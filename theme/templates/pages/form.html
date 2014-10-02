@@ -1,0 +1,53 @@
+{% extends "pages/page.html" %}
+
+{% load mezzanine_tags %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+jQuery.support.placeholder = (function(){
+    var i = document.createElement('input');
+    return 'placeholder' in i;
+})();
+$(document).ready(function() {
+    var next_elem;
+    if ($.support.placeholder){
+        $('.mezzanine-form .control-label').each(function() {
+            next_elem = $(this).next('input, textarea');
+            if (next_elem.length > 0){
+                next_elem.attr('placeholder', $(this).html());
+                $(this).remove();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+
+{% block main_cols %}col-md-8{% endblock %}
+
+{% block main %}
+{{ block.super }}
+{% if request.GET.sent %}
+    {% editable page.form.response %}
+    {{ page.form.response|richtext_filters|safe }}
+    {% endeditable %}
+{% else %}
+    {% errors_for form %}
+    <form class="mezzanine-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
+        {% fields_for form %}
+        <input class="hl-btn hl-btn-green" type="submit" value="{{ page.form.button_text }}">
+    </form>
+{% endif %}
+
+{% endblock %}
+
+{% block after_main %}
+<div class="col-md-4 form-content">
+    {% with page.form as page_form %}
+    {% editable page_form.content %}
+    {{ page_form.content|richtext_filters|safe }}
+    {% endeditable %}
+    {% endwith %}
+</div>
+{% endblock %}

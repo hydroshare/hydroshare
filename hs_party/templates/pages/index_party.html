@@ -1,0 +1,26 @@
+{% comment %}
+{# error since this is not a displayable: 'NoneType' object has no attribute 'homepage' #}
+{% extends "base.html" %}
+{% load  pages_tags mezzanine_tags %}
+{% endcomment %}
+
+{% load static %}
+
+
+<html>
+<body>
+<div>People, Organizations and Relationships</div>
+    <ul>
+    <li><a href="{%   url 'person_list' %}">List of People</a></li>
+     <li><a href="{%  url 'organization_list' %}">List of Organizations</a></li>
+    </ul>
+<div>API</div>
+    <ul>
+    <li><a class="btn btn-default" href="api/v1/?format=json">API</a></li>
+
+    <li><a class="btn btn-default" href="{%  url 'api_dispatch_list' resource_name='person'  api_name='v1'%}">List of People</a></li>
+     <li><a class="btn btn-default" href="{%  url 'api_dispatch_list' resource_name='organization'  api_name='v1'%}">List of Organizations</a></li>
+    </ul>
+</body>
+</html>
+

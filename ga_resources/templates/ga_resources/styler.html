@@ -1,0 +1,336 @@
+{% extends "base_nosidebars.html" %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}bootstrap/css/font-awesome.css"/>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/colorbrewer.css"/>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/ga_resources.css"/>
+    <style type="text/css">
+/* define height and width of scrollable area. Add 16px to width for scrollbar          */
+div.tableContainer {
+	height: 300px;
+	overflow: auto;
+}
+
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+    {% include 'ga_resources/application_scripts.html' %}
+
+    <script id="tpl-label-styler" type="text/template">
+        {# the label font #}
+        <h3>Style labels by <%= name %></h3>
+        <label for="font">Font</label>
+        <select name="font" id="font">
+            {% for font in installed_fonts %}
+            <option value="{{ font }}">{{ font }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="text-color">Text color</label>
+        <select class="text-color" name="text-color" id="text-color">
+            <option value="#000000">Black</option>
+            <option value="#ffffff">White</option>
+            <option value="#ff0000">Red</option>
+            <option value="#00ff00">Green</option>
+            <option value="#0000ff">Blue</option>
+            <option value="#ffff00">Yellow</option>
+            <option value="#00ffff">Cyan</option>
+            <option value="#ff00ff">Magenta</option>
+        </select>
+
+        <label for="text-size">Text size</label>
+        <select class="text-size" name="text-size" id="text-size">
+            <option value="9">Small</option>
+            <option value="11">Medium</option>
+            <option value="16">Large</option>
+        </select>
+    </script>
+
+    <script id="tpl-uniform-opacity" type="text/template">
+        <h3>Set <%= selector %> uniformly</h3>
+        <div class="span6"><input class="input-block-level <%= selector %>" value="1.0" type="number" name="" id=""/>
+        </div>
+    </script>
+
+    <script id="tpl-uniform-point-size" type="text/template">
+        <h3>Set <%= selector %> uniformly</h3>
+        <div class="span6"><input class="input-block-level <%= selector %>" value="1.0" type="number" name="" id=""/>
+        </div>
+    </script>
+
+    <script id="tpl-standard-palette" type="text/template">
+        <h3>Set <%= attribute %> uniformly</h3>
+        <table>
+            <tr>
+                <td><button class="btn"><i class="icon-stop" data-color='#ff0000'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#00ff00'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#0000ff'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#ffff00'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#ff00ff'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#00ffff'></i></button></td>
+            </tr>
+            <tr>
+                <td><button class="btn"><i class="icon-stop" data-color='#ff7777'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#77ff77'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#7777ff'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#ffff77'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#ff77ff'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#77ffff'></i></button></td>
+            </tr>
+            <tr>
+                <td><button class="btn"><i class="icon-stop" data-color='#880000'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#008800'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#000088'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#888800'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#880088'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#008888'></i></button></td>
+            </tr>
+            <tr>
+                <td><button class="btn"><i class="icon-stop" data-color='#000000'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#333333'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#666666'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#999999'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#bbbbbb'></i></button></td>
+                <td><button class="btn"><i class="icon-stop" data-color='#ffffff'></i></button></td>
+            </tr>
+            <tr>
+                <td colspan="6">
+                    <input class="color-value input-block-level <%= selector %>" type="text" placeholder="HTML color value"/>
+                </td>
+            </tr>
+        </table>
+
+    </script>
+
+    <script id="tpl-attribute-report" type="text/template">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Kind</th>
+            <th>Characteristics</th>
+            <th>Min</th>
+            <th>Max</th>
+            <th>Mean</th>
+            <th>Unique</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        </tbody>
+    </script>
+
+    <script id="tpl-attribute-characteristics" type="text/template">
+            <td><%= name %></td>
+            <td><%= kind %></td>
+            <td><%= commasep(tags) %></td>
+            <td><%= min === 'N/A' ? '-' : addCommas(min.toFixed(3)) %></td>
+            <td><%= max === 'N/A' ? '-' : addCommas(max.toFixed(3)) %></td>
+            <td><%= mean === 'N/A' ? '-' : addCommas(mean.toFixed(3)) %></td>
+            <td><%= unique === 'N/A' ? '-' : unique %></td>
+
+    </script>
+
+    <script id="tpl-attribute-styler" type="text/template">
+        <thead class='fixedHeader'>
+           <tr>
+               <th></th>
+               <th>Labels</th>
+               <th>Fill color</th>
+               <th>Fill opacity</th>
+               <th>Line color</th>
+               <th>Line opacity</th>
+               <th>Point size</th>
+           </tr>
+
+           <tr>
+               <th>Default</th>
+               <td><input type="radio" value='default' name="labels" id="labels-default" checked='true'/></td>
+               <td><input type="radio" value='default' name="polygon-fill" id="fill-color-default" checked='true'/></td>
+               <td><input type="radio" value='default' name="polygon-opacity" id="fill-opacity-default" checked='true'/></td>
+               <td><input type="radio" value='default' name="line-color" id="line-color-default" checked='true'/></td>
+               <td><input type="radio" value='default' name="line-opacity" id="line-opacity-default" checked='true'/></td>
+               <td><input type="radio" value='default' name="point-size" id="point-size-default" checked='true'/></td>
+           </tr>
+           <tr>
+               <th>Uniform</th>
+               <td>N/A</td>
+               <td><input type="radio" value='uniform' name="polygon-fill" id="fill-color-uniform"/></td>
+               <td><input type="radio" value='uniform' name="polygon-opacity" id="fill-opacity-uniform"/></td>
+               <td><input type="radio" value='uniform' name="line-color" id="line-color-uniform"/></td>
+               <td><input type="radio" value='uniform' name="line-opacity" id="line-opacity-uniform"/></td>
+               <td><input type="radio" value='uniform' name="point-size" id="point-size-uniform"/></td>
+           </tr>
+       </thead>
+
+        <tbody id='attribute-style-selection' class='scrollContent' >
+
+        </tbody>
+
+    </script>
+
+    <script id='tpl-style-by-attribute' type="text/template">
+        <td><%= name %></td>
+        <td><input type="radio" value="<%= name %>" name='labels' id="<%= name %>-labels" /></td>
+        <td><input type="radio" value="<%= name %>" name='polygon-fill' id="<%= name %>-fill-color" /></td>
+        <td><input type="radio" value="<%= name %>" name='polygon-opacity' id="<%= name %>-fill-opacity" /></td>
+        <td><input type="radio" value="<%= name %>" name='line-color' id="<%= name %>-line-color" /></td>
+        <td><input type="radio" value="<%= name %>" name='line-opacity' id="<%= name %>-line-opacity" /></td>
+        <td><input type="radio" value="<%= name %>" name='point-size' id="<%= name %>-point-size" /></td>
+    </script>
+
+    <script id="tpl-brewer-palette" type="text/template">
+        <%= name %> - <%= kind %>
+    </script>
+
+    <script id="tpl-color-picker" type="text/template">
+        <h3>Color by <%= name %></h3>
+        <label for="<%= name %>-num-classes">Number of color divisions</label>
+        <select class="num-classes" name="<%= name %>-num-classes" id="<%= name %>-num-classes">
+            <option value="3">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select>
+
+        <label for="<%= name %>-palette">Palette</label>
+        <select class='brewer-palettes' name='<%= name %>-palettes' id='<%= name %>-palettes'></select>
+        <h5>Assign colors to values</h5>
+        <div class="current-palette" id="<%= name %>-classes">No palette currently picked</div>
+    </script>
+
+    <script id="tpl-opacity-picker" type="text/template">
+        <h3>Vary opacity by <%= name %></h3>
+        <label for="<%= name %>-number-of-levels">
+        <select class="num-classes" name="<%= name %>-num-classes" id="<%= name %>-num-opacities">
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select> Levels of opacity</label>
+        <div class="class-values" id="<%= name %>-opacities">{# filled in by JS #}</div>
+        <label><input class='minimum-opacity' type="number" min='0' max='100' value='0'/>% opaque, minimum</label>
+        <label><input class='maximum-opacity' type="number" min='0' max='100' value='100'/>% opaque, maximum</label>
+    </script>
+
+    <script id="tpl-point-size-picker" type="text/template">
+        <h3>Vary point size by <%= name %></h3>
+        <label for="<%= name %>-num-sizes">
+        <select class="num-classes" name="<%= name %>-num-classes" id="<%= name %>-num-sizes">
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select> divisions of size</label>
+        <div class='class-values' id="<%= name %>-sizes">{# filled in by JS #}</div>
+        <label><input class='minimum-size' type="number" min='1' max='100' value='5'/>pt wide minimum</label>
+        <label><input class='maximum-size' type="number" min='1' max='100' value='24'/>pt wide maximum</label>
+    </script>
+
+    <script type="text/javascript">
+      // return a if a exists, otherwise return the default value
+      window.attributes = {{ attrs|safe }};
+
+      function ifexists (a, dflt) {
+            if(a && a !== 0 && a != '') {
+                return a;
+            }
+            else {
+                return dflt;
+            }
+      }
+
+      function addCommas(nStr) {
+            nStr += '';
+            x = nStr.split('.');
+            x1 = x[0];
+            x2 = x.length > 1 ? '.' + x[1] : '';
+            var rgx = /(\d+)(\d{3})/;
+            while (rgx.test(x1)) {
+                x1 = x1.replace(rgx, '$1' + ',' + '$2');
+            }
+            return x1 + x2;
+      }
+
+      function commasep (lst) {
+            return _.foldl(lst.slice(1), function(a, b) { return "" + a + ', ' + b}, lst[0]);
+      }
+    </script>
+    <script type="text/javascript" src="{{ STATIC_URL }}ga_resources/styler.js"></script>
+{% endblock %}
+
+{% block main %}
+    <h1>Styler</h1>
+    <hr>
+    <div class="helptext">
+    <p class="helptext"><i class="icon-question-sign"></i>
+        Use this page to create a styled layer for the dataset named {{ resource.title }}. Styles work in combination
+        with data you upload to create "services", which are a data resource coupled with a number of possible styles.
+        This is so you can use the same data for entirely different maps without uploading it multiple times.
+    </p>
+    <p class="helptext">
+        You can also create multiple services for the same dataset. The reason you might do this is if you have certain
+        views of the data you wish to remain private or only wish to be exposed to certain people.
+    </p>
+    <p class="helptext">
+        To add your style to an existing service associated with the dataset named "{{ resource.title }}", select the
+        first option in the form below.  This will add your style to an existing service.  If you want to re-use this
+        style with other datasets, you can do so using the "Admin" interface.
+    </p>
+    </div>
+
+
+    <form class="form" id='user-inputs' action="#">
+        <label for="#existing-layers"><input type="radio" name="layer-type" id="layer-type-existing" value='existing' checked='{% if not new_service %}true{% else %}false{% endif %}'/> Select an existing service to add your style to
+        <select name="existing-layers" id="existing-layers">
+        {% for layer in resource.renderedlayer_set.all %}
+            <option value="{{ layer.slug }}">{{ layer.title }}</option>
+        {% endfor %}
+        </select></label>
+        <label for="#new-layer"><input type="radio" name="layer-type" value='new' id="layer-type-new" checked='{% if new_service %}true{% else %}false{% endif %}'/> Or add a new service
+            <input type="text" name="new-layer-name" id="new-layer-name" value='{{ resource.title }} service'/>
+        </label>
+
+        <label for="style-name">Name your style*
+            <input type="text" name='style-name' id='style-name' value='{{ resource.title }} style'/>
+        </label>
+        <input id="resource" type="hidden" name="resource" value='{{ resource.slug }}'/>
+    </form>
+
+
+    <h3>Summary of data in the {{ resource.title }} resource</h3>
+    <div class="helptext">
+        <p>
+            <i class="icon-question-sign"></i> This is a summary report of all the variables in the data.  It is meant to help you
+            understand the characteristics of the data well enough to decide on how to style the data.
+        </p>
+    </div>
+    <div class="row tableContainer" id="attribute-report"></div>
+
+    <h3>Choose what data to style your map by.</h3>
+    <div class="row tableContainer" id="attribute-styler"></div>
+
+    <div class="row" id="label-styler"></div>
+    <div class='row' id="line-color-styler"></div>
+    <div class="row" id="line-opacity-styler"></div>
+    <div class="row" id="polygon-fill-styler"></div>
+    <div class="row" id="polygon-opacity-styler"></div>
+    <div class="row" id="point-size-styler"></div>
+
+    <div class="row">
+        <button class="btn btn-large btn-primary" id='save-style'>Save style</button>
+    </div>
+{% endblock %}

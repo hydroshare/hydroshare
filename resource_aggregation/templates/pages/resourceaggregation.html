@@ -1,0 +1,73 @@
+{% extends 'hydroshare/res.html' %}
+
+
+{% block extra_html_top %}
+
+    <h2 style="padding-bottom:30px ">Resources included in {{ cm.title }}:</h2>
+    {% if agg_resources %}
+        <table class="table table-striped">
+            <tr>
+            <th>Title</th>
+            <th>Short ID</th>
+            <th>Description</th>
+            </tr>
+                {% for res, details in agg_resources.items %}
+                    <tr>
+                    <td>{{ res }}</td>
+                    {%  for detail in details %}
+                        {% if forloop.first %}
+                        <td><a id="permalink" href="http://{{ request.get_host }}/r/{{ detail }}/" target="_blank">http://{{ request.get_host }}/r/{{ detail }}/</a></td>
+                        {% else %}
+                        <td>{{ detail }}</td>
+                        {% endif %}
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+        </table>
+    {% else %}
+        <h4>None</h4>
+    {% endif %}
+
+{% endblock %}
+
+{% block downloads %}
+
+ <div class="row">
+        <div class="col-md-12">
+
+            <table class="table table-striped">
+                <tfoot>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td>
+                            <div class="btn-group">
+                              <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Export All</a>
+                              <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                                <span class="caret"></span>
+                                <span class="sr-only">Toggle Dropdown</span>
+                              </button>
+                              <ul class="dropdown-menu" role="menu">
+                                  {% for b in cm.bags.all %}
+                                    <li><a href="{{ b.bag.url }}" style="color:black;">{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>
+                                  {% endfor %}
+                              </ul>
+                            </div>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block details %}
+    <h2 style="padding-bottom:30px ">Aggregation Details:</h2>
+    {{ block.super }}
+{% endblock %}
+
+{% block description-title %}
+{% endblock %}
+

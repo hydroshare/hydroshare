@@ -1,0 +1,29 @@
+apt-get install aptitude
+# Dependencies for Mapnik
+aptitude install carto
+aptitude install build-essential
+aptitude install libboost-all-dev 
+aptitude install libtiff-dev
+aptitude install libproj-dev
+aptitude install libicu-dev
+aptitude install libfreetype6-dev
+aptitude install libcairo2-dev
+aptitude install libcairomm-1.0-dev
+aptitude install python-cairo
+# Dependencies for Geoanalytics
+aptitude install libspatialite-dev libspatialite3 spatialite-bin
+aptitude install gfortran
+aptitude install python python-pip python-virtualenv
+aptitude install postgis postgresql-9.1 postgresql-9.1-postgis
+aptitude install libgeos-dev libgeos-3.3.3
+aptitude install libgdal-dev gdal-bin gdal-contrib
+aptitude install netcdf-bin libnetcdf-dev
+aptitude install git
+aptitude install libmapnik2-dev libmapnik2-2.0
+aptitude install libxml2 libxml2-dev
+aptitude install libncurses5 libncurses5-dev
+aptitude install libxslt1-dev libxslt1
+aptitude install liblapack-dev libblas-dev
+aptitude install grass
+aptitude install libgdal1-1.9.0-grass
+aptitude install nodejs npm

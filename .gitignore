@@ -1,0 +1,8 @@
+*.pyc
+*.pyo
+*.db
+.DS_Store
+.coverage
+/static
+.idea/
+celeryd.pid

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load  pages_tags mezzanine_tags  crispy_forms_tags %}
+
+{% block main %}
+<h1>PERSON</h1>
+
+   <div class='row'>
+   <form enctype="multipart/form-data" method="post" action="">
+   <fieldset class="model">
+                {{ form.management_form }}
+                {{ form.non_form_errors }}
+        {%  fields_for form %}
+
+
+
+    </fieldset>
+
+   <ul class="nav nav-tabs">
+  <li class="active"><a href="#location_form" data-toggle="tab">Addresses</a></li>
+  <li><a href="#phone_form" data-toggle="tab">Phone</a></li>
+<li><a href="#email_form" data-toggle="tab">email</a></li>
+    <li><a href="#names_form" data-toggle="tab">alternate Names</a></li>
+    <li><a href="#identifiers_form" data-toggle="tab">Identifiers</a></li>
+{#       <li><a href="#orgs_form" data-toggle="tab">Organizations</a></li> #}
+</ul>
+
+        <div class="tab-content">
+            <div class="tab-pane active" id="location_form">
+
+
+                    <div class="panel panel-primary" >
+
+                {{ location_form.management_form }}
+                {{ location_form.non_form_errors }}
+                        {% comment %}     {% crispy location_form %}                {% endcomment %}
+
+                {% for lf in location_form %}
+                 <div class="panel-heading">Address</div>
+                    {%  fields_for lf %}
+
+                {% endfor %}
+
+                        </div>
+                </div>
+
+
+       <div class="tab-pane " id="phone_form">
+              <div class="panel panel-primary" >
+
+
+                {{ phone_form.management_form }}
+                {{ phone_form.non_form_errors }}
+                {% for lf in phone_form %}
+              <div class="panel-heading">Phone</div>
+                    {%  fields_for lf %}
+
+                {% endfor %}
+
+ </div>
+</div>
+
+       <div class="tab-pane " id="email_form">
+              <div class="panel panel-primary" >
+
+                {{ email_form.management_form }}
+                {{ email_form.non_form_errors }}
+                {% for lf in email_form %}
+                 <div class="panel-heading">Email</div>
+                    {%  fields_for lf %}
+
+                {% endfor %}
+</div>
+       </div>
+
+
+       <div class="tab-pane " id="names_form">
+              <div class="panel panel-primary" >
+
+                {{ name_form.management_form }}
+                {{ name_form.non_form_errors }}
+                {% for lf in name_form %}
+                <div class="panel-heading">Name</div>
+                    {%  fields_for lf %}
+
+                {% endfor %}
+</div></div>
+
+
+       <div class="tab-pane " id="identifiers_form">
+              <div class="panel panel-primary" >
+
+                {{ identifier_form.management_form }}
+                {{ identifier_form.non_form_errors }}
+                {% for lf in identifier_form %}
+              <div class="panel-heading">Identifier</div>
+                    {%  fields_for lf %}
+
+                {% endfor %}
+           </div></div>
+{% comment %}
+   <div class="tab-pane " id="orgs_form">
+              <div class="panel panel-primary" >
+                    <div class="panel-heading">orgs</div>
+                {{ orgs_form.management_form }}
+                {{ orgs_form.non_form_errors }}
+                {% for lf in orgs_form %}
+                    {%  fields_for lf %}
+
+                {% endfor %}
+           </div></div>
+           {% endcomment %}
+</div>
+
+        <input class="btn btn-warning btn-lg" type="submit" value="Save Edits" action=""/>
+   </form>
+
+
+   </div>
+
+{% endblock %}

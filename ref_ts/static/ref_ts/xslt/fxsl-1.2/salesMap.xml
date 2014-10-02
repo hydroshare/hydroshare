@@ -1,0 +1,16 @@
+<sales>
+  <sale>
+    <price>3.5</price>
+    <quantity>2</quantity>
+    <Discount>0.75</Discount>
+    <Discount>0.80</Discount>
+    <Discount>0.90</Discount>
+  </sale>
+  <sale>
+    <price>3.5</price>
+    <quantity>2</quantity>
+    <Discount>0.75</Discount>
+    <Discount>0.80</Discount>
+    <Discount>0.90</Discount>
+  </sale>
+</sales>

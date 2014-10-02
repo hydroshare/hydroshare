@@ -1,0 +1,825 @@
+/* ===== Buttons ===== */
+
+.hl-btn {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.428571429;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+.hl-btn:focus {
+  outline: thin dotted #333;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+.hl-btn:hover,
+.hl-btn:focus {
+  color: #333333;
+  text-decoration: none;
+}
+.hl-btn:active,
+.hl-btn.active {
+  outline: 0;
+  background-image: none;
+  -webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+}
+.hl-btn.disabled,
+.hl-btn[disabled],
+fieldset[disabled] .btn {
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.65;
+  filter: alpha(opacity=65);
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+/* 1. Default Button */
+
+.hl-btn-default {
+  color: #333333;
+  background-color: #ffffff;
+  border-color: #cccccc;
+}
+.hl-btn-default:hover,
+.hl-btn-default:focus,
+.hl-btn-default:active,
+.hl-btn-default.active,
+.hl-open .dropdown-toggle.btn-default {
+  color: #333333;
+  background-color: #ebebeb;
+  border-color: #adadad;
+}
+.hl-btn-default:active,
+.hl-btn-default.active,
+.open .dropdown-toggle.hl-btn-default {
+  background-image: none;
+}
+.hl-btn-default.disabled,
+.hl-btn-default[disabled],
+fieldset[disabled] .hl-btn-default,
+.hl-btn-default.disabled:hover,
+.hl-btn-default[disabled]:hover,
+fieldset[disabled] .btn-default:hover,
+.hl-btn-default.disabled:focus,
+.hl-btn-default[disabled]:focus,
+fieldset[disabled] .hl-btn-default:focus,
+.hl-btn-default.disabled:active,
+.hl-btn-default[disabled]:active,
+fieldset[disabled] .hl-btn-default:active,
+.hl-btn-default.disabled.active,
+.hl-btn-default[disabled].active,
+fieldset[disabled] .hl-btn-default.active {
+  background-color: #ffffff;
+  border-color: #cccccc;
+}
+
+/* 2. Green Button */
+
+.hl-btn-green {
+  color: #ffffff;
+  background-color: #72a53b;
+  border-color: #72a53b;
+}
+.hl-btn-green:hover,
+.hl-btn-green:focus,
+.hl-btn-green:active,
+.hl-btn-green.active,
+.open .dropdown-toggle.hl-btn-green {
+  color: #ffffff;
+  background-color: #5d8731;
+  border-color: #5d8731;
+}
+.hl-btn-green:active,
+.hl-btn-green.active,
+.open .dropdown-toggle.hl-btn-green {
+  background-image: none;
+}
+.hl-btn-green.disabled,
+.hl-btn-green[disabled],
+fieldset[disabled] .hl-btn-green,
+.hl-btn-green.disabled:hover,
+.hl-btn-green[disabled]:hover,
+fieldset[disabled] .hl-btn-green:hover,
+.hl-btn-green.disabled:focus,
+.hl-btn-green[disabled]:focus,
+fieldset[disabled] .hl-btn-green:focus,
+.hl-btn-green.disabled:active,
+.hl-btn-green[disabled]:active,
+fieldset[disabled] .hl-btn-green:active,
+.hl-btn-green.disabled.active,
+.hl-btn-green[disabled].active,
+fieldset[disabled] .hl-btn-green.active {
+  background-color: #AFD487;
+  border-color: #AFD487;
+}
+
+/* 3. Red Button */
+
+.hl-btn-red {
+  color: #ffffff;
+  background-color: #E74C3C;
+  border-color: #E74C3C;
+}
+.hl-btn-red:hover,
+.hl-btn-red:focus,
+.hl-btn-red:active,
+.hl-btn-red.active,
+.open .dropdown-toggle.hl-btn-red {
+  color: #ffffff;
+  background-color: #C0392B;
+  border-color: #C0392B;
+}
+.hl-btn-red:active,
+.hl-btn-red.active,
+.open .dropdown-toggle.hl-btn-red {
+  background-image: none;
+}
+.hl-btn-red.disabled,
+.hl-btn-red[disabled],
+fieldset[disabled] .hl-btn-red,
+.hl-btn-red.disabled:hover,
+.hl-btn-red[disabled]:hover,
+fieldset[disabled] .hl-btn-red:hover,
+.hl-btn-red.disabled:focus,
+.hl-btn-red[disabled]:focus,
+fieldset[disabled] .hl-btn-red:focus,
+.hl-btn-red.disabled:active,
+.hl-btn-red[disabled]:active,
+fieldset[disabled] .hl-btn-red:active,
+.hl-btn-red.disabled.active,
+.hl-btn-red[disabled].active,
+fieldset[disabled] .hl-btn-red.active {
+  background-color: #EF8B80;
+  border-color: #EF8B80;
+}
+
+/* 4. Blue Button */
+
+.hl-btn-blue {
+  color: #ffffff;
+  background-color: #00B4FF;
+  border-color: #00B4FF;
+}
+.hl-btn-blue:hover,
+.hl-btn-blue:focus,
+.hl-btn-blue:active,
+.hl-btn-blue.active,
+.open .dropdown-toggle.hl-btn-blue {
+  color: #ffffff;
+  background-color: #009DE0;
+  border-color: #009DE0;
+}
+.hl-btn-blue:active,
+.hl-btn-blue.active,
+.open .dropdown-toggle.hl-btn-blue {
+  background-image: none;
+}
+.hl-btn-blue.disabled,
+.hl-btn-blue[disabled],
+fieldset[disabled] .hl-btn-blue,
+.hl-btn-blue.disabled:hover,
+.hl-btn-blue[disabled]:hover,
+fieldset[disabled] .hl-btn-blue:hover,
+.hl-btn-blue.disabled:focus,
+.hl-btn-blue[disabled]:focus,
+fieldset[disabled] .hl-btn-blue:focus,
+.hl-btn-blue.disabled:active,
+.hl-btn-blue[disabled]:active,
+fieldset[disabled] .hl-btn-blue:active,
+.hl-btn-blue.disabled.active,
+.hl-btn-blue[disabled].active,
+fieldset[disabled] .hl-btn-blue.active {
+  background-color: #5CCEFF;
+  border-color: #5CCEFF;
+}
+/* 5. Dark Button */
+
+.hl-btn-dark {
+  color: #ffffff;
+  background-color: #515151;
+  border-color: #515151;
+}
+.hl-btn-dark:hover,
+.hl-btn-dark:focus,
+.hl-btn-dark:active,
+.hl-btn-dark.active,
+.open .dropdown-toggle.hl-btn-dark {
+  color: #ffffff;
+  background-color: #444;
+  border-color: #444;
+}
+.hl-btn-dark:active,
+.hl-btn-dark.active,
+.open .dropdown-toggle.hl-btn-dark {
+  background-image: none;
+}
+.hl-btn-dark.disabled,
+.hl-btn-dark[disabled],
+fieldset[disabled] .hl-btn-dark,
+.hl-btn-dark.disabled:hover,
+.hl-btn-dark[disabled]:hover,
+fieldset[disabled] .hl-btn-dark:hover,
+.hl-btn-dark.disabled:focus,
+.hl-btn-dark[disabled]:focus,
+fieldset[disabled] .hl-btn-dark:focus,
+.hl-btn-dark.disabled:active,
+.hl-btn-dark[disabled]:active,
+fieldset[disabled] .hl-btn-dark:active,
+.hl-btn-dark.disabled.active,
+.hl-btn-dark[disabled].active,
+fieldset[disabled] .hl-btn-dark.active {
+  background-color: #707070;
+  border-color: #707070;
+} 
+
+/* 6. Turquoise Button */
+
+.hl-btn-turquoise {
+  color: #ffffff;
+  background-color: #1ABC9C;
+  border-color: #1ABC9C;
+}
+.hl-btn-turquoise:hover,
+.hl-btn-turquoise:focus,
+.hl-btn-turquoise:active,
+.hl-btn-turquoise.active,
+.open .dropdown-toggle.hl-btn-turquoise {
+  color: #ffffff;
+  background-color: #16A085;
+  border-color: #16A085;
+}
+.hl-btn-turquoise:active,
+.hl-btn-turquoise.active,
+.open .dropdown-toggle.hl-btn-turquoise {
+  background-image: none;
+}
+.hl-btn-turquoise.disabled,
+.hl-btn-turquoise[disabled],
+fieldset[disabled] .hl-btn-turquoise,
+.hl-btn-turquoise.disabled:hover,
+.hl-btn-turquoise[disabled]:hover,
+fieldset[disabled] .hl-btn-turquoise:hover,
+.hl-btn-turquoise.disabled:focus,
+.hl-btn-turquoise[disabled]:focus,
+fieldset[disabled] .hl-btn-turquoise:focus,
+.hl-btn-turquoise.disabled:active,
+.hl-btn-turquoise[disabled]:active,
+fieldset[disabled] .hl-btn-turquoise:active,
+.hl-btn-turquoise.disabled.active,
+.hl-btn-turquoise[disabled].active,
+fieldset[disabled] .hl-btn-turquoise.active {
+  background-color: #4BE7C8;
+  border-color: #4BE7C8;
+}
+
+/* 7. Amethyst Button */
+
+.hl-btn-amethyst {
+  color: #ffffff;
+  background-color: #9B59B6;
+  border-color: #9B59B6;
+}
+.hl-btn-amethyst:hover,
+.hl-btn-amethyst:focus,
+.hl-btn-amethyst:active,
+.hl-btn-amethyst.active,
+.open .dropdown-toggle.hl-btn-amethyst {
+  color: #ffffff;
+  background-color: #8E44AD;
+  border-color: #8E44AD;
+}
+.hl-btn-amethyst:active,
+.hl-btn-amethyst.active,
+.open .dropdown-toggle.hl-btn-amethyst {
+  background-image: none;
+}
+.hl-btn-amethyst.disabled,
+.hl-btn-amethyst[disabled],
+fieldset[disabled] .hl-btn-amethyst,
+.hl-btn-amethyst.disabled:hover,
+.hl-btn-amethyst[disabled]:hover,
+fieldset[disabled] .hl-btn-amethyst:hover,
+.hl-btn-amethyst.disabled:focus,
+.hl-btn-amethyst[disabled]:focus,
+fieldset[disabled] .hl-btn-amethyst:focus,
+.hl-btn-amethyst.disabled:active,
+.hl-btn-amethyst[disabled]:active,
+fieldset[disabled] .hl-btn-amethyst:active,
+.hl-btn-amethyst.disabled.active,
+.hl-btn-amethyst[disabled].active,
+fieldset[disabled] .hl-btn-amethyst.active {
+  background-color: #BB8ECD;
+  border-color: #BB8ECD;
+}
+
+.hl-btn-lg {
+  padding: 10px 16px;
+  font-size: 18px;
+  line-height: 1.33;
+  border-radius: 0;
+}
+.hl-btn-sm,
+.hl-btn-xs {
+  padding: 5px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 0;
+}
+.hl-btn-xs {
+  padding: 1px 5px;
+}
+.hl-btn-block {
+  display: block;
+  width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+}
+.hl-btn-block + .hl-btn-block {
+  margin-top: 5px;
+}
+input[type="submit"].hl-btn-block,
+input[type="reset"].hl-btn-block,
+input[type="button"].hl-btn-block {
+  width: 100%;
+}
+
+/* ===== Panels ===== */
+
+.panel {
+  border-radius: 0;
+}
+.panel-heading {
+  border-radius: 0;
+}
+.panel-footer {
+  border-radius: 0;
+}
+.panel-group .panel {
+  border-radius: 0;
+}
+
+/* 1. Panel Green */
+
+.panel-green {
+  border-color: #72a53b;
+}
+.panel-green > .panel-heading {
+  color: #fff;
+  background-color: #72a53b;
+  border-color: #72a53b;
+}
+.panel-green > .panel-heading + .panel-collapse .panel-body {
+  border-top-color: #72a53b;
+}
+.panel-green > .panel-footer + .panel-collapse .panel-body {
+  border-bottom-color: #72a53b;
+}
+.panel-green > .panel-footer {
+  background-color: #72a53b;
+  border-top: 1px solid #72a53b;
+}
+
+/* 2. Panel Blue */
+
+.panel-blue {
+  border-color: #00B4FF;
+}
+.panel-blue > .panel-heading {
+  color: #ffffff;
+  background-color: #00B4FF;
+  border-color: #00B4FF;
+}
+.panel-blue > .panel-heading + .panel-collapse .panel-body {
+  border-top-color: #00B4FF;
+}
+.panel-blue > .panel-footer + .panel-collapse .panel-body {
+  border-bottom-color: #00B4FF;
+}
+.panel-blue > .panel-footer {
+  background-color: #00B4FF;
+  border-top: 1px solid #00B4FF;
+}
+
+/* 3. Panel Dark */
+
+.panel-dark {
+  border-color: #515151;
+}
+.panel-dark > .panel-heading {
+  color: #ffffff;
+  background-color: #515151;
+  border-color: #515151;
+}
+.panel-dark > .panel-heading + .panel-collapse .panel-body {
+  border-top-color: #515151;
+}
+.panel-dark > .panel-footer + .panel-collapse .panel-body {
+  border-bottom-color: #515151;
+}
+.panel-dark > .panel-footer {
+  background-color: #515151;
+  border-top: 1px solid #515151;
+}
+
+/* 4. Panel Red */
+
+.panel-red {
+  border-color: #E74C3C;
+}
+.panel-red > .panel-heading {
+  color: #ffffff;
+  background-color: #E74C3C;
+  border-color: #E74C3C;
+}
+.panel-red > .panel-heading + .panel-collapse .panel-body {
+  border-top-color: #E74C3C;
+}
+.panel-red > .panel-footer + .panel-collapse .panel-body {
+  border-bottom-color: #E74C3C;
+}
+.panel-red > .panel-footer {
+  background-color: #E74C3C;
+  border-top: 1px solid #E74C3C;
+}
+
+/* 5. Panel Turquoise */
+
+.panel-turquoise {
+  border-color: #1ABC9C;
+}
+.panel-turquoise > .panel-heading {
+  color: #ffffff;
+  background-color: #1ABC9C;
+  border-color: #1ABC9C;
+}
+.panel-turquoise > .panel-heading + .panel-collapse .panel-body {
+  border-top-color: #1ABC9C;
+}
+.panel-turquoise > .panel-footer + .panel-collapse .panel-body {
+  border-bottom-color: #1ABC9C;
+}
+.panel-turquoise > .panel-footer {
+  background-color: #1ABC9C;
+  border-top: 1px solid #1ABC9C;
+}
+
+/* 6. Panel Amethyst */
+
+.panel-amethyst {
+  border-color: #8E44AD;
+}
+.panel-amethyst > .panel-heading {
+  color: #ffffff;
+  background-color: #8E44AD;
+  border-color: #8E44AD;
+}
+.panel-amethyst > .panel-heading + .panel-collapse .panel-body {
+  border-top-color: #8E44AD;
+}
+.panel-amethyst > .panel-footer + .panel-collapse .panel-body {
+  border-bottom-color: #8E44AD;
+}
+.panel-amethyst > .panel-footer {
+  background-color: #8E44AD;
+  border-top: 1px solid #8E44AD;
+}
+
+/* 7. Panel Dummy */
+
+.panel-dummy {
+  border-color: #DDD;
+}
+.panel-dummy > .panel-heading {
+  color: #333;
+  background-color: #FFF;
+  border-color: #FFF;
+}
+.panel-dummy > .panel-heading + .panel-collapse .panel-body {
+  border-top-color: #FFF;
+}
+.panel-dummy > .panel-footer + .panel-collapse .panel-body {
+  border-bottom-color: #FFF;
+}
+.panel-dummy > .panel-footer {
+  background-color: #FFF;
+  border-top: 1px solid #FFF;
+}
+
+
+/* ===== Info Boards ==== */
+
+.info-board {
+	margin: 20px 0;
+	padding: 15px 30px 15px 15px;
+	border-left: 5px solid #eee;
+}
+
+/* 1. Info board green */
+
+.info-board-green {
+	background-color: #F5FAF0;
+	border-color: #72a53b;
+}
+.info-board h4 {
+	margin-top: 0;
+}
+.info-board p:last-child {
+	margin-bottom: 0;
+}
+
+/* 2. Info board blue */
+
+.info-board-blue {
+	background-color: #EBF9FF;
+	border-color: #00B4FF;
+}
+.info-board h4 {
+	margin-top: 0;
+}
+.info-board p:last-child {
+	margin-bottom: 0;
+}
+
+/* 3. Info board red */
+
+.info-board-red {
+	background-color: #FBF0EE;
+	border-color: #E74C3C;
+}
+.info-board h4 {
+	margin-top: 0;
+}
+.info-board p:last-child {
+	margin-bottom: 0;
+}
+
+/* 4. Info board orange */
+
+.info-board-orange {
+	background-color: #FFF2EB;
+	border-color: #FFA973;
+}
+.info-board h4 {
+	margin-top: 0;
+}
+.info-board p:last-child {
+	margin-bottom: 0;
+}
+
+
+/* ===== Forms ===== */
+
+.form-control {
+	border-radius: 0; /* */
+}
+
+/* ===== Navs ===== */
+
+/* 1. Nav tabs */
+
+.nav-tabs {
+	margin-bottom: 15px;
+}
+.nav-tabs > li > a {
+    border-bottom: 1px solid #dedede;
+    border-radius: 0;
+    background: #f5f5f5;
+}
+
+/* 2. Nav pills */
+
+.nav-pills {
+	margin-bottom: 15px;
+}
+.nav-pills > li > a {
+	border-radius: 0;
+}
+.nav-pills > li > a {
+	background-color: #f5f5f5;
+}
+.nav-pills-green > li.active > a,
+.nav-pills-green > li.active > a:hover,
+.nav-pills-green > li.active > a:focus {
+	background-color: #72a53b; 
+}
+.nav-pills-blue > li.active > a,
+.nav-pills-blue > li.active > a:hover,
+.nav-pills-blue > li.active > a:focus {
+	background-color: #00B4FF; 
+}
+.nav-pills-dark > li.active > a,
+.nav-pills-dark > li.active > a:hover,
+.nav-pills-dark > li.active > a:focus {
+	background-color: #515151; 
+}
+.nav-pills-red > li.active > a,
+.nav-pills-red > li.active > a:hover,
+.nav-pills-red > li.active > a:focus {
+	background-color: #E74C3C; 
+}
+.nav-pills-turquoise > li.active > a,
+.nav-pills-turquoise > li.active > a:hover,
+.nav-pills-turquoise > li.active > a:focus {
+	background-color: #1ABC9C; 
+}
+.nav-pills-amethyst > li.active > a,
+.nav-pills-amethyst > li.active > a:hover,
+.nav-pills-amethyst > li.active > a:focus {
+	background-color: #9B59B6; 
+}
+
+/* ===== Alerts ===== */
+
+.alert {
+	border-radius: 0;
+}
+
+/* ===== Thumbnails ===== */
+
+.thumbnail {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+.thumbnail > img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  padding: 10px;
+  border: 1px solid #eee;
+}
+a.thumbnail:hover img,
+a.thumbnail:focus img {
+  border-color: #ccc;
+}
+.thumbnail > img {
+  margin-left: auto;
+  margin-right: auto;
+}
+.thumbnail .caption {
+  padding: 10px;
+  color: #333333;
+}
+.thumbnail .caption h4{
+  text-transform: uppercase;
+}
+.thumbnail .caption .rating {
+	margin-bottom: 10px;
+}
+.thumbnail .caption .rating i {
+  color: #F7C41F;
+  font-size: 18px;
+}
+
+/* ===== Page Tip ===== */
+
+.page-tip {
+	background: #fff;
+	-webkit-box-shadow: 0 0 16px 0 rgba(50, 50, 50, 0.3);
+	-moz-box-shadow: 0 0 16px 0 rgba(50, 50, 50, 0.3);
+	box-shadow: 0 0 16px 0 rgba(50, 50, 50, 0.3);
+	color: #515151;
+	margin-bottom: 50px;
+	padding: 15px 0;
+}
+.page-tip p {
+	margin: 0;
+}
+
+/* ===== Section headers ===== */
+
+.section-header {
+	background: #f5f5f5;
+	border-bottom: 1px solid #dedede;
+	padding: 15px 0;
+	margin-bottom: 50px;
+}
+.section-header h1 {
+	color: #666;
+	font-size: 16px;
+	font-weight: 300;
+	text-transform: uppercase;
+	padding: 0;
+	margin: 0;
+}
+.section-header h1 span {
+	border-bottom: 5px solid #00B4FF;
+	padding-bottom: 10px;
+}
+
+/* ===== Block header ===== */
+
+.block-header h2 {
+	margin: 40px 0;
+	font-size: 24px;
+	font-family: 'Lato', sans-serif;
+	font-weight: 300;
+	color: #FFC045;
+	text-transform: uppercase;
+	background: #FFC045;
+}
+.block-header h2 .title {
+	background: #fff;
+	padding: 0 15px 0 0;
+}
+.block-header h2 .decoration {
+	background: #fff;
+	padding-left: 3px;
+	margin-left: 5px;
+}
+
+/* ===== Lead ===== */
+
+.lead {
+	font-weight: 300;
+}
+
+/* ===== Social links ===== */
+
+.social-icons {
+	margin-bottom: 15px;
+}
+.social-icons ul {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+}
+.social-icons ul li {
+	text-align: center;
+	float: left;
+	margin: 0 5px 5px 0;
+	opacity: 0.5;
+	transition: 0.1s;
+	-webkit-transition: 0.1s;
+	-moz-transition: 0.1s;
+}
+.social-icons-small ul li {
+	height: 20px;
+	width: 20px;
+	font-size: 16px;
+	line-height: 20x;
+}
+.social-icons-default ul li {
+	height: 30px;
+	width: 30px;
+	font-size: 22px;
+	line-height: 30px;
+}
+.social-icons-large ul li {
+	height: 40px;
+	width: 40px;
+	font-size: 28px;
+	line-height: 40x;
+}
+.social-icons ul li:hover {
+	opacity: 1;
+	transition: 0.1s;
+	-webkit-transition: 0.1s;
+	-moz-transition: 0.1s;
+}
+.social-icons ul li a {
+	color: #FFF;
+	display: block;
+}
+.social-icons ul li.rss {
+	background: #ff9900;
+}
+.social-icons ul li.facebook {
+	background: #3B5998;
+}
+.social-icons ul li.twitter {
+	background: #1dcaff;
+}
+.social-icons ul li.plus {
+	background: #dd4b39;
+}
+.social-icons ul li.vk {
+	background: #3f628a;
+}
+.social-icons ul li.pinterest {
+	background: #c92026;
+}
+.social-icons ul li.vimeo {
+	background: #446d82;
+}
+.social-icons ul li.github {
+	background: #657e8c;
+}
+.social-icons ul li.linkedin {
+	background: #0c7bb3;
+}
+.social-icons ul li.dropbox {
+	background: #4fa3e3;
+}

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+service stop nginx
+cd /home/docker/hydroshare
+export POSTGIS_HOST=$POSTGIS_PORT_5432_TCP_ADDR
+export REDIS_HOST=$REDIS_PORT_6379_TCP_ADDR
+export POSTGIS_PORT=5432
+export REDIS_PORT=6379
+python manage.py migrate
+python manage.py runserver 0.0.0.0:80

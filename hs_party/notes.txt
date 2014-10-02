@@ -1,0 +1,26 @@
+User and Organization Hierarchy
+
+PartyModel
+|- Organizations
+       Includes a Organization Type property
+|- Group
+   includes a GroupType
+   |- ResearchGroup (disabled, model design issue)
+|- People
+   |- Scholar
+       user field contains Django User Properties
+
+ExternalIdentifiers
+|- ResearcherUrls
+
+
+Activity
+|- Assocations
+   this associates user with organizations
+|- Workshop
+
+PersonDemographics
+  This separates the demographics needed by the research project from the user, has a permission
+
+'''
+#===================================================================

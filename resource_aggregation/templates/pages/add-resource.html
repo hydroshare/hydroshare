@@ -1,0 +1,93 @@
+{% extends "pages/page.html" %}
+
+{% load geoanalytics_tags mezzanine_tags pages_tags hydroshare_tags %}
+
+{% block title %}
+
+    {{ agg.title }}
+
+{% endblock %}
+
+{% block main %}
+<h3>Resources currently included in {{ agg.title }}:</h3>
+    {% if agg_resources %}
+        <table class="table table-striped">
+            <tr>
+            <th>Title</th>
+            <th>Short ID</th>
+            <th>Description</th>
+            </tr>
+                {% for res, details in agg_resources.items %}
+                    <tr>
+                    <td>{{ res }}</td>
+                    {%  for detail in details %}
+                        <td>{{ detail|truncatechars:60 }}</td>
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+        </table>
+        <h3>Add another Resource</h3>
+    {% else %}
+        <h4>None</h4>
+        <h3>Add a Resource</h3>
+    {% endif %}
+
+<form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/{{ agg.short_id }}/add-resource/">
+    {% csrf_token %}
+
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Resource Permalink</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="" name='resource_permalink'>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Description</label>
+    <div class="col-sm-10">
+      <textarea rows="5" class="form-control" id="" name='resource_description'>
+      </textarea>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-sm-offset-7 col-sm-10">
+      <button type="submit" class="btn btn-primary">Save and Finish</button>
+      <button type="button" class="btn btn-primary" id="save-plus">Save and link more Resources</button>
+    </div>
+  </div>
+
+<input type="hidden" class="form-control" name="more" id="more" value="">
+
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript">
+        $(function() {
+            $("#save-plus").click(function () {
+                var resource_permalink = document.getElementsByName('resource_permalink')[0].value,
+                    resource_description = document.getElementsByName('resource_description')[0].value,
+                    more = "yes";
+
+                $.ajax({
+                    type: "POST",
+                    url: '/hsapi/_internal/{{ agg.short_id }}/add-resource/',
+                    data: {resource_permalink: resource_permalink,
+                        resource_description: resource_description,
+                        more: more},
+                    success: function (data, textStatus) {
+                        var redirect_url = "/hsapi/resource/" + '{{ agg.short_id }}' + "/add-resource/";
+                        window.location.replace(redirect_url);
+                    },
+                    error: function (data, stuff) {
+                        console.log(data);
+                        console.log(stuff);
+                    }
+                });
+            });
+        })
+
+    </script>
+{% endblock %}

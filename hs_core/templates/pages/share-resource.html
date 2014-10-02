@@ -1,0 +1,70 @@
+{% extends 'pages/page.html' %}
+
+{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags %}
+
+{% block main %}
+
+    <h2>Resource Name | <small>Share your resource with others</small></h2>
+
+<div class="pull-left">{# <img src="/placeholder.png"></div> #}
+
+    <table class="table">
+        <tr><th>Resource Type</th><td> Generic Resource</td></tr>
+        <tr><th>Created by</th><td>Jeff Horsburgh</td></tr>
+        <tr><th>Created on</th><td>06/10/2012</td></tr>
+        <tr><th>Keywords</th><td>Observations Catalog, Data Card, Little Bear River, Utah, CUAHSI, Water, Utah State University, Continuous Monitoring, Water Quality, Streamflow</td></tr>
+        <tr><th>Size</th><td>250 KB</td></tr>
+        <tr><th>Extent</th><td></td></tr>
+    </table>
+    <table class="table table-condensed">
+    <tr>
+        <td><strong>Left:</strong> -111.95</td>
+        <td><strong>Right:</strong> -111.79</td>
+    </tr>
+    <tr>
+        <td><strong>Top:</strong> 41.73</td>
+        <td><strong>Bottom:</strong> 41.48</td>
+    </tr>
+
+    </table>
+</div>
+
+<form role="form">
+
+<h3>HydroShare Settings</h3>
+
+  <div class="checkbox">
+    <label>
+      <input type="checkbox"> Make this resource public in HydroShare
+    </label>
+  </div>
+    <div class="checkbox">
+    <label>
+      <input type="checkbox"> Share this resource with specific HydroShare users <button class="btn btn-default btn-xs">Select Users</button>
+    </label>
+  </div>
+    <div class="checkbox">
+    <label>
+      <input type="checkbox"> Share this resource with a HydroShare group <button class="btn btn-default btn-xs">Select Group</button>
+    </label>
+  </div>
+
+<h3>Archival Settings</h3>
+
+      <div class="checkbox">
+    <label>
+      <input type="checkbox"> Publish this resource to the CUAHSI Water Data Center (<a href="link">What is the CUAHSI Data Center?</a>)
+    </label>
+  </div>
+       <div class="checkbox">
+    <label>
+      <input type="checkbox"> Publish this resource to DataONE( <a href="link">What is DataONE?</a>)
+    </label>
+  </div>
+
+
+
+  <button type="submit" class="btn btn-danger">Update Settings</button>
+</form>
+
+{% endblock %}

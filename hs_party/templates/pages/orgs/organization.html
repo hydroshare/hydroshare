@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% load pages_tags mezzanine_tags  crispy_forms_tags  %}
+
+{% block main %}
+
+    <h2>  {{ organization.name|truncatewords_html:50 }}</h2>
+
+    {% if request.user.is_authenticated %}
+ <a  class="btn btn-default"  href="{%   url 'organization_edit' organization.pk %}">
+                      Edit {{ organization.name }} </a>
+    {%  endif %}
+    <a class="btn btn-default" href="{%  url 'api_dispatch_detail' resource_name='organization'  api_name='v1' pk=organization.pk %}?format=json">JSON</a>
+<a class="btn btn-default" href="{%  url 'api_dispatch_detail' resource_name='organization'  api_name='v1' pk=organization.pk %}?format=rdf">RDF</a>
+
+
+ <div>
+ <table class="table">
+
+     <tr>
+         <td>Name:</td>
+         <td> {{ organization.name|truncatewords_html:50 }}</td>
+     </tr>
+ {%  if organization.alternate_names %}
+    <tr>
+     <td>Also Known as</td>
+     <td><table>
+         {%  for n in  organization.alternate_names.all %}
+         <tr>
+         <td>{{ n.otherName }}</td><th> ( {{ n.annotation.name }} )</th></tr>
+     {% endfor %}
+     </table></td>
+ </tr>
+ {% endif %}
+
+         <tr>
+         <td>Organization Type:</td>
+         <td> {{ organization.organizationType }}</td>
+     </tr>
+        <tr>
+         <td>URL:</td>
+         <td> {{ organization.url }}</td>
+     </tr>
+
+{% comment %}   <tr>
+         <td>Business Address</td>
+         <td> {{ organization.businessAddress }}</td>
+     </tr>
+{% endcomment %}
+
+ {%  if person.mail_addresses %}
+    <tr>
+     <td>Other Address</td>
+     <td><table>
+         {%  for add in person.mail_addresses.all %}
+         <tr>
+         <td>{{ add.address }}</td><th>({{ add.address_type.name }})</th></tr>
+     {% endfor %}
+     </table></td>
+ </tr>
+ {% endif %}
+
+{% comment %}
+     <tr>
+         <td>Business Telephone</td>
+         <td> {{ organization.businessTelephone }} </td>
+     </tr>
+{% endcomment %}
+
+  {%  if organization.phone_numbers %}
+    <tr>
+     <td>Other Phone</td>
+     <td><table>
+         {%  for o in organization.phone_numbers.all %}
+         <tr>
+         <td>{{ o.phone_number }}</td>
+         <th>( {{ o.phone_type.name }} )</th>
+         </tr>
+     {% endfor %}
+     </table></td>
+ </tr>
+{% endif %}
+   {%  if organization.email_addresses %}
+    <tr>
+     <td>Email Contacts</td>
+     <td><table>
+         {%  for o in organization.email_addresses.all %}
+         <tr>
+         <td>{{ o.email }}</td>
+         <th>( {{ o.email_type.name }} )</th></tr>
+     {% endfor %}
+     </table></td>
+ </tr>
+ {% endif %}
+          <tr>
+         <td>Parent Organization</td>
+         <td>  {{ organization.parentOrganization }}</td>
+     </tr>
+
+          <tr>
+         <td>Description:</td>
+         <td> {{ organization.notes }}</td>
+     </tr>
+
+       <tr>
+     <td>Added</td>
+     <td>{{ organization.createdDate }}</td>
+ </tr>
+   <tr>
+     <td>Last Updated</td>
+     <td>{{ organization.lastUpdate }}</td>
+ </tr>
+
+
+ </table>
+
+
+{% endblock %}

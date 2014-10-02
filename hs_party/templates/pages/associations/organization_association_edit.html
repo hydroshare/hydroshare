@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load  pages_tags mezzanine_tags keyword_tags  %}
+
+{% block main %}
+
+<h2>Edit Association for {{ organizationassociation.organization.name }} of {{ organizationassociation.person.name }}</h2>
+   <div class='row'>
+   <form enctype="multipart/form-data" method="post" action="">
+   <fieldset class="model">
+
+{%  fields_for form %}
+       <input class="btn btn-warning btn-lg" type="submit" value="Save Edits" action=""/>
+</fieldset>
+</form>
+</div>
+
+{% endblock %}

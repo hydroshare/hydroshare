@@ -1,0 +1,23 @@
+#!/bin/bash
+
+APP=$1
+HOST=192.168.59.103
+PORT=1338
+USER=docker
+
+if [ -d "$PWD/$APP/migrations" ]; then
+  ssh -p $PORT $USER@$HOST "cd hydroshare; python manage.py schemamigration --auto $APP && python manage.py migrate $APP"
+  rsync -avh --rsh="ssh -p $PORT" $USER@$HOST:/home/$USER/hydroshare/$APP/migrations $PWD/$APP
+  pushd $PWD
+  cd $APP
+  git add migrations
+  popd
+else
+  ssh -p $PORT $USER@$HOST "cd hydroshare; python manage.py schemamigration --init $APP && python manage.py migrate $APP"
+  mkdir $PWD/$APP/migrations
+  rsync -avh --rsh="ssh -p $PORT" $USER@$HOST:/home/$USER/hydroshare/$APP/migrations $PWD/$APP
+  pushd $PWD
+  cd $APP
+  git add migrations
+  popd
+fi

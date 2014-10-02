@@ -1,0 +1,43 @@
+postgis:
+  image: jamesbrink/postgresql
+redis:
+  image: dockerfile/redis
+hydroshare:
+  build: .
+  environment:
+    POSTGIS_HOST: postgis
+    POSTGIS_PORT: 5432
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    POSTGIS_PASSWORD: postgres
+    POSTGIS_DB: postgres
+    POSTGIS_USER: postgres
+    PGPASSWORD: postgres
+    LOCAL_SETTINGS: hydroshare.beta_settings
+  volumes:
+    - "media:/home/docker/hydroshare/static/media"
+  ports:
+    - "1338:22"
+    - "8000:8000"
+  links:
+    - postgis:postgis
+    - redis:redis
+  command: /bin/bash init
+worker:
+  build: .
+  environment:
+    POSTGIS_HOST: postgis
+    POSTGIS_PORT: 5432
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    POSTGIS_PASSWORD: postgres
+    POSTGIS_DB: postgres
+    PGPASSWORD: postgres
+    C_FORCE_ROOT: 1
+    LOCAL_SETTINGS: hydroshare.beta_settings
+  volumes_from:
+    - hydroshare
+  links:
+    - postgis:postgis
+    - redis:redis
+  command: celery worker -A celeryworker -E

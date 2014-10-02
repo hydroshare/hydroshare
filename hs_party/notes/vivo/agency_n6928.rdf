@@ -1,0 +1,211 @@
+<rdf:RDF
+    xmlns:geo="http://aims.fao.org/aos/geopolitical.owl#"
+    xmlns:c4o="http://purl.org/spar/c4o/"
+    xmlns:vitro-public="http://vitro.mannlib.cornell.edu/ns/vitro/public#"
+    xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+    xmlns:ero="http://purl.obolibrary.org/obo/"
+    xmlns:event="http://purl.org/NET/c4dm/event.owl#"
+    xmlns:pvs="http://vivoweb.org/ontology/provenance-support#"
+    xmlns:dcelem="http://purl.org/dc/elements/1.1/"
+    xmlns:vivo="http://vivoweb.org/ontology/core#"
+    xmlns:tsri="http://vivo.scripps.edu/ontology/tsri#"
+    xmlns:vitro="http://vitro.mannlib.cornell.edu/ns/vitro/0.7#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:bibo="http://purl.org/ontology/bibo/"
+    xmlns:foaf="http://xmlns.com/foaf/0.1/"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:dcterms="http://purl.org/dc/terms/"
+    xmlns:scires="http://vivoweb.org/ontology/scientific-research#"
+    xmlns:fabio="http://purl.org/spar/fabio/"
+    xmlns:nih="http://vivo.scripps.edu/ontology/nih#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" > 
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr355673">
+    <rdfs:label xml:lang="en-US">EEG and ERP measures of alcohol's effects</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr232976">
+    <rdfs:label xml:lang="en-US">Sex differences in stress-alcohol interactions modulating amygdala activity</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr12026">
+    <rdfs:label xml:lang="en-US">Cognitive function in alcohol dependence and protracted withdrawal</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr145777">
+    <rdfs:label xml:lang="en-US">Behavioral toxicity of chronic alcohol drinking in peri-adolescent monkeys</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr263479">
+    <rdfs:label xml:lang="en-US">Risk factors for alcoholism in native americans</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr127763">
+    <rdfs:label xml:lang="en-US">Neural substrates of compulsive ethanol-seeking behavior</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr187284">
+    <rdfs:label xml:lang="en-US">Molecular mechanisms of alcohol actions in the adolescent brain</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr140294">
+    <rdfs:label xml:lang="en-US">Alcoholism and stress: a framework for future treatment strategies</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr367477">
+    <rdfs:label xml:lang="en-US">Alcohol dependence and brain endocannabinoid function</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr369205">
+    <rdfs:label xml:lang="en-US">Discovery of potent and selective neuropeptide Y Y2 receptor antagonist probes</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr2911">
+    <rdfs:label xml:lang="en-US">Significance of withdrawal-related learning in ETOH craving and relapse</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n2859">
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">National Institutes of Health</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr334107">
+    <rdfs:label xml:lang="en-US">Integrative neuroscience initiative on alcoholism</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr337936">
+    <rdfs:label xml:lang="en-US">Alcohol-chemokine interactions and neurotransmission</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr28607">
+    <rdfs:label xml:lang="en-US">Alcohol and chemokine interactions</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr382580">
+    <rdfs:label xml:lang="en-US">Regulation of ethanol effects on synaptic transmission</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr21841">
+    <rdfs:label xml:lang="en-US">Synaptic and peptidergic neuroadaptations associated with alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr278428">
+    <rdfs:label xml:lang="en-US">The nociceptin ORL1 system: treatment target for relapse</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr33546">
+    <rdfs:label xml:lang="en-US">Neuronal plasticity in the BNST and alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr107169">
+    <rdfs:label xml:lang="en-US">Gene-environment interaction: the brain CRF  system in alcohol preferring MSP rats</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr295467">
+    <rdfs:label xml:lang="en-US">Intersection of pain and ethanol-seeking mechanisms in ethanol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr144316">
+    <rdfs:label xml:lang="en-US">Neuropsychopharmacology - multidisciplinary training</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr266302">
+    <rdfs:label xml:lang="en-US">Medial prefrontal cortical gliogenesis and alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr201892">
+    <rdfs:label xml:lang="en-US">Mechanisms and consequences of CNS aneuploidies altered by fetal ethanol exposure</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr98619">
+    <rdfs:label xml:lang="en-US">Duloxetine versus pregabalin for treatment of alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr13832">
+    <rdfs:label xml:lang="en-US">Gene network perturbations in alcohol dependence - a systems biology approach</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr132988">
+    <rdfs:label xml:lang="en-US">Alcohol/naltrexone; neuropeptide interaction with opioid receptor dynamics studie</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr391281">
+    <rdfs:label xml:lang="en-US">Discovery and development of nociceptin receptor ligands in alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr57294">
+    <rdfs:label xml:lang="en-US">Effects of adolescent alcohol exposure on sleep and arousal in adulthood</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr159326">
+    <rdfs:label xml:lang="en-US">Post-traumatic stress disorder and alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr305498">
+    <rdfs:label xml:lang="en-US">Role of BK channel interactome in excessive ethanol drinking</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr362742">
+    <rdfs:label xml:lang="en-US">Electrophysiology of alcohol in extended amygdala</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr167888">
+    <rdfs:label xml:lang="en-US">Neuroplasticity of the extended amygdala CRF  circuitry in alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr283963">
+    <rdfs:label xml:lang="en-US">Genome-wide RNAi screen for genes involved in learning</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr149634">
+    <rdfs:label xml:lang="en-US">Neuropharmacology of ethanol reinforcement</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr228353">
+    <rdfs:label xml:lang="en-US">CNS effects of alcohol:  cellular neurobiology</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr141999">
+    <rdfs:label xml:lang="en-US">Tonic gabaa receptor signaling in the central amygdala and alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr202454">
+    <rdfs:label xml:lang="en-US">Medication development for protracted abstinence in alcoholism</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n6928">
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr2911"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#GovernmentAgency"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr397596"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr167888"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr259737"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr159326"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr211305"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr373512"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr311810"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr263479"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr145777"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr232976"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr16504"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr187284"/>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Organization"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr98619"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FundingOrganization"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr305274"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr21841"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr295467"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr334107"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr283963"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr132988"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr33546"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr382580"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr144316"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr391281"/>
+    <vivo:subOrganizationWithin rdf:resource="http://vivo.scripps.edu/individual/n2859"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr228353"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr13832"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr202454"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr140294"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr149634"/>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Agent"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr12026"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr127763"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr141999"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr367477"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr369205"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr201892"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr57294"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr266302"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr107169"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr355673"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr337936"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr278428"/>
+    <vivo:abbreviation>NIAAA</vivo:abbreviation>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr28607"/>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr362742"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">National Institute on Alcohol Abuse and Alcoholism</rdfs:label>
+    <vivo:awardsGrant rdf:resource="http://vivo.scripps.edu/individual/nihr305498"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr305274">
+    <rdfs:label xml:lang="en-US">The role of  brain stress systems in the prefrontal cortex in compulsive drinking</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr259737">
+    <rdfs:label xml:lang="en-US">Histone modifications in transcriptional regulation by alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr397596">
+    <rdfs:label xml:lang="en-US">Stress history enhances ethanol self-administration: role of neuronal pentraxin 2</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr311810">
+    <rdfs:label xml:lang="en-US">Alcohol and tobacco CNS effects in binge drinkers</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr373512">
+    <rdfs:label xml:lang="en-US">Mouse target assessment core</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr211305">
+    <rdfs:label xml:lang="en-US">Treatment of alcohol induced hepatic injury with rev-erb ligands</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr16504">
+    <rdfs:label xml:lang="en-US">Role of central vasopressin/ERK signaling in ethanol dependence</rdfs:label>
+  </rdf:Description>
+</rdf:RDF>

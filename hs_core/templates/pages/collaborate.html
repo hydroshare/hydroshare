@@ -1,0 +1,71 @@
+{% extends "pages/page.html" %}
+
+{% block main %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2">
+                <a class="btn btn-success btn-block" href="#"><i class="fa fa-plus"></i> Create a group</a>
+            </div>
+            <form class="form" role="form" action="">
+
+                    <div class="col-md-5">
+                        <input type="text" class="form-control input-block" placeholder="Search keywords"/>
+                    </div>
+                <div class="col-md-2">
+                        <div class="btn-toolbar">
+                            <div class="btn-group">
+                                <button class="btn btn-default" data-toggle="dropdown">By name</button>
+                                <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#">By contents</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-block">Search groups</button>
+                    </div>
+                </form>
+        </div>
+        <div class="row" style="padding-top: 1em;">
+            <div class="col-lg-2">
+                <h4>Show</h4>
+                <ul class="nav nav-pills nav-stacked">
+                    <li><a href="#">Groups I own</a></li>
+                    <li class="active"><a href="#">Have membership</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-10">
+                <dl class="dl-horizontal">
+                    <dt>Name</dt>
+                    <dd><a href="/group-details">Little Bear River Research Group</a></dd>
+                    <dt>Description</dt>
+                    <dd>This group is studying water quality in the Little Bear River, UT, USA</dd>
+                    <dt>Owner</dt>
+                    <dd><a href="#">Jeff Horsburgh</a></dd>
+                </dl>
+                <dl class="dl-horizontal">
+                    <dt>Name</dt>
+                    <dd><a href="/group-details">CUAHSI</a></dd>
+                    <dt>Description</dt>
+                    <dd>This group shares resources related to hydrologic science</dd>
+                    <dt>Owner</dt>
+                    <dd><a href="#">Rick Hooper</a></dd>
+                </dl>
+                <div class="btn-toolbar">
+                    <a class="btn btn-link" href=""><i class="fa fa-fast-backward"></i></a>
+                    <a class="btn btn-link" href=""><i class="fa fa-backward"></i></a>
+                    Results 1-2 of 2
+                    <a class="btn btn-link" href=""><i class="fa fa-forward"></i></a>
+                    <a class="btn btn-link" href=""><i class="fa fa-fast-forward"></i></a>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+{% endblock %}

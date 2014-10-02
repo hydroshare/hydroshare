@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="{{ LANGUAGE_CODE }}"{% if LANGUAGE_BIDI %} dir="rtl"{% endif %}>
+{% load pages_tags mezzanine_tags i18n future staticfiles theme_tags %}
+{% get_site_conf as siteconf %}
+<head>
+
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width">
+<meta name="keywords" content="{% block meta_keywords %}{% endblock %}">
+<meta name="description" content="{% block meta_description %}{% endblock %}">
+<title>{% block meta_title %}{% endblock %}{% if settings.SITE_TITLE %} | {{ settings.SITE_TITLE }}{% endif %}</title>
+<link rel="shortcut icon" href="{% static "img/favicon.ico" %}">
+
+{% ifinstalled mezzanine.blog %}
+<link rel="alternate" type="application/rss+xml" title="RSS" href="{% url "blog_post_feed" "rss" %}">
+<link rel="alternate" type="application/atom+xml" title="Atom" href="{% url "blog_post_feed" "atom" %}">
+{% endifinstalled %}
+
+<link href='http://fonts.googleapis.com/css?family=Lato:100,300,400' rel='stylesheet' type='text/css'>
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+{% compress css %}
+<link href="{% static "css/bootstrap.3.0.2.min.css" %}" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="{% static "css/animate.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "css/elements.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_core.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_extends.css" %}" />
+{% if request.user.is_staff %}
+<style>
+    .animated{
+        animation-fill-mode: none;
+    }
+</style>
+{% endif %}
+{% block extra_css %}{% endblock %}
+{% endcompress %}
+
+{% compress js %}
+<script src="{% static "mezzanine/js/"|add:settings.JQUERY_FILENAME %}"></script>
+<script src="{% static "js/bootstrap.3.0.2.min.js" %}"></script>
+<script src="{% static "js/bootstrap-extras.js" %}"></script>
+<script src="{% static "js/hydrosharecustom.js" %}"></script>
+<script src="{% static "js/scrolltopcontrol.js" %}"></script><!-- Scroll to top javascript -->
+<script src="{% static "js/jqcsrf.js" %}"></script>
+{% block extra_js %}{% endblock %}
+{% endcompress %}
+
+<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+  <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+  <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+<![endif]-->
+<!--[if IE]>
+<style>
+    .showcase {
+         zoom: 0.6;
+    }
+</style>
+<![endif]-->
+
+{% block extra_head %}{% endblock %}
+
+</head>
+<body id="{% block body_id %}body{% endblock %}">
+<!-- Navbar
+    ============= -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/"><img src="{{ STATIC_URL }}img/logo-sm.png" alt="{{ settings.SITE_TITLE }}"/></a>
+            </div>
+            <div class="collapse navbar-collapse">
+                {% page_menu "pages/menus/dropdown.html" %}
+                {% comment %}
+                <!-- Search form for extra small screens -->
+                <form class="navbar-form navbar-left visible-xs" role="search" action="{% url 'search' %}">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q">
+                        <span class="input-group-btn">
+                            <button class="hl-btn hl-btn-blue" type="button">Go!</button>
+                        </span>
+                    </div>
+                </form>
+                {% endcomment %}
+                <ul class="nav navbar-nav navbar-right hidden-xs">
+                    {% ifinstalled mezzanine.accounts %}
+                    {% if request.user.is_authenticated %}
+                    <li id="profile-menu" class="display-block">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ request.user }} <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li class="account">
+                                <p><b>{{ request.user }}</b>{% if request.user.email %}<br />{{ request.user.email }}{% endif %}</p>
+                                <p><a href="{% url 'profile_update' %}">Profile</a> | <a href="{% url 'logout' %}" id="signout-menu">Log out</a>
+                                <div class="clearfix"></div>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li id="signup-menu"><a href="{% url 'signup' %}">Sign Up</a></li>
+                    <li id="signin-menu"><a href="{% url 'login' %}">Sign In</a></li>
+                    {% endif %}
+                    {% endifinstalled %}
+                    {% comment %}
+                    <!-- Search Button -->
+                    <li id="search">
+                        <a href="#" id="search-btn" onclick="return false;"><i class="fa fa-search" id="search-icon"></i> Search</a>
+                        <div class="search-box" id="search-box">
+                            <form class="input-group"role="search" action="{% url 'search' %}">
+                                <input type="text" class="form-control" placeholder="Search" name="q">
+                                <span class="input-group-btn">
+                                    <button class="hl-btn hl-btn-default" type="button">Go!</button>
+                                </span>
+                            </form>
+                        </div>
+                    </li>
+                    {% endcomment %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% nevercache %}
+    {% if messages %}
+    {% for message in messages %}
+    <div class="page-tip animated slideInDown">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <button type="button" onClick="$(this).parent().parent().parent().parent().hide(400);" class="close">&times;</button>
+                    <p>{{ message }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endnevercache %}
+
+
+    {% block all_content %}
+    <div class="section-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h1 class="animated slideInLeft"><span>{% block title %}{% endblock %}</span></h1>
+                </div>
+            </div>
+        </div>
+    </div>
+        <h2>Error 404: Not Found.</h2>
+    <div class="container">
+        <div class="row">
+            <div class="{% block main_cols %}col-md-12{% endblock %}">
+                {% block main %}{% endblock %}
+            </div>
+            {% block after_main %}{% endblock %}
+        </div>
+    </div>
+    {% endblock %}
+    <!-- Foooter
+    ================== -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <!-- Contact Us 
+                =================  -->
+                <div class="col-md-4 col-sm-4">
+                    {% editable siteconf.col1_heading siteconf.col1_content %}
+                    <div class="headline">
+                        <h3>{{ siteconf.col1_heading }}</h3>
+                    </div>
+                    <div class="content">
+                        {{ siteconf.col1_content|richtext_filters|safe }}
+                    </div>
+                    {% endeditable %}
+                </div>
+                <!-- Social icons 
+                ===================== -->
+                <div class="col-md-4 col-sm-4">
+                    {% editable siteconf.col2_heading siteconf.twitter_link siteconf.facebook_link siteconf.pinterest_link siteconf.youtube_link siteconf.github_link siteconf.linkedin_link siteconf.vk_link siteconf.gplus_link %}
+                    <div class="headline"><h3>{{ siteconf.col2_heading }}</h3></div>
+                    {% endeditable %}
+                    <div class="content social">
+                        {% editable siteconf.col2_content %}
+                        {{ siteconf.col2_content|richtext_filters|safe }}
+                        {% endeditable %}
+                        {% if siteconf.has_social_network_links %}
+                        <ul>{% if siteconf.twitter_link %}
+                            <li>
+                                <a href="{{ siteconf.twitter_link }}"><i class="fa fa-twitter"></i></a>
+                            </li>
+                            {% endif %}
+                            {% if siteconf.facebook_link %}
+                            <li>
+                                <a href="{{ siteconf.facebook_link }}"><i class="fa fa-facebook"></i></a>
+                            </li>
+                            {% endif %}
+                            {% if siteconf.pinterest_link %}
+                            <li>
+                                <a href="{{ siteconf.pinterest_link }}"><i class="fa fa-pinterest"></i></a>
+                            </li>
+                            {% endif %}
+                            {% if siteconf.youtube_link %}
+                            <li>
+                                <a href="{{ siteconf.youtube_link }}"><i class="fa fa-youtube"></i></a>
+                            </li>
+                            {% endif %}
+                            {% if siteconf.github_link %}
+                            <li>
+                                <a href="{{ siteconf.github_link }}"><i class="fa fa-github"></i></a>
+                            </li>
+                            {% endif %}
+                            {% if siteconf.linkedin_link %}
+                            <li>
+                                <a href="{{ siteconf.linkedin_link }}"><i class="fa fa-linkedin"></i></a>
+                            </li>
+                            {% endif %}
+                            {% if siteconf.vk_link %}
+                            <li>
+                                <a href="{{ siteconf.vk_link }}"><i class="fa fa-vk"></i></a>
+                            </li>
+                            {% endif %}
+                            {% if siteconf.gplus_link %}
+                            <li>
+                                <a href="{{ siteconf.gplus_link }}"><i class="fa fa-google-plus"></i></a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                        {% endif %}
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+                <!-- Subscribe 
+                =============== -->
+                <div class="col-md-4 col-sm-4">
+                    {% editable siteconf.col3_heading siteconf.col3_content %}
+                    <div class="headline"><h3>{{ siteconf.col3_heading }}</h3></div>
+                    <div class="content">
+                        {{ siteconf.col3_content|richtext_filters|safe }}
+                    </div>
+                    {% endeditable %}
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Legal 
+    ============= -->
+    <div class="legal">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    {% editable siteconf.copyright %}
+                    <p>{{ siteconf.render_copyright }} | <a href="/terms-of-use">Terms Of Use</a> | <a href="/privacy">Statement of Privacy</a></p>
+                    {% endeditable %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include "includes/footer_scripts.html" %}
+
+</body>
+</html>

@@ -1,0 +1,633 @@
+<rdf:RDF
+    xmlns:geo="http://aims.fao.org/aos/geopolitical.owl#"
+    xmlns:c4o="http://purl.org/spar/c4o/"
+    xmlns:vitro-public="http://vitro.mannlib.cornell.edu/ns/vitro/public#"
+    xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+    xmlns:ero="http://purl.obolibrary.org/obo/"
+    xmlns:event="http://purl.org/NET/c4dm/event.owl#"
+    xmlns:pvs="http://vivoweb.org/ontology/provenance-support#"
+    xmlns:dcelem="http://purl.org/dc/elements/1.1/"
+    xmlns:vivo="http://vivoweb.org/ontology/core#"
+    xmlns:tsri="http://vivo.scripps.edu/ontology/tsri#"
+    xmlns:vitro="http://vitro.mannlib.cornell.edu/ns/vitro/0.7#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:bibo="http://purl.org/ontology/bibo/"
+    xmlns:foaf="http://xmlns.com/foaf/0.1/"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:dcterms="http://purl.org/dc/terms/"
+    xmlns:scires="http://vivoweb.org/ontology/scientific-research#"
+    xmlns:fabio="http://purl.org/spar/fabio/"
+    xmlns:nih="http://vivo.scripps.edu/ontology/nih#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" > 
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n5993">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n3493"/>
+    <vivo:end rdf:resource="http://vivo.scripps.edu/individual/n26497"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders">
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr140294"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual//position70535576"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr107169"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual//position2088226906"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual//position225053299"/>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Agent"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr129765"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual/n5133"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#AcademicDepartment"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr149634"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr166971"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr305498"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr157306"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr156816"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr202454"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Committee on the Neurobiology of Addictive Disorders (CNAD)</rdfs:label>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr21841"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual/n5050"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr228353"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr144316"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr367477"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual//position1914726268"/>
+    <vivo:subOrganizationWithin rdf:resource="http://vivo.scripps.edu/individual/TheScrippsResearchInstitute"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr216665"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual//position205305249"/>
+    <vivo:overview>&lt;p&gt;The faculty of the Committee on the Neurobiology of Addictive Disorders is comprised of a group of 6 investigators with a common goal of understanding the function of the brain emotional systems and to understand how these systems malfunction in disease. The research programs in the Committee on the Neurobiology of Addictive Disorders are focused on the neurobiological mechanisms involved in motivated and emotional behavior and how these mechanisms are altered with the development of central nervous system pathology such as addiction, stress, and eating disorders. The research domains of the faculty of the Committee integrate and translate basic research findings across multiple domains from cell biology to neurocircuitry to clinical. The Committee also forms the foundation for the Pearson Center for Alcoholism and Addiction Research with the goal of developing novel medications for the treatment of addictive disorders. Detailed results of Committee activity in clinical, neuropsychology, neuropharmacology, neurochemistry, neurophysiology and neuroendocrinology domains are covered in the reports of B. Mason, M. Taffe, G. Koob, L. Parsons, E. Zorrilla, and M. Roberto. Here, I summarize what our faculty are doing and the background that led to this work.&lt;/p&gt;&#xD;
+&lt;p&gt;Barbara Mason has been a leader in the field of development of treatment of psychiatric disorders including depression and addiction. Currently, her work is focused on the clinical evaluation of medications for the treatment of substance dependence. Ongoing studies have the aim of development of medications that reduce the risk of relapse, and the signs and symptoms of protracted abstinence. Her approach involves short-term human laboratory studies as well as long-term double-blind placebo controlled clinical trials. Her current NIH-funded work focuses on the development of new Pharmacological treatments for alcohol and cannabis dependence. Dr. Mason is Co-Director of the Pearson Center for Alcoholism and Addiction Research and is a current Merit awardee from the National Institute on Alcohol Abuse and Alcoholism.&lt;/p&gt;&#xD;
+&lt;p&gt;My own laboratory has a focus on neurobiological changes associated with prolonged access to drugs of abuse and earlier work showed that extended access to intravenous self-administration of cocaine not only produced a progressive increase in drug intake (escalation) but significant reward deficits in animals showing such escalation. Similar escalation in drug intake with prolonged access has now been observed with methamphetamine, opioids, and nicotine. The animal models of excessive drug intake described above have been extended to alcohol where animals are made dependent and then allowed access to alcohol during acute withdrawal where drinking independent rodents ranges 3-4 times that on non dependent animals Dependence induced drinking is selectively blocked by systemic administration of selective CRF-1 receptor antagonists, and the neurobiological substrate for CRF antagonism appears to be the central nucleus of the amygdala. These results suggest that a common component of extended access to drugs is the development of compulsive use concomitant with the development of dependence. Dr. Koob is Co-Director of the Pearson Center for Alcoholism and Addiction Research.&lt;/p&gt;&#xD;
+&lt;p&gt;Michael Taffe has a major interest in the physiological, motivational and cognitive sequelae resulting from use and abuse of drugs of abuse. Using a primate model, the rhesus macaque, he has discovered that 3, 4-methylenedioxymethamphetamine (MDMA, also known as "Ecstasy") and associated amphetamine drugs produce profound hyperthermia that is not a direct result of increases in activity produced by these drugs. Dr. Taffe directs the primate neurobehavioral laboratory and current work is engaged in bridging our cellular neurobiological studies in the rodent work to the human clinical situation.&lt;/p&gt;&#xD;
+&lt;p&gt;Loren (Larry) Parsons has a long-term interest in the neurochemical/neuropharmacological changes that occur in critical brain motivational circuits associated with reward disregulation in addiction. His current work is focused on the exciting area of how self-administration of drugs of abuse affect endogenous endocannabinoids in the brain. Dr. Parsons and his team have identified specific endocannabinoid effects in specific brain areas linked to specific components of the drug dependence cycle: drug reward, withdrawal and reinstatement of drug seeking. Alcohol withdrawal is associated with decreases in endocannabinoid activities in the central nucleus of the amygdala providing a potential key component of neuroadaptation associated with alcohol dependence.&lt;/p&gt;&#xD;
+&lt;p&gt;Eric Zorrilla has a focus of his work on how the brain reward and stress systems control food intake an area of great current relevance because of the high incidence of obesity in the United States and the resulting secondary health consequences. Dr. Zorrilla and his team in collaboration with Dr. Janda (Department of Chemistry), have identified a key player in the control of appetite, ghrelin, that is produced by the stomach and signals to the brain a requirement for energy. Immunization of antibodies against ghrelin slowed the accumulation of body weight and rat in rats. In addition, Dr. Zorrilla and his team have begun to characterize a pattern of binge-like palatable food intake that generates a physiological profile not unlike some aspects of addictive-like behavior and the neurobiological basis for this phenomenon is being explored.&lt;/p&gt;&#xD;
+&lt;p&gt;Marisa Roberto is exploring the effects of drugs of abuse on the cellular physiology of the central nucleus of the amygdala, a key structure in the brain involved in emotional processing. Using cellular recording of neuronal activity in slices of the amygdala, Dr. Roberto and her team have identified key changes in the activity of both GABAergic and glutamatergic neurons with acute and chronic alcohol. Even more exciting is that the alcohol effects on activity of these neurons appear to be mediated by actions on neuropeptides such as corticotropin releasing factor and nociceptin that have been shown neuropharmacologically to have a key role in mediating neuroadaptation to the actions of alcohol. These studies provide a key translation of the neurocircuitry and neuropharmacological studies of the Committee to the level of cellular interactions. Dr. Roberto won the Young Investigator Award from the Research on Alcoholism in 2006.&lt;/p&gt;&#xD;
+&lt;p&gt;Chitra Mandyam has been recruited to the Committee on as an Assistant Professor. She is a cell biologist/neuroscientist who will pursue studies on how stress and drugs of abuse alter the neuroplasticity of the adult brain by examining changes in the birth, survival and dynamics of adult generated neurons. Dr. Mandyam will use techniques including immunohistochemistry, immunoblotting and &lt;i&gt;in situ&lt;/i&gt; hybridization to answer specific questions regarding neuroadaptations produced by stress and drugs of abuse that can lead to psychiatric disorders and brain pathology. She has won a career development award for 5 years from the National Institute on Drug Abuse that will support her program.&lt;/p&gt;</vivo:overview>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual/n8994"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual/n7627"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual//position340667076"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual/n6110"/>
+    <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Organization"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr332619"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr12026"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr145777"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr350"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr274717"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr334107"/>
+    <vivo:hasPredecessorOrganization rdf:resource="http://vivo.scripps.edu/individual/n9973"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr139500"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Department"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr167888"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr114885"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual//position641849520"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual//position947195106"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual/n1888"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual/n9118"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual//position1251928027"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr305274"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr98619"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual/n17530"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual//position852012373"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual/n6130"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr382580"/>
+    <vivo:organizationForPosition rdf:resource="http://vivo.scripps.edu/individual/n4510"/>
+    <vivo:administers rdf:resource="http://vivo.scripps.edu/individual/nihr266302"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n8994">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#PostdocPosition"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#NonFacultyAcademicPosition"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n4837"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/n8306"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Senior Research Associate</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n559">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2003-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr334107">
+    <rdfs:label xml:lang="en-US">Integrative neuroscience initiative on alcoholism</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr21841">
+    <rdfs:label xml:lang="en-US">Synaptic and peptidergic neuroadaptations associated with alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n6689">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2006-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual//position2088226906">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#PrimaryPosition"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n4812025"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/TaffeMichael"/>
+    <rdfs:label>Associate Professor</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual//position205305249">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#PrimaryPosition"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/RobertoMarisa"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n1639"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Associate Professor</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n3046">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n15989"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual//position852012373">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyAdministrativePosition"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n247"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/KoobGeorge"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Committee Chair</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n4124413">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n9534172"/>
+    <vivo:end rdf:resource="http://vivo.scripps.edu/individual/n8125066"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivoweb.org/ontology/core#yearPrecision">
+    <rdfs:label xml:lang="en-US">yearPrecision</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n4837">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n5231"/>
+    <vivo:end rdf:resource="http://vivo.scripps.edu/individual/n13141"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n4510">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#NonFacultyAcademicPosition"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n3107"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/n8306"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Staff Scientist</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr139500">
+    <rdfs:label xml:lang="en-US">Neuronal substrates of cocaine reward</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr305274">
+    <rdfs:label xml:lang="en-US">The role of  brain stress systems in the prefrontal cortex in compulsive drinking</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n5133">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#PrimaryPosition"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/n7445"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n27617"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Assistant Professor</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n15344">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2013-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/RobertoMarisa">
+    <rdfs:label xml:lang="en-US">Roberto, Marisa</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr145777">
+    <rdfs:label xml:lang="en-US">Behavioral toxicity of chronic alcohol drinking in peri-adolescent monkeys</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr140294">
+    <rdfs:label xml:lang="en-US">Alcoholism and stress: a framework for future treatment strategies</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n1285">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2008-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n8536">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2010-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/SchweitzerPaul">
+    <rdfs:label xml:lang="en-US">Schweitzer, Paul</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr216665">
+    <rdfs:label xml:lang="en-US">Liquid chromatograph - tandem mass spectrometer</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n9973">
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Neuropharmacology</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n49089">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n15344"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr332619">
+    <rdfs:label xml:lang="en-US">Cannabinoid regulation of cognition</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n26497">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2013-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n3493">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2005-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n15989">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2007-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n15413">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2013-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr274717">
+    <rdfs:label xml:lang="en-US">Determinants of transition states in mdma self-administration</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr305498">
+    <rdfs:label xml:lang="en-US">Role of BK channel interactome in excessive ethanol drinking</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/JangChoonGon">
+    <rdfs:label xml:lang="en-US">Jang, Choon-Gon</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr114885">
+    <rdfs:label xml:lang="en-US">Central mechanisms of nicotine reinforcement and dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr228353">
+    <rdfs:label xml:lang="en-US">CNS effects of alcohol:  cellular neurobiology</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr202454">
+    <rdfs:label xml:lang="en-US">Medication development for protracted abstinence in alcoholism</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n263">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2006-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n5231">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2008-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n33310">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2007-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/ParsonsLoren">
+    <rdfs:label xml:lang="en-US">Parsons, Loren (Larry)</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual//position70535576">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#PrimaryPosition"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/ZorrillaEric"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label>Associate Professor</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr156816">
+    <rdfs:label xml:lang="en-US">Immunopharmacotherapy for methamphetamine addiction</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/TaffeMichael">
+    <rdfs:label xml:lang="en-US">Taffe, Michael</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr367477">
+    <rdfs:label xml:lang="en-US">Alcohol dependence and brain endocannabinoid function</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n6675">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n6689"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr382580">
+    <rdfs:label xml:lang="en-US">Regulation of ethanol effects on synaptic transmission</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n7445">
+    <rdfs:label xml:lang="en-US">Contet, Candice</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n9534172">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2000-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n24676">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n15413"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual//position1914726268">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n5993"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/MandyamChitra"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label>Assistant Professor</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n8306">
+    <rdfs:label xml:lang="en-US">George, Olivier</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n85">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n11588"/>
+    <vivo:end rdf:resource="http://vivo.scripps.edu/individual/n33310"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n11588">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2006-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr107169">
+    <rdfs:label xml:lang="en-US">Gene-environment interaction: the brain CRF  system in alcohol preferring MSP rats</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n7627">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#PrimaryPosition"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n6675"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/KoobGeorge"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Professor</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr167888">
+    <rdfs:label xml:lang="en-US">Neuroplasticity of the extended amygdala CRF  circuitry in alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n1911">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2006-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n11889">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n1911"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual//position1251928027">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#PrimaryPosition"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/MasonBarbara"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n11889"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label>Professor</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n8125066">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2007-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n17530">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n49089"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/n8306"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Assistant Professor</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n1639">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n1630"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n4812025">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n1066461"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n14218">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2013-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n9118">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n540"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/ParsonsLoren"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Associate Professor</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n11378">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n20278"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n9784">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2009-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr12026">
+    <rdfs:label xml:lang="en-US">Cognitive function in alcohol dependence and protracted withdrawal</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/KoobGeorge">
+    <rdfs:label xml:lang="en-US">Koob, George</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/MandyamChitra">
+    <rdfs:label xml:lang="en-US">Mandyam, Chitra</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n27617">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n1285"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr350">
+    <rdfs:label xml:lang="en-US">Methamphetamine and adult hippocampal neurogenesis</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n20278">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2010-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/TheScrippsResearchInstitute">
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The Scripps Research Institute</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n1888">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#PostdocPosition"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#NonFacultyAcademicPosition"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n85"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/n8306"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Research Associate</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual//position225053299">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#PrimaryPosition"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/SchweitzerPaul"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label>Associate Professor of Neurobiology of Addiction</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n5050">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#PrimaryPosition"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/MandyamChitra"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n24676"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Associate Professor</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n7195">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2009-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n6130">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#NonFacultyAcademicPosition"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n1217"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/n8306"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Senior Staff Scientist</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n247">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n263"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n13141">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2009-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr129765">
+    <rdfs:label xml:lang="en-US">Effects of deep brain stimulation on compulsive drug intake</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n540">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n559"/>
+    <vivo:end rdf:resource="http://vivo.scripps.edu/individual/n9784"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr166971">
+    <rdfs:label xml:lang="en-US">Pharmacological treatment of cannabis withdrawal and dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr144316">
+    <rdfs:label xml:lang="en-US">Neuropsychopharmacology - multidisciplinary training</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/ZorrillaEric">
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Zorrilla, Eric</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr266302">
+    <rdfs:label xml:lang="en-US">Medial prefrontal cortical gliogenesis and alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n9291">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr98619">
+    <rdfs:label xml:lang="en-US">Duloxetine versus pregabalin for treatment of alcohol dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual//position641849520">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#PrimaryPosition"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n11378"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/ParsonsLoren"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Associate Professor</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n1066461">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2007-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr149634">
+    <rdfs:label xml:lang="en-US">Neuropharmacology of ethanol reinforcement</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n1630">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeValue"/>
+    <vivo:dateTimePrecision rdf:resource="http://vivoweb.org/ontology/core#yearPrecision"/>
+    <vivo:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2011-01-01T00:00:00</vivo:dateTime>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/nihr157306">
+    <rdfs:label xml:lang="en-US">Gabapentin treatment of cannabis dependence</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n6110">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/MasonBarbara"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n3046"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pearson Family Chair</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual//position340667076">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#PrimaryPosition"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#FacultyPosition"/>
+    <vivo:positionForPerson rdf:resource="http://vivo.scripps.edu/individual/JangChoonGon"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label>Associate Professor of Neurobiology of Addiction</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual//position947195106">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#Position"/>
+    <vivo:dateTimeInterval rdf:resource="http://vivo.scripps.edu/individual/n4124413"/>
+    <vivo:positionInOrganization rdf:resource="http://vivo.scripps.edu/individual/CommitteeontheNeurobiologyofAddictiveDisorders"/>
+    <rdfs:label>Assistant Professor</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n1217">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n9291"/>
+    <vivo:end rdf:resource="http://vivo.scripps.edu/individual/n14218"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/MasonBarbara">
+    <rdfs:label xml:lang="en-US">Mason, Barbara</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://vivo.scripps.edu/individual/n3107">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdf:type rdf:resource="http://vivoweb.org/ontology/core#DateTimeInterval"/>
+    <vivo:start rdf:resource="http://vivo.scripps.edu/individual/n7195"/>
+    <vivo:end rdf:resource="http://vivo.scripps.edu/individual/n8536"/>
+  </rdf:Description>
+</rdf:RDF>

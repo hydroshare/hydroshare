@@ -1,0 +1,129 @@
+{% extends "pages/page.html" %}
+
+{% load geoanalytics_tags mezzanine_tags pages_tags hydroshare_tags %}
+
+{% block title %}
+
+    Create Resource Aggregation
+
+{% endblock %}
+
+{% block main %}
+
+<h1>Create a Resource Aggregation</h1>
+
+<form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-resource-aggregation/">
+    {% csrf_token %}
+
+    <h3>Describe your Aggregation with metadata:</h3>
+    <p>Use this form to create metadata for your Resource. Be as descriptive as you can since all of this information
+        will show up when your Resource is displayed. You can edit this information later.
+    </p>
+
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Title</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" name="title" id="" placeholder="Title">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Creators</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" name="creators" id="" placeholder="Creators" value="{{ user|best_name }}">
+    </div>
+  </div>
+
+   <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Contributors</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" name="contributors" id="" placeholder="Contributors" value="{{ user|best_name }}">
+    </div>
+   </div>
+
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Abstract</label>
+    <div class="col-sm-10">
+        <textarea class="form-control" name="abstract" id="" cols="30" rows="10" placeholder="Abstract"></textarea>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Subject Keywords</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="" name='keywords' placeholder="Keywords">
+    </div>
+  </div>
+
+<h2>Link a Resource to your aggregation:</h2>
+<p>
+    This must be an existing HydroShare Resource
+</p>
+
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Resource Permalink</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="" name='resource_permalink'>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Description</label>
+    <div class="col-sm-10">
+      <textarea type="text" rows="2" class="form-control" id="" name='resource_description'>
+      </textarea>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-sm-offset-7 col-sm-10">
+      <button type="submit" class="btn btn-primary">Save and Finish</button>
+      <button type="button" class="btn btn-primary" id="save-plus">Save and link more Resources</button>
+    </div>
+  </div>
+
+<input type="hidden" class="form-control" name="more" id="more" value="">
+
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript">
+        $(function() {
+            $("#save-plus").click(function () {
+                var title = document.getElementsByName('title')[0].value,
+                        creators = document.getElementsByName('creators')[0].value,
+                        contributors = document.getElementsByName('contributors')[0].value,
+                        abstract = document.getElementsByName('abstract')[0].value,
+                        keywords = document.getElementsByName('keywords')[0].value,
+                        resource_permalink = document.getElementsByName('resource_permalink')[0].value,
+                        resource_description = document.getElementsByName('resource_description')[0].value,
+                        more = "yes";
+
+                $.ajax({
+                    type: "POST",
+                    url: '/hsapi/_internal/create-resource-aggregation/',
+                    data: {title: title,
+                        creators: creators,
+                        contributors: contributors,
+                        abstract: abstract,
+                        keywords: keywords,
+                        resource_permalink: resource_permalink,
+                        resource_description: resource_description,
+                        more: more},
+                    success: function (data, textStatus) {
+                        var redirect_url = "/hsapi/resource/" + data['agg_short_id'] + "/add-resource/";
+                        window.location.replace(redirect_url);
+                    },
+                    error: function (data, stuff) {
+                        console.log(data);
+                        console.log(stuff);
+                    }
+                });
+            });
+        })
+
+    </script>
+{% endblock %}
+

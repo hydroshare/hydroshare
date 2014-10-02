@@ -1,0 +1,665 @@
+{% extends 'pages/page.html' %}
+
+{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags staticfiles %}
+
+{% block main %}
+
+{% with page.get_content_model as cm %}
+{% keywords_for page as kws %}
+{% set_page_permissions page %}
+
+<style>
+.axis path, .axis line
+        {
+            fill: none;
+            stroke: #777;
+            shape-rendering: crispEdges;
+        }
+
+        .axis text
+        {
+            font-family: 'Arial';
+            font-size: 13px;
+        }
+        .tick
+        {
+            stroke-dasharray: 1, 2;
+        }
+        .bar
+        {
+            fill: FireBrick;
+        }
+
+</style>
+<div id="graph-header-var"></div>
+<div id="graph-header-site"></div>
+<div id="graph-container" style = "width: 1000px, height= 450px">
+
+</div>
+
+<div class="row">
+        <div class="col-md-12">
+            {% block extra_content %}
+            {% endblock %}
+            <div id="loading"><h2>UPDATING DATA . . .</h2><br></div>
+            <table class="table table-striped" id="downloads">
+                <tr>
+                    <td id="csv-name"></td>
+                    <td><a class="btn btn-primary btn-block" href="" id="csv-link">Download</a></td>
+                </tr>
+                <tr>
+                    <td id="xml-name"></td>
+                    <td id="xml-button"><a class="btn btn-primary btn-block" href="" id="xml-link" target="_blank">Download</a></td>
+                </tr>
+                <tr id="xml2"></tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <div class="btn-group">
+                          <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Export all</a>
+                          <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                            <span class="caret"></span>
+                            <span class="sr-only">Toggle Dropdown</span>
+                          </button>
+                          <ul class="dropdown-menu" role="menu">
+                              {% for b in cm.bags.all %}
+                                <li><a href="{{ b.bag.url }}" style="color:black;">{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>
+                              {% endfor %}
+                          </ul>
+                        </div>
+                    </td>
+
+                </tr>
+            </table>
+        </div>
+</div>
+
+<div class="btn-toolbar" style="padding-bottom: 0.5em;">
+    {% if page.perms.change %}
+    <a class="btn btn-primary" id="share" href="#sharing">Share</a>
+    <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="edit">Edit</a>
+    {% endif %}
+
+    <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="snapshot" data-toggle="tooltip" data-placement="top"
+       title="This takes the most up to date data and creates a non referenced time series.">Take a Snapshot</a>
+
+    {% if page.perms.delete %}
+    <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="switch-to-static" data-toggle="tooltip" data-placement="top"
+       title="This converts the most up to date data, and converts the resource to a non referenced time series">Switch to Static</a>
+    <button class="btn btn-danger" id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">Delete</button>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-12">{# <img src="/placeholder.png"></div> #}
+
+        <table class="table">
+            <tr><th>Resource Type</th><td>{{ resource_type }}</td></tr>
+            <tr><th>URL (type: '{{ reference_type|upper }}')</th><td>{{ url }}</tr>
+            {% if site_name %}<tr><th>Site</th><td>{{ site_name }}</td></tr>{% endif %}
+            {% if site_code %}<tr><th>Site Code</th><td>{{ site_code }}</td></tr>{% endif %}
+            {% if variable_name %}<tr><th>Variable</th><td>{{ variable_name }}</td></tr>{% endif %}
+            {% if variable_code %}<tr><th>Variable Code</th><td>{{ variable_code }}</td></tr>{% endif %}
+            <tr><th>Owner</th><td>{{ cm.user|contact|safe }}</td></tr>
+            <tr><th>Added on</th><td>{{ cm.created|date }}</td></tr>
+            <tr><th>Start Date</th><td>{{ cm.start_date }}</td></tr>
+            <tr><th>Last updated by</th><td>{% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
+            <tr><th>Updated on</th><td>{{ cm.updated|date }}</td></tr>
+            <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>
+            <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/r/{{ cm.short_id }}/">http://{{ request.get_host }}/r/{{ cm.short_id }}/</a></td></tr>
+        </table>
+
+    </div>
+</div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Resource Description</h2>
+
+            {% if cm.content %}
+                {% editable cm.content %}
+                <h4>Abstract</h4>
+                {{ cm.content|richtext_filters|safe }}
+                {% endeditable %}
+            {% endif %}
+
+            <h4>References</h4>
+            <ul class="list-unstyled">
+            {% for citation in citations %}
+                <li>{{ citation }}</li>
+            {% empty %}
+                <p><strong>No citations listed</strong></p>
+            {% endfor %}
+            </ul>
+            {% if page.perms.change %}
+                <button class="btn btn-primary" id="add-reference" data-toggle="modal" data-target="#add-reference-dialog">Add reference</button>
+            {% endif %}
+
+
+            <h4>Other Metadata</h4>
+            <table class="table table-condensed">
+            {% for term in dublin_core %}
+                <tr>
+                    <th>{{ term|dcterm }}</th>
+                    <td>{{ term.content }}</td>
+                </tr>
+            {% endfor %}
+            </table>
+            {% if page.perms.change %}
+                <button class="btn btn-primary" id="add-dcterm" data-toggle="modal" data-target="#add-dcterm-dialog">Add metadata term</button>
+            {% endif %}
+
+
+        </div>
+    </div>
+
+    <div class="row" id="sharing">
+        <div class="col-lg-12">
+        <h2>Sharing</h2>
+
+        {% editable cm.public %}
+            {% if cm.public %}
+                This resource can be viewed and downloaded by anyone.
+            {% else %}
+                This resource can be viewed and downloaded only by designated users or research groups.
+            {% endif %}
+        {% endeditable %}
+
+        <div style="padding-top:0.5em">
+        {% if user == cm.user %}
+            You are the owner of this resource.
+        {% elif is_edit_user %}
+            You have been given specific permission to edit this resource.
+        {% elif in_edit_group %}
+            Your research group(s) have been given specific permission to edit this resource.
+        {% elif is_view_user %}
+            You have been given specific permission to view this resource.
+        {% elif in_view_group %}
+            Your research group(s) have been given specific permission to view this resource.
+        {% endif %}
+        </div>
+
+        {% if page.perms.change %}
+        <div class="panel-group" id="accordion">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+                  Users with full read/write permissions on this resource
+                </a>
+              </h4>
+            </div>
+            <div id="collapseOne" class="panel-collapse collapse in">
+              <div class="panel-body">
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                        {% csrf_token %}
+                        <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>
+                        <select name="designees" id="owners-select" multiple class="form-control" size="20">
+                            {% for u in users %}
+                                <option value="{{ u.pk }}" {% if u in owners %}selected{% endif %}>{{ u|best_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input name="t" value="owners" type="hidden"/>
+                        <button type="submit" class="btn btn-primary btn-block">Update access list</button>
+                    </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+                  Users who can edit the content of this resource
+                </a>
+              </h4>
+            </div>
+            <div id="collapseTwo" class="panel-collapse collapse">
+              <div class="panel-body">
+                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                    {% csrf_token %}
+                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>
+                    <select name="designees" id="edit_users-select" multiple class="form-control" size="20">
+                        {% for u in users %}
+                            <option value="{{ u.pk }}" {% if u in edit_users %}selected{% endif %}>{{ u|best_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input name="t" value="edit_users" type="hidden"/>
+                    <button type="submit" class="btn btn-primary btn-block">Update access list</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
+                  Research groups that can edit the content of this resource
+                </a>
+              </h4>
+            </div>
+            <div id="collapseThree" class="panel-collapse collapse">
+              <div class="panel-body">
+                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                        {% csrf_token %}
+                        <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>
+                        <select name="designees" id="edit_groups-select" multiple class="form-control" size="20">
+                            {% for u in groups %}
+                                <option value="{{ u.pk }}" {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>
+                            {% endfor %}
+                        </select>
+                        <input name="t" value="edit_groups" type="hidden"/>
+                        <button type="submit" class="btn btn-primary btn-block">Update access list</button>
+                    </form>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          {% if not cm.public %}
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
+                  Users who can view and download the resource
+                </a>
+              </h4>
+            </div>
+            <div id="collapseFour" class="panel-collapse collapse">
+              <div class="panel-body">
+                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                    {% csrf_token %}
+                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>
+                    <select name="designees" id="view_users-select" multiple class="form-control" size="20">
+                        {% for u in users %}
+                            <option value="{{ u.pk }}" {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input name="t" value="view_users" type="hidden"/>
+                    <button type="submit" class="btn btn-primary btn-block">Update access list</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseFive">
+                  Research groups that can view and download the resource
+                </a>
+              </h4>
+            </div>
+            <div id="collapseFive" class="panel-collapse collapse">
+              <div class="panel-body">
+                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                    {% csrf_token %}
+                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>
+                    <select name="designees" id="view_groups-select" multiple class="form-control" size="20">
+                        {% for u in groups %}
+                            <option value="{{ u.pk }}" {% if u in view_groups %}selected{% endif %}>{{ u }}</option>
+                        {% endfor %}
+                    </select>
+                    <input name="t" value="view_groups" type="hidden"/>
+                    <button type="submit" class="btn btn-primary btn-block">Update access list</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+        </div>
+
+        {% endif %}
+
+
+    </div>
+    </div>
+
+    {% comments_for cm %}
+
+    {#                #}
+    {# dialogs follow #}
+    {#                #}
+
+    <!-- Modal -->
+
+    <div class="modal fade" id="delete-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="submit-for-publication-title">Submit resource for publication</h4>
+          </div>
+          <div class="modal-body">
+
+                <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource entirely. A copy of your 
+                resource data will not be retained by Hydroshare.  We recommend highly that you download the latest copy
+                of your resource before confirming this action.
+              <hr/>
+                <a class="btn btn-primary btn-block" href="{{ bag.bag.url }}">Download resource package</a>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
+          </div>
+        </div>
+      </div>
+    </div>
+        <!-- Modal -->
+    <div class="modal fade" id="add-dcterm-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+        <form action="/hsapi/_internal/{{ cm.short_id }}/add-metadata/">
+
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Add metadata term</h4>
+          </div>
+          <div class="modal-body">
+                    {% csrf_token %}
+
+                    {{ dcterm_frm|crispy }}
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+        </form>
+        </div>
+      </div>
+    </div>
+        <!-- Modal -->
+    <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form action="/hsapi/_internal/{{ cm.short_id }}/add-citation/">
+
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Add reference</h4>
+          </div>
+          <div class="modal-body">
+                  {% csrf_token %}
+                  <div class="form-group">
+                      <label for="add-citation-input">Citation text:</label>
+                      <textarea class="form-control" name="content" id="add-citation-input" cols="30" rows="10"></textarea>
+                  </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST" enctype="multipart/form-data">
+
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>
+          </div>
+          <div class="modal-body">
+                  {% csrf_token %}
+                  <div class="form-group">
+                      <label for="add-citation-input">Select file:</label>
+                      <input type="file" class="form-control" name="file" id="add-file-input" />
+                  </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+
+
+    <link rel="stylesheet" href="../../static/ref_ts/rickshaw/rickshaw.min.css">
+    <script src=" {% static "ref_ts/rickshaw/vendor/d3.min.js" %}"></script>
+    <script src=" {% static "ref_ts/rickshaw/vendor/d3.layout.min.js" %}"></script>
+    <script src=" {% static "ref_ts/rickshaw/rickshaw.min.js" %}"></script>
+    <script src=" {% static "ref_ts/d3/d3.min.js" %}"></script>
+    <script type="text/javascript">
+    $(function() {
+
+        function compare(a,b) {
+            if (a.x < b.x)
+                return -1;
+            if (a.x > b.x)
+                return 1;
+            return 0;
+        }
+
+        function humanFileSize(bytes) {
+            var thresh = 1024;
+            if(bytes < thresh) return bytes + ' B';
+            var units = ['kB','MB','GB','TB','PB','EB','ZB','YB'];
+            var u = -1;
+            do {
+                bytes /= thresh;
+                ++u;
+            } while(bytes >= thresh);
+            return bytes.toFixed(1)+' '+units[u];
+        }
+
+        function endsWith(str, suffix) {
+            return str.indexOf(suffix, str.length - suffix.length) !== -1;
+        }
+
+        function graphVals(graph_data, units) {
+
+            for (i=0; i<graph_data.length; i++){
+                graph_data[i].x = graph_data[i].x*1000;
+            }
+            var minDate = new Date(graph_data[0].x);
+            var maxDate = new Date(graph_data[graph_data.length - 1].x);
+
+            var WIDTH = 1140,
+                HEIGHT = 300,
+                HEIGHT2 = 50,
+                MARGINS = {
+                  top: 20,
+                  right: 40,
+                  bottom: 20,
+                  left: 20
+                },
+                xRange = d3.time.scale().range([MARGINS.left, WIDTH]).domain([minDate, maxDate ]),
+                xRange2 = d3.time.scale().range([MARGINS.left, WIDTH]).domain([minDate, maxDate ]),
+                yRange = d3.scale.linear().range([HEIGHT - MARGINS.top, MARGINS.bottom]).domain([d3.min(graph_data, function(d) {
+                  return d.y;
+                }), d3.max(graph_data, function(d) {
+                  return d.y;
+                })]),
+                yRange2 = d3.scale.linear().range([HEIGHT2 - MARGINS.top, MARGINS.bottom]).domain([d3.min(graph_data, function(d) {
+                  return d.y;
+                }), d3.max(graph_data, function(d) {
+                  return d.y;
+                })]),
+                xAxis = d3.svg.axis()
+                  .scale(xRange)
+                  .tickSize(5)
+                  .tickFormat(d3.time.format('%y'))
+                  .tickSubdivide(true),
+                yAxis = d3.svg.axis()
+                  .scale(yRange)
+                  .tickSize(5)
+                  .orient('left')
+                  .tickSubdivide(true),
+                yAxis2 = d3.svg.axis()
+                  .scale(yRange2)
+                  .tickSize(5)
+                  .orient('left')
+                  .tickSubdivide(true);
+
+            var svg = d3.select("#graph-container").append("svg")
+                .attr("width", $("#graph-container").width())
+                .attr("height", 350 + MARGINS.top + MARGINS.bottom);
+
+            var brush = d3.svg.brush()
+                .x(xRange2)
+                .on("brush", brushed);
+
+            var focus = svg.append("g")
+                .attr("class", "focus")
+                .attr("width", $("#graph-container").width())
+                .attr("height", '300');
+             
+            focus.append('g')
+              .attr('class', 'x axis')
+              .attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')')
+              .call(xAxis);
+             
+            focus.append('g')
+              .attr('class', 'y axis')
+              .attr('transform', 'translate(' + (MARGINS.left) + ',0)')
+              .call(yAxis);
+
+
+
+            var lineFunc = d3.svg.line()
+              .x(function(d) {
+                return xRange(d.x);
+              })
+              .y(function(d) {
+                return yRange(d.y);
+              })
+              .interpolate('linear');
+
+            var lineFunc1 = d3.svg.line()
+              .x(function(d) {
+                return xRange(d.x);
+              })
+              .y(function(d) {
+                return yRange2(d.y);
+              })
+              .interpolate('linear');
+
+            focus.append('path')
+              .attr('d', lineFunc(graph_data))
+              .attr('stroke', 'rgb(31,119,180)')
+              .attr('class','area')
+              .attr('stroke-width', 1.5)
+              .attr('fill', 'none');
+
+            var context = svg.append("g")
+                .attr("class", "context")
+                .attr("transform", "translate(0,300)");
+
+
+            context.append('g')
+              .attr('class', 'x axis')
+              .attr('transform', 'translate(0,' + (HEIGHT2 - MARGINS.bottom) + ')')
+              .call(xAxis);
+
+
+            context.append('path')
+              .attr('d', lineFunc1(graph_data))
+              .attr('stroke', 'rgb(31,119,180)')
+              .attr('stroke-width', 1.5)
+               .attr('class','area')
+              .attr('fill', 'none');
+
+            context.append("g")
+              .attr("class", "x brush")
+              .call(brush)
+            .selectAll("rect")
+              .attr("y", -6)
+              .attr("height", HEIGHT2);
+        function brushed() {
+          xRange.domain(brush.empty() ? xRange2.domain() : brush.extent());
+          focus.select(".area").attr("d", lineFunc(graph_data));
+          focus.select(".x.axis").call(xAxis);
+}
+
+        }
+
+
+        function transformFile() {
+            $.ajax({
+                type:"GET",
+                url:'/hsapi/_internal/{{ short_id }}/transform-file/',
+                success: function(data, stuff){
+                    var xml_text = "<td>" + data['xml_name'] + "</td>" + "<td><a class='btn btn-primary btn-block' href=" + data['xml_link'] + ">Download (" + humanFileSize(data['xml_size']) + ")</a></td>";
+                    $('#xml2').html(xml_text);
+                },
+                error: function(data, stuff){console.log(data, stuff)}
+            });
+        }
+
+        function generateFiles() {
+            $('#downloads').hide();
+            $.ajax({
+                type:"GET",
+                url:'/hsapi/_internal/{{ short_id }}/generate-files/',
+                success: function(data, xhr, status){
+                    var units = data['units'],
+                            d = data['for_graph'],
+                  status_code = data['status_code'],
+                     csv_name = data.csv_name || "",
+                     csv_link = data.csv_link || "",
+                     csv_size = data.csv_size || "",
+                     xml_name = data.xml_name || "",
+                     xml_link = data.xml_link || "",
+                     xml_size = data.xml_size || "";
+                    if (status_code==200 || status_code==503){
+                        $('#csv-name').html(csv_name);
+                        $('#csv-link').html('Download (' + humanFileSize(csv_size) +')');
+                        document.getElementById('csv-link').href = csv_link;
+                        $('#xml-name').html(xml_name);
+                        $('#xml-link').html('Download (' + humanFileSize(xml_size) +')');
+                        document.getElementById('xml-link').href = xml_link;
+                        $('#downloads').show();
+                        if (units==undefined){units='Data'}
+                        d.sort(compare);
+                        graphVals(d, units);
+                        if (data['variable_name']){
+                            var var_text = '<h2>' + data['variable_name'] + '</h2>';
+                            $('#graph-header-var').html(var_text);}
+                        if (data['site_name']){
+                            var site_text = '<h3>&nbsp;&nbsp;&nbsp; at ' + data['site_name'] + '</h3>';
+                            $('#graph-header-site').html(site_text);}
+                    } else if(status_code==404) {
+                        $('#loading').html('<h2>Unable to reach service and no data exists for this resource.</h2><br>');
+                    }
+                    if (status_code==200){$('#loading').hide();
+                    } else if (status_code==503) {$('#loading').html('<h3>Unable to reach service. This is the latest data</h3><br>');}
+                    if (endsWith(xml_name, 'wml_1.xml')){
+                        transformFile();
+                    }
+
+                },
+                error: function(data, stuff){
+                    console.log(data);
+                    console.log(stuff);
+                }
+            });
+        }
+
+        $(document).ready(function(){
+            generateFiles();
+        });
+
+        $('#snapshot').tooltip({animation: true, delay: { show: 500, hide: 100 }});
+
+        $('#switch-to-static').tooltip({animation: true, delay: { show: 500, hide: 100 }});
+
+    });
+    </script>
+{% endwith %}
+{% endblock %}
+
+

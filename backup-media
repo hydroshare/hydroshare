@@ -1,0 +1,9 @@
+#!/bin/bash
+
+mkdir /tmp/media
+rsync -avh --rsh="ssh -p 1338" docker@192.168.59.103:/home/docker/hydroshare/static/media /tmp/media
+HERE=$PWD
+pushd $PWD
+cd /tmp
+tar -czf "$HERE/media.`date`.tar.gz" media
+rm -rf /tmp/media

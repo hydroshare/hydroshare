@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load mezzanine_tags geoanalytics_tags hydroshare_tags %}
+
+{% block title %}User profile for {{ u|best_name }}{% endblock %}
+
+{% block main %}
+{% with u.get_profile as profile %}
+<div class="row">
+<div class="col-md-3">
+    <h2>Profile information</h2>
+
+    {% if profile.picture %}
+    <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>
+    {% endif %}
+
+    <ul class="list-unstyled">
+        <li><strong>Name:</strong> {{ u.first_name }} {{ u.last_name }}</li>
+
+        {% if profile.public %}
+            {% if profile.title %}
+            <li><strong>Title</strong> {{ profile.title }}</li>
+            {% endif %}
+
+            {% if profile.profession %}
+            <li><strong>Profession:</strong> {{ profile.profession }}</li>
+            {% endif %}
+
+            {% if profile.subject_areas %}
+            <li><strong>Subject areas:</strong> {{ profile.subject_areas }}</li>
+            {% endif %}
+
+            {% if profile.organization %}
+            <li><strong>Organization:</strong> {{ profile.organization }}</li>
+            {% endif %}
+
+            {% if profile.organization_type %}
+            <li><strong>Organization Type:</strong> {{ profile.organization_type }}</li>
+            {% endif %}
+
+            {% if profile.phone_1 %}
+            <li><strong>Phone 1:</strong> {{ profile.phone_1 }} {{ profile.phone_1_type }}</li>
+            {% endif %}
+
+            {% if profile.phone_2 %}
+            <li><strong>Phone 2:</strong> {{ profile.phone_2 }} {{ profile.phone_2_type }}</li>
+            {% endif %}
+
+            {% if u.email %}
+            <li><strong>Email:</strong> <a href="mailto:{{ u.email }}">Send email to {{ u.first_name }}</a></li>
+            {% endif %}
+            {% if profile.cv %}
+            <li><a href="{{ profile.cv.url }}">Download a curriculum vitae</a></li>
+            {% endif %}
+        {% else %}
+            <li>User has chosen to make their profile information private.</li>
+        {% endif %}
+    </ul>
+
+
+</div>
+
+<div class="col-md-5 text-justify">
+<h2>About {{ u.first_name }}</h2>{{ profile.details|richtext_filters|safe }}</div>
+
+<div class="col-md-4">
+<h2>Resources</h2>
+    <ul class="nav nav-stacked">
+    {% for res in resources %}
+        <li><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></li>
+    {% endfor %}
+    </ul>
+</div>
+</div>
+
+
+{% endwith %}
+{% endblock %}

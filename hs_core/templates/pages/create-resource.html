@@ -1,0 +1,118 @@
+{% extends "pages/page.html" %}
+
+{% load geoanalytics_tags mezzanine_tags pages_tags hydroshare_tags %}
+
+{% block title %}
+
+    Create Resource
+
+{% endblock %}
+
+{% block main %}
+
+    <h2>Upload files to create a new Resource:</h2>
+
+    <ul>
+    <li>All of the files you upload here will be grouped together into a "Resource"</li>
+    <li>File size is limited to 4 GB per file</li>
+    <li>Once you've added all of your files, you can describe your Resource using the form below</li>
+    <li>Files are private, until you choose to share them</li>
+    </ul>
+
+<h3>Add your files here:</h3>
+
+<form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-resource/">
+    {% csrf_token %}
+
+    <table class="table" id="file-list">
+    <tbody id="files">
+        <tr>
+            <td><input class="form-control" type="file" name="files" id="" multiple/></td>
+        </tr>
+    </tbody>
+    </table>
+
+    <h2>Describe your Resource with metadata:</h2>
+
+    <p>Use this form to create metadata for your Resource. Be as descriptive as you can since all of this information
+        will show up when your Resource is displayed. You can edit this information later.
+    </p>
+
+<h3>Add your metadata here:</h3>
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Resource Type</label>
+    <div class="col-sm-10">
+        <select class="form-control" name="resource-type" id="resource-type">
+            <option value="InstResource">RHESSys Instance Resource</option>
+            <option value="GenericResource">Generic Resource</option></select>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Title</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" name="title" id="" placeholder="Title">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Creators</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" name="creators" id="" placeholder="Creators" value="{{ user|best_name }}">
+    </div>
+  </div>
+
+   <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Contributors</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" name="contributors" id="" placeholder="Contributors" value="{{ user|best_name }}">
+    </div>
+   </div>
+
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Abstract</label>
+    <div class="col-sm-10">
+        <textarea class="form-control" name="abstract" id="" cols="30" rows="10" placeholder="Abstract"></textarea>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="" class="col-sm-2 control-label">Subject Keywords</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="" name='keywords' placeholder="Keywords">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-primary btn-lg btn-block">Create Resource</button>
+    </div>
+  </div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript">
+    function deleteRow(r) {
+            $(r).remove();
+    }
+
+    $(function() {
+        var fileCount = 1;
+
+
+        $("#add-row").click(function() {
+            fileCount++;
+
+            $("#files").append(
+                '<tr id="file' + fileCount + '">' +
+                    '<td><input class="form-control" type="file" name="file' + fileCount + '"/></td>' +
+                    '<td><button class="btn btn-danger btn-block deleter" onClick=\'deleteRow("#file' + fileCount + '")\'>Delete</button></td>' +
+                '</tr>'
+            );
+            return false;
+        });
+    });
+    </script>
+{% endblock %}

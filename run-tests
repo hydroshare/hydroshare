@@ -1,0 +1,3 @@
+#!/bin/bash
+
+fig run -rm hydroshare python manage.py test $1

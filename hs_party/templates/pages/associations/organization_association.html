@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load pages_tags mezzanine_tags %}
+
+{% block main %}
+
+    <h2>  {{ organizationassociation.pk }}</h2>
+
+    {% if request.user.is_authenticated %}
+ <a href="{%   url 'association_edit' organizationassociation.pk %}">
+                      Edit {{ organizationassociation.pk }} </a>
+    {%  endif %}
+ <div>
+ <table class="table">
+
+     <tr>
+         <td>organization.name:</td>
+         <td> <a href="{% url 'organization_detail' organizationassociation.organization.pk %}">
+              {{ organizationassociation.organization.name|truncatewords_html:50 }}
+         </a></td>
+     </tr>
+         <tr>
+         <td>person.name:</td>
+         <td><a href="{% url 'person_detail' organizationassociation.person.pk %}">
+              {{ organizationassociation.person.name }}
+         </a></td>
+     </tr>
+        <tr>
+         <td>beginDate:</td>
+         <td> {{ organizationassociation.beginDate }}</td>
+     </tr>
+        <tr>
+         <td>endDate:</td>
+         <td> {{ organizationassociation.endDate }}</td>
+     </tr>
+     <tr>
+         <td>presentOrganization</td>
+         <td> {{ organizationassociation.presentOrganization }}</td>
+     </tr>
+
+
+
+
+
+ </table>
+
+
+{% endblock %}
