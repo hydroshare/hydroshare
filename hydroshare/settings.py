@@ -267,7 +267,6 @@ INSTALLED_APPS = (
     "dublincore",
     "hs_core",
     "hs_party",
-    "hs_rhessys_inst_resource",
     "hs_metrics",
 	"hs_rhessys_inst_resource",
     "django_docker_processes"
