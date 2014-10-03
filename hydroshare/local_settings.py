@@ -117,7 +117,7 @@ IRODS_CWD='/hydroZone/home/hsdev'
 IRODS_ZONE='hydroZone'
 IRODS_USERNAME='hsdev'
 IRODS_AUTH='devwater1'
-IRODS_GLOBAL_SESSION=True
+IRODS_GLOBAL_SESSION=False
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST_USER = 'hydroshare@hydroshare.org'

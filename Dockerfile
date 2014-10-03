@@ -16,7 +16,7 @@ RUN pip install django-jsonfield
 RUN pip install docker-py
 
 RUN rm -rf /tmp/pip-build-root
-RUN mkdir /var/run/sshd
+RUN mkdir -p /var/run/sshd
 RUN echo root:docker | chpasswd
 RUN sed "s/without-password/yes/g" /etc/ssh/sshd_config > /etc/ssh/sshd_config2
 RUN sed "s/UsePAM yes/UsePAM no/g" /etc/ssh/sshd_config2 > /etc/ssh/sshd_config
