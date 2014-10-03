@@ -9,7 +9,6 @@ from dublincore.models import QualifiedDublinCoreElement
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
 from django.core.serializers import get_serializer
-from django.core.serializers import get_serializer
 from . import hs_bagit
 #from hs_scholar_profile.models import *
 
