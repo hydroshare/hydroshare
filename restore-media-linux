@@ -1,0 +1,12 @@
+#!/bin/bash
+
+mkdir /tmp/media
+pushd $PWD > /dev/null
+cp "$1" /tmp
+cd /tmp
+tar -xzf "$1" 
+cd media
+scp -r -P 1338 . root@localhost:/home/docker/hydroshare/static
+popd
+rm -rf /tmp/media
+
