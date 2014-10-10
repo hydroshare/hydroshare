@@ -38,6 +38,8 @@ defaultworker:
     C_FORCE_ROOT: 1
   volumes_from:
     - hydroshare
+  volumes:
+    - "/var/run/docker.sock:/docker.sock"
   links:
     - postgis:postgis
     - redis:redis
@@ -56,6 +58,8 @@ dockerworker:
     C_FORCE_ROOT: 1
   volumes_from:
     - hydroshare
+  volumes:
+    - "/var/run/docker.sock:/docker.sock"
   links:
     - postgis:postgis
     - redis:redis

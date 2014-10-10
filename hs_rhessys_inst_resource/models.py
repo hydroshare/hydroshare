@@ -24,7 +24,6 @@ import os
 #
 # To create a new resource, use these three super-classes.
 #
-
 class InstResource(Page, RichText, AbstractResource):
     class Meta:
         verbose_name = 'RHESSys Instance Resource'
@@ -56,16 +55,20 @@ def when_my_process_ends(sender, instance, result_text=None, result_data=None, f
         # make something out of the result data - result_data is a dict, result_text is plaintext
         # files are UploadedFile instances
         # logs are plain text stdout and stderr from the finished container
+        print "when_my_process_ends"
         owner = User.objects.first() # FIXME
         hydroshare.create_resource('GenericResource', owner, instance.profile.name + ' - ' + now().isoformat(), files=files, content=logs)
+        #process.delete() # no reason to leave it hanging around in the database
 
 def when_my_process_fails(sender, instance, error_text=None, error_data=None, logs=None, **kw):
         # do something out of the error data
         # error_data is a dict
         # error_text is plain text
         # logs are plain text stdout and stderr from the dead container
+        print "when_my_process_fails"
         instance.logs += error_text
         instance.save()
+        #process.delete() # no reason to leave it hanging around in the database
 
 finished = signals.process_finished.connect(when_my_process_ends, weak=False)
 error_handler = signals.process_aborted.connect(when_my_process_fails, weak=False)
@@ -126,15 +129,16 @@ def main_page(request, page):
             #content_model.commit_id = form.cleaned_data['commit_id']
             content_model.save()
             input_url = content_model.bags.first().bag.url
-            process_dict = {'INPUT_URL':input_url}
-            print "input_url is" + input_url
+            env_dict = {'INPUT_URL':input_url}
             my_profile = get_object_or_404(DockerProfile, name='RHESSys_Docker_Profile')
+            #my_profile = get_object_or_404(DockerProfile, name='Pandoc')
+            #global process
             process = DockerProcess.objects.create(profile=my_profile) # creates a unique ID
-            promise = tasks.run_process.apply_async(args=[process, process_dict])
+            #promise = tasks.run_process.delay(process, **env_dict)
+            promise = tasks.run_process.apply_async(args=[process, {}], **env_dict)
             logs = promise.get()
             print logs
             process.delete() # no reason to leave it hanging around in the database
-
     else:
         cm =page.get_content_model()
         form = InputForm(initial={

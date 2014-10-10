@@ -11,7 +11,8 @@ NEVERCACHE_KEY = "7b205669-41dd-40db-9b96-c6f93b66123496a56be1-607f-4dbf-bf62-33
 
 ALLOWED_HOSTS = "*"
 
-RABBITMQ_HOST = 'rabbitmq'
+#RABBITMQ_HOST = 'rabbitmq'
+RABBITMQ_HOST = os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR', 'localhost')
 RABBITMQ_PORT = '5672'
 
 REDIS_HOST = os.environ.get('REDIS_PORT_6379_TCP_ADDR', 'localhost')
@@ -60,7 +61,8 @@ CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 CELERY_ROUTES = ('django_docker_processes.router.DockerRouter',)
 
-DOCKER_URL = 'tcp://localhost:2375/'
+#DOCKER_URL = 'tcp://localhost:2375/'
+DOCKER_URL = 'unix://docker.sock/'
 DOCKER_API_VERSION = '1.12'
 
 
