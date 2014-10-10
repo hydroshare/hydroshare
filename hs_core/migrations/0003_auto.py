@@ -40,9 +40,9 @@ class Migration(SchemaMigration):
         db.create_table(m2m_table_name, (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
             ('genericresource', models.ForeignKey(orm[u'hs_core.genericresource'], null=False)),
-            ('user', models.ForeignKey(orm[u'auth.user'], null=False))
+            ('group', models.ForeignKey(orm[u'auth.group'], null=False))
         ))
-        db.create_unique(m2m_table_name, ['genericresource_id', 'user_id'])
+        db.create_unique(m2m_table_name, ['genericresource_id', 'group_id'])
 
 
     def backwards(self, orm):
