@@ -76,4 +76,3 @@ urllib3==1.5
 wsgiref==0.1.2
 google.foresite-toolkit
 pandas
-suds-jurko

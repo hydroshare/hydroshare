@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APP=$1
-HOST=localhost
+HOST=192.168.59.103
 PORT=1338
 USER=docker
 
