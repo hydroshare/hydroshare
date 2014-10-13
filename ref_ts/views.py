@@ -252,17 +252,16 @@ def generate_files(request, shortkey, *args, **kwargs):
                 xml_size = f.resource_file.size
         status_code = 200
         data = {'for_graph': ts.get('for_graph'),
-                'values': ts.get('values'),
-                'units': ts.get('units'),
-                'site_name': ts.get('site_name'),
-                'variable_name': ts.get('variable_name'),
-                'status_code': status_code,
-                'csv_name': csv_name,
-                'xml_name': xml_name,
-                'csv_link': csv_link,
-                'csv_size': csv_size,
-                'xml_link': xml_link,
-                'xml_size': xml_size}
+            'units': ts.get('units'),
+            'site_name': ts.get('site_name'),
+            'variable_name': ts.get('variable_name'),
+            'status_code': status_code,
+            'csv_name': csv_name,
+            'xml_name': xml_name,
+            'csv_link': csv_link,
+            'csv_size': csv_size,
+            'xml_link': xml_link,
+            'xml_size': xml_size}
         return json_or_jsonp(request, data)  # successfully generated new files
     except Exception:  # most likely because the server is unreachable
         files = ResourceFile.objects.filter(object_id=res.pk)
@@ -278,7 +277,6 @@ def generate_files(request, shortkey, *args, **kwargs):
         if xml_file is None:
             status_code = 404
             data = {'for_graph': ts.get('for_graph'),
-                    'values': ts.get('values'),
                     'units': ts.get('units'),
                     'site_name': ts.get('site_name'),
                     'variable_name': ts.get('variable_name'),
@@ -301,15 +299,14 @@ def generate_files(request, shortkey, *args, **kwargs):
         else:
             status_code = 503
         data = {'for_graph': ts.get('for_graph'),
-                'values': ts.get('values'),
-                'units': ts.get('units'),
-                'site_name': ts.get('site_name'),
-                'variable_name': ts.get('variable_name'),
-                'status_code': status_code,
-                'csv_link': csv_link,
-                'csv_size': csv_size,
-                'xml_link': xml_link,
-                'xml_size': xml_size}
+                    'units': ts.get('units'),
+                    'site_name': ts.get('site_name'),
+                    'variable_name': ts.get('variable_name'),
+                    'status_code': status_code,
+                    'csv_link': csv_link,
+                    'csv_size': csv_size,
+                    'xml_link': xml_link,
+                    'xml_size': xml_size}
         return json_or_jsonp(request, data) # did not generate new files, return old ones
 
 def transform_file(request, shortkey, *args, **kwargs):

@@ -149,11 +149,8 @@ def parse_1_0_and_1_1(root):
             units, site_name, variable_name = None, None, None
             unit_is_set = False
             for element in root.iter():
-                if '}' in element.tag:
-                    brack_lock = element.tag.index('}')  #The namespace in the tag is enclosed in {}.
-                    tag = element.tag[brack_lock+1:]     #Takes only actual tag, no namespace
-                else:
-                    tag = element.tag
+                brack_lock = element.tag.index('}')  #The namespace in the tag is enclosed in {}.
+                tag = element.tag[brack_lock+1:]     #Takes only actual tag, no namespace
                 if 'unitName' == tag:  # in the xml there is a unit for the value, then for time. just take the first
                     if not unit_is_set:
                         units = element.text
@@ -299,6 +296,7 @@ due to incorrect formatting in the web service format.")
             response = r.text.encode('utf-8')
     else:
         raise Http404()
+
     root = etree.XML(response)
     wml_version = get_version(root)
     if wml_version == '1':

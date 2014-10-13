@@ -30,88 +30,18 @@
             fill: FireBrick;
         }
 
-        .brush .extent {
-            stroke: #fff;
-            fill-opacity: .125;
-            shape-rendering: crispEdges;
-        }
-        #graph-area{
-            width: 100%;
-            height: 510px;
-        }
-
-        #graph-container{
-            height:100%;
-            width: -moz-calc(100% - 307px);
-            width: -webkit-calc(100% - 307px);
-            width: calc(100% - 307px);
-            float:left;
-            padding-top: 5px;
-            overflow-y: auto;
-        }
-
-        #panel-right{
-            overflow-y: scroll;
-            background: white;
-            overflow-x: hidden;
-            position: absolute;
-            right: 0px;
-            width: 307px;
-            height: 500px;
-            float: right;
-            border-left: 1px solid #aaa;
-        }
-
 </style>
-<link id="bsdp-css" href="{% static "ref_ts/datepicker/css/datepicker.css" %}" rel="stylesheet">
+<div id="graph-header-var"></div>
+<div id="graph-header-site"></div>
+<div id="graph-container" style = "width: 1000px, height= 450px">
+
+</div>
+
 <div class="row">
         <div class="col-md-12">
             {% block extra_content %}
-                <div id="loading"><h2>UPDATING DATA . . .</h2><br></div>
-                <div id="graph-header-var"></div>
-                <div id="graph-header-site"></div>
-                <div id="graph-area">
-                    <div id="graph-container"></div>
-                    <div id="panel-right">
-                        <div id="plot-options">
-                            <table class="table">
-                                        <div id="dateIntervals" class="btn-group">
-                                              <button id="btnAll" type="button" class="btn btn-default">All</button>
-                                              <button id="btnLastMonth" type="button" class="btn btn-default">Last Month</button>
-                                              <button id="btnLastWeek" type="button" class="btn btn-default">Last Week</button>
-                                        </div>
-
-                                        <tbody>
-                                            <tr><td>Begin Date</td><td><input id="dpd1" type="text" class="datepicker" data-date-format="m/dd/yyyy"></td></tr>
-                                            <tr><td>End Date</td><td><input id="dpd2" type="text" class="datepicker" data-date-format="m/dd/yyyy"></td></tr>
-                                            <tr><td>Visualization</td><td>
-                                              <div class="btn-group">
-                                                  <button id="visualizationDropDown" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown">
-                                                    Time Series <span class="caret"></span>
-                                                  </button>
-                                                  <ul class="dropdown-menu">
-                                                      <li><a href="#" id="btnTimeSeries">Time Series</a></li>
-                                                      <li><a href="#" id="btnHistogram">Histogram</a></li>
-                                                      <li><a href="#" id="btnBoxAndWhisker">Box and Whisker</a></li>
-                                                  </ul>
-                                              </div>
-                                            </td></tr>
-                                        <tr><td></td><td><button id ="btnSetPlotOptions" type="button" class="btn btn-primary"> Plot</button></td></tr>
-                                        </tbody>
-                                   </table>
-                                </div>
-                        <div id="summaryContainer" class="panel panel-default">
-                           <div class="panel-heading  glyphicon glyphicon-list-alt"><span class="container-title"> Summary Statistics</span></div>
-                           <table class="table" id="statisticsTable">
-                                <tbody>
-
-                                </tbody>
-                           </table>
-                        </div>
-                    </div>
-                </div>
             {% endblock %}
-
+            <div id="loading"><h2>UPDATING DATA . . .</h2><br></div>
             <table class="table table-striped" id="downloads">
                 <tr>
                     <td id="csv-name"></td>
@@ -149,6 +79,9 @@
     <a class="btn btn-primary" id="share" href="#sharing">Share</a>
     <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="edit">Edit</a>
     {% endif %}
+
+    <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="snapshot" data-toggle="tooltip" data-placement="top"
+       title="This takes the most up to date data and creates a non referenced time series.">Take a Snapshot</a>
 
     {% if page.perms.delete %}
     <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="switch-to-static" data-toggle="tooltip" data-placement="top"
@@ -494,10 +427,13 @@
     </div>
 
 
-    <script src=" {% static "ref_ts/d3/d3.min.js" %}"></script>
-    <script src=" {% static "ref_ts/datepicker/js/bootstrap-datepicker.js" %}"></script>
-    <script type="text/javascript">
 
+    <link rel="stylesheet" href="../../static/ref_ts/rickshaw/rickshaw.min.css">
+    <script src=" {% static "ref_ts/rickshaw/vendor/d3.min.js" %}"></script>
+    <script src=" {% static "ref_ts/rickshaw/vendor/d3.layout.min.js" %}"></script>
+    <script src=" {% static "ref_ts/rickshaw/rickshaw.min.js" %}"></script>
+    <script src=" {% static "ref_ts/d3/d3.min.js" %}"></script>
+    <script type="text/javascript">
     $(function() {
 
         function compare(a,b) {
@@ -507,7 +443,6 @@
                 return 1;
             return 0;
         }
-
 
         function humanFileSize(bytes) {
             var thresh = 1024;
@@ -525,23 +460,25 @@
             return str.indexOf(suffix, str.length - suffix.length) !== -1;
         }
 
-        function graphVals(graph_data, units, varName) {
+        function graphVals(graph_data, units) {
 
-
+            for (i=0; i<graph_data.length; i++){
+                graph_data[i].x = graph_data[i].x*1000;
+            }
             var minDate = new Date(graph_data[0].x);
             var maxDate = new Date(graph_data[graph_data.length - 1].x);
 
-            var WIDTH = 800,
-                HEIGHT = 432,
+            var WIDTH = 1140,
+                HEIGHT = 300,
                 HEIGHT2 = 50,
                 MARGINS = {
                   top: 20,
                   right: 40,
                   bottom: 20,
-                  left: 40
+                  left: 20
                 },
-                xRange = d3.time.scale().range([MARGINS.left, WIDTH-MARGINS.left-MARGINS.right]).domain([minDate, maxDate ]),
-                xRange2 = d3.time.scale().range([MARGINS.left, WIDTH-MARGINS.left-MARGINS.right]).domain([minDate, maxDate ]),
+                xRange = d3.time.scale().range([MARGINS.left, WIDTH]).domain([minDate, maxDate ]),
+                xRange2 = d3.time.scale().range([MARGINS.left, WIDTH]).domain([minDate, maxDate ]),
                 yRange = d3.scale.linear().range([HEIGHT - MARGINS.top, MARGINS.bottom]).domain([d3.min(graph_data, function(d) {
                   return d.y;
                 }), d3.max(graph_data, function(d) {
@@ -555,25 +492,22 @@
                 xAxis = d3.svg.axis()
                   .scale(xRange)
                   .tickSize(5)
+                  .tickFormat(d3.time.format('%y'))
                   .tickSubdivide(true),
                 yAxis = d3.svg.axis()
                   .scale(yRange)
                   .tickSize(5)
                   .orient('left')
+                  .tickSubdivide(true),
+                yAxis2 = d3.svg.axis()
+                  .scale(yRange2)
+                  .tickSize(5)
+                  .orient('left')
                   .tickSubdivide(true);
 
-            $("#graph-container").html("");
-
             var svg = d3.select("#graph-container").append("svg")
-                .attr("width", 833)
-                .attr("height", 500);
-
-            svg.append("clipPath")
-                .attr("id", "clip")
-              .append("rect")
-                .attr("width",  WIDTH-2*MARGINS.left-MARGINS.right)
-                .attr("x",MARGINS.left)
-                .attr("height", HEIGHT);
+                .attr("width", $("#graph-container").width())
+                .attr("height", 350 + MARGINS.top + MARGINS.bottom);
 
             var brush = d3.svg.brush()
                 .x(xRange2)
@@ -581,26 +515,19 @@
 
             var focus = svg.append("g")
                 .attr("class", "focus")
-                .attr("width", 762)
-                .attr("height", 300);
+                .attr("width", $("#graph-container").width())
+                .attr("height", '300');
              
-            focus.append('g')  // Add the x axis
-                .attr('class', 'x axis')
-                .attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')')
-                .call(xAxis);
+            focus.append('g')
+              .attr('class', 'x axis')
+              .attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')')
+              .call(xAxis);
+             
+            focus.append('g')
+              .attr('class', 'y axis')
+              .attr('transform', 'translate(' + (MARGINS.left) + ',0)')
+              .call(yAxis);
 
-            svg.append('g')  // Add the y axis
-                .attr('class', 'y axis')
-                .attr('transform', 'translate(' + (MARGINS.left) + ',0)') // not totall sure this is necessary
-                .call(yAxis);
-
-            svg.append("text")  // y axis label
-                .attr("transform", "rotate(-90)")
-                .attr("y", 6)
-                .attr("x",0 - (HEIGHT / 2))
-                .attr("dy", ".75em")
-                .attr("text-anchor", "middle")
-                .text(varName + " ("+units+")");
 
 
             var lineFunc = d3.svg.line()
@@ -622,19 +549,15 @@
               .interpolate('linear');
 
             focus.append('path')
-                .attr('d', lineFunc(graph_data))
-                .attr('stroke', 'rgb(31,119,180)')
-                .attr('class','line')
-                .attr('stroke-width', 1.5)
-                .attr("clip-path", "url(#clip)")
-                .attr('fill', 'none');
-
-
+              .attr('d', lineFunc(graph_data))
+              .attr('stroke', 'rgb(31,119,180)')
+              .attr('class','area')
+              .attr('stroke-width', 1.5)
+              .attr('fill', 'none');
 
             var context = svg.append("g")
                 .attr("class", "context")
-                .attr("transform", "translate(0," + HEIGHT + ")");
-
+                .attr("transform", "translate(0,300)");
 
 
             context.append('g')
@@ -647,137 +570,23 @@
               .attr('d', lineFunc1(graph_data))
               .attr('stroke', 'rgb(31,119,180)')
               .attr('stroke-width', 1.5)
-              .attr('class','line')
+               .attr('class','area')
               .attr('fill', 'none');
 
             context.append("g")
               .attr("class", "x brush")
               .call(brush)
             .selectAll("rect")
-              .attr("y", 0)
-              .attr("height", 35);
+              .attr("y", -6)
+              .attr("height", HEIGHT2);
         function brushed() {
           xRange.domain(brush.empty() ? xRange2.domain() : brush.extent());
-          focus.select(".line").attr("d", lineFunc(graph_data));
+          focus.select(".area").attr("d", lineFunc(graph_data));
           focus.select(".x.axis").call(xAxis);
-            }
-        var summary = calcSummaryStats(graph_data);
-        setSummaryStatistics(summary);
-        getDatasetsAfterFilters(glob_graph_data);
+}
+
         }
 
-        function calcSummaryStats(data){
-            var summary = {};
-            summary = {
-                maximum:-Infinity,
-                minimum:Infinity,
-                arithmeticMean: 0,
-                geometricSum:0,
-                geometricMean:0,
-                deviationSum:0,
-                standardDeviation:0,
-                observations:0,
-                coefficientOfVariation:0,
-                quantile10:0,
-                quantile25:0,
-                median:0,
-                quantile75:0,
-                quantile90:0
-            };
-
-            if (data.length == 0){
-                summary.maximum = "NaN";
-                summary.minimum = "NaN";
-                summary.arithmeticMean = "NaN";
-                summary.geometricSum = "NaN";
-                summary.geometricMean = "NaN";
-                summary.deviationSum = "NaN";
-                summary.standardDeviation = "NaN";
-                summary.observations = 0;
-                summary.quantile10 = "NaN";
-                summary.quantile25 = "NaN";
-                summary.median = "NaN";
-                summary.quantile75 = "NaN";
-                summary.quantile90 = "NaN";
-            }
-           else {
-                var y_vals = [];
-                for (var j = 0; j < data.length; j++) {
-                    y_vals.push(data[j].y)
-                }
-                // Quantiles
-                summary.quantile10 = d3.quantile(y_vals, .1).toFixed(2);
-                summary.quantile25 = d3.quantile(y_vals, .25).toFixed(2);
-                summary.median = d3.quantile(y_vals, .5).toFixed(2);
-                summary.quantile75 = d3.quantile(y_vals, .75).toFixed(2);
-                summary.quantile90 = d3.quantile(y_vals, .9).toFixed(2);
-                // Number of observations
-                summary.observations = data.length;
-                // Maximum and Minimum
-                summary.maximum = d3.max(data, function (d) {
-                    return d.y;
-                });  //good
-                summary.minimum = d3.min(data, function (d) {
-                    return d.y;
-                });  //good
-
-                // Arithmetic Mean
-                summary.arithmeticMean = d3.mean(data, function (d) {
-                    return d.y;
-                }).toFixed(2);
-
-                // Standard Deviation
-                summary.deviationSum = d3.sum(data, function (d) {
-                    return Math.pow(parseFloat(d.y) - summary.arithmeticMean, 2)
-                }).toFixed(2);
-                summary.standardDeviation = (Math.pow(summary.deviationSum / data.length, (1 / 2))).toFixed(2);
-
-                // Geometric Mean
-                summary.geometricSum = d3.sum(data, function (d) {
-                    if (d.y != 0) return Math.log(Math.abs(d.y));
-                }).toFixed(2);
-                summary.geometricMean = (Math.pow(2, (summary.geometricSum / data.length))).toFixed(2);
-
-                // Coefficient of Variation
-                var variation = summary.standardDeviation / summary.arithmeticMean;
-                if (variation == Infinity || variation == -Infinity) {
-                    variation = null;
-                }
-                summary.coefficientOfVariation = ((summary.standardDeviation / summary.arithmeticMean) * 100).toFixed(2) + "%";
-
-                // Add commas
-                summary.arithmeticMean = numberWithCommas(summary.arithmeticMean);
-                summary.geometricMean = numberWithCommas(summary.geometricMean);
-                summary.observations = numberWithCommas(summary.observations);
-                summary.quantile10 = numberWithCommas(summary.quantile10);
-                summary.quantile25 = numberWithCommas(summary.quantile25);
-                summary.median = numberWithCommas(summary.median);
-                summary.quantile75 = numberWithCommas(summary.quantile75);
-                summary.quantile90 = numberWithCommas(summary.quantile90);
-                return summary;
-            }
-    }
-
-        function numberWithCommas(x) {
-        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            }
-
-        function setSummaryStatistics(summary){
-        $("#statisticsTable tbody").empty();
-        $("#statisticsTable tbody").append(
-            '<tr><td>Arithmetic Mean</td><td>' + summary.arithmeticMean + '</td></tr>\
-                    <tr><td>Geometric Mean</td><td>'+ summary.geometricMean + '</td></tr>\
-                    <tr><td>Maximum</td><td>' + summary.maximum + '</td></tr>\
-                    <tr><td>Minimum</td><td>' + summary.minimum + '</td></tr>\
-                    <tr><td>Standard Deviation</td><td>' + summary.standardDeviation + '</td></tr>\
-                    <tr><td>10%</td><td>'+ summary.quantile10 +'</td></tr>\
-                    <tr><td>25%</td><td>'+ summary.quantile25 +'</td></tr>\
-                    <tr><td>Median, 50%</td><td>'+ summary.median +'</td></tr>\
-                    <tr><td>75%</td><td>'+ summary.quantile75 +'</td></tr>\
-                    <tr><td>90%</td><td>'+ summary.quantile90 +'</td></tr>\
-                    <tr><td>Number of Observations</td><td>'+ summary.observations +'</td></tr>'
-        );
-    }
 
         function transformFile() {
             $.ajax({
@@ -799,7 +608,6 @@
                 success: function(data, xhr, status){
                     var units = data['units'],
                             d = data['for_graph'],
-                         vals = data['values'],
                   status_code = data['status_code'],
                      csv_name = data.csv_name || "",
                      csv_link = data.csv_link || "",
@@ -807,7 +615,6 @@
                      xml_name = data.xml_name || "",
                      xml_link = data.xml_link || "",
                      xml_size = data.xml_size || "";
-              glob_graph_data = d;
                     if (status_code==200 || status_code==503){
                         $('#csv-name').html(csv_name);
                         $('#csv-link').html('Download (' + humanFileSize(csv_size) +')');
@@ -818,16 +625,9 @@
                         $('#downloads').show();
                         if (units==undefined){units='Data'}
                         d.sort(compare);
-                        for (var i=0; i<d.length; i++){
-                                d[i].x = d[i].x*1000;
-                            }
-
-                        if(data['variable_name']){
-                            var varName = data['variable_name'];
-                        }
-                        graphVals(d, units, varName);
+                        graphVals(d, units);
                         if (data['variable_name']){
-                            var var_text = '<h2>' + varName + '</h2>';
+                            var var_text = '<h2>' + data['variable_name'] + '</h2>';
                             $('#graph-header-var').html(var_text);}
                         if (data['site_name']){
                             var site_text = '<h3>&nbsp;&nbsp;&nbsp; at ' + data['site_name'] + '</h3>';
@@ -836,7 +636,6 @@
                         $('#loading').html('<h2>Unable to reach service and no data exists for this resource.</h2><br>');
                     }
                     if (status_code==200){$('#loading').hide();
-                                          $('#graph-area').show();
                     } else if (status_code==503) {$('#loading').html('<h3>Unable to reach service. This is the latest data</h3><br>');}
                     if (endsWith(xml_name, 'wml_1.xml')){
                         transformFile();
@@ -850,113 +649,13 @@
             });
         }
 
-        function getDatasetsAfterFilters(dataset){
-            var minDate = new Date(dataset[0].x);
-            var maxDate = new Date(dataset[dataset.length - 1].x);
-
-            // Update minimum and maximum dates on the date pickers
-             var dateFirst = $('#dpd1').datepicker({
-                onRender: function (date){
-                    return (date.valueOf() > maxDate.valueOf() || date.valueOf() < minDate.valueOf()) ? 'disabled' : '';    // disable dates with no records
-                }
-            }).on('click', function(){
-                dateLast.hide();
-            }).on('changeDate',function (ev) {
-                dateFirst.hide();
-            }).data('datepicker');
-
-            var dateLast = $('#dpd2').datepicker({
-                onRender: function (date) {
-                    return (date.valueOf() > maxDate.valueOf() || date.valueOf() < minDate.valueOf()) ? 'disabled' : '';    // disable dates with no records
-                }
-            }).on('click', function(){
-                dateFirst.hide();
-            }).on('changeDate',function (ev) {
-                dateLast.hide();
-            }).data('datepicker');
-
-            var nowTemp = new Date();
-            var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
-
-            // If no dates are set, display the last month. Display the whole set if it contains less than 500 data points.
-            if (dateFirst.date.valueOf() == now.valueOf() && dateLast.date.valueOf() == now.valueOf()) {
-                // Mark the button of last month interval
-                $("#dateIntervals button").removeClass("active");
-                $("#btnLastMonth").addClass("active");
-
-                dateFirst.date = maxDate.setMonth(maxDate.getMonth() - 1);
-                dateFirst.setValue(maxDate);
-
-                dateLast.date = maxDate.setMonth(maxDate.getMonth() + 1);
-                dateLast.setValue(maxDate);
-            }
-
-            // Update click events for the date interval buttons
-            $("#btnLastWeek").click(function() {
-                $("#dateIntervals button").removeClass("active");
-                $(this).addClass("active");
-
-                dateFirst.date = maxDate.setDate(maxDate.getDate() - 7);
-                dateFirst.setValue(maxDate);
-
-                dateLast.date = maxDate.setDate(maxDate.getDate() + 7);
-                dateLast.setValue(maxDate);
-            });
-            $("#btnLastMonth").click(function() {
-                $("#dateIntervals button").removeClass("active");
-                $(this).addClass("active");
-
-                dateFirst.date = maxDate.setMonth(maxDate.getMonth() - 1);
-                dateFirst.setValue(maxDate);
-
-                dateLast.date = maxDate.setMonth(maxDate.getMonth() + 1);
-                dateLast.setValue(maxDate);
-            });
-            $("#btnAll").click(function() {
-                $("#dateIntervals button").removeClass("active");
-                $(this).addClass("active");
-
-                dateFirst.date = minDate;
-                dateFirst.setValue(minDate);
-
-                dateLast.date = maxDate;
-                dateLast.setValue(maxDate);
-            });
-
-
-            return dataset;
-        }
-
         $(document).ready(function(){
             generateFiles();
-            $('#graph-area').hide();
         });
+
+        $('#snapshot').tooltip({animation: true, delay: { show: 500, hide: 100 }});
 
         $('#switch-to-static').tooltip({animation: true, delay: { show: 500, hide: 100 }});
-        $("#btnSetPlotOptions").click(function() {
-            var dateFirst = new Date($('#dpd1').val());
-            var dateLast = new Date($('#dpd2').val());
-
-            console.log(glob_graph_data);
-            var dataset = glob_graph_data.filter(function (d) {
-                return (d.x >= dateFirst.getTime() && d.x <= dateLast.getTime());
-            });
-            console.log(glob_graph_data);
-            var a = dateFirst.getTime();
-            var b = dateLast.getTime();
-            console.log(dataset);
-            if(a <= b) {
-               graphVals(dataset);  // Dates do not overlap, proceed
-            }
-            else{
-                $("#graph-area").prepend(
-                    '<div class="alert alert-danger alert-dismissable">\
-                      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>\
-                      <strong></strong> Dates cannot overlap. \
-                    </div>'
-                );
-            }
-        });
 
     });
     </script>
