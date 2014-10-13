@@ -16,7 +16,7 @@ hydroshare:
     POSTGIS_USER: postgres
     PGPASSWORD: postgres
   volumes:
-    - "media:/home/docker/hydroshare/hydroshare/static/media"
+    - "media:/home/docker/hydroshare/static/media"
     # Share the volume on hydrodev with the hydroshare container
     #- "/home/hydro/hydroshare:/home/docker/hydroshare"
   ports:
