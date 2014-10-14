@@ -45,12 +45,33 @@ function graphVals(graph_data, units, varName) {
                 .attr("width", 833)
                 .attr("height", 500);
 
+    var over = svg.append("g")
+                .attr("class", "over")
+                .style("display", "none");
+
+            over.append("circle")
+                .attr("r", 4.5);
+
+            over.append("text")
+                .attr("x", 9)
+                .attr("dy", ".35em");
+
             svg.append("clipPath")
                 .attr("id", "clip")
                 .append("rect")
                 .attr("width",  WIDTH-MARGINS.right-40)
                 .attr("x",MARGINS.left)
                 .attr("height", HEIGHT);
+
+
+            svg.append("rect")
+                .attr("class", "overlay")
+                .attr("width",  WIDTH-MARGINS.right-40)
+                .attr("x",MARGINS.left)
+                .attr("height", HEIGHT)
+                .on("mouseover", function() { over.style("display", null); })
+                .on("mouseout", function() { over.style("display", "none"); })
+                .on("mousemove", mousemove);
 
             var brush = d3.svg.brush()
                 .x(xRange2)
@@ -106,6 +127,20 @@ function graphVals(graph_data, units, varName) {
                 .attr("clip-path", "url(#clip)")
                 .attr('fill', 'none');
 
+            var bisectDate = d3.bisector(function(d) { return d.x; }).left;
+            console.log(graph_data);
+
+             function mousemove() {
+                 var x0 = xRange2.invert(d3.mouse(this)[0]),
+                 i = bisectDate(graph_data, x0, 1),
+                 d0 = graph_data[i - 1],
+                 d1 = graph_data[i],
+                 d = x0 - d0.x > d1.x - x0 ? d1 : d0;
+                 console.log(i);
+            over.attr("transform", "translate(" + xRange2(d.x) + "," + yRange(d.y) + ")");
+            over.select("text").text(d.y);
+            over.select("text").attr("transform","translate(0,8)");
+             }
 
 
             var context = svg.append("g")

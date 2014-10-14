@@ -20,6 +20,11 @@
           pointer-events: all;
         }
 
+        .over circle {
+          fill: none;
+          stroke: steelblue;
+        }
+
         .bar
         {
             fill: FireBrick;
