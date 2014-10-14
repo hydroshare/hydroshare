@@ -8,62 +8,8 @@
 {% keywords_for page as kws %}
 {% set_page_permissions page %}
 
-<style>
-.axis path, .axis line
-        {
-            fill: none;
-            stroke: #777;
-            shape-rendering: crispEdges;
-        }
-
-        .axis text
-        {
-            font-family: 'Arial';
-            font-size: 13px;
-        }
-        .tick
-        {
-            stroke-dasharray: 1, 2;
-        }
-        .bar
-        {
-            fill: FireBrick;
-        }
-
-        .brush .extent {
-            stroke: #fff;
-            fill-opacity: .125;
-            shape-rendering: crispEdges;
-        }
-        #graph-area{
-            width: 100%;
-            height: 510px;
-        }
-
-        #graph-container{
-            height:100%;
-            width: -moz-calc(100% - 307px);
-            width: -webkit-calc(100% - 307px);
-            width: calc(100% - 307px);
-            float:left;
-            padding-top: 5px;
-            overflow-y: auto;
-        }
-
-        #panel-right{
-            overflow-y: scroll;
-            background: white;
-            overflow-x: hidden;
-            position: absolute;
-            right: 0px;
-            width: 307px;
-            height: 500px;
-            float: right;
-            border-left: 1px solid #aaa;
-        }
-
-</style>
 <link id="bsdp-css" href="{% static "ref_ts/datepicker/css/datepicker.css" %}" rel="stylesheet">
+<link id="vis-css" href="{% static "ref_ts/visualization/css/style.css" %}" rel="stylesheet">
 <div class="row">
         <div class="col-md-12">
             {% block extra_content %}
@@ -496,7 +442,7 @@
 
     <script src=" {% static "ref_ts/d3/d3.min.js" %}"></script>
     <script src=" {% static "ref_ts/datepicker/js/bootstrap-datepicker.js" %}"></script>
-    <script src=" {% static "ref_ts/visualization/visualization.js" %}"></script>
+    <script src=" {% static "ref_ts/visualization/js/visualization.js" %}"></script>
     <script type="text/javascript">
 
     $(function() {

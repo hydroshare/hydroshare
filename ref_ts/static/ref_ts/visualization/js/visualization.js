@@ -59,9 +59,7 @@ function graphVals(graph_data, units, varName) {
             var focus = svg.append("g")
                 .attr("class", "focus")
                 .attr("width", 762)
-                .attr("height", 300)
-                .style("display", "none");
-
+                .attr("height", 300);
 
             focus.append('g')  // Add the x axis
                 .attr('class', 'x axis')
@@ -108,31 +106,6 @@ function graphVals(graph_data, units, varName) {
                 .attr("clip-path", "url(#clip)")
                 .attr('fill', 'none');
 
-            /*focus.append("circle")
-                .attr("r", 4.5);
-
-            focus.append("text")
-                .attr("x", 9)
-                .attr("dy", ".35em");
-
-            svg.append("rect")
-                .attr("class", "overlay")
-                .attr("width", 762)
-                .attr("height", 300)
-                .on("mouseover", function() { focus.style("display", null); })
-                .on("mouseout", function() { focus.style("display", "none"); })
-                .on("mousemove", mousemove);
-
-              function mousemove() {
-                  console.log(d3.mouse(this)[0]);
-//                var x0 = x.invert(d3.mouse(this)[0]),
-//                    i = bisectDate(data, x0, 1),
-//                    d0 = data[i - 1],
-//                    d1 = data[i],
-//                    d = x0 - d0.date > d1.date - x0 ? d1 : d0;
-//                focus.attr("transform", "translate(" + x(d.date) + "," + y(d.close) + ")");
-//                focus.select("text").text(formatCurrency(d.close));
-              }*/
 
 
             var context = svg.append("g")
