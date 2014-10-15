@@ -19,7 +19,7 @@ def make_zipfile(output_filename, source_dir):
     :param source_dir: (str) The source directory to zip
     """
     relroot = os.path.abspath(os.path.join(source_dir, os.pardir))
-    with zipfile.ZipFile(output_filename, "w", zipfile.ZIP_DEFLATED) as zip:
+    with zipfile.ZipFile(output_filename, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as zip:
         for root, dirs, files in os.walk(source_dir):
             # add directory (needed for empty dirs)
             zip.write(root, os.path.relpath(root, relroot))
