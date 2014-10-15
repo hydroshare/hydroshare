@@ -105,7 +105,8 @@ HYDROSHARE_APPS = (
     "ga_resources",
     "django_irods",
     "ga_interactive",
-    "hs_core"
+    "hs_core",
+    "ref_ts"
 )
 
 USE_IRODS=False
