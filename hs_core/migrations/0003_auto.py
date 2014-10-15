@@ -111,7 +111,7 @@ class Migration(SchemaMigration):
             u'page_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['pages.Page']", 'unique': 'True', 'primary_key': 'True'}),
             'public': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'published_and_frozen': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'resource_file': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
+            'resource_file': ('django.db.models.fields.files.FileField', [], {'max_length': '500', 'null': 'True', 'blank': 'True'}),
             'resource_url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "u'genericresources'", 'to': u"orm['auth.User']"}),
             'view_groups': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "u'group_viewable_hs_core_genericresource'", 'null': 'True', 'symmetrical': 'False', 'to': u"orm['auth.Group']"}),

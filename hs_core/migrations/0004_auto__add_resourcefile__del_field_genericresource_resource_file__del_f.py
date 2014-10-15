@@ -13,7 +13,7 @@ class Migration(SchemaMigration):
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('object_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
             ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'])),
-            ('resource_file', self.gf('django.db.models.fields.files.FileField')(max_length=100)),
+            ('resource_file', self.gf('django.db.models.fields.files.FileField')(max_length=500)),
         ))
         db.send_create_signal(u'hs_core', ['ResourceFile'])
 
@@ -47,7 +47,7 @@ class Migration(SchemaMigration):
 
         # Adding field 'GenericResource.resource_file'
         db.add_column(u'hs_core_genericresource', 'resource_file',
-                      self.gf('django.db.models.fields.files.FileField')(max_length=100, null=True, blank=True),
+                      self.gf('django.db.models.fields.files.FileField')(max_length=500, null=True, blank=True),
                       keep_default=False)
 
         # Adding field 'GenericResource.resource_url'
@@ -133,7 +133,7 @@ class Migration(SchemaMigration):
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'object_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
-            'resource_file': ('django.db.models.fields.files.FileField', [], {'max_length': '100'})
+            'resource_file': ('django.db.models.fields.files.FileField', [], {'max_length': '500'})
         },
         u'pages.page': {
             'Meta': {'ordering': "(u'titles',)", 'object_name': 'Page'},

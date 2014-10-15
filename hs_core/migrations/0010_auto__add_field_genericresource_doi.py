@@ -58,7 +58,7 @@ class Migration(SchemaMigration):
         },
         u'hs_core.bags': {
             'Meta': {'ordering': "['-timestamp']", 'object_name': 'Bags'},
-            'bag': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True'}),
+            'bag': ('django.db.models.fields.files.FileField', [], {'max_length': '500', 'null': 'True'}),
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'object_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
@@ -96,7 +96,7 @@ class Migration(SchemaMigration):
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'object_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
-            'resource_file': ('django.db.models.fields.files.FileField', [], {'max_length': '100'})
+            'resource_file': ('django.db.models.fields.files.FileField', [], {'max_length': '500'})
         },
         u'pages.page': {
             'Meta': {'ordering': "(u'titles',)", 'object_name': 'Page'},
