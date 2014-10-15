@@ -1,5 +1,48 @@
 [
     {
+        "pk": 1, 
+        "model": "auth.group", 
+        "fields": {
+            "name": "Hydroshare Author", 
+            "permissions": [
+                34, 
+                37, 
+                35, 
+                36, 
+                38, 
+                39, 
+                40, 
+                22, 
+                23, 
+                24, 
+                25, 
+                26, 
+                27, 
+                71, 
+                72, 
+                73, 
+                68, 
+                69, 
+                70, 
+                74, 
+                75, 
+                76, 
+                65, 
+                66, 
+                67, 
+                95, 
+                96, 
+                97, 
+                56, 
+                57, 
+                58, 
+                50, 
+                51, 
+                52
+            ]
+        }
+    },
+    {
         "pk": 6, 
         "model": "pages.page", 
         "fields": {
@@ -76,7 +119,33 @@
             "slug": "help", 
             "expiry_date": null
         }
-    }, 
+    },
+    {
+        "pk": 23, 
+        "model": "pages.page", 
+        "fields": {
+            "status": 2, 
+            "_meta_title": "", 
+            "updated": "2014-05-05T19:47:25.082Z", 
+            "_order": 6, 
+            "description": "Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account. \u00a0Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.", 
+            "parent": null, 
+            "title": "Verify account", 
+            "short_url": null, 
+            "login_required": false, 
+            "site": 1, 
+            "created": "2014-05-05T19:40:28.558Z", 
+            "in_sitemap": true, 
+            "titles": "Verify account", 
+            "publish_date": "2014-05-05T19:40:28Z", 
+            "gen_description": true, 
+            "content_model": "richtextpage", 
+            "keywords_string": "", 
+            "in_menus": "", 
+            "slug": "verify-account", 
+            "expiry_date": null
+        }
+    },  
     {
         "pk": 25, 
         "model": "pages.page", 
@@ -141,6 +210,13 @@
         "model": "pages.richtextpage", 
         "fields": {
             "content": "<p>This page is under construction</p>"
+        }
+    },
+    {
+        "pk": 23, 
+        "model": "pages.richtextpage", 
+        "fields": {
+            "content": "<p>Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account. \u00a0Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.</p>\n<p><a href=\"/hsapi/_internal/resend_verification_email/\">Please click here if you do not receive a verification email within 1 hour.</a></p>"
         }
     }
 ]
