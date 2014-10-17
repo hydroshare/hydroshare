@@ -130,12 +130,13 @@ function graphVals(graph_data, units, varName) {
             var bisectDate = d3.bisector(function(d) { return d.x; }).left;
 
              function mousemove() {
-                 var x0 = xRange2.invert(d3.mouse(this)[0]),
+                 var x0 = xRange.invert(d3.mouse(this)[0]),
                  i = bisectDate(graph_data, x0, 1),
                  d0 = graph_data[i - 1],
                  d1 = graph_data[i],
                  d = x0 - d0.x > d1.x - x0 ? d1 : d0;
-            over.attr("transform", "translate(" + xRange2(d.x) + "," + yRange(d.y) + ")");
+                 console.log(x0);
+            over.attr("transform", "translate(" + xRange(d.x) + "," + yRange(d.y) + ")");
             over.select("text").text(d.y);
             over.select("text").attr("transform","translate(0,8)");
              }
@@ -183,6 +184,9 @@ function graphVals(graph_data, units, varName) {
           focus.select(".line").attr("d", lineFunc(graph_data));
           focus.select(".x.axis").call(xAxis);
           focus.select(".y.axis").call(yAxis);
+          var summary = calcSummaryStats(subData);
+          if (brush.empty()){summary = calcSummaryStats(graph_data)}
+          setSummaryStatistics(summary);
             }
         var summary = calcSummaryStats(graph_data);
         setSummaryStatistics(summary);
