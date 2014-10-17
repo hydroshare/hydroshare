@@ -339,10 +339,12 @@ def create_resource(request, *args, **kwargs):
         ]
         for cn in frm.cleaned_data['contributors'].split(','):
             cn = cn.strip()
-            dcterms.append({'term': 'CN', 'content': cn})
+            if(cn !=""):
+                dcterms.append({'term': 'CN', 'content': cn})
         for cr in frm.cleaned_data['creators'].split(','):
             cr = cr.strip()
-            dcterms.append({'term': 'CR', 'content': cr})
+            if(cr != ""):
+                dcterms.append({'term': 'CR', 'content': cr})
 
         res = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
