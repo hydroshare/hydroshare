@@ -87,7 +87,7 @@ function graphVals(graph_data, units, varName) {
                 .attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')')
                 .call(xAxis);
 
-            svg.append('g')  // Add the y axis
+            focus.append('g')  // Add the y axis
                 .attr('class', 'y axis')
                 .attr('transform', 'translate(' + (MARGINS.left) + ',0)') // not totally sure this is necessary
                 .call(yAxis);
@@ -128,7 +128,6 @@ function graphVals(graph_data, units, varName) {
                 .attr('fill', 'none');
 
             var bisectDate = d3.bisector(function(d) { return d.x; }).left;
-            console.log(graph_data);
 
              function mousemove() {
                  var x0 = xRange2.invert(d3.mouse(this)[0]),
@@ -136,7 +135,6 @@ function graphVals(graph_data, units, varName) {
                  d0 = graph_data[i - 1],
                  d1 = graph_data[i],
                  d = x0 - d0.x > d1.x - x0 ? d1 : d0;
-                 console.log(i);
             over.attr("transform", "translate(" + xRange2(d.x) + "," + yRange(d.y) + ")");
             over.select("text").text(d.y);
             over.select("text").attr("transform","translate(0,8)");
@@ -170,8 +168,21 @@ function graphVals(graph_data, units, varName) {
               .attr("height", 35);
         function brushed() {
           xRange.domain(brush.empty() ? xRange2.domain() : brush.extent());
+          var x0 = brush.extent()[0],
+              x1 = brush.extent()[1],
+              xpos0 = bisectDate(graph_data,x0,1),
+              xpos1 = bisectDate(graph_data,x1,1),
+              subData = graph_data.slice(xpos0,xpos1),
+              subMin = d3.min(subData, function(d) {
+                  return d.y;
+                }),
+              subMax = d3.max(subData, function(d) {
+                  return d.y;
+                });
+          yRange.domain(brush.empty() ? yRange2.domain() : [subMin,subMax]);
           focus.select(".line").attr("d", lineFunc(graph_data));
           focus.select(".x.axis").call(xAxis);
+          focus.select(".y.axis").call(yAxis);
             }
         var summary = calcSummaryStats(graph_data);
         setSummaryStatistics(summary);
