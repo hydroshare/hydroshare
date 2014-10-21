@@ -1,0 +1,15 @@
+#!/usr/bin/expect -f
+
+# connect via scp
+spawn scp -r -P 1338 media root@localhost:/home/docker/hydroshare/hydroshare/static
+#######################
+expect {
+-re ".*es.*o.*" {
+exp_send "yes\r"
+exp_continue
+}
+-re ".*sword.*" {
+exp_send "docker\r"
+}
+}
+interact
