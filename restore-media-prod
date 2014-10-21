@@ -7,6 +7,7 @@ cd /tmp
 tar -xzf "$1"
 cd media
 cp ~/hydroshare/scp-media-prod ./scp-media-prod.exp
+chmod +x scp-media-prod.exp
 ./scp-media-prod.exp
 popd
 rm -rf /tmp/media
