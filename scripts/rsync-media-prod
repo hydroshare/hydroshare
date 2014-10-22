@@ -1,0 +1,11 @@
+#!/usr/bin/expect -f
+
+# connect via scp
+spawn rsync -avh -e "ssh -p 1338" root@localhost:/home/docker/hydroshare/hydroshare/static/media /tmp/media
+# Expect enter password
+expect {
+	-re ".*sword.*" {
+		exp_send "docker\r"
+	}
+}
+interact
