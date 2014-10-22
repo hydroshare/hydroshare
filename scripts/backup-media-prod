@@ -7,7 +7,7 @@ cd /tmp
 cp $HSDIR/scripts/rsync-media-prod ./rsync-media-prod.exp
 chmod +x rsync-media-prod.exp
 ./rsync-media-prod.exp
-cd media
+#cd media
 tar -czf "media-hydroshare-`date +"%m-%d-%y"`.tar.gz" media
 cp "media-hydroshare-`date +"%m-%d-%y"`.tar.gz" $HSDIR
 popd
