@@ -213,11 +213,15 @@ def my_resources(request, page):
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
+        res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
         owner = frm.cleaned_data['creator'] or None
         user = frm.cleaned_data['user'] or (request.user if request.user.is_authenticated() else None)
         edit_permission = frm.cleaned_data['edit_permission'] or False
         published = frm.cleaned_data['published'] or False
-        start = frm.cleaned_data['start'] or 0
+        startno = frm.cleaned_data['start']
+        if(startno < 0):
+            startno = 0
+        start = startno or 0
         from_date = frm.cleaned_data['from_date'] or None
         keywords = [k.strip() for k in request.REQUEST['keywords'].split(',')] if request.REQUEST.get('keywords', None) else None
         public = not request.user.is_authenticated()
@@ -232,23 +236,36 @@ def my_resources(request, page):
         for lst in get_resource_list(
             user=user,
             owner= owner,
-            count=20,
             published=published,
             edit_permission=edit_permission,
-            start=start,
             from_date=from_date,
             dc=list(dcterms.values()) if dcterms else None,
             keywords=keywords if keywords else None,
             public=public
         ).values():
             res = res.union(lst)
+        total_res_cnt = len(res)
 
-        res = sorted(list(res), key=lambda x: x.title)
+        reslst = list(res)
+
+        # need to return total number of resources as 'ct' so have to get all resources
+        # and then filter by start and count
+        if(start>=total_res_cnt):
+            start = total_res_cnt-res_cnt
+        if(start < 0):
+            start = 0
+        if(start+res_cnt > total_res_cnt):
+            res_cnt = total_res_cnt-start
+
+        reslst = reslst[start:start+res_cnt]
+
+        res = sorted(reslst, key=lambda x: x.title)
+
         return {
             'resources': res,
             'first': start,
             'last': start+len(res),
-            'ct': len(res),
+            'ct': total_res_cnt,
             'dcterms' : (
                 ('AB', 'Abstract'),
                 ('BX', 'Box'),
@@ -343,7 +360,7 @@ def create_resource(request, *args, **kwargs):
                 dcterms.append({'term': 'CN', 'content': cn})
         for cr in frm.cleaned_data['creators'].split(','):
             cr = cr.strip()
-            if(cr != ""):
+            if(cr !=""):
                 dcterms.append({'term': 'CR', 'content': cr})
 
         res = hydroshare.create_resource(
