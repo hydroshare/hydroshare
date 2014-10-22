@@ -75,12 +75,11 @@
         <div class="col-lg-10" id="items">
             <div style="padding-bottom: 0.5em" class="btn-group">
                 <a class="btn dropdown-toggle btn-success" data-toggle="dropdown" href="#">
-                    Create New
+                     Create New
                     <span class="caret"></span>
                 </a>
+                <a href="/res-type-reference" data-toggle="tooltip" title="Resource Types Reference">&nbsp <strong style="font-size:150%">?</strong></a>
                 <ul class="dropdown-menu" role="menu" style="height: auto; max-height: 200px; overflow-x: hidden;">
-                    <li><a href="/res-type-reference"><i>Resource Reference</i></a></li>
-                    <li class="divider"></li>
                     <li><a href="/create-resource">Generic Resource</a></li>
                     <li><a href="/create-ref-time-series">Referenced Time Series</a></li>
                     <li><a href="/create-ref-time-series">RHYSSys Instance Resource</a></li>
@@ -94,9 +93,10 @@
                     <li><a href="/create-ref-time-series">Some other type 7</a></li>
                     <li><a href="/create-ref-time-series">Some other type 8</a></li>
                     <li><a href="/create-ref-time-series">Some other type 9</a></li>
+                    <li class="divider"></li>
+                    <li><a href="/res-type-reference"><i>Resource Reference</i></a></li>
                 </ul>
             </div>
-
             <table class="table table-striped table-hover" id="item-selectors">
                 <tr>
                     <th>Title <i class="fa fa-sort-desc"></i></th>
@@ -137,6 +137,7 @@
     <script type="text/javascript">
         var k = 1;
         $(function() {
+            $('[data-toggle="tooltip"]').tooltip({'placement': 'right'});
             $("#add-row").click(function() {
                 k++;
                 var new_row = $("#initial-dcterm").clone();
