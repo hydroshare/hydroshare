@@ -1,0 +1,72 @@
+{% extends "pages/page.html" %}
+{% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+
+{% block main %}
+
+        <div class="col-md-8">
+            <h2>HydroShare Resource Types Reference</h2>
+        HydroShare is designed to help researchers and scientists share and collaborate on water data and models of all kinds. Because there are so many kinds of data and models, we have many kinds of resources to house them. In HydroShare, we define a resource as digital content which includes the science data files or model files and their corresponding metadata information. HydroShare will include multiple resource types such as time series, geographic feature class, geographic raster, multidimensional space time array data (NetCDF), model, document, etc. Currently, HydroShare beta system supports resource types of time series and geographic feature class (or Geoanalytics).
+        <p style="padding-top: 1em; padding-bottom: 5px">More on this can be found at our <a href="/help/#faq-cat-2-sub-1">support page</a>.</p>
+
+        <h3>Resource Types found in HydroShare</h3>
+
+        </div>
+  <div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Tab panes -->
+            <div class="tab-content res-cat-content">
+                <div class="tab-pane active in fade" id="res-cat">
+                    <div class="panel-group" id="accordion-cat"  style="padding-top: 1em">
+                        <div class="panel panel-default panel-faq">
+                            <div class="panel-heading">
+                                <a data-toggle="collapse" data-parent="#accordion-cat" href="#res-cat-sub-1">
+                                    <h4 class="panel-title">
+                                        Generic Resource
+                                        <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
+                                    </h4>
+                                </a>
+                            </div>
+                            <div id="res-cat-sub-1" class="panel-collapse collapse">
+                                <div class="panel-body">
+                                    <p><strong>Bacon ipsum dolor sit amet pork chop sirloin rump, tenderloin landjaeger</strong> ground round flank cow leberkas filet mignon. Cow ribeye sausage bacon pastrami pig landjaeger, frankfurter pork belly pork loin short loin tongue. Fatback turkey swine corned beef kielbasa pork loin. Jerky chuck chicken ball tip.</p>
+                                    <p><strong>Pork hamburger spare ribs, pork loin tri-tip strip steak pork chop </strong> doner corned beef leberkas. Pancetta brisket short loin prosciutto. Brisket short ribs corned beef tail bacon. Shoulder venison pork, t-bone bacon pastrami ham hock rump andouille corned beef short loin ham turducken fatback landjaeger. Short ribs sirloin beef ribs meatball. Ribeye frankfurter tail, rump boudin pork corned beef shoulder chicken. Turkey meatball pork loin, shoulder kielbasa porchetta flank spare ribs tenderloin boudin salami ball tip pig hamburger meatloaf.</p>
+                                    <span style="padding-top: 1em"><a href="/create-resource">Create a Generic Resource</a></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default panel-faq">
+                            <div class="panel-heading">
+                                <a data-toggle="collapse" data-parent="#accordion-cat" href="#res-cat-sub-2">
+                                    <h4 class="panel-title">
+                                        Referenced Time Series Resource
+                                        <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
+                                    </h4>
+                                </a>
+                            </div>
+                            <div id="res-cat-sub-2" class="panel-collapse collapse">
+                                <div class="panel-body">
+                                    <p><strong>Bacon ipsum dolor sit amet pork chop sirloin rump, tenderloin landjaeger</strong> ground round flank cow leberkas filet mignon. Cow ribeye sausage bacon pastrami pig landjaeger, frankfurter pork belly pork loin short loin tongue. Fatback turkey swine corned beef kielbasa pork loin. Jerky chuck chicken ball tip.</p>
+                                    <p><strong>Pork hamburger spare ribs, pork loin tri-tip strip steak pork chop </strong> doner corned beef leberkas. Pancetta brisket short loin prosciutto. Brisket short ribs corned beef tail bacon. Shoulder venison pork, t-bone bacon pastrami ham hock rump andouille corned beef short loin ham turducken fatback landjaeger. Short ribs sirloin beef ribs meatball. Ribeye frankfurter tail, rump boudin pork corned beef shoulder chicken. Turkey meatball pork loin, shoulder kielbasa porchetta flank spare ribs tenderloin boudin salami ball tip pig hamburger meatloaf.</p>
+                                    <span style="padding-top: 1em"><a href="/create-ref-time-series">Create a Referenced Time Series Resource</a></span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+          </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript">
+        $(function() {
+        })
+    </script>
+
+{% endblock %}
