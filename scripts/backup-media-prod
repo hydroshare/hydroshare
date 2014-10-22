@@ -1,0 +1,12 @@
+#!/bin/bash
+
+mkdir /tmp/media
+HERE=$PWD
+pushd $PWD
+cd /tmp
+cp ~/hydroshare/scripts/rsync-media-prod ./rsync-media-prod.exp
+chmod +x rsync-media-prod.exp
+./rsync-media-prod.exp
+tar -czf "$HERE/media-hydroshare-`date +"%m-%d-%y"`.tar.gz" media
+rm -rf /tmp/media
+popd
