@@ -1,7 +1,7 @@
 #!/usr/bin/expect -f
 
 # connect via scp
-spawn scp -r -P 1338 media root@localhost:/home/docker/hydroshare/hydroshare/static
+spawn scp -r -P 1338 media root@localhost:/home/docker/hydroshare/static
 # Expect either add fingerprint and/or enter password
 expect {
 	-re ".*es.*o.*" {
