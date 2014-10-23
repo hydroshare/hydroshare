@@ -387,6 +387,11 @@ def create_resource(
     # add the subject elements from the AssignedKeywords (new metadata implementation)
     for akw in AssignedKeyword.objects.filter(object_pk=resource.id).all():
         resource.metadata.create_element('subject', value=akw.keyword.title)
+        QualifiedDublinCoreElement.objects.create(
+                term='SUB',
+                content=akw.keyword.title,
+                content_object=resource
+            )
 
     hs_bagit.create_bag(resource)
 
