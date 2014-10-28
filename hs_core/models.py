@@ -115,9 +115,9 @@ class ResourcePermissionsMixin(Ownable):
         user = get_user(request)
 
         if user.is_authenticated():
-            if not self.user:
-                ret = user.is_superuser
-            elif user.pk == self.creator.pk:
+            if user.is_superuser:
+                ret = True
+            elif self.creator and user.pk == self.creator.pk:
                 ret = True
             elif user.pk in { o.pk for o in self.owners.all() }:
                 ret = True
@@ -139,9 +139,9 @@ class ResourcePermissionsMixin(Ownable):
         if self.public:
             return True
         if user.is_authenticated():
-            if not self.user:
-                ret = user.is_superuser
-            elif user.pk == self.creator.pk:
+            if user.is_superuser:
+                ret = True
+            elif self.creator and user.pk == self.creator.pk:
                 ret = True
             elif user.pk in { o.pk for o in self.owners.all() }:
                 ret = True
