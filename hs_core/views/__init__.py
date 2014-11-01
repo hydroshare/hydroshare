@@ -20,11 +20,13 @@ from hs_core.models import ResourceFile, GenericResource
 import requests
 from django.core import exceptions as ex
 from mezzanine.pages.page_processors import processor_for
+from django.template import RequestContext
 
 from . import users_api
 from . import discovery_api
 from . import resource_api
 from . import social_api
+from hs_core.hydroshare import file_size_limit_for_display
 
 import autocomplete_light
 
@@ -372,7 +374,13 @@ def create_resource(request, *args, **kwargs):
             files=request.FILES.getlist('files'),
             content=frm.cleaned_data['abstract'] or frm.cleaned_data['title']
         )
-        return HttpResponseRedirect(res.get_absolute_url())
+        if res is not None:
+            return HttpResponseRedirect(res.get_absolute_url())
+        else:
+            context = {
+            'file_size_error' : 'The resource file is larger than the supported size limit %s. Select resource files within %s to create resource.' % (file_size_limit_for_display, file_size_limit_for_display)
+            }
+            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
     else:
         raise ValidationError(frm.errors)
 
@@ -384,6 +392,5 @@ def get_file(request, *args, **kwargs):
     session.runCmd("iinit");
     session.runCmd('iget', [ name, 'tempfile.' + name ])
     return HttpResponse(open(name), content_type='x-binary/octet-stream')
-
 
 # FIXME need a task somewhere that amounts to checking inactive accounts and deleting them after 30 days.
