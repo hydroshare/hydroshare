@@ -19,6 +19,8 @@ from lxml import etree
 from StringIO import StringIO
 import datetime
 from django.utils.timezone import now
+import operator
+
 
 class ReferencedSitesForm(forms.Form):
     wsdl_url = forms.URLField()
@@ -197,6 +199,7 @@ def add_dublin_core(request, page):
         'edit_groups': set(cm.edit_groups.all()),
     }
 
+
 def generate_files(request, shortkey, *args, **kwargs):
     res = hydroshare.get_resource_by_shortkey(shortkey)
     ts, csv_link, csv_size, xml_link, xml_size = {}, '', '', '', ''
@@ -210,6 +213,10 @@ def generate_files(request, shortkey, *args, **kwargs):
                                                variable_code=res.variable_code)
 
         vals = ts['values']
+        for_graph = ts['for_graph']
+        units = ts['units']
+        variable_name = ts['variable_name']
+        vis_name = ts_utils.create_vis(for_graph, 'Date', variable_name, units)
         version = ts['wml_version']
         d = datetime.date.today()
         date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
@@ -237,10 +244,12 @@ def generate_files(request, shortkey, *args, **kwargs):
             xml_file.write(ts['time_series'])
         csv_file = open(csv_name, 'r')
         xml_file = open(xml_name, 'r')
+        vis_file = open(vis_name, 'r')
         files = [csv_file, xml_file]
-        hydroshare.add_resource_files(res.short_id, csv_file, xml_file)
+        hydroshare.add_resource_files(res.short_id, csv_file, xml_file, vis_file)
         create_bag(res)
         os.remove(csv_name)
+        os.remove(vis_name)
         os.remove(xml_name)
         files = ResourceFile.objects.filter(object_id=res.pk)
         for f in files:
@@ -250,6 +259,8 @@ def generate_files(request, shortkey, *args, **kwargs):
             if xml_end in str(f.resource_file):
                 xml_link = f.resource_file.url
                 xml_size = f.resource_file.size
+            if 'visual' in str(f.resource_file):
+                vis_link = f.resource_file.url
         status_code = 200
         data = {'for_graph': ts.get('for_graph'),
                 'values': ts.get('values'),
@@ -262,7 +273,8 @@ def generate_files(request, shortkey, *args, **kwargs):
                 'csv_link': csv_link,
                 'csv_size': csv_size,
                 'xml_link': xml_link,
-                'xml_size': xml_size}
+                'xml_size': xml_size,
+                'vis_link': vis_link}
         return json_or_jsonp(request, data)  # successfully generated new files
     except Exception:  # most likely because the server is unreachable
         files = ResourceFile.objects.filter(object_id=res.pk)
@@ -275,6 +287,8 @@ def generate_files(request, shortkey, *args, **kwargs):
                 xml_link = f.resource_file.url
                 xml_size = f.resource_file.size
                 xml_file = f.resource_file
+            if 'visual' in str(f.resource_file):
+                vis_link = f.resource_file.url
         if xml_file is None:
             status_code = 404
             data = {'for_graph': ts.get('for_graph'),
@@ -286,7 +300,8 @@ def generate_files(request, shortkey, *args, **kwargs):
                     'csv_link': csv_link,
                     'csv_size': csv_size,
                     'xml_link': xml_link,
-                    'xml_size': xml_size}
+                    'xml_size': xml_size,
+                    'vis_link': vis_link}
             return json_or_jsonp(request, data)  # did not generate new files, did not find old ones
         xml_doc = open(str(xml_file), 'r').read()
         root = etree.XML(xml_doc)
@@ -309,7 +324,8 @@ def generate_files(request, shortkey, *args, **kwargs):
                 'csv_link': csv_link,
                 'csv_size': csv_size,
                 'xml_link': xml_link,
-                'xml_size': xml_size}
+                'xml_size': xml_size,
+                'vis_link': vis_link}
         return json_or_jsonp(request, data) # did not generate new files, return old ones
 
 def transform_file(request, shortkey, *args, **kwargs):
@@ -348,3 +364,13 @@ def transform_file(request, shortkey, *args, **kwargs):
     # print(etree.tostring(newdom, pretty_print=True))
     return json_or_jsonp(request, data)
 
+def get_vis_link(request, shortkey, *args, **kwargs):
+    res = hydroshare.get_resource_by_shortkey(shortkey)
+    files = ResourceFile.objects.filter(object_id=res.pk)
+    for f in files:
+        if 'visual' in str(f.resource_file):
+            vis_link = f.resource_file.url
+    data = {
+        'vis_link':vis_link
+    }
+    return json_or_jsonp(request, data)

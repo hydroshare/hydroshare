@@ -6,6 +6,10 @@ from django.http import Http404
 from .models import RefTimeSeries
 from xml.sax._exceptions import SAXParseException
 from datetime import datetime
+from matplotlib.pyplot import savefig
+import matplotlib.pyplot as plt
+from matplotlib.dates import AutoDateFormatter, AutoDateLocator
+import operator
 import requests
 
 
@@ -307,3 +311,38 @@ due to incorrect formatting in the web service format.")
         return parse_2_0(root)
     else:
         raise Http404()
+
+def create_vis(data, xlab, variable_name, units):
+    loc = AutoDateLocator()
+    fmt = AutoDateFormatter(loc)
+    fmt.scaled[365.0] = '%y'
+    fmt.scaled[30.] = '%b %y'
+    fmt.scaled[1.0] = '%b %d %y'
+
+    x = []
+    y = []
+    x1 =[]
+    y1 =[]
+    for d in data:
+        x1.append(d['x'])
+        y1.append(d['y'])
+    vals_dict = dict(zip(x1, y1))
+    sorted_vals = sorted(vals_dict.items(), key=operator.itemgetter(0))
+    for d in sorted_vals:
+        t = (d[0])
+        t = datetime.fromtimestamp(t)
+        x.append(t)
+        y.append(d[1])
+    fig, ax = plt.subplots()
+    ax.plot_date(x, y, '-')
+    ax.set_aspect(10)
+    ax.set_xlabel(xlab)
+    ax.set_ylabel(variable_name + "(" + units + ")")
+    ax.xaxis.set_major_locator(loc)
+    ax.xaxis.set_major_formatter(fmt)
+    #ax.xaxis.set_minor_locator(days)
+    ax.autoscale_view()
+
+    ax.grid(True)
+    savefig('visualization.png', bbox_inches='tight')
+    return 'visualization.png'

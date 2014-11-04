@@ -41,6 +41,17 @@ function graphVals(graph_data, units, varName) {
 
             $("#graph-container").html("");
 
+            $("#graph-area").append(
+                '<div id="panel-right"><div id="plot-options"><table class="table">' +
+                    '<div id="dateIntervals" class="btn-group">' +
+                    '<button id="btnAll" type="button" class="btn btn-default">All</button><button id="btnLastMonth" type="button" class="btn btn-default">Last Month</button>' +
+                    '<button id="btnLastWeek" type="button" class="btn btn-default">Last Week</button></div>' +
+                    '<tbody><tr><td>Begin Date</td><td><input id="dpd1" type="text" class="datepicker" data-date-format="m/dd/yyyy"></td></tr>' +
+                    '<tr><td>End Date</td><td><input id="dpd2" type="text" class="datepicker" data-date-format="m/dd/yyyy"></td></tr>' +
+                    '<tr><td>Visualization</td><td></button><ul class="dropdown-menu"><li><a href="#" id="btnTimeSeries">Time Series</a></li><li><a href="#" id="btnHistogram">Histogram</a></li><li><a href="#" id="btnBoxAndWhisker">Box and Whisker</a></li></ul></div></td></tr>' +
+                    '<tr><td></td><td><button id ="btnSetPlotOptions" type="button" class="btn btn-primary"> Plot</button></td></tr></tbody></table></div>' +
+                    '<div id="summaryContainer" class="panel panel-default"><div class="panel-heading  glyphicon glyphicon-list-alt"><span class="container-title"> Summary Statistics</span></div><table class="table" id="statisticsTable"><tbody></tbody></table></div></div>');
+
             var svg = d3.select("#graph-container").append("svg")
                 .attr("width", 833)
                 .attr("height", 500);
@@ -135,7 +146,6 @@ function graphVals(graph_data, units, varName) {
                  d0 = graph_data[i - 1],
                  d1 = graph_data[i],
                  d = x0 - d0.x > d1.x - x0 ? d1 : d0;
-                 console.log(x0);
             over.attr("transform", "translate(" + xRange(d.x) + "," + yRange(d.y) + ")");
             over.select("text").text(d.y);
             over.select("text").attr("transform","translate(0,8)");
@@ -381,6 +391,30 @@ function getDatasetsAfterFilters(dataset){
                 dateLast.setValue(maxDate);
             });
 
-
+            //f();
             return dataset;
         }
+//
+//$(function() {
+//    $("#btnSetPlotOptions").click(function () {
+//        console.log('test');
+//        var dateFirst = new Date($('#dpd1').val());
+//        var dateLast = new Date($('#dpd2').val());
+//        var dataset = glob_graph_data.filter(function (d) {
+//            return (d.x >= dateFirst.getTime() && d.x <= dateLast.getTime());
+//        });
+//        var a = dateFirst.getTime();
+//        var b = dateLast.getTime();
+//        if (a <= b) {
+//            graphVals(dataset);  // Dates do not overlap, proceed
+//        }
+//        else {
+//            $("#graph-area").prepend(
+//                '<div class="alert alert-danger alert-dismissable">\
+//                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>\
+//                  <strong></strong> Dates cannot overlap. \
+//                </div>'
+//            );
+//        }
+//    });
+//});

@@ -14,48 +14,49 @@
         <div class="col-md-12">
             {% block extra_content %}
                 <div id="loading"><h2>UPDATING DATA . . .</h2><br></div>
-                <div id="graph-header-var"></div>
-                <div id="graph-header-site"></div>
-                <div id="graph-area">
-                    <div id="graph-container"></div>
-                    <div id="panel-right">
-                        <div id="plot-options">
-                            <table class="table">
-                                        <div id="dateIntervals" class="btn-group">
-                                              <button id="btnAll" type="button" class="btn btn-default">All</button>
-                                              <button id="btnLastMonth" type="button" class="btn btn-default">Last Month</button>
-                                              <button id="btnLastWeek" type="button" class="btn btn-default">Last Week</button>
-                                        </div>
-
-                                        <tbody>
-                                            <tr><td>Begin Date</td><td><input id="dpd1" type="text" class="datepicker" data-date-format="m/dd/yyyy"></td></tr>
-                                            <tr><td>End Date</td><td><input id="dpd2" type="text" class="datepicker" data-date-format="m/dd/yyyy"></td></tr>
-                                            <tr><td>Visualization</td><td>
-                                              <div class="btn-group">
-                                                  <button id="visualizationDropDown" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown">
-                                                    Time Series <span class="caret"></span>
-                                                  </button>
-                                                  <ul class="dropdown-menu">
-                                                      <li><a href="#" id="btnTimeSeries">Time Series</a></li>
-                                                      <li><a href="#" id="btnHistogram">Histogram</a></li>
-                                                      <li><a href="#" id="btnBoxAndWhisker">Box and Whisker</a></li>
-                                                  </ul>
-                                              </div>
-                                            </td></tr>
-                                        <tr><td></td><td><button id ="btnSetPlotOptions" type="button" class="btn btn-primary"> Plot</button></td></tr>
-                                        </tbody>
-                                   </table>
-                                </div>
-                        <div id="summaryContainer" class="panel panel-default">
-                           <div class="panel-heading  glyphicon glyphicon-list-alt"><span class="container-title"> Summary Statistics</span></div>
-                           <table class="table" id="statisticsTable">
-                                <tbody>
-
-                                </tbody>
-                           </table>
-                        </div>
-                    </div>
-                </div>
+                <img id="vis" src="">
+{#                <div id="graph-header-var"></div>#}
+{#                <div id="graph-header-site"></div>#}
+{#                <div id="graph-area">#}
+{#                    <div id="graph-container"></div>#}
+{#                <div id="panel-right">#}
+{#                        <div id="plot-options">#}
+{#                            <table class="table">#}
+{#                                        <div id="dateIntervals" class="btn-group">#}
+{#                                              <button id="btnAll" type="button" class="btn btn-default">All</button>#}
+{#                                              <button id="btnLastMonth" type="button" class="btn btn-default">Last Month</button>#}
+{#                                              <button id="btnLastWeek" type="button" class="btn btn-default">Last Week</button>#}
+{#                                        </div>#}
+{##}
+{#                                        <tbody>#}
+{#                                            <tr><td>Begin Date</td><td><input id="dpd1" type="text" class="datepicker" data-date-format="m/dd/yyyy"></td></tr>#}
+{#                                            <tr><td>End Date</td><td><input id="dpd2" type="text" class="datepicker" data-date-format="m/dd/yyyy"></td></tr>#}
+{#                                            <tr><td>Visualization</td><td>#}
+{#                                              <div class="btn-group">#}
+{#                                                  <button id="visualizationDropDown" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown">#}
+{#                                                    Time Series <span class="caret"></span>#}
+{#                                                  </button>#}
+{#                                                  <ul class="dropdown-menu">#}
+{#                                                      <li><a href="#" id="btnTimeSeries">Time Series</a></li>#}
+{#                                                      <li><a href="#" id="btnHistogram">Histogram</a></li>#}
+{#                                                      <li><a href="#" id="btnBoxAndWhisker">Box and Whisker</a></li>#}
+{#                                                  </ul>#}
+{#                                              </div>#}
+{#                                            </td></tr>#}
+{#                                        <tr><td></td><td><button id ="btnSetPlotOptions" type="button" class="btn btn-primary"> Plot</button></td></tr>#}
+{#                                        </tbody>#}
+{#                                   </table>#}
+{#                                </div>#}
+{#                        <div id="summaryContainer" class="panel panel-default">#}
+{#                           <div class="panel-heading  glyphicon glyphicon-list-alt"><span class="container-title"> Summary Statistics</span></div>#}
+{#                           <table class="table" id="statisticsTable">#}
+{#                                <tbody>#}
+{##}
+{#                                </tbody>#}
+{#                           </table>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
             {% endblock %}
 
             <table class="table table-striped" id="downloads">
@@ -472,25 +473,6 @@
             return str.indexOf(suffix, str.length - suffix.length) !== -1;
         }
 
-
-
-        function setSummaryStatistics(summary){
-        $("#statisticsTable tbody").empty();
-        $("#statisticsTable tbody").append(
-            '<tr><td>Arithmetic Mean</td><td>' + summary.arithmeticMean + '</td></tr>\
-                    <tr><td>Geometric Mean</td><td>'+ summary.geometricMean + '</td></tr>\
-                    <tr><td>Maximum</td><td>' + summary.maximum + '</td></tr>\
-                    <tr><td>Minimum</td><td>' + summary.minimum + '</td></tr>\
-                    <tr><td>Standard Deviation</td><td>' + summary.standardDeviation + '</td></tr>\
-                    <tr><td>10%</td><td>'+ summary.quantile10 +'</td></tr>\
-                    <tr><td>25%</td><td>'+ summary.quantile25 +'</td></tr>\
-                    <tr><td>Median, 50%</td><td>'+ summary.median +'</td></tr>\
-                    <tr><td>75%</td><td>'+ summary.quantile75 +'</td></tr>\
-                    <tr><td>90%</td><td>'+ summary.quantile90 +'</td></tr>\
-                    <tr><td>Number of Observations</td><td>'+ summary.observations +'</td></tr>'
-        );
-    }
-
         function transformFile() {
             $.ajax({
                 type:"GET",
@@ -537,7 +519,7 @@
                         if(data['variable_name']){
                             var varName = data['variable_name'];
                         }
-                        graphVals(d, units, varName);
+                        //graphVals(d, units, varName);
                         if (data['variable_name']){
                             var var_text = '<h2>' + varName + '</h2>';
                             $('#graph-header-var').html(var_text);}
@@ -562,38 +544,46 @@
             });
         }
 
-
-
-        $(document).ready(function(){
-            generateFiles();
-            $('#graph-area').hide();
-        });
-
-        $('#switch-to-static').tooltip({animation: true, delay: { show: 500, hide: 100 }});
         $("#btnSetPlotOptions").click(function() {
-            var dateFirst = new Date($('#dpd1').val());
-            var dateLast = new Date($('#dpd2').val());
-
-            console.log(glob_graph_data);
-            var dataset = glob_graph_data.filter(function (d) {
-                return (d.x >= dateFirst.getTime() && d.x <= dateLast.getTime());
-            });
-            console.log(glob_graph_data);
-            var a = dateFirst.getTime();
-            var b = dateLast.getTime();
-            console.log(dataset);
-            if(a <= b) {
-               graphVals(dataset);  // Dates do not overlap, proceed
-            }
-            else{
-                $("#graph-area").prepend(
-                    '<div class="alert alert-danger alert-dismissable">\
-                      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>\
-                      <strong></strong> Dates cannot overlap. \
-                    </div>'
-                );
-            }
+        console.log('test');
+        var dateFirst = new Date($('#dpd1').val());
+        var dateLast = new Date($('#dpd2').val());
+        var dataset = glob_graph_data.filter(function (d) {
+            return (d.x >= dateFirst.getTime() && d.x <= dateLast.getTime());
         });
+        var a = dateFirst.getTime();
+        var b = dateLast.getTime();
+        if (a <= b) {
+            graphVals(dataset);  // Dates do not overlap, proceed
+        }
+        else {
+            $("#graph-area").prepend(
+                '<div class="alert alert-danger alert-dismissable">\
+                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>\
+                  <strong></strong> Dates cannot overlap. \
+                </div>'
+            );
+        }
+    });
+    function getnSetVisLink(){
+        $.ajax({
+                type:"GET",
+                url:'/hsapi/_internal/{{ short_id }}/get-vis-link/',
+                success: function(data, xhr, status) {
+                    var vis_link = data.vis_link || "";
+                    document.getElementById('vis').src = vis_link;
+                }
+{#                error:function(data){#}
+{#                    console.log('something happened');#}
+{#                }#}
+                });
+    }
+        getnSetVisLink();
+        generateFiles();
+        $('#graph-area').hide();
+        $('#loading').hide();
+        $('#switch-to-static').tooltip({animation: true, delay: { show: 500, hide: 100 }});
+
 
     });
     </script>
