@@ -247,7 +247,12 @@ def generate_files(request, shortkey, *args, **kwargs):
         vis_file = open(vis_name, 'r')
         files = [csv_file, xml_file]
         hydroshare.add_resource_files(res.short_id, csv_file, xml_file, vis_file)
-        create_bag(res)
+        #cap bag count at 5, only make 3 bags per day
+        if len(res.bags.all()) >= 3 and res.bags.all()[2].timestamp.date() != now().date():
+                create_bag(res)
+        if len(res.bags.all()) > 5:
+            for b in res.bags.all()[5:]:
+                b.delete()
         os.remove(csv_name)
         os.remove(vis_name)
         os.remove(xml_name)
