@@ -74,10 +74,8 @@
         </div>
         <div class="col-lg-10" id="items">
             <div style="padding-bottom: 0.5em">
-            <a class="btn btn-success" href="/create-resource/"><i class="fa fa-plus"></i> Create new</a>
-
+-            <a class="btn btn-success" href="/create-resource/"><i class="fa fa-plus"></i> Create new</a>
             </div>
-
             <table class="table table-striped table-hover" id="item-selectors">
                 <tr>
                     <th>Title <i class="fa fa-sort-desc"></i></th>
@@ -118,6 +116,7 @@
     <script type="text/javascript">
         var k = 1;
         $(function() {
+            $('[data-toggle="tooltip"]').tooltip({'placement': 'right'});
             $("#add-row").click(function() {
                 k++;
                 var new_row = $("#initial-dcterm").clone();
