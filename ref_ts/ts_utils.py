@@ -335,7 +335,7 @@ def create_vis(data, xlab, variable_name, units):
         y.append(d[1])
     fig, ax = plt.subplots()
     ax.plot_date(x, y, '-')
-    ax.set_aspect(10)
+    # ax.set_aspect(10)
     ax.set_xlabel(xlab)
     ax.set_ylabel(variable_name + "(" + units + ")")
     ax.xaxis.set_major_locator(loc)
