@@ -262,7 +262,7 @@ class Migration(SchemaMigration):
         },
         u'hs_core.description': {
             'Meta': {'unique_together': "(('content_type', 'object_id'),)", 'object_name': 'Description'},
-            'abstract': ('django.db.models.fields.CharField', [], {'max_length': '500'}),
+            'abstract': ('django.db.models.fields.TextField', [], {}),
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'object_id': ('django.db.models.fields.PositiveIntegerField', [], {})

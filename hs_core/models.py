@@ -452,7 +452,7 @@ class Creator(Party):
 
 class Description(AbstractMetaDataElement):
     term = 'Description'
-    abstract = models.CharField(max_length=500)
+    abstract = models.TextField()
 
     def __unicode__(self):
         return self.abstract
