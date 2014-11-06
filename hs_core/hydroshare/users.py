@@ -659,7 +659,7 @@ def get_resource_list(
                     queries[t] = filter(lambda r: r.dublin_metadata.filter(content=metadata['content']).exists(), queries[t])
         qcnt = 0
         if queries[t]:
-            qcnt = queries[t].count();
+            qcnt = queries[t].__len__();
 
         if start is not None and count is not None:
             if qcnt>start:
