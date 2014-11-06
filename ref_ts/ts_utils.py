@@ -11,6 +11,12 @@ import matplotlib.pyplot as plt
 from matplotlib.dates import AutoDateFormatter, AutoDateLocator
 import operator
 import requests
+import csv
+import os
+from StringIO import StringIO
+from hs_core.hydroshare.hs_bagit import create_bag
+from hs_core import hydroshare
+from hs_core.models import ResourceFile
 
 
 def get_version(root):
@@ -337,6 +343,8 @@ def create_vis(data, xlab, variable_name, units):
     ax.plot_date(x, y, '-')
     # ax.set_aspect(10)
     ax.set_xlabel(xlab)
+    if 'NoneType' in str(type(units)):
+        units = 'unknown'
     ax.set_ylabel(variable_name + "(" + units + ")")
     ax.xaxis.set_major_locator(loc)
     ax.xaxis.set_major_formatter(fmt)
@@ -346,3 +354,95 @@ def create_vis(data, xlab, variable_name, units):
     ax.grid(True)
     savefig('visualization.png', bbox_inches='tight')
     return 'visualization.png'
+
+def make_files(reference_type, url, data_site_code, variable_code, title):
+
+    ts, csv_link, csv_size, xml_link, xml_size = {}, '', '', '', ''
+    if reference_type == 'rest':
+
+        ts = time_series_from_service(url, reference_type)
+
+    else:
+        ts = time_series_from_service(url,
+                                      reference_type,
+                                      site_name_or_code=data_site_code,
+                                      variable_code=variable_code)
+
+
+    vals = ts['values']
+    for_graph = ts['for_graph']
+    units = ts['units']
+    variable_name = ts['variable_name']
+    vis_name = create_vis(for_graph, 'Date', variable_name, units)
+    version = ts['wml_version']
+    d = datetime.today()
+    date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
+    file_base = '{0}-{1}'.format(title.replace(" ", ""), date)
+    csv_name = '{0}.{1}'.format(file_base, 'csv')
+    if version == '1':
+        xml_end = 'wml_1'
+        xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
+    elif version == '2.0':
+        xml_end = 'wml_2_0'
+        xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
+    for_csv = []
+    for k, v in vals.items():
+        t = (k, v)
+        for_csv.append(t)
+    with open(csv_name, 'wb') as csv_file:
+        w = csv.writer(csv_file)
+        w.writerow([title])
+        var = '{0}({1})'.format(ts['variable_name'], ts['units'])
+        w.writerow(['time', var])
+        for r in for_csv:
+            w.writerow(r)
+    with open(xml_name, 'wb') as xml_file:
+        xml_file.write(ts['time_series'])
+    csv_file = open(csv_name, 'r')
+    vis_file = open(vis_name, 'r')
+    files = []
+    if version == '1' or version == '1.0':
+        wml1_file = open(xml_name, 'r')
+        wml2_file = transform_file(reference_type, url, data_site_code, variable_code, title)
+        files = [csv_file, wml1_file, wml2_file, vis_file]
+        return files
+    if version == '2' or version == '2.0':
+        wml2_file = open(xml_name, 'r')
+        files = [csv_file, wml2_file, vis_file]
+        return files
+
+
+def generate_files(shortkey):
+    res = hydroshare.get_resource_by_shortkey(shortkey)
+    files = make_files(res.reference_type, res.url, res.data_site_code, res.variable_code, res.title)
+    for f in files:
+        hydroshare.add_resource_files(res.short_id, f)
+        os.remove(f.name)
+    create_bag(res)
+
+
+def transform_file(reference_type, url, data_site_code, variable_code, title):
+    if reference_type == 'soap':
+        client = Client(url)
+        response = client.service.GetValues(':'+data_site_code, ':'+variable_code, '', '', '')
+    elif reference_type == 'rest':
+        r = requests.get(url)
+        response = str(r.text)
+    waterml_1 = etree.XML(response)
+    wml_string = etree.tostring(waterml_1)
+    s = StringIO(wml_string)
+    dom = etree.parse(s)
+    module_dir = os.path.dirname(__file__)
+    xsl_location = os.path.join(module_dir, "static/ref_ts/xslt/WaterML1_1_timeSeries_to_WaterML2.xsl")
+    xslt = etree.parse(xsl_location)
+    transform = etree.XSLT(xslt)
+    newdom = transform(dom)
+    d = datetime.today()
+    date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
+    xml_name = '{0}-{1}-{2}'.format(title.replace(" ", ""), date, 'wml_2_0.xml')
+    with open(xml_name, 'wb') as f:
+        f.write(newdom)
+    xml_file = open(xml_name, 'r')
+    return xml_file
+
+

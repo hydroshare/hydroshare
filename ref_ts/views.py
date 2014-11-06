@@ -12,14 +12,11 @@ from hs_core.models import ResourceFile
 from . import ts_utils
 from .models import RefTimeSeries
 import requests
-from suds.client import Client
-import csv
-import os
 from lxml import etree
-from StringIO import StringIO
 import datetime
 from django.utils.timezone import now
-import operator
+import os
+
 
 
 class ReferencedSitesForm(forms.Form):
@@ -142,23 +139,26 @@ def create_ref_time_series(request, *args, **kwargs):
             n = full_variable.index(':')
             variable_name = full_variable[:n]
             variable_code = full_variable[n+1:]
+        reference_type = frm.cleaned_data['reference_type']
+        title = frm.cleaned_data['title']
 
         res = hydroshare.create_resource(
             resource_type='RefTimeSeries',
             owner=request.user,
-            title=frm.cleaned_data['title'],
+            title=title,
             keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None,
             dublin_metadata=dcterms,
             content=frm.cleaned_data['abstract'] or frm.cleaned_data['title'],
-            reference_type=frm.cleaned_data['reference_type'],
+            reference_type=reference_type,
             url=url,
             data_site_name=site_name,
             data_site_code=site_code,
             variable_name=variable_name,
             variable_code=variable_code,
             start_date=start_date,
-            end_date=now()
+            end_date=now(),
         )
+        ts_utils.generate_files(res.short_id)
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeries)
@@ -171,6 +171,14 @@ def add_dublin_core(request, page):
             fields = ['term', 'content']
 
     cm = page.get_content_model()
+    resfiles = []
+    visfile = ''
+    for f in cm.files.all():
+        if 'visual' in str(f.resource_file.name):
+            visfile = f
+        else:
+            resfiles.append(f)
+
     try:
         abstract = cm.dublin_metadata.filter(term='AB').first().content
     except:
@@ -187,6 +195,8 @@ def add_dublin_core(request, page):
         'site_code' : cm.data_site_code if cm.data_site_code else '',
         'variable_name': cm.variable_name if cm.variable_name else '',
         'variable_code': cm.variable_code if cm.variable_code else '',
+        'visfile':visfile,
+        'resfiles': resfiles,
         'files': cm.files.all(),
         'dcterm_frm': DCTerm(),
         'bag': cm.bags.first(),
@@ -200,182 +210,64 @@ def add_dublin_core(request, page):
     }
 
 
-def generate_files(request, shortkey, *args, **kwargs):
-    res = hydroshare.get_resource_by_shortkey(shortkey)
-    ts, csv_link, csv_size, xml_link, xml_size = {}, '', '', '', ''
-    try:
-        if res.reference_type == 'rest':
-            ts = ts_utils.time_series_from_service(res.url, res.reference_type)
-        else:
-            ts = ts_utils.time_series_from_service(res.url,
-                                               res.reference_type,
-                                               site_name_or_code=res.data_site_code,
-                                               variable_code=res.variable_code)
+def update_files(request, shortkey, *args, **kwargs):
 
-        vals = ts['values']
-        for_graph = ts['for_graph']
-        units = ts['units']
-        variable_name = ts['variable_name']
-        vis_name = ts_utils.create_vis(for_graph, 'Date', variable_name, units)
-        version = ts['wml_version']
-        d = datetime.date.today()
-        date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
-        file_base = '{0}-{1}'.format(res.title.replace(" ", ""), date)
-        csv_name = '{0}.{1}'.format(file_base, 'csv')
-        if version == '1':
-            xml_end = 'wml_1'
-            xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
-        elif version == '2.0':
-            xml_end = 'wml_2_0'
-            xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
-        for_csv = []
-        for k, v in vals.items():
-            t = (k, v)
-            for_csv.append(t)
-        ResourceFile.objects.filter(object_id=res.pk).delete()
-        with open(csv_name, 'wb') as csv_file:
-            w = csv.writer(csv_file)
-            w.writerow([res.title])
-            var = '{0}({1})'.format(ts['variable_name'], ts['units'])
-            w.writerow(['time', var])
-            for r in for_csv:
-                w.writerow(r)
-        with open(xml_name, 'wb') as xml_file:
-            xml_file.write(ts['time_series'])
-        csv_file = open(csv_name, 'r')
-        xml_file = open(xml_name, 'r')
-        vis_file = open(vis_name, 'r')
-        files = [csv_file, xml_file]
-        hydroshare.add_resource_files(res.short_id, csv_file, xml_file, vis_file)
-        #cap bag count at 5, only make 3 bags per day
-        if len(res.bags.all()) >= 3 and res.bags.all()[2].timestamp.date() != now().date():
+    res = hydroshare.get_resource_by_shortkey(shortkey)
+
+    files = ts_utils.make_files(res.reference_type, res.url, res.data_site_code, res.variable_code, res.title)
+    if files:
+        if len(res.files.all())>0:
+            for f in res.files.all():
+                f.resource_file.delete()
+        res_files = []
+        for f in files:
+            res_file = hydroshare.add_resource_files(res.short_id, f)
+            res_files.append(res_file)
+            os.remove(f.name)
+        # cap 3 bags per day, 5 overall
+        if len(res.bags.all()) <= 3 and res.bags.all()[2].timestamp.date() != now().date():
                 create_bag(res)
         if len(res.bags.all()) > 5:
             for b in res.bags.all()[5:]:
                 b.delete()
-        os.remove(csv_name)
-        os.remove(vis_name)
-        os.remove(xml_name)
-        files = ResourceFile.objects.filter(object_id=res.pk)
-        for f in files:
+        for f in res_files:
+            raise Exception(f.resource_file)
             if str(f.resource_file).endswith('.csv'):
+                csv_name = str(f.resource_file)
+                sl_loc = csv_name.rfind('/')
+                csv_name = csv_name[sl_loc+1:]
                 csv_link = f.resource_file.url
                 csv_size = f.resource_file.size
-            if xml_end in str(f.resource_file):
-                xml_link = f.resource_file.url
-                xml_size = f.resource_file.size
+            if str(f.resource_file).endswith('.xml') and 'wml_2' in str(f.resource_file):
+                wml2_name = str(f.resource_file)
+                sl_loc = wml2_name.rfind('/')
+                wml2_name = wml2_name[sl_loc+1:]
+                wml2_link = f.resource_file.url
+                wml2_size = f.resource_file.size
+            if str(f.resource_file).endswith('.xml') and 'wml_1' in str(f.resource_file):
+                wml1_name = str(f.resource_file)
+                sl_loc = wml1_name.rfind('/')
+                wml1_name = wml1_name[sl_loc+1:]
+                wml1_link = f.resource_file.url
+                wml1_size = f.resource_file.size
             if 'visual' in str(f.resource_file):
                 vis_link = f.resource_file.url
+
         status_code = 200
-        data = {'for_graph': ts.get('for_graph'),
-                'values': ts.get('values'),
-                'units': ts.get('units'),
-                'site_name': ts.get('site_name'),
-                'variable_name': ts.get('variable_name'),
-                'status_code': status_code,
+        data = {'status_code': status_code,
                 'csv_name': csv_name,
-                'xml_name': xml_name,
                 'csv_link': csv_link,
                 'csv_size': csv_size,
-                'xml_link': xml_link,
-                'xml_size': xml_size,
+                'wml1_name': wml1_name,
+                'wml1_link': wml1_link,
+                'wml1_size': wml1_size,
+                'wml2_name': wml2_name,
+                'wml2_link': wml2_link,
+                'wml2_size': wml2_size,
                 'vis_link': vis_link}
         return json_or_jsonp(request, data)  # successfully generated new files
-    except Exception:  # most likely because the server is unreachable
-        files = ResourceFile.objects.filter(object_id=res.pk)
-        xml_file = None
-        for f in files:
-            if str(f.resource_file).endswith('.csv'):
-                csv_link = f.resource_file.url
-                csv_size = f.resource_file.size
-            if str(f.resource_file).endswith('.xml'):
-                xml_link = f.resource_file.url
-                xml_size = f.resource_file.size
-                xml_file = f.resource_file
-            if 'visual' in str(f.resource_file):
-                vis_link = f.resource_file.url
-        if xml_file is None:
-            status_code = 404
-            data = {'for_graph': ts.get('for_graph'),
-                    'values': ts.get('values'),
-                    'units': ts.get('units'),
-                    'site_name': ts.get('site_name'),
-                    'variable_name': ts.get('variable_name'),
-                    'status_code': status_code,
-                    'csv_link': csv_link,
-                    'csv_size': csv_size,
-                    'xml_link': xml_link,
-                    'xml_size': xml_size,
-                    'vis_link': vis_link}
-            return json_or_jsonp(request, data)  # did not generate new files, did not find old ones
-        xml_doc = open(str(xml_file), 'r').read()
-        root = etree.XML(xml_doc)
-        os.remove(str(xml_file))
-        version = ts_utils.get_version(root)
-        if version == '1':
-            ts = ts_utils.parse_1_0_and_1_1(root)
-            status_code = 200
-        elif version =='2.0':
-            ts = ts_utils.parse_2_0(root)
-            status_code = 200
-        else:
-            status_code = 503
-        data = {'for_graph': ts.get('for_graph'),
-                'values': ts.get('values'),
-                'units': ts.get('units'),
-                'site_name': ts.get('site_name'),
-                'variable_name': ts.get('variable_name'),
-                'status_code': status_code,
-                'csv_link': csv_link,
-                'csv_size': csv_size,
-                'xml_link': xml_link,
-                'xml_size': xml_size,
-                'vis_link': vis_link}
-        return json_or_jsonp(request, data) # did not generate new files, return old ones
 
-def transform_file(request, shortkey, *args, **kwargs):
-    res = hydroshare.get_resource_by_shortkey(shortkey)
-    if res.reference_type == 'soap':
-        client = Client(res.url)
-        response = client.service.GetValues(':'+res.data_site_code, ':'+res.variable_code, '', '', '')
-    elif res.reference_type == 'rest':
-        r = requests.get(res.url)
-        response = str(r.text)
-    waterml_1 = etree.XML(response)
-    wml_string = etree.tostring(waterml_1)
-    s = StringIO(wml_string)
-    dom = etree.parse(s)
-    module_dir = os.path.dirname(__file__)
-    xsl_location = os.path.join(module_dir, "static/ref_ts/xslt/WaterML1_1_timeSeries_to_WaterML2.xsl")
-    xslt = etree.parse(xsl_location)
-    transform = etree.XSLT(xslt)
-    newdom = transform(dom)
-    d = datetime.date.today()
-    date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
-    xml_name = '{0}-{1}-{2}'.format(res.title.replace(" ", ""), date, 'wml_2_0.xml')
-    with open(xml_name, 'wb') as f:
-        f.write(newdom)
-    xml_file = open(xml_name, 'r')
-    ResourceFile.objects.filter(object_id=res.pk, resource_file__contains='wml_2_0').delete()
-    hydroshare.add_resource_files(res.short_id, xml_file)
-    f = ResourceFile.objects.filter(object_id=res.pk, resource_file__contains='wml_2_0')[0].resource_file
-    data = {
-        'status_code': 200,
-        'xml_name': xml_name,
-        'xml_size': f.size,
-        'xml_link': f.url
-    }
-    os.remove(xml_name)
-    # print(etree.tostring(newdom, pretty_print=True))
-    return json_or_jsonp(request, data)
 
-def get_vis_link(request, shortkey, *args, **kwargs):
-    res = hydroshare.get_resource_by_shortkey(shortkey)
-    files = ResourceFile.objects.filter(object_id=res.pk)
-    for f in files:
-        if 'visual' in str(f.resource_file):
-            vis_link = f.resource_file.url
-    data = {
-        'vis_link':vis_link
-    }
-    return json_or_jsonp(request, data)
+
+
+

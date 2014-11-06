@@ -14,7 +14,7 @@
         <div class="col-md-12">
             {% block extra_content %}
                 <div id="loading"><h2>UPDATING DATA . . .</h2><br></div>
-                <img id="vis" src="">
+                <img id="vis" src={{visfile.resource_file.url}}>
 {#                <div id="graph-header-var"></div>#}
 {#                <div id="graph-header-site"></div>#}
 {#                <div id="graph-area">#}
@@ -60,16 +60,16 @@
             {% endblock %}
 
             <table class="table table-striped" id="downloads">
+                {% if resfiles %}
+                {% for f in resfiles %}
                 <tr>
-                    <td id="csv-name"></td>
-                    <td><a class="btn btn-primary btn-block" href="" id="csv-link">Download</a></td>
+                    <td>{{ f.resource_file.name|slice:"33:" }}</td>
+                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
+                    <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>
+
                 </tr>
-                <tr>
-                    <td id="xml-name"></td>
-                    <td id="xml-button"><a class="btn btn-primary btn-block" href="" id="xml-link" target="_blank">Download</a></td>
-                </tr>
-                <tr id="xml2"></tr>
-                <tr>
+                {% endfor %}
+                {% endif %}
                     <td></td>
                     <td>
                         <div class="btn-group">
@@ -478,54 +478,30 @@
                 type:"GET",
                 url:'/hsapi/_internal/{{ short_id }}/transform-file/',
                 success: function(data, stuff){
-                    var xml_text = "<td>" + data['xml_name'] + "</td>" + "<td><a class='btn btn-primary btn-block' href=" + data['xml_link'] + ">Download (" + humanFileSize(data['xml_size']) + ")</a></td>";
-                    $('#xml2').html(xml_text);
+
                 },
                 error: function(data, stuff){console.log(data, stuff)}
             });
         }
 
-        function generateFiles() {
+        function updateFiles() {
             $('#downloads').hide();
             $.ajax({
                 type:"GET",
-                url:'/hsapi/_internal/{{ short_id }}/generate-files/',
+                url:'/hsapi/_internal/{{ short_id }}/update-files/',
                 success: function(data, xhr, status){
-                    var units = data['units'],
-                            d = data['for_graph'],
-                         vals = data['values'],
-                  status_code = data['status_code'],
+                    var status_code = data['status_code'],
                      csv_name = data.csv_name || "",
                      csv_link = data.csv_link || "",
                      csv_size = data.csv_size || "",
-                     xml_name = data.xml_name || "",
-                     xml_link = data.xml_link || "",
-                     xml_size = data.xml_size || "";
-              glob_graph_data = d;
+                     wml1_name = data.wml1_name || "",
+                     wml1_link = data.wml1_link || "",
+                     wml1_size = data.wml1_size || "",
+                     wml2_name = data.wml2_name || "",
+                     wml2_link = data.wml2_link || "",
+                     wml2_size = data.wml2_size || "";
                     if (status_code==200 || status_code==503){
-                        $('#csv-name').html(csv_name);
-                        $('#csv-link').html('Download (' + humanFileSize(csv_size) +')');
-                        document.getElementById('csv-link').href = csv_link;
-                        $('#xml-name').html(xml_name);
-                        $('#xml-link').html('Download (' + humanFileSize(xml_size) +')');
-                        document.getElementById('xml-link').href = xml_link;
-                        $('#downloads').show();
-                        if (units==undefined){units='Data'}
-                        d.sort(compare);
-                        for (var i=0; i<d.length; i++){
-                                d[i].x = d[i].x*1000;
-                            }
-
-                        if(data['variable_name']){
-                            var varName = data['variable_name'];
-                        }
-                        //graphVals(d, units, varName);
-                        if (data['variable_name']){
-                            var var_text = '<h2>' + varName + '</h2>';
-                            $('#graph-header-var').html(var_text);}
-                        if (data['site_name']){
-                            var site_text = '<h3>&nbsp;&nbsp;&nbsp; at ' + data['site_name'] + '</h3>';
-                            $('#graph-header-site').html(site_text);}
+                        update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size);
                     } else if(status_code==404) {
                         $('#loading').html('<h2>Unable to reach service and no data exists for this resource.</h2><br>');
                     }
@@ -533,53 +509,91 @@
                                           $('#graph-area').show();
                     } else if (status_code==503) {$('#loading').html('<h3>Unable to reach service. This is the latest data</h3><br>');}
                     if (endsWith(xml_name, 'wml_1.xml')){
-                        transformFile();
                     }
 
                 },
                 error: function(data, stuff){
+                    alert('what is going on?')
                     console.log(data);
                     console.log(stuff);
                 }
             });
         }
-
-        $("#btnSetPlotOptions").click(function() {
-        console.log('test');
-        var dateFirst = new Date($('#dpd1').val());
-        var dateLast = new Date($('#dpd2').val());
-        var dataset = glob_graph_data.filter(function (d) {
-            return (d.x >= dateFirst.getTime() && d.x <= dateLast.getTime());
-        });
-        var a = dateFirst.getTime();
-        var b = dateLast.getTime();
-        if (a <= b) {
-            graphVals(dataset);  // Dates do not overlap, proceed
+        function update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size){
+            $('#csv-name').html(csv_name);
+            $('#csv-link').html('Download (' + humanFileSize(csv_size) +')');
+            document.getElementById('csv-link').href = csv_link;
+            if (wml1_name != ""){
+                 $('#xml-name').html(wml1_name);
+                 $('#xml-link').html('Download (' + humanFileSize(wml1_size) +')');
+                 document.getElementById('xml-link').href = wml1_link;
+                 var xml_text = "<td>" + wml2_name + "</td>" + "<td><a class='btn btn-primary btn-block' href=" + wml2_link + ">Download (" + humanFileSize(wml2_size) + ")</a></td>";
+                 $('#xml2').html(xml_text);
+                        }
+            else{
+                 $('#xml-name').html(wml2_name);
+                 $('#xml-link').html('Download (' + humanFileSize(wml2_size) +')');
+                 document.getElementById('xml-link').href = wml2_link;
+            }
+                 $('#downloads').show();
         }
-        else {
-            $("#graph-area").prepend(
-                '<div class="alert alert-danger alert-dismissable">\
-                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>\
-                  <strong></strong> Dates cannot overlap. \
-                </div>'
-            );
-        }
-    });
-    function getnSetVisLink(){
+{#        $("#btnSetPlotOptions").click(function() {#}
+{#        console.log('test');#}
+{#        var dateFirst = new Date($('#dpd1').val());#}
+{#        var dateLast = new Date($('#dpd2').val());#}
+{#        var dataset = glob_graph_data.filter(function (d) {#}
+{#            return (d.x >= dateFirst.getTime() && d.x <= dateLast.getTime());#}
+{#        });#}
+{#        var a = dateFirst.getTime();#}
+{#        var b = dateLast.getTime();#}
+{#        if (a <= b) {#}
+{#            graphVals(dataset);  // Dates do not overlap, proceed#}
+{#        }#}
+{#        else {#}
+{#            $("#graph-area").prepend(#}
+{#                '<div class="alert alert-danger alert-dismissable">\#}
+{#                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>\#}
+{#                  <strong></strong> Dates cannot overlap. \#}
+{#                </div>'#}
+{#            );#}
+{#        }#}
+{#    });#}
+    function getnSetLinks(){
         $.ajax({
                 type:"GET",
-                url:'/hsapi/_internal/{{ short_id }}/get-vis-link/',
-                success: function(data, xhr, status) {
-                    var vis_link = data.vis_link || "";
-                    document.getElementById('vis').src = vis_link;
+                url:'/hsapi/_internal/{{ short_id }}/get-links/',
+                success: function(data, xhr, status){
+                    var status_code = data['status_code'],
+                     csv_name = data.csv_name || "",
+                     csv_link = data.csv_link || "",
+                     csv_size = data.csv_size || "",
+                     wml1_name = data.wml1_name || "",
+                     wml1_link = data.wml1_link || "",
+                     wml1_size = data.wml1_size || "",
+                     wml2_name = data.wml2_name || "",
+                     wml2_link = data.wml2_link || "",
+                     wml2_size = data.wml2_size || "";
+                    if (status_code==200 || status_code==503){
+                        update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size);
+                    } else if(status_code==404) {
+                        $('#loading').html('<h2>Unable to reach service and no data exists for this resource.</h2><br>');
+                    }
+                    if (status_code==200){$('#loading').hide();
+                                          $('#graph-area').show();
+                    } else if (status_code==503) {$('#loading').html('<h3>Unable to reach service. This is the latest data</h3><br>');}
+                    if (endsWith(xml_name, 'wml_1.xml')){
+                    }
+
+                },
+                error: function(data, stuff){
+                    alert('error');
+                    console.log(data);
+                    console.log(stuff);
                 }
-{#                error:function(data){#}
-{#                    console.log('something happened');#}
-{#                }#}
-                });
+            });
     }
-        getnSetVisLink();
-        generateFiles();
+        //getnSetLinks();
+        //updateFiles();
         $('#graph-area').hide();
         $('#loading').hide();
         $('#switch-to-static').tooltip({animation: true, delay: { show: 500, hide: 100 }});
