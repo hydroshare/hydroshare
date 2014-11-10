@@ -15,6 +15,8 @@ import os
 pre_create_resource = django.dispatch.Signal(providing_args=['dublin_metadata', 'files'])
 post_create_resource = django.dispatch.Signal(providing_args=['resource'])
 
+file_size_limit =  4*(1024 ** 3)
+file_size_limit_for_display = '4G'
 
 def get_resource(pk):
     """
@@ -319,6 +321,11 @@ def create_resource(
     else:
         raise NotImplementedError("Type {resource_type} does not exist".format(resource_type=resource_type))
 
+    for file in files:
+        if file._size > file_size_limit:
+            # file is greater than file_size_limit, which is not allowed
+            return None
+
     # Send pre-create resource signal
     pre_create_resource.send(sender=cls, dublin_metadata=dublin_metadata, files=files, **kwargs)
 
@@ -387,6 +394,11 @@ def create_resource(
     # add the subject elements from the AssignedKeywords (new metadata implementation)
     for akw in AssignedKeyword.objects.filter(object_pk=resource.id).all():
         resource.metadata.create_element('subject', value=akw.keyword.title)
+        QualifiedDublinCoreElement.objects.create(
+                term='SUB',
+                content=akw.keyword.title,
+                content_object=resource
+            )
 
     hs_bagit.create_bag(resource)
 

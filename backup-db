@@ -1,3 +1,3 @@
 #!/bin/bash
 
-fig run --rm hydroshare /usr/bin/pg_dump -c -d postgres -U postgres -h postgis > "pg.`date`.sql"
+fig run --rm hydroshare /usr/bin/pg_dump -c -d postgres -U postgres -h postgis > "pg.hydroshare-`date +"%m-%d-%y"`.sql"

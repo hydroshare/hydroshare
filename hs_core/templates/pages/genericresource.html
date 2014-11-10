@@ -69,10 +69,12 @@
             <h4>Other Metadata</h4>
             <table class="table table-condensed">
             {% for term in dublin_core %}
-                <tr>
-                    <th>{{ term|dcterm }}</th>
-                    <td>{{ term.content }}</td>
-                </tr>
+                {% ifnotequal term|dcterm 'Title' %}
+                    <tr>
+                        <th>{{ term|dcterm }}</th>
+                        <td>{{ term.content }}</td>
+                    </tr>
+                {% endifnotequal %}
             {% endfor %}
             </table>
             {% if page.perms.change %}
@@ -96,7 +98,26 @@
                     <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
                     <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>
                     {% if page.perms.change %}
-                        <td><a class="btn btn-danger btn-block" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a></td>
+                        <div class="modal fade" id="delete-resource-file" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title" id="submit-for-publication-title">Confirm resource file deletion</h4>
+                              </div>
+                              <div class="modal-body">
+                                  <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource file. A copy of your
+                                    resource file will not be retained by Hydroshare.  We recommend highly that you download the latest copy
+                                    of your resource file before confirming this action.
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <td><a class="btn btn-danger btn-block" data-toggle="modal" data-target="#delete-resource-file">Delete</a></td>
                     {% endif %}
                 </tr>
                 {% endfor %}
@@ -463,7 +484,7 @@
                   {% csrf_token %}
                   <div class="form-group">
                       <label for="add-citation-input">Select files:</label>
-                      <input type="file" class="form-control" name="files" id="add-file-input" multiple/>
+                      <input type="file" name="files" id="add-file-input" multiple/>
                   </div>
 
           </div>
