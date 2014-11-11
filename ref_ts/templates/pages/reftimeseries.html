@@ -473,53 +473,27 @@
             return str.indexOf(suffix, str.length - suffix.length) !== -1;
         }
 
-        function transformFile() {
-            $.ajax({
-                type:"GET",
-                url:'/hsapi/_internal/{{ short_id }}/transform-file/',
-                success: function(data, stuff){
 
-                },
-                error: function(data, stuff){console.log(data, stuff)}
-            });
-        }
 
         function updateFiles() {
-            $('#downloads').hide();
-            $.ajax({
-                type:"GET",
-                url:'/hsapi/_internal/{{ short_id }}/update-files/',
-                success: function(data, xhr, status){
-                    var status_code = data['status_code'],
-                     csv_name = data.csv_name || "",
-                     csv_link = data.csv_link || "",
-                     csv_size = data.csv_size || "",
-                     wml1_name = data.wml1_name || "",
-                     wml1_link = data.wml1_link || "",
-                     wml1_size = data.wml1_size || "",
-                     wml2_name = data.wml2_name || "",
-                     wml2_link = data.wml2_link || "",
-                     wml2_size = data.wml2_size || "";
-                    if (status_code==200 || status_code==503){
-                        update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size);
-                    } else if(status_code==404) {
-                        $('#loading').html('<h2>Unable to reach service and no data exists for this resource.</h2><br>');
-                    }
-                    if (status_code==200){$('#loading').hide();
-                                          $('#graph-area').show();
-                    } else if (status_code==503) {$('#loading').html('<h3>Unable to reach service. This is the latest data</h3><br>');}
-                    if (endsWith(xml_name, 'wml_1.xml')){
-                    }
+            console.log('before');
+             $.ajax({
+                 type:"GET",
+                 url:'/hsapi/_internal/{{ short_id }}/update-files/',
+                 success:function (data, xhr, status) {
 
-                },
-                error: function(data, stuff){
-                    alert('what is going on?')
-                    console.log(data);
-                    console.log(stuff);
-                }
-            });
+               console.log(data);
+
+            },
+                 error:function(data){
+                     console.log('error', data);
+                 }
+
+
+        });
+            console.log('after');
         }
-        function update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size){
+    function update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size){
             $('#csv-name').html(csv_name);
             $('#csv-link').html('Download (' + humanFileSize(csv_size) +')');
             document.getElementById('csv-link').href = csv_link;
@@ -537,63 +511,10 @@
             }
                  $('#downloads').show();
         }
-{#        $("#btnSetPlotOptions").click(function() {#}
-{#        console.log('test');#}
-{#        var dateFirst = new Date($('#dpd1').val());#}
-{#        var dateLast = new Date($('#dpd2').val());#}
-{#        var dataset = glob_graph_data.filter(function (d) {#}
-{#            return (d.x >= dateFirst.getTime() && d.x <= dateLast.getTime());#}
-{#        });#}
-{#        var a = dateFirst.getTime();#}
-{#        var b = dateLast.getTime();#}
-{#        if (a <= b) {#}
-{#            graphVals(dataset);  // Dates do not overlap, proceed#}
-{#        }#}
-{#        else {#}
-{#            $("#graph-area").prepend(#}
-{#                '<div class="alert alert-danger alert-dismissable">\#}
-{#                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>\#}
-{#                  <strong></strong> Dates cannot overlap. \#}
-{#                </div>'#}
-{#            );#}
-{#        }#}
-{#    });#}
-    function getnSetLinks(){
-        $.ajax({
-                type:"GET",
-                url:'/hsapi/_internal/{{ short_id }}/get-links/',
-                success: function(data, xhr, status){
-                    var status_code = data['status_code'],
-                     csv_name = data.csv_name || "",
-                     csv_link = data.csv_link || "",
-                     csv_size = data.csv_size || "",
-                     wml1_name = data.wml1_name || "",
-                     wml1_link = data.wml1_link || "",
-                     wml1_size = data.wml1_size || "",
-                     wml2_name = data.wml2_name || "",
-                     wml2_link = data.wml2_link || "",
-                     wml2_size = data.wml2_size || "";
-                    if (status_code==200 || status_code==503){
-                        update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size);
-                    } else if(status_code==404) {
-                        $('#loading').html('<h2>Unable to reach service and no data exists for this resource.</h2><br>');
-                    }
-                    if (status_code==200){$('#loading').hide();
-                                          $('#graph-area').show();
-                    } else if (status_code==503) {$('#loading').html('<h3>Unable to reach service. This is the latest data</h3><br>');}
-                    if (endsWith(xml_name, 'wml_1.xml')){
-                    }
 
-                },
-                error: function(data, stuff){
-                    alert('error');
-                    console.log(data);
-                    console.log(stuff);
-                }
-            });
-    }
-        //getnSetLinks();
-        //updateFiles();
+
+
+        updateFiles();
         $('#graph-area').hide();
         $('#loading').hide();
         $('#switch-to-static').tooltip({animation: true, delay: { show: 500, hide: 100 }});

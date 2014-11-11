@@ -176,8 +176,10 @@ def add_dublin_core(request, page):
     for f in cm.files.all():
         if 'visual' in str(f.resource_file.name):
             visfile = f
-        else:
+        elif f.resource_file:
             resfiles.append(f)
+        else:
+            f.delete()
 
     try:
         abstract = cm.dublin_metadata.filter(term='AB').first().content
@@ -210,6 +212,7 @@ def add_dublin_core(request, page):
     }
 
 
+
 def update_files(request, shortkey, *args, **kwargs):
 
     res = hydroshare.get_resource_by_shortkey(shortkey)
@@ -221,17 +224,24 @@ def update_files(request, shortkey, *args, **kwargs):
                 f.resource_file.delete()
         res_files = []
         for f in files:
-            res_file = hydroshare.add_resource_files(res.short_id, f)
+            res_file = hydroshare.add_resource_files(res.short_id, f)[0]
             res_files.append(res_file)
             os.remove(f.name)
+        for fl in res.files.all():
+            if fl.resource_file:
+                pass
+            else:
+                fl.delete()
+
         # cap 3 bags per day, 5 overall
-        if len(res.bags.all()) <= 3 and res.bags.all()[2].timestamp.date() != now().date():
+        if len(res.bags.all()) >= 3:
+            if res.bags.all()[2].timestamp.date() != now().date():
                 create_bag(res)
         if len(res.bags.all()) > 5:
             for b in res.bags.all()[5:]:
                 b.delete()
+
         for f in res_files:
-            raise Exception(f.resource_file)
             if str(f.resource_file).endswith('.csv'):
                 csv_name = str(f.resource_file)
                 sl_loc = csv_name.rfind('/')
@@ -266,7 +276,6 @@ def update_files(request, shortkey, *args, **kwargs):
                 'wml2_size': wml2_size,
                 'vis_link': vis_link}
         return json_or_jsonp(request, data)  # successfully generated new files
-
 
 
 
