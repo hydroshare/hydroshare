@@ -13,50 +13,8 @@
 <div class="row">
         <div class="col-md-12">
             {% block extra_content %}
-                <div id="loading"><h2>UPDATING DATA . . .</h2><br></div>
                 <img id="vis" src={{visfile.resource_file.url}}>
-{#                <div id="graph-header-var"></div>#}
-{#                <div id="graph-header-site"></div>#}
-{#                <div id="graph-area">#}
-{#                    <div id="graph-container"></div>#}
-{#                <div id="panel-right">#}
-{#                        <div id="plot-options">#}
-{#                            <table class="table">#}
-{#                                        <div id="dateIntervals" class="btn-group">#}
-{#                                              <button id="btnAll" type="button" class="btn btn-default">All</button>#}
-{#                                              <button id="btnLastMonth" type="button" class="btn btn-default">Last Month</button>#}
-{#                                              <button id="btnLastWeek" type="button" class="btn btn-default">Last Week</button>#}
-{#                                        </div>#}
-{##}
-{#                                        <tbody>#}
-{#                                            <tr><td>Begin Date</td><td><input id="dpd1" type="text" class="datepicker" data-date-format="m/dd/yyyy"></td></tr>#}
-{#                                            <tr><td>End Date</td><td><input id="dpd2" type="text" class="datepicker" data-date-format="m/dd/yyyy"></td></tr>#}
-{#                                            <tr><td>Visualization</td><td>#}
-{#                                              <div class="btn-group">#}
-{#                                                  <button id="visualizationDropDown" class="btn btn-default btn-sm dropdown-toggle" type="button" data-toggle="dropdown">#}
-{#                                                    Time Series <span class="caret"></span>#}
-{#                                                  </button>#}
-{#                                                  <ul class="dropdown-menu">#}
-{#                                                      <li><a href="#" id="btnTimeSeries">Time Series</a></li>#}
-{#                                                      <li><a href="#" id="btnHistogram">Histogram</a></li>#}
-{#                                                      <li><a href="#" id="btnBoxAndWhisker">Box and Whisker</a></li>#}
-{#                                                  </ul>#}
-{#                                              </div>#}
-{#                                            </td></tr>#}
-{#                                        <tr><td></td><td><button id ="btnSetPlotOptions" type="button" class="btn btn-primary"> Plot</button></td></tr>#}
-{#                                        </tbody>#}
-{#                                   </table>#}
-{#                                </div>#}
-{#                        <div id="summaryContainer" class="panel panel-default">#}
-{#                           <div class="panel-heading  glyphicon glyphicon-list-alt"><span class="container-title"> Summary Statistics</span></div>#}
-{#                           <table class="table" id="statisticsTable">#}
-{#                                <tbody>#}
-{##}
-{#                                </tbody>#}
-{#                           </table>#}
-{#                        </div>#}
-{#                    </div>#}
-{#                </div>#}
+
             {% endblock %}
 
             <table class="table table-striped" id="downloads">
@@ -476,13 +434,11 @@
 
 
         function updateFiles() {
-            console.log('before');
              $.ajax({
                  type:"GET",
                  url:'/hsapi/_internal/{{ short_id }}/update-files/',
                  success:function (data, xhr, status) {
-
-               console.log(data);
+                     $('#downloads').html("<tr><td>"+ data.csv_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.csv_link + "'>Download(Updated)</td></tr><tr><td>"+ data.wml1_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.wml1_link + "'>Download(Updated)</td></tr><tr><td>"+ data.wml2_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.wml2_link + "'>Download(Updated)</td></tr><td></td><td><div class='btn-group'><a type='button' class='btn btn-primary' href='{{ bag.bag.url }}'>Export all</a><button type='button' class='btn btn-primary dropdown-toggle' data-toggle='dropdown'><span class='caret'></span><span class='sr-only'>Toggle Dropdown</span></button><ul class='dropdown-menu' role='menu'><li><a href='" + data.bag_url + "' style='color:black;'>" + data.bag_time + " (latest)</a></li>{% for b in first_4_bags %}<li><a href='{{ b.bag.url }}' style='color:black;'>{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>{% endfor %}</ul></div></td></tr>");
 
             },
                  error:function(data){
@@ -491,8 +447,8 @@
 
 
         });
-            console.log('after');
         }
+
     function update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size){
             $('#csv-name').html(csv_name);
             $('#csv-link').html('Download (' + humanFileSize(csv_size) +')');
@@ -511,8 +467,6 @@
             }
                  $('#downloads').show();
         }
-
-
 
         updateFiles();
         $('#graph-area').hide();

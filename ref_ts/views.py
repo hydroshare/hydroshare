@@ -202,6 +202,7 @@ def add_dublin_core(request, page):
         'files': cm.files.all(),
         'dcterm_frm': DCTerm(),
         'bag': cm.bags.first(),
+        'first_4_bags': cm.bags.all()[:4],
         'users': User.objects.all(),
         'groups': Group.objects.all(),
         'owners': set(cm.owners.all()),
@@ -234,13 +235,11 @@ def update_files(request, shortkey, *args, **kwargs):
                 fl.delete()
 
         # cap 3 bags per day, 5 overall
-        if len(res.bags.all()) >= 3:
-            if res.bags.all()[2].timestamp.date() != now().date():
-                create_bag(res)
+        bag = ''
+        bag = create_bag(res)
         if len(res.bags.all()) > 5:
             for b in res.bags.all()[5:]:
                 b.delete()
-
         for f in res_files:
             if str(f.resource_file).endswith('.csv'):
                 csv_name = str(f.resource_file)
@@ -264,6 +263,14 @@ def update_files(request, shortkey, *args, **kwargs):
                 vis_link = f.resource_file.url
 
         status_code = 200
+
+        #changing date to match Django formatting
+        time = bag.timestamp.date().strftime('%b. %d, %Y, %I:%M %P')
+        if time.endswith('am'):
+            time = time[:-2]+'a.m.'
+        elif time.endswith('pm'):
+            time = time[:-2]+'p.m.'
+
         data = {'status_code': status_code,
                 'csv_name': csv_name,
                 'csv_link': csv_link,
@@ -274,7 +281,10 @@ def update_files(request, shortkey, *args, **kwargs):
                 'wml2_name': wml2_name,
                 'wml2_link': wml2_link,
                 'wml2_size': wml2_size,
-                'vis_link': vis_link}
+                'vis_link': vis_link,
+                'bag_url': bag.bag.url,
+                'bag_time': time
+        }
         return json_or_jsonp(request, data)  # successfully generated new files
 
 
