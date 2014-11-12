@@ -14,7 +14,6 @@ from .forms import InputForm
 from mezzanine.pages.page_processors import processor_for
 from hs_core.hydroshare.resource import post_create_resource
 from django.utils.timezone import now
-from hs_core import hydroshare
 from django.dispatch import receiver
 import zipfile
 import ConfigParser
@@ -52,21 +51,22 @@ class InstResource(Page, RichText, AbstractResource):
         return AbstractResource.can_view(self, request)
 
 def when_my_process_ends(sender, instance, result_text=None, result_data=None, files=None, logs=None, **kw):
-        # make something out of the result data - result_data is a dict, result_text is plaintext
-        # files are UploadedFile instances
-        # logs are plain text stdout and stderr from the finished container
-        owner = User.objects.first() # FIXME
-        hydroshare.create_resource('GenericResource', owner, instance.profile.name + ' - ' + now().isoformat(), files=files, content=logs)
-        #process.delete() # no reason to leave it hanging around in the database
+    # make something out of the result data - result_data is a dict, result_text is plaintext
+    # files are UploadedFile instances
+    # logs are plain text stdout and stderr from the finished container
+    from hs_core import hydroshare
+    owner = User.objects.first() # FIXME
+    hydroshare.create_resource('GenericResource', owner, instance.profile.name + ' - ' + now().isoformat(), files=files, content=logs)
+    #process.delete() # no reason to leave it hanging around in the database
 
 def when_my_process_fails(sender, instance, error_text=None, error_data=None, logs=None, **kw):
-        # do something out of the error data
-        # error_data is a dict
-        # error_text is plain text
-        # logs are plain text stdout and stderr from the dead container
-        instance.logs += error_text
-        instance.save()
-        #process.delete() # no reason to leave it hanging around in the database
+    # do something out of the error data
+    # error_data is a dict
+    # error_text is plain text
+    # logs are plain text stdout and stderr from the dead container
+    instance.logs += error_text
+    instance.save()
+    #process.delete() # no reason to leave it hanging around in the database
 
 finished = signals.process_finished.connect(when_my_process_ends, weak=False)
 error_handler = signals.process_aborted.connect(when_my_process_fails, weak=False)
