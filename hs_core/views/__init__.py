@@ -16,17 +16,15 @@ from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize
-from hs_core.models import ResourceFile, GenericResource
+from hs_core.models import ResourceFile, GenericResource, resource_processor
 import requests
 from django.core import exceptions as ex
 from mezzanine.pages.page_processors import processor_for
-from django.template import RequestContext
 
 from . import users_api
 from . import discovery_api
 from . import resource_api
 from . import social_api
-from hs_core.hydroshare import file_size_limit_for_display
 
 import autocomplete_light
 
@@ -212,17 +210,14 @@ class FilterForm(forms.Form):
 def my_resources(request, page):
 #    if not request.user.is_authenticated():
 #        return HttpResponseRedirect('/accounts/login/')
+
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
-        res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
         owner = frm.cleaned_data['creator'] or None
         user = frm.cleaned_data['user'] or (request.user if request.user.is_authenticated() else None)
         edit_permission = frm.cleaned_data['edit_permission'] or False
         published = frm.cleaned_data['published'] or False
-        startno = frm.cleaned_data['start']
-        if(startno < 0):
-            startno = 0
-        start = startno or 0
+        start = frm.cleaned_data['start'] or 0
         from_date = frm.cleaned_data['from_date'] or None
         keywords = [k.strip() for k in request.REQUEST['keywords'].split(',')] if request.REQUEST.get('keywords', None) else None
         public = not request.user.is_authenticated()
@@ -237,36 +232,23 @@ def my_resources(request, page):
         for lst in get_resource_list(
             user=user,
             owner= owner,
+            count=20,
             published=published,
             edit_permission=edit_permission,
+            start=start,
             from_date=from_date,
             dc=list(dcterms.values()) if dcterms else None,
             keywords=keywords if keywords else None,
             public=public
         ).values():
             res = res.union(lst)
-        total_res_cnt = len(res)
 
-        reslst = list(res)
-
-        # need to return total number of resources as 'ct' so have to get all resources
-        # and then filter by start and count
-        if(start>=total_res_cnt):
-            start = total_res_cnt-res_cnt
-        if(start < 0):
-            start = 0
-        if(start+res_cnt > total_res_cnt):
-            res_cnt = total_res_cnt-start
-
-        reslst = reslst[start:start+res_cnt]
-
-        res = sorted(reslst, key=lambda x: x.title)
-
+        res = sorted(list(res), key=lambda x: x.title)
         return {
             'resources': res,
             'first': start,
             'last': start+len(res),
-            'ct': total_res_cnt,
+            'ct': len(res),
             'dcterms' : (
                 ('AB', 'Abstract'),
                 ('BX', 'Box'),
@@ -357,12 +339,10 @@ def create_resource(request, *args, **kwargs):
         ]
         for cn in frm.cleaned_data['contributors'].split(','):
             cn = cn.strip()
-            if(cn !=""):
-                dcterms.append({'term': 'CN', 'content': cn})
+            dcterms.append({'term': 'CN', 'content': cn})
         for cr in frm.cleaned_data['creators'].split(','):
             cr = cr.strip()
-            if(cr !=""):
-                dcterms.append({'term': 'CR', 'content': cr})
+            dcterms.append({'term': 'CR', 'content': cr})
 
         res = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
@@ -373,13 +353,7 @@ def create_resource(request, *args, **kwargs):
             files=request.FILES.getlist('files'),
             content=frm.cleaned_data['abstract'] or frm.cleaned_data['title']
         )
-        if res is not None:
-            return HttpResponseRedirect(res.get_absolute_url())
-        else:
-            context = {
-            'file_size_error' : 'The resource file is larger than the supported size limit %s. Select resource files within %s to create resource.' % (file_size_limit_for_display, file_size_limit_for_display)
-            }
-            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        return HttpResponseRedirect(res.get_absolute_url())
     else:
         raise ValidationError(frm.errors)
 
@@ -391,5 +365,15 @@ def get_file(request, *args, **kwargs):
     session.runCmd("iinit");
     session.runCmd('iget', [ name, 'tempfile.' + name ])
     return HttpResponse(open(name), content_type='x-binary/octet-stream')
+
+processor_for(GenericResource)(resource_processor)
+
+@processor_for('resources')
+def resource_listing_processor(request, page):
+    owned_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
+    editable_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
+    viewable_resources = list(GenericResource.objects.filter(public=True))
+
+    return locals()
 
 # FIXME need a task somewhere that amounts to checking inactive accounts and deleting them after 30 days.

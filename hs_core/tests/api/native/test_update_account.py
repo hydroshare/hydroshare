@@ -37,6 +37,6 @@ class UpdateAccountTest(ResourceTestCase):
         self.assertEqual(self.user.email, 'shauntheta@gmail.com')
         self.assertEqual(self.user.first_name, 'john')
         self.assertEqual(self.user.last_name, 'livingston')
-        self.assertEqual(self.user.get_profile().notes, 'these are some notes')
+        self.assertEqual(hydroshare.utils.get_profile(self.user).notes, 'these are some notes')
         self.assertTrue(Group.objects.filter(user=self.user).exists)
 

@@ -22,7 +22,7 @@ from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from languages_iso import languages as iso_languages
 from dateutil import parser
-from django.utils import simplejson as json
+import json
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -1777,15 +1777,6 @@ def resource_processor(request, page):
     extra['dc'] = { m.term_name : m.content for m in extra['res'].dublin_metadata.all() }
     return extra
 
-processor_for(GenericResource)(resource_processor)
-
-@processor_for('resources')
-def resource_listing_processor(request, page):
-    owned_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
-    editable_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
-    viewable_resources = list(GenericResource.objects.filter(public=True))
-
-    return locals()
 
 @receiver(post_save)
 def resource_creation_signal_handler(sender, instance, created, **kwargs):

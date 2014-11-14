@@ -262,8 +262,10 @@ INSTALLED_APPS = (
     "mezzanine.accounts",
     "mezzanine.mobile",
     "autocomplete_light",
-    "tastypie",
-    "tastypie_swagger",
+    # "tastypie",
+    # "tastypie_swagger",
+    "ga_ows",
+    "ga_resources",
     "dublincore",
     "hs_core",
     "hs_party",
@@ -386,7 +388,6 @@ except ImportError:
 else:
     set_dynamic_settings(globals())
 
-INSTALLED_APPS += HYDROSHARE_APPS
 
 TASTYPIE_SWAGGER_API_MODULE = 'hydroshare.urls.v1_api'
 
