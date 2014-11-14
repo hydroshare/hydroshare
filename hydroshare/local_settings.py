@@ -108,18 +108,18 @@ HYDROSHARE_APPS = (
     "hs_core"
 )
 
-USE_IRODS=False
+USE_IRODS=True
 IRODS_ROOT='/tmp'
 IRODS_ICOMMANDS_PATH='/usr/bin'
 IRODS_HOST='data.hydroshare.org'
 IRODS_PORT='1247'
-IRODS_DEFAULT_RESOURCE='hsDevResource'
-IRODS_HOME_COLLECTION='/hydroZone/home/hsdev'
-IRODS_CWD='/hydroZone/home/hsdev'
+IRODS_DEFAULT_RESOURCE='hydroResource'
+IRODS_HOME_COLLECTION='/hydroZone/home/hssandbox'
+IRODS_CWD='/hydroZone/home/hssandbox'
 IRODS_ZONE='hydroZone'
-IRODS_USERNAME='hsdev'
-IRODS_AUTH='devwater1'
-IRODS_GLOBAL_SESSION=False
+IRODS_USERNAME='hssandbox'
+IRODS_AUTH='sandboxwater1'
+IRODS_GLOBAL_SESSION=True
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST_USER = 'hydroshare@hydroshare.org'
