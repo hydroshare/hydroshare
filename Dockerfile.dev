@@ -10,7 +10,6 @@ WORKDIR /home/docker/hydroshare
 
 RUN apt-get install -y docker.io
 RUN easy_install pip
-RUN pip install -r requirements.txt
 RUN pip install django-autocomplete-light
 RUN pip install django-jsonfield
 RUN pip install docker-py
