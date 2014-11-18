@@ -1,3 +1,5 @@
 #!/bin/bash
 
+# for use in Development environment only
+
 cat "$1" | fig run --rm hydroshare /usr/bin/psql -d postgres -U postgres -h postgis  -f -

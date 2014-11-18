@@ -98,16 +98,6 @@ DATABASES = {
 }
 POSTGIS_VERSION=(2,1,1)
 
-HYDROSHARE_APPS = (
-    "tastypie",
-    "djcelery",
-    "ga_ows",
-    "ga_resources",
-    "django_irods",
-    "ga_interactive",
-    "hs_core"
-)
-
 # iRODS proxy user configuration
 USE_IRODS=False
 IRODS_ROOT='/tmp'
