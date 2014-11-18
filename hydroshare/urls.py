@@ -49,6 +49,11 @@ urlpatterns += patterns('',
     url('^hs_metrics/', include('hs_metrics.urls')),
 )
 
+if settings.DEBUG is False:   #if DEBUG is True it will be served automatically
+  urlpatterns += patterns('',
+  url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
+)
+
 urlpatterns += patterns('',
 
     # We don't want to presume how your homepage works, so here are a

@@ -83,7 +83,7 @@ local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_setti
 
 # If True, the south application will be automatically added to the
 # INSTALLED_APPS setting.
-USE_SOUTH = True
+USE_SOUTH = False
 
 
 ########################
