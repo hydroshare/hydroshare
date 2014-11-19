@@ -25,7 +25,7 @@ hydroshare:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
-  command: /bin/bash init
+  command: python manage.py runserver 0.0.0.0:8000
 defaultworker:
   build: .
   environment:
