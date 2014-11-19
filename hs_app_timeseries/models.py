@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
+from mezzanine.pages.page_processors import processor_for
 from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
 
 
@@ -200,6 +201,9 @@ class TimeSeriesResource(Page, RichText, AbstractResource):
         return self._get_metadata(md)
 
     # not sure why we have to implement all the can_ type methods that we are inheriting from AbstractResource
+
+# this would allow us to pick up additional form elements for the template before the template is displayed
+processor_for(TimeSeriesResource)(resource_processor)
 
 class TimeSeriesMetaData(CoreMetaData):
     _site = generic.GenericRelation(Site)
