@@ -114,18 +114,18 @@ HYDROSHARE_APPS = (
 )
 
 # iRODS proxy user configuration
-USE_IRODS=True
+USE_IRODS=False
 IRODS_ROOT='/tmp'
 IRODS_ICOMMANDS_PATH='/usr/bin'
-IRODS_HOST='data.hydroshare.org'
+IRODS_HOST=''
 IRODS_PORT='1247'
-IRODS_DEFAULT_RESOURCE='hydroResource'
-IRODS_HOME_COLLECTION='/hydroZone/home/hsbeta'
-IRODS_CWD='/hydroZone/home/hsbeta'
-IRODS_ZONE='hydroZone'
-IRODS_USERNAME='hsbeta'
-IRODS_AUTH='betawater1'
-IRODS_GLOBAL_SESSION=True
+IRODS_DEFAULT_RESOURCE=''
+IRODS_HOME_COLLECTION=''
+IRODS_CWD=''
+IRODS_ZONE=''
+IRODS_USERNAME=''
+IRODS_AUTH=''
+IRODS_GLOBAL_SESSION=False
 
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
