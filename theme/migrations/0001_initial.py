@@ -1,158 +1,110 @@
 # -*- coding: utf-8 -*-
-from south.utils import datetime_utils as datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+import mezzanine.core.fields
+from django.conf import settings
 
 
-class Migration(SchemaMigration):
+class Migration(migrations.Migration):
 
-    def forwards(self, orm):
-        # Adding model 'SiteConfiguration'
-        db.create_table(u'theme_siteconfiguration', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('site', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sites.Site'])),
-            ('col1_heading', self.gf('django.db.models.fields.CharField')(default='Contact us', max_length=200)),
-            ('col1_content', self.gf('mezzanine.core.fields.RichTextField')()),
-            ('col2_heading', self.gf('django.db.models.fields.CharField')(default='Go social', max_length=200)),
-            ('col2_content', self.gf('mezzanine.core.fields.RichTextField')(blank=True)),
-            ('col3_heading', self.gf('django.db.models.fields.CharField')(default='Subscribe', max_length=200)),
-            ('col3_content', self.gf('mezzanine.core.fields.RichTextField')()),
-            ('twitter_link', self.gf('django.db.models.fields.CharField')(max_length=2000, blank=True)),
-            ('facebook_link', self.gf('django.db.models.fields.CharField')(max_length=2000, blank=True)),
-            ('pinterest_link', self.gf('django.db.models.fields.CharField')(max_length=2000, blank=True)),
-            ('youtube_link', self.gf('django.db.models.fields.CharField')(max_length=2000, blank=True)),
-            ('github_link', self.gf('django.db.models.fields.CharField')(max_length=2000, blank=True)),
-            ('linkedin_link', self.gf('django.db.models.fields.CharField')(max_length=2000, blank=True)),
-            ('vk_link', self.gf('django.db.models.fields.CharField')(max_length=2000, blank=True)),
-            ('gplus_link', self.gf('django.db.models.fields.CharField')(max_length=2000, blank=True)),
-            ('has_social_network_links', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('copyright', self.gf('django.db.models.fields.TextField')(default='&copy {% now "Y" %} {{ settings.SITE_TITLE }}')),
-        ))
-        db.send_create_signal(u'theme', ['SiteConfiguration'])
+    dependencies = [
+        ('sites', '0001_initial'),
+        ('pages', '__first__'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
 
-        # Adding model 'HomePage'
-        db.create_table(u'theme_homepage', (
-            (u'page_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['pages.Page'], unique=True, primary_key=True)),
-            ('heading', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('slide_in_one_icon', self.gf('django.db.models.fields.CharField')(max_length=50, blank=True)),
-            ('slide_in_one', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
-            ('slide_in_two_icon', self.gf('django.db.models.fields.CharField')(max_length=50, blank=True)),
-            ('slide_in_two', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
-            ('slide_in_three_icon', self.gf('django.db.models.fields.CharField')(max_length=50, blank=True)),
-            ('slide_in_three', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
-            ('header_background', self.gf('mezzanine.core.fields.FileField')(max_length=255, blank=True)),
-            ('header_image', self.gf('mezzanine.core.fields.FileField')(max_length=255, null=True, blank=True)),
-            ('welcome_heading', self.gf('django.db.models.fields.CharField')(default='Welcome', max_length=100)),
-            ('content', self.gf('mezzanine.core.fields.RichTextField')()),
-            ('recent_blog_heading', self.gf('django.db.models.fields.CharField')(default='Latest blog posts', max_length=100)),
-            ('number_recent_posts', self.gf('django.db.models.fields.PositiveIntegerField')(default=3)),
-        ))
-        db.send_create_signal(u'theme', ['HomePage'])
-
-        # Adding model 'IconBox'
-        db.create_table(u'theme_iconbox', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('_order', self.gf('django.db.models.fields.IntegerField')(null=True)),
-            ('homepage', self.gf('django.db.models.fields.related.ForeignKey')(related_name='boxes', to=orm['theme.HomePage'])),
-            ('icon', self.gf('django.db.models.fields.CharField')(max_length=50)),
-            ('title', self.gf('django.db.models.fields.CharField')(max_length=200)),
-            ('link_text', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('link', self.gf('django.db.models.fields.CharField')(max_length=2000, blank=True)),
-        ))
-        db.send_create_signal(u'theme', ['IconBox'])
-
-
-    def backwards(self, orm):
-        # Deleting model 'SiteConfiguration'
-        db.delete_table(u'theme_siteconfiguration')
-
-        # Deleting model 'HomePage'
-        db.delete_table(u'theme_homepage')
-
-        # Deleting model 'IconBox'
-        db.delete_table(u'theme_iconbox')
-
-
-    models = {
-        u'pages.page': {
-            'Meta': {'ordering': "(u'titles',)", 'object_name': 'Page'},
-            '_meta_title': ('django.db.models.fields.CharField', [], {'max_length': '500', 'null': 'True', 'blank': 'True'}),
-            '_order': ('django.db.models.fields.IntegerField', [], {'null': 'True'}),
-            'content_model': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True'}),
-            'created': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
-            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'expiry_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'gen_description': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'in_menus': ('mezzanine.pages.fields.MenusField', [], {'default': '(1, 2, 3)', 'max_length': '100', 'null': 'True', 'blank': 'True'}),
-            'in_sitemap': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            u'keywords_string': ('django.db.models.fields.CharField', [], {'max_length': '500', 'blank': 'True'}),
-            'login_required': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'parent': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "u'children'", 'null': 'True', 'to': u"orm['pages.Page']"}),
-            'publish_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'short_url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
-            'site': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['sites.Site']"}),
-            'slug': ('django.db.models.fields.CharField', [], {'max_length': '2000', 'null': 'True', 'blank': 'True'}),
-            'status': ('django.db.models.fields.IntegerField', [], {'default': '2'}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '500'}),
-            'titles': ('django.db.models.fields.CharField', [], {'max_length': '1000', 'null': 'True'}),
-            'updated': ('django.db.models.fields.DateTimeField', [], {'null': 'True'})
-        },
-        u'sites.site': {
-            'Meta': {'ordering': "(u'domain',)", 'object_name': 'Site', 'db_table': "u'django_site'"},
-            'domain': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
-        },
-        u'theme.homepage': {
-            'Meta': {'ordering': "(u'_order',)", 'object_name': 'HomePage', '_ormbases': [u'pages.Page']},
-            'content': ('mezzanine.core.fields.RichTextField', [], {}),
-            'header_background': ('mezzanine.core.fields.FileField', [], {'max_length': '255', 'blank': 'True'}),
-            'header_image': ('mezzanine.core.fields.FileField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'heading': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'number_recent_posts': ('django.db.models.fields.PositiveIntegerField', [], {'default': '3'}),
-            u'page_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['pages.Page']", 'unique': 'True', 'primary_key': 'True'}),
-            'recent_blog_heading': ('django.db.models.fields.CharField', [], {'default': "'Latest blog posts'", 'max_length': '100'}),
-            'slide_in_one': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            'slide_in_one_icon': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
-            'slide_in_three': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            'slide_in_three_icon': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
-            'slide_in_two': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            'slide_in_two_icon': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
-            'welcome_heading': ('django.db.models.fields.CharField', [], {'default': "'Welcome'", 'max_length': '100'})
-        },
-        u'theme.iconbox': {
-            'Meta': {'ordering': "(u'_order',)", 'object_name': 'IconBox'},
-            '_order': ('django.db.models.fields.IntegerField', [], {'null': 'True'}),
-            'homepage': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'boxes'", 'to': u"orm['theme.HomePage']"}),
-            'icon': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'link': ('django.db.models.fields.CharField', [], {'max_length': '2000', 'blank': 'True'}),
-            'link_text': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '200'})
-        },
-        u'theme.siteconfiguration': {
-            'Meta': {'object_name': 'SiteConfiguration'},
-            'col1_content': ('mezzanine.core.fields.RichTextField', [], {}),
-            'col1_heading': ('django.db.models.fields.CharField', [], {'default': "'Contact us'", 'max_length': '200'}),
-            'col2_content': ('mezzanine.core.fields.RichTextField', [], {'blank': 'True'}),
-            'col2_heading': ('django.db.models.fields.CharField', [], {'default': "'Go social'", 'max_length': '200'}),
-            'col3_content': ('mezzanine.core.fields.RichTextField', [], {}),
-            'col3_heading': ('django.db.models.fields.CharField', [], {'default': "'Subscribe'", 'max_length': '200'}),
-            'copyright': ('django.db.models.fields.TextField', [], {'default': '\'&copy {% now "Y" %} {{ settings.SITE_TITLE }}\''}),
-            'facebook_link': ('django.db.models.fields.CharField', [], {'max_length': '2000', 'blank': 'True'}),
-            'github_link': ('django.db.models.fields.CharField', [], {'max_length': '2000', 'blank': 'True'}),
-            'gplus_link': ('django.db.models.fields.CharField', [], {'max_length': '2000', 'blank': 'True'}),
-            'has_social_network_links': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'linkedin_link': ('django.db.models.fields.CharField', [], {'max_length': '2000', 'blank': 'True'}),
-            'pinterest_link': ('django.db.models.fields.CharField', [], {'max_length': '2000', 'blank': 'True'}),
-            'site': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['sites.Site']"}),
-            'twitter_link': ('django.db.models.fields.CharField', [], {'max_length': '2000', 'blank': 'True'}),
-            'vk_link': ('django.db.models.fields.CharField', [], {'max_length': '2000', 'blank': 'True'}),
-            'youtube_link': ('django.db.models.fields.CharField', [], {'max_length': '2000', 'blank': 'True'})
-        }
-    }
-
-    complete_apps = ['theme']
+    operations = [
+        migrations.CreateModel(
+            name='HomePage',
+            fields=[
+                ('page_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='pages.Page')),
+                ('heading', models.CharField(max_length=100)),
+                ('slide_in_one_icon', models.CharField(max_length=50, blank=True)),
+                ('slide_in_one', models.CharField(max_length=200, blank=True)),
+                ('slide_in_two_icon', models.CharField(max_length=50, blank=True)),
+                ('slide_in_two', models.CharField(max_length=200, blank=True)),
+                ('slide_in_three_icon', models.CharField(max_length=50, blank=True)),
+                ('slide_in_three', models.CharField(max_length=200, blank=True)),
+                ('header_background', mezzanine.core.fields.FileField(max_length=255, verbose_name='Header Background', blank=True)),
+                ('header_image', mezzanine.core.fields.FileField(max_length=255, null=True, verbose_name='Header Image (optional)', blank=True)),
+                ('welcome_heading', models.CharField(default=b'Welcome', max_length=100)),
+                ('content', mezzanine.core.fields.RichTextField()),
+                ('recent_blog_heading', models.CharField(default=b'Latest blog posts', max_length=100)),
+                ('number_recent_posts', models.PositiveIntegerField(default=3, help_text=b'Number of recent blog posts to show')),
+            ],
+            options={
+                'ordering': ('_order',),
+                'verbose_name': 'Home page',
+                'verbose_name_plural': 'Home pages',
+            },
+            bases=('pages.page',),
+        ),
+        migrations.CreateModel(
+            name='IconBox',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('_order', models.IntegerField(null=True, verbose_name='Order')),
+                ('icon', models.CharField(help_text=b'Enter the name of a font awesome icon, i.e. fa-eye. A list is available here http://fontawesome.io/', max_length=50)),
+                ('title', models.CharField(max_length=200)),
+                ('link_text', models.CharField(max_length=100)),
+                ('link', models.CharField(help_text=b'Optional, if provided clicking the box will go here.', max_length=2000, blank=True)),
+                ('homepage', models.ForeignKey(related_name='boxes', to='theme.HomePage')),
+            ],
+            options={
+                'ordering': ('_order',),
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='SiteConfiguration',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('col1_heading', models.CharField(default=b'Contact us', max_length=200)),
+                ('col1_content', mezzanine.core.fields.RichTextField()),
+                ('col2_heading', models.CharField(default=b'Go social', max_length=200)),
+                ('col2_content', mezzanine.core.fields.RichTextField(help_text=b'If present will override the social network icons.', blank=True)),
+                ('col3_heading', models.CharField(default=b'Subscribe', max_length=200)),
+                ('col3_content', mezzanine.core.fields.RichTextField()),
+                ('twitter_link', models.CharField(max_length=2000, blank=True)),
+                ('facebook_link', models.CharField(max_length=2000, blank=True)),
+                ('pinterest_link', models.CharField(max_length=2000, blank=True)),
+                ('youtube_link', models.CharField(max_length=2000, blank=True)),
+                ('github_link', models.CharField(max_length=2000, blank=True)),
+                ('linkedin_link', models.CharField(max_length=2000, blank=True)),
+                ('vk_link', models.CharField(max_length=2000, blank=True)),
+                ('gplus_link', models.CharField(max_length=2000, blank=True)),
+                ('has_social_network_links', models.BooleanField(default=False)),
+                ('copyright', models.TextField(default=b'&copy {% now "Y" %} {{ settings.SITE_TITLE }}')),
+                ('site', models.ForeignKey(editable=False, to='sites.Site')),
+            ],
+            options={
+                'verbose_name': 'Site Configuration',
+                'verbose_name_plural': 'Site Configuration',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='UserProfile',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('picture', models.ImageField(null=True, upload_to=b'profile', blank=True)),
+                ('title', models.CharField(help_text=b'e.g. Assistant Professor, Program Director, Adjunct Professor, Software Developer.', max_length=1024, null=True, blank=True)),
+                ('profession', models.CharField(default=b'Student', max_length=1024, null=True, help_text=b'e.g. Student, Researcher, Research Faculty, Research Staff, Project Manager, Teacher, Research Assistant.', blank=True)),
+                ('subject_areas', models.CharField(help_text=b'A comma-separated list of subject areas you are interested in researching. e.g. "Computer Science, Hydrology, Water Management"', max_length=1024, null=True, blank=True)),
+                ('organization', models.CharField(help_text=b'The name of the organization you work for.', max_length=1024, null=True, blank=True)),
+                ('organization_type', models.CharField(blank=True, max_length=1024, null=True, choices=[(b'Higher Education', b'Higher Education'), (b'Research', b'Research'), (b'Government', b'Government'), (b'Commercial', b'Commercial'), (b'Primary Education', b'Primary Education'), (b'Secondary Education', b'Secondary Education')])),
+                ('phone_1', models.CharField(max_length=1024, null=True, blank=True)),
+                ('phone_1_type', models.CharField(blank=True, max_length=1024, null=True, choices=[(b'Home', b'Home'), (b'Work', b'Work'), (b'Mobile', b'Mobile')])),
+                ('phone_2', models.CharField(max_length=1024, null=True, blank=True)),
+                ('phone_2_type', models.CharField(blank=True, max_length=1024, null=True, choices=[(b'Home', b'Home'), (b'Work', b'Work'), (b'Mobile', b'Mobile')])),
+                ('public', models.BooleanField(default=True, help_text=b'Uncheck to make your profile information private.')),
+                ('cv', models.FileField(help_text=b'Upload your Curriculum Vitae if you wish people to be able to download it.', null=True, upload_to=b'profile', blank=True)),
+                ('details', mezzanine.core.fields.RichTextField(help_text=b'Tell the Hydroshare community a little about yourself.', null=True, blank=True)),
+                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+    ]

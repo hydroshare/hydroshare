@@ -1343,6 +1343,8 @@ class Rights(AbstractMetaDataElement):
 
 
 
+def short_id():
+    return uuid4().hex
 
 class AbstractResource(ResourcePermissionsMixin):
     """
@@ -1368,7 +1370,7 @@ class AbstractResource(ResourcePermissionsMixin):
     )
     files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource')
     bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource')
-    short_id = models.CharField(max_length=32, default=lambda: uuid4().hex, db_index=True)
+    short_id = models.CharField(max_length=32, default=short_id, db_index=True)
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
