@@ -12,6 +12,7 @@ from matplotlib.dates import AutoDateFormatter, AutoDateLocator
 import operator
 import requests
 import csv
+import collections
 import os
 from StringIO import StringIO
 from hs_core.hydroshare.hs_bagit import create_bag
@@ -386,7 +387,8 @@ def make_files(reference_type, url, data_site_code, variable_code, title):
         xml_end = 'wml_2_0'
         xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
     for_csv = []
-    for k, v in vals.items():
+    od_vals = collections.OrderedDict(sorted(vals.items()))
+    for k, v in od_vals.items():
         t = (k, v)
         for_csv.append(t)
     with open(csv_name, 'wb') as csv_file:
