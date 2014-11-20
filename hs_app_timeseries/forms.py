@@ -7,6 +7,7 @@ from models import *
 class SiteForm(ModelForm):
     class Meta:
         model = Site
+        fields = ['site_code', 'site_name', 'elevation_m', 'elevation_datum', 'site_type']
 
 
 class VariableForm(ModelForm):
