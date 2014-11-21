@@ -1065,9 +1065,9 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def _validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
-        if coverage_type== 'period':
+        if coverage_type == 'period':
             if not 'start' in value_dict or not 'end' in value_dict:
-                raise ValidationError("For coverage of type 'period' values for start date and end date needed.")
+                raise ValidationError("For coverage of type 'period' values for both start date and end date are needed.")
             else:
                 # validate the date values
                 try:
@@ -1078,11 +1078,11 @@ class Coverage(AbstractMetaDataElement):
                     end_dt = parser.parse(value_dict['end'])
                 except TypeError:
                     raise TypeError("Invalid end date. Not a valid date value.")
-        elif coverage_type== 'point':
+        elif coverage_type == 'point':
             if not 'east' in value_dict or not 'north' in value_dict:
-                raise ValidationError("For coverage of type 'period' values for both start date and end date are needed.")
-        elif coverage_type== 'box':
-            for value_item in ['name','northlimit', 'eastlimit', 'southlimit', 'westlimit']:
+                raise ValidationError("For coverage of type 'point' values for both 'east' and 'north' are needed.")
+        elif coverage_type == 'box':
+            for value_item in ['name', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
                 if not value_item in value_dict:
                     raise ValidationError("For coverage of type 'box' values for one or more bounding box limits is missing.")
 
@@ -1164,7 +1164,7 @@ class Subject(AbstractMetaDataElement):
                 if sub.value != kwargs['value']:
                     # check this new subject not already exists
                     if Subject.objects.filter(value__iexact=kwargs['value'], object_id=sub.object_id,
-                                             content_type__pk=sub.content_type.id).count()> 0:
+                                             content_type__pk=sub.content_type.id).count() > 0:
                         raise ValidationError('Subject:%s already exists for this resource.' % kwargs['value'])
 
                 sub.value = kwargs['value']
@@ -1198,7 +1198,7 @@ class Source(AbstractMetaDataElement):
             # check the source doesn't already exists - source needs to be unique per resource
             metadata_obj = kwargs['content_object']
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            src = Source.objects.filter(derived_from= kwargs['derived_from'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            src = Source.objects.filter(derived_from=kwargs['derived_from'], object_id=metadata_obj.id, content_type=metadata_type).first()
             if src:
                 raise ValidationError('Source:%s already exists for this resource.' % kwargs['derived_from'])
 
@@ -1278,6 +1278,8 @@ class Rights(AbstractMetaDataElement):
 
 
 
+def short_id():
+    return uuid4().hex
 
 class AbstractResource(ResourcePermissionsMixin):
     """
@@ -1303,7 +1305,7 @@ class AbstractResource(ResourcePermissionsMixin):
     )
     files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource')
     bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource')
-    short_id = models.CharField(max_length=32, default=lambda: uuid4().hex, db_index=True)
+    short_id = models.CharField(max_length=32, default=short_id(), db_index=True)
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
@@ -1669,14 +1671,14 @@ class CoreMetaData(models.Model):
                                   % element_model_name)
 
         try:
-            model = ContentType.objects.get(app_label=self._meta.app_label, model=element_model_name)
+            model_type = ContentType.objects.get(app_label=self._meta.app_label, model=element_model_name)
         except ObjectDoesNotExist:
-            model = ContentType.objects.get(app_label='hs_core', model=element_model_name)
+            model_type = ContentType.objects.get(app_label='hs_core', model=element_model_name)
 
-        if model:
-            if issubclass(model.model_class(), AbstractMetaDataElement):
+        if model_type:
+            if issubclass(model_type.model_class(), AbstractMetaDataElement):
                 kwargs['content_object'] = self
-                element = model.model_class().create(**kwargs)
+                element = model_type.model_class().create(**kwargs)
                 element.save()
             else:
                 raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
@@ -1685,7 +1687,11 @@ class CoreMetaData(models.Model):
 
     def update_element(self, element_model_name, element_id, **kwargs):
         element_model_name = element_model_name.lower()
-        model_type = ContentType.objects.get(model=element_model_name)
+        try:
+            model_type = ContentType.objects.get(app_label=self._meta.app_label, model=element_model_name)
+        except ObjectDoesNotExist:
+            model_type = ContentType.objects.get(app_label='hs_core', model=element_model_name)
+
         if model_type:
             if issubclass(model_type.model_class(), AbstractMetaDataElement):
                 kwargs['content_object']= self
@@ -1697,7 +1703,11 @@ class CoreMetaData(models.Model):
 
     def delete_element(self, element_model_name, element_id):
         element_model_name = element_model_name.lower()
-        model_type = ContentType.objects.get(model=element_model_name)
+        try:
+            model_type = ContentType.objects.get(app_label=self._meta.app_label, model=element_model_name)
+        except ObjectDoesNotExist:
+            model_type = ContentType.objects.get(app_label='hs_core', model=element_model_name)
+
         if model_type:
             if issubclass(model_type.model_class(), AbstractMetaDataElement):
                 model_type.model_class().remove(element_id)
