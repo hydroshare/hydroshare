@@ -21,7 +21,7 @@ import requests
 from django.core import exceptions as ex
 from mezzanine.pages.page_processors import processor_for
 from django.template import RequestContext
-
+from ..forms import *
 from . import users_api
 from . import discovery_api
 from . import resource_api
@@ -347,7 +347,20 @@ class CreateResourceForm(forms.Form):
 @login_required
 def create_resource(request, *args, **kwargs):
     frm = CreateResourceForm(request.POST)
-    if frm.is_valid():
+    # core metadata element formsets
+    creator_formset = CreatorFormSet(request.POST)
+    contributor_formset = ContributorFormSet(request.POST)
+
+    if frm.is_valid() and creator_formset.is_valid() and contributor_formset.is_valid():
+        core_metadata = []
+        for form in creator_formset:
+            creator_data = {k: v for k, v in form.cleaned_data}
+            core_metadata.append({'creator': creator_data})
+
+        for form in contributor_formset:
+            contributor_data = {k: v for k, v in form.cleaned_data}
+            core_metadata.append({'contributor': contributor_data})
+
         dcterms = [
             { 'term': 'T', 'content': frm.cleaned_data['title'] },
             { 'term': 'AB',  'content': frm.cleaned_data['abstract'] or frm.cleaned_data['title']},
@@ -369,6 +382,7 @@ def create_resource(request, *args, **kwargs):
             title=frm.cleaned_data['title'],
             keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None, 
             dublin_metadata=dcterms,
+            metadata=core_metadata,
             files=request.FILES.getlist('files'),
             content=frm.cleaned_data['abstract'] or frm.cleaned_data['title']
         )
