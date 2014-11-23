@@ -2,10 +2,10 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-import django.utils.timezone
 import mezzanine.core.fields
-import django_irods.storage
 from django.conf import settings
+import django.utils.timezone
+import django.core.files.storage
 import hs_core.models
 
 
@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('bag', models.FileField(storage=django_irods.storage.IrodsStorage(), max_length=500, null=True, upload_to=b'bags')),
+                ('bag', models.FileField(storage=django.core.files.storage.FileSystemStorage(), max_length=500, null=True, upload_to=b'bags')),
                 ('timestamp', models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
                 ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
             ],
@@ -252,7 +252,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('resource_file', models.FileField(storage=django_irods.storage.IrodsStorage(), max_length=500, upload_to=hs_core.models.get_path)),
+                ('resource_file', models.FileField(storage=django.core.files.storage.FileSystemStorage(), max_length=500, upload_to=hs_core.models.get_path)),
                 ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
             ],
             options={

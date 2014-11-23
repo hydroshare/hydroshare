@@ -8,15 +8,8 @@ RUN apt-get install -y sqlite3 sqlite3-pcre libspatialite-dev libspatialite5 spa
 RUN apt-get install -y ssh git libfreetype6 libfreetype6-dev libxml2-dev libxslt-dev libprotobuf-dev
 RUN apt-get install -y python2.7-gdal gdal-bin libgdal-dev gdal-contrib python-pillow protobuf-compiler libtokyocabinet-dev tokyocabinet-bin libreadline-dev ncurses-dev
 RUN apt-get install -y docker.io
-RUN apt-get install -y curl libssl0.9.8 libfuse2
 
 ADD . /home/docker
-
-WORKDIR /home/docker
-RUN curl ftp://ftp.renci.org/pub/irods/releases/4.0.3/irods-runtime-4.0.3-64bit.deb -o irods-runtime-4.0.3-64bit.deb
-RUN curl ftp://ftp.renci.org/pub/irods/releases/4.0.3/irods-icommands-4.0.3-64bit.deb -o irods-icommands-4.0.3-64bit.deb
-RUN sudo dpkg -i irods-runtime-4.0.3-64bit.deb irods-icommands-4.0.3-64bit.deb
-RUN sudo apt-get -f install
 
 WORKDIR /home/docker/pysqlite-2.6.3/
 RUN python setup.py install
