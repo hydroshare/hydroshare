@@ -234,51 +234,29 @@ class Party(AbstractMetaDataElement):
     def create(cls,**kwargs):
         element_name = cls.__name__
         if 'name' in kwargs:
-            if 'metadata_obj' in kwargs:
-                if not isinstance(kwargs['metadata_obj'], CoreMetaData) and not issubclass(kwargs['metadata_obj'], CoreMetaData):
-                    raise ValidationError("%s metadata element can't be created for metadata type:%s" %(element_name, type(kwargs['metadata_obj'])))
+            if not isinstance(kwargs['content_object'], CoreMetaData) and not issubclass(kwargs['content_object'], CoreMetaData):
+                raise ValidationError("%s metadata element can't be created for metadata type:%s" %(element_name, type(kwargs['content_object'])))
 
-                metadata_obj = kwargs['metadata_obj']
-                metadata_type = ContentType.objects.get_for_model(metadata_obj)
-                if element_name == 'Creator':
-                    party = Creator.objects.filter(object_id=metadata_obj.id, content_type=metadata_type).last()
-                    creator_order = 1
-                    if party:
-                        creator_order = party.order + 1
-                    party = Creator.objects.create(name=kwargs['name'], order=creator_order, content_object=metadata_obj)
-                else:
-                    party = Contributor.objects.create(name=kwargs['name'], content_object=metadata_obj)
-
-                if 'profile_links' in kwargs:
-                    links = kwargs['profile_links']
-                    for link in links:
-                        cls._create_profile_link(party, link)
+            metadata_obj = kwargs['content_object']
+            metadata_type = ContentType.objects.get_for_model(metadata_obj)
+            if element_name == 'Creator':
+                party = Creator.objects.filter(object_id=metadata_obj.id, content_type=metadata_type).last()
+                creator_order = 1
+                if party:
+                    creator_order = party.order + 1
+                party = Creator.objects.create(name=kwargs['name'], order=creator_order, content_object=metadata_obj)
             else:
-                raise ValidationError("Metadata container object for which metadata element 'Creator' to be created is missing.")
+                party = Contributor.objects.create(name=kwargs['name'], content_object=metadata_obj)
 
-            if 'description' in kwargs:
-                party.description = kwargs['description']
+            if 'profile_links' in kwargs:
+                links = kwargs['profile_links']
+                for link in links:
+                    cls._create_profile_link(party, link)
 
-            if 'organization' in kwargs:
-                party.organization = kwargs['organization']
-
-            if 'email' in kwargs:
-                party.email = kwargs['email']
-
-            if 'address' in kwargs:
-                party.address = kwargs['address']
-
-            if 'phone' in kwargs:
-                party.phone = kwargs['phone']
-
-            if 'homepage' in kwargs:
-                party.homepage = kwargs['homepage']
-
-            if 'researcherID' in kwargs:
-                party.researcherID = kwargs['researcherID']
-
-            if 'researchGateID' in kwargs:
-                party.researchGateID = kwargs['researchGateID']
+            for key, value in kwargs.iteritems():
+                if key in ('description', 'organization', 'email', 'address', 'phone', 'homepage', 'researcherID',
+                           'researchGateID'):
+                    setattr(party, key, value)
 
             party.save()
             return party
@@ -463,14 +441,11 @@ class Description(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'abstract' in kwargs:
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                # no need to check if a description element already exists
-                # the Meta settings 'unique_together' will enforce that we have only one description element per resource
-                description = Description.objects.create(abstract=kwargs['abstract'], content_object=metadata_obj)
-                return description
-            else:
-                raise ValidationError('Metadata instance for which description element to be created is missing.')
+
+            # no need to check if a description element already exists
+            # the Meta settings 'unique_together' will enforce that we have only one description element per resource
+            return Description.objects.create(**kwargs)
+
         else:
             raise ValidationError("Abstract of the description element is missing.")
 
@@ -503,12 +478,8 @@ class Title(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'value' in kwargs:
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                title = Title.objects.create(value=kwargs['value'], content_object=metadata_obj)
-                return title
-            else:
-                raise ValidationError('Metadata instance for which title element to be created is missing.')
+            return Title.objects.create(**kwargs)
+
         else:
             raise ValidationError("Value of the title element is missing.")
 
@@ -541,12 +512,7 @@ class Type(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'url' in kwargs:
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                type = Type.objects.create(url=kwargs['url'], content_object=metadata_obj)
-                return type
-            else:
-                raise ValidationError('Metadata instance for which type element to be created is missing.')
+            return Type.objects.create(**kwargs)
         else:
             raise ValidationError("URL of the type element is missing.")
 
@@ -584,47 +550,45 @@ class Date(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if 'type' in kwargs:
             # check the type doesn't already exists - we allow only one date type per resource
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                metadata_type = ContentType.objects.get_for_model(metadata_obj)
-                dt = Date.objects.filter(type= kwargs['type'], object_id=metadata_obj.id, content_type=metadata_type).first()
-                if dt:
-                    raise ValidationError('Date type:%s already exists' % kwargs['type'])
-                if not kwargs['type'] in ['created', 'modified', 'valid', 'available', 'published']:
-                    raise ValidationError('Invalid date type:%s' % kwargs['type'])
+            metadata_obj = kwargs['content_object']
+            metadata_type = ContentType.objects.get_for_model(metadata_obj)
+            dt = Date.objects.filter(type= kwargs['type'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            if dt:
+                raise ValidationError('Date type:%s already exists' % kwargs['type'])
+            if not kwargs['type'] in ['created', 'modified', 'valid', 'available', 'published']:
+                raise ValidationError('Invalid date type:%s' % kwargs['type'])
 
-                if kwargs['type'] == 'published':
-                    if not metadata_obj.resource.published_and_frozen:
-                        raise ValidationError("Resource is not published yet.")
+            if kwargs['type'] == 'published':
+                if not metadata_obj.resource.published_and_frozen:
+                    raise ValidationError("Resource is not published yet.")
 
-                if kwargs['type'] == 'available':
-                    if not metadata_obj.resource.public:
-                        raise ValidationError("Resource has not been shared yet.")
+            if kwargs['type'] == 'available':
+                if not metadata_obj.resource.public:
+                    raise ValidationError("Resource has not been shared yet.")
 
-                if 'start_date' in kwargs:
+            if 'start_date' in kwargs:
+                try:
+                    start_dt = parser.parse(str(kwargs['start_date']))
+                except TypeError:
+                    raise TypeError("Not a valid date value.")
+            else:
+                raise ValidationError('Date value is missing.')
+
+            # end_date is used only for date type 'valid'
+            if kwargs['type'] == 'valid':
+                if 'end_date' in kwargs:
                     try:
-                        start_dt = parser.parse(str(kwargs['start_date']))
+                        end_dt = parser.parse(str(kwargs['end_date']))
                     except TypeError:
-                        raise TypeError("Not a valid date value.")
-                else:
-                    raise ValidationError('Date value is missing.')
-
-                # end_date is used only for date type 'valid'
-                if kwargs['type'] == 'valid':
-                    if 'end_date' in kwargs:
-                        try:
-                            end_dt = parser.parse(str(kwargs['end_date']))
-                        except TypeError:
-                            raise TypeError("Not a valid end date value.")
-                        dt = Date.objects.create(type=kwargs['type'], start_date=start_dt, end_date=end_dt, content_object=metadata_obj)
-                    else:
-                        dt = Date.objects.create(type=kwargs['type'], start_date=start_dt, content_object=metadata_obj)
+                        raise TypeError("Not a valid end date value.")
+                    dt = Date.objects.create(type=kwargs['type'], start_date=start_dt, end_date=end_dt, content_object=metadata_obj)
                 else:
                     dt = Date.objects.create(type=kwargs['type'], start_date=start_dt, content_object=metadata_obj)
-
-                return dt
             else:
-                raise ValidationError('Metadata instance for which date element to be created is missing.')
+                dt = Date.objects.create(type=kwargs['type'], start_date=start_dt, content_object=metadata_obj)
+
+            return dt
+
         else:
             raise ValidationError("Type of date element is missing.")
 
@@ -632,7 +596,7 @@ class Date(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         dt = Date.objects.get(id=element_id)
-        metadata_obj = kwargs['metadata_obj']
+        metadata_obj = kwargs['content_object']
         if dt:
             if 'start_date' in kwargs:
                 try:
@@ -691,19 +655,16 @@ class Relation(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'type' in kwargs:
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                metadata_type = ContentType.objects.get_for_model(metadata_obj)
-                rel = Relation.objects.filter(type= kwargs['type'], object_id=metadata_obj.id, content_type=metadata_type).first()
-                if rel:
-                    raise ValidationError('Relation type:%s already exists.' % kwargs['type'])
-                if 'value' in kwargs:
-                    rel = Relation.objects.create(type=kwargs['type'], value=kwargs['value'], content_object=metadata_obj)
-                    return rel
-                else:
-                    raise ValidationError('Value for relation element is missing.')
+            metadata_obj = kwargs['content_object']
+            metadata_type = ContentType.objects.get_for_model(metadata_obj)
+            rel = Relation.objects.filter(type= kwargs['type'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            if rel:
+                raise ValidationError('Relation type:%s already exists.' % kwargs['type'])
+            if 'value' in kwargs:
+                return Relation.objects.create(type=kwargs['type'], value=kwargs['value'], content_object=metadata_obj)
+
             else:
-                raise ValidationError('Metadata instance for which relation element to be created is missing.')
+                raise ValidationError('Value for relation element is missing.')
         else:
             raise ObjectDoesNotExist("Type of relation element is missing.")
 
@@ -743,24 +704,22 @@ class Identifier(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'name' in kwargs:
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                metadata_type = ContentType.objects.get_for_model(metadata_obj)
-                # check the identifier name doesn't already exist - identifier name needs to be unique per resource
-                idf = Identifier.objects.filter(name__iexact= kwargs['name'], object_id=metadata_obj.id, content_type=metadata_type).first()
-                if idf:
-                    raise ValidationError('Identifier name:%s already exists' % kwargs['name'])
-                if kwargs['name'].lower() == 'doi':
-                    if not metadata_obj.resource.doi:
-                        raise ValidationError("Identifier of 'DOI' type can't be created for a resource that has not been assign a DOI yet.")
+            metadata_obj = kwargs['content_object']
+            metadata_type = ContentType.objects.get_for_model(metadata_obj)
+            # check the identifier name doesn't already exist - identifier name needs to be unique per resource
+            idf = Identifier.objects.filter(name__iexact= kwargs['name'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            if idf:
+                raise ValidationError('Identifier name:%s already exists' % kwargs['name'])
+            if kwargs['name'].lower() == 'doi':
+                if not metadata_obj.resource.doi:
+                    raise ValidationError("Identifier of 'DOI' type can't be created for a resource that has not been assign a DOI yet.")
 
-                if 'url' in kwargs:
-                    idf = Identifier.objects.create(name=kwargs['name'], url=kwargs['url'], content_object=metadata_obj)
-                    return idf
-                else:
-                    raise ValidationError('URL for the identifier is missing.')
+            if 'url' in kwargs:
+                idf = Identifier.objects.create(name=kwargs['name'], url=kwargs['url'], content_object=metadata_obj)
+                return idf
             else:
-                raise ValidationError('Metadata instance for which date element to be created is missing.')
+                raise ValidationError('URL for the identifier is missing.')
+
         else:
             raise ValidationError("Name of identifier element is missing.")
 
@@ -825,23 +784,19 @@ class Publisher(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'name' in kwargs:
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                if 'url' in kwargs:
-                    if not metadata_obj.resource.public and metadata_obj.resource.published_and_frozen:
-                        raise ValidationError("Publisher element can't be created for a resource that is not shared nor published.")
-                    if kwargs['name'].lower() == 'hydroshare':
-                        if not  metadata_obj.resource.files.all():
-                            raise ValidationError("Hydroshare can't be the publisher for a resource that has no content files.")
-                        else:
-                            kwargs['name'] = 'HydroShare'
-                            kwargs['url'] = 'http://hydroshare.org'
-                    pub = Publisher.objects.create(name=kwargs['name'], url=kwargs['url'], content_object=metadata_obj)
-                    return pub
-                else:
-                    raise ValidationError('URL for the publisher is missing.')
+            metadata_obj = kwargs['content_object']
+            if 'url' in kwargs:
+                if not metadata_obj.resource.public and metadata_obj.resource.published_and_frozen:
+                    raise ValidationError("Publisher element can't be created for a resource that is not shared nor published.")
+                if kwargs['name'].lower() == 'hydroshare':
+                    if not  metadata_obj.resource.files.all():
+                        raise ValidationError("Hydroshare can't be the publisher for a resource that has no content files.")
+                    else:
+                        kwargs['name'] = 'HydroShare'
+                        kwargs['url'] = 'http://hydroshare.org'
+                return Publisher.objects.create(name=kwargs['name'], url=kwargs['url'], content_object=metadata_obj)
             else:
-                raise ValidationError('Metadata instance for which publisher element to be created is missing.')
+                raise ValidationError('URL for the publisher is missing.')
         else:
             raise ValidationError("Name of publisher is missing.")
 
@@ -849,10 +804,7 @@ class Publisher(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         pub = Publisher.objects.get(id=element_id)
-        if 'metadata_obj' in kwargs:
-            metadata_obj = kwargs['metadata_obj']
-        else:
-            raise ValidationError('Metadata instance for which publisher element to be updated is missing.')
+        metadata_obj = kwargs['content_object']
 
         if metadata_obj.resource.frozen:
             raise ValidationError("Resource metadata can't be edited when the resource is in frozen state.")
@@ -920,14 +872,11 @@ class Language(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if 'code' in kwargs:
             # check the code doesn't already exists - format values need to be unique per resource
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                metadata_type = ContentType.objects.get_for_model(metadata_obj)
-                lang = Language.objects.filter(object_id=metadata_obj.id, content_type=metadata_type).first()
-                if lang:
-                    raise ValidationError('Language element already exists.')
-            else:
-                raise ValidationError('Metadata instance for which langauge element to be created is missing.')
+            metadata_obj = kwargs['content_object']
+            metadata_type = ContentType.objects.get_for_model(metadata_obj)
+            lang = Language.objects.filter(object_id=metadata_obj.id, content_type=metadata_type).first()
+            if lang:
+                raise ValidationError('Language element already exists.')
 
             # check the code is a valid code
             if not [t for t in iso_languages if t[0]==kwargs['code']]:
@@ -1004,55 +953,53 @@ class Coverage(AbstractMetaDataElement):
         # TODO: validate coordinate values
         if 'type' in kwargs:
             # check the type doesn't already exists - we allow only one coverage type per resource
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                metadata_type = ContentType.objects.get_for_model(metadata_obj)
-                coverage = Coverage.objects.filter(type= kwargs['type'], object_id=metadata_obj.id,
+            metadata_obj = kwargs['content_object']
+            metadata_type = ContentType.objects.get_for_model(metadata_obj)
+            coverage = Coverage.objects.filter(type= kwargs['type'], object_id=metadata_obj.id,
+                                               content_type=metadata_type).first()
+            if coverage:
+                raise ValidationError('Coverage type:%s already exists' % kwargs['type'])
+
+            if not kwargs['type'] in ['box', 'point', 'period']:
+                raise ValidationError('Invalid coverage type:%s' % kwargs['type'])
+
+            if kwargs['type'] == 'box':
+                # check that there is not already a coverage of point type
+                coverage = Coverage.objects.filter(type= 'point', object_id=metadata_obj.id,
                                                    content_type=metadata_type).first()
                 if coverage:
-                    raise ValidationError('Coverage type:%s already exists' % kwargs['type'])
+                    raise ValidationError("Coverage type 'Box' can't be created when there is a coverage of type 'Point'")
+            elif kwargs['type'] == 'point':
+                # check that there is not already a coverage of box type
+                coverage = Coverage.objects.filter(type= 'box', object_id=metadata_obj.id,
+                                                   content_type=metadata_type).first()
+                if coverage:
+                    raise ValidationError("Coverage type 'Point' can't be created when there is a coverage of type 'Box'")
 
-                if not kwargs['type'] in ['box', 'point', 'period']:
-                    raise ValidationError('Invalid coverage type:%s' % kwargs['type'])
+            if 'value' in kwargs:
+                if isinstance(kwargs['value'], dict):
+                    if not 'name' in kwargs['value']:
+                        raise ValidationError("Coverage name attribute is missing.")
 
-                if kwargs['type'] == 'box':
-                    # check that there is not already a coverage of point type
-                    coverage = Coverage.objects.filter(type= 'point', object_id=metadata_obj.id,
-                                                       content_type=metadata_type).first()
-                    if coverage:
-                        raise ValidationError("Coverage type 'Box' can't be created when there is a coverage of type 'Point'")
-                elif kwargs['type'] == 'point':
-                    # check that there is not already a coverage of box type
-                    coverage = Coverage.objects.filter(type= 'box', object_id=metadata_obj.id,
-                                                       content_type=metadata_type).first()
-                    if coverage:
-                        raise ValidationError("Coverage type 'Point' can't be created when there is a coverage of type 'Box'")
+                    cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
 
-                if 'value' in kwargs:
-                    if isinstance(kwargs['value'], dict):
-                        if not 'name' in kwargs['value']:
-                            raise ValidationError("Coverage name attribute is missing.")
+                    if kwargs['type']== 'period':
+                        value_dict = {k: v for k, v in kwargs['value'].iteritems() if k in ('name', 'start', 'end')}
+                    elif kwargs['type']== 'point':
+                        value_dict = {k: v for k, v in kwargs['value'].iteritems() if k in ('name', 'east', 'north')}
+                    elif kwargs['type']== 'box':
+                        value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                                      if k in ('name','northlimit', 'eastlimit', 'southlimit', 'westlimit')}
 
-                        cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
-
-                        if kwargs['type']== 'period':
-                            value_dict = {k: v for k, v in kwargs['value'].iteritems() if k in ('name', 'start', 'end')}
-                        elif kwargs['type']== 'point':
-                            value_dict = {k: v for k, v in kwargs['value'].iteritems() if k in ('name', 'east', 'north')}
-                        elif kwargs['type']== 'box':
-                            value_dict = {k: v for k, v in kwargs['value'].iteritems()
-                                          if k in ('name','northlimit', 'eastlimit', 'southlimit', 'westlimit')}
-
-                        value_json = json.dumps(value_dict)
-                        cov = Coverage.objects.create(type=kwargs['type'], _value=value_json,
-                                                      content_object=metadata_obj)
-                        return cov
-                    else:
-                        raise ValidationError('Invalid coverage value format.')
+                    value_json = json.dumps(value_dict)
+                    cov = Coverage.objects.create(type=kwargs['type'], _value=value_json,
+                                                  content_object=metadata_obj)
+                    return cov
                 else:
-                    raise ValidationError('Coverage value is missing.')
+                    raise ValidationError('Invalid coverage value format.')
             else:
-                raise ValidationError('Metadata instance for which date element to be created is missing.')
+                raise ValidationError('Coverage value is missing.')
+
         else:
             raise ValidationError("Type of coverage element is missing.")
 
@@ -1118,9 +1065,9 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def _validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
-        if coverage_type== 'period':
+        if coverage_type == 'period':
             if not 'start' in value_dict or not 'end' in value_dict:
-                raise ValidationError("For coverage of type 'period' values for start date and end date needed.")
+                raise ValidationError("For coverage of type 'period' values for both start date and end date are needed.")
             else:
                 # validate the date values
                 try:
@@ -1131,11 +1078,11 @@ class Coverage(AbstractMetaDataElement):
                     end_dt = parser.parse(value_dict['end'])
                 except TypeError:
                     raise TypeError("Invalid end date. Not a valid date value.")
-        elif coverage_type== 'point':
+        elif coverage_type == 'point':
             if not 'east' in value_dict or not 'north' in value_dict:
-                raise ValidationError("For coverage of type 'period' values for both start date and end date are needed.")
-        elif coverage_type== 'box':
-            for value_item in ['name','northlimit', 'eastlimit', 'southlimit', 'westlimit']:
+                raise ValidationError("For coverage of type 'point' values for both 'east' and 'north' are needed.")
+        elif coverage_type == 'box':
+            for value_item in ['name', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
                 if not value_item in value_dict:
                     raise ValidationError("For coverage of type 'box' values for one or more bounding box limits is missing.")
 
@@ -1150,17 +1097,14 @@ class Format(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if 'value' in kwargs:
             # check the format doesn't already exists - format values need to be unique per resource
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                metadata_type = ContentType.objects.get_for_model(metadata_obj)
-                format = Format.objects.filter(value__iexact= kwargs['value'], object_id=metadata_obj.id, content_type=metadata_type).first()
-                if format:
-                    raise ValidationError('Format:%s already exists' % kwargs['value'])
+            metadata_obj = kwargs['content_object']
+            metadata_type = ContentType.objects.get_for_model(metadata_obj)
+            format = Format.objects.filter(value__iexact= kwargs['value'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            if format:
+                raise ValidationError('Format:%s already exists' % kwargs['value'])
 
-                format = Format.objects.create(value=kwargs['value'], content_object=metadata_obj)
-                return format
-            else:
-                raise ValidationError('Metadata instance for which format element to be created is missing.')
+            return Format.objects.create(**kwargs)
+
         else:
             raise ValidationError("Format value is missing.")
 
@@ -1201,17 +1145,14 @@ class Subject(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if 'value' in kwargs:
             # check the subject doesn't already exists - subjects need to be unique per resource
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                metadata_type = ContentType.objects.get_for_model(metadata_obj)
-                sub = Subject.objects.filter(value__iexact= kwargs['value'], object_id=metadata_obj.id, content_type=metadata_type).first()
-                if sub:
-                    raise ValidationError('Subject:%s already exists for this resource.' % kwargs['value'])
+            metadata_obj = kwargs['content_object']
+            metadata_type = ContentType.objects.get_for_model(metadata_obj)
+            sub = Subject.objects.filter(value__iexact=kwargs['value'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            if sub:
+                raise ValidationError('Subject:%s already exists for this resource.' % kwargs['value'])
 
-                sub = Subject.objects.create(value=kwargs['value'], content_object=metadata_obj)
-                return sub
-            else:
-                raise ValidationError('Metadata instance for which subject element to be created is missing.')
+            return Subject.objects.create(**kwargs)
+
         else:
             raise ValidationError("Subject value is missing.")
 
@@ -1223,7 +1164,7 @@ class Subject(AbstractMetaDataElement):
                 if sub.value != kwargs['value']:
                     # check this new subject not already exists
                     if Subject.objects.filter(value__iexact=kwargs['value'], object_id=sub.object_id,
-                                             content_type__pk=sub.content_type.id).count()> 0:
+                                             content_type__pk=sub.content_type.id).count() > 0:
                         raise ValidationError('Subject:%s already exists for this resource.' % kwargs['value'])
 
                 sub.value = kwargs['value']
@@ -1255,17 +1196,14 @@ class Source(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if 'derived_from' in kwargs:
             # check the source doesn't already exists - source needs to be unique per resource
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                metadata_type = ContentType.objects.get_for_model(metadata_obj)
-                src = Source.objects.filter(derived_from= kwargs['derived_from'], object_id=metadata_obj.id, content_type=metadata_type).first()
-                if src:
-                    raise ValidationError('Source:%s already exists for this resource.' % kwargs['derived_from'])
+            metadata_obj = kwargs['content_object']
+            metadata_type = ContentType.objects.get_for_model(metadata_obj)
+            src = Source.objects.filter(derived_from=kwargs['derived_from'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            if src:
+                raise ValidationError('Source:%s already exists for this resource.' % kwargs['derived_from'])
 
-                src = Source.objects.create(derived_from=kwargs['derived_from'], content_object=metadata_obj)
-                return src
-            else:
-                raise ValidationError('Metadata instance for which source element to be created is missing.')
+            return Source.objects.create(**kwargs)
+
         else:
             raise ValidationError("Source data is missing.")
 
@@ -1306,21 +1244,18 @@ class Rights(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         # the Meta class setting "unique-tigether' enforces that we have only one rights element per resource
-        if 'metadata_obj' in kwargs:
-            metadata_obj = kwargs['metadata_obj']
-        else:
-            raise ValidationError('Metadata instance for which rights element to be created is missing.')
+        metadata_obj = kwargs['content_object']
 
         # in order to create a Rights element we need to have either a value for the statement field or a value for the url field
         if 'statement' in kwargs and 'url' in kwargs:
-            rights = Rights.objects.create(statement=kwargs['statement'], url=kwargs['url'],  content_object=metadata_obj)
-            return rights
+            return Rights.objects.create(statement=kwargs['statement'], url=kwargs['url'],  content_object=metadata_obj)
+
         elif 'url' in kwargs:
-            rights = Rights.objects.create(url=kwargs['url'],  content_object=metadata_obj)
-            return rights
+            return Rights.objects.create(url=kwargs['url'],  content_object=metadata_obj)
+
         elif 'statement' in kwargs:
-            rights = Rights.objects.create(statement=kwargs['statement'],  content_object=metadata_obj)
-            return rights
+            return Rights.objects.create(statement=kwargs['statement'],  content_object=metadata_obj)
+
         else:
             raise ValidationError("Statement and/or URL of rights is missing.")
 
@@ -1370,7 +1305,7 @@ class AbstractResource(ResourcePermissionsMixin):
     )
     files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource')
     bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource')
-    short_id = models.CharField(max_length=32, default=short_id, db_index=True)
+    short_id = models.CharField(max_length=32, default=short_id(), db_index=True)
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
@@ -1554,7 +1489,7 @@ class CoreMetaData(models.Model):
         self.sources.all().delete()
         self.relations.all().delete()
 
-    def get_xml(self):
+    def get_xml(self, pretty_print=True):
         from lxml import etree
         import arrow
         RDF_ROOT = etree.Element('{%s}RDF' % self.NAMESPACES['rdf'], nsmap=self.NAMESPACES)
@@ -1682,7 +1617,7 @@ class CoreMetaData(models.Model):
             else:
                 dc_subject.text = sub.value
 
-        return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=True)
+        return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def _create_person_element(self, etree, parent_element, person):
         if isinstance(person, Creator):
@@ -1735,11 +1670,15 @@ class CoreMetaData(models.Model):
             raise ValidationError("Metadata element type:%s is not one of the supported in core metadata elements."
                                   % element_model_name)
 
-        model = ContentType.objects.get(model=element_model_name)
-        if model:
-            if issubclass(model.model_class(), AbstractMetaDataElement):
-                kwargs['metadata_obj']= self
-                element = model.model_class().create(**kwargs)
+        try:
+            model_type = ContentType.objects.get(app_label=self._meta.app_label, model=element_model_name)
+        except ObjectDoesNotExist:
+            model_type = ContentType.objects.get(app_label='hs_core', model=element_model_name)
+
+        if model_type:
+            if issubclass(model_type.model_class(), AbstractMetaDataElement):
+                kwargs['content_object'] = self
+                element = model_type.model_class().create(**kwargs)
                 element.save()
             else:
                 raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
@@ -1748,10 +1687,14 @@ class CoreMetaData(models.Model):
 
     def update_element(self, element_model_name, element_id, **kwargs):
         element_model_name = element_model_name.lower()
-        model_type = ContentType.objects.get(model=element_model_name)
+        try:
+            model_type = ContentType.objects.get(app_label=self._meta.app_label, model=element_model_name)
+        except ObjectDoesNotExist:
+            model_type = ContentType.objects.get(app_label='hs_core', model=element_model_name)
+
         if model_type:
             if issubclass(model_type.model_class(), AbstractMetaDataElement):
-                kwargs['metadata_obj']= self
+                kwargs['content_object']= self
                 model_type.model_class().update(element_id, **kwargs)
             else:
                 raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
@@ -1760,7 +1703,11 @@ class CoreMetaData(models.Model):
 
     def delete_element(self, element_model_name, element_id):
         element_model_name = element_model_name.lower()
-        model_type = ContentType.objects.get(model=element_model_name)
+        try:
+            model_type = ContentType.objects.get(app_label=self._meta.app_label, model=element_model_name)
+        except ObjectDoesNotExist:
+            model_type = ContentType.objects.get(app_label='hs_core', model=element_model_name)
+
         if model_type:
             if issubclass(model_type.model_class(), AbstractMetaDataElement):
                 model_type.model_class().remove(element_id)
