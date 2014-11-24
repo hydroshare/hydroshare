@@ -883,7 +883,7 @@ class TestCoreMetadata(TestCase):
         cr_homepage = 'http://usu.edu/homepage/001'
         cr_res_id = 'http://research.org/001'
         cr_res_gate_id = 'http://research-gate.org/001'
-        resource.create_metadata_element(self.res.short_id,'creator',
+        self.res.metadata.create_element('creator',
                                 name=cr_name,
                                 description=cr_des,
                                 organization=cr_org,
@@ -895,7 +895,7 @@ class TestCoreMetadata(TestCase):
                                 researchGateID=cr_res_gate_id)
 
         # add another creator with only the name
-        resource.create_metadata_element(self.res.short_id,'creator', name='Lisa Holley')
+        self.res.metadata.create_element('creator', name='Lisa Holley')
 
         #test adding a contributor with all sub_elements
         con_name = 'Sujan Peterson'
@@ -907,7 +907,7 @@ class TestCoreMetadata(TestCase):
         con_homepage = 'http://usu.edu/homepage/009'
         con_res_id = 'http://research.org/009'
         con_res_gate_id = 'http://research-gate.org/009'
-        resource.create_metadata_element(self.res.short_id,'contributor',
+        self.res.metadata.create_element('contributor',
                                 name=con_name,
                                 description=con_des,
                                 organization=con_org,
@@ -919,30 +919,30 @@ class TestCoreMetadata(TestCase):
                                 researchGateID=con_res_gate_id)
 
         # add another creator with only the name
-        resource.create_metadata_element(self.res.short_id,'contributor', name='Andrew Smith')
+        self.res.metadata.create_element('contributor', name='Andrew Smith')
 
         # add a period type coverage
         value_dict = {'name':'Name for period coverage' , 'start':'1/1/2000', 'end':'12/12/2012'}
-        resource.create_metadata_element(self.res.short_id,'coverage', type='period', value=value_dict)
+        self.res.metadata.create_element('coverage', type='period', value=value_dict)
 
         # add a point type coverage
         value_dict = {'name':'Name for point coverage', 'east':'56.45678', 'north':'12.6789'}
-        resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+        self.res.metadata.create_element('coverage', type='point', value=value_dict)
 
         # add date of type 'valid'
-        resource.create_metadata_element(self.res.short_id,'date', type='valid', start_date='8/10/2011', end_date='8/11/2012')
+        self.res.metadata.create_element('date', type='valid', start_date='8/10/2011', end_date='8/11/2012')
 
         # add a format element
         format_csv = 'text/csv'
-        resource.create_metadata_element(self.res.short_id,'format', value=format_csv)
+        self.res.metadata.create_element('format', value=format_csv)
 
         # add 'DOI' identifier
         self.res.doi='doi1000100010001'
         self.res.save()
-        resource.create_metadata_element(self.res.short_id,'identifier', name='DOI', url="http://dx.doi.org/001")
+        self.res.metadata.create_element('identifier', name='DOI', url="http://dx.doi.org/001")
 
         # add a language element
-        resource.create_metadata_element(self.res.short_id,'language', code='eng')
+        self.res.metadata.create_element('language', code='eng')
 
         # add 'Publisher' element
         original_file_name = 'original.txt'
@@ -953,29 +953,29 @@ class TestCoreMetadata(TestCase):
         original_file = open(original_file_name, 'r')
         # add the file to the resource
         hydroshare.add_resource_files(self.res.short_id, original_file)
-        resource.create_metadata_element(self.res.short_id,'publisher', name="HydroShare", url="http://hydroshare.org")
+        self.res.metadata.create_element('publisher', name="HydroShare", url="http://hydroshare.org")
 
         # add a relation element of uri type
-        resource.create_metadata_element(self.res.short_id,'relation', type='isPartOf',
+        self.res.metadata.create_element('relation', type='isPartOf',
                                 value='http://hydroshare.org/resource/001')
 
         # add another relation element of non-uri type
-        resource.create_metadata_element(self.res.short_id,'relation', type='isDataFor',
+        self.res.metadata.create_element('relation', type='isDataFor',
                                 value='This resource is for another resource')
 
 
         # add a source element of uri type
-        resource.create_metadata_element(self.res.short_id,'source', derived_from='http://hydroshare.org/resource/0002')
+        self.res.metadata.create_element('source', derived_from='http://hydroshare.org/resource/0002')
 
         # add a rights element
-        resource.create_metadata_element(self.res.short_id,'rights', statement='This is the rights statement for this resource',
+        self.res.metadata.create_element('rights', statement='This is the rights statement for this resource',
                                 url='http://rights.ord/001')
 
         # add a subject element
-        resource.create_metadata_element(self.res.short_id,'subject', value='sub-1')
+        self.res.metadata.create_element('subject', value='sub-1')
 
         # add another subject element
-        resource.create_metadata_element(self.res.short_id,'subject', value='sub-2')
+        self.res.metadata.create_element('subject', value='sub-2')
 
         RDF_ROOT = etree.XML(self.res.metadata.get_xml())
 
