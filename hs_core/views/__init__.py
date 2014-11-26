@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import get_object_or_404, render_to_response
+from django.shortcuts import get_object_or_404, render_to_response, render
 from django.template import RequestContext
 from django.utils.timezone import now
 from mezzanine.conf import settings
@@ -27,6 +27,7 @@ from . import discovery_api
 from . import resource_api
 from . import social_api
 from hs_core.hydroshare import file_size_limit_for_display
+from crispy_forms.layout import *
 
 import autocomplete_light
 
@@ -212,6 +213,13 @@ class FilterForm(forms.Form):
 def my_resources(request, page):
 #    if not request.user.is_authenticated():
 #        return HttpResponseRedirect('/accounts/login/')
+    # TODO: Pycharm remote debug code
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    # End of Pycharm remote debug code
+
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
         res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
@@ -346,10 +354,23 @@ class CreateResourceForm(forms.Form):
 
 @login_required
 def create_resource(request, *args, **kwargs):
+    creator_formset = CreatorFormSet(request.POST or None)
+    contributor_formset = ContributorFormSet(request.POST or None)
+
+    if request.method == "GET":
+        #ext_md_layout = Layout(HTML('<h3>Testing extended metadata layout</h3>'))
+        ext_md_layout = None
+        metadata_form = MetaDataForm(extended_metadata_layout=ext_md_layout)
+        creator_formset = CreatorFormSet(initial=[], prefix='creators')
+        contributor_formset = ContributorFormSet(prefix='contributors')
+        creator_helper = CreatorFormSetHelper()
+        context = {'metadata_form':metadata_form, 'creator_formset': creator_formset,
+                   'contributor_formset': contributor_formset, 'extended_metadata_layout': ext_md_layout}
+
+        return render(request, 'pages/create-resource.html', context)
+
     frm = CreateResourceForm(request.POST)
     # core metadata element formsets
-    creator_formset = CreatorFormSet(request.POST)
-    contributor_formset = ContributorFormSet(request.POST)
 
     if frm.is_valid() and creator_formset.is_valid() and contributor_formset.is_valid():
         core_metadata = []
