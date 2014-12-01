@@ -354,16 +354,23 @@ class CreateResourceForm(forms.Form):
 
 @login_required
 def create_resource(request, *args, **kwargs):
-    creator_formset = CreatorFormSet(request.POST or None)
-    contributor_formset = ContributorFormSet(request.POST or None)
+    creator_formset = CreatorFormSet(request.POST or None, prefix='creators')
+    contributor_formset = ContributorFormSet(request.POST or None, prefix='contributors')
 
     if request.method == "GET":
         #ext_md_layout = Layout(HTML('<h3>Testing extended metadata layout</h3>'))
         ext_md_layout = None
         metadata_form = MetaDataForm(extended_metadata_layout=ext_md_layout)
-        creator_formset = CreatorFormSet(initial=[], prefix='creators')
+        user = hydroshare.user_from_id(request.user)
+        if user.first_name:
+            first_creator_name = "{first_name} {last_name}".format(first_name=user.first_name, last_name=user.last_name)
+        else:
+            first_creator_name = user.username
+        first_creator_email = user.email
+
+        creator_formset = CreatorFormSet(initial=[{'name': first_creator_name, 'email': first_creator_email}], prefix='creators')
         contributor_formset = ContributorFormSet(prefix='contributors')
-        creator_helper = CreatorFormSetHelper()
+        #creator_helper = CreatorFormSetHelper()
         context = {'metadata_form':metadata_form, 'creator_formset': creator_formset,
                    'contributor_formset': contributor_formset, 'extended_metadata_layout': ext_md_layout}
 
@@ -374,13 +381,22 @@ def create_resource(request, *args, **kwargs):
 
     if frm.is_valid() and creator_formset.is_valid() and contributor_formset.is_valid():
         core_metadata = []
-        for form in creator_formset:
-            creator_data = {k: v for k, v in form.cleaned_data}
-            core_metadata.append({'creator': creator_data})
+        # for form in creator_formset:
+        #     creator_data = {k: v for k, v in form.cleaned_data.iteritems()}
+        #     core_metadata.append({'creator': creator_data})
+        # TODO: implement get_metadata_dict() method in each metadata element form/formset
+        core_metadata.append(creator_formset.get_metadata_dict())
 
         for form in contributor_formset:
-            contributor_data = {k: v for k, v in form.cleaned_data}
+            contributor_data = {k: v for k, v in form.cleaned_data.iteritems()}
             core_metadata.append({'contributor': contributor_data})
+
+        subjects = [k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None
+        for subject_value in subjects:
+            core_metadata.append({'subject': {'value': subject_value}})
+
+        core_metadata.append({'title': {'value': frm.cleaned_data['title']}})
+        core_metadata.append({'description': {'abstract': frm.cleaned_data['abstract'] or frm.cleaned_data['title']}})
 
         dcterms = [
             { 'term': 'T', 'content': frm.cleaned_data['title'] },

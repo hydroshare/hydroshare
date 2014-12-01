@@ -1734,11 +1734,11 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
         if created:
             from hs_core.hydroshare import utils
             import json
-            instance.metadata.create_element('title', value=instance.title)
-            if instance.content:
-                instance.metadata.create_element('description', abstract=instance.content)
-            else:
-                instance.metadata.create_element('description', abstract=instance.description)
+            #instance.metadata.create_element('title', value=instance.title)
+            # if instance.content:
+            #     instance.metadata.create_element('description', abstract=instance.content)
+            # else:
+            #     instance.metadata.create_element('description', abstract=instance.description)
 
             # TODO: With the current VM the get_user_info() method fails. So we can't get the resource uri for
             # the user now.
@@ -1747,7 +1747,7 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
             #                                  email=instance.creator.email,
             #                                  description=creator_dict['resource_uri'])
 
-            instance.metadata.create_element('creator', name=instance.creator.get_full_name(), email=instance.creator.email)
+            #instance.metadata.create_element('creator', name=instance.creator.get_full_name(), email=instance.creator.email)
 
             # TODO: The element 'Type' can't be created as we do not have an URI for specific resource types yet
 
