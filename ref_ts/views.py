@@ -17,8 +17,6 @@ import datetime
 from django.utils.timezone import now
 import os
 
-
-
 class ReferencedSitesForm(forms.Form):
     wsdl_url = forms.URLField()
 
@@ -286,7 +284,3 @@ def update_files(request, shortkey, *args, **kwargs):
                 'bag_time': time
         }
         return json_or_jsonp(request, data)  # successfully generated new files
-
-
-
-

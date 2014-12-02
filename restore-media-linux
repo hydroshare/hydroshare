@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO - deprecate from workflow now that the entire volume is shared (~/hydroshare)
+
 mkdir /tmp/media
 pushd $PWD > /dev/null
 cp "$1" /tmp

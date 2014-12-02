@@ -23,14 +23,15 @@
 
 <form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-resource/">
     {% csrf_token %}
-
     <table class="table" id="file-list">
     <tbody id="files">
         <tr>
-            <td><input class="form-control" type="file" name="files" id="" multiple/></td>
+            <td><input type="file" name="files" id="" multiple/></td>
         </tr>
     </tbody>
     </table>
+
+    <h2 style="color:red">{{ file_size_error }}</h2>
 
     <h2>Describe your Resource with metadata:</h2>
 
@@ -38,13 +39,14 @@
         will show up when your Resource is displayed. You can edit this information later.
     </p>
 
-<h3>Add your metadata here:</h3>
+  <h3>Add your metadata here:</h3>
   <div class="form-group">
     <label for="" class="col-sm-2 control-label">Resource Type</label>
     <div class="col-sm-10">
         <select class="form-control" name="resource-type" id="resource-type">
+            <option value="GenericResource">Generic Resource</option>
             <option value="InstResource">RHESSys Instance Resource</option>
-            <option value="GenericResource">Generic Resource</option></select>
+        </select>
     </div>
   </div>
 
@@ -72,7 +74,7 @@
   <div class="form-group">
     <label for="" class="col-sm-2 control-label">Abstract</label>
     <div class="col-sm-10">
-        <textarea class="form-control" name="abstract" id="" cols="30" rows="10" placeholder="Abstract"></textarea>
+        <textarea class="mceEditor charfield" cols="40" id="" name="abstract" rows="10" placeholder="Abstract"> </textarea>
     </div>
   </div>
 

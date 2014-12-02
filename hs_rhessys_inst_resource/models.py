@@ -14,7 +14,6 @@ from .forms import InputForm
 from mezzanine.pages.page_processors import processor_for
 from hs_core.hydroshare.resource import post_create_resource
 from django.utils.timezone import now
-from hs_core import hydroshare
 from django.dispatch import receiver
 import zipfile
 import ConfigParser
@@ -52,23 +51,22 @@ class InstResource(Page, RichText, AbstractResource):
         return AbstractResource.can_view(self, request)
 
 def when_my_process_ends(sender, instance, result_text=None, result_data=None, files=None, logs=None, **kw):
-        # make something out of the result data - result_data is a dict, result_text is plaintext
-        # files are UploadedFile instances
-        # logs are plain text stdout and stderr from the finished container
-        print "when_my_process_ends"
-        owner = User.objects.first() # FIXME
-        hydroshare.create_resource('GenericResource', owner, instance.profile.name + ' - ' + now().isoformat(), files=files, content=logs)
-        #process.delete() # no reason to leave it hanging around in the database
+    # make something out of the result data - result_data is a dict, result_text is plaintext
+    # files are UploadedFile instances
+    # logs are plain text stdout and stderr from the finished container
+    from hs_core import hydroshare
+    owner = User.objects.first() # FIXME
+    hydroshare.create_resource('GenericResource', owner, instance.profile.name + ' - ' + now().isoformat(), files=files, content=logs)
+    #process.delete() # no reason to leave it hanging around in the database
 
 def when_my_process_fails(sender, instance, error_text=None, error_data=None, logs=None, **kw):
-        # do something out of the error data
-        # error_data is a dict
-        # error_text is plain text
-        # logs are plain text stdout and stderr from the dead container
-        print "when_my_process_fails"
-        instance.logs += error_text
-        instance.save()
-        #process.delete() # no reason to leave it hanging around in the database
+    # do something out of the error data
+    # error_data is a dict
+    # error_text is plain text
+    # logs are plain text stdout and stderr from the dead container
+    instance.logs += error_text
+    instance.save()
+    #process.delete() # no reason to leave it hanging around in the database
 
 finished = signals.process_finished.connect(when_my_process_ends, weak=False)
 error_handler = signals.process_aborted.connect(when_my_process_fails, weak=False)
@@ -78,45 +76,46 @@ def rhessys_post_trigger(sender, **kwargs):
     if sender is InstResource:
         resource = kwargs['resource']
         files = resource.files.all()
-        # Assume only one file in files, and that that file is a zipfile
-        infile = files[0].resource_file
-        infile.open('rb')
-        zfile = zipfile.ZipFile(infile)
+        if(files):
+            # Assume only one file in files, and that that file is a zipfile
+            infile = files[0].resource_file
+            infile.open('rb')
+            zfile = zipfile.ZipFile(infile)
 
-        # Get list of files in zipfile
-        zlist = zfile.namelist()
-        # Assume zipfile contains a single directory
-        root = zlist[0]
+            # Get list of files in zipfile
+            zlist = zfile.namelist()
+            # Assume zipfile contains a single directory
+            root = zlist[0]
 
-        # Read metadata.txt from zipfile
-        metadataFilename = os.path.join(root, 'metadata.txt')
+            # Read metadata.txt from zipfile
+            metadataFilename = os.path.join(root, 'metadata.txt')
 
-        metadata = zfile.read(metadataFilename)
+            metadata = zfile.read(metadataFilename)
 
-        # Read metadata into ConfigParser
-        md = ConfigParser.ConfigParser()
-        md.readfp(StringIO.StringIO(metadata))
+            # Read metadata into ConfigParser
+            md = ConfigParser.ConfigParser()
+            md.readfp(StringIO.StringIO(metadata))
 
-        resource.project_name = root
+            resource.project_name = root
 
-        resource.model_desc = md.get('rhessys', 'model_description')
+            resource.model_desc = md.get('rhessys', 'model_description')
 
-        resource.git_repo = md.get('rhessys', 'rhessys_src')
+            resource.git_repo = md.get('rhessys', 'rhessys_src')
 
-        resource.commit_id = md.get('rhessys', 'rhessys_sha')
+            resource.commit_id = md.get('rhessys', 'rhessys_sha')
 
-        resource.study_area_bbox = md.get('study_area', 'bbox_wgs84')
-        resource.save()
-        zfile.close()
+            resource.study_area_bbox = md.get('study_area', 'bbox_wgs84')
+            resource.save()
+            zfile.close()
 
 processor_for(InstResource)(resource_processor)
 
 @processor_for(InstResource)
 def main_page(request, page):
+    content_model = page.get_content_model()
     if(request.method == 'POST'):
         form = InputForm(request.POST)
         if(form.is_valid()):
-            content_model = page.get_content_model()
             content_model.name=form.cleaned_data['name']
             content_model.git_username = form.cleaned_data['git_username']
             content_model.git_password = form.cleaned_data['git_password']
@@ -140,13 +139,12 @@ def main_page(request, page):
             print logs
             process.delete() # no reason to leave it hanging around in the database
     else:
-        cm =page.get_content_model()
         form = InputForm(initial={
-            'project_name' : cm.project_name,
-            'model_desc' : cm.model_desc,
-            'git_repo' : cm.git_repo,
-            'commit_id' : cm.commit_id,
-            'study_area_bbox' : cm.study_area_bbox
+            'project_name' : content_model.project_name,
+            'model_desc' : content_model.model_desc,
+            'git_repo' : content_model.git_repo,
+            'commit_id' : content_model.commit_id,
+            'study_area_bbox' : content_model.study_area_bbox
         })
 
     return  {'form': form}

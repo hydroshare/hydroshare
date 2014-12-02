@@ -22,7 +22,7 @@ from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from languages_iso import languages as iso_languages
 from dateutil import parser
-from django.utils import simplejson as json
+import json
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -115,9 +115,9 @@ class ResourcePermissionsMixin(Ownable):
         user = get_user(request)
 
         if user.is_authenticated():
-            if not self.user:
-                ret = user.is_superuser
-            elif user.pk == self.creator.pk:
+            if user.is_superuser:
+                ret = True
+            elif self.creator and user.pk == self.creator.pk:
                 ret = True
             elif user.pk in { o.pk for o in self.owners.all() }:
                 ret = True
@@ -139,9 +139,9 @@ class ResourcePermissionsMixin(Ownable):
         if self.public:
             return True
         if user.is_authenticated():
-            if not self.user:
-                ret = user.is_superuser
-            elif user.pk == self.creator.pk:
+            if user.is_superuser:
+                ret = True
+            elif self.creator and user.pk == self.creator.pk:
                 ret = True
             elif user.pk in { o.pk for o in self.owners.all() }:
                 ret = True
@@ -452,7 +452,7 @@ class Creator(Party):
 
 class Description(AbstractMetaDataElement):
     term = 'Description'
-    abstract = models.CharField(max_length=500)
+    abstract = models.TextField()
 
     def __unicode__(self):
         return self.abstract
@@ -1343,6 +1343,8 @@ class Rights(AbstractMetaDataElement):
 
 
 
+def short_id():
+    return uuid4().hex
 
 class AbstractResource(ResourcePermissionsMixin):
     """
@@ -1368,7 +1370,7 @@ class AbstractResource(ResourcePermissionsMixin):
     )
     files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource')
     bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource')
-    short_id = models.CharField(max_length=32, default=lambda: uuid4().hex, db_index=True)
+    short_id = models.CharField(max_length=32, default=short_id, db_index=True)
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
@@ -1418,14 +1420,14 @@ class ResourceFile(models.Model):
     content_type = models.ForeignKey(ContentType)
 
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    resource_file = models.FileField(upload_to=get_path, storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
+    resource_file = models.FileField(upload_to=get_path, max_length=500, storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
 
 class Bags(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
 
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    bag = models.FileField(upload_to='bags', storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage(), null=True) # actually never null
+    bag = models.FileField(upload_to='bags', max_length=500, storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage(), null=True) # actually never null
     timestamp = models.DateTimeField(default=now, db_index=True)
 
     class Meta:
@@ -1777,15 +1779,6 @@ def resource_processor(request, page):
     extra['dc'] = { m.term_name : m.content for m in extra['res'].dublin_metadata.all() }
     return extra
 
-processor_for(GenericResource)(resource_processor)
-
-@processor_for('resources')
-def resource_listing_processor(request, page):
-    owned_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
-    editable_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
-    viewable_resources = list(GenericResource.objects.filter(public=True))
-
-    return locals()
 
 @receiver(post_save)
 def resource_creation_signal_handler(sender, instance, created, **kwargs):

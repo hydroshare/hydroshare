@@ -6,4 +6,4 @@
 	url = https://github.com/hydroshare/django_docker_processes.git
 [submodule "django_irods"]
 	path = django_irods
-	url = https://github.com/hydroshare/django_irods
+	url = https://github.com/hydroshare/django_irods.git

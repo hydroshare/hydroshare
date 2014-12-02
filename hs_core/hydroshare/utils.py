@@ -321,11 +321,12 @@ def serialize_science_metadata_xml(res):
     rdf_modified_value = etree.SubElement(dc_date_dcterms_modified, '{%s}value' % NAMESPACES['rdf'])
     rdf_modified_value.text = arrow.get(res_dict['updated']).format(DATE_FORMAT)
 
-    if res_dict.get('publish_date', None):
-        dc_date = etree.SubElement(rdf_Description, '{%s}date' % NAMESPACES['dc'])
-        dc_date_dcterms_published = etree.SubElement(dc_date, '{%s}published' % NAMESPACES['dcterms'])
-        rdf_published_value = etree.SubElement(dc_date_dcterms_published, '{%s}value' % NAMESPACES['rdf'])
-        rdf_published_value.text = arrow.get(res_dict['publish_date']).format(DATE_FORMAT)
+    if res_dict.get('published_and_frozen'): # only set publish_date when resource is published
+        if res_dict.get('publish_date', None):
+            dc_date = etree.SubElement(rdf_Description, '{%s}date' % NAMESPACES['dc'])
+            dc_date_dcterms_published = etree.SubElement(dc_date, '{%s}published' % NAMESPACES['dcterms'])
+            rdf_published_value = etree.SubElement(dc_date_dcterms_published, '{%s}value' % NAMESPACES['rdf'])
+            rdf_published_value.text = arrow.get(res_dict['publish_date']).format(DATE_FORMAT)
 
     # format
     formats = _get_dc_term_objects(res_dict[DUBLIN_METADATA], 'FMT')
@@ -446,3 +447,7 @@ def _validate_email( email ):
         return True
     except ValidationError:
         return False
+
+def get_profile(user):
+    return user.userprofile
+

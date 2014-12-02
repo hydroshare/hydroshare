@@ -43,11 +43,11 @@
         <div class="col-md-12" id="dcterms-rows">
 
             <div class="form-group" style="padding-top: 0.3em;">
-                    <button class="btn btn-primary" id="add-row">
+                    <button class="btn btn-primary" id="add-row" type="button">
                         Add row
                     </button>
                     <button class="btn btn-primary" type="submit">Update results</button>
-                </div>
+            </div>
 
         </div>
     </div>
@@ -101,9 +101,13 @@
             <div class="btn-toolbar">
                 <a class="btn btn-link" href="?start=0"><i class="fa fa-fast-backward"></i></a>
                 <a class="btn btn-link" href="?start={{ first|add:"-20" }}"><i class="fa fa-backward"></i></a>
-                Results {{ first }}-{{ last }} of {{ ct }}
+                {% if last %}
+                    Results {{ first|add:"1" }}-{{ last }} of {{ ct }}
+                {% else %}
+                    Results 0-0 of 0
+                {% endif %}
                 <a class="btn btn-link" href="?start={{ first|add:"20" }}"><i class="fa fa-forward"></i></a>
-                <a class="btn btn-link" href="?start={{ first|add:"100" }}"><i class="fa fa-fast-forward"></i></a>
+                <a class="btn btn-link" href="?start={{ ct|add:"-20" }}"><i class="fa fa-fast-forward"></i></a>
 
             </div>
         </div>

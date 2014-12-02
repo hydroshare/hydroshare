@@ -1,8 +1,7 @@
 from django.core.exceptions import MultipleObjectsReturned
 from django.contrib.auth.models import User, Group
-from tastypie.models import ApiKey
 from hs_core.models import GroupOwnership
-from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types
+from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
 from django.core import exceptions
 import json
 
@@ -157,6 +156,7 @@ def create_account(
 
     """
 
+    from tastypie.models import ApiKey
     from django.contrib.auth.models import User, Group
     from django.contrib.sites.models import Site
 
@@ -251,7 +251,7 @@ def update_account(user, **kwargs):
         del kwargs[k]
 
     try:
-        profile = user.get_profile()
+        profile = get_profile(user)
         profile_update = dict()
         update_keys = filter(lambda x: hasattr(profile, str(x)), kwargs.keys())
         for key in update_keys:
@@ -593,7 +593,7 @@ def get_resource_list(
     from django.db.models import Q
 
     if not any((group, user, owner, from_date, to_date, start, count, keywords, dc, full_text_search, public)):
-        raise NotImplemented("Returning the full resource list is not supported.  at least limit by count")
+        raise NotImplemented("Returning the full resource list is not supported.")
 
     resource_types = get_resource_types()
     queries = dict((el, []) for el in resource_types)
@@ -657,8 +657,21 @@ def get_resource_list(
                 if metadata['content']:
                     queries[t] = filter(lambda r: r.dublin_metadata.filter(term=metadata['term']).exists(), queries[t])
                     queries[t] = filter(lambda r: r.dublin_metadata.filter(content=metadata['content']).exists(), queries[t])
+        qcnt = 0
+        if queries[t]:
+            qcnt = queries[t].__len__();
 
-
-
+        if start is not None and count is not None:
+            if qcnt>start:
+                if(qcnt>=start+count):
+                    queries[t] = queries[t][start:start+count]
+                else:
+                    queries[t] = queries[t][start:qcnt]
+        elif start is not None:
+            if qcnt>=start:
+                queries[t] = queries[t][start:qcnt]
+        elif count is not None:
+            if qcnt>count:
+                queries[t] = queries[t][0:count]
 
     return queries

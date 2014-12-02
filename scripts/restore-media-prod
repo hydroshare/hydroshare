@@ -1,0 +1,13 @@
+#!/bin/bash
+
+mkdir /tmp/media
+pushd $PWD > /dev/null
+cp "$1" /tmp
+cd /tmp
+tar -xzf "$1"
+cd media
+cp ~/hydroshare/scripts/scp-media-prod ./scp-media-prod.exp
+chmod +x scp-media-prod.exp
+./scp-media-prod.exp
+popd
+rm -rf /tmp/media

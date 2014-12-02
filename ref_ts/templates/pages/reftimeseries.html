@@ -1,6 +1,6 @@
 {% extends 'pages/page.html' %}
 
-{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags staticfiles %}
+{% load pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags staticfiles %}
 
 {% block main %}
 
@@ -307,7 +307,7 @@
           </div>
           <div class="modal-body">
 
-                <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource entirely. A copy of your 
+                <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource entirely. A copy of your
                 resource data will not be retained by Hydroshare.  We recommend highly that you download the latest copy
                 of your resource before confirming this action.
               <hr/>
@@ -403,9 +403,7 @@
     <script src=" {% static "ref_ts/datepicker/js/bootstrap-datepicker.js" %}"></script>
     <script src=" {% static "ref_ts/visualization/js/visualization.js" %}"></script>
     <script type="text/javascript">
-
     $(function() {
-
         function compare(a,b) {
             if (a.x < b.x)
                 return -1;
@@ -413,8 +411,6 @@
                 return 1;
             return 0;
         }
-
-
         function humanFileSize(bytes) {
             var thresh = 1024;
             if(bytes < thresh) return bytes + ' B';
@@ -426,29 +422,21 @@
             } while(bytes >= thresh);
             return bytes.toFixed(1)+' '+units[u];
         }
-
         function endsWith(str, suffix) {
             return str.indexOf(suffix, str.length - suffix.length) !== -1;
         }
-
-
-
         function updateFiles() {
              $.ajax({
                  type:"GET",
                  url:'/hsapi/_internal/{{ short_id }}/update-files/',
                  success:function (data, xhr, status) {
                      $('#downloads').html("<tr><td>"+ data.csv_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.csv_link + "'>Download(Updated)</td></tr><tr><td>"+ data.wml1_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.wml1_link + "'>Download(Updated)</td></tr><tr><td>"+ data.wml2_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.wml2_link + "'>Download(Updated)</td></tr><td></td><td><div class='btn-group'><a type='button' class='btn btn-primary' href='{{ bag.bag.url }}'>Export all</a><button type='button' class='btn btn-primary dropdown-toggle' data-toggle='dropdown'><span class='caret'></span><span class='sr-only'>Toggle Dropdown</span></button><ul class='dropdown-menu' role='menu'><li><a href='" + data.bag_url + "' style='color:black;'>" + data.bag_time + " (latest)</a></li>{% for b in first_4_bags %}<li><a href='{{ b.bag.url }}' style='color:black;'>{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>{% endfor %}</ul></div></td></tr>");
-
             },
                  error:function(data){
                      console.log('error', data);
                  }
-
-
         });
         }
-
     function update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size){
             $('#csv-name').html(csv_name);
             $('#csv-link').html('Download (' + humanFileSize(csv_size) +')');
@@ -467,16 +455,11 @@
             }
                  $('#downloads').show();
         }
-
         updateFiles();
         $('#graph-area').hide();
         $('#loading').hide();
         $('#switch-to-static').tooltip({animation: true, delay: { show: 500, hide: 100 }});
-
-
     });
     </script>
 {% endwith %}
 {% endblock %}
-
-

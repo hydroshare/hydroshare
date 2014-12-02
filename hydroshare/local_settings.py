@@ -1,3 +1,8 @@
+# beta.hydroshare.org - local_settings.py
+#    - This file should be copied to ~/hydroshare/hydroshare/local_settings.py
+#    - The iRODS specific contents of this file contain username and password informaiton 
+#      that is used for a HydroShare proxy user
+
 import redis
 import os
 from kombu import Queue, Exchange
@@ -70,7 +75,7 @@ DOCKER_API_VERSION = '1.12'
 CARTO_HOME='/home/docker/node_modules/carto'
 
 
-USE_SOUTH = True
+USE_SOUTH = False
 SITE_TITLE = "Hydroshare"
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -98,30 +103,21 @@ DATABASES = {
 }
 POSTGIS_VERSION=(2,1,1)
 
-HYDROSHARE_APPS = (
-    "tastypie",
-    "djcelery",
-    "ga_ows",
-    "ga_resources",
-    "django_irods",
-    "ga_interactive",
-    "hs_core",
-    "ref_ts"
-)
-
+# iRODS proxy user configuration
 USE_IRODS=False
 IRODS_ROOT='/tmp'
 IRODS_ICOMMANDS_PATH='/usr/bin'
-IRODS_HOST='data.hydroshare.org'
+IRODS_HOST=''
 IRODS_PORT='1247'
-IRODS_DEFAULT_RESOURCE='hsDevResource'
-IRODS_HOME_COLLECTION='/hydroZone/home/hsdev'
-IRODS_CWD='/hydroZone/home/hsdev'
-IRODS_ZONE='hydroZone'
-IRODS_USERNAME='hsdev'
-IRODS_AUTH='devwater1'
+IRODS_DEFAULT_RESOURCE=''
+IRODS_HOME_COLLECTION=''
+IRODS_CWD=''
+IRODS_ZONE=''
+IRODS_USERNAME=''
+IRODS_AUTH=''
 IRODS_GLOBAL_SESSION=False
 
+# Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST_USER = 'hydroshare@hydroshare.org'
 EMAIL_HOST_PASSWORD = 'zR=D~QBxU&}+'

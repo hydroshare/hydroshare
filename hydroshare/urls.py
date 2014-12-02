@@ -24,7 +24,7 @@ urlpatterns = i18n_patterns("",
     # admin interface, which would be marginally more secure.
     url("^admin/", include(admin.site.urls)),
     url('^ga_resources/', include('ga_resources.urls')),
-    url('^ga_interactive/', include('ga_interactive.urls')),
+    #url('^ga_interactive/', include('ga_interactive.urls')),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', 'hs_core.views.short_url'),
     # url('^party/', include('hs_scholar_profile.urls'))
     url(r'^user/$', theme.UserProfileView.as_view()),
@@ -45,9 +45,13 @@ if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += patterns('',
     url('^hsapi/', include('hs_core.urls')),
-    url('^hsapi/', include('ref_ts.urls')),
-    url('^hs_party/', include('hs_party.urls')),
+    #url('^hs_party/', include('hs_party.urls')),
     url('^hs_metrics/', include('hs_metrics.urls')),
+)
+
+if settings.DEBUG is False:   #if DEBUG is True it will be served automatically
+  urlpatterns += patterns('',
+  url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
 )
 
 urlpatterns += patterns('',
