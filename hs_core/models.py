@@ -210,7 +210,7 @@ class ExternalProfileLink(models.Model):
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
     class Meta:
-        unique_together = ("type", "url", "content_type")
+        unique_together = ("type", "url", "content_type")   # TODO: this is a bug. Replace 'content_type' with 'object_id'
 
 class Party(AbstractMetaDataElement):
     description = models.URLField(null=True, blank=True)

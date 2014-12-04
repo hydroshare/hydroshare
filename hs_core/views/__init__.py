@@ -354,8 +354,10 @@ class CreateResourceForm(forms.Form):
 
 @login_required
 def create_resource(request, *args, **kwargs):
-    creator_formset = CreatorFormSet(request.POST or None, prefix='creators')
-    contributor_formset = ContributorFormSet(request.POST or None, prefix='contributors')
+    creator_formset = CreatorFormSet(request.POST or None, prefix='creator')
+    contributor_formset = ContributorFormSet(request.POST or None, prefix='contributor')
+    creator_profilelink_formset = ProfileLinksFormset(request.POST or None, prefix='creators_links')
+    contributor_profilelink_formset = ProfileLinksFormset(request.POST or None, prefix='contributors_links')
 
     if request.method == "GET":
         #ext_md_layout = Layout(HTML('<h3>Testing extended metadata layout</h3>'))
@@ -368,28 +370,32 @@ def create_resource(request, *args, **kwargs):
             first_creator_name = user.username
         first_creator_email = user.email
 
-        creator_formset = CreatorFormSet(initial=[{'name': first_creator_name, 'email': first_creator_email}], prefix='creators')
-        contributor_formset = ContributorFormSet(prefix='contributors')
+        creator_formset = CreatorFormSet(initial=[{'name': first_creator_name, 'email': first_creator_email}], prefix='creator')
+        contributor_formset = ContributorFormSet(prefix='contributor')
         #creator_helper = CreatorFormSetHelper()
-        context = {'metadata_form':metadata_form, 'creator_formset': creator_formset,
+        context = {'metadata_form': metadata_form, 'creator_formset': creator_formset,
+                   'creator_profilelink_formset': None,
                    'contributor_formset': contributor_formset, 'extended_metadata_layout': ext_md_layout}
 
         return render(request, 'pages/create-resource.html', context)
 
     frm = CreateResourceForm(request.POST)
     # core metadata element formsets
+    index = 0
+    for form in creator_formset.forms:
+        form.profile_link_formset = ProfileLinksFormset(request.POST, prefix='creator_links-%s' % index)
+        index += 1
 
     if frm.is_valid() and creator_formset.is_valid() and contributor_formset.is_valid():
         core_metadata = []
-        # for form in creator_formset:
-        #     creator_data = {k: v for k, v in form.cleaned_data.iteritems()}
-        #     core_metadata.append({'creator': creator_data})
-        # TODO: implement get_metadata_dict() method in each metadata element form/formset
-        core_metadata.append(creator_formset.get_metadata_dict())
 
-        for form in contributor_formset:
-            contributor_data = {k: v for k, v in form.cleaned_data.iteritems()}
-            core_metadata.append({'contributor': contributor_data})
+        # TODO: implement get_metadata_dict() method in each metadata element form/formset
+        creator_metadata_dict_list = creator_formset.get_metadata_dict()
+
+        for metadata_dict in creator_metadata_dict_list:
+            core_metadata.append(metadata_dict)
+
+        core_metadata.append(contributor_formset.get_metadata_dict())
 
         subjects = [k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None
         for subject_value in subjects:

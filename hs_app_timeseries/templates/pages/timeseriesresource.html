@@ -1,18 +1,279 @@
 {# This template is used as the landing page for TimeSeriesResource #}
 
 {% extends "pages/genericresource.html" %}
-{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags%}
+{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
 
-{% block extra_content %}
-    <h4> Time Series Resource Specific Additional Metadata</h4>
-
+{#{% block extra_content %}#}
+{#    <h4> Time Series Resource Specific Additional Metadata</h4>#}
+{##}
 {#    <form method="post" action="." style="padding-top:0.3em;padding-bottom: 0.5em;">#}
 {#        {% csrf_token %}#}
 {#        {{ form|crispy }}#}
 {##}
 {#        <input type="submit" class="btn btn-primary" style="margin-top: 0.5em;" value="Run model"/>#}
 {#    </form>#}
-    {% csrf_token %}
-    {{ site_form|crispy }}
+{#    {% csrf_token %}#}
+{#    {{ site_form|crispy }}#}
+{##}
+{#{% endblock %}#}
+{% block extra_js %}
+    <script type="text/javascript">
+        function deleteRow(r) {
+                $(r).remove();
+        }
 
+        $(function() {
+            var fileCount = 1;
+
+
+            $("#add-row").click(function() {
+                fileCount++;
+
+                $("#files").append(
+                    '<tr id="file' + fileCount + '">' +
+                        '<td><input class="form-control" type="file" name="file' + fileCount + '"/></td>' +
+                        '<td><button class="btn btn-danger btn-block deleter" onClick=\'deleteRow("#file' + fileCount + '")\'>Delete</button></td>' +
+                    '</tr>'
+                );
+                return false;
+            });
+        });
+        $(document).ready(function () {
+        // Code adapted from http://djangosnippets.org/snippets/1389/
+        function updateElementIndex(el, prefix, ndx) {
+            var id_regex = new RegExp('(' + prefix + '-\\d+-)');
+            var replacement = prefix + '-' + ndx + '-';
+            if ($(el).attr("for")) $(el).attr("for", $(el).attr("for").replace(id_regex,
+            replacement));
+            if (el.id) el.id = el.id.replace(id_regex, replacement);
+            if (el.name) el.name = el.name.replace(id_regex, replacement);
+        }
+
+        function deleteForm(btn, prefix) {
+            var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+            if (formCount > 1) {
+                // Delete the item/form
+                $(btn).parents('.item').slideUp(300);
+                $(btn).parents('.item').remove();
+                var forms = $("#" + prefix + ' .item'); // Get all the forms
+                // Update the total number of forms (1 less than before)
+                $('#id_' + prefix + '-TOTAL_FORMS').val(forms.length);
+                var i = 0;
+                // Go through the forms and set their indices, names and IDs
+                for (formCount = forms.length; i < formCount; i++) {
+                    $(forms.get(i)).children().children().each(function () {
+                        if ($(this).attr('type') == 'text') updateElementIndex(this, prefix, i);
+                        if($(this).is('input')) updateElementIndex(this, prefix, i);
+                    });
+                    $(forms.get(i)).find('input').each(function (){
+                        updateElementIndex(this, prefix, i);
+                    })
+                }
+            } // End if
+            else {
+                if (prefix == 'creators'){
+                    alert("Resource needs to have at least one creator!");
+                }
+            }
+            return false;
+        }
+
+        function addForm(btn, prefix) {
+            var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+            // You can only submit a maximum of 10 todo items
+            if (formCount < 10) {
+                // Clone a form (without event handlers) from the first form
+                var row = $("#" + prefix + " .item:first").clone(false).get(0);
+                // Insert it after the last form
+                $(row).removeAttr('id').hide().insertAfter("#" + prefix + " .item:last").slideDown(300);
+
+                // Remove the bits we don't want in the new row/form
+                // e.g. error messages
+                $(".errorlist", row).remove();
+                $(row).children().removeClass("error");
+                $(row).find(".item_link:not(:first)").remove();
+
+                // Relabel or rename all the relevant bits of the main form
+                $(row).children().children().each(function () {
+                    updateElementIndex(this, prefix, formCount);
+                    $(this).val("");
+
+                });
+
+                // Relabel or rename all the relevant bits of the child form
+                var link_prefix = prefix + '_links'
+                $(row).find("*").each(function () {
+                    updateElementIndex(this, link_prefix, formCount);
+                    if ($(this).attr("id")){
+                        if($(this).attr("id").substr(-6) !== "_FORMS"){
+                            $(this).val("");
+                        }
+                        else{
+                            if($(this).attr("id").substr(-11) === "TOTAL_FORMS"){
+                                $(this).val("1");
+                            }
+                        }
+                    }
+                    else{
+                        $(this).val("");
+                    }
+                });
+
+                $(row).find('input').each(function () {
+                    updateElementIndex(this, prefix, formCount);
+                    if ($(this).attr('type') == 'button'){
+                        $(this).attr('value', 'Delete');
+                    }
+                    if ($(this).attr('type') == 'submit'){
+                        $(this).attr('value', 'Save');
+                    }
+                })
+
+                // Add an event handler for the delete item/form link
+                $(row).find(".delete-creator").click(function () {
+                    return deleteForm(this, prefix);
+                });
+
+                $(row).find(".delete-contributor").click(function () {
+                    return deleteForm(this, prefix);
+                });
+
+                $(row).find("#addLinkCreator").click(function () {
+                    return addLink(this, "creator");
+                });
+                // Add an event handler for the delete item/form link
+                $(row).find(".delete-link-creator").click(function () {
+                    return deleteLink(this, prefix);
+                });
+
+                $(row).find(".delete-link-contributor").click(function () {
+                    return deleteLink(this, prefix);
+                });
+
+                // Update the total form count
+                $("#id_" + prefix + "-TOTAL_FORMS").val(formCount + 1);
+            } // End if
+            else {
+                alert("Sorry, you can only enter a maximum of ten items.");
+            }
+            return false;
+        }
+
+        function deleteLink(btn, prefix) {
+            var link_form_input = $(btn).parents('.item').children('input:first');
+            var id = $(link_form_input).attr('id');
+            var link_formset_index = id.split("-")[1];
+
+            var formCount = parseInt($('#id_' + prefix + '_links-' + link_formset_index+ '-TOTAL_FORMS').val());
+            if (formCount > 1) {
+                // Delete the item/form
+                $(btn).parents('.item_link').slideUp(300);
+                $(btn).parents('.item_link').remove();
+                var forms = $("#" + prefix + ' .item_link'); // Get all the forms
+                // Update the total number of forms (1 less than before)
+                var update_prefix = prefix + '_links-' + link_formset_index;
+                $('#id_' + update_prefix + '-TOTAL_FORMS').val(forms.length);
+                var i = 0;
+                // Go through the forms and set their indices, names and IDs
+                for (formCount = forms.length; i < formCount; i++) {
+                    $(forms.get(i)).children().children().each(function () {
+                        if ($(this).attr('type') == 'text') updateElementIndex(this, update_prefix, i);
+                        if($(this).is('input')) updateElementIndex(this, update_prefix, i);
+                    });
+                    $(forms.get(i)).find('input').each(function (){
+                        updateElementIndex(this, update_prefix, i);
+                    })
+                }
+            } // End if
+{#            else {#}
+{#                if (prefix == 'creators'){#}
+{#                    alert("Resource needs to have at least one creator!");#}
+{#                }#}
+{#            }#}
+            return false;
+        }
+
+        function addLink(btn, prefix) {
+
+            var link_form_input = $(btn).parents('.item').children('input:first');
+            var id = $(link_form_input).attr('id');
+            var link_formset_index = id.split("-")[1];
+            var formCount = parseInt($('#id_' + prefix + '_links-' + link_formset_index + '-TOTAL_FORMS').val());
+            // You can only submit a maximum of 10 todo items
+            if (formCount < 10) {
+                // Clone a form (without event handlers) from the first form
+                //var row = $("#" + prefix + " .item_link:first").clone(false).get(0);
+                var row = $(btn).parents(".item").find(".item_link:last").clone(false).get(0);
+                // Insert it after the last form
+                $(row).removeAttr('id').hide().insertAfter("#" + prefix + " .item_link:last").slideDown(300);
+
+                // Remove the bits we don't want in the new row/form
+                // e.g. error messages
+                $(".errorlist", row).remove();
+                $(row).children().removeClass("error");
+
+                var update_prefix = prefix + '_links-' + link_formset_index;
+                // Relabel or rename all the relevant bits
+                $(row).children().children().each(function () {
+                    updateElementIndex(this, update_prefix, formCount);
+                    $(this).val("");
+                });
+                $(row).find('button').each(function () {
+                    updateElementIndex(this, update_prefix, formCount);
+                    if ($(this).attr('type') == 'button'){
+                        $(this).text('Delete Link');
+                    }
+{#                    if ($(this).attr('type') == 'submit'){#}
+{#                        $(this).attr('value', 'Save');#}
+{#                    }#}
+                })
+
+                // Add an event handler for the delete item/form link
+                $(row).find(".delete-link-creator").click(function () {
+                    return deleteLink(this, prefix);
+                });
+
+                $(row).find(".delete-link-contributor").click(function () {
+                    return deleteLink(this, prefix);
+                });
+
+                // Update the total form count
+                $("#id_" + update_prefix + "-TOTAL_FORMS").val(formCount + 1);
+            } // End if
+            else {
+                alert("Sorry, you can only enter a maximum of ten links.");
+            }
+            return false;
+        }
+
+        // Register the click event handlers
+        $("#addCreator").click(function () {
+            return addForm(this, "creator");
+        });
+
+        $(".delete-creator").click(function () {
+            return deleteForm(this, "creator");
+        });
+
+        $("#addContributor").click(function () {
+            return addForm(this, "contributor");
+        });
+
+        $("#addLinkCreator").click(function () {
+            return addLink(this, "creator");
+        });
+
+        $(".delete-contributor").click(function () {
+            return deleteForm(this, "contributors");
+        });
+
+        $(".delete-link-contributor").click(function () {
+            return deleteLink(this, "contributors");
+        });
+
+        $(".delete-link-creator").click(function () {
+            return deleteLink(this, "creator");
+        });
+    });
+    </script>
 {% endblock %}
