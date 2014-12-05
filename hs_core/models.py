@@ -210,7 +210,7 @@ class ExternalProfileLink(models.Model):
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
     class Meta:
-        unique_together = ("type", "url", "object_id")   # TODO: this is a bug. Replace 'content_type' with 'object_id'
+        unique_together = ("type", "url", "object_id")
 
 class Party(AbstractMetaDataElement):
     description = models.URLField(null=True, blank=True)
@@ -252,8 +252,7 @@ class Party(AbstractMetaDataElement):
                     cls._create_profile_link(party, link)
 
             for key, value in kwargs.iteritems():
-                if key in ('description', 'organization', 'email', 'address', 'phone', 'homepage', 'researcherID',
-                           'researchGateID'):
+                if key in ('description', 'organization', 'email', 'address', 'phone', 'homepage'):
                     setattr(party, key, value)
 
             party.save()
@@ -1654,13 +1653,9 @@ class CoreMetaData(models.Model):
             hsterms_homepage = etree.SubElement(dc_person_rdf_Description, '{%s}homepage' % self.NAMESPACES['hsterms'])
             hsterms_homepage.set('{%s}resource' % self.NAMESPACES['rdf'], person.homepage)
 
-        if person.researcherID:
-            hsterms_researcherID = etree.SubElement(dc_person_rdf_Description, '{%s}researcherID' % self.NAMESPACES['hsterms'])
-            hsterms_researcherID.set('{%s}resource' % self.NAMESPACES['rdf'], person.researcherID)
-
-        if person.researchGateID:
-            hsterms_researchGateID = etree.SubElement(dc_person_rdf_Description, '{%s}researchGateID' % self.NAMESPACES['hsterms'])
-            hsterms_researchGateID.set('{%s}resource' % self.NAMESPACES['rdf'], person.researcherID)
+        for link in person.external_links.all():
+            hsterms_link_type = etree.SubElement(dc_person_rdf_Description, '{%s}' % self.NAMESPACES['hsterms'] + link.type)
+            hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link.url)
 
     def create_element(self, element_model_name, **kwargs):
         element_model_name = element_model_name.lower()
@@ -1732,11 +1727,11 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
         if created:
             from hs_core.hydroshare import utils
             import json
-            #instance.metadata.create_element('title', value=instance.title)
-            # if instance.content:
-            #     instance.metadata.create_element('description', abstract=instance.content)
-            # else:
-            #     instance.metadata.create_element('description', abstract=instance.description)
+            instance.metadata.create_element('title', value=instance.title)
+            if instance.content:
+                instance.metadata.create_element('description', abstract=instance.content)
+            else:
+                instance.metadata.create_element('description', abstract=instance.description)
 
             # TODO: With the current VM the get_user_info() method fails. So we can't get the resource uri for
             # the user now.
@@ -1745,7 +1740,7 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
             #                                  email=instance.creator.email,
             #                                  description=creator_dict['resource_uri'])
 
-            #instance.metadata.create_element('creator', name=instance.creator.get_full_name(), email=instance.creator.email)
+            instance.metadata.create_element('creator', name=instance.creator.get_full_name(), email=instance.creator.email)
 
             # TODO: The element 'Type' can't be created as we do not have an URI for specific resource types yet
 
