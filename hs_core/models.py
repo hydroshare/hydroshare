@@ -210,7 +210,7 @@ class ExternalProfileLink(models.Model):
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
     class Meta:
-        unique_together = ("type", "url", "content_type")   # TODO: this is a bug. Replace 'content_type' with 'object_id'
+        unique_together = ("type", "url", "object_id")   # TODO: this is a bug. Replace 'content_type' with 'object_id'
 
 class Party(AbstractMetaDataElement):
     description = models.URLField(null=True, blank=True)
@@ -220,8 +220,6 @@ class Party(AbstractMetaDataElement):
     address = models.CharField(max_length=250, null=True, blank=True)
     phone = models.CharField(max_length=25, null=True, blank=True)
     homepage = models.URLField(null=True, blank=True)
-    researcherID = models.URLField(null=True, blank=True)
-    researchGateID = models.URLField(null=True, blank=True)
     external_links = generic.GenericRelation(ExternalProfileLink)
 
     def __unicode__(self):

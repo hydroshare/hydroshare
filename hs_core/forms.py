@@ -17,12 +17,8 @@ class PartyForm(ModelForm):
     class Meta:
         model = Party
         # fields that will be displayed are specified here - but not necessarily in the same order
-        fields = ['name', 'description', 'organization', 'email', 'address', 'phone', 'homepage', 'researcherID', 'researchGateID']
+        fields = ['name', 'description', 'organization', 'email', 'address', 'phone', 'homepage']
 
-        labels = {
-            'researcherID': _('Researcher ID'),
-            'researchGateID': _('Research Gate ID')
-        }
         # TODO: field labels and widgets types to be specified
 
 #ExternalProfileLinkFormSet = inlineformset_factory(Party, ExternalProfileLink)
@@ -168,8 +164,6 @@ class CreatorFormSetHelper(FormHelper):
                      Field('address', css_class=field_width),
                      Field('phone', css_class=field_width),
                      Field('homepage', css_class=field_width),
-                     Field('researcherID', css_class=field_width),
-                     Field('researchGateID', css_class=field_width),
                      Field('order', css_class=field_width),
                      ),
         )
@@ -184,7 +178,7 @@ class CreatorForm(PartyForm):
         model = Creator
         fields = PartyForm.Meta.fields
         fields.append("order")
-        labels = PartyForm.Meta.labels
+        #labels = PartyForm.Meta.labels
 
 class BaseCreatorFormSet(BaseFormSet):
     def add_fields(self, form, index):
@@ -226,8 +220,6 @@ class ContributorFormSetHelper(FormHelper):
                      Field('address', css_class=field_width),
                      Field('phone', css_class=field_width),
                      Field('homepage', css_class=field_width),
-                     Field('researcherID', css_class=field_width),
-                     Field('researchGateID', css_class=field_width),
                      ),
             # ButtonHolder(
             #     Submit('button', 'Save', css_class='button black')
@@ -247,7 +239,7 @@ class ContributorForm(PartyForm):
         fields = PartyForm.Meta.fields
         if 'order' in fields:
             fields.remove('order')
-        labels = PartyForm.Meta.labels
+        #labels = PartyForm.Meta.labels
 
 class BaseContributorFormSet(BaseFormSet):
     def get_metadata_dict(self):
