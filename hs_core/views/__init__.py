@@ -7,6 +7,7 @@ from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
+import django.dispatch
 from django.template import RequestContext
 from django.utils.timezone import now
 from mezzanine.conf import settings
@@ -27,10 +28,10 @@ from . import discovery_api
 from . import resource_api
 from . import social_api
 from hs_core.hydroshare import file_size_limit_for_display
+from hs_core.signals import *
 from crispy_forms.layout import *
 
 import autocomplete_light
-
 
 def short_url(request, *args, **kwargs):
     try:
@@ -68,6 +69,35 @@ def add_citation(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     res.dublin_metadata.create(term='REF', content=request.REQUEST['content'])
     resource_modified(res, request.user)
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    handler_response = pre_metadata_element_create.send(sender=res.__class__,
+                                                                   element_name=element_name,
+                                                                   request=request)
+    for receiver, response in handler_response:
+        if 'is_valid' in response:
+            if response['is_valid']:
+                element_data_dict = response['element_data_dict']
+                res.metadata.create_element(element_name, **element_data_dict)
+                resource_modified(res, request.user)
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def update_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    handler_response = pre_metadata_element_update.send(sender=res.__class__, element_name=element_name,
+                                                        element_id=element_id, request=request)
+    for receiver, response in handler_response:
+        if 'is_valid' in response:
+            if response['is_valid']:
+                element_data_dict = response['element_data_dict']
+                res.metadata.update_element(element_name, element_id, **element_data_dict)
+                resource_modified(res, request.user)
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 

@@ -366,3 +366,5 @@ class TimeSeriesMetaData(CoreMetaData):
             hsterms_statistics.text = self.time_series_result.aggregation_statistics
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
+
+import receivers
