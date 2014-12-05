@@ -29,20 +29,6 @@ class TestCoreMetadata(TestCase):
             self.tearDown()
             self.user = User.objects.create_user('user1', email='user1@nowhere.com')
 
-        # md = CoreMetaData()
-        # md.save()
-        # self.res, created = GenericResource.objects.get_or_create(
-        #     user=self.user,
-        #     title='Generic resource',
-        #     creator=self.user,
-        #     last_changed_by=self.user,
-        #     doi='doi1000100010001',
-        #     public=False
-        # )
-        #
-        # if created:
-        #     self.res.owners.add(self.user)
-
         self.res = hydroshare.create_resource(
             resource_type='GenericResource',
             owner=self.user,
@@ -132,8 +118,7 @@ class TestCoreMetadata(TestCase):
         cr_address = "11 River Drive, Logan UT-84321, USA"
         cr_phone = '435-567-0989'
         cr_homepage = 'http://usu.edu/homepage/001'
-        cr_res_id = 'http://research.org/001'
-        cr_res_gate_id = 'http://research-gate.org/001'
+
         resource.create_metadata_element(self.res.short_id,'creator',
                                 name=cr_name,
                                 description=cr_des,
@@ -142,8 +127,7 @@ class TestCoreMetadata(TestCase):
                                 address=cr_address,
                                 phone=cr_phone,
                                 homepage=cr_homepage,
-                                researcherID=cr_res_id,
-                                researchGateID=cr_res_gate_id)
+                                )
 
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
         self.assertNotEqual(cr_mike, None, msg='Creator Mike was not found')
@@ -153,8 +137,6 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(cr_mike.address, cr_address)
         self.assertEqual(cr_mike.phone, cr_phone)
         self.assertEqual(cr_mike.homepage, cr_homepage)
-        self.assertEqual(cr_mike.researcherID, cr_res_id)
-        self.assertEqual(cr_mike.researchGateID, cr_res_gate_id)
         self.assertEqual(cr_mike.order, 3)
 
         # update Mike's order to 2 from 3
@@ -212,8 +194,6 @@ class TestCoreMetadata(TestCase):
         con_address = "11 River Drive, Logan UT-84321, USA"
         con_phone = '435-567-0989'
         con_homepage = 'http://usu.edu/homepage/001'
-        con_res_id = 'http://research.org/001'
-        con_res_gate_id = 'http://research-gate.org/001'
         resource.create_metadata_element(self.res.short_id,'contributor',
                                 name=con_name,
                                 description=con_des,
@@ -222,8 +202,7 @@ class TestCoreMetadata(TestCase):
                                 address=con_address,
                                 phone=con_phone,
                                 homepage=con_homepage,
-                                researcherID=con_res_id,
-                                researchGateID=con_res_gate_id)
+                                )
 
         # number of contributors at this point should be 2
         self.assertEqual(self.res.metadata.contributors.all().count(), 2, msg='Number of contributors not equal to 2')
@@ -236,8 +215,6 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(con_mike.address, con_address)
         self.assertEqual(con_mike.phone, con_phone)
         self.assertEqual(con_mike.homepage, con_homepage)
-        self.assertEqual(con_mike.researcherID, con_res_id)
-        self.assertEqual(con_mike.researchGateID, con_res_gate_id)
 
         # update Mike's phone
         con_phone = '435-567-9999'
@@ -881,8 +858,7 @@ class TestCoreMetadata(TestCase):
         cr_address = "11 River Drive, Logan UT-84321, USA"
         cr_phone = '435-567-0989'
         cr_homepage = 'http://usu.edu/homepage/001'
-        cr_res_id = 'http://research.org/001'
-        cr_res_gate_id = 'http://research-gate.org/001'
+
         self.res.metadata.create_element('creator',
                                 name=cr_name,
                                 description=cr_des,
@@ -891,8 +867,9 @@ class TestCoreMetadata(TestCase):
                                 address=cr_address,
                                 phone=cr_phone,
                                 homepage=cr_homepage,
-                                researcherID=cr_res_id,
-                                researchGateID=cr_res_gate_id)
+                                profile_links=[{'type': 'researchID', 'url': 'http://research.org/001'},
+                                               {'type': 'researchGateID', 'url': 'http://research-gate.org/001'}]
+                            )
 
         # add another creator with only the name
         self.res.metadata.create_element('creator', name='Lisa Holley')
@@ -905,8 +882,7 @@ class TestCoreMetadata(TestCase):
         con_address = "101 Center St, Logan UT-84321, USA"
         con_phone = '435-567-3245'
         con_homepage = 'http://usu.edu/homepage/009'
-        con_res_id = 'http://research.org/009'
-        con_res_gate_id = 'http://research-gate.org/009'
+
         self.res.metadata.create_element('contributor',
                                 name=con_name,
                                 description=con_des,
@@ -915,8 +891,7 @@ class TestCoreMetadata(TestCase):
                                 address=con_address,
                                 phone=con_phone,
                                 homepage=con_homepage,
-                                researcherID=con_res_id,
-                                researchGateID=con_res_gate_id)
+                                )
 
         # add another creator with only the name
         self.res.metadata.create_element('contributor', name='Andrew Smith')

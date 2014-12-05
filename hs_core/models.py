@@ -210,7 +210,7 @@ class ExternalProfileLink(models.Model):
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
     class Meta:
-        unique_together = ("type", "url", "content_type")
+        unique_together = ("type", "url", "object_id")
 
 class Party(AbstractMetaDataElement):
     description = models.URLField(null=True, blank=True)
@@ -220,8 +220,6 @@ class Party(AbstractMetaDataElement):
     address = models.CharField(max_length=250, null=True, blank=True)
     phone = models.CharField(max_length=25, null=True, blank=True)
     homepage = models.URLField(null=True, blank=True)
-    researcherID = models.URLField(null=True, blank=True)
-    researchGateID = models.URLField(null=True, blank=True)
     external_links = generic.GenericRelation(ExternalProfileLink)
 
     def __unicode__(self):
@@ -254,8 +252,7 @@ class Party(AbstractMetaDataElement):
                     cls._create_profile_link(party, link)
 
             for key, value in kwargs.iteritems():
-                if key in ('description', 'organization', 'email', 'address', 'phone', 'homepage', 'researcherID',
-                           'researchGateID'):
+                if key in ('description', 'organization', 'email', 'address', 'phone', 'homepage'):
                     setattr(party, key, value)
 
             party.save()
@@ -1656,13 +1653,9 @@ class CoreMetaData(models.Model):
             hsterms_homepage = etree.SubElement(dc_person_rdf_Description, '{%s}homepage' % self.NAMESPACES['hsterms'])
             hsterms_homepage.set('{%s}resource' % self.NAMESPACES['rdf'], person.homepage)
 
-        if person.researcherID:
-            hsterms_researcherID = etree.SubElement(dc_person_rdf_Description, '{%s}researcherID' % self.NAMESPACES['hsterms'])
-            hsterms_researcherID.set('{%s}resource' % self.NAMESPACES['rdf'], person.researcherID)
-
-        if person.researchGateID:
-            hsterms_researchGateID = etree.SubElement(dc_person_rdf_Description, '{%s}researchGateID' % self.NAMESPACES['hsterms'])
-            hsterms_researchGateID.set('{%s}resource' % self.NAMESPACES['rdf'], person.researcherID)
+        for link in person.external_links.all():
+            hsterms_link_type = etree.SubElement(dc_person_rdf_Description, '{%s}' % self.NAMESPACES['hsterms'] + link.type)
+            hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link.url)
 
     def create_element(self, element_model_name, **kwargs):
         element_model_name = element_model_name.lower()
