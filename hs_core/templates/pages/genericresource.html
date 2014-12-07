@@ -596,7 +596,17 @@
                 $(row).find('input').each(function () {
                     updateElementIndex(this, prefix, formCount);
                     if ($(this).attr('type') == 'button'){
-                        $(this).attr('value', 'Delete');
+                        if (prefix === 'creator'){
+                            $(this).attr('value', 'Delete creator');
+                        }
+                        else if(prefix === 'contributor'){
+                            $(this).attr('value', 'Delete contributor');
+                        }
+                        else{
+                            $(this).attr('value', 'Delete');
+                        }
+
+
                     }
                     if ($(this).attr('type') == 'submit'){
                         $(this).attr('value', 'Save');
@@ -688,10 +698,14 @@
 
                 var update_prefix = prefix + '_links-' + link_formset_index;
                 // Relabel or rename all the relevant bits
-                $(row).children().children().each(function () {
+                $(row).find('*').each(function (){
                     updateElementIndex(this, update_prefix, formCount);
                     $(this).val("");
-                });
+                })
+{#                $(row).children().children().each(function () {#}
+{#                    updateElementIndex(this, update_prefix, formCount);#}
+{#                    $(this).val("");#}
+{#                });#}
                 $(row).find('button').each(function () {
                     updateElementIndex(this, update_prefix, formCount);
                     if ($(this).attr('type') == 'button'){

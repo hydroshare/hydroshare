@@ -74,7 +74,15 @@ def add_citation(request, shortkey, *args, **kwargs):
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    handler_response = pre_metadata_element_create.send(sender=res.__class__,
+
+    core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
+
+    if element_name in core_metadata_element_names:
+        sender_resource = GenericResource().__class__
+    else:
+        sender_resource = res.__class__
+
+    handler_response = pre_metadata_element_create.send(sender=sender_resource,
                                                                    element_name=element_name,
                                                                    request=request)
     for receiver, response in handler_response:
@@ -100,6 +108,11 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
+def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res.metadata.delete_element(element_name, element_id)
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 def add_metadata_term(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
