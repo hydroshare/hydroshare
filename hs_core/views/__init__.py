@@ -71,16 +71,26 @@ def add_citation(request, shortkey, *args, **kwargs):
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-
-def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-
+def _get_resource_sender(element_name, resource):
     core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
 
     if element_name in core_metadata_element_names:
         sender_resource = GenericResource().__class__
     else:
-        sender_resource = res.__class__
+        sender_resource = resource.__class__
+
+    return sender_resource
+
+def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+
+    sender_resource = _get_resource_sender(element_name, res)
+    # core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
+    #
+    # if element_name in core_metadata_element_names:
+    #     sender_resource = GenericResource().__class__
+    # else:
+    #     sender_resource = res.__class__
 
     handler_response = pre_metadata_element_create.send(sender=sender_resource,
                                                                    element_name=element_name,
@@ -97,7 +107,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
 def update_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    handler_response = pre_metadata_element_update.send(sender=res.__class__, element_name=element_name,
+    sender_resource = _get_resource_sender(element_name, res)
+    handler_response = pre_metadata_element_update.send(sender=sender_resource, element_name=element_name,
                                                         element_id=element_id, request=request)
     for receiver, response in handler_response:
         if 'is_valid' in response:
@@ -399,8 +410,8 @@ class CreateResourceForm(forms.Form):
 def create_resource(request, *args, **kwargs):
     creator_formset = CreatorFormSet(request.POST or None, prefix='creator')
     contributor_formset = ContributorFormSet(request.POST or None, prefix='contributor')
-    creator_profilelink_formset = ProfileLinksFormset(request.POST or None, prefix='creators_links')
-    contributor_profilelink_formset = ProfileLinksFormset(request.POST or None, prefix='contributors_links')
+    #creator_profilelink_formset = ProfileLinksFormset(request.POST or None, prefix='creators_links')
+    #contributor_profilelink_formset = ProfileLinksFormset(request.POST or None, prefix='contributors_links')
 
     if request.method == "GET":
         #ext_md_layout = Layout(HTML('<h3>Testing extended metadata layout</h3>'))

@@ -27,12 +27,23 @@ def landing_page(request, page):
     else:
         # TODO: these forms need to be created with initial data
         site_form = SiteForm(instance=content_model.metadata.site, res_short_id=content_model.short_id,
-                             element_id=content_model.metadata.site.id)
+                             element_id=content_model.metadata.site.id if content_model.metadata.site else None)
 
-        variable_form = VariableForm(initial=content_model.metadata.variable)
-        method_form = MethodForm(initial=content_model.metadata.method)
-        processing_level_form = ProcessingLevelForm(initial=content_model.metadata.processing_level)
-        timeseries_result_form = TimeSeriesResultForm(initial=content_model.metadata.time_series_result)
+        variable_form = VariableForm(instance=content_model.metadata.variable, res_short_id=content_model.short_id,
+                             element_id=content_model.metadata.variable.id if content_model.metadata.variable else None)
+
+        method_form = MethodForm(instance=content_model.metadata.method, res_short_id=content_model.short_id,
+                                 element_id=content_model.metadata.method.id if content_model.metadata.method else None)
+
+        processing_level_form = ProcessingLevelForm(instance=content_model.metadata.processing_level,
+                                                    res_short_id=content_model.short_id,
+                                                    element_id=content_model.metadata.processing_level.id
+                                                    if content_model.metadata.processing_level else None)
+
+        timeseries_result_form = TimeSeriesResultForm(instance=content_model.metadata.time_series_result,
+                                                      res_short_id=content_model.short_id,
+                                                      element_id=content_model.metadata.time_series_result.id
+                                                      if content_model.metadata.time_series_result else None)
         ext_md_layout = Layout(
                                 HTML("<div class='form-group' id='site'> "
                                         '{% load crispy_forms_tags %} '
@@ -51,10 +62,6 @@ def landing_page(request, page):
                                         '{% crispy timeseries_result_form %} '
                                      '</div> '
                                 ),
-                                #HTML("<p></p>"),
-                                #HTML("<div class='form-group' id='variable'>"),
-                                #HTML('{% load crispy_forms_tags %} {% crispy variable_form %}'),
-
                         )
 
 

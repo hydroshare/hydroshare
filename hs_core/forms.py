@@ -82,47 +82,51 @@ ModalConfirmDeleteMetaDataElement = Layout(
 CreatorLayoutNew = Layout(
                             HTML('{% load crispy_forms_tags %} '
                                  '{% for form in creator_formset.forms %} '
-                                 '<div class="item" '
-                                 '{% crispy form %} '
-                                 '{{ form.profile_link_formset.management_form }} '
-                                 '{% for link_form in form.profile_link_formset.forms %} '
-                                 '<div class="item_link" '
-                                 '{% crispy link_form %} '
-                                 '</div> {% endfor %} '
-                                '<p><a id="addLinkCreator" class="btn btn-success" href="#"><i class="fa fa-plus"></i>Add another link</a></p>'
-                                 '<p style="">'
-                                 '<input class="delete-creator btn-danger btn btn-sm" type="button" value="Delete creator">'
-                                 '</p>'
-                                 '</div> {% endfor %}'),
-                            HTML('<p><a id="addCreator" class="btn btn-success" href="#"><i class="fa fa-plus"></i>Add another creator</a></p>'),
-                            HTML("</div>"),
-
-)
+                                     '<div class="item"> '
+                                     '{% crispy form %} '
+                                     '{{ form.profile_link_formset.management_form }} '
+                                     '{% for link_form in form.profile_link_formset.forms %} '
+                                        '<div class="item_link"> '
+                                            '{% crispy link_form %} '
+                                        '</div> '
+                                     '{% endfor %} '
+                                     '<div style="margin-top:10px"><a id="addLinkCreator" class="btn btn-success" href="#"><i class="fa fa-plus"></i>Add another link</a></div>'
+                                     '<div style="margin-top:10px"><input class="delete-creator btn-danger btn btn-md" type="button" value="Delete creator"></div>'
+                                     '</div> '
+                                 '{% endfor %}'
+                                ),
+                            HTML('<div style="margin-top:10px"><a id="addCreator" class="btn btn-success" href="#"><i class="fa fa-plus"></i>Add another creator</a></div>'),
+                        )
 
 CreatorLayoutEdit = Layout(
                             HTML('{% load crispy_forms_tags %} '
                                  '{% for form in creator_formset.forms %} '
-                                 '<div class="item" '
-                                 '{% crispy form %} '
-                                 '{{ form.profile_link_formset.management_form }} '
-                                 '{% for link_form in form.profile_link_formset.forms %} '
-                                 '<div class="item_link" '
-                                 '{% crispy link_form %} '
-                                 '</div> {% endfor %} '
-                                '<p><a id="addLinkCreator" class="btn btn-success" href="#"><i class="fa fa-plus"></i>Add another link</a></p>'
-                                 '<p style="">'
-                                '{% crispy form.delete_modal_form %} '
-                                '<div class="row">'
-                                    '<div class="span4">'
-                                    '<input class="btn-danger btn btn-sm" type="button" data-toggle="modal" data-target="#delete-metadata-element-dialog" value="Delete creator">'
+                                     '<div class="item form-group"> '
+                                     '<form action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
+                                     '{% crispy form %} '
+                                        '{{ form.profile_link_formset.management_form }} '
+                                        '{% for link_form in form.profile_link_formset.forms %} '
+                                            '<div class="item_link"> '
+                                                '{% crispy link_form %} '
+                                            '</div>'
+                                        '{% endfor %} '
+                                    '<div style="margin-top:10px"><a id="addLinkCreator" class="btn btn-success" href="#"><i class="fa fa-plus"></i>Add another link</a></div>'
+                                     #'<p style="">'
+                                    '<div class="row" style="margin-top:10px">'
+                                        '<div class="col-md-10">'
+                                            '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-metadata-element-dialog" value="Delete creator">'
+                                        '</div>'
+                                        '<div class="col-md-2">'
+                                            '<button type="submit" class="btn btn-primary">Save Changes</button>'
+                                        '</div>'
                                     '</div>'
-                                    '<div class="span8">'
-                                    '<button type="submit" class="btn btn-primary">Save changes</button>'
-                                    '</div>'
-                                '</div>'
-                                '</p>'
-                                 '</div> {% endfor %}'),
-                            HTML('<p><a id="add-creator" class="btn btn-success" data-toggle="modal" data-target="#add-creator-dialog"><i class="fa fa-plus"></i>Add another creator</a></p>'),
+                                    '{% crispy form.delete_modal_form %} '
+                                    #'</p>'
+                                    '</div> '
+                                    '</form> '
+                                '{% endfor %}'
+                            ),
+                            HTML('<div style="margin-top:10px"><p><a id="add-creator" class="btn btn-success" data-toggle="modal" data-target="#add-creator-dialog"><i class="fa fa-plus"></i>Add another creator</a></div>'),
                             HTML("</div>"),
 
 )
@@ -141,7 +145,7 @@ class MetaDataForm(forms.Form):
         super(MetaDataForm, self).__init__(*args, **kwargs)
         #self.form_method = 'post'
         if not extended_metadata_layout:
-            extended_metadata_layout = Layout(HTML('<h3>No extended metadata for this resource.</h3>'))
+            extended_metadata_layout = HTML('<h3>No extended metadata for this resource.</h3>')
         # self.layout = Layout(
         #     Fieldset('Creator', CreatorForm.Meta.fields),
         #     ButtonHolder(
@@ -179,6 +183,7 @@ class MetaDataForm(forms.Form):
                     Accordion(
                         AccordionGroup('Creators (required)',
                             HTML("<div class='form-group' id='creator'>"),
+
                             #HTML("<label for='' class='col-sm-2 control-label'></label><br>"),
 
                             HTML("{{ creator_formset.management_form }}"),
@@ -200,15 +205,19 @@ class MetaDataForm(forms.Form):
                             #      '</p>'
                             #      '</div> {% endfor %}'),
                             # HTML('<p><a id="addCreator" class="btn btn-success" href="#"><i class="fa fa-plus"></i>Add another creator</a></p>'),
-                            # HTML("</div>"),
+                            HTML("</div>"),
                         ),
                         AccordionGroup('Contributors (optional)',
                             HTML("<div class='form-group' id='contributor'>"),
-                            #HTML("<label for='' class='col-sm-2 control-label'>Contributors</label>"),
-                            HTML("{{ contributor_formset.management_form }}"),
-                            HTML('{% load crispy_forms_tags %} {% for form in contributor_formset.forms %} <div class="item" {% crispy form %} <p style=""><input class="delete-contributor btn-danger btn btn-sm" type="button" value="Delete contributor"></p></div> {% endfor %}'),
-                            HTML('<p><a id="addContributor" class="btn btn-success" href="#"><i class="fa fa-plus"></i>Add another contributor</a></p>'),
-                            #HTML("{{ contributor_formset }}"),
+                                HTML("{{ contributor_formset.management_form }}"),
+                                HTML('{% load crispy_forms_tags %} '
+                                     '{% for form in contributor_formset.forms %} '
+                                     '<div class="item"> '
+                                        '{% crispy form %} '
+                                        '<input class="delete-contributor btn-danger btn btn-md" type="button" style="margin-top:10px" value="Delete contributor">'
+                                     '</div> '
+                                     '{% endfor %}'),
+                                HTML('<p><a id="addContributor" class="btn btn-success" style="margin-top:10px" href="#"><i class="fa fa-plus"></i>Add another contributor</a></p>'),
                             HTML("</div>")
                         )
                     ),
@@ -238,6 +247,7 @@ class ProfileLinksFormSetHelper(FormHelper):
             Fieldset('External Profile Link',
                      Field('type', css_class=field_width),
                      Field('url', css_class=field_width),
+                     HTML('<div style="margin-top:10px"></div>')
                      ),
             ButtonHolder(
                 #StrictButton('Add Link', css_class='btn-success'),
@@ -272,7 +282,7 @@ class CreatorFormSetHelper(FormHelper):
         #self.form_method = 'post'
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
-        #self.form_tag = False
+        self.form_tag = False
         self.layout = Layout(
             Fieldset('Creator',
                      Field('name', css_class=field_width),
@@ -294,12 +304,13 @@ class CreatorForm(PartyForm):
         self.profile_link_formset = ProfileLinksFormset(prefix='creator_links')
         self.delete_modal_form = None
         if res_short_id:
-            if element_id:
-                self.helper.form_method = 'post'
-                self.helper.form_tag = True
-                self.action = "/hsapi/_internal/%s/creator/%s/update-metadata/" % (res_short_id, element_id)
-            else:
-                self.action = "/hsapi/_internal/%s/creator/add-metadata/" % res_short_id
+            # self.helper.form_method = 'post'
+            # self.helper.form_tag = True
+            # if len(self.initial) > 0:
+            #     self.action = "/hsapi/_internal/%s/creator/%s/update-metadata/" % (res_short_id, self.initial['id'])
+            #     pass
+            # else:
+            self.action = "/hsapi/_internal/%s/creator/add-metadata/" % res_short_id
         else:
             self.action = ""
 
@@ -319,6 +330,7 @@ class CreatorValidationForm(forms.Form):
     phone = forms.CharField(max_length=25, required=False)
     homepage = forms.URLField(required=False)
     order = forms.IntegerField()
+
 
 
 class BaseCreatorFormSet(BaseFormSet):

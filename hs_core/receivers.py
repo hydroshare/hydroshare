@@ -26,7 +26,14 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     element_id = kwargs['element_id']
     request = kwargs['request']
     if element_name == "creator":
-        element_form = CreatorValidationForm(request.POST)
+        # since creator is a repeatable element and creator data is displayed on the landing page
+        # using formset, the data coming from a single creator form in the request for update
+        # needs to be parsed to match with creator field names
+        form_data = {}
+        for field_name in CreatorValidationForm().fields:
+            matching_key = [key for key in request.POST if '-'+field_name in key][0]
+            form_data[field_name] = request.POST[matching_key]
+        element_form = CreatorValidationForm(form_data)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
