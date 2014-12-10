@@ -14,6 +14,8 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     request = kwargs['request']
     if element_name == "creator":
         element_form = CreatorValidationForm(request.POST)
+    elif element_name == "contributor":
+        element_form = ContributorValidationForm(request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
@@ -33,9 +35,21 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         for field_name in CreatorValidationForm().fields:
             matching_key = [key for key in request.POST if '-'+field_name in key][0]
             form_data[field_name] = request.POST[matching_key]
+
         element_form = CreatorValidationForm(form_data)
+    elif element_name == "contributor":
+        # since contributor is a repeatable element and contributor data is displayed on the landing page
+        # using formset, the data coming from a single contributor form in the request for update
+        # needs to be parsed to match with contributor field names
+        form_data = {}
+        for field_name in ContributorValidationForm().fields:
+            matching_key = [key for key in request.POST if '-'+field_name in key][0]
+            form_data[field_name] = request.POST[matching_key]
+
+        element_form = ContributorValidationForm(form_data)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
+        # TODO: need to return form errors
         return {'is_valid': False, 'element_data_dict': None}

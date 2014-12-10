@@ -66,7 +66,7 @@
 {#  </div>#}
 
     <div class="form-group">
-        <label for="" class="col-sm-2 control-label">Meta Data</label>
+        <label for="" class="col-sm-2 control-label">Science Metadata</label>
         <div class="col-sm-10">
 {#            {{ creator_formset.management_form }}#}
             {% crispy metadata_form %}
@@ -277,7 +277,7 @@
         }
 
         function deleteLink(btn, prefix) {
-            var link_form_input = $(btn).parents('.item').children('input:first');
+            var link_form_input = $(btn).parents('.item').children('input[id^="id_"]:first');
             var id = $(link_form_input).attr('id');
             var link_formset_index = id.split("-")[1];
 
@@ -312,7 +312,7 @@
 
         function addLink(btn, prefix) {
 
-            var link_form_input = $(btn).parents('.item').children('input:first');
+            var link_form_input = $(btn).parents('.item').children('input[id^="id_"]:first');
             var id = $(link_form_input).attr('id');
             var link_formset_index = id.split("-")[1];
             var formCount = parseInt($('#id_' + prefix + '_links-' + link_formset_index + '-TOTAL_FORMS').val());
@@ -384,12 +384,16 @@
             return addLink(this, "creator");
         });
 
+        $("#addLinkContributor").click(function () {
+            return addLink(this, "contributor");
+        });
+
         $(".delete-contributor").click(function () {
-            return deleteForm(this, "contributors");
+            return deleteForm(this, "contributor");
         });
 
         $(".delete-link-contributor").click(function () {
-            return deleteLink(this, "contributors");
+            return deleteLink(this, "contributor");
         });
 
         $(".delete-link-creator").click(function () {

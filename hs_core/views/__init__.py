@@ -81,20 +81,13 @@ def _get_resource_sender(element_name, resource):
 
     return sender_resource
 
+
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
     sender_resource = _get_resource_sender(element_name, res)
-    # core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
-    #
-    # if element_name in core_metadata_element_names:
-    #     sender_resource = GenericResource().__class__
-    # else:
-    #     sender_resource = res.__class__
-
-    handler_response = pre_metadata_element_create.send(sender=sender_resource,
-                                                                   element_name=element_name,
-                                                                   request=request)
+    handler_response = pre_metadata_element_create.send(sender=sender_resource, element_name=element_name,
+                                                        request=request)
     for receiver, response in handler_response:
         if 'is_valid' in response:
             if response['is_valid']:
@@ -440,6 +433,11 @@ def create_resource(request, *args, **kwargs):
         form.profile_link_formset = ProfileLinksFormset(request.POST, prefix='creator_links-%s' % index)
         index += 1
 
+    index = 0
+    for form in contributor_formset.forms:
+        form.profile_link_formset = ProfileLinksFormset(request.POST, prefix='contributor_links-%s' % index)
+        index += 1
+
     if frm.is_valid() and creator_formset.is_valid() and contributor_formset.is_valid():
         core_metadata = []
 
@@ -449,7 +447,11 @@ def create_resource(request, *args, **kwargs):
         for metadata_dict in creator_metadata_dict_list:
             core_metadata.append(metadata_dict)
 
-        core_metadata.append(contributor_formset.get_metadata_dict())
+        contributor_metadata_dict_list = contributor_formset.get_metadata_dict()
+        for metadata_dict in contributor_metadata_dict_list:
+            core_metadata.append(metadata_dict)
+
+        #core_metadata.append(contributor_formset.get_metadata_dict())
 
         subjects = [k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None
         for subject_value in subjects:
