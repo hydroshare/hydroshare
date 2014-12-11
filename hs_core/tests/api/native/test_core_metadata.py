@@ -318,7 +318,7 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(self.res.metadata.coverages.all().count(), 0, msg="One more coverages found.")
 
         # add a period type coverage
-        value_dict = {'name':'Name for period coverage' , 'start':'1/1/2000', 'end':'12/12/2012'}
+        value_dict = {'name':'Name for period coverage', 'start':'1/1/2000', 'end':'12/12/2012'}
         resource.create_metadata_element(self.res.short_id,'coverage', type='period', value=value_dict)
 
         # there should be now one coverage element
@@ -328,54 +328,54 @@ class TestCoreMetadata(TestCase):
         value_dict = {'name':'Name for period coverage', 'start':'1/1/2002', 'end':'12/12/2013'}
         self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'coverage', type='period', value=value_dict))
 
+        # test that the name is optional
+        self.res.metadata.coverages.all()[0].delete()
+        value_dict = {'start':'1/1/2000', 'end':'12/12/2012'}
+        resource.create_metadata_element(self.res.short_id,'coverage', type='period', value=value_dict)
+        # there should be now one coverage element
+        self.assertEqual(self.res.metadata.coverages.all().count(), 1, msg="Number of coverages not equal to 1.")
+
         # add a point type coverage
-        value_dict = {'name':'Name for point coverage', 'east':'56.45678', 'north':'12.6789'}
+        value_dict = {'east':'56.45678', 'north':'12.6789', 'units': 'decimal deg'}
         resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
 
         # there should be now 2 coverage elements
         self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total overages not equal 2.")
 
+        # test that the name, elevation, zunits and projection are optional
+        self.res.metadata.coverages.get(type='point').delete()
+        value_dict = {'east':'56.45678', 'north':'12.6789', 'units': 'decimal deg', 'name': 'Little bear river',
+                      'elevation': '34.6789', 'zunits': 'rad deg', 'projection': 'NAD83'}
+        resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+        # there should be now 2 coverage elements
+        self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total coverages not equal 2.")
+
         # add a box type coverage - this should raise an exception as we already have a point type coverage
-        value_dict = {'name':'Name for box coverage', 'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789' }
+        value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789', 'units': 'decimal deg' }
         self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict))
 
         self.assertIn('point', [cov.type for cov in self.res.metadata.coverages.all()], msg="Coverage type 'Point' does not exist")
         self.assertIn('period', [cov.type for cov in self.res.metadata.coverages.all()], msg="Coverage type 'Point' does not exist")
-
-        for cov in self.res.metadata.coverages.all():
-            print 'cov type:%s' % cov.type
-            print 'cov value:%s' % cov.value
 
         # test coverage element can't be deleted - raises exception
         cov_pt = self.res.metadata.coverages.all().filter(type='point').first()
         self.assertRaises(Exception, lambda : resource.delete_metadata_element(self.res.short_id, 'coverage', cov_pt.id ))
 
         #change the point coverage to type box
-        value_dict = {'name':'Name for box coverage', 'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789' }
+        value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789', 'units':'decimal deg' }
         resource.update_metadata_element(self.res.short_id,'coverage', cov_pt.id, type='box', value=value_dict)
-        self.assertIn('box', [cov.type for cov in self.res.metadata.coverages.all()], msg="Coverage type 'Point' does not exist")
-        self.assertIn('period', [cov.type for cov in self.res.metadata.coverages.all()], msg="Coverage type 'Point' does not exist")
+        self.assertIn('box', [cov.type for cov in self.res.metadata.coverages.all()], msg="Coverage type 'box' does not exist")
+        self.assertIn('period', [cov.type for cov in self.res.metadata.coverages.all()], msg="Coverage type 'Period' does not exist")
 
-        for cov in self.res.metadata.coverages.all():
-            print 'cov type:%s' % cov.type
-            print 'cov value:%s' % cov.value
-
-        #update the northlimit for the box type coverage
-        cov_prd = self.res.metadata.coverages.all().filter(type='period').first()
-        value_dict = {'northlimit':'76.45678'}
-        resource.update_metadata_element(self.res.short_id,'coverage', cov_pt.id, type='box', value=value_dict)
-
-        # update the name for the period coverage
-        value_dict = {'name':'Updated name for the period coverage'}
-        resource.update_metadata_element(self.res.short_id,'coverage', cov_prd.id, type='period', value=value_dict)
-
-        for cov in self.res.metadata.coverages.all():
-            print 'cov type:%s' % cov.type
-            print 'cov value:%s' % cov.value
+        # test that the name, uplimit, downlimit, zunits and projection are optional
+        self.res.metadata.coverages.get(type='box').delete()
+        value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789',
+                      'units': 'decimal deg','name': 'Bear river', 'uplimit': '45.234', 'downlimit': '12.345',
+                      'zunits': 'decimal deg', 'projection': 'NAD83'}
+        resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 
         # there should be now 2 coverage elements
         self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total overages not equal 2.")
-        #print (bad)
 
     def test_date(self):
         # this test will pass only if we have added the creation and modified dates for the resource
@@ -897,12 +897,19 @@ class TestCoreMetadata(TestCase):
         self.res.metadata.create_element('contributor', name='Andrew Smith')
 
         # add a period type coverage
-        value_dict = {'name':'Name for period coverage' , 'start':'1/1/2000', 'end':'12/12/2012'}
+        value_dict = {'name':'fall season' , 'start':'1/1/2000', 'end':'12/12/2012'}
         self.res.metadata.create_element('coverage', type='period', value=value_dict)
 
-        # add a point type coverage
-        value_dict = {'name':'Name for point coverage', 'east':'56.45678', 'north':'12.6789'}
-        self.res.metadata.create_element('coverage', type='point', value=value_dict)
+        # TODO: add a point type coverage
+        # value_dict = {'east':'56.45678', 'north':'12.6789', 'units': 'decimal deg', 'name': 'Little bear river',
+        #               'elevation': '34.6789', 'zunits': 'rad deg', 'projection': 'NAD83'}
+        # self.res.metadata.create_element('coverage', type='point', value=value_dict)
+
+        # TODO: test box type coverage - uncommet this one and comment the above point type test
+        value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789',
+                      'units': 'decimal deg','name': 'Bear river', 'uplimit': '45.234', 'downlimit': '12.345',
+                      'zunits': 'decimal deg', 'projection': 'NAD83'}
+        self.res.metadata.create_element('coverage', type='box', value=value_dict)
 
         # add date of type 'valid'
         self.res.metadata.create_element('date', type='valid', start_date='8/10/2011', end_date='8/11/2012')
