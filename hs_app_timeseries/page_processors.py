@@ -67,6 +67,7 @@ def landing_page(request, page):
 
         context = page_processors.get_page_context(page, extended_metadata_layout=ext_md_layout)
 
+        context['resource_type'] = 'Time Series Resource'
         context['site_form'] = site_form
         context['variable_form'] = variable_form
         context['method_form'] = method_form

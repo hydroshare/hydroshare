@@ -493,7 +493,13 @@ def create_resource(request, *args, **kwargs):
             }
             return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
     else:
-        raise ValidationError(frm.errors)
+        ext_md_layout = None
+        metadata_form = MetaDataForm(extended_metadata_layout=ext_md_layout)
+        context = {'metadata_form': metadata_form, 'creator_formset': creator_formset,
+                   'creator_profilelink_formset': None,
+                   'contributor_formset': contributor_formset, 'extended_metadata_layout': ext_md_layout, 'test': 'test'}
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        #raise ValidationError(frm.errors)
 
 @login_required
 def get_file(request, *args, **kwargs):

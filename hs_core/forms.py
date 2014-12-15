@@ -340,6 +340,9 @@ class CreatorFormSetHelper(FormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         self.form_tag = False
+        self.form_show_errors = True
+        self.error_text_inline = True
+        self.html5_required = True
         self.layout = Layout(
             Fieldset('Creator',
                      Field('name', css_class=field_width),
@@ -353,6 +356,12 @@ class CreatorFormSetHelper(FormHelper):
                      ),
         )
 
+
+# class HydroProgramForm(forms.Form):
+#     def __init__(self, *args, **kwargs):
+#         super(HydroProgramForm, self).__init__(*args, **kwargs)
+#         self.helper = FormHelper()
+#         self.helper.html5_required = True
 
 class CreatorForm(PartyForm):
     def __init__(self, res_short_id=None, element_id=None, *args, **kwargs):
