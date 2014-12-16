@@ -1,6 +1,6 @@
 {% extends 'pages/page.html' %}
 
-{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags %}
+{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags inplace_edit %}
 
 {% block main %}
 
@@ -47,10 +47,8 @@
             <h2>Resource Description</h2>
 
             {% if cm.content %}
-                {% editable cm.content %}
                 <h4>Abstract</h4>
-                {{ cm.content|richtext_filters|safe }}
-                {% endeditable %}
+                {% inplace_edit "cm.content|linebreaksbr|safe"%}
             {% endif %}
 
             <h4>References</h4>
@@ -71,12 +69,29 @@
             {% for term in dublin_core %}
                 {% ifnotequal term|dcterm 'Title' %}
                     <tr>
-                        <th>{{ term|dcterm }}</th>
-                        <td>{{ term.content }}</td>
+                        {% if term|dcterm == 'Date' or term|dcterm == 'Date Created' or term|dcterm == 'Date Modified' or term|dcterm == 'Date Submitted'%}
+                            <th>{{ term|dcterm }}</th>
+                            <td>{{ term.content|slice:":10" }}</td>
+                        {%  else %}
+                            <th>{{ term|dcterm }}</th>
+                            <td>{{ term.content }}</td>
+                        {% endif %}
                     </tr>
                 {% endifnotequal %}
             {% endfor %}
             </table>
+            {% for attr, val_dict in core_metadata.items %}
+                <h5>{{ attr }}</h5>
+                <table class="table table-condensed">
+                    {% for subattr, subval in val_dict.items %}
+                    <tr>
+                        <th>{{ subattr }}</th>
+                        <td>{{ subval }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% endfor %}
+
             {% if page.perms.change %}
                 <button class="btn btn-primary" id="add-dcterm" data-toggle="modal" data-target="#add-dcterm-dialog">Add metadata term</button>
             {% endif %}
@@ -157,12 +172,16 @@
             {% csrf_token %}
             {% if cm.public %}
                 This resource can be viewed and downloaded by anyone.
-                <input name="t" type="hidden" value="make_private"/>
-                <button type="submit" class="btn btn-danger">Make private</button>
+                {% if user == cm.user %}
+                    <input name="t" type="hidden" value="make_private"/>
+                    <button type="submit" class="btn btn-danger">Make private</button>
+                {% endif %}
             {% else %}
                 This resource can be viewed and downloaded only by designated users or research groups.
-                <input name="t" type="hidden" value="make_public"/>
-                <button type="submit" class="btn btn-danger">Make public</button>
+                {% if user == cm.user %}
+                    <input name="t" type="hidden" value="make_public"/>
+                    <button type="submit" class="btn btn-danger">Make public</button>
+                {% endif %}
             {% endif %}
             </form>
 
