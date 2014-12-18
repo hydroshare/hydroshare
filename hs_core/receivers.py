@@ -8,6 +8,7 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
 from hs_core.models import GenericResource
 from forms import *
 
+# This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_create, sender=GenericResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
     element_name = kwargs['element_name']
@@ -22,6 +23,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     else:
         return {'is_valid': False, 'element_data_dict': None}
 
+# This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_update, sender=GenericResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
     element_name = kwargs['element_name']

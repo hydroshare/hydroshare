@@ -51,68 +51,14 @@
     </div>
   </div>
 
-{#  <div class="form-group">#}
-{#    <label for="" class="col-sm-2 control-label">Title</label>#}
-{#    <div class="col-sm-10">#}
-{#      <input type="text" class="form-control" name="title" id="" placeholder="Title">#}
-{#    </div>#}
-{#  </div>#}
-
-{#  <div class="form-group">#}
-{#    <label for="" class="col-sm-2 control-label">Creators</label>#}
-{#    <div class="col-sm-10">#}
-{#      <input type="text" class="form-control" name="creators" id="" placeholder="Creators" value="{{ user|best_name }}">#}
-{#    </div>#}
-{#  </div>#}
 
     <div class="form-group">
         <label for="" class="col-sm-2 control-label">Science Metadata</label>
         <div class="col-sm-6">
-{#            {{ creator_formset.management_form }}#}
             {% crispy metadata_form %}
-
         </div>
     </div>
 
-{#   <div class="form-group">#}
-{#        <label for="" class="col-sm-2 control-label">Creators</label>#}
-{#        <div class="col-sm-10">#}
-{#            {{ creator_formset.management_form }}#}
-{#            {% crispy creator_formset creator_helper %}#}
-{##}
-{#        </div>#}
-{#   </div>#}
-{#    <div class="form-group">#}
-{#       <label for="" class="col-sm-2 control-label">Contributors</label>#}
-{#        <div class="col-sm-10">#}
-{#            {{ contributor_formset.management_form }}#}
-{#            {% for form in contributor_formset %}#}
-{#                {{ form|crispy }}#}
-{#            {% endfor %}#}
-{#        </div>#}
-{#   </div>#}
-
-
-{#   <div class="form-group">#}
-{#    <label for="" class="col-sm-2 control-label">Contributors</label>#}
-{#    <div class="col-sm-10">#}
-{#      <input type="text" class="form-control" name="contributors" id="" placeholder="Contributors" value="{{ user|best_name }}">#}
-{#    </div>#}
-{#   </div>#}
-
-{#  <div class="form-group">#}
-{#    <label for="" class="col-sm-2 control-label">Abstract</label>#}
-{#    <div class="col-sm-10">#}
-{#        <textarea class="mceEditor charfield" cols="40" id="" name="abstract" rows="10" placeholder="Abstract"> </textarea>#}
-{#    </div>#}
-{#  </div>#}
-
-{#  <div class="form-group">#}
-{#    <label for="" class="col-sm-2 control-label">Subject Keywords</label>#}
-{#    <div class="col-sm-10">#}
-{#      <input type="text" class="form-control" id="" name='keywords' placeholder="Keywords">#}
-{#    </div>#}
-{#  </div>#}
 
   <div class="form-group">
     <div class="col-sm-offset-2 col-sm-10">
@@ -238,8 +184,6 @@
                         else{
                             $(this).attr('value', 'Delete');
                         }
-
-
                     }
                     if ($(this).attr('type') == 'submit'){
                         $(this).attr('value', 'Save');
@@ -301,12 +245,7 @@
                         updateElementIndex(this, update_prefix, i);
                     })
                 }
-            } // End if
-{#            else {#}
-{#                if (prefix == 'creators'){#}
-{#                    alert("Resource needs to have at least one creator!");#}
-{#                }#}
-{#            }#}
+            }
             return false;
         }
 
@@ -319,7 +258,6 @@
             // You can only submit a maximum of 10 todo items
             if (formCount < 10) {
                 // Clone a form (without event handlers) from the first form
-                //var row = $("#" + prefix + " .item_link:first").clone(false).get(0);
                 var row = $(btn).parents(".item").find(".item_link:last").clone(false).get(0);
                 // Insert it after the last form
                 $(row).removeAttr('id').hide().insertAfter("#" + prefix + " .item_link:last").slideDown(300);
@@ -335,18 +273,12 @@
                     updateElementIndex(this, update_prefix, formCount);
                     $(this).val("");
                 })
-{#                $(row).children().children().each(function () {#}
-{#                    updateElementIndex(this, update_prefix, formCount);#}
-{#                    $(this).val("");#}
-{#                });#}
+
                 $(row).find('button').each(function () {
                     updateElementIndex(this, update_prefix, formCount);
                     if ($(this).attr('type') == 'button'){
                         $(this).text('Delete Link');
                     }
-{#                    if ($(this).attr('type') == 'submit'){#}
-{#                        $(this).attr('value', 'Save');#}
-{#                    }#}
                 })
 
                 // Add an event handler for the delete item/form link

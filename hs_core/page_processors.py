@@ -4,16 +4,12 @@ from forms import *
 
 @processor_for(GenericResource)
 def landing_page(request, page):
-    content_model = page.get_content_model()
-    creator_formset = CreatorFormSet(request.POST or None, prefix='creator')
-    contributor_formset = ContributorFormSet(request.POST or None, prefix='contributor')
-    #creator_profilelink_formset = ProfileLinksFormset(request.POST or None, prefix='creators_links')
-    add_creator_modal_form = CreatorForm(res_short_id=content_model.short_id)
-
     if request.method == "GET":
         return get_page_context(page)
 
 
+# resource type specific app needs to call this method to inject a crispy_form layout
+# object for displaying metadata UI for the extended metadata for their resource
 def get_page_context(page, extended_metadata_layout=None):
     content_model = page.get_content_model()
     add_creator_modal_form = CreatorForm(res_short_id=content_model.short_id)
@@ -34,6 +30,7 @@ def get_page_context(page, extended_metadata_layout=None):
             link_form.helper.layout[1][0] = StrictButton('Delete link', css_class=link_form.helper.delete_btn_class, disabled="disabled")
 
         creator_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'creator', creator_form.initial['id'])
+        creator_form.number = creator_form.initial['id']
         index += 1
 
     ContributorFormSetEdit = formset_factory(ContributorForm, formset=BaseContributorFormSet, extra=0)
@@ -45,11 +42,12 @@ def get_page_context(page, extended_metadata_layout=None):
         contributor_form.action = "/hsapi/_internal/%s/contributor/%s/update-metadata/" % (content_model.short_id, contributor_form.initial['id'])
         contributor_form.profile_link_formset = ProfileLinksFormSetEdit(initial=contributors[index].external_links.all().values('type', 'url'), prefix='contributor_links-%s' % index)
 
-        # TODO: Temporarily the delete profile link is disabled on the resource landing page as we do not how the functionality for this button be implemented
+        # TODO: Temporarily the delete profile link is disabled on the resource landing page as we do not know how the functionality for this button be implemented
         for link_form in contributor_form.profile_link_formset.forms:
             link_form.helper.layout[1][0] = StrictButton('Delete link', css_class=link_form.helper.delete_btn_class, disabled="disabled")
 
         contributor_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'contributor', contributor_form.initial['id'])
+        contributor_form.number = contributor_form.initial['id']
         index += 1
 
     metadata_form = MetaDataForm(resource_mode='edit', extended_metadata_layout=extended_metadata_layout)
