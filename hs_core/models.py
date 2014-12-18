@@ -178,7 +178,9 @@ class AbstractMetaDataElement(models.Model):
     term = None
 
     object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType)
+    # see the following link the reason for having the related_name setting for the content_type attribute
+    # https://docs.djangoproject.com/en/1.6/topics/db/models/#abstract-related-name
+    content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_related")
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
     @property
