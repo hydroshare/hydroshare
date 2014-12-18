@@ -75,7 +75,7 @@ DOCKER_API_VERSION = '1.12'
 CARTO_HOME='/home/docker/node_modules/carto'
 
 
-USE_SOUTH = True
+USE_SOUTH = False
 SITE_TITLE = "Hydroshare"
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True

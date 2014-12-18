@@ -178,7 +178,9 @@ class AbstractMetaDataElement(models.Model):
     term = None
 
     object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType)
+    # see the following link the reason for having the related_name setting for the content_type attribute
+    # https://docs.djangoproject.com/en/1.6/topics/db/models/#abstract-related-name
+    content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_related")
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
     @property
@@ -928,15 +930,29 @@ class Coverage(AbstractMetaDataElement):
      string depends on the type of coverage as shown below. All keys shown in json string are required.
 
      For coverage type: period
-         _value = "{'name':coverage name value here, 'start':start date value, 'end':end date value, 'scheme':'W3C-DTF}"
+         _value = "{'name':coverage name value here (optional), 'start':start date value, 'end':end date value, 'scheme':'W3C-DTF}"
 
      For coverage type: point
-         _value = "{'name':coverage name value here, 'east':east coordinate value, 'north':north coordinate value}"
+         _value = "{'east':east coordinate value,
+                    'north':north coordinate value,
+                    'units:units applying to (east. north),
+                    'name':coverage name value here (optional),
+                    'elevation': coordinate in the vertical direction (optional),
+                    'zunits': units for elevation (optional),
+                    'projection': name of the projection (optional),
+                    }"
 
      For coverage type: box
-         _value = "{'name':coverage name value here, 'northlimit':northenmost coordinate value,
-                    'eastlimit':easternmost coordinate value, 'southlimit':southernmost coordinate value,
-                    'westlimit':westernmost coordinate value}"
+         _value = "{'northlimit':northenmost coordinate value,
+                    'eastlimit':easternmost coordinate value,
+                    'southlimit':southernmost coordinate value,
+                    'westlimit':westernmost coordinate value,
+                    'units:units applying to 4 limits (north, east, south & east),
+                    'name':coverage name value here (optional),
+                    'uplimit':uppermost coordinate value (optional),
+                    'downlimit':lowermost coordinate value (optional),
+                    'zunits': units for uplimit/downlimit (optional),
+                    'projection': name of the projection (optional)}"
     """
     _value = models.CharField(max_length=1024)
 
@@ -975,18 +991,20 @@ class Coverage(AbstractMetaDataElement):
 
             if 'value' in kwargs:
                 if isinstance(kwargs['value'], dict):
-                    if not 'name' in kwargs['value']:
-                        raise ValidationError("Coverage name attribute is missing.")
+                    # if not 'name' in kwargs['value']:
+                    #     raise ValidationError("Coverage name attribute is missing.")
 
                     cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
 
-                    if kwargs['type']== 'period':
+                    if kwargs['type'] == 'period':
                         value_dict = {k: v for k, v in kwargs['value'].iteritems() if k in ('name', 'start', 'end')}
                     elif kwargs['type']== 'point':
-                        value_dict = {k: v for k, v in kwargs['value'].iteritems() if k in ('name', 'east', 'north')}
+                        value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                                      if k in ('name', 'east', 'north', 'units', 'elevation', 'zunits', 'projection')}
                     elif kwargs['type']== 'box':
                         value_dict = {k: v for k, v in kwargs['value'].iteritems()
-                                      if k in ('name','northlimit', 'eastlimit', 'southlimit', 'westlimit')}
+                                      if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'name',
+                                               'uplimit', 'downlimit', 'zunits', 'projection')}
 
                     value_json = json.dumps(value_dict)
                     cov = Coverage.objects.create(type=kwargs['type'], _value=value_json,
@@ -1024,7 +1042,7 @@ class Coverage(AbstractMetaDataElement):
                         changing_coverage_type = True
 
             if 'value' in kwargs:
-                if  not isinstance(kwargs['value'], dict):
+                if not isinstance(kwargs['value'], dict):
                     raise ValidationError('Invalid coverage value format.')
 
                 if changing_coverage_type:
@@ -1041,11 +1059,12 @@ class Coverage(AbstractMetaDataElement):
                         if item_name in kwargs['value']:
                             value_dict[item_name] = kwargs['value'][item_name]
                 elif cov.type == 'point':
-                    for item_name in ('east', 'north'):
+                    for item_name in ('east', 'north', 'units', 'elevation', 'zunits', 'projection'):
                         if item_name in kwargs['value']:
                             value_dict[item_name] = kwargs['value'][item_name]
                 elif cov.type == 'box':
-                    for item_name in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+                    for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'uplimit',
+                                      'downlimit', 'zunits', 'projection'):
                         if item_name in kwargs['value']:
                             value_dict[item_name] = kwargs['value'][item_name]
 
@@ -1063,6 +1082,7 @@ class Coverage(AbstractMetaDataElement):
     @classmethod
     def _validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
         if coverage_type == 'period':
+            # check that all the required sub-elements exist
             if not 'start' in value_dict or not 'end' in value_dict:
                 raise ValidationError("For coverage of type 'period' values for both start date and end date are needed.")
             else:
@@ -1076,12 +1096,14 @@ class Coverage(AbstractMetaDataElement):
                 except TypeError:
                     raise TypeError("Invalid end date. Not a valid date value.")
         elif coverage_type == 'point':
-            if not 'east' in value_dict or not 'north' in value_dict:
-                raise ValidationError("For coverage of type 'point' values for both 'east' and 'north' are needed.")
+            # check that all the required sub-elements exist
+            if not 'east' in value_dict or not 'north' in value_dict or not 'units' in value_dict:
+                raise ValidationError("For coverage of type 'point' values for 'east', 'north' and 'units' are needed.")
         elif coverage_type == 'box':
-            for value_item in ['name', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
+            # check that all the required sub-elements exist
+            for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
                 if not value_item in value_dict:
-                    raise ValidationError("For coverage of type 'box' values for one or more bounding box limits is missing.")
+                    raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or 'units' is missing.")
 
 class Format(AbstractMetaDataElement):
     term = 'Format'
@@ -1527,17 +1549,38 @@ class CoreMetaData(models.Model):
             dc_coverage_dcterms = etree.SubElement(dc_coverage, cov_dcterm % self.NAMESPACES['dcterms'])
             rdf_coverage_value = etree.SubElement(dc_coverage_dcterms, '{%s}value' % self.NAMESPACES['rdf'])
             if coverage.type == 'period':
-                cov_value = 'name=%s; start=%s; end=%s; scheme=W3C-DTF' %(coverage.value['name'],
-                                                          arrow.get(coverage.value['start'].format(self.DATE_FORMAT)),
-                                                          arrow.get(coverage.value['start'].format(self.DATE_FORMAT)))
+                cov_value = 'start=%s; end=%s; scheme=W3C-DTF' % (arrow.get(coverage.value['start'].format(self.DATE_FORMAT)),
+                                                          arrow.get(coverage.value['end'].format(self.DATE_FORMAT)))
+                if 'name' in coverage.value:
+                    cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
+
             elif coverage.type == 'point':
-                cov_value = 'name=%s; east=%s; north=%s' %(coverage.value['name'],
-                                                                           coverage.value['east'],
-                                                                           coverage.value['north'])
+                cov_value = 'east=%s; north=%s; units=%s' % (coverage.value['east'], coverage.value['north'],
+                                                  coverage.value['units'])
+                if 'name' in coverage.value:
+                    cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
+                if 'elevation' in coverage.value:
+                    cov_value = cov_value + '; elevation=%s' % coverage.value['elevation']
+                    if 'zunits' in coverage.value:
+                        cov_value = cov_value + '; zunits=%s' % coverage.value['zunits']
+                if 'projection' in coverage.value:
+                    cov_value = cov_value + '; projection=%s' % coverage.value['projection']
+
             else: # this is box type
-                cov_value = 'name=%s; northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s' \
-                            %(coverage.value['name'], coverage.value['northlimit'], coverage.value['eastlimit'],
-                              coverage.value['southlimit'], coverage.value['westlimit'])
+                cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                            %(coverage.value['northlimit'], coverage.value['eastlimit'],
+                              coverage.value['southlimit'], coverage.value['westlimit'], coverage.value['units'])
+
+                if 'name' in coverage.value:
+                    cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
+                if 'uplimit' in coverage.value:
+                    cov_value = cov_value + '; uplimit=%s' % coverage.value['uplimit']
+                if 'downlimit' in coverage.value:
+                    cov_value = cov_value + '; downlimit=%s' % coverage.value['downlimit']
+                if 'uplimit' in coverage.value or 'downlimit' in coverage.value:
+                    cov_value = cov_value + '; zunits=%s' % coverage.value['zunits']
+                if 'projection' in coverage.value:
+                    cov_value = cov_value + '; projection=%s' % coverage.value['projection']
 
             rdf_coverage_value.text = cov_value
 
