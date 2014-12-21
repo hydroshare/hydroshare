@@ -181,6 +181,12 @@
                         else if(prefix === 'contributor'){
                             $(this).attr('value', 'Delete contributor');
                         }
+                        else if(prefix === 'relation'){
+                            $(this).attr('value', 'Delete relation');
+                        }
+                        else if(prefix === 'source'){
+                            $(this).attr('value', 'Delete source');
+                        }
                         else{
                             $(this).attr('value', 'Delete');
                         }
@@ -209,6 +215,14 @@
 
                 $(row).find(".delete-link-contributor").click(function () {
                     return deleteLink(this, prefix);
+                });
+
+                $(row).find(".delete-relation").click(function () {
+                    return deleteForm(this, prefix);
+                });
+
+                $(row).find(".delete-source").click(function () {
+                    return deleteForm(this, prefix);
                 });
 
                 // Update the total form count
@@ -330,6 +344,22 @@
 
         $(".delete-link-creator").click(function () {
             return deleteLink(this, "creator");
+        });
+
+        $("#addRelation").click(function () {
+            return addForm(this, "relation");
+        });
+
+        $(".delete-relation").click(function () {
+            return deleteForm(this, "relation");
+        });
+
+        $("#addSource").click(function () {
+            return addForm(this, "source");
+        });
+
+        $(".delete-source").click(function () {
+            return deleteForm(this, "source");
         });
     });
     </script>

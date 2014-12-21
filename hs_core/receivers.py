@@ -17,6 +17,10 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         element_form = CreatorValidationForm(request.POST)
     elif element_name == "contributor":
         element_form = ContributorValidationForm(request.POST)
+    elif element_name == 'relation':
+        element_form = RelationValidationForm(request.POST)
+    elif element_name == 'source':
+        element_form = SourceValidationForm(request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
@@ -26,7 +30,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
 # This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_update, sender=GenericResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
-    element_name = kwargs['element_name']
+    element_name = kwargs['element_name'].lower()
     element_id = kwargs['element_id']
     request = kwargs['request']
     if element_name == "creator":
@@ -49,6 +53,29 @@ def metadata_element_pre_update_handler(sender, **kwargs):
             form_data[field_name] = request.POST[matching_key]
 
         element_form = ContributorValidationForm(form_data)
+    elif element_name == "relation":
+        # since relation is a repeatable element and relation data is displayed on the landing page
+        # using formset, the data coming from a single relation form in the request for update
+        # needs to be parsed to match with relation field names
+        form_data = {}
+        for field_name in RelationValidationForm().fields:
+            matching_key = [key for key in request.POST if '-'+field_name in key][0]
+            form_data[field_name] = request.POST[matching_key]
+
+        element_form = RelationValidationForm(form_data)
+
+    elif element_name == "source":
+        # since source is a repeatable element and source data is displayed on the landing page
+        # using formset, the data coming from a single source form in the request for update
+        # needs to be parsed to match with source field names
+        form_data = {}
+        for field_name in SourceValidationForm().fields:
+            matching_key = [key for key in request.POST if '-'+field_name in key][0]
+            form_data[field_name] = request.POST[matching_key]
+
+        element_form = SourceValidationForm(form_data)
+    elif element_name == 'rights':
+        element_form = RightsValidationForm(request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}

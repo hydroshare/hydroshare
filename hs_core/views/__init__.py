@@ -403,6 +403,9 @@ class CreateResourceForm(forms.Form):
 def create_resource(request, *args, **kwargs):
     creator_formset = CreatorFormSet(request.POST or None, prefix='creator')
     contributor_formset = ContributorFormSet(request.POST or None, prefix='contributor')
+    relation_formset = RelationFormSet(request.POST or None, prefix='relation')
+    source_formset = SourceFormSet(request.POST or None, prefix='source')
+    rights_form = RightsForm(request.POST or None)
     #creator_profilelink_formset = ProfileLinksFormset(request.POST or None, prefix='creators_links')
     #contributor_profilelink_formset = ProfileLinksFormset(request.POST or None, prefix='contributors_links')
 
@@ -419,10 +422,16 @@ def create_resource(request, *args, **kwargs):
 
         creator_formset = CreatorFormSet(initial=[{'name': first_creator_name, 'email': first_creator_email}], prefix='creator')
         contributor_formset = ContributorFormSet(prefix='contributor')
-        #creator_helper = CreatorFormSetHelper()
+        relation_formset = RelationFormSet(prefix='relation')
+        #source_form = SourceForm()
+
         context = {'metadata_form': metadata_form, 'creator_formset': creator_formset,
                    'creator_profilelink_formset': None,
-                   'contributor_formset': contributor_formset, 'extended_metadata_layout': ext_md_layout}
+                   'contributor_formset': contributor_formset,
+                   'relation_formset': relation_formset,
+                   'source_formset': source_formset,
+                   'rights_form': rights_form,
+                   'extended_metadata_layout': ext_md_layout}
 
         return render(request, 'pages/create-resource.html', context)
 
@@ -438,20 +447,38 @@ def create_resource(request, *args, **kwargs):
         form.profile_link_formset = ProfileLinksFormset(request.POST, prefix='contributor_links-%s' % index)
         index += 1
 
-    if frm.is_valid() and creator_formset.is_valid() and contributor_formset.is_valid():
+    #source_form = SourceValidationForm(request.POST)
+    rights_form = RightsValidationForm(request.POST)
+
+    if frm.is_valid() and creator_formset.is_valid() and \
+            contributor_formset.is_valid() and \
+            relation_formset.is_valid() and \
+            source_formset.is_valid() and \
+            rights_form.is_valid():
+
         core_metadata = []
 
-        # TODO: implement get_metadata_dict() method in each metadata element form/formset
-        creator_metadata_dict_list = creator_formset.get_metadata_dict()
+        # TODO: implement get_metadata() method in each metadata element form/formset
+        creator_metadata_dict_list = creator_formset.get_metadata()
 
         for metadata_dict in creator_metadata_dict_list:
             core_metadata.append(metadata_dict)
 
-        contributor_metadata_dict_list = contributor_formset.get_metadata_dict()
+        contributor_metadata_dict_list = contributor_formset.get_metadata()
         for metadata_dict in contributor_metadata_dict_list:
             core_metadata.append(metadata_dict)
 
-        #core_metadata.append(contributor_formset.get_metadata_dict())
+        relation_metadata_dict_list = relation_formset.get_metadata()
+        for metadata_dict in relation_metadata_dict_list:
+            core_metadata.append(metadata_dict)
+
+        source_metadata_dict_list = source_formset.get_metadata()
+        for metadata_dict in source_metadata_dict_list:
+            core_metadata.append(metadata_dict)
+
+        core_metadata.append(rights_form.get_metadata())
+
+        #core_metadata.append(contributor_formset.get_metadata())
 
         subjects = [k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None
         for subject_value in subjects:

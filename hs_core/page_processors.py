@@ -14,6 +14,8 @@ def get_page_context(page, extended_metadata_layout=None):
     content_model = page.get_content_model()
     add_creator_modal_form = CreatorForm(res_short_id=content_model.short_id)
     add_contributor_modal_form = ContributorForm(res_short_id=content_model.short_id)
+    add_relation_modal_form = RelationForm(res_short_id=content_model.short_id)
+    add_source_modal_form = SourceForm(res_short_id=content_model.short_id)
 
     CreatorFormSetEdit = formset_factory(CreatorForm, formset=BaseCreatorFormSet, extra=0)
     creator_formset = CreatorFormSetEdit(initial=content_model.metadata.creators.all().values(), prefix='creator')
@@ -50,6 +52,28 @@ def get_page_context(page, extended_metadata_layout=None):
         contributor_form.number = contributor_form.initial['id']
         index += 1
 
+    RelationFormSetEdit = formset_factory(RelationForm, formset=BaseRelationFormSet, extra=0)
+    relation_formset = RelationFormSetEdit(initial=content_model.metadata.relations.all().values(), prefix='relation')
+
+    for relation_form in relation_formset.forms:
+        relation_form.action = "/hsapi/_internal/%s/relation/%s/update-metadata/" % (content_model.short_id, relation_form.initial['id'])
+        relation_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'relation', relation_form.initial['id'])
+        relation_form.number = relation_form.initial['id']
+
+    SourceFormSetEdit = formset_factory(SourceForm, formset=BaseSourceFormSet, extra=0)
+    source_formset = SourceFormSetEdit(initial=content_model.metadata.sources.all().values(), prefix='source')
+
+    IdentifierFormSetEdit = formset_factory(IdentifierForm, formset=BaseIdentifierFormSet, extra=0)
+    identifier_formset = IdentifierFormSetEdit(initial=content_model.metadata.identifiers.all().values(), prefix='identifier')
+
+    for source_form in source_formset.forms:
+        source_form.action = "/hsapi/_internal/%s/source/%s/update-metadata/" % (content_model.short_id, source_form.initial['id'])
+        source_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'source', source_form.initial['id'])
+        source_form.number = source_form.initial['id']
+
+    rights_form = RightsForm(instance=content_model.metadata.rights, res_short_id=content_model.short_id,
+                             element_id=content_model.metadata.rights.id if content_model.metadata.rights else None)
+
     metadata_form = MetaDataForm(resource_mode='edit', extended_metadata_layout=extended_metadata_layout)
 
     context = {'metadata_form': metadata_form,
@@ -60,6 +84,12 @@ def get_page_context(page, extended_metadata_layout=None):
                'abstract': content_model.metadata.description,
                'contributor_formset': contributor_formset,
                'add_contributor_modal_form': add_contributor_modal_form,
+               'relation_formset': relation_formset,
+               'add_relation_modal_form': add_relation_modal_form,
+               'source_formset': source_formset,
+               'add_source_modal_form': add_source_modal_form,
+               'rights_form': rights_form,
+               'identifier_formset': identifier_formset,
                'extended_metadata_layout': extended_metadata_layout}
 
     return context

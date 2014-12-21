@@ -70,6 +70,60 @@ ModalDialogLayoutAddContributor = Layout(
                             )
                         )
 
+ModalDialogLayoutAddRelation = Layout(
+                                HTML('<div class="modal fade" id="add-relation-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
+                                        '<div class="modal-dialog">'
+                                            '<div class="modal-content">'
+                                                '<form action="{{ add_relation_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
+                                                '<div class="modal-header">'
+                                                    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
+                                                    '<h4 class="modal-title" id="myModalLabel">Add Relation</h4>'
+                                                '</div>'
+                                                '<div class="modal-body">'
+                                                    '{% csrf_token %}'
+                                                    '<div class="form-group">'
+                                                        '{% load crispy_forms_tags %} '
+                                                        '{% crispy add_relation_modal_form %} '
+                                                    '</div>'
+                                                '</div>'
+                                                '<div class="modal-footer">'
+                                                    '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
+                                                    '<button type="submit" class="btn btn-primary">Save changes</button>'
+                                                '</div>'
+                                                '</form>'
+                                            '</div>'
+                                        '</div>'
+                                    '</div>'
+                                )
+                            )
+
+ModalDialogLayoutAddSource = Layout(
+                                HTML('<div class="modal fade" id="add-source-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
+                                        '<div class="modal-dialog">'
+                                            '<div class="modal-content">'
+                                                '<form action="{{ add_source_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
+                                                '<div class="modal-header">'
+                                                    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
+                                                    '<h4 class="modal-title" id="myModalLabel">Add Source</h4>'
+                                                '</div>'
+                                                '<div class="modal-body">'
+                                                    '{% csrf_token %}'
+                                                    '<div class="form-group">'
+                                                        '{% load crispy_forms_tags %} '
+                                                        '{% crispy add_source_modal_form %} '
+                                                    '</div>'
+                                                '</div>'
+                                                '<div class="modal-footer">'
+                                                    '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
+                                                    '<button type="submit" class="btn btn-primary">Save changes</button>'
+                                                '</div>'
+                                                '</form>'
+                                            '</div>'
+                                        '</div>'
+                                    '</div>'
+                                )
+                            )
+
 CreatorLayoutNew = Layout(
                             HTML('{% load crispy_forms_tags %} '
                                  '{% for form in creator_formset.forms %} '
@@ -175,6 +229,93 @@ ContributorLayoutEdit = Layout(
                     )
 
 
+RelationLayoutNew = Layout(
+                            HTML('{% load crispy_forms_tags %} '
+                                 '{% for form in relation_formset.forms %} '
+                                     '<div class="item"> '
+                                     '{% crispy form %} '
+                                     '<div style="margin-top:10px"><input class="delete-relation btn-danger btn btn-md" type="button" value="Delete relation"></div>'
+                                     '</div> '
+                                 '{% endfor %}'
+                                ),
+                            HTML('<div style="margin-top:10px"><a id="addRelation" class="btn btn-success" href="#"><i class="fa fa-plus"></i>Add another relation</a></div>'),
+                        )
+
+
+RelationLayoutEdit = Layout(
+                            HTML('{% load crispy_forms_tags %} '
+                                 '{% for form in relation_formset.forms %} '
+                                     '<div class="item form-group"> '
+                                         '<form action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
+                                         '{% crispy form %} '
+                                         '<div class="row" style="margin-top:10px">'
+                                            '<div class="col-md-10">'
+                                                '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-relation-element-dialog_{{ form.number }}" value="Delete relation">'
+                                            '</div>'
+                                            '<div class="col-md-2">'
+                                                '<button type="submit" class="btn btn-primary">Save Changes</button>'
+                                            '</div>'
+                                        '</div>'
+                                        '{% crispy form.delete_modal_form %} '
+                                        '</form> '
+                                    '</div> '
+                                '{% endfor %}'
+                            ),
+                            HTML('<div style="margin-top:10px">'
+                                 '<p><a id="add-relation" class="btn btn-success" data-toggle="modal" data-target="#add-relation-dialog">'
+                                 '<i class="fa fa-plus"></i>Add another relation</a>'
+                                 '</div>'
+                            ),
+                    )
+
+
+SourceLayoutNew = Layout(
+                            HTML('{% load crispy_forms_tags %} '
+                                 '{% for form in source_formset.forms %} '
+                                     '<div class="item"> '
+                                     '{% crispy form %} '
+                                     '<div style="margin-top:10px"><input class="delete-source btn-danger btn btn-md" type="button" value="Delete source"></div>'
+                                     '</div> '
+                                 '{% endfor %}'
+                                ),
+                            HTML('<div style="margin-top:10px"><a id="addSource" class="btn btn-success" href="#"><i class="fa fa-plus"></i>Add another source</a></div>'),
+                        )
+
+
+SourceLayoutEdit = Layout(
+                            HTML('{% load crispy_forms_tags %} '
+                                 '{% for form in source_formset.forms %} '
+                                     '<div class="item form-group"> '
+                                         '<form action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
+                                         '{% crispy form %} '
+                                         '<div class="row" style="margin-top:10px">'
+                                            '<div class="col-md-10">'
+                                                '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-source-element-dialog_{{ form.number }}" value="Delete source">'
+                                            '</div>'
+                                            '<div class="col-md-2">'
+                                                '<button type="submit" class="btn btn-primary">Save Changes</button>'
+                                            '</div>'
+                                        '</div>'
+                                        '{% crispy form.delete_modal_form %} '
+                                        '</form> '
+                                    '</div> '
+                                '{% endfor %}'
+                            ),
+                            HTML('<div style="margin-top:10px">'
+                                 '<p><a id="add-source" class="btn btn-success" data-toggle="modal" data-target="#add-source-dialog">'
+                                 '<i class="fa fa-plus"></i>Add another source</a>'
+                                 '</div>'
+                            ),
+                    )
+
+IdentifierLayoutEdit = Layout(
+                            HTML('{% load crispy_forms_tags %} '
+                                 '{% for form in identifier_formset.forms %} '
+                                    '{% crispy form %} '
+                                '{% endfor %}'
+                            ),
+                    )
+
 # the 1st and the 3rd HTML layout objects get replaced in MetaDataElementDeleteForm class
 def _get_modal_confirm_delete_matadata_element():
     layout = Layout(
@@ -220,13 +361,24 @@ class MetaDataForm(forms.Form):
         if resource_mode == 'new':
             creator_layout = CreatorLayoutNew
             contributor_layout = ContributorLayoutNew
+            relation_layout = RelationLayoutNew
+            source_layout = SourceLayoutNew
+            # no UI for identifier when creating a resource as identifier elements are created automatically by the system
+            identifier_layout = Layout()
+            #source_form = SourceForm()
             modal_dialog_add_creator = Layout()
             modal_dialog_add_contributor = Layout()
+            modal_dialog_add_relation = Layout()
         else:
             creator_layout = CreatorLayoutEdit
             contributor_layout = ContributorLayoutEdit
+            relation_layout = RelationLayoutEdit
+            source_layout = SourceLayoutEdit
+            identifier_layout = IdentifierLayoutEdit
             modal_dialog_add_creator = ModalDialogLayoutAddCreator
             modal_dialog_add_contributor = ModalDialogLayoutAddContributor
+            modal_dialog_add_relation = ModalDialogLayoutAddRelation
+            modal_dialog_add_source = ModalDialogLayoutAddSource
 
         self.helper = FormHelper()
         self.helper.form_method = 'post'
@@ -260,7 +412,31 @@ class MetaDataForm(forms.Form):
                             HTML("<div class='form-group' id='contributor'>"),
                             HTML("{{ contributor_formset.management_form }}"),
                             contributor_layout,
-                            HTML("</div>")
+                            HTML("</div>"),
+                        ),
+                        AccordionGroup('Relations (optional)',
+                            HTML("<div class='form-group' id='relation'>"),
+                            HTML("{{ relation_formset.management_form }}"),
+                            relation_layout,
+                            HTML("</div>"),
+                        ),
+                        AccordionGroup('Sources (optional)',
+                            HTML("<div class='form-group' id='source'>"),
+                            HTML("{{ source_formset.management_form }}"),
+                            source_layout,
+                            HTML("</div>"),
+                        ),
+                        AccordionGroup('Identifiers (required)',
+                            HTML("<div class='form-group' id='identifier'>"),
+                            HTML("{{ identifier_formset.management_form }}"),
+                            identifier_layout,
+                            HTML("</div>"),
+                        ),
+                        AccordionGroup('Rights (required)',
+                            HTML('<div class="form-group" id="source"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy rights_form %} '
+                                 '</div>'),
                         )
                     ),
                 ),
@@ -272,6 +448,8 @@ class MetaDataForm(forms.Form):
             ),
             modal_dialog_add_creator,
             modal_dialog_add_contributor,
+            modal_dialog_add_relation,
+            modal_dialog_add_source,
         )
 
 
@@ -312,7 +490,7 @@ class ProfileLinksForm(ModelForm):
 
 
 class BaseProfileLinkFormSet(BaseFormSet):
-    def get_metadata_dict(self):
+    def get_metadata(self):
         links_data = []
         for form in self.forms:
             link_data = {k: v for k, v in form.cleaned_data.iteritems()}
@@ -401,12 +579,12 @@ class BaseCreatorFormSet(BaseFormSet):
         # create the nested profile link formset
         form.profile_link_formset = ProfileLinksFormset(prefix='creator_links-%s' % index)
 
-    def get_metadata_dict(self):
+    def get_metadata(self):
         creators_data = []
         for form in self.forms:
             creator_data = {k: v for k, v in form.cleaned_data.iteritems()}
             if form.profile_link_formset.is_valid():
-                profile_link_dict = form.profile_link_formset.get_metadata_dict()
+                profile_link_dict = form.profile_link_formset.get_metadata()
                 if len(profile_link_dict['profile_links']) > 0:
                     creator_data['profile_links'] = profile_link_dict['profile_links']
 
@@ -463,12 +641,12 @@ class BaseContributorFormSet(BaseFormSet):
         # create the nested profile link formset
         form.profile_link_formset = ProfileLinksFormset(prefix='contributor_links-%s' % index)
 
-    def get_metadata_dict(self):
+    def get_metadata(self):
         contributors_data = []
         for form in self.forms:
             contributor_data = {k: v for k, v in form.cleaned_data.iteritems()}
             if form.profile_link_formset.is_valid():
-                profile_link_dict = form.profile_link_formset.get_metadata_dict()
+                profile_link_dict = form.profile_link_formset.get_metadata()
                 if len(profile_link_dict['profile_links']) > 0:
                     contributor_data['profile_links'] = profile_link_dict['profile_links']
 
@@ -478,3 +656,226 @@ class BaseContributorFormSet(BaseFormSet):
 
 
 ContributorFormSet = formset_factory(ContributorForm, formset=BaseContributorFormSet)
+
+
+class RelationFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(RelationFormSetHelper, self).__init__(*args, **kwargs)
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        self.form_tag = False
+        self.form_show_errors = True
+        self.error_text_inline = True
+        self.html5_required = True
+        self.layout = Layout(
+            Fieldset('Relation',
+                     Field('type', css_class=field_width),
+                     Field('value', css_class=field_width),
+                     ),
+        )
+
+
+class BaseRelationFormSet(BaseFormSet):
+    def get_metadata(self):
+        relations_data = []
+        for form in self.forms:
+            relation_data = {k: v for k, v in form.cleaned_data.iteritems()}
+            relations_data.append({'relation': relation_data})
+
+        return relations_data
+
+
+class RelationForm(ModelForm):
+    def __init__(self, res_short_id=None, *args, **kwargs):
+        super(RelationForm, self).__init__(*args, **kwargs)
+        self.helper = RelationFormSetHelper()
+        self.number = 0
+        self.delete_modal_form = None
+        if res_short_id:
+            self.action = "/hsapi/_internal/%s/relation/add-metadata/" % res_short_id
+        else:
+            self.action = ""
+
+    class Meta:
+        model = Relation
+        # fields that will be displayed are specified here - but not necessarily in the same order
+        fields = ['type', 'value']
+
+        # TODO: field labels and widgets types to be specified
+
+
+class RelationValidationForm(forms.Form):
+    type = forms.CharField(max_length=100)
+    value = forms.CharField(max_length=500)
+
+RelationFormSet = formset_factory(RelationForm, formset=BaseRelationFormSet)
+
+
+class SourceFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(SourceFormSetHelper, self).__init__(*args, **kwargs)
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        self.form_tag = False
+        self.form_show_errors = True
+        self.error_text_inline = True
+        self.html5_required = True
+        self.layout = Layout(
+            Fieldset('Source',
+                     Field('derived_from', css_class=field_width),
+                     ),
+        )
+
+
+class BaseSourceFormSet(BaseFormSet):
+    def get_metadata(self):
+        sources_data = []
+        for form in self.forms:
+            source_data = {k: v for k, v in form.cleaned_data.iteritems()}
+            sources_data.append({'source': source_data})
+
+        return sources_data
+
+
+class SourceForm(ModelForm):
+    def __init__(self, res_short_id=None, *args, **kwargs):
+        super(SourceForm, self).__init__(*args, **kwargs)
+        self.helper = SourceFormSetHelper()
+        self.number = 0
+        self.delete_modal_form = None
+        if res_short_id:
+            self.action = "/hsapi/_internal/%s/source/add-metadata/" % res_short_id
+        else:
+            self.action = ""
+
+    class Meta:
+        model = Source
+        # fields that will be displayed are specified here - but not necessarily in the same order
+        fields = ['derived_from']
+
+        # TODO: field labels and widgets types to be specified
+
+
+class SourceValidationForm(forms.Form):
+    derived_from = forms.CharField(max_length=300)
+
+
+SourceFormSet = formset_factory(SourceForm, formset=BaseSourceFormSet)
+
+
+class IdentifierFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(IdentifierFormSetHelper, self).__init__(*args, **kwargs)
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        self.form_tag = False
+        self.form_show_errors = True
+        self.error_text_inline = True
+        self.html5_required = True
+        self.layout = Layout(
+            Fieldset('Identifier',
+                     Field('name', css_class=field_width),
+                     Field('url', css_class=field_width),
+                     ),
+        )
+
+
+class BaseIdentifierFormSet(BaseFormSet):
+    def get_metadata(self):
+        identifiers_data = []
+        for form in self.forms:
+            identifier_data = {k: v for k, v in form.cleaned_data.iteritems()}
+            identifiers_data.append({'identifier': identifier_data})
+
+        return identifiers_data
+
+
+class IdentifierForm(ModelForm):
+    def __init__(self, res_short_id=None, *args, **kwargs):
+        super(IdentifierForm, self).__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs['readonly'] = True
+        self.fields['url'].widget.attrs['readonly'] = True
+        
+        self.helper = IdentifierFormSetHelper()
+        self.number = 0
+        self.delete_modal_form = None
+        if res_short_id:
+            self.action = "/hsapi/_internal/%s/identifier/add-metadata/" % res_short_id
+        else:
+            self.action = ""
+
+    class Meta:
+        model = Identifier
+        # fields that will be displayed are specified here - but not necessarily in the same order
+        fields = ['name', 'url']
+
+        # TODO: field labels and widgets types to be specified
+
+IdentifierFormSet = formset_factory(IdentifierForm, formset=BaseIdentifierFormSet)
+
+
+# Non repeatable element related forms
+class BaseFormHelper(FormHelper):
+    def __init__(self, res_short_id=None, element_id=None, element_name=None, element_layout=None,  *args, **kwargs):
+        super(BaseFormHelper, self).__init__(*args, **kwargs)
+
+        if res_short_id:
+            self.form_method = 'post'
+            self.form_tag = True
+            if element_id:
+                self.form_action = "/hsapi/_internal/%s/%s/%s/update-metadata/" % (res_short_id, element_name.lower(), element_id)
+            else:
+                self.form_action = "/hsapi/_internal/%s/%s/add-metadata/" % (res_short_id, element_name)
+        else:
+            self.form_tag = False
+
+        # change the first character to uppercase of the element name
+        element_name = element_name.title()
+
+        if res_short_id:
+            self.layout = Layout(
+                            Fieldset(element_name,
+                                     element_layout,
+                                     HTML('<div style="margin-top:10px">'),
+                                     HTML('<button type="submit" class="btn btn-primary">Save changes</button>'),
+                                     HTML('</div>')
+                            ),
+                         )
+        else:
+            self.layout = Layout(
+                            Fieldset(element_name,
+                                     element_layout,
+                            ),
+                          )
+
+
+class RightsFormHelper(BaseFormHelper):
+    def __init__(self, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+                        Field('statement', css_class=field_width),
+                        Field('url', css_class=field_width),
+                 )
+
+        super(RightsFormHelper, self).__init__(res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class RightsForm(ModelForm):
+    def __init__(self, res_short_id=None, element_id=None, *args, **kwargs):
+        super(RightsForm, self).__init__(*args, **kwargs)
+        self.helper = RightsFormHelper(res_short_id, element_id, element_name='rights')
+
+    class Meta:
+        model = Rights
+        fields = ['statement', 'url']
+        exclude = ['content_object']
+
+
+class RightsValidationForm(forms.Form):
+    statement = forms.CharField(required=False)
+    url = forms.URLField(required=False)
+
+    def get_metadata(self):
+        return {'rights': self.cleaned_data}
