@@ -21,6 +21,10 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         element_form = RelationValidationForm(request.POST)
     elif element_name == 'source':
         element_form = SourceValidationForm(request.POST)
+    elif element_name == 'rights':
+        element_form = RightsValidationForm(request.POST)
+    elif element_name == 'language':
+        element_form = LanguageValidationForm(request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
@@ -76,6 +80,8 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         element_form = SourceValidationForm(form_data)
     elif element_name == 'rights':
         element_form = RightsValidationForm(request.POST)
+    elif element_name == 'language':
+        element_form = LanguageValidationForm(request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}

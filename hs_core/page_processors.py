@@ -66,6 +66,9 @@ def get_page_context(page, extended_metadata_layout=None):
     IdentifierFormSetEdit = formset_factory(IdentifierForm, formset=BaseIdentifierFormSet, extra=0)
     identifier_formset = IdentifierFormSetEdit(initial=content_model.metadata.identifiers.all().values(), prefix='identifier')
 
+    FormatFormSetEdit = formset_factory(FormatForm, formset=BaseFormatFormSet, extra=0)
+    format_formset = FormatFormSetEdit(initial=content_model.metadata.formats.all().values(), prefix='format')
+
     for source_form in source_formset.forms:
         source_form.action = "/hsapi/_internal/%s/source/%s/update-metadata/" % (content_model.short_id, source_form.initial['id'])
         source_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'source', source_form.initial['id'])
@@ -73,6 +76,9 @@ def get_page_context(page, extended_metadata_layout=None):
 
     rights_form = RightsForm(instance=content_model.metadata.rights, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.rights.id if content_model.metadata.rights else None)
+
+    language_form = LanguageForm(instance=content_model.metadata.language, res_short_id=content_model.short_id,
+                             element_id=content_model.metadata.language.id if content_model.metadata.language else None)
 
     metadata_form = MetaDataForm(resource_mode='edit', extended_metadata_layout=extended_metadata_layout)
 
@@ -90,6 +96,8 @@ def get_page_context(page, extended_metadata_layout=None):
                'add_source_modal_form': add_source_modal_form,
                'rights_form': rights_form,
                'identifier_formset': identifier_formset,
+               'language_form': language_form,
+               'format_formset': format_formset,
                'extended_metadata_layout': extended_metadata_layout}
 
     return context

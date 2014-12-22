@@ -316,6 +316,14 @@ IdentifierLayoutEdit = Layout(
                             ),
                     )
 
+FormatLayoutEdit = Layout(
+                            HTML('{% load crispy_forms_tags %} '
+                                 '{% for form in format_formset.forms %} '
+                                    '{% crispy form %} '
+                                '{% endfor %}'
+                            ),
+                    )
+
 # the 1st and the 3rd HTML layout objects get replaced in MetaDataElementDeleteForm class
 def _get_modal_confirm_delete_matadata_element():
     layout = Layout(
@@ -365,16 +373,19 @@ class MetaDataForm(forms.Form):
             source_layout = SourceLayoutNew
             # no UI for identifier when creating a resource as identifier elements are created automatically by the system
             identifier_layout = Layout()
+            format_layout = Layout()
             #source_form = SourceForm()
             modal_dialog_add_creator = Layout()
             modal_dialog_add_contributor = Layout()
             modal_dialog_add_relation = Layout()
+            modal_dialog_add_source = Layout()
         else:
             creator_layout = CreatorLayoutEdit
             contributor_layout = ContributorLayoutEdit
             relation_layout = RelationLayoutEdit
             source_layout = SourceLayoutEdit
             identifier_layout = IdentifierLayoutEdit
+            format_layout = FormatLayoutEdit
             modal_dialog_add_creator = ModalDialogLayoutAddCreator
             modal_dialog_add_contributor = ModalDialogLayoutAddContributor
             modal_dialog_add_relation = ModalDialogLayoutAddRelation
@@ -437,7 +448,19 @@ class MetaDataForm(forms.Form):
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy rights_form %} '
                                  '</div>'),
-                        )
+                        ),
+                        AccordionGroup('Language (optional)',
+                            HTML('<div class="form-group" id="language"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy language_form %} '
+                                 '</div>'),
+                        ),
+                        AccordionGroup('Formats/MIME Types (optional)',
+                            HTML("<div class='form-group' id='format'>"),
+                            HTML("{{ format_formset.management_form }}"),
+                            format_layout,
+                            HTML("</div>"),
+                        ),
                     ),
                 ),
 
@@ -700,6 +723,7 @@ class RelationForm(ModelForm):
         model = Relation
         # fields that will be displayed are specified here - but not necessarily in the same order
         fields = ['type', 'value']
+        labels = {'type': 'Relation type', 'value': 'Related to'}
 
         # TODO: field labels and widgets types to be specified
 
@@ -814,6 +838,56 @@ class IdentifierForm(ModelForm):
 IdentifierFormSet = formset_factory(IdentifierForm, formset=BaseIdentifierFormSet)
 
 
+class FormatFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(FormatFormSetHelper, self).__init__(*args, **kwargs)
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        self.form_tag = False
+        self.form_show_errors = True
+        self.error_text_inline = True
+        self.html5_required = True
+        self.layout = Layout(
+            Fieldset('Format/MIME Type',
+                     Field('value', css_class=field_width),
+                     ),
+        )
+
+
+class BaseFormatFormSet(BaseFormSet):
+    def get_metadata(self):
+        formats_data = []
+        for form in self.forms:
+            format_data = {k: v for k, v in form.cleaned_data.iteritems()}
+            formats_data.append({'format': format_data})
+
+        return formats_data
+
+
+class FormatForm(ModelForm):
+    def __init__(self, res_short_id=None, *args, **kwargs):
+        super(FormatForm, self).__init__(*args, **kwargs)
+        self.fields['value'].widget.attrs['readonly'] = True
+
+        self.helper = FormatFormSetHelper()
+        self.number = 0
+        self.delete_modal_form = None
+        if res_short_id:
+            self.action = "/hsapi/_internal/%s/format/add-metadata/" % res_short_id
+        else:
+            self.action = ""
+
+    class Meta:
+        model = Format
+        # fields that will be displayed are specified here - but not necessarily in the same order
+        fields = ['value']
+        labels = {'value': 'Mime type'}
+
+        # TODO: field labels and widgets types to be specified
+
+FormatFormSet = formset_factory(FormatForm, formset=BaseFormatFormSet)
+
+
 # Non repeatable element related forms
 class BaseFormHelper(FormHelper):
     def __init__(self, res_short_id=None, element_id=None, element_name=None, element_layout=None,  *args, **kwargs):
@@ -879,3 +953,34 @@ class RightsValidationForm(forms.Form):
 
     def get_metadata(self):
         return {'rights': self.cleaned_data}
+
+
+class LanguageFormHelper(BaseFormHelper):
+    def __init__(self, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+                        Field('code', css_class=field_width),
+                 )
+
+        super(LanguageFormHelper, self).__init__(res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class LanguageForm(ModelForm):
+    def __init__(self, res_short_id=None, element_id=None, *args, **kwargs):
+        super(LanguageForm, self).__init__(*args, **kwargs)
+        self.helper = LanguageFormHelper(res_short_id, element_id, element_name='language')
+        self.initial['code'] = 'eng'
+
+    class Meta:
+        model = Language
+        fields = ['code']
+        exclude = ['content_object']
+        labels = {'code': 'Language name'}
+
+class LanguageValidationForm(forms.Form):
+    code = forms.CharField(max_length=3)
+
+    def get_metadata(self):
+        return {'language': self.cleaned_data}
