@@ -29,20 +29,6 @@ class TestCoreMetadata(TestCase):
             self.tearDown()
             self.user = User.objects.create_user('user1', email='user1@nowhere.com')
 
-        # md = CoreMetaData()
-        # md.save()
-        # self.res, created = GenericResource.objects.get_or_create(
-        #     user=self.user,
-        #     title='Generic resource',
-        #     creator=self.user,
-        #     last_changed_by=self.user,
-        #     doi='doi1000100010001',
-        #     public=False
-        # )
-        #
-        # if created:
-        #     self.res.owners.add(self.user)
-
         self.res = hydroshare.create_resource(
             resource_type='GenericResource',
             owner=self.user,
@@ -132,8 +118,7 @@ class TestCoreMetadata(TestCase):
         cr_address = "11 River Drive, Logan UT-84321, USA"
         cr_phone = '435-567-0989'
         cr_homepage = 'http://usu.edu/homepage/001'
-        cr_res_id = 'http://research.org/001'
-        cr_res_gate_id = 'http://research-gate.org/001'
+
         resource.create_metadata_element(self.res.short_id,'creator',
                                 name=cr_name,
                                 description=cr_des,
@@ -142,8 +127,7 @@ class TestCoreMetadata(TestCase):
                                 address=cr_address,
                                 phone=cr_phone,
                                 homepage=cr_homepage,
-                                researcherID=cr_res_id,
-                                researchGateID=cr_res_gate_id)
+                                )
 
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
         self.assertNotEqual(cr_mike, None, msg='Creator Mike was not found')
@@ -153,8 +137,6 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(cr_mike.address, cr_address)
         self.assertEqual(cr_mike.phone, cr_phone)
         self.assertEqual(cr_mike.homepage, cr_homepage)
-        self.assertEqual(cr_mike.researcherID, cr_res_id)
-        self.assertEqual(cr_mike.researchGateID, cr_res_gate_id)
         self.assertEqual(cr_mike.order, 3)
 
         # update Mike's order to 2 from 3
@@ -212,8 +194,6 @@ class TestCoreMetadata(TestCase):
         con_address = "11 River Drive, Logan UT-84321, USA"
         con_phone = '435-567-0989'
         con_homepage = 'http://usu.edu/homepage/001'
-        con_res_id = 'http://research.org/001'
-        con_res_gate_id = 'http://research-gate.org/001'
         resource.create_metadata_element(self.res.short_id,'contributor',
                                 name=con_name,
                                 description=con_des,
@@ -222,8 +202,7 @@ class TestCoreMetadata(TestCase):
                                 address=con_address,
                                 phone=con_phone,
                                 homepage=con_homepage,
-                                researcherID=con_res_id,
-                                researchGateID=con_res_gate_id)
+                                )
 
         # number of contributors at this point should be 2
         self.assertEqual(self.res.metadata.contributors.all().count(), 2, msg='Number of contributors not equal to 2')
@@ -236,8 +215,6 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(con_mike.address, con_address)
         self.assertEqual(con_mike.phone, con_phone)
         self.assertEqual(con_mike.homepage, con_homepage)
-        self.assertEqual(con_mike.researcherID, con_res_id)
-        self.assertEqual(con_mike.researchGateID, con_res_gate_id)
 
         # update Mike's phone
         con_phone = '435-567-9999'
@@ -341,7 +318,7 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(self.res.metadata.coverages.all().count(), 0, msg="One more coverages found.")
 
         # add a period type coverage
-        value_dict = {'name':'Name for period coverage' , 'start':'1/1/2000', 'end':'12/12/2012'}
+        value_dict = {'name':'Name for period coverage', 'start':'1/1/2000', 'end':'12/12/2012'}
         resource.create_metadata_element(self.res.short_id,'coverage', type='period', value=value_dict)
 
         # there should be now one coverage element
@@ -351,54 +328,54 @@ class TestCoreMetadata(TestCase):
         value_dict = {'name':'Name for period coverage', 'start':'1/1/2002', 'end':'12/12/2013'}
         self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'coverage', type='period', value=value_dict))
 
+        # test that the name is optional
+        self.res.metadata.coverages.all()[0].delete()
+        value_dict = {'start':'1/1/2000', 'end':'12/12/2012'}
+        resource.create_metadata_element(self.res.short_id,'coverage', type='period', value=value_dict)
+        # there should be now one coverage element
+        self.assertEqual(self.res.metadata.coverages.all().count(), 1, msg="Number of coverages not equal to 1.")
+
         # add a point type coverage
-        value_dict = {'name':'Name for point coverage', 'east':'56.45678', 'north':'12.6789'}
+        value_dict = {'east':'56.45678', 'north':'12.6789', 'units': 'decimal deg'}
         resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
 
         # there should be now 2 coverage elements
         self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total overages not equal 2.")
 
+        # test that the name, elevation, zunits and projection are optional
+        self.res.metadata.coverages.get(type='point').delete()
+        value_dict = {'east':'56.45678', 'north':'12.6789', 'units': 'decimal deg', 'name': 'Little bear river',
+                      'elevation': '34.6789', 'zunits': 'rad deg', 'projection': 'NAD83'}
+        resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+        # there should be now 2 coverage elements
+        self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total coverages not equal 2.")
+
         # add a box type coverage - this should raise an exception as we already have a point type coverage
-        value_dict = {'name':'Name for box coverage', 'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789' }
+        value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789', 'units': 'decimal deg' }
         self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict))
 
         self.assertIn('point', [cov.type for cov in self.res.metadata.coverages.all()], msg="Coverage type 'Point' does not exist")
         self.assertIn('period', [cov.type for cov in self.res.metadata.coverages.all()], msg="Coverage type 'Point' does not exist")
-
-        for cov in self.res.metadata.coverages.all():
-            print 'cov type:%s' % cov.type
-            print 'cov value:%s' % cov.value
 
         # test coverage element can't be deleted - raises exception
         cov_pt = self.res.metadata.coverages.all().filter(type='point').first()
         self.assertRaises(Exception, lambda : resource.delete_metadata_element(self.res.short_id, 'coverage', cov_pt.id ))
 
         #change the point coverage to type box
-        value_dict = {'name':'Name for box coverage', 'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789' }
+        value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789', 'units':'decimal deg' }
         resource.update_metadata_element(self.res.short_id,'coverage', cov_pt.id, type='box', value=value_dict)
-        self.assertIn('box', [cov.type for cov in self.res.metadata.coverages.all()], msg="Coverage type 'Point' does not exist")
-        self.assertIn('period', [cov.type for cov in self.res.metadata.coverages.all()], msg="Coverage type 'Point' does not exist")
+        self.assertIn('box', [cov.type for cov in self.res.metadata.coverages.all()], msg="Coverage type 'box' does not exist")
+        self.assertIn('period', [cov.type for cov in self.res.metadata.coverages.all()], msg="Coverage type 'Period' does not exist")
 
-        for cov in self.res.metadata.coverages.all():
-            print 'cov type:%s' % cov.type
-            print 'cov value:%s' % cov.value
-
-        #update the northlimit for the box type coverage
-        cov_prd = self.res.metadata.coverages.all().filter(type='period').first()
-        value_dict = {'northlimit':'76.45678'}
-        resource.update_metadata_element(self.res.short_id,'coverage', cov_pt.id, type='box', value=value_dict)
-
-        # update the name for the period coverage
-        value_dict = {'name':'Updated name for the period coverage'}
-        resource.update_metadata_element(self.res.short_id,'coverage', cov_prd.id, type='period', value=value_dict)
-
-        for cov in self.res.metadata.coverages.all():
-            print 'cov type:%s' % cov.type
-            print 'cov value:%s' % cov.value
+        # test that the name, uplimit, downlimit, zunits and projection are optional
+        self.res.metadata.coverages.get(type='box').delete()
+        value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789',
+                      'units': 'decimal deg','name': 'Bear river', 'uplimit': '45.234', 'downlimit': '12.345',
+                      'zunits': 'decimal deg', 'projection': 'NAD83'}
+        resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
 
         # there should be now 2 coverage elements
         self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total overages not equal 2.")
-        #print (bad)
 
     def test_date(self):
         # this test will pass only if we have added the creation and modified dates for the resource
@@ -881,9 +858,8 @@ class TestCoreMetadata(TestCase):
         cr_address = "11 River Drive, Logan UT-84321, USA"
         cr_phone = '435-567-0989'
         cr_homepage = 'http://usu.edu/homepage/001'
-        cr_res_id = 'http://research.org/001'
-        cr_res_gate_id = 'http://research-gate.org/001'
-        resource.create_metadata_element(self.res.short_id,'creator',
+
+        self.res.metadata.create_element('creator',
                                 name=cr_name,
                                 description=cr_des,
                                 organization=cr_org,
@@ -891,11 +867,12 @@ class TestCoreMetadata(TestCase):
                                 address=cr_address,
                                 phone=cr_phone,
                                 homepage=cr_homepage,
-                                researcherID=cr_res_id,
-                                researchGateID=cr_res_gate_id)
+                                profile_links=[{'type': 'researchID', 'url': 'http://research.org/001'},
+                                               {'type': 'researchGateID', 'url': 'http://research-gate.org/001'}]
+                            )
 
         # add another creator with only the name
-        resource.create_metadata_element(self.res.short_id,'creator', name='Lisa Holley')
+        self.res.metadata.create_element('creator', name='Lisa Holley')
 
         #test adding a contributor with all sub_elements
         con_name = 'Sujan Peterson'
@@ -905,9 +882,8 @@ class TestCoreMetadata(TestCase):
         con_address = "101 Center St, Logan UT-84321, USA"
         con_phone = '435-567-3245'
         con_homepage = 'http://usu.edu/homepage/009'
-        con_res_id = 'http://research.org/009'
-        con_res_gate_id = 'http://research-gate.org/009'
-        resource.create_metadata_element(self.res.short_id,'contributor',
+
+        self.res.metadata.create_element('contributor',
                                 name=con_name,
                                 description=con_des,
                                 organization=con_org,
@@ -915,34 +891,40 @@ class TestCoreMetadata(TestCase):
                                 address=con_address,
                                 phone=con_phone,
                                 homepage=con_homepage,
-                                researcherID=con_res_id,
-                                researchGateID=con_res_gate_id)
+                                )
 
         # add another creator with only the name
-        resource.create_metadata_element(self.res.short_id,'contributor', name='Andrew Smith')
+        self.res.metadata.create_element('contributor', name='Andrew Smith')
 
         # add a period type coverage
-        value_dict = {'name':'Name for period coverage' , 'start':'1/1/2000', 'end':'12/12/2012'}
-        resource.create_metadata_element(self.res.short_id,'coverage', type='period', value=value_dict)
+        value_dict = {'name':'fall season' , 'start':'1/1/2000', 'end':'12/12/2012'}
+        self.res.metadata.create_element('coverage', type='period', value=value_dict)
 
-        # add a point type coverage
-        value_dict = {'name':'Name for point coverage', 'east':'56.45678', 'north':'12.6789'}
-        resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+        # TODO: add a point type coverage
+        # value_dict = {'east':'56.45678', 'north':'12.6789', 'units': 'decimal deg', 'name': 'Little bear river',
+        #               'elevation': '34.6789', 'zunits': 'rad deg', 'projection': 'NAD83'}
+        # self.res.metadata.create_element('coverage', type='point', value=value_dict)
+
+        # TODO: test box type coverage - uncommet this one and comment the above point type test
+        value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789',
+                      'units': 'decimal deg','name': 'Bear river', 'uplimit': '45.234', 'downlimit': '12.345',
+                      'zunits': 'decimal deg', 'projection': 'NAD83'}
+        self.res.metadata.create_element('coverage', type='box', value=value_dict)
 
         # add date of type 'valid'
-        resource.create_metadata_element(self.res.short_id,'date', type='valid', start_date='8/10/2011', end_date='8/11/2012')
+        self.res.metadata.create_element('date', type='valid', start_date='8/10/2011', end_date='8/11/2012')
 
         # add a format element
         format_csv = 'text/csv'
-        resource.create_metadata_element(self.res.short_id,'format', value=format_csv)
+        self.res.metadata.create_element('format', value=format_csv)
 
         # add 'DOI' identifier
         self.res.doi='doi1000100010001'
         self.res.save()
-        resource.create_metadata_element(self.res.short_id,'identifier', name='DOI', url="http://dx.doi.org/001")
+        self.res.metadata.create_element('identifier', name='DOI', url="http://dx.doi.org/001")
 
         # add a language element
-        resource.create_metadata_element(self.res.short_id,'language', code='eng')
+        self.res.metadata.create_element('language', code='eng')
 
         # add 'Publisher' element
         original_file_name = 'original.txt'
@@ -953,29 +935,29 @@ class TestCoreMetadata(TestCase):
         original_file = open(original_file_name, 'r')
         # add the file to the resource
         hydroshare.add_resource_files(self.res.short_id, original_file)
-        resource.create_metadata_element(self.res.short_id,'publisher', name="HydroShare", url="http://hydroshare.org")
+        self.res.metadata.create_element('publisher', name="HydroShare", url="http://hydroshare.org")
 
         # add a relation element of uri type
-        resource.create_metadata_element(self.res.short_id,'relation', type='isPartOf',
+        self.res.metadata.create_element('relation', type='isPartOf',
                                 value='http://hydroshare.org/resource/001')
 
         # add another relation element of non-uri type
-        resource.create_metadata_element(self.res.short_id,'relation', type='isDataFor',
+        self.res.metadata.create_element('relation', type='isDataFor',
                                 value='This resource is for another resource')
 
 
         # add a source element of uri type
-        resource.create_metadata_element(self.res.short_id,'source', derived_from='http://hydroshare.org/resource/0002')
+        self.res.metadata.create_element('source', derived_from='http://hydroshare.org/resource/0002')
 
         # add a rights element
-        resource.create_metadata_element(self.res.short_id,'rights', statement='This is the rights statement for this resource',
+        self.res.metadata.create_element('rights', statement='This is the rights statement for this resource',
                                 url='http://rights.ord/001')
 
         # add a subject element
-        resource.create_metadata_element(self.res.short_id,'subject', value='sub-1')
+        self.res.metadata.create_element('subject', value='sub-1')
 
         # add another subject element
-        resource.create_metadata_element(self.res.short_id,'subject', value='sub-2')
+        self.res.metadata.create_element('subject', value='sub-2')
 
         RDF_ROOT = etree.XML(self.res.metadata.get_xml())
 
