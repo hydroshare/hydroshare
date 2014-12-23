@@ -89,7 +89,7 @@ def get_spatial_coverage_info(raster_dataset):
     spatial_coverage_info = OrderedDict()
     spatial_coverage_info['name'] ="Raster coverage"
     spatial_coverage_info['projection'] =projection
-    spatial_coverage_info['unit'] =unit
+    spatial_coverage_info['units'] =unit
     spatial_coverage_info['northlimit'] =northlimit
     spatial_coverage_info['southlimit'] =southlimit
     spatial_coverage_info['eastlimit'] =northlimit
