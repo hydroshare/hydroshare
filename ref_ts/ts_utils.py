@@ -380,10 +380,10 @@ def make_files(reference_type, url, data_site_code, variable_code, title):
     csv_name = '{0}.{1}'.format(file_base, 'csv')
     if version == '1':
         xml_end = 'wml_1'
-        xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
+        xml_name = '{0}-{1}.wml'.format(file_base, xml_end)
     elif version == '2.0':
         xml_end = 'wml_2_0'
-        xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
+        xml_name = '{0}-{1}.wml'.format(file_base, xml_end)
     for_csv = []
     od_vals = collections.OrderedDict(sorted(vals.items()))
     for k, v in od_vals.items():
@@ -439,7 +439,7 @@ def transform_file(reference_type, url, data_site_code, variable_code, title):
     newdom = transform(dom)
     d = datetime.today()
     date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
-    xml_name = '{0}-{1}-{2}'.format(title.replace(" ", ""), date, 'wml_2_0.xml')
+    xml_name = '{0}-{1}-{2}'.format(title.replace(" ", ""), date, 'wml_2_0.wml')
     with open(xml_name, 'wb') as f:
         f.write(newdom)
     xml_file = open(xml_name, 'r')

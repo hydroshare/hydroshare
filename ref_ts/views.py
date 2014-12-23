@@ -245,13 +245,13 @@ def update_files(request, shortkey, *args, **kwargs):
                 csv_name = csv_name[sl_loc+1:]
                 csv_link = f.resource_file.url
                 csv_size = f.resource_file.size
-            if str(f.resource_file).endswith('.xml') and 'wml_2' in str(f.resource_file):
+            if str(f.resource_file).endswith('.wml') and 'wml_2' in str(f.resource_file):
                 wml2_name = str(f.resource_file)
                 sl_loc = wml2_name.rfind('/')
                 wml2_name = wml2_name[sl_loc+1:]
                 wml2_link = f.resource_file.url
                 wml2_size = f.resource_file.size
-            if str(f.resource_file).endswith('.xml') and 'wml_1' in str(f.resource_file):
+            if str(f.resource_file).endswith('.wml') and 'wml_1' in str(f.resource_file):
                 wml1_name = str(f.resource_file)
                 sl_loc = wml1_name.rfind('/')
                 wml1_name = wml1_name[sl_loc+1:]
