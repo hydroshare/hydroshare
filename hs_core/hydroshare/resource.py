@@ -301,7 +301,7 @@ def check_resource_type(resource_type):
 def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=None, dublin_metadata=None, metadata=None,
+        keywords=None, dublin_metadata=None, metadata=None, content=None,
         files=(), res_type_cls=None, resource=None, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
@@ -386,6 +386,7 @@ def create_resource(
         #tid = resource.content_object.Title.object_id
         #resource.title.update(res_type_cls, tid, {"value":title})
         resource.last_changed_by = owner
+        resource.content = content
         resource.save()
 
     if 'owner' in kwargs:
