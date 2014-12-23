@@ -386,6 +386,7 @@ def create_resource(
         #tid = resource.content_object.Title.object_id
         #resource.title.update(res_type_cls, tid, {"value":title})
         resource.last_changed_by = owner
+        resource.save()
 
     if 'owner' in kwargs:
         owner = utils.user_from_id(kwargs['owner'])
