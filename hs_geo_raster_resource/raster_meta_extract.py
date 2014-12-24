@@ -92,8 +92,8 @@ def get_spatial_coverage_info(raster_dataset):
     spatial_coverage_info['units'] =unit
     spatial_coverage_info['northlimit'] =northlimit
     spatial_coverage_info['southlimit'] =southlimit
-    spatial_coverage_info['eastlimit'] =northlimit
-    spatial_coverage_info['westlimit'] =southlimit
+    spatial_coverage_info['eastlimit'] =eastlimit
+    spatial_coverage_info['westlimit'] =westlimit
 
     return spatial_coverage_info
 
