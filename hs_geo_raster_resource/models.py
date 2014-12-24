@@ -84,19 +84,26 @@ def main_page(request, page):
         i = i+1
     cvg = content_model.metadata.coverages.all()
     core_md = {}
-    coverage = cvg[0]
-    core_md = OrderedDict()
-    core_md['name'] = coverage.value['name']
-    core_md['northLimit'] = coverage.value['northlimit']
-    core_md['eastLimit'] = coverage.value['eastlimit']
-    core_md['southLimit'] = coverage.value['southlimit']
-    core_md['westLimit'] = coverage.value['westlimit']
+    if not cvg:
+        coverage = cvg[0]
+        core_md = OrderedDict()
+        core_md['name'] = coverage.value['name']
+        core_md['northLimit'] = coverage.value['northlimit']
+        core_md['eastLimit'] = coverage.value['eastlimit']
+        core_md['southLimit'] = coverage.value['southlimit']
+        core_md['westLimit'] = coverage.value['westlimit']
 
-    core_md_dict = {'Coverage': core_md}
-    return  { "res_add_metadata": md_dict,
-              'resource_type' : content_model._meta.verbose_name,
-              'dublin_core' : [t for t in content_model.dublin_metadata.all().exclude(term='AB')],
-              'core_metadata' : core_md_dict,
-              'dcterm_frm' : DCTerm()
-            }
+        core_md_dict = {'Coverage': core_md}
+        return  { 'res_add_metadata': md_dict,
+                  'resource_type' : content_model._meta.verbose_name,
+                  'dublin_core' : [t for t in content_model.dublin_metadata.all().exclude(term='AB')],
+                  'core_metadata' : core_md_dict,
+                  'dcterm_frm' : DCTerm()
+                }
+    else:
+        return  { 'res_add_metadata': md_dict,
+                  'resource_type' : content_model._meta.verbose_name,
+                  'dublin_core' : [t for t in content_model.dublin_metadata.all().exclude(term='AB')],
+                  'dcterm_frm' : DCTerm()
+                }
 import receivers
