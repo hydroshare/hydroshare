@@ -84,7 +84,7 @@ def main_page(request, page):
         i = i+1
     cvg = content_model.metadata.coverages.all()
     core_md = {}
-    if not cvg:
+    if cvg:
         coverage = cvg[0]
         core_md = OrderedDict()
         core_md['name'] = coverage.value['name']
