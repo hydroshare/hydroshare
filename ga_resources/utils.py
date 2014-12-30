@@ -25,11 +25,11 @@ def json_or_jsonp(r, i, code=200):
         i = json.dumps(i)
 
     if 'callback' in r.REQUEST:
-        return HttpResponse('{c}({i})'.format(c=r.REQUEST['callback'], i=i), mimetype='text/javascript')
+        return HttpResponse('{c}({i})'.format(c=r.REQUEST['callback'], i=i), content_type='text/javascript')
     elif 'jsonp' in r.REQUEST:
-        return HttpResponse('{c}({i})'.format(c=r.REQUEST['jsonp'], i=i), mimetype='text/javascript')
+        return HttpResponse('{c}({i})'.format(c=r.REQUEST['jsonp'], i=i), content_type='text/javascript')
     else:
-        return HttpResponse(i, mimetype='application/json', status=code)
+        return HttpResponse(i, content_type='application/json', status=code)
 
 
 def get_data_page_for_user(user):

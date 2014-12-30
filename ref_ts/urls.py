@@ -7,6 +7,7 @@ urlpatterns = patterns('',
     url(r'^_internal/search-variables/$', views.search_variables),
     url(r'^_internal/verify-rest-url/$', views.verify_rest_url),
     url(r'^_internal/time-series-from-service/$', views.time_series_from_service),
-    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/generate-files/$', views.generate_files),
-    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/transform-file/$', views.transform_file)
+    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/update-files/$', views.update_files)
+    # url(r'^_internal/(?P<shortkey>[A-z0-9]+)/transform-file/$', views.transform_file),
+    # url(r'^_internal/(?P<shortkey>[A-z0-9]+)/get-links/$', views.get_links)
     )
