@@ -1,5 +1,30 @@
 <div class="{{ field_classes }}">
+    <div id="{{ field.auto_id }}-upload-name"></div>
+    <img id="{{ field.auto_id }}-preview" width="100%" />
     <span class="btn btn-default btn-file">
-        {{ field_label|default:field.label }} <input type="file" id="{{ field.auto_id }}" name="{{ field.name }}" />
+        <label id="{{ field.auto_id}}-label">{{ field_label|default:field.label }}</label> <input type="file" id="{{ field.auto_id }}" name="{{ field.name }}" />
+        <script>
+            $('#{{ field.auto_id }}').change(function() {
+                var imageType = /image.*/;
+                var file = this.files[0];
+                var preview = $('#{{ field.auto_id }}-preview')[0];
+
+                $('#{{ field.auto_id }}-upload-name').html("Uploading file <b>" + file.name + "</b>")
+                if (!file.type.match(imageType)) {
+                    $(preview).hide();
+                    return;
+                }
+
+                $(preview).show();
+
+                var reader = new FileReader();
+                reader.onload = (function(aImg) {
+                    return function(e) {
+                        aImg.src = e.target.result;
+                    };
+                })(preview);
+                reader.readAsDataURL(file);
+            })
+        </script>
     </span>
 </div>
