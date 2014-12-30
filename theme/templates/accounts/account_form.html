@@ -24,6 +24,10 @@
         <h2>About</h2>
 
         <div class="row">
+            {% include "includes/checkbox_field.html" with field=form.public  field_classes="col-md-12" %}
+        </div>
+
+        <div class="row">
             {% include "includes/form_field.html" with field=form.first_name  field_classes="col-md-6" %}
             {% include "includes/form_field.html" with field=form.last_name  field_classes="col-md-6" %}
         </div>

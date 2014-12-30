@@ -51,6 +51,14 @@ li.account{
   max-width: 100% !important;
 }
 
+.account-form input[type=checkbox] {
+    width: auto;
+    max-width: auto;
+}
+.account-form .form-group-checkbox label {
+    margin: auto 15px;
+}
+
 /*========================================
           MEZZANINE GENERIC
 ==========================================*/

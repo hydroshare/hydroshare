@@ -4,13 +4,13 @@
 {% block title %}User profile for {{ u|best_name }}{% endblock %}
 
 {% block main %}
-{% with u.get_profile as profile %}
+{% with u.userprofile as profile %}
 <div class="row">
 <div class="col-md-3">
     <h2>Profile information</h2>
 
     {% if profile.picture %}
-    <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>
+        <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>
     {% endif %}
 
     <ul class="list-unstyled">
