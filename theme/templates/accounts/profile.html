@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load mezzanine_tags geoanalytics_tags hydroshare_tags %}
 
-{% block title %}User profile for {{ u|best_name }}{% endblock %}
+{% block meta_title %}User profile for {{ u|best_name }}{% endblock %}
 
 {% block main %}
 {% with u.userprofile as profile %}
@@ -67,6 +67,8 @@
     <ul class="nav nav-stacked">
     {% for res in resources %}
         <li><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></li>
+    {% empty %}
+        <li>This user has no Resources, yet.</li>
     {% endfor %}
     </ul>
 </div>
