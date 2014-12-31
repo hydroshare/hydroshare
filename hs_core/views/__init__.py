@@ -21,6 +21,7 @@ import requests
 from django.core import exceptions as ex
 from mezzanine.pages.page_processors import processor_for
 from django.template import RequestContext
+from django.core.signing import Signer
 
 from . import users_api
 from . import discovery_api
@@ -41,13 +42,15 @@ def short_url(request, *args, **kwargs):
     return HttpResponseRedirect(m.get_absolute_url())
 
 def verify(request, *args, **kwargs):
-    uid = int(kwargs['pk'])
-    u = User.objects.get(pk=uid)
-    if not u.is_active:
-        u.is_active=True
-        u.save()
-        u.groups.add(Group.objects.get(name="Hydroshare Author"))
-        return HttpResponseRedirect('/account/update/')
+    signer = Signer()
+    _, pk, email = signer.unsign(kwargs['token']).split(':')
+    u = User.objects.get(pk=pk)
+    if u.email == email:
+        if not u.is_active:
+            u.is_active=True
+            u.save()
+            u.groups.add(Group.objects.get(name="Hydroshare Author"))
+            return HttpResponseRedirect('/account/update/')
 
 
 def add_file_to_resource(request, *args, **kwargs):
@@ -367,7 +370,7 @@ def create_resource(request, *args, **kwargs):
             resource_type=request.POST['resource-type'],
             owner=request.user,
             title=frm.cleaned_data['title'],
-            keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None, 
+            keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None,
             dublin_metadata=dcterms,
             files=request.FILES.getlist('files'),
             content=frm.cleaned_data['abstract'] or frm.cleaned_data['title']
@@ -398,7 +401,6 @@ def resource_listing_processor(request, page):
     owned_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
     editable_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
     viewable_resources = list(GenericResource.objects.filter(public=True))
-    return locals()   
+    return locals()
 
 # FIXME need a task somewhere that amounts to checking inactive accounts and deleting them after 30 days.
-
