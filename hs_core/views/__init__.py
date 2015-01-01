@@ -318,7 +318,8 @@ def add_dublin_core(request, page):
         abstract = None
 
     return {
-        'dublin_core' : [t for t in cm.dublin_metadata.all().exclude(term='AB')],
+        # 'dublin_core' : [t for t in cm.dublin_metadata.all().exclude(term='AB')],
+        'dublin_core': cm.get_dublin_metadata(),
         'abstract' : abstract,
         'resource_type' : cm._meta.verbose_name,
         'dcterm_frm' : DCTerm(),
@@ -367,7 +368,7 @@ def create_resource(request, *args, **kwargs):
             resource_type=request.POST['resource-type'],
             owner=request.user,
             title=frm.cleaned_data['title'],
-            keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None, 
+            keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None,
             dublin_metadata=dcterms,
             files=request.FILES.getlist('files'),
             content=frm.cleaned_data['abstract'] or frm.cleaned_data['title']
@@ -398,7 +399,6 @@ def resource_listing_processor(request, page):
     owned_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
     editable_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
     viewable_resources = list(GenericResource.objects.filter(public=True))
-    return locals()   
+    return locals()
 
 # FIXME need a task somewhere that amounts to checking inactive accounts and deleting them after 30 days.
-

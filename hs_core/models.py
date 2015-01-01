@@ -1406,8 +1406,16 @@ class GenericResource(Page, RichText, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
+    def get_dublin_metadata(self):
+        """Helper method returns a dictionary of Dublincore Meta Data."""
+        
+        from hs_core.templatetags.hydroshare_tags import dcterm
+        elements = [t for t in self.dublin_metadata.all().exclude(term='AB')]
+        metadata = dict((dcterm(t), t.content) for t in elements)
+        return metadata
 
-# This model has a one-to-one relation with the AbstractResource model
+
+# This m =l has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
     #from django.contrib.sites.models import Site
     _domain = 'hydroshare.org'  #Site.objects.get_current() # this one giving error since the database does not have a related table called 'django_site'
@@ -1820,7 +1828,3 @@ def user_creation_signal_handler(sender, instance, created, **kwargs):
             instance.is_staff = True
             instance.save()
             instance.groups.add(Group.objects.get(name='Hydroshare Author'))
-
-
-
-

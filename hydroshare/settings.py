@@ -272,6 +272,7 @@ INSTALLED_APPS = (
     "hs_rhessys_inst_resource",
     "django_docker_processes",
     "djcelery",
+    "haystack",
 )
 
 # List of processors used by RequestContext to populate the context.
@@ -394,3 +395,12 @@ TASTYPIE_SWAGGER_API_MODULE = 'hydroshare.urls.v1_api'
 
 #
 AUTH_PROFILE_MODULE = "theme.UserProfile"
+
+# TODO This needs to be configured to point to an Elastic Search instance
+# once that is up and running. Described here:
+# http://django-haystack.readthedocs.org/en/latest/tutorial.html#elasticsearch
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
+    },
+}

@@ -68,11 +68,11 @@
 
             <h4>Other Metadata</h4>
             <table class="table table-condensed">
-            {% for term in dublin_core %}
-                {% ifnotequal term|dcterm 'Title' %}
+            {% for term, content in dublin_core.items %}
+                {% ifnotequal term 'Title' %}
                     <tr>
-                        <th>{{ term|dcterm }}</th>
-                        <td>{{ term.content }}</td>
+                        <th>{{ term }}</th>
+                        <td>{{ content }}</td>
                     </tr>
                 {% endifnotequal %}
             {% endfor %}
@@ -406,7 +406,7 @@
           </div>
           <div class="modal-body">
 
-                <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource entirely. A copy of your 
+                <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource entirely. A copy of your
                 resource data will not be retained by Hydroshare.  We recommend highly that you download the latest copy
                 of your resource before confirming this action.
               <hr/>
