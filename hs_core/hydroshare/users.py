@@ -3,7 +3,7 @@ import json
 from django.core.exceptions import MultipleObjectsReturned
 from django.contrib.auth.models import User, Group
 from django.core import exceptions
-from django.core.signing import Signer
+from django.core import signing
 
 from hs_core.models import GroupOwnership
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
@@ -194,8 +194,7 @@ def create_account(
     ApiKey.objects.get_or_create(user=u)
 
     try:
-        signer = Signer()
-        token = signer.sign('verify_user_email:{0}:{1}'.format(u.pk, u.email))
+        token = signing.dumps('verify_user_email:{0}:{1}'.format(u.pk, u.email))
         u.email_user(
             'Please verify your new Hydroshare account.',
             """

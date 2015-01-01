@@ -21,7 +21,7 @@ import requests
 from django.core import exceptions as ex
 from mezzanine.pages.page_processors import processor_for
 from django.template import RequestContext
-from django.core.signing import Signer
+from django.core import signing
 
 from . import users_api
 from . import discovery_api
@@ -42,15 +42,22 @@ def short_url(request, *args, **kwargs):
     return HttpResponseRedirect(m.get_absolute_url())
 
 def verify(request, *args, **kwargs):
-    signer = Signer()
-    _, pk, email = signer.unsign(kwargs['token']).split(':')
+    _, pk, email = signing.loads(kwargs['token']).split(':')
     u = User.objects.get(pk=pk)
     if u.email == email:
         if not u.is_active:
             u.is_active=True
             u.save()
             u.groups.add(Group.objects.get(name="Hydroshare Author"))
-            return HttpResponseRedirect('/account/update/')
+        from django.contrib.auth import login
+        u.backend = settings.AUTHENTICATION_BACKENDS[0]
+        login(request, u)
+        return HttpResponseRedirect('/account/update/')
+    else:
+        from django.contrib import messages
+        messages.error(request, "Your verification token was invalid.")
+
+    return HttpResponseRedirect('/')
 
 
 def add_file_to_resource(request, *args, **kwargs):
