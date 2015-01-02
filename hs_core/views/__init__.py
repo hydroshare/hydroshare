@@ -27,6 +27,7 @@ from . import discovery_api
 from . import resource_api
 from . import social_api
 from hs_core.hydroshare import file_size_limit_for_display
+from dublincore.models import AbstractQualifiedDublinCoreTerm
 
 import autocomplete_light
 
@@ -267,33 +268,34 @@ def my_resources(request, page):
             'first': start,
             'last': start+len(res),
             'ct': total_res_cnt,
-            'dcterms' : (
-                ('AB', 'Abstract'),
-                ('BX', 'Box'),
-                ('CN', 'Contributor'),
-                ('CVR', 'Coverage'),
-                ('CR', 'Creator'),
-                ('DT', 'Date'),
-                ('DTS', 'DateSubmitted'),
-                ('DC', 'DateCreated'),
-                ('DM', 'DateModified'),
-                ('DSC', 'Description'),
-                ('FMT', 'Format'),
-                ('ID', 'Identifier'),
-                ('LG', 'Language'),
-                ('PD', 'Period'),
-                ('PT', 'Point'),
-                ('PBL', 'Publisher'),
-                ('REL', 'Relation'),
-                ('RT', 'Rights'),
-                ('SRC', 'Source'),
-                ('SUB', 'Subject'),
-                ('T', 'Title'),
-                ('TYP', 'Type'),
-    )
+            'dcterms' : AbstractQualifiedDublinCoreTerm.DCTERMS,
         }
 
 
+@processor_for('discovery')
+def discovery_search(request, page):
+    from haystack.query import SearchQuerySet
+
+    parameters = request.GET.dict()
+
+    dcterms = defaultdict(dict)
+    for k, v in filter(lambda (x, y): x.startswith('dc'), request.REQUEST.items()):
+        num = int(k[-1])
+        vtype = k[2:-1]
+        dcterms[num][vtype] = v
+
+    for (i, term) in dcterms.items():
+        parameters[term['term']] = term['content']
+
+    results = SearchQuerySet().filter(**parameters)
+
+    assert results, parameters
+
+    return {
+        'resources': [r.object for r in results],
+        'ct': len(results),
+        'dcterms' : AbstractQualifiedDublinCoreTerm.DCTERMS,
+    }
 
 @processor_for(GenericResource)
 def add_dublin_core(request, page):
