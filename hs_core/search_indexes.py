@@ -8,7 +8,7 @@ class GenericResourceIndex(indexes.SearchIndex, indexes.Indexable):
     keywords = indexes.MultiValueField()
 
     for code, name in AbstractQualifiedDublinCoreTerm.DCTERMS:
-        locals()[name] = indexes.CharField(null=True)
+        locals()[name.lower()] = indexes.CharField(null=True)
 
     def prepare_keywords(self, obj):
         return [k.keyword.title for k in obj.keywords.all()]
@@ -17,6 +17,7 @@ class GenericResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return obj.description
 
     def prepare(self, obj):
+        terms = dict(AbstractQualifiedDublinCoreTerm.DCTERMS)
         dublindata = obj.get_dublin_metadata()
         data = super(GenericResourceIndex, self).prepare(obj)
         data.update(dublindata)

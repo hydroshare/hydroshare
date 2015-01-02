@@ -283,13 +283,13 @@ def discovery_search(request, page):
         num = int(k[-1])
         vtype = k[2:-1]
         dcterms[num][vtype] = v
+        del parameters[k]
 
+    term_names = dict(AbstractQualifiedDublinCoreTerm.DCTERMS)
     for (i, term) in dcterms.items():
-        parameters[term['term']] = term['content']
+        parameters[term_names[term['term']].lower()] = term['content']
 
     results = SearchQuerySet().filter(**parameters)
-
-    assert results, parameters
 
     return {
         'resources': [r.object for r in results],
