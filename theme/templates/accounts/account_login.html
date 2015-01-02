@@ -8,6 +8,30 @@
 {% else %}
     {{ block.super }}
 
+    <form class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
+        {% csrf_token %}
+        {{ form.errors }}
+        {{ form.non_field_errors }}
+
+        <fieldset>
+            <div class="row">
+                {% include "includes/checkbox_field.html" with field=form.username  field_classes="col-md-12" %}
+            </div>
+
+            <div class="row">
+                {% include "includes/checkbox_field.html" with field=form.password  field_classes="col-md-12" %}
+            </div>
+
+            {% block account_form_actions %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <input class="hl-btn hl-btn-green" type="submit" value="{{ title }}" style="width: 100%;">
+                    </div>
+                </div>
+            {% endblock %}
+        </fieldset>
+    </form>
+
     <p>{% blocktrans with request.GET.next as next %}If you don't have an account you can <a href="/?next={{ next }}">sign up</a> for one now.{% endblocktrans %}</p>
     {% url "mezzanine_password_reset" as password_reset_url %}
     {% url "profile_update" as profile_update_url %}
