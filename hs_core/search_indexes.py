@@ -17,7 +17,6 @@ class GenericResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return obj.description
 
     def prepare(self, obj):
-        1/0
         dublindata = obj.get_dublin_metadata()
         data = super(GenericResourceIndex, self).prepare(obj)
         data.update(dublindata)
