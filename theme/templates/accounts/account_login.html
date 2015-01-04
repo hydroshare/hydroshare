@@ -10,8 +10,14 @@
 
     <form class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
         {% csrf_token %}
-        {{ form.errors }}
-        {{ form.non_field_errors }}
+
+        {% if form.non_field_errors %}
+            <div class="form-errors">
+                <div class="alert alert-danger non-field-error">
+                    {{ form.non_field_errors }}
+                </div>
+            </div>
+        {% endif %}
 
         <fieldset>
             <div class="row">
