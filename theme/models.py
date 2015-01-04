@@ -151,9 +151,9 @@ class UserProfile(models.Model):
         ('Work','Work'),
         ('Mobile','Mobile'),
     ))
-    public = models.BooleanField(default=True, help_text='Uncheck to make your profile information private.')
+    public = models.BooleanField(default=True, help_text='Uncheck to make your profile contact information and details private.')
     cv = models.FileField(upload_to='profile', help_text='Upload your Curriculum Vitae if you wish people to be able to download it.', null=True, blank=True)
-    details = models.TextField(help_text='Tell the Hydroshare community a little about yourself.', null=True, blank=True)
+    details = models.TextField("Description", help_text='Tell the Hydroshare community a little about yourself.', null=True, blank=True)
 
 from django.db.models.signals import post_save
 def create_user_profile(sender, instance, created, **kwargs):
