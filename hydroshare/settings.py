@@ -269,9 +269,10 @@ INSTALLED_APPS = (
     "dublincore",
     "hs_core",
     "hs_metrics",
-    "hs_rhessys_inst_resource",
+	"hs_rhessys_inst_resource",
     "django_docker_processes",
     "djcelery",
+    "hs_app_timeseries",
 )
 
 # List of processors used by RequestContext to populate the context.
@@ -394,3 +395,5 @@ TASTYPIE_SWAGGER_API_MODULE = 'hydroshare.urls.v1_api'
 
 #
 AUTH_PROFILE_MODULE = "theme.UserProfile"
+
+CRISPY_TEMPLATE_PACK = 'bootstrap'

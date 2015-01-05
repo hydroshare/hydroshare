@@ -11,6 +11,7 @@ from hs_core.hydroshare.utils import get_resource_types
 from hs_core.models import ResourceFile
 from . import utils
 import os
+import mimetypes
 
 pre_create_resource = django.dispatch.Signal(providing_args=['dublin_metadata', 'files'])
 post_create_resource = django.dispatch.Signal(providing_args=['resource'])
@@ -340,8 +341,23 @@ def create_resource(
         in_menus=[],
         **kwargs
     )
+
+    if not metadata:
+        metadata = []
+
+    file_format_types = []
     for file in files:
         ResourceFile.objects.create(content_object=resource, resource_file=file)
+        # TODO: looks like the mimetypes module can't find all mime types
+        # We may need to user the python magic module instead
+        file_format_type = mimetypes.guess_type(file.name)[0]
+        if not file_format_type:
+            # TODO: this is probably not the right way to get the mime type
+            file_format_type ='application/%s' % os.path.splitext(file.name)[1][1:]
+        if file_format_type not in file_format_types:
+            file_format_types.append(file_format_type)
+            metadata.append({'format': {'value': file_format_type}})
+
 
     resource.view_users.add(owner)
     resource.edit_users.add(owner)
@@ -393,7 +409,7 @@ def create_resource(
 
     # add the subject elements from the AssignedKeywords (new metadata implementation)
     for akw in AssignedKeyword.objects.filter(object_pk=resource.id).all():
-        resource.metadata.create_element('subject', value=akw.keyword.title)
+        #resource.metadata.create_element('subject', value=akw.keyword.title)
         QualifiedDublinCoreElement.objects.create(
                 term='SUB',
                 content=akw.keyword.title,

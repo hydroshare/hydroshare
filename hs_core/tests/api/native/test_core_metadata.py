@@ -603,10 +603,10 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(self.res.metadata.language.code, 'eng', msg="Resource has a language that is not English.")
 
         # no more than one langauge element per resource - raises exception
-        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'language', code='fr'))
+        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'language', code='fre'))
 
         # should be able to update language
-        resource.update_metadata_element(self.res.short_id,'language', self.res.metadata.language.id, code='fr')
+        resource.update_metadata_element(self.res.short_id,'language', self.res.metadata.language.id, code='fre')
         self.assertEqual(self.res.metadata.language.code, 'fre', msg="Resource has a language that is not French.")
 
         # it should be possible to delete the langauge element
