@@ -33,11 +33,11 @@ def raster_describe_resource_trigger(sender, **kwargs):
             # if res_md_dict['cell_and_band_info'].get('variableUnit') is None:
             #     res_md_dict['cell_and_band_info']['variableUnit'] = "meter"
             for i in range(bcount):
-                res_md_dict['cell_and_band_info']['bandName_'+str(i+1)] = 'Band_' + str(i+1)
-                res_md_dict['cell_and_band_info']['variableName_'+str(i+1)] = 'Required'
-                res_md_dict['cell_and_band_info']['variableUnit_'+str(i+1)] = 'Required'
-                res_md_dict['cell_and_band_info']['method_'+str(i+1)] = ''
-                res_md_dict['cell_and_band_info']['comment_'+str(i+1)] = ''
+                res_md_dict['cell_and_band_info']['Name (band '+str(i+1)+')'] = 'Band_' + str(i+1)
+                res_md_dict['cell_and_band_info']['Variable (band '+str(i+1)+')'] = 'Required'
+                res_md_dict['cell_and_band_info']['Units (band '+str(i+1)+')'] = 'Required'
+                res_md_dict['cell_and_band_info']['Method (band '+str(i+1)+')'] = ''
+                res_md_dict['cell_and_band_info']['Comment (band '+str(i+1)+')'] = ''
 
             res_sci_md = {'Coverage': res_md_dict['spatial_coverage_info'],}
             res_ext_md = {'Cell and band info': res_md_dict['cell_and_band_info'],}
@@ -57,6 +57,18 @@ def raster_pre_call_resource_trigger(sender, **kwargs):
         from hs_geo_raster_resource.forms import ValidateMetadataForm
         from django.core.exceptions import ValidationError
         qrylst = kwargs['request_post']
+        # add the corresponding names for form validation
+        for k, v in qrylst.items():
+            if k.startswith('Name (band'):
+                qrylst['bandName_' + k[-2:-1]] = v
+            elif k.startswith('Variable (band'):
+                qrylst['variableName_' + k[-2:-1]] = v
+            elif k.startswith('Units (band'):
+                qrylst['variableUnit_' + k[-2:-1]] = v
+            elif k.startswith('Method (band'):
+                qrylst['method_' + k[-2:-1]] = v
+            elif k.startswith('Comment (band'):
+                qrylst['comment_' + k[-2:-1]] = v
         resource = kwargs['resource']
         #create form and do metadata validation
         frm = ValidateMetadataForm(qrylst)

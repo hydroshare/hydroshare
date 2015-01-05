@@ -15,9 +15,8 @@ class RasterBand(models.Model):
     bandName = models.CharField(max_length=50, null=True)
     variableName = models.CharField(max_length=50, null=True)
     variableUnit = models.CharField(max_length=50, null=True)
-    method = models.CharField(max_length=100, null=True)
-    comment = models.TextField(null=True)
-
+    method = models.CharField(max_length=100, null=True, blank=True)
+    comment = models.TextField(null=True, blank=True)
 #
 # To create a new resource, use these two super-classes.
 #
@@ -74,14 +73,16 @@ def main_page(request, page):
     md_dict['cellNoDataValue'] = content_model.cellNoDataValue
     md_dict['bandCount'] = content_model.bandCount
 
+    band_dict = OrderedDict()
     i = 1
     for band in content_model.bands.all():
-        md_dict['bandName_'+str(i)] = band.bandName
-        md_dict['variableName_'+str(i)] = band.variableName
-        md_dict['variableUnit_'+str(i)] = band.variableUnit
-        md_dict['method_'+str(i)] = band.method
-        md_dict['comment_'+str(i)] = band.comment
-        i = i+1
+         band_dict['Name (band '+str(i)] = band.bandName
+         band_dict['Variable (band '+str(i)] = band.variableName
+         band_dict['Units (band '+str(i)] = band.variableUnit
+         band_dict['Method (band '+str(i)] = band.method
+         band_dict['Comment (band )'+str(i)] = band.comment
+         i = i+1
+
     cvg = content_model.metadata.coverages.all()
     core_md = {}
     if cvg:
@@ -95,6 +96,7 @@ def main_page(request, page):
 
         core_md_dict = {'Coverage': core_md}
         return  { 'res_add_metadata': md_dict,
+                  'band_metadata': band_dict,
                   'resource_type' : content_model._meta.verbose_name,
                   'dublin_core' : [t for t in content_model.dublin_metadata.all().exclude(term='AB')],
                   'core_metadata' : core_md_dict,
@@ -102,6 +104,7 @@ def main_page(request, page):
                 }
     else:
         return  { 'res_add_metadata': md_dict,
+                  'band_metadata': band_dict,
                   'resource_type' : content_model._meta.verbose_name,
                   'dublin_core' : [t for t in content_model.dublin_metadata.all().exclude(term='AB')],
                   'dcterm_frm' : DCTerm()

@@ -207,16 +207,16 @@ class AbstractMetaDataElement(models.Model):
 class HSAdaptorEditInline(object):
     @classmethod
     def can_edit(cls, adaptor_field):
-        from hs_core.views.utils import authorize
+        #from hs_core.views.utils import authorize
         user = adaptor_field.request.user
-        obj = adaptor_field.obj
-        cm = obj.get_content_model()
         can_edit = False
         if user.is_anonymous():
             pass
         elif user.is_superuser:
             can_edit = True
         else:
+            obj = adaptor_field.obj
+            cm = obj.get_content_model()
             #_, can_edit, _ = authorize(adaptor_field.request, res_id, edit=True, full=True) - need to know res_id
             can_edit = (user in set(cm.edit_users.all())) or (len(set(cm.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
         return can_edit

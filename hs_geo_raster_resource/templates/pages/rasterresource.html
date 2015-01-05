@@ -1,15 +1,52 @@
 {% extends "pages/genericresource.html" %}
-{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags%}
+{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags inplace_edit %}
 
 {% block extra_content %}
 
     {% if res_add_metadata %}
         <h4>Extended metadata terms</h4>
         <div class="row">
-            <div class="col-md-12">{# <img src="/placeholder.png"></div> #}
+            <div class="col-md-12">
                 <table class="table">
                 {% for attr, val in res_add_metadata.items %}
-                    <tr><th>{{ attr }}</th><td>{{ val }}</td></tr>
+                    <tr>
+                        <th>{{ attr }}</th>
+                        <td>
+                        {{ val }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                {% for band in cm.bands.all %}
+                   <tr>
+                        <th>"Name (band 1)"</th>
+                        <td>
+                            {% inplace_edit "band.bandName|linebreaksbr|safe"%}
+                        </td>
+                   </tr>
+                    <tr>
+                        <th>"Variable (band 1)"</th>
+                        <td>
+                            {% inplace_edit "band.variableName|linebreaksbr|safe"%}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>"Units (band 1)"</th>
+                        <td>
+                            {% inplace_edit "band.variableUnit|linebreaksbr|safe"%}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>"Method (band 1)"</th>
+                        <td>
+                            {% inplace_edit "band.method|linebreaksbr|safe"%}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>"Comment (band 1)"</th>
+                        <td>
+                            {% inplace_edit "band.comment|linebreaksbr|safe"%}
+                        </td>
+                    </tr>
                 {% endfor %}
                 </table>
             </div>
