@@ -13,4 +13,4 @@ class ValidateMetadataForm(forms.Form):
     variableName_1 = forms.CharField(max_length=50, required=True)
     variableUnit_1 = forms.CharField(max_length=50, required=True)
     method_1 = forms.CharField(max_length=50, required=False)
-    comment_1 = forms.CharField(max_length=50, required=False)
+    comment_1 = forms.CharField(widget=forms.Textarea, required=False)
