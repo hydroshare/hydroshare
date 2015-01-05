@@ -1,4 +1,4 @@
-<div class="{{ field_classes }}">
+<fieldset {% if readonly %}disabled="disabled"{% endif %} class="{{ field_classes }}">
     <div id="{{ field.auto_id }}-upload-name"></div>
     <img id="{{ field.auto_id }}-preview" width="100%" />
     <span class="btn btn-default btn-file">
@@ -27,4 +27,4 @@
             })
         </script>
     </span>
-</div>
+</fieldset>

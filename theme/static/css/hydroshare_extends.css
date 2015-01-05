@@ -59,6 +59,10 @@ li.account{
     margin: auto 15px;
 }
 
+fieldset[disabled].form-group input {
+    background-color: #eee;
+}
+
 /*========================================
           MEZZANINE GENERIC
 ==========================================*/

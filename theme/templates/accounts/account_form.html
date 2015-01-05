@@ -20,7 +20,7 @@
     {% csrf_token %}
     {{ form.errors }}
     {{ form.non_field_errors }}
-    <fieldset>
+
         <h2>About</h2>
 
         <div class="row">
@@ -29,7 +29,7 @@
         </div>
         <div class="row">
             {% include "includes/form_field.html" with field=form.username  field_classes="col-md-6" %}
-            {% include "includes/form_field.html" with field=form.email field_classes="col-md-6" %}
+            {% include "includes/form_field.html" with field=form.email field_classes="col-md-6" readonly="true" %}
         </div>
         <div class="row">
             {% include "includes/form_field.html" with field=form.title field_classes="col-md-6" %}
@@ -50,9 +50,7 @@
                 </div>
             {% endif %}
         </div>
-    </fieldset>
 
-    <fieldset>
         <!-- <h2>Photo</h2> -->
 
         <div class="row">
@@ -79,17 +77,13 @@
             {% include "includes/file_field.html" with field=form.picture field_classes="col-md-12" field_label="Choose a Photo to Upload" %}
         </div>
         {% endif %}
-    </fieldset>
 
-    <fieldset>
         <h2>Change Password</h2>
         <div class="row">
             {% include "includes/form_field.html" with field=form.password1 field_classes="col-md-6" %}
             {% include "includes/form_field.html" with field=form.password2 field_classes="col-md-6" %}
         </div>
-    </fieldset>
 
-    <fieldset>
         <h2>Contact</h2>
 
         <div class="row">
@@ -108,12 +102,10 @@
             {% include "includes/form_field.html" with field=form.phone_1_type field_classes="col-md-6" %}
             {% include "includes/form_field.html" with field=form.phone_1 field_classes="col-md-6" %}
         </div>
-    </fieldset>
 
-    <fieldset>
         {% block account_form_actions %}
         <input class="hl-btn hl-btn-green" type="submit" value="{{ title }}">
         {% endblock %}
-    </fieldset>
+
 </form>
 {% endblock %}
