@@ -457,7 +457,8 @@ def create_resource(request, *args, **kwargs):
             contributor_formset.is_valid() and \
             relation_formset.is_valid() and \
             source_formset.is_valid() and \
-            rights_form.is_valid():
+            rights_form.is_valid() and \
+            language_form.is_valid():
 
         core_metadata = []
 
