@@ -404,11 +404,12 @@ def describe_resource(request, *args, **kwargs):
     }
     page_url = 'pages/create-resource.html'
     for receiver, response in ret_responses:
-        for key in response:
-            if key != 'create_resource_page_url':
-                create_res_context[key] = response[key]
-            else:
-                page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
+        if response is not None:
+            for key in response:
+                if key != 'create_resource_page_url':
+                    create_res_context[key] = response[key]
+                else:
+                    page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
     return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
 
 class CreateResourceForm(forms.Form):
