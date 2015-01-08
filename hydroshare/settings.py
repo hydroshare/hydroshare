@@ -272,6 +272,7 @@ INSTALLED_APPS = (
     "hs_rhessys_inst_resource",
     "django_docker_processes",
     "djcelery",
+    "ref_ts"
 )
 
 # List of processors used by RequestContext to populate the context.

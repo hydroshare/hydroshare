@@ -1,6 +1,6 @@
 {% extends "pages/page.html" %}
 
-{% load geoanalytics_tags mezzanine_tags pages_tags hydroshare_tags staticfiles%}
+{% load mezzanine_tags pages_tags hydroshare_tags staticfiles%}
 
 {% block title %}
 
@@ -25,7 +25,7 @@
     <div class="col-sm-10">
         <select class="form-control" name="reference_type" id="reference_type">
             <option selected="selected" value="rest">CUAHSI HIS REST Service</option>
-            <option value="soap">CUAHSI HIS Soap Service</option>
+            <option value="soap">CUAHSI HIS SOAP Service</option>
         </select>
     </div>
   </div>
@@ -132,7 +132,7 @@
     $(function() {
         $( "#reference_type" )
             .change(function () {
-                if ($("[name='reference_type'] option:selected").text() == "CUAHSI HIS Soap Service") {
+                if ($("[name='reference_type'] option:selected").text() == "CUAHSI HIS SOAP Service") {
                     $('.cuahsi-his-1').show();
                     $('#preview-div').html( '<div class="col-sm-offset-2" id="preview"></div>');
                     $('.rest-url').hide();
@@ -162,7 +162,7 @@
             var x_axis = new Rickshaw.Graph.Axis.Time( { graph: graph } );
             var y_axis = new Rickshaw.Graph.Axis.Y( { graph: graph } );
             graph.render();
-            var hoverDetail = new Rickshaw.Graph.HoverDetail( {graph: graph} );
+           // var hoverDetail = new Rickshaw.Graph.HoverDetail( {graph: graph} );
 
         }
         $(document).ready(function(){
@@ -253,7 +253,7 @@
                     console.log(data);
                     console.log(stuff);
                     btn.button('reset');
-                    btn.html('This is NOT a valid HIS Soap Url!');
+                    btn.html('This is NOT a valid HIS SOAP Url!');
                     btn.addClass('btn-danger');
                 }
             }).always(function () {btn.button('reset')});

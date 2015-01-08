@@ -1,6 +1,6 @@
 {% extends 'pages/page.html' %}
 
-{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags staticfiles %}
+{% load pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags staticfiles %}
 
 {% block main %}
 
@@ -8,51 +8,26 @@
 {% keywords_for page as kws %}
 {% set_page_permissions page %}
 
-<style>
-.axis path, .axis line
-        {
-            fill: none;
-            stroke: #777;
-            shape-rendering: crispEdges;
-        }
-
-        .axis text
-        {
-            font-family: 'Arial';
-            font-size: 13px;
-        }
-        .tick
-        {
-            stroke-dasharray: 1, 2;
-        }
-        .bar
-        {
-            fill: FireBrick;
-        }
-
-</style>
-<div id="graph-header-var"></div>
-<div id="graph-header-site"></div>
-<div id="graph-container" style = "width: 1000px, height= 450px">
-
-</div>
-
+<link id="bsdp-css" href="{% static "ref_ts/datepicker/css/datepicker.css" %}" rel="stylesheet">
+<link id="vis-css" href="{% static "ref_ts/visualization/css/style.css" %}" rel="stylesheet">
 <div class="row">
         <div class="col-md-12">
             {% block extra_content %}
+                <img id="vis" src={{visfile.resource_file.url}}>
+
             {% endblock %}
-            <div id="loading"><h2>UPDATING DATA . . .</h2><br></div>
+
             <table class="table table-striped" id="downloads">
+                {% if resfiles %}
+                {% for f in resfiles %}
                 <tr>
-                    <td id="csv-name"></td>
-                    <td><a class="btn btn-primary btn-block" href="" id="csv-link">Download</a></td>
+                    <td>{{ f.resource_file.name|slice:"33:" }}</td>
+                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
+                    <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>
+
                 </tr>
-                <tr>
-                    <td id="xml-name"></td>
-                    <td id="xml-button"><a class="btn btn-primary btn-block" href="" id="xml-link" target="_blank">Download</a></td>
-                </tr>
-                <tr id="xml2"></tr>
-                <tr>
+                {% endfor %}
+                {% endif %}
                     <td></td>
                     <td>
                         <div class="btn-group">
@@ -79,9 +54,6 @@
     <a class="btn btn-primary" id="share" href="#sharing">Share</a>
     <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="edit">Edit</a>
     {% endif %}
-
-    <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="snapshot" data-toggle="tooltip" data-placement="top"
-       title="This takes the most up to date data and creates a non referenced time series.">Take a Snapshot</a>
 
     {% if page.perms.delete %}
     <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="switch-to-static" data-toggle="tooltip" data-placement="top"
@@ -335,7 +307,7 @@
           </div>
           <div class="modal-body">
 
-                <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource entirely. A copy of your 
+                <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource entirely. A copy of your
                 resource data will not be retained by Hydroshare.  We recommend highly that you download the latest copy
                 of your resource before confirming this action.
               <hr/>
@@ -427,15 +399,11 @@
     </div>
 
 
-
-    <link rel="stylesheet" href="../../static/ref_ts/rickshaw/rickshaw.min.css">
-    <script src=" {% static "ref_ts/rickshaw/vendor/d3.min.js" %}"></script>
-    <script src=" {% static "ref_ts/rickshaw/vendor/d3.layout.min.js" %}"></script>
-    <script src=" {% static "ref_ts/rickshaw/rickshaw.min.js" %}"></script>
     <script src=" {% static "ref_ts/d3/d3.min.js" %}"></script>
+    <script src=" {% static "ref_ts/datepicker/js/bootstrap-datepicker.js" %}"></script>
+    <script src=" {% static "ref_ts/visualization/js/visualization.js" %}"></script>
     <script type="text/javascript">
     $(function() {
-
         function compare(a,b) {
             if (a.x < b.x)
                 return -1;
@@ -443,7 +411,6 @@
                 return 1;
             return 0;
         }
-
         function humanFileSize(bytes) {
             var thresh = 1024;
             if(bytes < thresh) return bytes + ' B';
@@ -455,211 +422,44 @@
             } while(bytes >= thresh);
             return bytes.toFixed(1)+' '+units[u];
         }
-
         function endsWith(str, suffix) {
             return str.indexOf(suffix, str.length - suffix.length) !== -1;
         }
-
-        function graphVals(graph_data, units) {
-
-            for (i=0; i<graph_data.length; i++){
-                graph_data[i].x = graph_data[i].x*1000;
-            }
-            var minDate = new Date(graph_data[0].x);
-            var maxDate = new Date(graph_data[graph_data.length - 1].x);
-
-            var WIDTH = 1140,
-                HEIGHT = 300,
-                HEIGHT2 = 50,
-                MARGINS = {
-                  top: 20,
-                  right: 40,
-                  bottom: 20,
-                  left: 20
-                },
-                xRange = d3.time.scale().range([MARGINS.left, WIDTH]).domain([minDate, maxDate ]),
-                xRange2 = d3.time.scale().range([MARGINS.left, WIDTH]).domain([minDate, maxDate ]),
-                yRange = d3.scale.linear().range([HEIGHT - MARGINS.top, MARGINS.bottom]).domain([d3.min(graph_data, function(d) {
-                  return d.y;
-                }), d3.max(graph_data, function(d) {
-                  return d.y;
-                })]),
-                yRange2 = d3.scale.linear().range([HEIGHT2 - MARGINS.top, MARGINS.bottom]).domain([d3.min(graph_data, function(d) {
-                  return d.y;
-                }), d3.max(graph_data, function(d) {
-                  return d.y;
-                })]),
-                xAxis = d3.svg.axis()
-                  .scale(xRange)
-                  .tickSize(5)
-                  .tickFormat(d3.time.format('%y'))
-                  .tickSubdivide(true),
-                yAxis = d3.svg.axis()
-                  .scale(yRange)
-                  .tickSize(5)
-                  .orient('left')
-                  .tickSubdivide(true),
-                yAxis2 = d3.svg.axis()
-                  .scale(yRange2)
-                  .tickSize(5)
-                  .orient('left')
-                  .tickSubdivide(true);
-
-            var svg = d3.select("#graph-container").append("svg")
-                .attr("width", $("#graph-container").width())
-                .attr("height", 350 + MARGINS.top + MARGINS.bottom);
-
-            var brush = d3.svg.brush()
-                .x(xRange2)
-                .on("brush", brushed);
-
-            var focus = svg.append("g")
-                .attr("class", "focus")
-                .attr("width", $("#graph-container").width())
-                .attr("height", '300');
-             
-            focus.append('g')
-              .attr('class', 'x axis')
-              .attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')')
-              .call(xAxis);
-             
-            focus.append('g')
-              .attr('class', 'y axis')
-              .attr('transform', 'translate(' + (MARGINS.left) + ',0)')
-              .call(yAxis);
-
-
-
-            var lineFunc = d3.svg.line()
-              .x(function(d) {
-                return xRange(d.x);
-              })
-              .y(function(d) {
-                return yRange(d.y);
-              })
-              .interpolate('linear');
-
-            var lineFunc1 = d3.svg.line()
-              .x(function(d) {
-                return xRange(d.x);
-              })
-              .y(function(d) {
-                return yRange2(d.y);
-              })
-              .interpolate('linear');
-
-            focus.append('path')
-              .attr('d', lineFunc(graph_data))
-              .attr('stroke', 'rgb(31,119,180)')
-              .attr('class','area')
-              .attr('stroke-width', 1.5)
-              .attr('fill', 'none');
-
-            var context = svg.append("g")
-                .attr("class", "context")
-                .attr("transform", "translate(0,300)");
-
-
-            context.append('g')
-              .attr('class', 'x axis')
-              .attr('transform', 'translate(0,' + (HEIGHT2 - MARGINS.bottom) + ')')
-              .call(xAxis);
-
-
-            context.append('path')
-              .attr('d', lineFunc1(graph_data))
-              .attr('stroke', 'rgb(31,119,180)')
-              .attr('stroke-width', 1.5)
-               .attr('class','area')
-              .attr('fill', 'none');
-
-            context.append("g")
-              .attr("class", "x brush")
-              .call(brush)
-            .selectAll("rect")
-              .attr("y", -6)
-              .attr("height", HEIGHT2);
-        function brushed() {
-          xRange.domain(brush.empty() ? xRange2.domain() : brush.extent());
-          focus.select(".area").attr("d", lineFunc(graph_data));
-          focus.select(".x.axis").call(xAxis);
-}
-
-        }
-
-
-        function transformFile() {
-            $.ajax({
-                type:"GET",
-                url:'/hsapi/_internal/{{ short_id }}/transform-file/',
-                success: function(data, stuff){
-                    var xml_text = "<td>" + data['xml_name'] + "</td>" + "<td><a class='btn btn-primary btn-block' href=" + data['xml_link'] + ">Download (" + humanFileSize(data['xml_size']) + ")</a></td>";
-                    $('#xml2').html(xml_text);
-                },
-                error: function(data, stuff){console.log(data, stuff)}
-            });
-        }
-
-        function generateFiles() {
-            $('#downloads').hide();
-            $.ajax({
-                type:"GET",
-                url:'/hsapi/_internal/{{ short_id }}/generate-files/',
-                success: function(data, xhr, status){
-                    var units = data['units'],
-                            d = data['for_graph'],
-                  status_code = data['status_code'],
-                     csv_name = data.csv_name || "",
-                     csv_link = data.csv_link || "",
-                     csv_size = data.csv_size || "",
-                     xml_name = data.xml_name || "",
-                     xml_link = data.xml_link || "",
-                     xml_size = data.xml_size || "";
-                    if (status_code==200 || status_code==503){
-                        $('#csv-name').html(csv_name);
-                        $('#csv-link').html('Download (' + humanFileSize(csv_size) +')');
-                        document.getElementById('csv-link').href = csv_link;
-                        $('#xml-name').html(xml_name);
-                        $('#xml-link').html('Download (' + humanFileSize(xml_size) +')');
-                        document.getElementById('xml-link').href = xml_link;
-                        $('#downloads').show();
-                        if (units==undefined){units='Data'}
-                        d.sort(compare);
-                        graphVals(d, units);
-                        if (data['variable_name']){
-                            var var_text = '<h2>' + data['variable_name'] + '</h2>';
-                            $('#graph-header-var').html(var_text);}
-                        if (data['site_name']){
-                            var site_text = '<h3>&nbsp;&nbsp;&nbsp; at ' + data['site_name'] + '</h3>';
-                            $('#graph-header-site').html(site_text);}
-                    } else if(status_code==404) {
-                        $('#loading').html('<h2>Unable to reach service and no data exists for this resource.</h2><br>');
-                    }
-                    if (status_code==200){$('#loading').hide();
-                    } else if (status_code==503) {$('#loading').html('<h3>Unable to reach service. This is the latest data</h3><br>');}
-                    if (endsWith(xml_name, 'wml_1.xml')){
-                        transformFile();
-                    }
-
-                },
-                error: function(data, stuff){
-                    console.log(data);
-                    console.log(stuff);
-                }
-            });
-        }
-
-        $(document).ready(function(){
-            generateFiles();
+        function updateFiles() {
+             $.ajax({
+                 type:"GET",
+                 url:'/hsapi/_internal/{{ short_id }}/update-files/',
+                 success:function (data, xhr, status) {
+                     $('#downloads').html("<tr><td>"+ data.csv_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.csv_link + "'>Download(Updated)</td></tr><tr><td>"+ data.wml1_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.wml1_link + "'>Download(Updated)</td></tr><tr><td>"+ data.wml2_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.wml2_link + "'>Download(Updated)</td></tr><td></td><td><div class='btn-group'><a type='button' class='btn btn-primary' href='{{ bag.bag.url }}'>Export all</a><button type='button' class='btn btn-primary dropdown-toggle' data-toggle='dropdown'><span class='caret'></span><span class='sr-only'>Toggle Dropdown</span></button><ul class='dropdown-menu' role='menu'><li><a href='" + data.bag_url + "' style='color:black;'>" + data.bag_time + " (latest)</a></li>{% for b in first_4_bags %}<li><a href='{{ b.bag.url }}' style='color:black;'>{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>{% endfor %}</ul></div></td></tr>");
+            },
+                 error:function(data){
+                     console.log('error', data);
+                 }
         });
-
-        $('#snapshot').tooltip({animation: true, delay: { show: 500, hide: 100 }});
-
+        }
+    function update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size){
+            $('#csv-name').html(csv_name);
+            $('#csv-link').html('Download (' + humanFileSize(csv_size) +')');
+            document.getElementById('csv-link').href = csv_link;
+            if (wml1_name != ""){
+                 $('#xml-name').html(wml1_name);
+                 $('#xml-link').html('Download (' + humanFileSize(wml1_size) +')');
+                 document.getElementById('xml-link').href = wml1_link;
+                 var xml_text = "<td>" + wml2_name + "</td>" + "<td><a class='btn btn-primary btn-block' href=" + wml2_link + ">Download (" + humanFileSize(wml2_size) + ")</a></td>";
+                 $('#xml2').html(xml_text);
+                        }
+            else{
+                 $('#xml-name').html(wml2_name);
+                 $('#xml-link').html('Download (' + humanFileSize(wml2_size) +')');
+                 document.getElementById('xml-link').href = wml2_link;
+            }
+                 $('#downloads').show();
+        }
+        updateFiles();
+        $('#graph-area').hide();
+        $('#loading').hide();
         $('#switch-to-static').tooltip({animation: true, delay: { show: 500, hide: 100 }});
-
     });
     </script>
 {% endwith %}
 {% endblock %}
-
-

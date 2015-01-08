@@ -51,6 +51,18 @@ li.account{
   max-width: 100% !important;
 }
 
+.account-form input[type=checkbox] {
+    width: auto;
+    max-width: auto;
+}
+.account-form .form-group-checkbox label {
+    margin: auto 15px;
+}
+
+fieldset[disabled].form-group input {
+    background-color: #eee;
+}
+
 /*========================================
           MEZZANINE GENERIC
 ==========================================*/
@@ -89,6 +101,27 @@ li.account{
   border: 0;
   width: 100%;
 }
+
+.btn-file {
+    position: relative;
+    overflow: hidden;
+}
+.btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+}
+
 /*========================================
             MEZZANINE FORMS CSS
 ==========================================
