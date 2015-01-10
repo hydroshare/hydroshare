@@ -1,0 +1,83 @@
+{% extends "pages/page.html" %}
+{% load geoanalytics_tags pages_tags mezzanine_tags %}
+
+{% block main %}
+    {% set_page_permissions page %}
+
+<div class='row'>
+    {% editable page.genericresource.content %}
+       {{ page.genericresource.content|safe|richtext_filters }}
+    {% endeditable %}
+</div>
+
+<h4>Download files</h4>
+<div class='row'>
+{% if page.genericresource.resource_file %}
+    <a class='btn btn-lg btn-primary' href='{{page.genericresource.resource_file.url}}'>{{ page.genericresource.resource_file.name }}</a>
+{% elif page.genericresource.resource_url %}
+    <a class='btn btn-lg btn-primary' href='{{page.genericresource.resource_url}}'>Resource URL links to off-site</a>
+{% endif %}
+</div>
+
+<hr/>
+<div class='row'>
+    <ul class='list-group'>
+        {% editable page.genericresource.discoverable %}
+        <li class='list-group-item'><b>Creator:</b> {{ page.genericresource.creator }}</li>
+        {% endeditable %}
+        <li class='list-group-item'><b>Created on</b> {{ page.created|date:"SHORT_DATETIME_FORMAT" }}</li>
+        <li class='list-group-item'><b>Last modified by:</b> {{ page.genericresource.last_changed_by.username }}</li>
+        <li class='list-group-item'><b>Modified on</b> {{ page.updated|date:"SHORT_DATETIME_FORMAT" }}</li>
+        {% editable page.genericresource.public %}
+        <li class='list-group-item'><b>Publicly viewable:</b> {{ page.genericresource.public|yesno }}</li>
+        {% endeditable %}
+        {% editable page.genericresource.frozen %}
+        <li class='list-group-item'><b>Published:</b> {{ page.genericresource.published_and_frozen|yesno }}</li>
+        {% endeditable %}
+        {% editable page.genericresource.do_not_distribute %}
+        <li class='list-group-item'><b>Do Not Distribute:</b> {{ page.genericresource.do_not_distribute|yesno }}</li>
+        {% endeditable %}
+        {% editable page.genericresource.discoverable %}
+        <li class='list-group-item'><b>Discoverable:</b> {{ page.genericresource.discoverable|yesno }}</li>
+        {% endeditable %}
+    </ul>
+    <h5>Owners</h5>
+    <div class='list-group'>
+        {% editable page.genericresource.owners %}
+        {% for owner in page.genericresource.owners.all %}
+        <a class='list-group-item' href='mailto:{{ page.genericresource.owner.email }}'>
+             {% if owner.first_name %}
+                {{ owner.first_name }} {{ page.genericresource.owner.last_name }}
+             {% else %}
+                {{ owner.username }}
+             {% endif %}
+	</a>
+        {% endfor %}
+        {% endeditable %}
+    </div>
+</div>
+
+<h4>Dublin Core Metadata</h4>
+<table class="table table-striped">
+{% for m in page.genericresource.dublin_metadata.all %}
+<tr>
+<td>{{m.term_name}}</td>
+<td>{{m.qualifier}}</td>
+<td>{{m.content}}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h4>Keywords</h4>
+
+<ul class='list-group'>
+    {% editable page.keywords %}
+    {% for keyword in page.keywords.all %}
+    <li class='list-group-item'>{{ keyword }}</li>
+    {% endfor %}
+    {% endeditable %}
+</ul>
+
+    {% include 'pages/includes/page_permissions_editor.html' %}
+
+{% endblock %}
