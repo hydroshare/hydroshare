@@ -1,0 +1,201 @@
+<?xml version="1.0" ?>
+<!DOCTYPE RDF
+  PUBLIC '-//DUBLIN CORE//DCMES DTD 2002/07/31//EN'
+  'http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd'>
+<rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:hsterms="http://hydroshare.org/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <!-- The rdf:description element indicates the URI for the resource -->
+    <rdf:Description rdf:about="http://hydroshare.org/resource/resourceIdentifier">
+        <!-- The title element contains a descriptive title for the resource -->
+        <dc:title>
+            Water Temperature in the Little Bear River at Mendon Road near Mendon, UT
+        </dc:title>
+        <!-- The type element stores the HydroShare resource type -->
+        <!-- The type element references HydroShare resource types from a formal vocabulary -->
+        <dc:type rdf:resource="http://hydroshare.org/terms/timeSeries"/>
+        <!-- The description element has a single sub-element called abstract -->
+        <dc:description>
+            <rdf:Description>
+                <dcterms:abstract>
+		 			This dataset contains water temperature values recorded every 30 minutes in the Little Bear River at Mendon Road near Mendon, UT, USA. 
+		 			The values were recorded using a Hydrolab Minisonde 5 multiparameter water quality sonde connected to a Campbell Scientific datalogger. 
+		 			Recorded values represent the average water temperature over each 30 minute interval with values recorded at the end of the interval.
+                </dcterms:abstract>
+            </rdf:Description>
+        </dc:description>
+        <!-- The creator element describes authors/creators and is repeatable -->
+        <dc:creator>
+            <!-- A creator that is a HydroShare user and has links to external systems -->
+            <rdf:Description rdf:about="http://hydroshare.org/user/userID1">
+                <hsterms:name>
+                    Jeffery S. Horsburgh
+                </hsterms:name>
+                <hsterms:creatorOrder>
+                    1
+                </hsterms:creatorOrder>
+                <hsterms:organization>
+                    Utah Water Research Laboratory
+                </hsterms:organization>
+                <hsterms:email>
+                    jeff.horsburgh@usu.edu
+                </hsterms:email>
+                <hsterms:address>
+                    8200 Old Main Hill, Logan, UT, 84322-8200, USA
+                </hsterms:address>
+                <hsterms:phone rdf:resource="tel:435-797-2946"/>
+                <hsterms:homepage rdf:resource="http://jeffh.usu.edu"/>
+                <hsterms:researcherID rdf:resource="http://www.researcherid.com/rid/E-8975-2010"/>
+                <hsterms:researchGateID rdf:resource="https://www.researchgate.net/profile/Jeffery_Horsburgh/"/>
+            </rdf:Description>
+        </dc:creator>
+        <dc:creator>
+            <!-- A creator that is a HydroShare user with no links to external systems -->
+            <rdf:Description rdf:about="http://hydroshare.org/user/userID2">
+                <hsterms:name>
+                    Amber Jones
+                </hsterms:name>
+                <hsterms:creatorOrder>
+                    2
+                </hsterms:creatorOrder>
+                <hsterms:organization>
+                    Utah Water Research Laboratory
+                </hsterms:organization>
+                <hsterms:email>
+                    amber.jones@usu.edu
+                </hsterms:email>
+                <hsterms:address>
+                    8200 Old Main Hill, Logan, UT, 84322-8200, USA
+                </hsterms:address>
+                <hsterms:phone rdf:resource="tel:435-797-7147"/>
+            </rdf:Description>
+        </dc:creator>
+        <!-- The contributor element is also repeatable. Not all resources will have contributors -->
+        <dc:contributor>
+            <!-- A contributor that is not a HydroShare user with minimal metadata -->
+            <rdf:Description>
+                <hsterms:name>
+                    Brant Whiting
+                </hsterms:name>
+                <hsterms:organization>
+                    Utah Water Research Laboratory
+                </hsterms:organization>
+                <hsterms:email>
+                    brant.whiting@usu.edu
+                </hsterms:email>
+            </rdf:Description>
+        </dc:contributor>
+        <!-- The coverage element contains both spatial and temporal coverage elements -->
+        <dc:coverage>
+            <dcterms:Point>
+                <rdf:value>
+                    name=Little Bear River at Mendon Road near Mendon, UT; east=-111.946402; north=41.718473
+                </rdf:value>
+            </dcterms:Point>
+        </dc:coverage>
+        <dc:coverage>
+            <dcterms:Period>
+                <rdf:value>
+                    name=Period of Record; start=2005-09-25T14:20-07:00; end=2006-09-25T16:40-07:00; scheme=W3C-DTF;
+                </rdf:value>
+            </dcterms:Period>
+        </dc:coverage>
+        <!-- The date element is repeatable. Created and modified dates must be specified -->
+        <dc:date>
+            <dcterms:created>
+                <rdf:value>
+                    2013-07-16T19:20:30-05:00
+                </rdf:value>
+            </dcterms:created>
+        </dc:date>
+        <dc:date>
+            <dcterms:modified>
+                <rdf:value>
+                    2013-07-16T19:20:30-05:00
+                </rdf:value>
+            </dcterms:modified>
+        </dc:date>
+        <dc:date>
+            <dcterms:published>
+                <rdf:value>
+                    2013-07-16T19:20:30-05:00
+                </rdf:value>
+            </dcterms:published>
+        </dc:date>
+        <!--The format element uses mime types where possible -->
+        <dc:format>
+            text/csv
+        </dc:format>
+        <!-- The identifier element is repeatable if there are multiple identifiers -->
+        <!-- Identifiers are expressed as URIs -->
+        <dc:identifier>
+            <rdf:Description>
+                <hsterms:hydroShareIdentifer>
+                    http://hydroshare.org/resource/resourceIdentifier&quot;
+                </hsterms:hydroShareIdentifer>
+            </rdf:Description>
+        </dc:identifier>
+        <dc:identifier>
+            <rdf:Description>
+                <hsterms:DOI>
+                    rdf:resource=&quot;http://dx.doi.org/XXXXXXXXXXXXXXXXXXX&quot;
+                </hsterms:DOI>
+            </rdf:Description>
+        </dc:identifier>
+        <!-- The language element specifies the language in which the metadata is encoded -->
+        <dc:language>
+            eng
+        </dc:language>
+        <!-- The publisher element is used for publicly shared and formally publishd resources -->
+        <!-- Metadata only records may have a publisher other than HydroShare -->
+        <dc:publisher>
+            <rdf:Description>
+                <hsterms:publisherName>
+                    HydroShare
+                </hsterms:publisherName>
+                <hsterms:publisherURL rdf:resource="http://hydroshare.org"/>
+            </rdf:Description>
+        </dc:publisher>
+        <!-- The relation element is repeatable and contains links to related resources -->
+        <!-- Relations can be expressed as URIs or strings -->
+        <dc:relation>
+            <rdf:Description>
+                <dcterms:cites rdf:resource="http://hydroshare.org/resource/relatedResourceID"/>
+            </rdf:Description>
+        </dc:relation>
+        <dc:relation>
+            <rdf:Description>
+                <dcterms:isDataFor>
+									Spackman Jones, A., D. K. Stevens, J. S. Horsburgh, and N. O. Mesner (2011), 
+									Surrogate measures for providing high frequency estimates of total suspended solids and total phosphorus concentrations, 
+									Journal of the American Water Resources Association, 47(2), 239-253, http://dx.doi.org/10.1111/j.1752-1688.2010.00505.x
+                </dcterms:isDataFor>
+            </rdf:Description>
+        </dc:relation>
+        <!-- The source element is repeatable and contains links to resources from which this resource was derived -->
+        <!-- Sources can be expressed as URIs or strings -->
+        <dc:source>
+            <rdf:Description>
+                <dcterms:isDerivedFrom rdf:resource="http://hydroshare.org/resource/sourceResourceIdentifer"/>
+            </rdf:Description>
+        </dc:source>
+        <!-- The rights element contains a statement or URL that points to a rights management or usage statement -->
+        <dc:rights>
+            <rdf:Description>
+                <hsterms:rightsStatement>
+                    This resource is shared under the Creative Commons Attribution license.
+                </hsterms:rightsStatement>
+                <hsterms:rightsURL rdf:resource="http://creativecommons.org/licenses/by/3.0/"/>
+            </rdf:Description>
+        </dc:rights>
+        <!--The subject element is repeatable and contains keywords that may come from a formal vocabulary or may be free text -->
+        <dc:subject rdf:resource="http://mmisw.org/ont/agu/indexterm/_1719"/>
+        <dc:subject>
+            Little Bear River
+        </dc:subject>
+        <dc:subject>
+            Water quality
+        </dc:subject>
+        <dc:subject>
+            Temperature
+        </dc:subject>
+    </rdf:Description>
+</rdf:RDF>
