@@ -29,13 +29,13 @@ class HydroProgramResource(Page, RichText, AbstractResource):
     ############################
 
     # version
-    software_version = models.CharField(verbose_name='Software Version ',null=False,blank=True,default='1.0',max_length=255,
+    software_version = models.CharField(verbose_name='Software Version ',null=True,blank=True,default='1.0',max_length=255,
                                           help_text='The software version of the model program')
     # program language
-    software_language = models.CharField(verbose_name="Software Language", null=False,default='',max_length=100,
+    software_language = models.CharField(verbose_name="Software Language", null=True,default='',max_length=100,
                                         help_text="The programming language that the model program was written in")
     # operating system
-    operating_sys = models.CharField(verbose_name='Operating System',null=False,blank=True,default='unknown',max_length=255,
+    operating_sys = models.CharField(verbose_name='Operating System',null=True,blank=True,default='unknown',max_length=255,
                                           help_text='Identify the operating system used by the model program')
     # release date
     date_released = models.DateTimeField(verbose_name='Date of Software Release',null=True, default=dt.datetime.now(),
@@ -47,13 +47,13 @@ class HydroProgramResource(Page, RichText, AbstractResource):
     software_repo = models.CharField(verbose_name='Software Repository', null=True, default= None, max_length=255,
                                     help_text='A URL for the source code repository')
     # rights
-    software_rights = models.TextField(verbose_name="Software Rights", null=False,default="",
+    software_rights = models.TextField(verbose_name="Software Rights", null=True,default="",
                                        help_text="The software rights of the program (e.g. http://creativecommons.org/licenses/by/4.0)")
 
     ####################################################################################################################
 
     # release notes
-    release_notes = models.TextField(verbose_name="Release Notes", null=False,default="",
+    release_notes = models.TextField(verbose_name="Release Notes", null=True,default="",
                                        help_text="Notes about the software release (e.g. bug fixes, new functionality)")
     # user manual
     user_manual = models.FileField(verbose_name='User Manual',name='user_manual', null=True, default=None, upload_to='./hs/hydromodel',
@@ -63,7 +63,7 @@ class HydroProgramResource(Page, RichText, AbstractResource):
                                      help_text='Theoretical manual for the model program (e.g. .doc, .md, .rtf, .pdf')
     # source code
     # This will save the file in ./static/media/hs/hydromodel
-    source_code = models.FileField(verbose_name='Model Source Code',name='source_code', default=None, upload_to='./hs/hydromodel',
+    source_code = models.FileField(verbose_name='Model Source Code',name='source_code', default=None, null=False, upload_to='./hs/hydromodel',
                                      help_text='Upload Model Source Code as *.ZIP')
 
     ####################################################################################################################
@@ -73,10 +73,10 @@ class HydroProgramResource(Page, RichText, AbstractResource):
     ###########
 
     # executable code
-    exec_code = models.FileField(verbose_name='Model Executable Code',name='exec_code',default=None, upload_to='./hs/hydromodel',
+    exec_code = models.FileField(verbose_name='Model Executable Code',name='exec_code', null=True, default=None, upload_to='./hs/hydromodel',
                                      help_text='Upload Model Executables as *.ZIP')
     # build notes
-    build_notes = models.TextField(verbose_name="Build Notes", null=False,default="",
+    build_notes = models.TextField(verbose_name="Build Notes", null=True,default="",
                                        help_text="Notes about building/compiling the source code")
 
     # repository type?

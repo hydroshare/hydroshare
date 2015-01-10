@@ -20,12 +20,13 @@ from mezzanine.pages.page_processors import processor_for
 from django.template import RequestContext
 # from django.contrib import messages
 from crispy_forms.helper import FormHelper
+from django.contrib.auth.models import User, Group
+from collections import OrderedDict
 
-
-class DetailView(generic.DetailView):
-    model = HydroProgramResource
-    #template_name = 'hydromodel/detail.html'
-    template_name = 'hs_hydroprogram/detail.html'
+# class DetailView(generic.DetailView):
+#     model = HydroProgramResource
+#     #template_name = 'hydromodel/detail.html'
+#     template_name = 'hydroprogramresource.html'
 
 
 class CreateHydroProgramForm(forms.Form):
@@ -35,7 +36,7 @@ class CreateHydroProgramForm(forms.Form):
     #     self.helper= FormHelper()
     #     self.helper.html5_required = True
 
-    title = forms.CharField(required=True)
+    title = forms.CharField(required=False)
     creators = forms.CharField(required=False, min_length=0)
     contributors = forms.CharField(required=False, min_length=0)
     abstract = forms.CharField(required=False, min_length=0)
@@ -50,16 +51,16 @@ class CreateHydroProgramForm(forms.Form):
     software_version = forms.CharField(required=False,max_length=255)
     software_language = forms.CharField(required=False,max_length=100)
     operating_sys = forms.CharField(required=False,max_length=255)
-    date_released = forms.DateTimeField(required=True)
+    date_released = forms.DateTimeField(required=False)
     release_notes = forms.CharField(required=False)
-    program_website = forms.CharField(required=True, max_length=255)
-    software_repo = forms.CharField(required=True, max_length=255)
+    program_website = forms.CharField(required=False, max_length=255)
+    software_repo = forms.CharField(required=False, max_length=255)
     user_manual = forms.FileField(required=False)
     theoretical_manual = forms.FileField(required=False)
     source_code = forms.FileField(required=False)
     exec_code = forms.FileField(required=False)
     build_notes = forms.CharField(required=False)
-
+    software_rights = forms.CharField(required=False)
 
 
 
@@ -105,12 +106,17 @@ def create_hydro_program(request, *args, **kwargs):
             dcterms.append({'term' : 'CR', 'content' : cr})
 
 
+        terms = ['source','theoretical','user','notes']
         # get files
-        file_map = form.cleaned_data['file_map']
-        uploaded_files = {}
-        for f in request.files:
+        file_map = json.loads(form.data['file_map'])
+        upload_files = {}
+        for f in request.FILES.itervalues():
             tag = file_map[f.name]
-            upload_files[tag] = f
+            for term in terms:
+                if term in tag.lower():
+                    upload_files[term] = f
+
+
 
         res = hydroshare.create_resource(
             resource_type='HydroProgramResource',
@@ -120,18 +126,19 @@ def create_hydro_program(request, *args, **kwargs):
             dublin_metadata=dcterms,
             content=form.cleaned_data['abstract'] or form.cleaned_data['title'],
             ###########
-            software_version = form.cleaned_data['sofware_version'],
+            software_version = form.cleaned_data['software_version'],
             software_language = form.cleaned_data['software_language'],
             operating_sys = form.cleaned_data['operating_sys'],
             date_released = form.cleaned_data['date_released'],
             release_notes = form.cleaned_data['release_notes'],
             program_website =form.cleaned_data['program_website'],
             software_repo =form.cleaned_data['software_repo'],
-            user_manual =form.cleaned_data[''],
-            theoretical_manual =form.cleaned_data[''],
-            source_code =form.cleaned_data[''],
-            exec_code =form.cleaned_data[''],
-            build_notes =form.cleaned_data[''],
+            user_manual = upload_files['user'] if 'user' in upload_files else None,
+            theoretical_manual = upload_files['theoretical'] if 'theoretical' in upload_files else None,
+            source_code =upload_files['source'] if 'source' in upload_files else None,
+            exec_code = '',
+            build_notes =upload_files['notes'] if 'notes' in upload_files else None,
+            software_rights = form.data['eula']
         )
         return HttpResponseRedirect(res.get_absolute_url())
     else:
@@ -141,46 +148,60 @@ def create_hydro_program(request, *args, **kwargs):
         return render_to_response('pages/create-hydro-program.html', context ,context_instance=RequestContext(request))
         #return render(request, 'pages/create-hydro-program.html', {'form':frm})
 
-# #todo:  Copied from Ref Time Series.  Do I need this?
-# @processor_for(HydroProgramResource)
-# def add_dublin_core(request, page):
-#     from dublincore import models as dc
-#
-#     class DCTerm(forms.ModelForm):
-#         class Meta:
-#             model = dc.QualifiedDublinCoreElement
-#             fields = ['term', 'content']
-#
-#     cm = page.get_content_model()
-#     try:
-#         abstract = cm.dublin_metadata.filter(term='AB').first().content
-#     except:
-#         abstract = None
-#
-#     return {
-#         'dublin_core': [t for t in cm.dublin_metadata.all().exclude(term='AB').exclude(term='DM').exclude(term='DC').exclude(term='DTS').exclude(term='T')],
-#         'abstract' : abstract,
-#         'short_id' : cm.short_id,
-#         'resource_type': cm._meta.verbose_name,
-#         'reference_type': cm.reference_type,
-#         'url': cm.url,
-#         'site_name': cm.data_site_name if cm.data_site_name else '',
-#         'site_code' : cm.data_site_code if cm.data_site_code else '',
-#         'variable_name': cm.variable_name if cm.variable_name else '',
-#         'variable_code': cm.variable_code if cm.variable_code else '',
-#         'files': cm.files.all(),
-#         'dcterm_frm': DCTerm(),
-#         'bag': cm.bags.first(),
-#         'users': User.objects.all(),
-#         'groups': Group.objects.all(),
-#         'owners': set(cm.owners.all()),
-#         'view_users': set(cm.view_users.all()),
-#         'view_groups': set(cm.view_groups.all()),
-#         'edit_users': set(cm.edit_users.all()),
-#         'edit_groups': set(cm.edit_groups.all()),
-#     }
+@processor_for(HydroProgramResource)
+def add_dublin_core(request, page):
+    from dublincore import models as dc
 
+    class DCTerm(forms.ModelForm):
+        class Meta:
+            model = dc.QualifiedDublinCoreElement
+            fields = ['term', 'content']
 
+    cm = page.get_content_model()
+    try:
+        abstract = cm.dublin_metadata.filter(term='AB').first().content
+    except:
+        abstract = None
+    coverages = cm.metadata.coverages.all()
+
+    # build an ordered dictionary to store model program metadata
+    program_metadata = OrderedDict()
+
+    return {
+        'dublin_core': [t for t in cm.dublin_metadata.all().exclude(term='AB').exclude(term='DM').exclude(term='DC').exclude(term='DTS').exclude(term='T')],
+        'abstract': abstract,
+        'short_id': cm.short_id,
+        'resource_type': cm._meta.verbose_name,
+        'coverages': coverages,
+        #'spatial_coverage': cm.spatial_coverage,
+        #'temporal_coverage': cm.temporal_coverage,
+        #'includes_output': cm.includes_output,
+        #'executed_by' : cm.executed_by,
+        #'files': cm.files.all(),
+        'dcterm_frm': DCTerm(),
+        'bag': cm.bags.first(),
+        'users': User.objects.all(),
+        'groups': Group.objects.all(),
+        'owners': set(cm.owners.all()),
+        'view_users': set(cm.view_users.all()),
+        'view_groups': set(cm.view_groups.all()),
+        'edit_users': set(cm.edit_users.all()),
+        'edit_groups': set(cm.edit_groups.all()),
+        ##################
+        'software_version' : cm.software_version,
+        'software_language' : cm.software_language,
+        'operating_sys' : cm.operating_sys,
+        'date_released' : cm.date_released,
+        'release_notes' : cm.release_notes,
+        'program_website' : cm.program_website,
+        'software_repo' : cm.software_repo,
+        'user_manual'  : cm.user_manual,
+        'theoretical_manual' : cm.theoretical_manual,
+        'source_code' : cm.source_code,
+        'exec_code' :cm.exec_code,
+        'build_notes' : cm.build_notes,
+        'software_rights': cm.software_rights
+    }
 
 def upload_files(request):
 
@@ -228,9 +249,6 @@ def parse_metadata(request):
     #render_to_response('create_hydro_program.html', {'h': 'test'})
 
     return json_response(True,data)
-
-
-
 
 def get_eula(request):
 

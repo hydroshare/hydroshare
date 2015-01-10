@@ -10,5 +10,5 @@ urlpatterns = patterns('',
            url(r'^_internal/parse-metadata/$', views.parse_metadata),
            url(r'^_internal/upload-files/$', views.upload_files),
            url(r'^_internal/get-eula/$', views.get_eula),
-           url(r'^(?P<pk>\d+)/$', views.DetailView.as_view(), name='detail'),
+           #url(r'^(?P<pk>\d+)/$', views.DetailView.as_view(), name='detail'),
 )
