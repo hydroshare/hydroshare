@@ -405,14 +405,11 @@ def my_resources(request, page):
 #    if not request.user.is_authenticated():
 #        return HttpResponseRedirect('/accounts/login/')
 
-    # TODO: remove the following 4 lines of debugging code prior to pull request
-    #import sys
-    #sys.path.append("/home/docker/pycharm-debug")
-    #import pydevd
-    #pydevd.settrace('144.39.193.200', port=21000, suspend=False)
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
-    # from hs_core.hydroshare import users
-    # users.create_account(email="hong.yi.hello@gmail.com", username="test1", first_name="Hong", last_name="Yi", password="test123")
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():

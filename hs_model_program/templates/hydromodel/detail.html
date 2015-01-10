@@ -1,0 +1,20 @@
+{% load url from future %}
+<h1>{{ simulation.name }}</h1>
+
+<table border="0" cellspacing="10">
+    <tr><td><font color="blue"><b>Simulation</font></td> <td>{{ simulation.description }}</li></td></tr>
+    <tr><td><font color="blue"><b>Version</font></td><td>{{ simulation.version }}</td></tr>
+
+    <tr><td><font color="blue"><b>simulation_date</font></td> <td>{{simulation.simulation_date}}</td></tr>
+    <tr><td><font color="blue"><b>creator_name</font></td> <td>{{simulation.creator_name}}</td></tr>
+    <tr><td><font color="blue"><b>creator_email</font></td> <td>{{simulation.creator_email}}</td></tr>
+    <tr><td><font color="blue"><b>creator_organization</font></td> <td>{{simulation.creator_organization}}</td></tr>
+    <tr><td><font color="blue"><b>creator_mail_address</font></td> <td>{{simulation.creator_mail_address}}</td></tr>
+    <tr><td><font color="blue"><b>creator_phone</font></td> <td>{{simulation.creator_phone}}</td></tr>
+
+    {# <li>{{simulation.get_items}}</li> #}
+    {# {% for field in simulation.items %} #}
+    {#    <li> {{field.name}}: {{field.value}} </li> #}
+    {# {% endfor %} #}
+
+</table>
