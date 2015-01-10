@@ -1,11 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 
-import os
-import importlib
-
-local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
-
 ######################
 # MEZZANINE SETTINGS #
 ######################
@@ -83,7 +78,7 @@ local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_setti
 
 # If True, the south application will be automatically added to the
 # INSTALLED_APPS setting.
-USE_SOUTH = False
+USE_SOUTH = True
 
 
 ########################
@@ -230,7 +225,7 @@ ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
 # Always use forward slashes, even on Windows.
 # Don't forget to use absolute paths, not relative paths.
 TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
-
+print TEMPLATE_DIRS
 
 ################
 # APPLICATIONS #
@@ -258,22 +253,17 @@ INSTALLED_APPS = (
     "mezzanine.forms",
     "mezzanine.pages",
     "mezzanine.galleries",
+    #"mezzanine.twitter",
     "crispy_forms",
     "mezzanine.accounts",
     "mezzanine.mobile",
-    "autocomplete_light",
     "tastypie",
-    # "tastypie_swagger",
-    "ga_ows",
-    "ga_resources",
+    "tastypie_swagger",
     "dublincore",
     "hs_core",
-    "hs_metrics",
-    "hs_rhessys_inst_resource",
-    "django_docker_processes",
-    "djcelery",
-    #$"ref_ts",
-    "hs_model_program",
+    "ref_ts_app",
+    "hs_hydroprogram",
+    #"hs_scholar_profile"
 )
 
 # List of processors used by RequestContext to populate the context.
@@ -289,7 +279,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.request",
     "django.core.context_processors.tz",
     "mezzanine.conf.context_processors.settings",
-    "mezzanine.pages.context_processors.page",
 )
 
 # List of middleware classes to use. Order is important; in the request phase,
@@ -369,9 +358,7 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 # Allow any settings to be defined in local_settings.py which should be
 # ignored in your version control system allowing for settings to be
 # defined per machine.
-local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
-for k in dir(local_settings):
-    locals()[k] = getattr(local_settings, k)
+from local_settings import *
 
 
 ####################
@@ -391,6 +378,7 @@ except ImportError:
 else:
     set_dynamic_settings(globals())
 
+INSTALLED_APPS += HYDROSHARE_APPS
 
 TASTYPIE_SWAGGER_API_MODULE = 'hydroshare.urls.v1_api'
 

@@ -1,0 +1,60 @@
+	
+[resource]
+title = Storm Water Management Model (SWMM)
+type = rdf:resource="http://hydroshare.org/terms/HydroProgram
+abstract = The EPA Storm Water Management Model (SWMM) is a dynamic rainfall-runoff simulation model used for single event or long-term (continuous) simulation of runoff quantity and quality from primarily urban areas
+language = eng
+subject = Continuous, Water Quality, Water Quantity, Event-based
+format = application/zip
+
+[creator]
+name=Anthony Castronova
+creatorOrder=1
+organization = Utah Water Research Laboratory
+email = tony.castronova@usu.edu
+address = 8200 Old Main Hill, Logan, UT, 84322-8200, USA
+phone =435-797-2946
+homepage = http://anthonycastronova.com
+			
+[creator]
+name = Jeff Horsburgh
+creatorOrder = 2
+organization = Utah Water Research Laboratory
+email = jeff.horsburgh@usu.edu
+address = 8200 Old Main Hill, Logan, UT, 84322-8200, USA
+phone = 435-797-2946
+homepage = http://jeffh.usu.edu
+researcherID = http://www.researcherid.com/rid/E-8975-2010
+researchGateID = https://www.researchgate.net/profile/Jeffery_Horsburgh/
+						
+[contributor]
+name = David Tarboton
+organization = Utah State University 
+email = dtarb@usu.edu
+address = 8200 Old Main Hill, Logan, UT, 84322-8200, USA
+
+[date]
+created = 2013-07-16T19:20:30-05:00
+modified = 2013-07-16T19:20:30-05:00
+valid = 2013-07-16T19:20:30-05:00
+
+[rights]
+rightsStatement = This resource is shared under the Creative Commons Attribution license
+rightsURL =  http://creativecommons.org/licenses/by/3.0/
+
+[hydroprogram]
+
+
+[software]
+version = 5.1.004
+date_released = 04-14-2014
+url = http://www.epa.gov/nrmrl/wswrd/wq/models/swmm/swmm51004_engine.zip
+rightsURL = http://creativecommons.org/licenses/by/4.0/
+  	
+[requirement]
+description = Requires Microsoft windows XP or greater.  Windows 8 has not been tested.
+url = http://windows.microsoft.com/en-us/windows/download-shop
+subject = Windows XP, Windows Vista, Windows 7
+
+
+
