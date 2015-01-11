@@ -76,11 +76,11 @@ def main_page(request, page):
     band_dict = OrderedDict()
     i = 1
     for band in content_model.bands.all():
-         band_dict['Name (band '+str(i)] = band.bandName
-         band_dict['Variable (band '+str(i)] = band.variableName
-         band_dict['Units (band '+str(i)] = band.variableUnit
-         band_dict['Method (band '+str(i)] = band.method
-         band_dict['Comment (band )'+str(i)] = band.comment
+         band_dict['Name (band '+str(i)+')'] = band.bandName
+         band_dict['Variable (band '+str(i)+')'] = band.variableName
+         band_dict['Units (band '+str(i)+')'] = band.variableUnit
+         band_dict['Method (band '+str(i)+')'] = band.method
+         band_dict['Comment (band '+str(i)+')'] = band.comment
          i = i+1
 
     cvg = content_model.metadata.coverages.all()
