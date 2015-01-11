@@ -18,13 +18,7 @@
     {% csrf_token %}
   <h3>Add your metadata here:</h3>
   <input type="hidden" name="resource-type" id="resource-type" value="{{ resource_type }}">
-  <div class="form-group">
-    <label for="" class="col-sm-2 control-label">Title</label>
-    <div class="col-sm-10">
-      <input type="text" class="form-control" name="title" id="" placeholder="Title" {% if res_title %} value="{{ res_title }}" {%  endif %}>
-    </div>
-  </div>
-
+  <input type="hidden" name="title" id="" value="{{ res_title }}">
   <div class="form-group">
     <label for="" class="col-sm-2 control-label">Creators</label>
     <div class="col-sm-10">

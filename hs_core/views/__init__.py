@@ -375,6 +375,7 @@ resource = None
 @login_required
 def describe_resource(request, *args, **kwargs):
     resource_type=request.POST['resource-type']
+    res_title = request.POST['title']
     global res_cls, resource
     resource_files=request.FILES.getlist('files')
     valid = hydroshare.check_resource_files(resource_files)
@@ -392,7 +393,7 @@ def describe_resource(request, *args, **kwargs):
     resource = res_cls.objects.create(
             user=owner,
             creator=owner,
-            title="Placeholder title",
+            title=res_title,
             last_changed_by=owner,
             in_menus=[],
             **kwargs
@@ -401,6 +402,7 @@ def describe_resource(request, *args, **kwargs):
         ResourceFile.objects.create(content_object=resource, resource_file=file)
     create_res_context = {
         'resource_type': resource_type,
+        'res_title': res_title,
     }
     page_url = 'pages/create-resource.html'
     for receiver, response in ret_responses:

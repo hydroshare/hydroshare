@@ -41,8 +41,7 @@ def raster_describe_resource_trigger(sender, **kwargs):
 
             res_sci_md = {'Coverage': res_md_dict['spatial_coverage_info'],}
             res_ext_md = {'Cell and band info': res_md_dict['cell_and_band_info'],}
-            return {"res_title": infile.name,
-                    "res_sci_metadata": res_sci_md,
+            return {"res_sci_metadata": res_sci_md,
                     "res_add_metadata": res_ext_md}
 
 # signal handler to validate resource metadata, and if valid, retrieve raster resource type specific metadata
