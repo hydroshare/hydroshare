@@ -1,9 +1,7 @@
-hs_app RHESSys instance resource type
-===============
+# hs_app RHESSys instance resource type
 
-Hydroshare RHESSys instance resource type app
-========================
-hs_rhessys_inst_resource
-========================
+Authors: Hong Yi, Brian Miles, Jeff Heard
 
-The app that creates the new REHEYSys instance resource type
+## hs\_rhessys\_inst\_resource ##
+
+The app that creates the new RHESSys instance resource type serving as bundled input resource for RHESSys model execution within HydroShare. 

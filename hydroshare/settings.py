@@ -231,6 +231,8 @@ ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
 # Don't forget to use absolute paths, not relative paths.
 TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
 
+ADAPTOR_INPLACEEDIT_EDIT = 'hs_core.models.HSAdaptorEditInline'
+INPLACE_SAVE_URL = '/hsapi/save_inline/'
 
 ################
 # APPLICATIONS #
@@ -246,6 +248,7 @@ INSTALLED_APPS = (
     "django.contrib.sitemaps",
     "django.contrib.staticfiles",
     "django.contrib.gis",
+    "inplaceeditform",
     "django_nose",
     "django_irods",
     "theme",
@@ -271,6 +274,7 @@ INSTALLED_APPS = (
     "hs_metrics",
     "hs_rhessys_inst_resource",
     "django_docker_processes",
+    "hs_geo_raster_resource",
     "djcelery",
 )
 

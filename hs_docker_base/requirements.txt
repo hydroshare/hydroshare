@@ -68,3 +68,4 @@ urllib3==1.5
 wsgiref
 google.foresite-toolkit
 pandas
+django-inplaceedit
