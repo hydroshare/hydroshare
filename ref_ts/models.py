@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 
 
-class RefTimeSeries(Page, AbstractResource, RichText):
+class RefTimeSeries(Page, AbstractResource):
 
         class Meta:
                 verbose_name = "Referenced HIS Time Series Resource"
