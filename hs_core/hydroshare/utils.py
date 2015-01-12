@@ -21,8 +21,9 @@ cached_resource_types = None
 
 def get_resource_types():
     global cached_resource_types
-    cached_resource_types = filter(lambda x: issubclass(x, AbstractResource), get_models()) if\
-        not cached_resource_types else cached_resource_types
+    #cached_resource_types = filter(lambda x: issubclass(x, AbstractResource), get_models()) if\
+    #    not cached_resource_types else cached_resource_types
+    cached_resource_types = filter(lambda x: issubclass(x, AbstractResource), get_models())
 
     return cached_resource_types
 

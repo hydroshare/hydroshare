@@ -203,6 +203,24 @@ class AbstractMetaDataElement(models.Model):
     class Meta:
         abstract = True
 
+# Adaptor class added for Django inplace editing to honor HydroShare user-resource permissions
+class HSAdaptorEditInline(object):
+    @classmethod
+    def can_edit(cls, adaptor_field):
+        #from hs_core.views.utils import authorize
+        user = adaptor_field.request.user
+        can_edit = False
+        if user.is_anonymous():
+            pass
+        elif user.is_superuser:
+            can_edit = True
+        else:
+            obj = adaptor_field.obj
+            cm = obj.get_content_model()
+            #_, can_edit, _ = authorize(adaptor_field.request, res_id, edit=True, full=True) - need to know res_id
+            can_edit = (user in set(cm.edit_users.all())) or (len(set(cm.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
+        return can_edit
+
 class ExternalProfileLink(models.Model):
     type = models.CharField(max_length=50)
     url = models.URLField()
@@ -1313,6 +1331,7 @@ class AbstractResource(ResourcePermissionsMixin):
         class MyResourceContentType(pages.Page, hs_core.AbstractResource):
             ...
     """
+    content = models.TextField() # the field added for use by Django inplace editing
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
                                         related_name='last_changed_%(app_label)s_%(class)s',
@@ -1388,8 +1407,8 @@ class Bags(models.Model):
         ordering = ['-timestamp']
 
 
-
-class GenericResource(Page, RichText, AbstractResource):
+# remove RichText parent class from the parameters for Django inplace editing to work; otherwise, get internal edit error when saving changes
+class GenericResource(Page, AbstractResource):
 
     class Meta:
         verbose_name = 'Generic Hydroshare Resource'

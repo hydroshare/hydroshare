@@ -28,6 +28,7 @@ urlpatterns = patterns('',
     url(r'^checksum/(?P<pk>[A-z0-9]+)/$', views.resource_api.GetChecksum.as_view()), # raises not implemented
     url(r'^publishResource/(?P<pk>[A-z0-9]+)/$', views.resource_api.PublishResource.as_view()), # raises not implemented
     url(r'^resolveDOI/(?P<doi>[A-z0-9]+)/$', views.resource_api.ResolveDOI.as_view()), # raises not implemented
+    url(r'^save_inline/$', views.save_ajax),
 
     # internal API
 
@@ -40,6 +41,7 @@ urlpatterns = patterns('',
     url(r'^_internal/verify_captcha/$', views.verify_captcha),
     url(r'^_internal/publish/$', views.publish),
     url(r'^_internal/create-resource/$', views.create_resource),
+    url(r'^_internal/describe-resource/$', views.describe_resource),
     url(r'^_internal/resend_verification_email/$', views.resend_verification_email),
 )
 

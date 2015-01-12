@@ -14,7 +14,7 @@ from django import forms
 from mezzanine.generic.models import Keyword
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, user_from_id
 from .utils import authorize
 from hs_core.models import ResourceFile, GenericResource, resource_processor
 import requests
@@ -22,15 +22,20 @@ from django.core import exceptions as ex
 from mezzanine.pages.page_processors import processor_for
 from django.template import RequestContext
 from django.core import signing
+from django.template import Context
+import django.dispatch
+from django.contrib.contenttypes.models import ContentType
+from django.forms import ValidationError
+from inplaceeditform.commons import get_dict_from_obj, apply_filters, get_adaptor_class
+from inplaceeditform.views import _get_http_response, _get_adaptor
 
 from . import users_api
 from . import discovery_api
 from . import resource_api
 from . import social_api
 from hs_core.hydroshare import file_size_limit_for_display
-
+from hs_core.signals import *
 import autocomplete_light
-
 
 def short_url(request, *args, **kwargs):
     try:
@@ -171,7 +176,38 @@ def change_permissions(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-
+# view functions mapped with INPLACE_SAVE_URL(/hsapi/save_inline/) for Django inplace editing
+def save_ajax(request):
+    if not request.method == 'POST':
+        return _get_http_response({'errors': 'It is not a POST request'})
+    adaptor = _get_adaptor(request, 'POST')
+    if not adaptor:
+        return _get_http_response({'errors': 'Params insufficient'})
+    if not adaptor.can_edit():
+        return _get_http_response({'errors': 'You can not edit this content'})
+    value = adaptor.loads_to_post(request)
+    new_data = get_dict_from_obj(adaptor.obj)
+    form_class = adaptor.get_form_class()
+    field_name = adaptor.field_name
+    new_data['in_menus'] = ''
+    form = form_class(data=new_data, instance=adaptor.obj)
+    try:
+        value_edit = adaptor.get_value_editor(value)
+        value_edit_with_filter = apply_filters(value_edit, adaptor.filters_to_edit)
+        new_data[field_name] = value_edit_with_filter
+        if form.is_valid():
+            adaptor.save(value_edit_with_filter)
+            return _get_http_response({'errors': False,
+                                        'value': adaptor.render_value_edit()})
+        messages = [] # The error is for another field that you are editing
+        for field_name_error, errors_field in form.errors.items():
+            for error in errors_field:
+                messages.append("%s: %s" % (field_name_error, unicode(error)))
+        message_i18n = ','.join(messages)
+        return _get_http_response({'errors': message_i18n})
+    except ValidationError as error: # The error is for a field that you are editing
+        message_i18n = ', '.join([u"%s" % m for m in error.messages])
+        return _get_http_response({'errors': message_i18n})
 
 class CaptchaVerifyForm(forms.Form):
     challenge = forms.CharField()
@@ -303,8 +339,6 @@ def my_resources(request, page):
     )
         }
 
-
-
 @processor_for(GenericResource)
 def add_dublin_core(request, page):
 
@@ -347,6 +381,50 @@ def add_dublin_core(request, page):
         'add_edit_group_form' : AddGroupForm(),
     }
 
+res_cls = ""
+resource = None
+@login_required
+def describe_resource(request, *args, **kwargs):
+    resource_type=request.POST['resource-type']
+    res_title = request.POST['title']
+    global res_cls, resource
+    resource_files=request.FILES.getlist('files')
+    valid = hydroshare.check_resource_files(resource_files)
+    if not valid:
+        context = {
+            'file_size_error' : 'The resource file is larger than the supported size limit %s. Select resource files within %s to create resource.' % (file_size_limit_for_display, file_size_limit_for_display)
+        }
+        return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
+    res_cls = hydroshare.check_resource_type(resource_type)
+    # Send pre_describe_resource signal for other resource type apps to listen, extract, and add their own metadata
+    ret_responses = pre_describe_resource.send(sender=res_cls, files=resource_files)
+
+    # create barebone resource with resource_files to database model for later update since on Django 1.7, resource_files get closed automatically at the end of each request
+    owner = user_from_id(request.user)
+    resource = res_cls.objects.create(
+            user=owner,
+            creator=owner,
+            title=res_title,
+            last_changed_by=owner,
+            in_menus=[],
+            **kwargs
+    )
+    for file in resource_files:
+        ResourceFile.objects.create(content_object=resource, resource_file=file)
+    create_res_context = {
+        'resource_type': resource_type,
+        'res_title': res_title,
+    }
+    page_url = 'pages/create-resource.html'
+    for receiver, response in ret_responses:
+        if response is not None:
+            for key in response:
+                if key != 'create_resource_page_url':
+                    create_res_context[key] = response[key]
+                else:
+                    page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
+    return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
+
 class CreateResourceForm(forms.Form):
     title = forms.CharField(required=True)
     creators = forms.CharField(required=False, min_length=0)
@@ -356,7 +434,9 @@ class CreateResourceForm(forms.Form):
 
 @login_required
 def create_resource(request, *args, **kwargs):
-    frm = CreateResourceForm(request.POST)
+    global resource
+    qrylst = request.POST
+    frm = CreateResourceForm(qrylst)
     if frm.is_valid():
         dcterms = [
             { 'term': 'T', 'content': frm.cleaned_data['title'] },
@@ -372,23 +452,21 @@ def create_resource(request, *args, **kwargs):
             cr = cr.strip()
             if(cr !=""):
                 dcterms.append({'term': 'CR', 'content': cr})
-
+        global res_cls
+        # Send pre_call_create_resource signal
+        pre_call_create_resource.send(sender=res_cls, resource=resource, request_post = qrylst)
         res = hydroshare.create_resource(
-            resource_type=request.POST['resource-type'],
+            resource_type=qrylst['resource-type'],
             owner=request.user,
             title=frm.cleaned_data['title'],
             keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None,
             dublin_metadata=dcterms,
-            files=request.FILES.getlist('files'),
-            content=frm.cleaned_data['abstract'] or frm.cleaned_data['title']
+            content=frm.cleaned_data['abstract'] or frm.cleaned_data['title'],
+            res_type_cls = res_cls,
+            resource=resource
         )
         if res is not None:
             return HttpResponseRedirect(res.get_absolute_url())
-        else:
-            context = {
-            'file_size_error' : 'The resource file is larger than the supported size limit %s. Select resource files within %s to create resource.' % (file_size_limit_for_display, file_size_limit_for_display)
-            }
-            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
     else:
         raise ValidationError(frm.errors)
 
