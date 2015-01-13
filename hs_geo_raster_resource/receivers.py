@@ -21,17 +21,7 @@ def raster_describe_resource_trigger(sender, **kwargs):
             global res_md_dict
             res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
             bcount = res_md_dict['cell_and_band_info']['bandCount']
-            # bname = "Band_1";
-            # for i in range(bcount):
-            #     bname += ", Band_%d" % (i)
-            # if res_md_dict['cell_and_band_info'].get('bandName') is None:
-            #     res_md_dict['cell_and_band_info']['bandName'] = bname
-            #
-            # if res_md_dict['cell_and_band_info'].get('variableName') is None:
-            #     res_md_dict['cell_and_band_info']['variableName'] = "Elevation"
-            #
-            # if res_md_dict['cell_and_band_info'].get('variableUnit') is None:
-            #     res_md_dict['cell_and_band_info']['variableUnit'] = "meter"
+
             for i in range(bcount):
                 res_md_dict['cell_and_band_info']['Name (band '+str(i+1)+')'] = 'Band_' + str(i+1)
                 res_md_dict['cell_and_band_info']['Variable (band '+str(i+1)+')'] = 'Required'
@@ -39,6 +29,8 @@ def raster_describe_resource_trigger(sender, **kwargs):
                 res_md_dict['cell_and_band_info']['Method (band '+str(i+1)+')'] = ''
                 res_md_dict['cell_and_band_info']['Comment (band '+str(i+1)+')'] = ''
 
+            # have to set a name for spatial coverage since name is a required field in core metadata models.py
+            res_md_dict['spatial_coverage_info']['name']= infile.name + " raster coverage"
             res_sci_md = {'Coverage': res_md_dict['spatial_coverage_info'],}
             res_ext_md = {'Cell and band info': res_md_dict['cell_and_band_info'],}
             return {"res_sci_metadata": res_sci_md,
@@ -86,8 +78,8 @@ def raster_pre_call_resource_trigger(sender, **kwargs):
                     resource.cellSizeUnit = v
                 elif k=='cellDataType':
                     resource.cellDataType = v
-                elif k=='cellNoDataValue':
-                    resource.cellNoDataValue = v
+                elif k=='noDataValue':
+                    resource.noDataValue = v
                 elif k=='bandCount':
                     resource.bandCount = v
                 elif k.startswith('bandName') or k.startswith('variableName') or k.startswith('variableUnit')\
