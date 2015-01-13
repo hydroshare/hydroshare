@@ -29,7 +29,7 @@ class RasterResource(Page, AbstractResource):
     cellSizeYValue = models.FloatField(null=True)
     cellSizeUnit = models.CharField(max_length=50, null=True)
     cellDataType = models.CharField(max_length=50, null=True)
-    cellNoDataValue = models.FloatField(null=True)
+    noDataValue = models.FloatField(null=True)
     bandCount =models.IntegerField(null=True)
     bands = models.ManyToManyField(RasterBand,
                                     related_name='bands_of_raster',
@@ -70,7 +70,7 @@ def main_page(request, page):
     md_dict['cellSizeYValue'] = content_model.cellSizeYValue
     md_dict['cellSizeUnit'] = content_model.cellSizeUnit
     md_dict['cellDataType'] = content_model.cellDataType
-    md_dict['cellNoDataValue'] = content_model.cellNoDataValue
+    md_dict['noDataValue'] = content_model.noDataValue
     md_dict['bandCount'] = content_model.bandCount
 
     band_dict = OrderedDict()
@@ -88,7 +88,6 @@ def main_page(request, page):
     if cvg:
         coverage = cvg[0]
         core_md = OrderedDict()
-        core_md['name'] = coverage.value['name']
         core_md['northLimit'] = coverage.value['northlimit']
         core_md['eastLimit'] = coverage.value['eastlimit']
         core_md['southLimit'] = coverage.value['southlimit']

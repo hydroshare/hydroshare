@@ -42,7 +42,7 @@ class Migration(SchemaMigration):
             ('cellSizeYValue', self.gf('django.db.models.fields.FloatField')(null=True)),
             ('cellSizeUnit', self.gf('django.db.models.fields.CharField')(max_length=50, null=True)),
             ('cellDataType', self.gf('django.db.models.fields.CharField')(max_length=50, null=True)),
-            ('cellNoDataValue', self.gf('django.db.models.fields.FloatField')(null=True)),
+            ('noDataValue', self.gf('django.db.models.fields.FloatField')(null=True)),
             ('bandCount', self.gf('django.db.models.fields.IntegerField')(null=True)),
         ))
         db.send_create_signal(u'hs_geo_raster_resource', ['RasterResource'])
@@ -179,7 +179,7 @@ class Migration(SchemaMigration):
             'bandCount': ('django.db.models.fields.IntegerField', [], {'null': 'True'}),
             'bands': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'bands_of_raster'", 'symmetrical': 'False', 'to': u"orm['hs_geo_raster_resource.RasterBand']"}),
             'cellDataType': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True'}),
-            'cellNoDataValue': ('django.db.models.fields.FloatField', [], {'null': 'True'}),
+            'noDataValue': ('django.db.models.fields.FloatField', [], {'null': 'True'}),
             'cellSizeUnit': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True'}),
             'cellSizeXValue': ('django.db.models.fields.FloatField', [], {'null': 'True'}),
             'cellSizeYValue': ('django.db.models.fields.FloatField', [], {'null': 'True'}),

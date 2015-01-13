@@ -55,12 +55,14 @@
         <h5>{{ attr }}</h5>
         <div class ="border-form">
             {% for subattr, subval in val_dict.items %}
-            <div class="form-group">
-            <label for="" class="col-sm-2 control-label">{{ subattr }}</label>
-            <div class="col-sm-10">
-                <input type="text" class="form-control" id="" name='{{ subattr }}' value="{{ subval }}">
-            </div>
-            </div>
+                {% ifnotequal subattr 'name' %}
+                    <div class="form-group">
+                    <label for="" class="col-sm-2 control-label">{{ subattr }}</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="" name='{{ subattr }}' value="{{ subval }}">
+                    </div>
+                    </div>
+                {% endifnotequal %}
             {% endfor %}
         </div>
     {% endfor %}
