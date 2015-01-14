@@ -88,6 +88,7 @@ def main_page(request, page):
     if cvg:
         coverage = cvg[0]
         core_md = OrderedDict()
+        core_md['Place/Area name'] = coverage.value['name']
         core_md['northLimit'] = coverage.value['northlimit']
         core_md['eastLimit'] = coverage.value['eastlimit']
         core_md['southLimit'] = coverage.value['southlimit']
