@@ -389,3 +389,5 @@ class RefTSMetadata(CoreMetaData):
             hsterms_latitude.text = method.source_description or ''
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
+
+import receivers
