@@ -30,7 +30,7 @@ def raster_describe_resource_trigger(sender, **kwargs):
                 res_md_dict['cell_and_band_info']['Comment (band '+str(i+1)+')'] = ''
 
             # have to set a name for spatial coverage since name is a required field in core metadata models.py
-            res_md_dict['spatial_coverage_info']['name']= infile.name + " raster coverage"
+            res_md_dict['spatial_coverage_info']['Place/Area name']= "Unnamed"
             res_sci_md = {'Coverage': res_md_dict['spatial_coverage_info'],}
             res_ext_md = {'Cell and band info': res_md_dict['cell_and_band_info'],}
             return {"res_sci_metadata": res_sci_md,
@@ -60,6 +60,10 @@ def raster_pre_call_resource_trigger(sender, **kwargs):
                 qrylst['method_' + k[-2:-1]] = v
             elif k.startswith('Comment (band'):
                 qrylst['comment_' + k[-2:-1]] = v
+
+        res_md_dict['spatial_coverage_info']['name'] = qrylst['Place/Area name']
+        res_md_dict['spatial_coverage_info'].pop('Place/Area name', None)
+
         resource = kwargs['resource']
         #create form and do metadata validation
         frm = ValidateMetadataForm(qrylst)
@@ -93,6 +97,7 @@ def raster_pre_call_resource_trigger(sender, **kwargs):
 def raster_post_trigger(sender, **kwargs):
     if sender is RasterResource:
         resource = kwargs['resource']
+
         resource.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info'])
         global band_terms
         for i in range(int(resource.bandCount)):
