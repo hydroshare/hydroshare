@@ -76,11 +76,11 @@ def main_page(request, page):
     band_dict = OrderedDict()
     i = 1
     for band in content_model.bands.all():
-         band_dict['Name (band '+str(i)+')'] = band.bandName
-         band_dict['Variable (band '+str(i)+')'] = band.variableName
-         band_dict['Units (band '+str(i)+')'] = band.variableUnit
-         band_dict['Method (band '+str(i)+')'] = band.method
-         band_dict['Comment (band '+str(i)+')'] = band.comment
+         band_dict['name (band '+str(i)+')'] = band.bandName
+         band_dict['variable (band '+str(i)+')'] = band.variableName
+         band_dict['units (band '+str(i)+')'] = band.variableUnit
+         band_dict['method (band '+str(i)+')'] = band.method
+         band_dict['comment (band '+str(i)+')'] = band.comment
          i = i+1
 
     cvg = content_model.metadata.coverages.all()
@@ -88,12 +88,13 @@ def main_page(request, page):
     if cvg:
         coverage = cvg[0]
         core_md = OrderedDict()
-        core_md['Place/Area name'] = coverage.value['name']
+        core_md['place/area name'] = coverage.value['name']
+        core_md['projection'] = coverage.value['projection']
+        core_md['units'] = coverage.value['units']
         core_md['northLimit'] = coverage.value['northlimit']
         core_md['eastLimit'] = coverage.value['eastlimit']
         core_md['southLimit'] = coverage.value['southlimit']
         core_md['westLimit'] = coverage.value['westlimit']
-
         core_md_dict = {'Coverage': core_md}
         return  { 'res_add_metadata': md_dict,
                   'band_metadata': band_dict,

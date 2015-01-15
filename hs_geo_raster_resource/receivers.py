@@ -23,14 +23,14 @@ def raster_describe_resource_trigger(sender, **kwargs):
             bcount = res_md_dict['cell_and_band_info']['bandCount']
 
             for i in range(bcount):
-                res_md_dict['cell_and_band_info']['Name (band '+str(i+1)+')'] = 'Band_' + str(i+1)
-                res_md_dict['cell_and_band_info']['Variable (band '+str(i+1)+')'] = 'Required'
-                res_md_dict['cell_and_band_info']['Units (band '+str(i+1)+')'] = 'Required'
-                res_md_dict['cell_and_band_info']['Method (band '+str(i+1)+')'] = ''
-                res_md_dict['cell_and_band_info']['Comment (band '+str(i+1)+')'] = ''
+                res_md_dict['cell_and_band_info']['name (band '+str(i+1)+')'] = 'Band_' + str(i+1)
+                res_md_dict['cell_and_band_info']['variable (band '+str(i+1)+')'] = 'Required'
+                res_md_dict['cell_and_band_info']['units (band '+str(i+1)+')'] = 'Required'
+                res_md_dict['cell_and_band_info']['method (band '+str(i+1)+')'] = ''
+                res_md_dict['cell_and_band_info']['comment (band '+str(i+1)+')'] = ''
 
             # have to set a name for spatial coverage since name is a required field in core metadata models.py
-            res_md_dict['spatial_coverage_info']['Place/Area name']= "Unnamed"
+            res_md_dict['spatial_coverage_info']['place/area name']= "Unnamed"
             res_sci_md = {'Coverage': res_md_dict['spatial_coverage_info'],}
             res_ext_md = {'Cell and band info': res_md_dict['cell_and_band_info'],}
             return {"res_sci_metadata": res_sci_md,
@@ -50,19 +50,19 @@ def raster_pre_call_resource_trigger(sender, **kwargs):
         qrylst = kwargs['request_post']
         # add the corresponding names for form validation
         for k, v in qrylst.items():
-            if k.startswith('Name (band'):
+            if k.startswith('name (band'):
                 qrylst['bandName_' + k[-2:-1]] = v
-            elif k.startswith('Variable (band'):
+            elif k.startswith('variable (band'):
                 qrylst['variableName_' + k[-2:-1]] = v
-            elif k.startswith('Units (band'):
+            elif k.startswith('units (band'):
                 qrylst['variableUnit_' + k[-2:-1]] = v
-            elif k.startswith('Method (band'):
+            elif k.startswith('method (band'):
                 qrylst['method_' + k[-2:-1]] = v
-            elif k.startswith('Comment (band'):
+            elif k.startswith('comment (band'):
                 qrylst['comment_' + k[-2:-1]] = v
 
-        res_md_dict['spatial_coverage_info']['name'] = qrylst['Place/Area name']
-        res_md_dict['spatial_coverage_info'].pop('Place/Area name', None)
+        res_md_dict['spatial_coverage_info']['name'] = qrylst['place/area name']
+        res_md_dict['spatial_coverage_info'].pop('place/area name', None)
 
         resource = kwargs['resource']
         #create form and do metadata validation
