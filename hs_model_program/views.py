@@ -196,21 +196,19 @@ def add_dublin_core(request, page):
 
     # build an ordered dictionary to store model program metadata
     program_metadata = OrderedDict([
-                        ('software_version', cm.software_version),
-                        ('software_language', cm.software_language),
-                        ('operating_sys', cm.operating_sys),
-                        ('date_released', cm.date_released),
-                        ('release_notes', cm.release_notes),
-                        ('program_website', cm.program_website),
-                        ('software_repo', cm.software_repo),
-                        #('exec_code', res.exec_code.path if res.exec_code.name !=  '' else 'undefined'),
-                        #('build_notes', res.build_notes.path if res.build_notes.name !=  '' else 'undefined'),
-                        ('software_rights', cm.software_rights)
+                        ('Date Released', cm.date_released),
+                        ('Program Website', cm.program_website),
+                        ('Version', cm.software_version),
+                        ('Language', cm.software_language),
+                        ('Operating System', cm.operating_sys),
+                        ('Code Repository', cm.software_repo),
+                        ('Software Rights', cm.software_rights)
                     ])
     program_files = OrderedDict([
-                        ('user_manual', res.user_manual),
-                        ('theoretical_manual', res.theoretical_manual),
-                        ('source_code', res.source_code),
+                        ('User Manual', res.user_manual),
+                        ('Theoretical Manual', res.theoretical_manual),
+                        ('Source Code', res.source_code),
+                        ('Release Notes', cm.release_notes),
                     ])
 
     return {
