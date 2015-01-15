@@ -53,7 +53,7 @@ class HydroProgramResource(Page, RichText, AbstractResource):
     ####################################################################################################################
 
     # release notes
-    release_notes = models.TextField(verbose_name="Release Notes", null=True,default="",
+    release_notes = models.CharField(verbose_name="Release Notes", null=True,default="",max_length=400,
                                        help_text="Notes about the software release (e.g. bug fixes, new functionality)")
     # user manual
     user_manual = models.CharField(verbose_name='User Manual',name='user_manual', null=True, default=None,max_length=400,

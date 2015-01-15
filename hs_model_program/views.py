@@ -53,14 +53,16 @@ class CreateHydroProgramForm(forms.Form):
     software_language = forms.CharField(required=False,max_length=100)
     operating_sys = forms.CharField(required=False,max_length=255)
     date_released = forms.DateTimeField(required=False)
-    release_notes = forms.CharField(required=False)
+
     program_website = forms.CharField(required=False, max_length=255)
     software_repo = forms.CharField(required=False, max_length=255)
-    user_manual = forms.FileField(required=False)
-    theoretical_manual = forms.FileField(required=False)
-    source_code = forms.FileField(required=False)
-    exec_code = forms.FileField(required=False)
-    build_notes = forms.CharField(required=False)
+
+    release_notes = forms.CharField(required=False)
+    user_manual = forms.CharField(required=False)
+    theoretical_manual = forms.CharField(required=False)
+    source_code = forms.CharField(required=False)
+    # exec_code = forms.CharField(required=False)
+    # build_notes = forms.CharField(required=False)
     software_rights = forms.CharField(required=False)
 
 
