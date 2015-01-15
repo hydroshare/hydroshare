@@ -9,7 +9,7 @@
 {% set_page_permissions page %}
 
 
-<h2>Resource Details</h2>
+<h2>General Resource Details</h2>
 
 <div class="btn-toolbar" style="padding-bottom: 0.5em;">
     {% if page.perms.change %}
@@ -44,22 +44,22 @@
     </div>
 </div>
 
-<h2>Model Program Metadata</h2>
+<h2>Model Program Details</h2>
 <div class='row'>
  <div class="col-md-12">
      <table class="table">
 
-      {% for k,v in program_files.items %}
-            <tr>
-                {% if 'undefined' not in v %}
-                    <th>{{ k }}</th>
-                    <td> <a href = {{ v }}> Download </a></td>
-                {%  else %}
-                    <th>{{ k }}</th>
-                    <td> {{ v }}</td>
-                {% endif %}
-            </tr>
-        {% endfor %}
+{#      {% for k,v in program_files.items %}#}
+{#            <tr>#}
+{#                {% if 'undefined' not in v %}#}
+{#                    <th>{{ k }}</th>#}
+{#                    <td><a class="btn btn-primary btn-block" href="{{ v }}">Download</a></td>#}
+{#                {%  else %}#}
+{#                    <th>{{ k }}</th>#}
+{#                    <td> {{ v }}</td>#}
+{#                {% endif %}#}
+{#            </tr>#}
+{#        {% endfor %}#}
 
          {% for k,v in program_metadata.items %}
             <tr>
@@ -73,7 +73,14 @@
                <table class="table table-striped">
                 {% for f in cm.files.all %}
                 <tr>
-                    <td>{{ f.resource_file.name|slice:"33:" }}</td>
+                    {% for k,v in program_files.items %}
+                        {% if v == f.resource_file.url %}
+                            <td>{{  k }}</td>
+                            {{ break }}
+                        {% endif %}
+                    {%  endfor %}
+
+
                     <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
                     <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>
                     {% if page.perms.change %}
