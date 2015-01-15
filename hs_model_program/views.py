@@ -22,6 +22,7 @@ from django.template import RequestContext
 from crispy_forms.helper import FormHelper
 from django.contrib.auth.models import User, Group
 from collections import OrderedDict
+from hs_core.hydroshare.hs_bagit import create_bag
 
 # class DetailView(generic.DetailView):
 #     model = HydroProgramResource
@@ -118,6 +119,7 @@ def create_hydro_program(request, *args, **kwargs):
 
 
 
+
         res = hydroshare.create_resource(
             resource_type='HydroProgramResource',
             owner=request.user,
@@ -125,6 +127,7 @@ def create_hydro_program(request, *args, **kwargs):
             keywords=[k.strip() for k in form.cleaned_data['keywords'].split(',')] if form.cleaned_data['keywords'] else None,
             dublin_metadata=dcterms,
             content=form.cleaned_data['abstract'] or form.cleaned_data['title'],
+            files = upload_files.values(),
             ###########
             software_version = form.cleaned_data['software_version'],
             software_language = form.cleaned_data['software_language'],
@@ -133,14 +136,38 @@ def create_hydro_program(request, *args, **kwargs):
             release_notes = form.cleaned_data['release_notes'],
             program_website =form.cleaned_data['program_website'],
             software_repo =form.cleaned_data['software_repo'],
-            user_manual = upload_files['user'] if 'user' in upload_files else None,
-            theoretical_manual = upload_files['theoretical'] if 'theoretical' in upload_files else None,
-            source_code =upload_files['source'] if 'source' in upload_files else None,
-            exec_code = '',
-            build_notes =upload_files['notes'] if 'notes' in upload_files else None,
+            # user_manual = upload_files['user'] if 'user' in upload_files else None,
+            # theoretical_manual = upload_files['theoretical'] if 'theoretical' in upload_files else None,
+            # source_code =upload_files['source'] if 'source' in upload_files else None,
+            # exec_code = '',
+            # build_notes =upload_files['notes'] if 'notes' in upload_files else None,
+            user_manual = 'undefined',
+            theoretical_manual = 'undefined',
+            source_code ='undefined',
             software_rights = form.data['eula']
         )
+
+        updated_kwargs = {}
+        # get the file links from the content model (this should be done during create_resource)
+        files = res.files.all()
+        for f in files:
+            # get the file url and name
+            url = f.resource_file.url
+            fname = url.split('/')[-1]
+
+            # get the term associated with this file
+            term = file_map[fname].lower()
+            if 'theoretical' in term : res.theoretical_manual = url
+            elif 'user' in term : res.user_manual = url
+            elif 'source' in term : res.source_code= url
+            elif 'notes' in term :res.build_notes = url
+
+        if len(files) > 0:
+            res.save()
+
+        #save_files(res.short_id, upload_files)
         return HttpResponseRedirect(res.get_absolute_url())
+
     else:
         # messages.error(request, "Error")
         #return render_to_response('pages/create-hydro-program.html',frm, context_instance=RequestContext(request))
@@ -164,8 +191,27 @@ def add_dublin_core(request, page):
         abstract = None
     coverages = cm.metadata.coverages.all()
 
+    # get the current resource
+    res = hydroshare.get_resource_by_shortkey(cm.short_id)
+
     # build an ordered dictionary to store model program metadata
-    program_metadata = OrderedDict()
+    program_metadata = OrderedDict([
+                        ('software_version', cm.software_version),
+                        ('software_language', cm.software_language),
+                        ('operating_sys', cm.operating_sys),
+                        ('date_released', cm.date_released),
+                        ('release_notes', cm.release_notes),
+                        ('program_website', cm.program_website),
+                        ('software_repo', cm.software_repo),
+                        #('exec_code', res.exec_code.path if res.exec_code.name !=  '' else 'undefined'),
+                        #('build_notes', res.build_notes.path if res.build_notes.name !=  '' else 'undefined'),
+                        ('software_rights', cm.software_rights)
+                    ])
+    program_files = OrderedDict([
+                        ('user_manual', res.user_manual),
+                        ('theoretical_manual', res.theoretical_manual),
+                        ('source_code', res.source_code),
+                    ])
 
     return {
         'dublin_core': [t for t in cm.dublin_metadata.all().exclude(term='AB').exclude(term='DM').exclude(term='DC').exclude(term='DTS').exclude(term='T')],
@@ -173,6 +219,7 @@ def add_dublin_core(request, page):
         'short_id': cm.short_id,
         'resource_type': cm._meta.verbose_name,
         'coverages': coverages,
+        'cm' : cm,
         #'spatial_coverage': cm.spatial_coverage,
         #'temporal_coverage': cm.temporal_coverage,
         #'includes_output': cm.includes_output,
@@ -188,19 +235,22 @@ def add_dublin_core(request, page):
         'edit_users': set(cm.edit_users.all()),
         'edit_groups': set(cm.edit_groups.all()),
         ##################
-        'software_version' : cm.software_version,
-        'software_language' : cm.software_language,
-        'operating_sys' : cm.operating_sys,
-        'date_released' : cm.date_released,
-        'release_notes' : cm.release_notes,
-        'program_website' : cm.program_website,
-        'software_repo' : cm.software_repo,
-        'user_manual'  : cm.user_manual,
-        'theoretical_manual' : cm.theoretical_manual,
-        'source_code' : cm.source_code,
-        'exec_code' :cm.exec_code,
-        'build_notes' : cm.build_notes,
-        'software_rights': cm.software_rights
+        'program_metadata' : program_metadata,
+        'program_files' : program_files,
+
+        # 'software_version' : cm.software_version,
+        # 'software_language' : cm.software_language,
+        # 'operating_sys' : cm.operating_sys,
+        # 'date_released' : cm.date_released,
+        # 'release_notes' : cm.release_notes,
+        # 'program_website' : cm.program_website,
+        # 'software_repo' : cm.software_repo,
+        # 'user_manual'  : cm.user_manual,
+        # 'theoretical_manual' : cm.theoretical_manual,
+        # 'source_code' : cm.source_code,
+        # 'exec_code' :cm.exec_code,
+        # 'build_notes' : cm.build_notes,
+        # 'software_rights': cm.software_rights
     }
 
 def upload_files(request):
