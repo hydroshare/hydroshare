@@ -44,94 +44,91 @@
     </div>
 </div>
 
-<h2>Model Program Details</h2>
-<div class='row'>
- <div class="col-md-12">
-     <table class="table">
-
-{#      {% for k,v in program_files.items %}#}
-{#            <tr>#}
-{#                {% if 'undefined' not in v %}#}
-{#                    <th>{{ k }}</th>#}
-{#                    <td><a class="btn btn-primary btn-block" href="{{ v }}">Download</a></td>#}
-{#                {%  else %}#}
-{#                    <th>{{ k }}</th>#}
-{#                    <td> {{ v }}</td>#}
-{#                {% endif %}#}
-{#            </tr>#}
-{#        {% endfor %}#}
-
-         {% for k,v in program_metadata.items %}
-            <tr>
-                <th>{{ k }}</th>
-                <td>{{ v }}</td>
-            </tr>
-        {% endfor %}
-    </table>
-</div>
-
-               <table class="table table-striped">
-                {% for f in cm.files.all %}
-                <tr>
-                    {% for k,v in program_files.items %}
-                        {% if v == f.resource_file.url %}
-                            <td>{{  k }}</td>
-                            {{ break }}
-                        {% endif %}
-                    {%  endfor %}
-
-
-                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
-                    <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>
-                    {% if page.perms.change %}
-                        <div class="modal fade" id="delete-resource-file" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-                          <div class="modal-dialog">
-                            <div class="modal-content">
-                              <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                <h4 class="modal-title" id="submit-for-publication-title">Confirm resource file deletion</h4>
-                              </div>
-                              <div class="modal-body">
-                                  <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource file. A copy of your
-                                    resource file will not be retained by Hydroshare.  We recommend highly that you download the latest copy
-                                    of your resource file before confirming this action.
-                              </div>
-                              <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <td><a class="btn btn-danger btn-block" data-toggle="modal" data-target="#delete-resource-file">Delete</a></td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-
-                <tfoot>
+        <h2>Model Program Details</h2>
+        <div class='row'>
+         <div class="col-md-12">
+             <table class="table">
+                 {% for k,v in program_metadata.items %}
                     <tr>
-                        <td></td>
-                        <td></td>
-                        <td>
-                            <div class="btn-group">
-                              <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Export all</a>
-                              <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                                <span class="caret"></span>
-                                <span class="sr-only">Toggle Dropdown</span>
-                              </button>
-                              <ul class="dropdown-menu" role="menu">
-                                  {% for b in cm.bags.all %}
-                                    <li><a href="{{ b.bag.url }}" style="color:black;">{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>
-                                  {% endfor %}
-                              </ul>
-                            </div>
-                        </td>
-                        {% if page.perms.change %}
-                        <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
+                        <th width="22%">{{ k }}</th>
+
+                        {% if 'Rights' in k %}
+
+                            <td> <div style="width:100%;height:8%;overflow-y:auto;background-color: #f0f0f0"> {{ v }}</div></td>
+
+                        {% else %}
+
+                            <td>{{ v }}</td>
+
                         {% endif %}
                     </tr>
-                </tfoot>
+                {% endfor %}
             </table>
+        </div>
+    </div>
+
+       <table class="table table-striped">
+        {% for f in cm.files.all %}
+        <tr>
+            {% for k,v in program_files.items %}
+                {% if v == f.resource_file.url %}
+                    <td>{{  k }}</td>
+                    {{ break }}
+                {% endif %}
+            {%  endfor %}
+
+
+            <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
+            <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>
+            {% if page.perms.change %}
+                <div class="modal fade" id="delete-resource-file" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="submit-for-publication-title">Confirm resource file deletion</h4>
+                      </div>
+                      <div class="modal-body">
+                          <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource file. A copy of your
+                            resource file will not be retained by Hydroshare.  We recommend highly that you download the latest copy
+                            of your resource file before confirming this action.
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <td><a class="btn btn-danger btn-block" data-toggle="modal" data-target="#delete-resource-file">Delete</a></td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+
+        <tfoot>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>
+                    <div class="btn-group">
+                      <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Export all</a>
+                      <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                      </button>
+                      <ul class="dropdown-menu" role="menu">
+                          {% for b in cm.bags.all %}
+                            <li><a href="{{ b.bag.url }}" style="color:black;">{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>
+                          {% endfor %}
+                      </ul>
+                    </div>
+                </td>
+                {% if page.perms.change %}
+                <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
+                {% endif %}
+            </tr>
+        </tfoot>
+    </table>
 
 
 
