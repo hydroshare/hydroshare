@@ -56,14 +56,14 @@ class HydroProgramResource(Page, RichText, AbstractResource):
     release_notes = models.TextField(verbose_name="Release Notes", null=True,default="",
                                        help_text="Notes about the software release (e.g. bug fixes, new functionality)")
     # user manual
-    user_manual = models.FileField(verbose_name='User Manual',name='user_manual', null=True, default=None, upload_to='./hs/hydromodel',
+    user_manual = models.CharField(verbose_name='User Manual',name='user_manual', null=True, default=None,max_length=400,
                                      help_text='User manual for the model program (e.g. .doc, .md, .rtf, .pdf')
     # theoretical manual
-    theoretical_manual = models.FileField(verbose_name='Theoretical Manual',name='theoretical_manual', null=True, default=None, upload_to='./hs/hydromodel',
+    theoretical_manual = models.CharField(verbose_name='Theoretical Manual',name='theoretical_manual', null=True, default=None, max_length=400,
                                      help_text='Theoretical manual for the model program (e.g. .doc, .md, .rtf, .pdf')
     # source code
     # This will save the file in ./static/media/hs/hydromodel
-    source_code = models.FileField(verbose_name='Model Source Code',name='source_code', default=None, null=False, upload_to='./hs/hydromodel',
+    source_code = models.CharField(verbose_name='Model Source Code',name='source_code', default=None, null=False,max_length=400,
                                      help_text='Upload Model Source Code as *.ZIP')
 
     ####################################################################################################################
@@ -72,12 +72,12 @@ class HydroProgramResource(Page, RichText, AbstractResource):
     # missing #
     ###########
 
-    # executable code
-    exec_code = models.FileField(verbose_name='Model Executable Code',name='exec_code', null=True, default=None, upload_to='./hs/hydromodel',
-                                     help_text='Upload Model Executables as *.ZIP')
-    # build notes
-    build_notes = models.TextField(verbose_name="Build Notes", null=True,default="",
-                                       help_text="Notes about building/compiling the source code")
+    # # executable code
+    # exec_code = models.FileField(verbose_name='Model Executable Code',name='exec_code', null=True, default=None, upload_to='./hs/hydromodel',
+    #                                  help_text='Upload Model Executables as *.ZIP')
+    # # build notes
+    # build_notes = models.TextField(verbose_name="Build Notes", null=True,default="",
+    #                                    help_text="Notes about building/compiling the source code")
 
     # repository type?
 
