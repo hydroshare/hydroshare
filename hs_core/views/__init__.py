@@ -258,6 +258,13 @@ class FilterForm(forms.Form):
 def my_resources(request, page):
 #    if not request.user.is_authenticated():
 #        return HttpResponseRedirect('/accounts/login/')
+
+    # TODO: remove the following 4 lines of debugging code prior to pull request
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
         res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
@@ -424,6 +431,81 @@ def describe_resource(request, *args, **kwargs):
                 else:
                     page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
     return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
+
+# TODO: new method by pabitra
+@login_required
+def create_resource_new_workflow(request, *args, **kwargs):
+    resource_type=request.POST['resource-type']
+    res_title = request.POST['title']
+    if len(res_title) == 0:
+        res_title = 'Untitled resource'
+
+    global res_cls, resource
+    resource_files = request.FILES.getlist('files')
+    valid = hydroshare.check_resource_files(resource_files)
+    if not valid:
+        context = {
+            'file_size_error' : 'The resource file is larger than the supported size limit %s. '
+                                'Select resource files within %s to create resource.'
+                                % (file_size_limit_for_display, file_size_limit_for_display)
+        }
+        return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
+
+    res_cls = hydroshare.check_resource_type(resource_type)
+
+    # Send pre_describe_resource signal for other resource type apps to listen, extract, and add their own metadata
+    #ret_responses = pre_describe_resource.send(sender=res_cls, files=resource_files)
+    metadata = []
+    # Send pre-create resource signal - let any other app populate the metadata list object
+    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, resource=None, **kwargs)
+
+    metadata.append({'title': {'value': res_title}})
+    metadata.append({'description': {'abstract': 'No abstract'}})
+    # create barebone resource with resource_files to database model for later update since on Django 1.7,
+    # resource_files get closed automatically at the end of each request
+    owner = user_from_id(request.user)
+
+    resource = hydroshare.create_resource(
+            resource_type=request.POST['resource-type'],
+            owner=request.user,
+            title=res_title,
+            keywords=None,
+            dublin_metadata=None,
+            metadata=metadata,
+            files=request.FILES.getlist('files'),
+            content=res_title
+    )
+
+    # resource = res_cls.objects.create(
+    #         user=owner,
+    #         creator=owner,
+    #         title=res_title,
+    #         last_changed_by=owner,
+    #         in_menus=[],
+    #         **kwargs
+    # )
+    # for file in resource_files:
+    #     ResourceFile.objects.create(content_object=resource, resource_file=file)
+
+    if resource is not None:
+        # go to resource landing page
+        return HttpResponseRedirect(resource.get_absolute_url())
+
+    # create_res_context = {
+    #     'resource_type': resource_type,
+    #     'res_title': res_title,
+    # }
+    #
+    # page_url = 'pages/create-resource.html'
+    #
+    # for receiver, response in ret_responses:
+    #     if response is not None:
+    #         for key in response:
+    #             if key != 'create_resource_page_url':
+    #                 create_res_context[key] = response[key]
+    #             else:
+    #                 page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
+    # return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
 
 class CreateResourceForm(forms.Form):
     title = forms.CharField(required=True)

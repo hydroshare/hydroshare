@@ -1429,7 +1429,7 @@ class GenericResource(Page, AbstractResource):
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
     #from django.contrib.sites.models import Site
-    _domain = 'hydroshare.org'  #Site.objects.get_current() # this one giving error since the database does not have a related table called 'django_site'
+    #_domain = 'hydroshare.org'  #Site.objects.get_current() # this one giving error since the database does not have a related table called 'django_site'
 
     XML_HEADER = '''<?xml version="1.0"?>
 <!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
@@ -1441,7 +1441,7 @@ class CoreMetaData(models.Model):
                   'hsterms': "http://hydroshare.org/terms/"}
 
     DATE_FORMAT = "YYYY-MM-DDThh:mm:ssTZD"
-    HYDROSHARE_URL = 'http://%s' % _domain
+    #HYDROSHARE_URL = 'http://%s' % _domain
 
     id = models.AutoField(primary_key=True)
 
@@ -1534,7 +1534,8 @@ class CoreMetaData(models.Model):
         # create the Description element -this is not exactly a dc element
         rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' % self.NAMESPACES['rdf'])
 
-        resource_uri = self.HYDROSHARE_URL + '/resource/' + self.resource.short_id
+        #resource_uri = self.HYDROSHARE_URL + '/resource/' + self.resource.short_id
+        resource_uri = self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
         rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], resource_uri)
 
         # create the title element
@@ -1787,13 +1788,14 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
     """Create initial dublin core elements"""
     if isinstance(instance, AbstractResource):
         if created:
-            from hs_core.hydroshare import utils
-            import json
-            instance.metadata.create_element('title', value=instance.title)
-            if instance.content:
-                instance.metadata.create_element('description', abstract=instance.content)
-            else:
-                instance.metadata.create_element('description', abstract=instance.description)
+            pass
+            # from hs_core.hydroshare import utils
+            # import json
+            # instance.metadata.create_element('title', value=instance.title)
+            # if instance.content:
+            #     instance.metadata.create_element('description', abstract=instance.content)
+            # else:
+            #     instance.metadata.create_element('description', abstract=instance.description)
 
             # TODO: With the current VM the get_user_info() method fails. So we can't get the resource uri for
             # the user now.
@@ -1802,16 +1804,16 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
             #                                  email=instance.creator.email,
             #                                  description=creator_dict['resource_uri'])
 
-            instance.metadata.create_element('creator', name=instance.creator.get_full_name(), email=instance.creator.email)
+            #instance.metadata.create_element('creator', name=instance.creator.get_full_name(), email=instance.creator.email)
 
             # TODO: The element 'Type' can't be created as we do not have an URI for specific resource types yet
 
-            instance.metadata.create_element('date', type='created', start_date=instance.created)
-            instance.metadata.create_element('date', type='modified', start_date=instance.updated)
+            # instance.metadata.create_element('date', type='created', start_date=instance.created)
+            # instance.metadata.create_element('date', type='modified', start_date=instance.updated)
 
             # res_json = utils.serialize_science_metadata(instance)
             # res_dict = json.loads(res_json)
-            instance.metadata.create_element('identifier', name='hydroShareIdentifier', url='http://hydroshare.org/resource{0}{1}'.format('/', instance.short_id))
+            #instance.metadata.create_element('identifier', name='hydroShareIdentifier', url='http://hydroshare.org/resource{0}{1}'.format('/', instance.short_id))
 
         else:
             resource_update_signal_handler(sender, instance, created, **kwargs)
