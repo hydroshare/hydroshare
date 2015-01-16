@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 from south.db import db
 from south.v2 import SchemaMigration
 
@@ -75,3 +74,4 @@ class Migration(migrations.Migration):
             bases=('pages.page', models.Model),
         ),
     ]
+
