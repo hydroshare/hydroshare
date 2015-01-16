@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-            ('variableName', self.gf('django.db.models.fields.TextField')(null=True)),
-            ('method', self.gf('django.db.models.fields.TextField')(null=True)),
+from south.db import db
+from south.v2 import SchemaMigration
 
 from django.db import models, migrations
 from django.conf import settings
