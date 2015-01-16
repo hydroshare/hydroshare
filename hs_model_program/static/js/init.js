@@ -80,6 +80,8 @@ myDropzone.on("success", function(file, data){
 
     console.log('success');
 
+    window.location.replace(data);
+
 });
 
 // Hide the total progress bar when nothing's uploading anymore
