@@ -40,7 +40,9 @@ urlpatterns = patterns('',
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/change-permissions/$', views.change_permissions),
     url(r'^_internal/verify_captcha/$', views.verify_captcha),
     url(r'^_internal/publish/$', views.publish),
-    url(r'^_internal/create-resource/$', views.create_resource),
+    #TODO: Pabitra: Finalize resource create url
+    #url(r'^_internal/create-resource/$', views.create_resource),
+    url(r'^_internal/create-resource/$', views.create_resource_new_workflow),
     url(r'^_internal/describe-resource/$', views.describe_resource),
     url(r'^_internal/resend_verification_email/$', views.resend_verification_email),
 )

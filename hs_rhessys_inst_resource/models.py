@@ -12,7 +12,8 @@ from django.shortcuts import get_object_or_404
 import django.dispatch
 from .forms import InputForm
 from mezzanine.pages.page_processors import processor_for
-from hs_core.hydroshare.resource import post_create_resource
+#from hs_core.hydroshare.resource import post_create_resource
+from hs_core.signals import *
 #from hs_core.views import pre_describe_resource
 from django.utils.timezone import now
 from django.dispatch import receiver

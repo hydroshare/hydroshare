@@ -2,7 +2,8 @@ __author__ = 'Hong Yi'
 ## Note: this module has been imported in the models.py in order to receive signals
 ## at the end of the models.py for the import of this module
 from django.dispatch import receiver
-from hs_core.hydroshare import pre_create_resource, post_create_resource
+#from hs_core.hydroshare import pre_create_resource, post_create_resource
+from hs_core.signals import *
 from hs_core.signals import *
 from hs_geo_raster_resource.models import RasterResource
 from hs_geo_raster_resource.models import RasterBand
