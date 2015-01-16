@@ -12,5 +12,5 @@ class ValidateMetadataForm(forms.Form):
     bandName_1 = forms.CharField(max_length=50, required=True)
     variableName_1 = forms.CharField(max_length=50, required=True)
     variableUnit_1 = forms.CharField(max_length=50, required=True)
-    method_1 = forms.CharField(max_length=50, required=False)
+    method_1 = forms.CharField(widget=forms.Textarea, required=False)
     comment_1 = forms.CharField(widget=forms.Textarea, required=False)
