@@ -15,9 +15,6 @@ RUN pip install django-jsonfield
 RUN pip install docker-py
 RUN pip install suds-jurko
 
-
-
-
 RUN rm -rf /tmp/pip-build-root
 RUN mkdir -p /var/run/sshd
 RUN echo root:docker | chpasswd
