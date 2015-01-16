@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from south.utils import datetime_utils as datetime
-from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
+import hs_core.models
 import hs_core.models
 
 class Migration(SchemaMigration):
@@ -20,13 +20,12 @@ class Migration(SchemaMigration):
         db.send_create_signal(u'hs_geo_raster_resource', ['RasterBand'])
 
         # Adding model 'RasterResource'
-        db.create_table(u'hs_geo_raster_resource_rasterresource', (
             (u'page_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['pages.Page'], unique=True, primary_key=True)),
             (u'comments_count', self.gf('django.db.models.fields.IntegerField')(default=0)),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'rasterresources', to=orm['auth.User'])),
             ('creator', self.gf('django.db.models.fields.related.ForeignKey')(related_name=u'creator_of_hs_geo_raster_resource_rasterresource', to=orm['auth.User'])),
             ('public', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('frozen', self.gf('django.db.models.fields.BooleanField')(default=False)),
+    ]
             ('do_not_distribute', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('discoverable', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('published_and_frozen', self.gf('django.db.models.fields.BooleanField')(default=False)),
@@ -49,19 +48,16 @@ class Migration(SchemaMigration):
 
         # Adding M2M table for field owners on 'RasterResource'
         m2m_table_name = db.shorten_name(u'hs_geo_raster_resource_rasterresource_owners')
-        db.create_table(m2m_table_name, (
+            name='RasterBand',
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
             ('rasterresource', models.ForeignKey(orm[u'hs_geo_raster_resource.rasterresource'], null=False)),
-            ('user', models.ForeignKey(orm[u'auth.user'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['rasterresource_id', 'user_id'])
+                ('bandName', models.CharField(max_length=50, null=True)),
+                ('variableName', models.CharField(max_length=50, null=True)),
 
-        # Adding M2M table for field view_users on 'RasterResource'
+                ('method', models.CharField(max_length=100, null=True, blank=True)),
         m2m_table_name = db.shorten_name(u'hs_geo_raster_resource_rasterresource_view_users')
-        db.create_table(m2m_table_name, (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
             ('rasterresource', models.ForeignKey(orm[u'hs_geo_raster_resource.rasterresource'], null=False)),
-            ('user', models.ForeignKey(orm[u'auth.user'], null=False))
         ))
         db.create_unique(m2m_table_name, ['rasterresource_id', 'user_id'])
 
@@ -138,13 +134,6 @@ class Migration(SchemaMigration):
         u'auth.permission': {
             'Meta': {'ordering': "(u'content_type__app_label', u'content_type__model', u'codename')", 'unique_together': "((u'content_type', u'codename'),)", 'object_name': 'Permission'},
             'codename': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
-        },
-        u'auth.user': {
-            'Meta': {'object_name': 'User'},
-            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'groups': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Group']"}),
@@ -157,6 +146,7 @@ class Migration(SchemaMigration):
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Permission']"}),
             'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'})
+                ('bands', models.ManyToManyField(help_text=b'All band info of the raster resource', related_name='bands_of_raster', to='hs_geo_raster_resource.RasterBand')),
         },
         u'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
