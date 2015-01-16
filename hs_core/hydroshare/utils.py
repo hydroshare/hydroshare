@@ -9,6 +9,7 @@ from dublincore.models import QualifiedDublinCoreElement
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
 from django.core.serializers import get_serializer
+from mezzanine.conf import settings
 from . import hs_bagit
 #from hs_scholar_profile.models import *
 
@@ -16,6 +17,7 @@ import importlib
 import json
 from lxml import etree
 import arrow
+#from hydroshare import settings
 
 cached_resource_types = None
 
@@ -452,3 +454,13 @@ def _validate_email( email ):
 def get_profile(user):
     return user.userprofile
 
+def current_site_url():
+    """Returns fully qualified URL (no trailing slash) for the current site."""
+    from django.contrib.sites.models import Site
+    current_site = Site.objects.get_current()
+    protocol = getattr(settings, 'MY_SITE_PROTOCOL', 'http')
+    port     = getattr(settings, 'MY_SITE_PORT', '')
+    url = '%s://%s' % (protocol, current_site.domain)
+    if port:
+        url += ':%s' % port
+    return url
