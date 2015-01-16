@@ -163,7 +163,9 @@ def create_hydro_program(request, *args, **kwargs):
             res.save()
 
         #save_files(res.short_id, upload_files)
-        return HttpResponseRedirect(res.get_absolute_url())
+        #return HttpResponseRedirect(res.get_absolute_url())
+        u = res.get_absolute_url()
+        return HttpResponse(u)
 
     else:
         # messages.error(request, "Error")
