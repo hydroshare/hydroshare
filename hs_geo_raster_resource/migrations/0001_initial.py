@@ -1,47 +1,35 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
 from django.db import models, migrations
 from django.conf import settings
+import hs_core.models
 import hs_core.models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0002_auto_20150127_1847'),
         ('auth', '0001_initial'),
         ('pages', '__first__'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('contenttypes', '0001_initial'),
     ]
+    ]
 
     operations = [
         migrations.CreateModel(
-            name='BandInformation',
+            name='RasterBand',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('object_id', models.PositiveIntegerField()),
-                ('name', models.CharField(max_length=50, null=True)),
-                ('variableName', models.TextField(null=True)),
+                ('bandName', models.CharField(max_length=50, null=True)),
+                ('variableName', models.CharField(max_length=50, null=True)),
                 ('variableUnit', models.CharField(max_length=50, null=True)),
-                ('method', models.TextField(null=True, blank=True)),
+                ('method', models.CharField(max_length=100, null=True, blank=True)),
                 ('comment', models.TextField(null=True, blank=True)),
-                ('content_type', models.ForeignKey(related_name='hs_geo_raster_resource_bandinformation_related', to='contenttypes.ContentType')),
             ],
             options={
-                'abstract': False,
             },
             bases=(models.Model,),
-        ),
-        migrations.CreateModel(
-            name='RasterMetaData',
-            fields=[
-                ('coremetadata_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='hs_core.CoreMetaData')),
-            ],
-            options={
-            },
-            bases=('hs_core.coremetadata',),
         ),
         migrations.CreateModel(
             name='RasterResource',
@@ -65,6 +53,7 @@ class Migration(migrations.Migration):
                 ('cellDataType', models.CharField(max_length=50, null=True)),
                 ('noDataValue', models.FloatField(null=True)),
                 ('bandCount', models.IntegerField(null=True)),
+                ('bands', models.ManyToManyField(help_text=b'All band info of the raster resource', related_name='bands_of_raster', to='hs_geo_raster_resource.RasterBand')),
                 ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
                 ('creator', models.ForeignKey(related_name='creator_of_hs_geo_raster_resource_rasterresource', to=settings.AUTH_USER_MODEL, help_text=b'This is the person who first uploaded the resource')),
                 ('edit_groups', models.ManyToManyField(help_text=b'This is the set of Hydroshare Groups who can edit the resource', related_name='group_editable_hs_geo_raster_resource_rasterresource', null=True, to='auth.Group', blank=True)),
