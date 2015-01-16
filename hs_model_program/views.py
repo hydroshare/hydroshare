@@ -138,11 +138,6 @@ def create_hydro_program(request, *args, **kwargs):
             release_notes = form.cleaned_data['release_notes'],
             program_website =form.cleaned_data['program_website'],
             software_repo =form.cleaned_data['software_repo'],
-            # user_manual = upload_files['user'] if 'user' in upload_files else None,
-            # theoretical_manual = upload_files['theoretical'] if 'theoretical' in upload_files else None,
-            # source_code =upload_files['source'] if 'source' in upload_files else None,
-            # exec_code = '',
-            # build_notes =upload_files['notes'] if 'notes' in upload_files else None,
             user_manual = 'undefined',
             theoretical_manual = 'undefined',
             source_code ='undefined',
@@ -220,11 +215,6 @@ def add_dublin_core(request, page):
         'resource_type': cm._meta.verbose_name,
         'coverages': coverages,
         'cm' : cm,
-        #'spatial_coverage': cm.spatial_coverage,
-        #'temporal_coverage': cm.temporal_coverage,
-        #'includes_output': cm.includes_output,
-        #'executed_by' : cm.executed_by,
-        #'files': cm.files.all(),
         'dcterm_frm': DCTerm(),
         'bag': cm.bags.first(),
         'users': User.objects.all(),
@@ -237,20 +227,6 @@ def add_dublin_core(request, page):
         ##################
         'program_metadata' : program_metadata,
         'program_files' : program_files,
-
-        # 'software_version' : cm.software_version,
-        # 'software_language' : cm.software_language,
-        # 'operating_sys' : cm.operating_sys,
-        # 'date_released' : cm.date_released,
-        # 'release_notes' : cm.release_notes,
-        # 'program_website' : cm.program_website,
-        # 'software_repo' : cm.software_repo,
-        # 'user_manual'  : cm.user_manual,
-        # 'theoretical_manual' : cm.theoretical_manual,
-        # 'source_code' : cm.source_code,
-        # 'exec_code' :cm.exec_code,
-        # 'build_notes' : cm.build_notes,
-        # 'software_rights': cm.software_rights
     }
 
 def upload_files(request):
