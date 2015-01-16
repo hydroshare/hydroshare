@@ -14,7 +14,7 @@ class Migration(SchemaMigration):
             ('bandName', self.gf('django.db.models.fields.CharField')(max_length=50, null=True)),
             ('variableName', self.gf('django.db.models.fields.CharField')(max_length=50, null=True)),
             ('variableUnit', self.gf('django.db.models.fields.CharField')(max_length=50, null=True)),
-            ('method', self.gf('django.db.models.fields.CharField')(max_length=100, null=True)),
+            ('method', self.gf('django.db.models.fields.TextField')(null=True)),
             ('comment', self.gf('django.db.models.fields.TextField')(null=True)),
         ))
         db.send_create_signal(u'hs_geo_raster_resource', ['RasterBand'])
@@ -169,8 +169,8 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'RasterBand'},
             'bandName': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True'}),
             'comment': ('django.db.models.fields.TextField', [], {'null': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'method': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True'}),
+             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'method': ('django.db.models.fields.TextField', [], {'null': 'True'}),
             'variableName': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True'}),
             'variableUnit': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True'})
         },

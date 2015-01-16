@@ -15,7 +15,7 @@ class RasterBand(models.Model):
     bandName = models.CharField(max_length=50, null=True)
     variableName = models.CharField(max_length=50, null=True)
     variableUnit = models.CharField(max_length=50, null=True)
-    method = models.CharField(max_length=100, null=True, blank=True)
+    method = models.TextField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
 #
 # To create a new resource, use these two super-classes.
