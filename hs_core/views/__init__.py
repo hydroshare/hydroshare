@@ -16,7 +16,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, user_from_id
 from .utils import authorize
-from hs_core.models import ResourceFile, GenericResource, resource_processor
+from hs_core.models import ResourceFile, GenericResource, resource_processor, CoreMetaData
 import requests
 from django.core import exceptions as ex
 from mezzanine.pages.page_processors import processor_for
@@ -95,6 +95,85 @@ def add_metadata_term(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+def _get_resource_sender(element_name, resource):
+    core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
+
+    if element_name in core_metadata_element_names:
+        sender_resource = GenericResource().__class__
+    else:
+        sender_resource = resource.__class__
+
+    return sender_resource
+
+
+def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+
+    sender_resource = _get_resource_sender(element_name, res)
+    handler_response = pre_metadata_element_create.send(sender=sender_resource, element_name=element_name,
+                                                        request=request)
+    is_add_success = False
+    for receiver, response in handler_response:
+        if 'is_valid' in response:
+            if response['is_valid']:
+                element_data_dict = response['element_data_dict']
+                if element_name == 'subject':
+                    keywords = [k.strip() for k in element_data_dict['value'].split(',')]
+                    if res.metadata.subjects.all().count() > 0:
+                        res.metadata.subjects.all().delete()
+                    for kw in keywords:
+                        res.metadata.create_element(element_name, value=kw)
+                else:
+                    res.metadata.create_element(element_name, **element_data_dict)
+
+                is_add_success = True
+                resource_modified(res, request.user)
+
+    if request.is_ajax():
+        if is_add_success:
+            return HttpResponse("success")
+        else:
+            return HttpResponse("failure")
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def update_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    sender_resource = _get_resource_sender(element_name, res)
+    handler_response = pre_metadata_element_update.send(sender=sender_resource, element_name=element_name,
+                                                        element_id=element_id, request=request)
+    is_update_success = False
+
+    for receiver, response in handler_response:
+        if 'is_valid' in response:
+            if response['is_valid']:
+                element_data_dict = response['element_data_dict']
+                res.metadata.update_element(element_name, element_id, **element_data_dict)
+                if element_name == 'title':
+                    res.title = res.metadata.title.value
+                    res.save()
+
+                resource_modified(res, request.user)
+                is_update_success = True
+
+    if request.is_ajax():
+        if is_update_success:
+            return HttpResponse("success")
+        else:
+            return HttpResponse("failure")
+
+        #return render_to_response("Success")
+    #return render_to_response('pages/genericresource.html', context_instance=RequestContext(request))
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res.metadata.delete_element(element_name, element_id)
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     fl = res.files.filter(pk=int(f)).first()
@@ -124,6 +203,7 @@ def publish(request, shortkey, *args, **kwargs):
     res.save()
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 def change_permissions(request, shortkey, *args, **kwargs):
 
@@ -460,7 +540,7 @@ def create_resource_new_workflow(request, *args, **kwargs):
     pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, resource=None, **kwargs)
 
     metadata.append({'title': {'value': res_title}})
-    metadata.append({'description': {'abstract': 'No abstract'}})
+    #metadata.append({'description': {'abstract': 'No abstract'}})
     # create barebone resource with resource_files to database model for later update since on Django 1.7,
     # resource_files get closed automatically at the end of each request
     owner = user_from_id(request.user)
