@@ -1,0 +1,21 @@
+{% extends "pages/genericresource.html" %}
+{% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags crispy_forms_tags %}
+
+{% block extra_content %}
+    <h4>NetCDF Extended Metadata</h4>
+
+    {%  csrf_token %}
+
+    {{ variable_formsets |crispy }}
+    {% comment %}
+    {% for lf in variable_formsets %}
+        <div>Variable</div>
+        {% fields_for lf %}
+    {% endfor %}
+    {% endcomment %}
+
+{% endblock %}
+
+
+
+
