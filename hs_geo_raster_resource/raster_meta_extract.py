@@ -74,8 +74,8 @@ def get_spatial_coverage_info(raster_dataset):
             proj = spatial_ref.GetAttrValue("PROJECTION", 0) if spatial_ref.GetAttrValue("PROJECTION", 0) else ''
             projection = datum + ' '+proj
     else:
-        unit = ''
-        projection = ''
+        unit = 'Unnamed'
+        projection = 'Unnamed'
 
     # get the bounding box
     gt = raster_dataset.GetGeoTransform()
@@ -131,7 +131,7 @@ def get_cell_and_band_info(raster_dataset):
         if re.match('metre', cell_size_unit, re.I):
             cell_size_unit = 'meter'
     else:
-        cell_size_unit = ''
+        cell_size_unit = 'Unnamed'
 
     # get band count, cell no data value, cell data type
     band_count = raster_dataset.RasterCount

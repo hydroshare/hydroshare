@@ -19,13 +19,14 @@ def raster_describe_resource_trigger(sender, **kwargs):
             infile = files[0]
             import raster_meta_extract
             global res_md_dict
+
             res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
             bcount = res_md_dict['cell_and_band_info']['bandCount']
 
             for i in range(bcount):
                 res_md_dict['cell_and_band_info']['name (band '+str(i+1)+')'] = 'Band_' + str(i+1)
-                res_md_dict['cell_and_band_info']['variable (band '+str(i+1)+')'] = 'Required'
-                res_md_dict['cell_and_band_info']['units (band '+str(i+1)+')'] = 'Required'
+                res_md_dict['cell_and_band_info']['variable (band '+str(i+1)+')'] = 'Unnamed'
+                res_md_dict['cell_and_band_info']['units (band '+str(i+1)+')'] = 'Unnamed'
                 res_md_dict['cell_and_band_info']['method (band '+str(i+1)+')'] = ''
                 res_md_dict['cell_and_band_info']['comment (band '+str(i+1)+')'] = ''
 
