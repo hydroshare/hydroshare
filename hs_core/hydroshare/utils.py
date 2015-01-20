@@ -421,7 +421,7 @@ def serialize_science_metadata_xml(res):
     #return getattr(tastypie_api, tastypie_name)()        # make an instance of the tastypie resource
 
 
-def resource_modified(resource, by_user=None):
+def resource_modified(resource, by_user=None, overwrite_bag=True):
     resource.last_changed_by = by_user
     QualifiedDublinCoreElement.objects.filter(term='DM', object_id=resource.pk).delete()
     QualifiedDublinCoreElement.objects.create(
@@ -430,6 +430,9 @@ def resource_modified(resource, by_user=None):
         content_object=resource
             )
     resource.save()
+    if overwrite_bag:
+        resource.bags.all().delete()
+
     hs_bagit.create_bag(resource)
 
 def _get_dc_term_objects(resource_dc_elements, term):
