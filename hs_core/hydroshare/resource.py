@@ -425,12 +425,8 @@ def create_resource(
     file_format_types = []
     for file in files:
         ResourceFile.objects.create(content_object=resource, resource_file=file)
-        # TODO: looks like the mimetypes module can't find all mime types
-        # We may need to user the python magic module instead
-        file_format_type = mimetypes.guess_type(file.name)[0]
-        if not file_format_type:
-            # TODO: this is probably not the right way to get the mime type
-            file_format_type ='application/%s' % os.path.splitext(file.name)[1][1:]
+
+        file_format_type = utils.get_file_mime_type(file.name)
         if file_format_type not in file_format_types:
             file_format_types.append(file_format_type)
             metadata.append({'format': {'value': file_format_type}})

@@ -4,6 +4,8 @@ from django.db.models import get_model, get_models
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
+import mimetypes
+import os
 from hs_core.models import AbstractResource
 from dublincore.models import QualifiedDublinCoreElement
 from django.core.exceptions import ObjectDoesNotExist
@@ -454,8 +456,10 @@ def _validate_email( email ):
     except ValidationError:
         return False
 
+
 def get_profile(user):
     return user.userprofile
+
 
 def current_site_url():
     """Returns fully qualified URL (no trailing slash) for the current site."""
@@ -467,3 +471,14 @@ def current_site_url():
     if port:
         url += ':%s' % port
     return url
+
+
+def get_file_mime_type(file_name):
+    # TODO: looks like the mimetypes module can't find all mime types
+    # We may need to user the python magic module instead
+    file_format_type = mimetypes.guess_type(file_name)[0]
+    if not file_format_type:
+        # TODO: this is probably not the right way to get the mime type
+        file_format_type ='application/%s' % os.path.splitext(file_name)[1][1:]
+
+    return file_format_type

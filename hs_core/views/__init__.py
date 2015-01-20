@@ -12,6 +12,8 @@ from django.utils.timezone import now
 from mezzanine.conf import settings
 from django import forms
 from mezzanine.generic.models import Keyword
+import mimetypes
+import os
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, user_from_id
@@ -33,6 +35,7 @@ from . import users_api
 from . import discovery_api
 from . import resource_api
 from . import social_api
+from hs_core.hydroshare import utils
 from hs_core.hydroshare import file_size_limit_for_display
 from hs_core.signals import *
 import autocomplete_light
@@ -72,8 +75,15 @@ def add_file_to_resource(request, *args, **kwargs):
         raise TypeError('shortkey must be specified...')
 
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+
     for f in request.FILES.getlist('files'):
         res.files.add(ResourceFile(content_object=res, resource_file=f))
+
+        # add format metadata element if necessary
+        file_format_type = utils.get_file_mime_type(f.name)
+        if file_format_type not in [mime.value for mime in res.metadata.formats.all()]:
+            res.metadata.create_element('format', value=file_format_type)
+
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -177,8 +187,18 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     fl = res.files.filter(pk=int(f)).first()
+    file_name = fl.resource_file.name
     fl.resource_file.delete()
     fl.delete()
+    delete_file_mime_type = utils.get_file_mime_type(file_name)
+    delete_file_extension = os.path.splitext(file_name)[1]
+    # if there is no other resource file with the same extension as the
+    # file just deleted then delete the matching format metadata element for the resource
+    resource_file_extensions = [os.path.splitext(f.resource_file.name)[1] for f in res.files.all()]
+    if delete_file_extension not in resource_file_extensions:
+        format_element = res.metadata.formats.filter(value=delete_file_mime_type).first()
+        res.metadata.delete_element(format_element.term, format_element.id)
+
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -190,7 +210,11 @@ def delete_resource(request, shortkey, *args, **kwargs):
     for bag in res.bags.all():
         bag.bag.delete()
         bag.delete()
-    res.delete()
+
+    res.metadata.delete_all_elements()
+    res.metadata.delete()
+    # deleting the metadata container object deletes the resource also
+    #res.delete()
     return HttpResponseRedirect('/my-resources/')
 
 
