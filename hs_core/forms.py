@@ -307,14 +307,15 @@ RelationLayoutEdit = Layout(
                             HTML('{% load crispy_forms_tags %} '
                                  '{% for form in relation_formset.forms %} '
                                      '<div class="item form-group"> '
-                                         '<form action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
+                                         '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
                                          '{% crispy form %} '
                                          '<div class="row" style="margin-top:10px">'
                                             '<div class="col-md-10">'
                                                 '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-relation-element-dialog_{{ form.number }}" value="Delete relation">'
                                             '</div>'
                                             '<div class="col-md-2">'
-                                                '<button type="submit" class="btn btn-primary">Save Changes</button>'
+                                                #'<button type="submit" class="btn btn-primary">Save Changes</button>'
+                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'
                                             '</div>'
                                         '</div>'
                                         '{% crispy form.delete_modal_form %} '
@@ -356,14 +357,15 @@ SourceLayoutEdit = Layout(
                             HTML('{% load crispy_forms_tags %} '
                                  '{% for form in source_formset.forms %} '
                                      '<div class="item form-group"> '
-                                         '<form action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
+                                         '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
                                          '{% crispy form %} '
                                          '<div class="row" style="margin-top:10px">'
                                             '<div class="col-md-10">'
                                                 '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-source-element-dialog_{{ form.number }}" value="Delete source">'
                                             '</div>'
                                             '<div class="col-md-2">'
-                                                '<button type="submit" class="btn btn-primary">Save Changes</button>'
+                                                #'<button type="submit" class="btn btn-primary">Save Changes</button>'
+                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'
                                             '</div>'
                                         '</div>'
                                         '{% crispy form.delete_modal_form %} '
@@ -448,7 +450,7 @@ class MetaDataForm(forms.Form):
             #source_form = SourceForm()
             modal_dialog_add_creator = ModalDialogLayoutAddCreator
             modal_dialog_add_contributor = ModalDialogLayoutAddContributor
-            modal_dialog_add_relation = Layout()
+            modal_dialog_add_relation = ModalDialogLayoutAddRelation
             modal_dialog_add_source = ModalDialogLayoutAddSource
         else:
             creator_layout = CreatorLayoutView
@@ -459,7 +461,7 @@ class MetaDataForm(forms.Form):
             format_layout = FormatLayoutView
             modal_dialog_add_creator = Layout()
             modal_dialog_add_contributor = Layout()
-            modal_dialog_add_relation = ModalDialogLayoutAddRelation
+            modal_dialog_add_relation = Layout()
             modal_dialog_add_source = Layout()
 
         self.helper = FormHelper()
@@ -584,15 +586,15 @@ class MetaDataForm(forms.Form):
                                 #'{% endfor %}'
                              '</div>'),
 
-                        HTML('<div class="form-group" id="title"> '
-                                '{% load crispy_forms_tags %} '
-                                '{% crispy subjects_form %} '
-                             '</div>'),
+                        # HTML('<div class="form-group" id="abstract"> '
+                        #         '{% load crispy_forms_tags %} '
+                        #         '{% crispy subjects_form %} '
+                        #      '</div>'),
 
-                        HTML('<div class="form-group" id="title"> '
-                                '{% load crispy_forms_tags %} '
-                                '{% crispy abstract_form %} '
-                             '</div>'),
+                        # HTML('<div class="form-group" id="title"> '
+                        #         '{% load crispy_forms_tags %} '
+                        #         '{% crispy abstract_form %} '
+                        #      '</div>'),
 
                         # HTML('<div class="form-group">'
                         #      '<label for="" control-label">Abstract</label>'
@@ -600,6 +602,18 @@ class MetaDataForm(forms.Form):
                         #      '</div>'),
 
                         Accordion(
+                            AccordionGroup('Keywords (required)',
+                                 HTML('<div class="form-group" id="subjects"> '
+                                        '{% load crispy_forms_tags %} '
+                                        '{% crispy subjects_form %} '
+                                      '</div>'),
+                            ),
+                            AccordionGroup('Abstract (required)',
+                                 HTML('<div class="form-group" id="abstract"> '
+                                        '{% load crispy_forms_tags %} '
+                                        '{% crispy abstract_form %} '
+                                      '</div>'),
+                            ),
                             AccordionGroup('Rights (required)',
                                 HTML('<div class="form-group" id="source"> '
                                         '{% load crispy_forms_tags %} '
@@ -976,6 +990,16 @@ class RelationForm(ModelForm):
                 self.fields[fld_name].widget.attrs['readonly'] = True
                 self.fields[fld_name].widget.attrs['style'] = "background-color:white;"
 
+    @property
+    def form_id(self):
+        form_id = 'id_relation_%s' % self.number
+        return form_id
+
+    @property
+    def form_id_button(self):
+        form_id = 'id_relation_%s' % self.number
+        return "'" + form_id + "'"
+
     class Meta:
         model = Relation
         # fields that will be displayed are specified here - but not necessarily in the same order
@@ -1032,6 +1056,17 @@ class SourceForm(ModelForm):
         if not allow_edit:
             self.fields['derived_from'].widget.attrs['readonly'] = True
             self.fields['derived_from'].widget.attrs['style'] = "background-color:white;"
+
+    @property
+    def form_id(self):
+        form_id = 'id_source_%s' % self.number
+        return form_id
+
+    @property
+    def form_id_button(self):
+        form_id = 'id_source_%s' % self.number
+        return "'" + form_id + "'"
+
     class Meta:
         model = Source
         # fields that will be displayed are specified here - but not necessarily in the same order
@@ -1155,12 +1190,21 @@ FormatFormSet = formset_factory(FormatForm, formset=BaseFormatFormSet)
 # Non repeatable element related forms
 class BaseFormHelper(FormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None, element_layout=None,  *args, **kwargs):
+        coverage_type = kwargs.pop('coverage', None)
+
         super(BaseFormHelper, self).__init__(*args, **kwargs)
 
         if res_short_id:
             self.form_method = 'post'
             self.form_tag = True
-            self.form_id = 'id-%s' % element_name.lower()
+            if element_name.lower() == 'coverage':
+                if coverage_type:
+                    self.form_id = 'id-%s-%s' % (element_name.lower(), coverage_type)
+                else:
+                    self.form_id = 'id-%s' % element_name.lower()
+            else:
+                self.form_id = 'id-%s' % element_name.lower()
+
             if element_id:
                 self.form_action = "/hsapi/_internal/%s/%s/%s/update-metadata/" % (res_short_id, element_name.lower(), element_id)
             else:
@@ -1344,6 +1388,8 @@ class CoverageTemporalFormHelper(BaseFormHelper):
                         Field('end', css_class=field_width),
                  )
 
+        kwargs['coverage'] = 'temporal'
+
         super(CoverageTemporalFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 class CoverageTemporalForm(forms.Form):
@@ -1424,6 +1470,7 @@ class CoverageSpatialFormHelper(BaseFormHelper):
                         Field('projection', css_class=field_width),
                  )
 
+        kwargs['coverage'] = 'spatial'
         super(CoverageSpatialFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 class CoverageSpatialForm(forms.Form):

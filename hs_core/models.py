@@ -668,6 +668,7 @@ class Relation(AbstractMetaDataElement):
         ('isCreatedBy', 'Created By'),
         ('isVersionOf', 'Version Of'),
         ('isDataFor', 'Data For'),
+        ('cites', 'Cites'),
     )
 
     term = 'Relation'

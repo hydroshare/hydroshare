@@ -131,7 +131,7 @@ def get_page_context(page, user, extended_metadata_layout=None):
 
 
     spatial_coverages = content_model.metadata.coverages.all().exclude(type='period')
-    spatial_coverage_data_dict = {}
+    spatial_coverage_data_dict = {'type': 'point'}
     if len(spatial_coverages) > 0:
         spatial_coverage = spatial_coverages[0]
         spatial_coverage_data_dict['name'] = spatial_coverage.value.get('name', None)

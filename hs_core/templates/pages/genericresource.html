@@ -29,7 +29,7 @@
             <tr><th>Added on</th><td>{{ cm.created|date }}</td></tr>
             <tr><th>Last updated by</th><td>{% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
             <tr><th>Updated on</th><td>{{ cm.updated|date }}</td></tr>
-            <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>
+{#            <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>#}
             <tr><th>Size</th><td>{{ cm.bags.first.bag.size|filesizeformat }}</td></tr>
             <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/r/{{ cm.short_id }}/">http://{{ request.get_host }}/r/{{ cm.short_id }}/</a></td></tr>
             {% if cm.doi %}
@@ -64,9 +64,9 @@
             {% endif %}
 
 
-            <h4>Other Metadata</h4>
+{#            <h4>Other Metadata</h4>#}
             <div class="form-group">
-                <label for="" class="col-sm-2 control-label">Science Metadata</label>
+                <label for="" class="col-sm-2 control-label" style="margin-left: -15px"><h4>Science Metadata</h4></label>
                 <div class="col-sm-10">
                     {% crispy metadata_form %}
                 </div>
