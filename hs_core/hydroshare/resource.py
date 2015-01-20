@@ -415,6 +415,10 @@ def create_resource(
         **kwargs
     )
 
+    # by default make resource private
+    resource.public = False
+    resource.save()
+
     if not metadata:
         metadata = []
 
