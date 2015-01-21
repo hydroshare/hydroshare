@@ -34,10 +34,10 @@ ModalDialogLayoutAddCreator = Layout(
                                                 '<div class="form-group">'
                                                     '{% load crispy_forms_tags %} '
                                                     '{% crispy add_creator_modal_form %} '
-                                                    '{% for link_form in add_creator_modal_form.profile_link_formset.forms %} '
-                                                     '<div class="item_link" '
-                                                     '{% crispy link_form %} '
-                                                     '</div> {% endfor %} '
+                                                    # '{% for link_form in add_creator_modal_form.profile_link_formset.forms %} '
+                                                    #  '<div class="item_link" '
+                                                    #  '{% crispy link_form %} '
+                                                    #  '</div> {% endfor %} '
                                                 '</div>'
                                             '</div>'
                                             '<div class="modal-footer">'
@@ -65,10 +65,10 @@ ModalDialogLayoutAddContributor = Layout(
                                                 '<div class="form-group">'
                                                     '{% load crispy_forms_tags %} '
                                                     '{% crispy add_contributor_modal_form %} '
-                                                    '{% for link_form in add_creator_modal_form.profile_link_formset.forms %} '
-                                                    '<div class="item_link" '
-                                                    '{% crispy link_form %} '
-                                                    '</div> {% endfor %} '
+                                                    # '{% for link_form in add_creator_modal_form.profile_link_formset.forms %} '
+                                                    # '<div class="item_link" '
+                                                    # '{% crispy link_form %} '
+                                                    # '</div> {% endfor %} '
                                                 '</div>'
                                             '</div>'
                                             '<div class="modal-footer">'
@@ -189,9 +189,6 @@ CreatorLayoutEdit = Layout(
                                             '<div class="col-md-10">'
                                                 '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-creator-element-dialog_{{ form.number }}" value="Delete creator">'
                                             '</div>'
-                                            # '<div class="col-md-2">'
-                                            #     '<button type="submit" class="btn btn-primary pull-right">Save Changes</button>'
-                                            # '</div>'
                                             '<div class="col-md-2">'
                                                 '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'
                                             '</div>'
@@ -261,9 +258,6 @@ ContributorLayoutEdit = Layout(
                                             '<div class="col-md-10">'
                                                 '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-contributor-element-dialog_{{ form.number }}" value="Delete contributor">'
                                             '</div>'
-                                            # '<div class="col-md-2">'
-                                            #     '<button type="submit" class="btn btn-primary">Save Changes</button>'
-                                            # '</div>'
                                             '<div class="col-md-2">'
                                                 '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'
                                             '</div>'
@@ -314,7 +308,6 @@ RelationLayoutEdit = Layout(
                                                 '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-relation-element-dialog_{{ form.number }}" value="Delete relation">'
                                             '</div>'
                                             '<div class="col-md-2">'
-                                                #'<button type="submit" class="btn btn-primary">Save Changes</button>'
                                                 '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'
                                             '</div>'
                                         '</div>'
@@ -364,7 +357,6 @@ SourceLayoutEdit = Layout(
                                                 '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-source-element-dialog_{{ form.number }}" value="Delete source">'
                                             '</div>'
                                             '<div class="col-md-2">'
-                                                #'<button type="submit" class="btn btn-primary">Save Changes</button>'
                                                 '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'
                                             '</div>'
                                         '</div>'
@@ -373,6 +365,7 @@ SourceLayoutEdit = Layout(
                                     '</div> '
                                 '{% endfor %}'
                             ),
+
                             HTML('<div style="margin-top:10px">'
                                  '<p><a id="add-source" class="btn btn-success" data-toggle="modal" data-target="#add-source-dialog">'
                                  '<i class="fa fa-plus"></i>Add another source</a>'
@@ -444,15 +437,13 @@ class MetaDataForm(forms.Form):
             contributor_layout = ContributorLayoutEdit
             relation_layout = RelationLayoutEdit
             source_layout = SourceLayoutEdit
-            # no UI for identifier when creating a resource as identifier elements are created automatically by the system
             identifier_layout = IdentifierLayoutView
             format_layout = FormatLayoutView
-            #source_form = SourceForm()
             modal_dialog_add_creator = ModalDialogLayoutAddCreator
             modal_dialog_add_contributor = ModalDialogLayoutAddContributor
             modal_dialog_add_relation = ModalDialogLayoutAddRelation
             modal_dialog_add_source = ModalDialogLayoutAddSource
-        else:
+        else:   # view mode
             creator_layout = CreatorLayoutView
             contributor_layout = ContributorLayoutView
             relation_layout = RelationLayoutView
@@ -469,113 +460,9 @@ class MetaDataForm(forms.Form):
         self.helper.form_action = "/hsapi/_internal/create-resource/"
         self.helper.form_tag = False
 
-        if resource_mode == 'view':
-            layout = Layout(
+        layout = Layout(
                 TabHolder(
                     Tab("Core Metadata",
-                        # HTML('<div class="form-group">'
-                        #      '<label for="" control-label">Title</label>'
-                        #      '<input type="text" class="form-control input-sm" name="title" id="" placeholder="Title" value="{{ title }}">'
-                        #      '</div>'),
-
-                        HTML('<div class="form-group" id="title"> '
-                                '{% load crispy_forms_tags %} '
-                                '{% crispy title_form %} '
-                             '</div>'),
-
-                        HTML('<div class="form-group" id="title"> '
-                                '{% load crispy_forms_tags %} '
-                                '{% crispy subjects_form %} '
-                             '</div>'),
-
-                        HTML('<div class="form-group" id="title"> '
-                                '{% load crispy_forms_tags %} '
-                                '{% crispy abstract_form %} '
-                             '</div>'),
-
-                        # HTML('<div class="form-group">'
-                        #      '<label for="" control-label">Abstract</label>'
-                        #      '<textarea class="mceEditor charfield" cols="40" id="" name="abstract" rows="10" placeholder="Abstract">{{ abstract }}</textarea>'
-                        #      '</div>'),
-
-                        Accordion(
-                            AccordionGroup('Rights (required)',
-                                HTML('<div class="form-group" id="source"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy rights_form %} '
-                                     '</div>'),
-                            ),
-                            AccordionGroup('Creators (required)',
-                                HTML("<div class='form-group' id='creator'>"),
-                                HTML("{{ creator_formset.management_form }}"),
-                                creator_layout,
-                                HTML("</div>"),
-                            ),
-                            AccordionGroup('Contributors (optional)',
-                                HTML("<div class='form-group' id='contributor'>"),
-                                HTML("{{ contributor_formset.management_form }}"),
-                                contributor_layout,
-                                HTML("</div>"),
-                            ),
-                            AccordionGroup('Relations (optional)',
-                                HTML("<div class='form-group' id='relation'>"),
-                                HTML("{{ relation_formset.management_form }}"),
-                                relation_layout,
-                                HTML("</div>"),
-                            ),
-                            AccordionGroup('Sources (optional)',
-                                HTML("<div class='form-group' id='source'>"),
-                                HTML("{{ source_formset.management_form }}"),
-                                source_layout,
-                                HTML("</div>"),
-                            ),
-
-                            AccordionGroup('Language (optional)',
-                                HTML('<div class="form-group" id="language"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy language_form %} '
-                                     '</div>'),
-                            ),
-                            AccordionGroup('Valid date (optional)',
-                                HTML('<div class="form-group" id="validdate"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy valid_date_form %} '
-                                     '</div>'),
-                            ),
-                            AccordionGroup('Temporal Coverage (required)',
-                                HTML('<div class="form-group" id="coverage-temporal"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy coverage_temporal_form %} '
-                                     '</div>'),
-                            ),
-                            AccordionGroup('Spatial Coverage (required)',
-                                HTML('<div class="form-group" id="coverage-spatial"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy coverage_spatial_form %} '
-                                     '</div>'),
-                            ),
-                        ),
-                    ),
-
-                    # Specific resource type app needs to provide the crispy form Layout object: extended_metadata_layout
-                    Tab("Extended Metadata",
-                        extended_metadata_layout,
-                    ),
-                ),
-                modal_dialog_add_creator,
-                modal_dialog_add_contributor,
-                modal_dialog_add_relation,
-                modal_dialog_add_source,
-            )
-        else:
-            layout = Layout(
-                TabHolder(
-                    Tab("Core Metadata",
-                        # HTML('<div class="form-group">'
-                        #      '<label for="" control-label">Title</label>'
-                        #      '<input type="text" class="form-control input-sm" name="title" id="" placeholder="Title" value="{{ title }}">'
-                        #      '</div>'),
-
                         HTML('<div class="form-group" id="title"> '
                                 '{% load crispy_forms_tags %} '
                                 '{% crispy title_form %} '
@@ -585,21 +472,6 @@ class MetaDataForm(forms.Form):
                                 #'{% inplace_edit "title_form.value" %} '
                                 #'{% endfor %}'
                              '</div>'),
-
-                        # HTML('<div class="form-group" id="abstract"> '
-                        #         '{% load crispy_forms_tags %} '
-                        #         '{% crispy subjects_form %} '
-                        #      '</div>'),
-
-                        # HTML('<div class="form-group" id="title"> '
-                        #         '{% load crispy_forms_tags %} '
-                        #         '{% crispy abstract_form %} '
-                        #      '</div>'),
-
-                        # HTML('<div class="form-group">'
-                        #      '<label for="" control-label">Abstract</label>'
-                        #      '<textarea class="mceEditor charfield" cols="40" id="" name="abstract" rows="10" placeholder="Abstract">{{ abstract }}</textarea>'
-                        #      '</div>'),
 
                         Accordion(
                             AccordionGroup('Keywords (required)',
@@ -1224,8 +1096,6 @@ class BaseFormHelper(FormHelper):
                             Fieldset(element_name,
                                      element_layout,
                                      HTML('<div style="margin-top:10px">'),
-                                     #HTML('<button type="submit" class="btn btn-primary">Save changes</button>' % self.form_id),
-                                     # onClick="gotoNode(\'' + result.name + '\')"
                                      HTML('<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit(%s); return false;">Save changes</button>' % form_id),
                                      HTML('</div>')
                             ),
@@ -1394,8 +1264,8 @@ class CoverageTemporalFormHelper(BaseFormHelper):
 
 class CoverageTemporalForm(forms.Form):
     name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
-    start = forms.DateField()
-    end = forms.DateField()
+    start = forms.DateField(label='Start Date')
+    end = forms.DateField(label='End Date')
 
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
         super(CoverageTemporalForm, self).__init__(*args, **kwargs)
@@ -1487,18 +1357,14 @@ class CoverageSpatialForm(forms.Form):
     elevation = forms.DecimalField(required=False)
     zunits = forms.CharField(max_length=50, required=False)
     projection = forms.CharField(max_length=100, required=False)
-    northlimit = forms.DecimalField()
-    eastlimit = forms.DecimalField()
-    southlimit = forms.DecimalField()
-    westlimit = forms.DecimalField()
-    uplimit = forms.DecimalField(required=False)
-    downlimit = forms.DecimalField(required=False)
+    northlimit = forms.DecimalField(label='North Limit')
+    eastlimit = forms.DecimalField(label='East Limit')
+    southlimit = forms.DecimalField(label='South Limit')
+    westlimit = forms.DecimalField(label='West Limit')
+    uplimit = forms.DecimalField(required=False, label='Up Limit')
+    downlimit = forms.DecimalField(required=False, label='Down Limit')
 
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
-        # self.name = kwargs.pop('name', None)
-        # self.start = kwargs.pop('start', None)
-        # self.end = kwargs.pop('end', None)
-
         super(CoverageSpatialForm, self).__init__(*args, **kwargs)
         self.helper = CoverageSpatialFormHelper(allow_edit, res_short_id, element_id, element_name='coverage')
         self.number = 0
