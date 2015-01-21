@@ -98,7 +98,7 @@
                         <ul class="dropdown-menu">
                             <li class="account">
                                 <p><b>{{ request.user }}</b>{% if request.user.email %}<br />{{ request.user.email }}{% endif %}</p>
-                                <p><a href="{% url 'profile_update' %}">Profile</a> | <a href="{% url 'logout' %}" id="signout-menu">Log out</a>
+                                <p><a href="{% url 'profile_update' %}">Profile</a> | <a href="{% url 'logout' %}" id="signout-menu">Sign out</a>
                                 <div class="clearfix"></div>
                             </li>
                         </ul>
