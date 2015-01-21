@@ -379,7 +379,7 @@ def create_resource(
 
     # Send pre-create resource signal
 
-    signals.pre_create_resource.send(sender=res_type_cls, dublin_metadata=dublin_metadata, metadata=metadata, files=files, resource=resource, **kwargs)
+    #signals.pre_create_resource.send(sender=res_type_cls, dublin_metadata=dublin_metadata, metadata=metadata, files=files, resource=resource, **kwargs)
     owner = utils.user_from_id(owner)
 
     # if resource is None:

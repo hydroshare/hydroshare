@@ -30,8 +30,6 @@ def get_page_context(page, user, extended_metadata_layout=None):
     abstract_form = AbstractForm(instance=content_model.metadata.description, allow_edit=edit_mode, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.description.id if content_model.metadata.description else None)
 
-    #subjects = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
-
     CreatorFormSetEdit = formset_factory(wraps(CreatorForm)(partial(CreatorForm, allow_edit=edit_mode)), formset=BaseCreatorFormSet, extra=0)
 
     creator_formset = CreatorFormSetEdit(initial=content_model.metadata.creators.all().values(), prefix='creator')
@@ -76,7 +74,6 @@ def get_page_context(page, user, extended_metadata_layout=None):
         relation_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'relation', relation_form.initial['id'])
         relation_form.number = relation_form.initial['id']
 
-    #ServiceFormSet = formset_factory(wraps(ServiceForm)(partial(ServiceForm, affiliate=request.affiliate)), extra=3)
     SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm, allow_edit=edit_mode)), formset=BaseSourceFormSet, extra=0)
     source_formset = SourceFormSetEdit(initial=content_model.metadata.sources.all().values(), prefix='source')
 
@@ -84,7 +81,6 @@ def get_page_context(page, user, extended_metadata_layout=None):
     identifier_formset = IdentifierFormSetEdit(initial=content_model.metadata.identifiers.all().values(), prefix='identifier')
 
     FormatFormSetEdit = formset_factory(FormatForm, formset=BaseFormatFormSet, extra=0)
-    #FormatFormSetEdit = formset_factory(wraps(FormatForm)(partial(FormatForm, allow_edit=edit_mode)), formset=BaseFormatFormSet, extra=0)
     format_formset = FormatFormSetEdit(initial=content_model.metadata.formats.all().values(), prefix='format')
 
     for source_form in source_formset.forms:
