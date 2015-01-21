@@ -19,22 +19,48 @@ def raster_describe_resource_trigger(sender, **kwargs):
             infile = files[0]
             import raster_meta_extract
             global res_md_dict
+
             res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
             bcount = res_md_dict['cell_and_band_info']['bandCount']
+        else:
+            # initialize required raster metadata to be place holders to be entered later by users
+            from collections import OrderedDict
+            spatial_coverage_info = OrderedDict([
+                ('projection', "Unnamed"),
+                ('units', "Unnamed"),
+                ('northlimit', 0),
+                ('southlimit', 0),
+                ('eastlimit', 0),
+                ('westlimit', 0)
+            ])
+            cell_and_band_info = OrderedDict([
+                ('rows', 0),
+                ('columns', 0),
+                ('cellSizeXValue', 0),
+                ('cellSizeYValue', 0),
+                ('cellSizeUnit', "Unnamed"),
+                ('cellDataType', "Unnamed"),
+                ('noDataValue', 0),
+                ('bandCount', 1)
+            ])
+            res_md_dict = {
+                'spatial_coverage_info': spatial_coverage_info,
+                'cell_and_band_info': cell_and_band_info,
+            }
+            bcount = 1
+        for i in range(bcount):
+            res_md_dict['cell_and_band_info']['name (band '+str(i+1)+')'] = 'Band_' + str(i+1)
+            res_md_dict['cell_and_band_info']['variable (band '+str(i+1)+')'] = 'Unnamed'
+            res_md_dict['cell_and_band_info']['units (band '+str(i+1)+')'] = 'Unnamed'
+            res_md_dict['cell_and_band_info']['method (band '+str(i+1)+')'] = ''
+            res_md_dict['cell_and_band_info']['comment (band '+str(i+1)+')'] = ''
 
-            for i in range(bcount):
-                res_md_dict['cell_and_band_info']['name (band '+str(i+1)+')'] = 'Band_' + str(i+1)
-                res_md_dict['cell_and_band_info']['variable (band '+str(i+1)+')'] = 'Required'
-                res_md_dict['cell_and_band_info']['units (band '+str(i+1)+')'] = 'Required'
-                res_md_dict['cell_and_band_info']['method (band '+str(i+1)+')'] = ''
-                res_md_dict['cell_and_band_info']['comment (band '+str(i+1)+')'] = ''
-
-            # have to set a name for spatial coverage since name is a required field in core metadata models.py
-            res_md_dict['spatial_coverage_info']['place/area name']= "Unnamed"
-            res_sci_md = {'Coverage': res_md_dict['spatial_coverage_info'],}
-            res_ext_md = {'Cell and band info': res_md_dict['cell_and_band_info'],}
-            return {"res_sci_metadata": res_sci_md,
-                    "res_add_metadata": res_ext_md}
+        # have to set a name for spatial coverage since name is a required field in core metadata models.py
+        res_md_dict['spatial_coverage_info']['place/area name']= "Unnamed"
+        res_sci_md = {'Coverage': res_md_dict['spatial_coverage_info'],}
+        res_ext_md = {'Cell and band info': res_md_dict['cell_and_band_info'],}
+        return {"res_sci_metadata": res_sci_md,
+                "res_add_metadata": res_ext_md}
 
 # signal handler to validate resource metadata, and if valid, retrieve raster resource type specific metadata
 # values from create-resource.html page and return a dictionary of metadata_terms to be passed on to
@@ -60,9 +86,9 @@ def raster_pre_call_resource_trigger(sender, **kwargs):
                 qrylst['method_' + k[-2:-1]] = v
             elif k.startswith('comment (band'):
                 qrylst['comment_' + k[-2:-1]] = v
-
-        res_md_dict['spatial_coverage_info']['name'] = qrylst['place/area name']
-        res_md_dict['spatial_coverage_info'].pop('place/area name', None)
+        if res_md_dict:
+            res_md_dict['spatial_coverage_info']['name'] = qrylst['place/area name']
+            res_md_dict['spatial_coverage_info'].pop('place/area name', None)
 
         resource = kwargs['resource']
         #create form and do metadata validation
