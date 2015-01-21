@@ -29,7 +29,7 @@ def landing_page(request, page):
             else:
                 form.action = "/hsapi/_internal/%s/variable/add-metadata/" % content_model.short_id
 
-        context = page_processors.get_page_context(page, extended_metadata_layout=ext_md_layout)
+        context = page_processors.get_page_context(page, request.user, extended_metadata_layout=ext_md_layout)
         context['variable_formset'] = variable_formset
         context['add_variable_modal_form'] = add_variable_modal_form
         return context

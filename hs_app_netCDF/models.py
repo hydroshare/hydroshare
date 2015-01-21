@@ -103,7 +103,7 @@ class Variable(AbstractMetaDataElement):
             raise ObjectDoesNotExist("No variable element was found for id:%d." % element_id)
 
 # Define the netCDF resource
-class NetcdfResource(Page, RichText, AbstractResource):
+class NetcdfResource(Page, AbstractResource):
 
     @property
     def metadata(self):

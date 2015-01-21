@@ -1,5 +1,5 @@
 from django.dispatch import receiver
-from hs_core.hydroshare import pre_describe_resource, pre_create_resource, post_create_resource
+#from hs_core.hydroshare import pre_describe_resource, pre_create_resource, post_create_resource
 from hs_core.signals import *
 from hs_app_netCDF.models import NetcdfResource, NetcdfMetaData, Variable
 
