@@ -120,7 +120,7 @@ def get_page_context(page, user, extended_metadata_layout=None):
         temporal_coverage = temporal_coverages[0]
         temporal_coverage_data_dict['start'] = temporal_coverage.value['start']
         temporal_coverage_data_dict['end'] = temporal_coverage.value['end']
-        temporal_coverage_data_dict['name'] = temporal_coverage.value['name']
+        temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
     else:
         temporal_coverage = None
 
