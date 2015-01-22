@@ -51,7 +51,7 @@ class Variable(AbstractMetaDataElement):
             raise ValidationError("Variable unit is missing.")
 
         if 'type' in kwargs:
-            if not kwargs['type'] in ['char', 'byte', 'short', 'int', 'float', 'double']:
+            if not kwargs['type'] in ['S1', 'int8', 'int16', 'int32', 'float32', 'float64']:
                 raise ValidationError('Invalid variable type:%s' % kwargs['type'])
         else:
             raise ValidationError("Variable type is missing.")
