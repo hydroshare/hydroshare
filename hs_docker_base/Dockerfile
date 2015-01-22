@@ -19,5 +19,27 @@ RUN pip install numexpr
 WORKDIR /home/docker
 RUN pip install -r requirements.txt
 
+WORKDIR  /home/docker
+RUN apt-get install -y curl
+RUN curl -O http://www.hdfgroup.org/ftp/HDF5/prev-releases/hdf5-1.8.13/src/hdf5-1.8.13.tar.gz
+RUN curl -O ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.2.tar.gz
+RUN curl -O https://pypi.python.org/packages/source/n/netCDF4/netCDF4-1.1.1.tar.gz
+RUN tar -xvzf hdf5-1.8.13.tar.gz
+RUN tar -xvzf netcdf-4.3.2.tar.gz
+RUN tar -xvzf netCDF4-1.1.1.tar.gz
+
+WORKDIR /home/docker/hdf5-1.8.13
+RUN ./configure --prefix=/usr/local --enable-shared --enable-hl
+RUN make
+RUN sudo make install
+
+WORKDIR /home/docker/netcdf-4.3.2
+RUN LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include ./configure --enable-netcdf-4 --enable-dap --enable-shared --prefix=/usr/local
+RUN make
+RUN sudo make install
+
+WORKDIR /home/docker/netCDF4-1.1.1
+RUN python setup.py install
+
 RUN useradd -m docker -g docker
 RUN echo docker:docker | chpasswd
