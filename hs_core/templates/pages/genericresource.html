@@ -613,6 +613,10 @@
             $("#div_id_uplimit").hide();
             $("#div_id_downlimit").hide();
         }
+        if ($("input:button[value='Delete creator']").length == 1){
+            $("input:button[value='Delete creator']").first().hide();
+        }
+
         // Code adapted from http://djangosnippets.org/snippets/1389/
         function updateElementIndex(el, prefix, ndx) {
             var id_regex = new RegExp('(' + prefix + '-\\d+-)');
@@ -826,6 +830,11 @@
         $(".delete-link-creator").click(function () {
             return deleteLink(this, "creator");
         });
+
+        $("#addSource").click(function () {
+            return addForm(this, "source");
+        });
+
         $("form input:radio").change(function () {
             if ($(this).val() == "point") {
                 //alert('you select the point radio button');
