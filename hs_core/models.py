@@ -1742,6 +1742,7 @@ class CoreMetaData(models.Model):
                 kwargs['content_object'] = self
                 element = model_type.model_class().create(**kwargs)
                 element.save()
+                return element
             else:
                 raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
         else:
