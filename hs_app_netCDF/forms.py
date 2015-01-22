@@ -61,15 +61,19 @@ class VariableFormHelper(BaseFormHelper):
 
 
 class VariableForm(ModelForm):
-    def __init__(self, res_short_id=None, element_id=None, *args, **kwargs):
+    def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
         super(VariableForm, self).__init__(*args, **kwargs)
         self.helper = VariableFormHelper(res_short_id, element_id, element_name='Variable')
         self.delete_modal_form = None
         self.number = 0
+        self.allow_edit = allow_edit
         if res_short_id:
             self.action = "/hsapi/_internal/%s/variable/add-metadata/" % res_short_id
         else:
             self.action = ""
+        if not allow_edit:
+            self.fields['derived_from'].widget.attrs['readonly'] = True
+            self.fields['derived_from'].widget.attrs['style'] = "background-color:white;"
 
     class Meta:
         model = Variable
@@ -132,30 +136,29 @@ ModalDialogLayoutAddVariable = Layout(
                             )
                         )
 
-VariableLayoutNew = Layout(
+# change here for meta extraction frontend
+VariableLayoutView = Layout(
                             HTML('{% load crispy_forms_tags %} '
                                  '{% for form in variable_formset.forms %} '
                                      '<div class="item"> '
                                      '{% crispy form %} '
-                                     '<div style="margin-top:10px"><input class="delete-creator btn-danger btn btn-md" type="button" value="Delete creator"></div>'
                                      '</div> '
                                  '{% endfor %}'
                                 ),
-                            HTML('<div style="margin-top:10px"><a id="addCreator" class="btn btn-success" href="#"><i class="fa fa-plus"></i>Add another creator</a></div>'),
                         )
 
 VariableLayoutEdit = Layout(
                             HTML('{% load crispy_forms_tags %} '
                                  '{% for form in variable_formset.forms %} '
                                      '<div class="item form-group"> '
-                                     '<form action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
+                                     '<form id={{form.form_if}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
                                      '{% crispy form %} '
                                     '<div class="row" style="margin-top:10px">'
                                         '<div class="col-md-10">'
-                                            '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-variable-element-dialog_{{ form.number }}" value="Delete variable">'
-                                        '</div>'
+                                            '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-source-element-dialog_{{ form.number }}" value="Delete Variable">'
+                                        '</div>' #change
                                         '<div class="col-md-2">'
-                                            '<button type="submit" class="btn btn-primary">Save Changes</button>'
+                                            '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'  # change
                                         '</div>'
                                     '</div>'
                                     '{% crispy form.delete_modal_form %} '
