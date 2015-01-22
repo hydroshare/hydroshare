@@ -552,15 +552,33 @@
                 {
                     /* The div contains now the updated form */
                     //$('#' + form_id).html(result);
-                    console.log(result)
-                    if (result === "success")
+                    console.log(result);
+                    json_response = JSON.parse(result);
+                    console.log(json_response);
+                    if (json_response.status === 'success')
                     {
+                        if (json_response.hasOwnProperty('element_id')){
+                            form_update_action = $form.attr('action');
+                            res_short_id = form_update_action.split('/')[3];
+                            update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/"
+                            $form.attr('action', update_url);
+                        }
+
                         $('#' + form_id).before($alert_success);
                         $(".alert-success").fadeTo(2000, 500).slideUp(1000, function()
                         {
                             $(".alert-success").alert('close');
                         });
+                        // "/hsapi/_internal/%s/%s/%s/update-metadata/" % (res_short_id, element_name.lower(), element_id)
                     }
+{#                    if (result === "success")#}
+{#                    {#}
+{#                        $('#' + form_id).before($alert_success);#}
+{#                        $(".alert-success").fadeTo(2000, 500).slideUp(1000, function()#}
+{#                        {#}
+{#                            $(".alert-success").alert('close');#}
+{#                        });#}
+{#                    }#}
                     else{
                         $('#' + form_id).before($alert_error);
 

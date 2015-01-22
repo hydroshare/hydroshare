@@ -1,9 +1,5 @@
 __author__ = 'Pabitra'
 import copy
-
-__author__ = 'pabitra'
-
-
 from models import *
 from django.forms import ModelForm, BaseFormSet, DateInput, Select, TextInput
 from django.forms.models import inlineformset_factory, modelformset_factory, formset_factory
@@ -1204,7 +1200,7 @@ class AbstractForm(ModelForm):
         labels = {'abstract': ''}
 
 class AbstractValidationForm(forms.Form):
-    abstract = forms.CharField()
+    abstract = forms.CharField(max_length=5000)
 
     def get_metadata(self):
         return {'description': self.cleaned_data}
@@ -1240,7 +1236,7 @@ class RightsForm(ModelForm):
 
 class RightsValidationForm(forms.Form):
     statement = forms.CharField(required=False)
-    url = forms.URLField(required=False)
+    url = forms.URLField(required=False, max_length=500)
 
     def get_metadata(self):
         return {'rights': self.cleaned_data}

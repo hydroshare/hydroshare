@@ -9,6 +9,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.utils.timezone import now
+import json
 from mezzanine.conf import settings
 from django import forms
 from mezzanine.generic.models import Keyword
@@ -134,16 +135,23 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                     for kw in keywords:
                         res.metadata.create_element(element_name, value=kw)
                 else:
-                    res.metadata.create_element(element_name, **element_data_dict)
+                    element = res.metadata.create_element(element_name, **element_data_dict)
 
                 is_add_success = True
                 resource_modified(res, request.user)
 
     if request.is_ajax():
         if is_add_success:
-            return HttpResponse("success")
+            if element_name == 'subject':
+                ajax_response_data = {'status': 'success'}
+            else:
+                ajax_response_data = {'status': 'success', 'element_id': element.id, 'element_name': element_name}
+
+            return HttpResponse(json.dumps(ajax_response_data))
+
         else:
-            return HttpResponse("failure")
+            ajax_response_data = {'status': 'error'}
+            return HttpResponse (json.dumps(ajax_response_data))
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -169,9 +177,11 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     if request.is_ajax():
         if is_update_success:
-            return HttpResponse("success")
+            ajax_response_data = {'status': 'success'}
+            return HttpResponse(json.dumps(ajax_response_data))
         else:
-            return HttpResponse("failure")
+            ajax_response_data = {'status': 'error'}
+            return HttpResponse(json.dumps(ajax_response_data))
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -363,10 +373,10 @@ def my_resources(request, page):
 #        return HttpResponseRedirect('/accounts/login/')
 
     # TODO: remove the following 4 lines of debugging code prior to pull request
-    # import sys
-    # sys.path.append("/home/docker/pycharm-debug")
-    # import pydevd
-    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
