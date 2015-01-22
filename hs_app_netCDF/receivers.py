@@ -17,15 +17,24 @@ def netcdf_create_resource_trigger(sender, **kwargs):
             res_dublin_core_meta = res_md_dict['dublin_core_meta']
             res_type_specific_meta = res_md_dict['type_specific_meta']
 
-            # Save dublin core meta to metadata variable
-            # res_sci_md = {
-            #     'Description': res_dublin_core_meta['description'],
-            #     'Title': res_dublin_core_meta['title'],
-            #     'Coverage temporal': res_dublin_core_meta['temporal'],
-            #     'Coverage spatial': res_dublin_core_meta['spatial'],
-            #     'Source': res_dublin_core_meta['source'],
-            #     'References': res_dublin_core_meta['references'],
-            # }
+            # For dict key name and structure refer to the hs_core/models.py
+            # TODO add title
+            # title = {'title': {'value': res_dublin_core_meta['title']}
+            # add description
+            description = {'description': {'abstract': res_dublin_core_meta['description']}}
+            metadata.append(description)
+            # add source
+            source = {'source': {'derived_from': res_dublin_core_meta['source']}}
+            metadata.append(source)
+            # add relation
+            relation = {'relation': {'type': 'cites', 'value': res_dublin_core_meta['references']}}
+            metadata.append(relation)
+            # add coverage - period
+            period = {'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
+            metadata.append(period)
+            # add coverage - box
+            box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
+            metadata.append(box)
 
             # Save extended meta to metadata variable
             for var_name, var_meta in res_type_specific_meta.items():

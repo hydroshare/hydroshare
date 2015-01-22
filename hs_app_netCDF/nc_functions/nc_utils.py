@@ -306,7 +306,7 @@ def get_nc_grid_mapping_projection_name(nc_dataset):
     if nc_grid_mapping_variable is not None:
         nc_grid_mapping_projection_name = nc_grid_mapping_variable.grid_mapping_name
     else:
-        nc_grid_mapping_projection_name = ''
+        nc_grid_mapping_projection_name = 'Unknown'
 
     return nc_grid_mapping_projection_name
 

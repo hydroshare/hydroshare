@@ -98,33 +98,33 @@ def extract_nc_coverage_meta(nc_dataset):
     """
 
     nc_coverage_meta = {
-        'temporal': {},
-        'spatial': {}
+        'period': {},
+        'box': {}
     }
     nc_coordinate_variables_detail = get_nc_coordinate_variables_detail(nc_dataset)
 
     for var_name, var_detail in nc_coordinate_variables_detail.items():
         coor_type = var_detail['coordinate_type']
         if coor_type == 'T':
-            nc_coverage_meta['temporal'] = {
+            nc_coverage_meta['period'] = {
                 'start': var_detail['coordinate_start'],
                 'end': var_detail['coordinate_end'],
-                'units': var_detail['coordinate_units']
+                #'units': var_detail['coordinate_units']
             }
         elif coor_type == 'X':
-            nc_coverage_meta['spatial']['westlimit'] = var_detail['coordinate_start']
-            nc_coverage_meta['spatial']['eastlimit'] = var_detail['coordinate_end']
-            nc_coverage_meta['spatial']['units'] = var_detail['coordinate_units']
+            nc_coverage_meta['box']['westlimit'] = var_detail['coordinate_start']
+            nc_coverage_meta['box']['eastlimit'] = var_detail['coordinate_end']
+            nc_coverage_meta['box']['units'] = var_detail['coordinate_units']
 
         elif coor_type == 'Y':
-            nc_coverage_meta['spatial']['southlimit'] = var_detail['coordinate_start']
-            nc_coverage_meta['spatial']['northlimit'] = var_detail['coordinate_end']
-            nc_coverage_meta['spatial']['units'] = var_detail['coordinate_units']
+            nc_coverage_meta['box']['southlimit'] = var_detail['coordinate_start']
+            nc_coverage_meta['box']['northlimit'] = var_detail['coordinate_end']
+            nc_coverage_meta['box']['units'] = var_detail['coordinate_units']
 
-    if ('units' in nc_coverage_meta['spatial']) and (re.match('degree', nc_coverage_meta['spatial']['units'], re.I)):
-        nc_coverage_meta['spatial']['units'] = 'degree'
+    if ('units' in nc_coverage_meta['box']) and (re.match('degree', nc_coverage_meta['box']['units'], re.I)):
+        nc_coverage_meta['box']['units'] = 'degree'
 
-    nc_coverage_meta['spatial']['projection'] = get_nc_grid_mapping_projection_name(nc_dataset)
+    nc_coverage_meta['box']['projection'] = get_nc_grid_mapping_projection_name(nc_dataset)
     ## ToDo consider the boundary variable info for spatial meta!
 
     return nc_coverage_meta
@@ -153,11 +153,11 @@ def extract_nc_data_variables_meta(nc_data_variables):
     for var_name, var_obj in nc_data_variables.items():
         nc_data_variables_meta[var_name] = {
             'name': var_name,
-            'unit': var_obj.units if hasattr(var_obj, 'units') else '',
+            'unit': var_obj.units if hasattr(var_obj, 'units') else 'unknown',
             'shape': ','.join(var_obj.dimensions),
             'type': str(var_obj.dtype),
-            'descriptive_name': var_obj.long_name if hasattr(var_obj, 'long_name') else '',
-            'missing_value': str(var_obj.missing_value if hasattr(var_obj, 'missing_value') else ''),
+            'descriptive_name': var_obj.long_name if hasattr(var_obj, 'long_name') else 'unknown',
+            'missing_value': str(var_obj.missing_value if hasattr(var_obj, 'missing_value') else 'unknown'),
         }
 
         # check type element info:
