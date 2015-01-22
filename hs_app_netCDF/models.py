@@ -9,13 +9,15 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 # Define netCDF metadata
 class Variable(AbstractMetaDataElement):
+    # variable types are defined in OGC enhanced_data_model_extension_standard
     VARIABLE_TYPES = (
-        ('char', 'Char'),
-        ('byte', 'Byte'),
-        ('short', 'Short'),
-        ('int', 'Int'),
-        ('float', 'Float'),
-        ('double', 'Double')
+        ('S1', 'Char'), # 8-bit byte that contains uninterpreted character data
+        ('int8', 'Byte'), # integer(8bit)
+        ('int16', 'Short'),  # signed integer (16bit)
+        ('int32', 'Int'),  # signed integer (32bit)
+        ('float32', 'Float'),  # floating point (32bit)
+        ('float64', 'Double'),  # floating point(64bit)
+        ('unknown', 'Unknown')
     )
     term = 'Variable'
     # required variable attributes

@@ -160,6 +160,11 @@ def extract_nc_data_variables_meta(nc_data_variables):
             'missing_value': str(var_obj.missing_value if hasattr(var_obj, 'missing_value') else ''),
         }
 
+        # check type element info:
+        nc_type_list = ['S1', 'int8', 'int16', 'int32', 'float32', 'float64']
+        if nc_data_variables_meta[var_name]['type'] not in nc_type_list:
+            nc_data_variables_meta[var_name]['type'] = 'unknown'
+
     return nc_data_variables_meta
 
 
