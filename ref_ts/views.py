@@ -86,33 +86,18 @@ def verify_rest_url(request):
             return json_or_jsonp(request, 400)
 
 class CreateRefTimeSeriesForm(forms.Form):
-    title = forms.CharField(required=True)
-    creators = forms.CharField(required=False, min_length=0)
-    contributors = forms.CharField(required=False, min_length=0)
-    abstract = forms.CharField(required=False, min_length=0)
-    keywords = forms.CharField(required=False, min_length=0)
     rest_url = forms.URLField(required=False)
     wsdl_url = forms.URLField(required=False)
     reference_type = forms.CharField(required=False, min_length=0)
     site = forms.CharField(required=False, min_length=0)
     variable = forms.CharField(required=False, min_length=0)
-    start_date = forms.CharField(required=True, min_length=0)
+
 
 @login_required
 def create_ref_time_series(request, *args, **kwargs):
     frm = CreateRefTimeSeriesForm(request.POST)
+
     if frm.is_valid():
-        dcterms = [
-            { 'term': 'T', 'content': frm.cleaned_data['title']},
-            { 'term': 'AB', 'content': frm.cleaned_data['abstract'] or frm.cleaned_data['title']},
-            { 'term': 'DTS', 'content': now().isoformat()}
-        ]
-        for cn in frm.cleaned_data['contributors'].split(','):
-            cn = cn.strip()
-            dcterms.append({'term' : 'CN', 'content' : cn})
-        for cr in frm.cleaned_data['creators'].split(','):
-            cr = cr.strip()
-            dcterms.append({'term' : 'CR', 'content' : cr})
 
         if frm.cleaned_data['wsdl_url']:
             url = frm.cleaned_data['wsdl_url']
@@ -121,9 +106,8 @@ def create_ref_time_series(request, *args, **kwargs):
         else:
             url = ''
 
-        start_date_str = frm.cleaned_data["start_date"]
-        start_date_int = ts_utils.time_to_int(start_date_str)
-        start_date = datetime.datetime.fromtimestamp(start_date_int)
+        # start_date_str = frm.cleaned_data["start_date"]
+        # start_date_int = ts_utils.time_to_int(start_date_str)
         site_name, site_code, variable_name, variable_code = None, None, None, None
 
         if frm.cleaned_data.get('site'):
@@ -138,44 +122,41 @@ def create_ref_time_series(request, *args, **kwargs):
             variable_name = full_variable[:n]
             variable_code = full_variable[n+1:]
         reference_type = frm.cleaned_data['reference_type']
-        title = frm.cleaned_data['title']
 
         res = hydroshare.create_resource(
             resource_type='RefTimeSeries',
             owner=request.user,
-            title=title,
-            keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None,
-            dublin_metadata=dcterms,
-            content=frm.cleaned_data['abstract'] or frm.cleaned_data['title'],
+            title='fake title',
+            #keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None,
+            keywords=None,
             reference_type=reference_type,
             url=url,
-            data_site_name=site_name,
-            data_site_code=site_code,
-            variable_name=variable_name,
-            variable_code=variable_code,
-            start_date=start_date,
-            end_date=now(),
+        )
+        hydroshare.resource.create_metadata_element(
+            res.short_id,
+            'Site',
+            name=site_name,
+            code=site_code
+        )
+        hydroshare.resource.create_metadata_element(
+            res.short_id,
+            'Variable',
+            name=variable_name,
+            code=variable_code
         )
         ts_utils.generate_files(res.short_id)
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeries)
 def add_dublin_core(request, page):
-    from dublincore import models as dc
-
-    class DCTerm(forms.ModelForm):
-        class Meta:
-            model = dc.QualifiedDublinCoreElement
-            fields = ['term', 'content']
 
     cm = page.get_content_model()
-    resfiles = []
+    res = hydroshare.get_resource_by_shortkey(cm.short_id)
+    testsite = res.metadata.sites.first()
     visfile = ''
     for f in cm.files.all():
         if 'visual' in str(f.resource_file.name):
             visfile = f
-        elif f.resource_file:
-            resfiles.append(f)
         else:
             f.delete()
 
@@ -185,29 +166,8 @@ def add_dublin_core(request, page):
         abstract = None
 
     return {
-        'dublin_core': [t for t in cm.dublin_metadata.all().exclude(term='AB').exclude(term='DM').exclude(term='DC').exclude(term='DTS').exclude(term='T')],
-        'abstract' : abstract,
-        'short_id' : cm.short_id,
-        'resource_type': cm._meta.verbose_name,
-        'reference_type': cm.reference_type,
-        'url': cm.url,
-        'site_name': cm.data_site_name if cm.data_site_name else '',
-        'site_code' : cm.data_site_code if cm.data_site_code else '',
-        'variable_name': cm.variable_name if cm.variable_name else '',
-        'variable_code': cm.variable_code if cm.variable_code else '',
-        'visfile':visfile,
-        'resfiles': resfiles,
-        'files': cm.files.all(),
-        'dcterm_frm': DCTerm(),
-        'bag': cm.bags.first(),
-        'first_4_bags': cm.bags.all()[:4],
-        'users': User.objects.all(),
-        'groups': Group.objects.all(),
-        'owners': set(cm.owners.all()),
-        'view_users': set(cm.view_users.all()),
-        'view_groups': set(cm.view_groups.all()),
-        'edit_users': set(cm.edit_users.all()),
-        'edit_groups': set(cm.edit_groups.all()),
+        'testsite': testsite,
+        'visfile': visfile
     }
 
 
