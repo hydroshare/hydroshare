@@ -157,8 +157,10 @@ def parse_1_0_and_1_1(root):
             ts = etree.tostring(time_series)
             values = {}
             for_graph = []
-            units, site_name, variable_name = None, None, None
+            units, site_name, variable_name, latitude, longitude, methodCode, method, QCcode, QClevel = None, None, None, None, None, None, None, None, None
             unit_is_set = False
+            methodCode_set = False
+            QCcode_set = False
             for element in root.iter():
                 brack_lock = element.tag.index('}')  #The namespace in the tag is enclosed in {}.
                 tag = element.tag[brack_lock+1:]     #Takes only actual tag, no namespace
@@ -168,10 +170,40 @@ def parse_1_0_and_1_1(root):
                         unit_is_set = True
                 if 'value' == tag:
                     values[element.attrib['dateTime']] = element.text
+                    if not methodCode_set:
+                        for a in element.attrib:
+                            if 'methodCode' in a:
+                                methodCode = element.attrib[a]
+                                methodCode_set = True
+                            if 'qualityControlLevelCode' in a:
+                                QCcode = element.attrib[a]
+                                QCcode_set = True
                 if 'siteName' == tag:
                     site_name = element.text
                 if 'variableName' == tag:
                     variable_name = element.text
+                if 'latitude' == tag:
+                    latitude = element.text
+                if 'longitude' == tag:
+                    longitude = element.text
+            if methodCode == 1:
+                method = 'No method specified'
+            else:
+                method = 'Unknown method'
+
+            if QCcode == 0:
+                QClevel = "Raw Data"
+            elif QCcode == 1:
+                QClevel = "Quality Controlled Data"
+            elif QCcode == 2:
+                QClevel = "Derived Products"
+            elif QCcode == 3:
+                QClevel = "Interpreted Products"
+            elif QCcode == 4:
+                QClevel = "Knowledge Products"
+            else:
+                QClevel = 'Unknown'
+
             for k, v in values.items():
                 t = time_to_int(k)
                 for_graph.append({'x': t, 'y': float(v)})
@@ -186,7 +218,11 @@ def parse_1_0_and_1_1(root):
                     'units': units,
                     'values': values,
                     'for_graph': for_graph,
-                    'wml_version': '1'}
+                    'wml_version': '1',
+                    'latitude': latitude,
+                    'longitude': longitude,
+                    'QClevel': QClevel,
+                    'method': method}
         else:
             return "Parsing error: The waterml document doesn't appear to be a WaterML 1.0/1.1 time series"
     except:
@@ -199,7 +235,7 @@ def parse_2_0(root):
             keys = []
             vals = []
             for_graph = []
-            units, site_name, variable_name = None, None, None
+            units, site_name, variable_name, latitude, longitude, method = None, None, None, None, None, None
             name_is_set = False
             variable_name = root[1].text
             for element in root.iter():
@@ -216,10 +252,21 @@ def parse_2_0(root):
                         if 'name' in e.tag and not name_is_set:
                             site_name = e.text
                             name_is_set = True
+                        if 'pos' in e.tag:
+                            lat_long = e.text
+                            lat_long = lat_long.split(' ')
+                            latitude = lat_long[0]
+                            longitude = lat_long[1]
                 if 'observedProperty' in element.tag:
                     for a in element.attrib:
                         if 'title' in a:
                             variable_name = element.attrib[a]
+                if 'ObservationProcess' in element.tag:
+                    for e in element.iter():
+                        if 'processType' in e.tag:
+                            for a in e.attrib:
+                                if 'title' in a:
+                                    method=e.attrib[a]
             values = dict(zip(keys, vals))
             for k, v in values.items():
                 t = time_to_int(k)
@@ -235,7 +282,9 @@ def parse_2_0(root):
                     'units': units,
                     'values': values,
                     'for_graph': for_graph,
-                    'wml_version': '2.0'}
+                    'wml_version': '2.0',
+                    'latitude': latitude,
+                    'longitude': longitude}
         else:
             return "Parsing error: The waterml document doesn't appear to be a WaterML 2.0 time series"
     except:
@@ -354,7 +403,8 @@ def create_vis(data, xlab, variable_name, units):
     savefig('visualization.png', bbox_inches='tight')
     return 'visualization.png'
 
-def make_files(reference_type, url, data_site_code, variable_code, title):
+#this function also creates the metadata terms
+def make_files(shortkey, reference_type, url, data_site_code, variable_code, title):
 
     ts, csv_link, csv_size, xml_link, xml_size = {}, '', '', '', ''
     if reference_type == 'rest':
@@ -366,6 +416,34 @@ def make_files(reference_type, url, data_site_code, variable_code, title):
                                       reference_type,
                                       site_name_or_code=data_site_code,
                                       variable_code=variable_code)
+
+    #update/create metadata elements
+    res = hydroshare.get_resource_by_shortkey(shortkey)
+    s = res.metadata.sites.all()[0]
+    hydroshare.resource.update_metadata_element(
+        shortkey,
+        'Site',
+        s.id,
+        latitude=ts['latitude'],
+        longitude=ts['longitude'])
+    v = res.metadata.variables.all()[0]
+    # hydroshare.resource.update_metadata_element(
+    #     shortkey,
+    #     'Variable',
+    #     v.id,
+    #     name=ts['variable_name'],
+    #     code=variable_code,
+    #     )
+    hydroshare.resource.create_metadata_element(
+        shortkey,
+        'QualityControlLevel',
+        value=ts['QClevel'],
+        )
+    hydroshare.resource.create_metadata_element(
+        shortkey,
+        'Method',
+        value=ts['method'],
+        )
 
 
     vals = ts['values']
@@ -414,7 +492,7 @@ def make_files(reference_type, url, data_site_code, variable_code, title):
 
 def generate_files(shortkey):
     res = hydroshare.get_resource_by_shortkey(shortkey)
-    files = make_files(res.reference_type, res.url, res.data_site_code, res.variable_code, res.title)
+    files = make_files(res.short_id, res.reference_type, res.url, res.metadata.sites.all()[0].code, res.metadata.variables.all()[0].code, res.title)
     for f in files:
         hydroshare.add_resource_files(res.short_id, f)
         os.remove(f.name)
