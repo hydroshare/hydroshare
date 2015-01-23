@@ -1,6 +1,7 @@
 from django.dispatch import receiver
 from hs_core.signals import *
 from hs_app_netCDF.models import NetcdfResource, NetcdfMetaData, Variable
+from hs_app_netCDF.forms import *
 
 
 # receiver used to extract metadata after user click on "create resource"
@@ -46,3 +47,34 @@ def netcdf_create_resource_trigger(sender, **kwargs):
 
             return metadata
 
+
+@receiver(pre_metadata_element_create, sender=NetcdfResource)
+def metadata_element_pre_create_handler(sender, **kwargs):
+    request = kwargs['request']
+    element_name = kwargs['element_name']
+    if element_name == "Variable":
+        element_form = VariableForm(data=request.POST)
+
+    if element_form.is_valid():
+        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+    else:
+        return {'is_valid': False, 'element_data_dict': None}
+
+# This handler is executed only when a metadata element is added as part of editing a resource
+@receiver(pre_metadata_element_update, sender=NetcdfResource)
+def metadata_element_pre_update_handler(sender, **kwargs):
+    element_name = kwargs['element_name'].lower()
+    element_id = kwargs['element_id']
+    request = kwargs['request']
+    if element_name == 'variable':
+        form_data = {}
+        for field_name in VariableValidationForm().fields:
+            matching_key = [key for key in request.POST if '-'+field_name in key][0]
+            form_data[field_name] = request.POST[matching_key]
+
+        element_form = VariableValidationForm(form_data)
+    if element_form.is_valid():
+        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+    else:
+        # TODO: need to return form errors
+        return {'is_valid': False, 'element_data_dict': None}

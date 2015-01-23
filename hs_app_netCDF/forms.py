@@ -5,6 +5,8 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import *
 from hs_app_netCDF.models import *
 from django.forms.models import formset_factory
+from functools import partial, wraps
+
 
 # Keep this one unchanged
 class BaseFormHelper(FormHelper):
@@ -72,8 +74,18 @@ class VariableForm(ModelForm):
         else:
             self.action = ""
         if not allow_edit:
-            self.fields['derived_from'].widget.attrs['readonly'] = True
-            self.fields['derived_from'].widget.attrs['style'] = "background-color:white;"
+            for field in self.fields.values():
+                field.widget.attrs['readonly'] = True
+                field.widget.attrs['style'] = "background-color:white;"
+    @property
+    def form_id(self):
+        form_id = 'id_variable_%s' % self.number
+        return form_id
+
+    @property
+    def form_id_button(self):
+        form_id = 'id_variable_%s' % self.number
+        return "'" + form_id + "'"
 
     class Meta:
         model = Variable
@@ -151,7 +163,7 @@ VariableLayoutEdit = Layout(
                             HTML('{% load crispy_forms_tags %} '
                                  '{% for form in variable_formset.forms %} '
                                      '<div class="item form-group"> '
-                                     '<form id={{form.form_if}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
+                                     '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
                                      '{% crispy form %} '
                                     '<div class="row" style="margin-top:10px">'
                                         '<div class="col-md-10">'

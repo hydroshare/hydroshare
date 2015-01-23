@@ -12,10 +12,13 @@ from django.forms.models import formset_factory
 # when the resource is created this page will be shown
 def landing_page(request, page):
     content_model = page.get_content_model()
+    edit_mode = False
+    if content_model.creator == request.user or request.user in content_model.owners.all() or request.user in content_model.edit_users.all():
+        edit_mode = True
     if request.method == 'GET':
-        VariableFormSetEdit = formset_factory(VariableForm, formset=BaseVariableFormSet, extra=0)
+        VariableFormSetEdit = formset_factory(wraps(VariableForm)(partial(VariableForm, allow_edit=edit_mode)), formset=BaseVariableFormSet, extra=0)
         variable_formset = VariableFormSetEdit(initial=content_model.metadata.variables.all().values(), prefix='variable')
-        add_variable_modal_form = VariableForm(res_short_id=content_model.short_id)
+        add_variable_modal_form = VariableForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
         ext_md_layout = Layout(
                                 VariableLayoutEdit,
                                 ModalDialogLayoutAddVariable
