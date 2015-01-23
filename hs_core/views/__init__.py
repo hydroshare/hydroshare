@@ -454,7 +454,8 @@ def create_resource(request, *args, **kwargs):
                 dcterms.append({'term': 'CR', 'content': cr})
         global res_cls
         # Send pre_call_create_resource signal
-        pre_call_create_resource.send(sender=res_cls, resource=resource, request_post = qrylst)
+        metadata = []
+        pre_call_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, request_post = qrylst)
         res = hydroshare.create_resource(
             resource_type=qrylst['resource-type'],
             owner=request.user,
@@ -463,7 +464,8 @@ def create_resource(request, *args, **kwargs):
             dublin_metadata=dcterms,
             content=frm.cleaned_data['abstract'] or frm.cleaned_data['title'],
             res_type_cls = res_cls,
-            resource=resource
+            resource=resource,
+            metadata=metadata
         )
         if res is not None:
             return HttpResponseRedirect(res.get_absolute_url())
