@@ -9,6 +9,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.utils.timezone import now
+import json
 from mezzanine.conf import settings
 from django import forms
 from mezzanine.generic.models import Keyword
@@ -134,16 +135,23 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                     for kw in keywords:
                         res.metadata.create_element(element_name, value=kw)
                 else:
-                    res.metadata.create_element(element_name, **element_data_dict)
+                    element = res.metadata.create_element(element_name, **element_data_dict)
 
                 is_add_success = True
                 resource_modified(res, request.user)
 
     if request.is_ajax():
         if is_add_success:
-            return HttpResponse("success")
+            if element_name == 'subject':
+                ajax_response_data = {'status': 'success'}
+            else:
+                ajax_response_data = {'status': 'success', 'element_id': element.id, 'element_name': element_name}
+
+            return HttpResponse(json.dumps(ajax_response_data))
+
         else:
-            return HttpResponse("failure")
+            ajax_response_data = {'status': 'error'}
+            return HttpResponse (json.dumps(ajax_response_data))
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -169,12 +177,12 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     if request.is_ajax():
         if is_update_success:
-            return HttpResponse("success")
+            ajax_response_data = {'status': 'success'}
+            return HttpResponse(json.dumps(ajax_response_data))
         else:
-            return HttpResponse("failure")
+            ajax_response_data = {'status': 'error'}
+            return HttpResponse(json.dumps(ajax_response_data))
 
-        #return render_to_response("Success")
-    #return render_to_response('pages/genericresource.html', context_instance=RequestContext(request))
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -213,7 +221,8 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
     res.metadata.delete_all_elements()
     res.metadata.delete()
-    # deleting the metadata container object deletes the resource also
+    # deleting the metadata container object deletes the resource
+    # so no need to delete the resource separately
     #res.delete()
     return HttpResponseRedirect('/my-resources/')
 
@@ -364,10 +373,10 @@ def my_resources(request, page):
 #        return HttpResponseRedirect('/accounts/login/')
 
     # TODO: remove the following 4 lines of debugging code prior to pull request
-    import sys
-    sys.path.append("/home/docker/pycharm-debug")
-    import pydevd
-    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    # import sys
+    # sys.path.append("/home/docker/pycharm-debug")
+    # import pydevd
+    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
@@ -536,7 +545,6 @@ def describe_resource(request, *args, **kwargs):
                     page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
     return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
 
-# TODO: new method by pabitra
 @login_required
 def create_resource_new_workflow(request, *args, **kwargs):
     resource_type=request.POST['resource-type']
@@ -557,17 +565,12 @@ def create_resource_new_workflow(request, *args, **kwargs):
 
     res_cls = hydroshare.check_resource_type(resource_type)
 
-    # Send pre_describe_resource signal for other resource type apps to listen, extract, and add their own metadata
-    #ret_responses = pre_describe_resource.send(sender=res_cls, files=resource_files)
     metadata = []
     # Send pre-create resource signal - let any other app populate the metadata list object
     pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, resource=None, **kwargs)
 
     metadata.append({'title': {'value': res_title}})
-    #metadata.append({'description': {'abstract': 'No abstract'}})
-    # create barebone resource with resource_files to database model for later update since on Django 1.7,
-    # resource_files get closed automatically at the end of each request
-    owner = user_from_id(request.user)
+    #owner = user_from_id(request.user)
 
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
@@ -580,36 +583,15 @@ def create_resource_new_workflow(request, *args, **kwargs):
             content=res_title
     )
 
-    # resource = res_cls.objects.create(
-    #         user=owner,
-    #         creator=owner,
-    #         title=res_title,
-    #         last_changed_by=owner,
-    #         in_menus=[],
-    #         **kwargs
-    # )
-    # for file in resource_files:
-    #     ResourceFile.objects.create(content_object=resource, resource_file=file)
-
     if resource is not None:
         # go to resource landing page
         return HttpResponseRedirect(resource.get_absolute_url())
+    else:
+        context = {
+            'resource_creation_error': 'Resource creation failed'
+        }
+        return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
 
-    # create_res_context = {
-    #     'resource_type': resource_type,
-    #     'res_title': res_title,
-    # }
-    #
-    # page_url = 'pages/create-resource.html'
-    #
-    # for receiver, response in ret_responses:
-    #     if response is not None:
-    #         for key in response:
-    #             if key != 'create_resource_page_url':
-    #                 create_res_context[key] = response[key]
-    #             else:
-    #                 page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
-    # return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
 
 class CreateResourceForm(forms.Form):
     title = forms.CharField(required=True)

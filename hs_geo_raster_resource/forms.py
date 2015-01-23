@@ -10,7 +10,7 @@ class ValidateMetadataForm(forms.Form):
     cellNoDataValue = forms.FloatField(required = False)
     bandCount =forms.IntegerField(required=True)
     bandName_1 = forms.CharField(max_length=50, required=True)
-    variableName_1 = forms.CharField(max_length=50, required=True)
+    variableName_1 = forms.CharField(widget=forms.Textarea, required=True)
     variableUnit_1 = forms.CharField(max_length=50, required=True)
     method_1 = forms.CharField(widget=forms.Textarea, required=False)
     comment_1 = forms.CharField(widget=forms.Textarea, required=False)

@@ -149,6 +149,14 @@ TEMPLATE_LOADERS = (
     "django.template.loaders.app_directories.Loader",
 )
 
+# make django file uploader to always write uploaded file to a temporary directory
+# rather than holding uploaded file in memory for small files. This is due to
+# the difficulty of metadata extraction from an uploaded file being held in memory
+# by Django, e.g., gdal raster metadata extraction opens file from disk to extract
+# metadata. Besides, performance gain from holding small uploaded files in memory
+# is not that great for our project use case
+FILE_UPLOAD_MAX_MEMORY_SIZE = 0
+
 AUTHENTICATION_BACKENDS = ("mezzanine.core.auth_backends.MezzanineBackend",)
 
 # List of finder classes that know how to find static files in
