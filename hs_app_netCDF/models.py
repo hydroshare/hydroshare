@@ -79,7 +79,7 @@ class Variable(AbstractMetaDataElement):
             if 'name' in kwargs:
                 if variable.name != kwargs['name']:
                 # check this new name not already exists
-                    if Variable.objects.filter(name_iexact=kwargs['name'], object_id=variable.object_id,
+                    if Variable.objects.filter(name__iexact=kwargs['name'], object_id=variable.object_id,
                                          content_type__pk=variable.content_type.id).count()> 0:
                         raise ValidationError('Variable name:%s already exists.' % kwargs['name'])
 

@@ -20,7 +20,8 @@ def netcdf_create_resource_trigger(sender, **kwargs):
 
             # For dict key name and structure refer to the hs_core/models.py
             # TODO add title
-            # title = {'title': {'value': res_dublin_core_meta['title']}
+            title = {'title': {'value': res_dublin_core_meta['title']}}
+            metadata.append(title)
             # add description
             description = {'description': {'abstract': res_dublin_core_meta['description']}}
             metadata.append(description)
@@ -52,7 +53,7 @@ def netcdf_create_resource_trigger(sender, **kwargs):
 def metadata_element_pre_create_handler(sender, **kwargs):
     request = kwargs['request']
     element_name = kwargs['element_name']
-    if element_name == "Variable":
+    if element_name == "variable":
         element_form = VariableForm(data=request.POST)
 
     if element_form.is_valid():

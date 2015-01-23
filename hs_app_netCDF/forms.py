@@ -167,7 +167,7 @@ VariableLayoutEdit = Layout(
                                      '{% crispy form %} '
                                     '<div class="row" style="margin-top:10px">'
                                         '<div class="col-md-10">'
-                                            '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-source-element-dialog_{{ form.number }}" value="Delete Variable">'
+                                            '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-variable-element-dialog_{{ form.number }}" value="Delete Variable">'
                                         '</div>' #change
                                         '<div class="col-md-2">'
                                             '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'  # change

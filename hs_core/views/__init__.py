@@ -373,10 +373,10 @@ def my_resources(request, page):
 #        return HttpResponseRedirect('/accounts/login/')
 
     # TODO: remove the following 4 lines of debugging code prior to pull request
-    # import sys
-    # sys.path.append("/home/docker/pycharm-debug")
-    # import pydevd
-    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
@@ -569,7 +569,21 @@ def create_resource_new_workflow(request, *args, **kwargs):
     # Send pre-create resource signal - let any other app populate the metadata list object
     pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, resource=None, **kwargs)
 
-    metadata.append({'title': {'value': res_title}})
+    add_title = True
+    for element in metadata:
+        if 'title' in element:
+            if 'value' in element['title']:
+                res_title = element['title']['value']
+                add_title = False
+            else:
+                metadata.remove(element)
+            break
+
+    if add_title:
+        metadata.append({'title': {'value': res_title}})
+
+
+
     #owner = user_from_id(request.user)
 
     resource = hydroshare.create_resource(
