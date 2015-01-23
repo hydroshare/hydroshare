@@ -25,22 +25,6 @@ class RefTimeSeries(Page, AbstractResource):
         url = models.URLField(null=False, blank=True, default='',
                               verbose_name='Web Services Url')
 
-        data_site_name = models.CharField(max_length=100, null=True, blank=True, default='',
-                                verbose_name='Time Series Site value')
-
-        data_site_code = models.CharField(max_length=100, null=True, blank=True, default='',
-                                verbose_name='Time Series Site Code')
-
-        variable_name = models.CharField(max_length=100, null=True, blank=True, default='',
-                                    verbose_name='Data Variable Name')
-
-        variable_code = models.CharField(max_length=100, null=True, blank=True, default='',
-                                    verbose_name='Data Variable Code')
-
-        start_date = models.DateTimeField(null=True)
-
-        end_date = models.DateTimeField(null=True)
-
         def can_add(self, request):
                 return AbstractResource.can_add(self, request)
 
