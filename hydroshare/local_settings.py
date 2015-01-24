@@ -68,7 +68,7 @@ CELERY_ROUTES = ('django_docker_processes.router.DockerRouter',)
 
 #DOCKER_URL = 'tcp://localhost:2375/'
 DOCKER_URL = 'unix://docker.sock/'
-DOCKER_API_VERSION = '1.12'
+DOCKER_API_VERSION = '1.15'
 
 
 # CartoCSS
@@ -125,3 +125,31 @@ EMAIL_HOST = 'gator3038.hostgator.com'
 EMAIL_PORT = '26'
 EMAIL_USE_TLS= True
 DEFAULT_FROM_EMAIL= 'hydroshare@hydroshare.org'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+            }
+    },
+    'loggers': {
+        'django': {
+            'handlers':['console'],
+            'propagate': True,
+            'level': 'INFO',
+        }
+    },
+}
+

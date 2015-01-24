@@ -1,6 +1,12 @@
 
 from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+
 from mezzanine.pages.page_processors import processor_for
+
+from django_docker_processes.models import DockerProcess
+from django_docker_processes.models import DockerProfile
+from django_docker_processes import tasks
 
 from .models import InstResource
 from .forms import InputForm
@@ -29,7 +35,7 @@ def main_page(request, page):
             #content_model.commit_id = form.cleaned_data['commit_id']
             content_model.save()
 
-            input_url = content_model.bags.first().bag.url
+            input_url = request.build_absolute_uri(content_model.bags.first().bag.url)
 
             logger.info("Running model, input_url: {0}".format(input_url))
 
@@ -39,7 +45,13 @@ def main_page(request, page):
             #global process
             process = DockerProcess.objects.create(profile=my_profile) # creates a unique ID
             #promise = tasks.run_process.delay(process, **env_dict)
-            promise = tasks.run_process.apply_async(args=[process, {}], **env_dict)
+
+            logger.info("Calling tasks.run_process.apply_async...")
+
+            keyword_args = {'env': env_dict,
+                            'overwrite_images': True}
+            promise = tasks.run_process.apply_async(args=[process, {}], 
+                                                    kwargs=keyword_args)
             logs = promise.get()
             print logs
             process.delete() # no reason to leave it hanging around in the database

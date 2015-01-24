@@ -5,13 +5,8 @@ from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from hs_core.models import AbstractResource, resource_processor
 from django_docker_processes import signals
-from django_docker_processes.models import DockerProcess
-from django_docker_processes.models import DockerProfile
-from django_docker_processes import tasks
-from django.shortcuts import get_object_or_404
 import django.dispatch
 from .forms import InputForm
-from mezzanine.pages.page_processors import processor_for
 from hs_core.hydroshare.resource import post_create_resource
 from django.utils.timezone import now
 from django.dispatch import receiver
@@ -19,6 +14,9 @@ import zipfile
 import ConfigParser
 import cStringIO as StringIO
 import os
+import logging
+
+LOGGER = logging.getLogger('django')
 
 #
 # To create a new resource, use these three super-classes.
@@ -57,6 +55,10 @@ def when_my_process_ends(sender, instance, result_text=None, result_data=None, f
     from hs_core import hydroshare
     owner = User.objects.first() # FIXME
     hydroshare.create_resource('GenericResource', owner, instance.profile.name + ' - ' + now().isoformat(), files=files, content=logs)
+
+    LOGGER.info('Process finished')
+    if logs:
+        LOGGER.info(logs)
     #process.delete() # no reason to leave it hanging around in the database
 
 def when_my_process_fails(sender, instance, error_text=None, error_data=None, logs=None, **kw):
@@ -64,7 +66,12 @@ def when_my_process_fails(sender, instance, error_text=None, error_data=None, lo
     # error_data is a dict
     # error_text is plain text
     # logs are plain text stdout and stderr from the dead container
-    instance.logs += error_text
+    LOGGER.info('Process failed')
+    if error_text:
+        if instance.logs is None:
+            instance.logs = ''
+        instance.logs += error_text
+        LOGGER.info(error_text)
     instance.save()
     #process.delete() # no reason to leave it hanging around in the database
 
@@ -108,43 +115,4 @@ def rhessys_post_trigger(sender, **kwargs):
             resource.save()
             zfile.close()
 
-processor_for(InstResource)(resource_processor)
-
-@processor_for(InstResource)
-def main_page(request, page):
-    content_model = page.get_content_model()
-    if(request.method == 'POST'):
-        form = InputForm(request.POST)
-        if(form.is_valid()):
-            content_model.name=form.cleaned_data['name']
-            content_model.git_username = form.cleaned_data['git_username']
-            content_model.git_password = form.cleaned_data['git_password']
-            content_model.git_branch = form.cleaned_data['git_branch']
-            content_model.model_command_line_parameters = form.cleaned_data['model_command_line_parameters']
-            #content_model.project_name = form.cleaned_data['project_name']
-            #content_model.model_desc = form.cleaned_data['model_desc']
-            #content_model.study_area_bbox = form.cleaned_data['study_area_bbox']
-            #content_model.git_repo = form.cleaned_data['git_repo']
-            #content_model.commit_id = form.cleaned_data['commit_id']
-            content_model.save()
-            input_url = content_model.bags.first().bag.url
-            env_dict = {'INPUT_URL':input_url}
-            my_profile = get_object_or_404(DockerProfile, name='RHESSys_Docker_Profile')
-            #my_profile = get_object_or_404(DockerProfile, name='Pandoc')
-            #global process
-            process = DockerProcess.objects.create(profile=my_profile) # creates a unique ID
-            #promise = tasks.run_process.delay(process, **env_dict)
-            promise = tasks.run_process.apply_async(args=[process, {}], **env_dict)
-            logs = promise.get()
-            print logs
-            process.delete() # no reason to leave it hanging around in the database
-    else:
-        form = InputForm(initial={
-            'project_name' : content_model.project_name,
-            'model_desc' : content_model.model_desc,
-            'git_repo' : content_model.git_repo,
-            'commit_id' : content_model.commit_id,
-            'study_area_bbox' : content_model.study_area_bbox
-        })
-
-    return  {'form': form}
+#processor_for(InstResource)(resource_processor)
