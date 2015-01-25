@@ -11,14 +11,14 @@
     <h2>Resource Details</h2>
 
 <div class="btn-toolbar" style="padding-bottom: 0.5em;">
-{#    {% if page.perms.change %}#}
+    {% if page.perms.change %}
 
-    {% if can_edit %}
+{#    {% if can_edit %}#}
     <a class="btn btn-primary" id="share" href="#sharing">Share</a>
     {% endif %}
 
-{#    {% if page.perms.delete %}#}
-    {% if can_edit %}
+    {% if page.perms.delete %}
+{#    {% if can_edit %}#}
     <button class="btn btn-danger" id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">Delete</button>
     {% endif %}
 </div>
@@ -40,6 +40,17 @@
             {% elif page.perms.change %}
             {% comment %}<tr><th>DOI</th><td><button class='btn btn-danger' data-toggle="modal" data-target="#submit-for-publication-dialog">Submit for publication</button></td></tr>{% endcomment %}
             {% endif %}
+            {% if cm.public %}
+                <tr><th>Sharing Status</th><td>Public</td></tr>
+            {% else %}
+                <tr><th>Sharing Status</th><td>Private</td></tr>
+            {% endif %}
+            <tr><th>Metadata Status</th>
+                {%  if metadata_status == 'Incomplete' %}
+                    <td class="text-danger">{{ metadata_status }}</td></tr>
+                {%  else %}
+                    <td class="text-success">{{ metadata_status }}</td></tr>
+                {%  endif %}
         </table>
 
     </div>
@@ -49,10 +60,10 @@
         <div class="col-md-12">
             <h2>Resource Description</h2>
 
-            {% if cm.content %}
-                <h4>Abstract</h4>
-                {% inplace_edit "cm.content|linebreaksbr|safe"%}
-            {% endif %}
+{#            {% if cm.content %}#}
+{#                <h4>Abstract</h4>#}
+{#                {% inplace_edit "cm.content|linebreaksbr|safe"%}#}
+{#            {% endif %}#}
 
             <h4>References</h4>
             <ul class="list-unstyled">
@@ -62,14 +73,15 @@
                 <p><strong>No citations listed</strong></p>
             {% endfor %}
             </ul>
-{#            {% if page.perms.change %}#}
-            {%  if can_edit %}
+            {% if page.perms.change %}
+{#            {%  if can_edit %}#}
                 {# Pabitra: This needs to be enabled once this functionality is mapped to the new metadata element #}
                 <button class="btn btn-primary" id="add-reference" data-toggle="modal" data-target="#add-reference-dialog" disabled>Add reference</button>
             {% endif %}
 
 
 {#            <h4>Other Metadata</h4>#}
+
             <div class="form-group">
                 <label for="" class="col-sm-2 control-label" style="margin-left: -15px"><h4>Science Metadata</h4></label>
                 <div class="col-sm-10">
@@ -124,8 +136,8 @@
                     <td>{{ f.resource_file.name|slice:"33:" }}</td>
                     <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
                     <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>
-{#                    {% if page.perms.change %}#}
-                      {% if can_edit %}
+                    {% if page.perms.change %}
+{#                      {% if can_edit %}#}
                         <div class="modal fade" id="delete-resource-file" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                           <div class="modal-dialog">
                             <div class="modal-content">
@@ -166,8 +178,8 @@
                               </ul>
                             </div>
                         </td>
-{#                        {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
-                        {% if can_edit and resource_type != "Geographic Raster Resource" %}
+                        {% if page.perms.change and resource_type != "Geographic Raster Resource" %}
+{#                        {% if can_edit and resource_type != "Geographic Raster Resource" %}#}
                         <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
                         {% endif %}
                     </tr>
@@ -191,8 +203,10 @@
             {% else %}
                 This resource can be viewed and downloaded only by designated users or research groups.
                 {% if user == cm.user %}
-                    <input name="t" type="hidden" value="make_public"/>
-                    <button type="submit" class="btn btn-danger">Make public</button>
+                    {%  if cm.can_be_public %}
+                        <input name="t" type="hidden" value="make_public"/>
+                        <button type="submit" class="btn btn-danger">Make public</button>
+                    {% endif %}
                 {% endif %}
             {% endif %}
             </form>
@@ -562,29 +576,31 @@
                             res_short_id = form_update_action.split('/')[3];
                             update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/"
                             $form.attr('action', update_url);
-                        }
 
+                        }
+                        if (json_response.hasOwnProperty('element_name')){
+                            if(json_response.element_name === 'title'){
+                                $res_title = $(".inplaceedit").find("inplaceeditform").first();
+                                //console.log($res_title)
+                                field_name_value = $res_title.attr('field_name');
+                                //console.log(field_name_value)
+                                if (field_name_value === 'title'){
+                                    updated_title = $form.find("#id_value").val();
+                                    $res_title.closest("span").html($res_title);
+                                    $res_title.closest("span").append(updated_title);
+                                }
+                            }
+                        }
                         $('#' + form_id).before($alert_success);
                         $(".alert-success").fadeTo(2000, 500).slideUp(1000, function()
                         {
                             $(".alert-success").alert('close');
                         });
-                        // "/hsapi/_internal/%s/%s/%s/update-metadata/" % (res_short_id, element_name.lower(), element_id)
                     }
-{#                    if (result === "success")#}
-{#                    {#}
-{#                        $('#' + form_id).before($alert_success);#}
-{#                        $(".alert-success").fadeTo(2000, 500).slideUp(1000, function()#}
-{#                        {#}
-{#                            $(".alert-success").alert('close');#}
-{#                        });#}
-{#                    }#}
                     else{
                         $('#' + form_id).before($alert_error);
 
                     }
-
-                    //alert("Save success")
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown)
                 {

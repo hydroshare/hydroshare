@@ -116,7 +116,7 @@ def get_page_context(page, user, extended_metadata_layout=None):
         temporal_coverage = temporal_coverages[0]
         temporal_coverage_data_dict['start'] = temporal_coverage.value['start']
         temporal_coverage_data_dict['end'] = temporal_coverage.value['end']
-        temporal_coverage_data_dict['name'] = temporal_coverage.value['name']
+        temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
     else:
         temporal_coverage = None
 
@@ -156,6 +156,11 @@ def get_page_context(page, user, extended_metadata_layout=None):
 
     metadata_form = MetaDataForm(resource_mode='edit' if edit_mode else 'view', extended_metadata_layout=extended_metadata_layout)
 
+    if content_model.metadata.has_all_required_elements():
+        metadata_status = "Complete"
+    else:
+        metadata_status = "Incomplete"
+
     context = {'metadata_form': metadata_form,
                'title_form': title_form,
                'creator_formset': creator_formset,
@@ -177,6 +182,7 @@ def get_page_context(page, user, extended_metadata_layout=None):
                'coverage_spatial_form': coverage_spatial_form,
                'format_formset': format_formset,
                'subjects_form': subjects_form,
+               'metadata_status': metadata_status,
                'extended_metadata_layout': extended_metadata_layout}
 
     return context

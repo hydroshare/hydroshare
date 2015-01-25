@@ -177,7 +177,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     if request.is_ajax():
         if is_update_success:
-            ajax_response_data = {'status': 'success'}
+            ajax_response_data = {'status': 'success', 'element_name': element_name}
             return HttpResponse(json.dumps(ajax_response_data))
         else:
             ajax_response_data = {'status': 'error'}
@@ -205,7 +205,13 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     resource_file_extensions = [os.path.splitext(f.resource_file.name)[1] for f in res.files.all()]
     if delete_file_extension not in resource_file_extensions:
         format_element = res.metadata.formats.filter(value=delete_file_mime_type).first()
+
         res.metadata.delete_element(format_element.term, format_element.id)
+
+    if res.public:
+        if not res.can_be_public:
+            res.public = False
+            res.save()
 
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -281,8 +287,10 @@ def change_permissions(request, shortkey, *args, **kwargs):
         if frm.is_valid():
             res.owners.add(frm.cleaned_data['user'])
     elif t == 'make_public':
-        res.public = True
-        res.save()
+        #if res.metadata.has_all_required_elements():
+        if res.can_be_public:
+            res.public = True
+            res.save()
     elif t == 'make_private':
         res.public = False
         res.save()
@@ -373,10 +381,10 @@ def my_resources(request, page):
 #        return HttpResponseRedirect('/accounts/login/')
 
     # TODO: remove the following 4 lines of debugging code prior to pull request
-    # import sys
-    # sys.path.append("/home/docker/pycharm-debug")
-    # import pydevd
-    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
@@ -514,7 +522,7 @@ def describe_resource(request, *args, **kwargs):
         context = {
             'file_size_error' : 'The resource file is larger than the supported size limit %s. Select resource files within %s to create resource.' % (file_size_limit_for_display, file_size_limit_for_display)
         }
-        return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
     res_cls = hydroshare.check_resource_type(resource_type)
     # Send pre_describe_resource signal for other resource type apps to listen, extract, and add their own metadata
     ret_responses = pre_describe_resource.send(sender=res_cls, files=resource_files)
@@ -535,15 +543,21 @@ def describe_resource(request, *args, **kwargs):
         'resource_type': resource_type,
         'res_title': res_title,
     }
-    page_url = 'pages/create-resource.html'
+    page_url = 'pages/create-resource.html.old'
     for receiver, response in ret_responses:
         if response is not None:
             for key in response:
                 if key != 'create_resource_page_url':
                     create_res_context[key] = response[key]
                 else:
-                    page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
+                    page_url = response.get('create_resource_page_url', 'pages/create-resource.html.old')
     return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
+
+
+@login_required
+def create_resource_select_resource_type(request, *args, **kwargs):
+    return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
+
 
 @login_required
 def create_resource_new_workflow(request, *args, **kwargs):
@@ -561,16 +575,26 @@ def create_resource_new_workflow(request, *args, **kwargs):
                                 'Select resource files within %s to create resource.'
                                 % (file_size_limit_for_display, file_size_limit_for_display)
         }
-        return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     res_cls = hydroshare.check_resource_type(resource_type)
 
     metadata = []
-    # Send pre-create resource signal - let any other app populate the metadata list object
+    # Send pre-create resource signal - let any other app populate the empty metadata list object
     pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, resource=None, **kwargs)
 
-    metadata.append({'title': {'value': res_title}})
-    #owner = user_from_id(request.user)
+    add_title = True
+    for element in metadata:
+        if 'title' in element:
+            if 'value' in element['title']:
+                res_title = element['title']['value']
+                add_title = False
+            else:
+                metadata.remove(element)
+            break
+
+    if add_title:
+        metadata.append({'title': {'value': res_title}})
 
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
@@ -590,7 +614,7 @@ def create_resource_new_workflow(request, *args, **kwargs):
         context = {
             'resource_creation_error': 'Resource creation failed'
         }
-        return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
 
 class CreateResourceForm(forms.Form):

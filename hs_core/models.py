@@ -1387,6 +1387,10 @@ class AbstractResource(ResourcePermissionsMixin):
         """
         return None
 
+    @property
+    def can_be_public(self):
+        return True
+
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
@@ -1431,6 +1435,12 @@ class GenericResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
+    @property
+    def can_be_public(self):
+        if self.files.count() > 0 and self.metadata.has_all_required_elements():
+            return True
+
+        return False
 
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
@@ -1513,6 +1523,35 @@ class CoreMetaData(models.Model):
                 'Source',
                 'Relation',
                 'Publisher']
+
+    # this method needs to be overriden by any subclass of this class
+    # if they implement additional metadata elements that are required
+    def has_all_required_elements(self):
+        if not self.title:
+            return False
+        elif self.title.value.lower() == 'untitled resource':
+            return False
+
+        if not self.description:
+            return False
+        elif len(self.description.abstract.strip()) == 0:
+            return False
+
+        if self.creators.count() == 0:
+            return False
+
+        if not self.rights:
+            return False
+        elif len(self.rights.statement.strip()) == 0:
+            return False
+
+        if self.coverages.count() == 0:
+            return False
+
+        if self.subjects.count() == 0:
+            return False
+
+        return True
 
     # this method needs to be overriden by any subclass of this class
     def delete_all_elements(self):
