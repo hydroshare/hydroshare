@@ -121,34 +121,11 @@ def raster_pre_call_resource_trigger(sender, **kwargs):
                     band_terms[k] = v
             for i in range(int(resource.bandCount)):
                 meta_info = {}
-                meta_info['bandName'] = band_terms['bandName_'+str(i+1)]
+                meta_info['name'] = band_terms['bandName_'+str(i+1)]
                 meta_info['variableName'] = band_terms['variableName_'+str(i+1)]
                 meta_info['variableUnit'] = band_terms['variableUnit_'+str(i+1)]
                 meta_info['method'] = band_terms['method_'+str(i+1)]
                 meta_info['comment'] = band_terms['comment_'+str(i+1)]
-                metadata.append({'bandInformation': band_terms})
+                metadata.append({'bandInformation': meta_info})
         else:
             raise ValidationError(frm.errors)
-
-# signal handler to create the Coverage core metadata and band(s) metadata as part of the created resource
-# @receiver(post_create_resource, sender=RasterResource)
-# def raster_post_trigger(sender, **kwargs):
-#     if sender is RasterResource:
-#         resource = kwargs['resource']
-#
-#         resource.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info'])
-#         global band_terms
-#         for i in range(int(resource.bandCount)):
-#             resource.metadata.create_element('BandInformation', bandName=band_terms['bandName_'+str(i+1)],
-#                                variableName=band_terms['variableName_'+str(i+1)],
-#                                variableUnit=band_terms['variableUnit_'+str(i+1)],
-#                                method = band_terms['method_'+str(i+1)],
-#                                comment = band_terms['comment_'+str(i+1)])
-#             band = BandInformation.objects.create(bandName=band_terms['bandName_'+str(i+1)],
-#                               variableName=band_terms['variableName_'+str(i+1)],
-#                               variableUnit=band_terms['variableUnit_'+str(i+1)],
-#                               method = band_terms['method_'+str(i+1)],
-#                               comment = band_terms['comment_'+str(i+1)])
-#             band.save()
-#             resource.bands.add(band)
-#         resource.save()

@@ -9,7 +9,9 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 class BandInformation(AbstractMetaDataElement):
     term = 'BandInformation'
     # required fields
-    bandName = models.CharField(max_length=50, null=True)
+    # has to call the field name rather than bandName, which seems to be enforced by the AbstractMetaDataElement;
+    # otherwise, got an error indicating required "name" field does not exist
+    name = models.CharField(max_length=50, null=True)
     variableName = models.TextField(null=True)
     variableUnit = models.CharField(max_length=50, null=True)
     # optional fields
@@ -20,16 +22,16 @@ class BandInformation(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         # Check the required fields and create new BandInformation meta instance
-        if 'bandName' in kwargs:
+        if 'name' in kwargs:
             # check if the variable metadata already exists
             metadata_obj = kwargs['content_object']
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            band_info = BandInformation.objects.filter(name__iexact=kwargs['bandName'], object_id=metadata_obj.id,
+            band_info = BandInformation.objects.filter(name__iexact=kwargs['name'], object_id=metadata_obj.id,
                                                        content_type=metadata_type).first()
             if band_info:
-                raise ValidationError('bandInformation bandName:%s already exists' % kwargs['bandName'])
+                raise ValidationError('bandInformation name:%s already exists' % kwargs['name'])
         else:
-            raise ValidationError("bandName of bandInformation is missing.")
+            raise ValidationError("name of bandInformation is missing.")
 
         if not 'variableName' in kwargs:
             raise ValidationError("bandInformation variableName is missing.")
@@ -37,7 +39,7 @@ class BandInformation(AbstractMetaDataElement):
         if not 'variableUnit' in kwargs:
             raise ValidationError("bandInformation variableUnit is missing.")
 
-        band_info = BandInformation.objects.create(bandName=kwargs['bandName'], variableName=kwargs['variableName'],
+        band_info = BandInformation.objects.create(name=kwargs['name'], variableName=kwargs['variableName'],
                                                    variableUnit=kwargs['variableUnit'], content_object=metadata_obj)
 
         # check for the optional fields and save them to the BandInformation metadata
@@ -53,14 +55,14 @@ class BandInformation(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         band_info = BandInformation.objects.get(id=element_id)
         if band_info:
-            if 'bandName' in kwargs:
-                if band_info.bandName != kwargs['bandName']:
-                    # check to make sure this new bandName not already exists
-                    if BandInformation.objects.filter(name_iexact=kwargs['bandName'], object_id=band_info.object_id,
+            if 'name' in kwargs:
+                if band_info.name != kwargs['name']:
+                    # check to make sure this new name not already exists
+                    if BandInformation.objects.filter(name_iexact=kwargs['name'], object_id=band_info.object_id,
                                                       content_type__pk=band_info.content_type.id).count()> 0:
-                        raise ValidationError('BandInformation bandName:%s already exists.' % kwargs['bandName'])
+                        raise ValidationError('BandInformation name:%s already exists.' % kwargs['name'])
 
-                band_info.bandName = kwargs['bandName']
+                band_info.name = kwargs['name']
 
             for key, value in kwargs.iteritems():
                 if key in ('variableName', 'variableUnit', 'method', 'comment'):
@@ -170,8 +172,8 @@ class RasterMetaData(CoreMetaData):
             hsterms_bandInfo = etree.SubElement(container, '{%s}rasterBandInformation' % self.NAMESPACES['hsterms'])
             hsterms_bandInfo_rdf_Description = etree.SubElement(hsterms_bandInfo, '{%s}Description' % self.NAMESPACES['rdf'])
 
-            hsterms_bandName = etree.SubElement(hsterms_bandInfo_rdf_Description, '{%s}bandName' % self.NAMESPACES['hsterms'])
-            hsterms_bandName.text = band_info.bandName
+            hsterms_name = etree.SubElement(hsterms_bandInfo_rdf_Description, '{%s}name' % self.NAMESPACES['hsterms'])
+            hsterms_name.text = band_info.name
 
             hsterms_variableName = etree.SubElement(hsterms_bandInfo_rdf_Description, '{%s}variableName' % self.NAMESPACES['hsterms'])
             hsterms_variableName.text = band_info.variableName
@@ -218,7 +220,7 @@ def main_page(request, page):
     band_dict = OrderedDict()
     i = 1
     for band in content_model.metadata.bandInformation.all():
-         band_dict['name (band '+str(i)+')'] = band.bandName
+         band_dict['name (band '+str(i)+')'] = band.name
          band_dict['variable (band '+str(i)+')'] = band.variableName
          band_dict['units (band '+str(i)+')'] = band.variableUnit
          band_dict['method (band '+str(i)+')'] = band.method
