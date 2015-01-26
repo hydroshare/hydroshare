@@ -524,6 +524,7 @@
                     console.log(json_response);
                     if (json_response.status === 'success')
                     {
+                        $form.find("button").hide();
                         if (json_response.hasOwnProperty('element_id')){
                             form_update_action = $form.attr('action');
                             res_short_id = form_update_action.split('/')[3];
@@ -585,7 +586,21 @@
         if ($("input:button[value='Delete creator']").length == 1){
             $("input:button[value='Delete creator']").first().hide();
         }
+        // disable all save changes button on load
+        $("form").each(function(){
+            $save_button = $(this).find("button").first();
+            //console.log($(this).attr('id') + ":" + $save_button.text());
+            if ($save_button.text() === "Save changes"){
+                $save_button.hide();
+            }
+        })
 
+        // show "Save changes" button when form editing starts
+        $(".form-control").each(function(){
+            $(this).on('input', function(e){
+                $(this).closest("form").find("button").show();
+            });
+        })
         // Code adapted from http://djangosnippets.org/snippets/1389/
         function updateElementIndex(el, prefix, ndx) {
             var id_regex = new RegExp('(' + prefix + '-\\d+-)');
