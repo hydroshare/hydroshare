@@ -5,7 +5,7 @@ from django.dispatch import receiver
 from hs_core.hydroshare import pre_create_resource, post_create_resource
 from hs_core.signals import *
 from hs_geo_raster_resource.models import RasterResource
-from hs_geo_raster_resource.models import RasterBand
+from hs_geo_raster_resource.models import BandInformation
 
 res_md_dict = {}
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
@@ -74,6 +74,7 @@ def raster_pre_call_resource_trigger(sender, **kwargs):
         from hs_geo_raster_resource.forms import ValidateMetadataForm
         from django.core.exceptions import ValidationError
         qrylst = kwargs['request_post']
+        metadata = kwargs['metadata']
         # add the corresponding names for form validation
         for k, v in qrylst.items():
             if k.startswith('name (band'):
@@ -89,6 +90,9 @@ def raster_pre_call_resource_trigger(sender, **kwargs):
         if res_md_dict:
             res_md_dict['spatial_coverage_info']['name'] = qrylst['place/area name']
             res_md_dict['spatial_coverage_info'].pop('place/area name', None)
+
+        box = {'coverage': {'type': 'box', 'value': res_md_dict['spatial_coverage_info']}}
+        metadata.append(box)
 
         resource = kwargs['resource']
         #create form and do metadata validation
@@ -115,23 +119,13 @@ def raster_pre_call_resource_trigger(sender, **kwargs):
                 elif k.startswith('bandName') or k.startswith('variableName') or k.startswith('variableUnit')\
                         or k.startswith('method') or k.startswith('comment'):
                     band_terms[k] = v
+            for i in range(int(resource.bandCount)):
+                meta_info = {}
+                meta_info['name'] = band_terms['bandName_'+str(i+1)]
+                meta_info['variableName'] = band_terms['variableName_'+str(i+1)]
+                meta_info['variableUnit'] = band_terms['variableUnit_'+str(i+1)]
+                meta_info['method'] = band_terms['method_'+str(i+1)]
+                meta_info['comment'] = band_terms['comment_'+str(i+1)]
+                metadata.append({'bandInformation': meta_info})
         else:
             raise ValidationError(frm.errors)
-
-# signal handler to create the Coverage core metadata and band(s) metadata as part of the created resource
-@receiver(post_create_resource, sender=RasterResource)
-def raster_post_trigger(sender, **kwargs):
-    if sender is RasterResource:
-        resource = kwargs['resource']
-
-        resource.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info'])
-        global band_terms
-        for i in range(int(resource.bandCount)):
-            band = RasterBand(bandName=band_terms['bandName_'+str(i+1)],
-                              variableName=band_terms['variableName_'+str(i+1)],
-                              variableUnit=band_terms['variableUnit_'+str(i+1)],
-                              method = band_terms['method_'+str(i+1)],
-                              comment = band_terms['comment_'+str(i+1)])
-            band.save()
-            resource.bands.add(band)
-        resource.save()
