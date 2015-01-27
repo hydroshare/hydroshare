@@ -113,24 +113,24 @@
                     <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
                     <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>
                     {% if page.perms.change %}
-                        <div class="modal fade" id="delete-resource-file" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal fade" id="delete-resource-file-{{f.pk}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                           <div class="modal-dialog">
                             <div class="modal-content">
                               <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                <h4 class="modal-title" id="submit-for-publication-title">Confirm file deletion</h4>
+                                <h4 class="modal-title">Confirm file deletion</h4>
                               </div>
                               <div class="modal-body">
                                   This will delete the file from the resource. Consider saving a copy if it is important to you.
                               </div>
                               <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
+                                <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{f.pk}}/">Delete</a>
                               </div>
                             </div>
                           </div>
                         </div>
-                        <td><a class="btn btn-danger btn-block" data-toggle="modal" data-target="#delete-resource-file">Delete</a></td>
+                        <td><a class="btn btn-danger btn-block" data-toggle="modal" data-target="#delete-resource-file-{{f.pk}}">Delete</a></td>
                     {% endif %}
                 </tr>
                 {% endfor %}
