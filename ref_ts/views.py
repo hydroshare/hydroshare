@@ -62,7 +62,12 @@ def time_series_from_service(request):
             ts = ts_utils.time_series_from_service(url, ref_type)
         else:
             ts = ts_utils.time_series_from_service(url, ref_type, site_name_or_code=site, variable_code=variable)
-        return json_or_jsonp(request, ts)
+        for_graph = ts['for_graph']
+        units = ts['units']
+        variable_name = ts['variable_name']
+        vis_file = ts_utils.create_vis("theme/static/img/", site, for_graph, 'Date', variable_name, units)
+        vis_file_name = os.path.basename(vis_file.name)
+        return json_or_jsonp(request, {'vis_file_name': vis_file_name})
 
 
 class VerifyRestUrlForm(forms.Form):
@@ -145,6 +150,10 @@ def create_ref_time_series(request, *args, **kwargs):
             code=variable_code
         )
         ts_utils.generate_files(res.short_id)
+        for file_name in os.listdir("theme/static/img"):
+            if 'visualization' in file_name:
+                # open(file_name, 'w')
+                os.remove("theme/static/img/"+file_name)
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeries)
