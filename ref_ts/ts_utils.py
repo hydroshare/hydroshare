@@ -366,7 +366,7 @@ due to incorrect formatting in the web service format.")
     else:
         raise Http404()
 
-def create_vis(data, xlab, variable_name, units):
+def create_vis(path, site_code, data, xlab, variable_name, units):
     loc = AutoDateLocator()
     fmt = AutoDateFormatter(loc)
     fmt.scaled[365.0] = '%y'
@@ -400,8 +400,11 @@ def create_vis(data, xlab, variable_name, units):
     ax.autoscale_view()
 
     ax.grid(True)
-    savefig('visualization.png', bbox_inches='tight')
-    return 'visualization.png'
+    vis_name = 'visualization-'+site_code+'-'+variable_name+'.png'
+    vis_path = path+vis_name
+    savefig(vis_path, bbox_inches='tight')
+    vis_file = open(vis_path, 'r')
+    return vis_file
 
 #this function also creates the metadata terms
 def make_files(shortkey, reference_type, url, data_site_code, variable_code, title):
@@ -450,7 +453,7 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
     for_graph = ts['for_graph']
     units = ts['units']
     variable_name = ts['variable_name']
-    vis_name = create_vis(for_graph, 'Date', variable_name, units)
+    vis_file = create_vis("", data_site_code, for_graph, 'Date', variable_name, units)
     version = ts['wml_version']
     d = datetime.today()
     date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
@@ -477,7 +480,6 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
     with open(xml_name, 'wb') as xml_file:
         xml_file.write(ts['time_series'])
     csv_file = open(csv_name, 'r')
-    vis_file = open(vis_name, 'r')
     files = []
     if version == '1' or version == '1.0':
         wml1_file = open(xml_name, 'r')
