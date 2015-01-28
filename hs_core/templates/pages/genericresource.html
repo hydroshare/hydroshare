@@ -31,7 +31,7 @@
             <tr><th>Updated on</th><td>{{ cm.updated|date }}</td></tr>
             <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>
             <tr><th>Size</th><td>{{ cm.bags.first.bag.size|filesizeformat }}</td></tr>
-            <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/r/{{ cm.short_id }}/">http://{{ request.get_host }}/r/{{ cm.short_id }}/</a></td></tr>
+            <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/resource/{{ cm.short_id }}/">http://{{ request.get_host }}/resource/{{ cm.short_id }}/</a></td></tr>
             {% if cm.doi %}
             <tr><th>DOI</th><td><a id="permalink" href="http://{{ request.get_host }}/r/doi/{{ cm.doi }}/">{{ cm.doi }}</a></td></tr>
             {% elif page.perms.change %}
