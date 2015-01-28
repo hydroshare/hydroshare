@@ -397,25 +397,14 @@ def describe_resource(request, *args, **kwargs):
         return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
     res_cls = hydroshare.check_resource_type(resource_type)
     # Send pre_describe_resource signal for other resource type apps to listen, extract, and add their own metadata
-    ret_responses = pre_describe_resource.send(sender=res_cls, files=resource_files)
+    ret_responses = pre_describe_resource.send(sender=res_cls, files=resource_files, title=res_title)
 
-    # create barebone resource with resource_files to database model for later update since on Django 1.7, resource_files get closed automatically at the end of each request
-    owner = user_from_id(request.user)
-    resource = res_cls.objects.create(
-            user=owner,
-            creator=owner,
-            title=res_title,
-            last_changed_by=owner,
-            in_menus=[],
-            **kwargs
-    )
-    for file in resource_files:
-        ResourceFile.objects.create(content_object=resource, resource_file=file)
     create_res_context = {
         'resource_type': resource_type,
         'res_title': res_title,
     }
     page_url = 'pages/create-resource.html'
+    use_generic = True
     for receiver, response in ret_responses:
         if response is not None:
             for key in response:
@@ -423,6 +412,22 @@ def describe_resource(request, *args, **kwargs):
                     create_res_context[key] = response[key]
                 else:
                     page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
+                    use_generic = False
+
+    if use_generic:
+        # create barebone resource with resource_files to database model for later update since on Django 1.7, resource_files get closed automatically at the end of each request
+        owner = user_from_id(request.user)
+        resource = res_cls.objects.create(
+                user=owner,
+                creator=owner,
+                title=res_title,
+                last_changed_by=owner,
+                in_menus=[],
+                **kwargs
+        )
+        for file in resource_files:
+            ResourceFile.objects.create(content_object=resource, resource_file=file)
+
     return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
 
 class CreateResourceForm(forms.Form):
