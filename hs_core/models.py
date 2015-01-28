@@ -1812,7 +1812,7 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
             # res_json = utils.serialize_science_metadata(instance)
             # res_dict = json.loads(res_json)
             instance.metadata.create_element('identifier', name='hydroShareIdentifier', url='http://hydroshare.org/resource{0}{1}'.format('/', instance.short_id))
-
+            instance.set_slug('resource{0}{1}'.format('/', instance.short_id))
         else:
             resource_update_signal_handler(sender, instance, created, **kwargs)
 
