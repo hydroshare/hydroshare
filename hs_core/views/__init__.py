@@ -596,6 +596,19 @@ def create_resource_new_workflow(request, *args, **kwargs):
     if add_title:
         metadata.append({'title': {'value': res_title}})
 
+    add_language = True
+    for element in metadata:
+        if 'language' in element:
+            if 'code' in element['language']:
+                #language_code = element['language']['code']
+                add_language = False
+            else:
+                metadata.remove(element)
+            break
+
+    if add_language:
+        metadata.append({'language': {'code': 'eng'}})
+
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
             owner=request.user,

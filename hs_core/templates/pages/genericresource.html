@@ -489,6 +489,7 @@
       </div>
     </div>
 
+
 {% endwith %}
 
 {% block extra_js %}
@@ -534,15 +535,11 @@
                         }
                         if (json_response.hasOwnProperty('element_name')){
                             if(json_response.element_name === 'title'){
-                                $res_title = $(".inplaceedit").find("inplaceeditform").first();
-                                //console.log($res_title)
-                                field_name_value = $res_title.attr('field_name');
-                                //console.log(field_name_value)
-                                if (field_name_value === 'title'){
-                                    updated_title = $form.find("#id_value").val();
-                                    $res_title.closest("span").html($res_title);
-                                    $res_title.closest("span").append(updated_title);
-                                }
+                                $res_title = $(".section-header").find("span").first();
+                                field_name_value = $res_title.text();
+                                console.log(field_name_value);
+                                updated_title = $form.find("#id_value").val();
+                                $res_title.text(updated_title);
                             }
                         }
                         $('#' + form_id).before($alert_success);
@@ -594,10 +591,42 @@
                 $save_button.hide();
             }
         })
+        $("#select_license").on('change', function(){
+            var value = this.value;
+            if (value === "other"){
+                $(this).closest("form").find("#id_statement").first().text("");
+                $(this).closest("form").find("#id_url").first().attr('value', "");
+            }
+            else{
+                var text = $(this).find('option:selected').text();
+                text = "This resource is shared under the " + text + ".";
+                $(this).closest("form").find("#id_statement").first().text(text);
+                $(this).closest("form").find("#id_url").first().attr('value', value);
+            }
+
+        });
+        $("#select_license").val($("#id_url").attr('value'));
+        console.log($("#id_url").attr('value'));
 
         // show "Save changes" button when form editing starts
         $(".form-control").each(function(){
             $(this).on('input', function(e){
+                //$(this).css('border-color', 'gray');
+                $(this).closest("form").find("button").show();
+            });
+            $(this).on('change', function(e){
+                //$(this).css('border-color', 'gray');
+                $(this).closest("form").find("button").show();
+            });
+        })
+        $(".dateinput").each(function(){
+            $(this).datepicker({
+                format: 'mm-dd-yyyy',
+                changeMonth: true,
+                changeYear: true
+             });
+
+            $(this).on('change', function(){
                 $(this).closest("form").find("button").show();
             });
         })

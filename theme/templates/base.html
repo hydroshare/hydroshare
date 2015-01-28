@@ -25,6 +25,7 @@
 <link rel="stylesheet" type="text/css" href="{% static "css/elements.css" %}" />
 <link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_core.css" %}" />
 <link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_extends.css" %}" />
+<link rel='stylesheet' type='text/css' href='{% static 'css/jquery-ui/smoothness/jquery-ui.css' %}' />
 {% if request.user.is_staff %}
 <style>
     .animated{
@@ -42,6 +43,7 @@
 <script src="{% static "js/custom.js" %}"></script>
 <script src="{% static "js/scrolltopcontrol.js" %}"></script><!-- Scroll to top javascript -->
 <script src="{% static "js/jqcsrf.js" %}"></script>
+<script src='{% static 'js/jquery-ui.js' %}'></script>
 {% block extra_js %}{% endblock %}
 {% endcompress %}
 {% include 'autocomplete_light/static.html' %}

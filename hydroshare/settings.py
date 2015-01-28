@@ -273,6 +273,7 @@ INSTALLED_APPS = (
     "mezzanine.accounts",
     "mezzanine.mobile",
     "autocomplete_light",
+    "jquery_ui",
     "tastypie",
     # "tastypie_swagger",
     "ga_ows",

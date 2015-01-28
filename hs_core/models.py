@@ -1437,7 +1437,7 @@ class GenericResource(Page, AbstractResource):
 
     @property
     def can_be_public(self):
-        if self.files.count() > 0 and self.metadata.has_all_required_elements():
+        if self.metadata.has_all_required_elements():
             return True
 
         return False
@@ -1545,8 +1545,8 @@ class CoreMetaData(models.Model):
         elif len(self.rights.statement.strip()) == 0:
             return False
 
-        if self.coverages.count() == 0:
-            return False
+        # if self.coverages.count() == 0:
+        #     return False
 
         if self.subjects.count() == 0:
             return False
