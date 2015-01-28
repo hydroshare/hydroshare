@@ -19,24 +19,30 @@ def netcdf_create_resource_trigger(sender, **kwargs):
             res_type_specific_meta = res_md_dict['type_specific_meta']
 
             # For dict key name and structure refer to the hs_core/models.py
-            # TODO add title
-            title = {'title': {'value': res_dublin_core_meta['title']}}
-            metadata.append(title)
+            # add title
+            if 'title' in res_dublin_core_meta.keys():
+                title = {'title': {'value': res_dublin_core_meta['title']}}
+                metadata.append(title)
             # add description
-            description = {'description': {'abstract': res_dublin_core_meta['description']}}
-            metadata.append(description)
+            if 'description' in res_dublin_core_meta.keys():
+                description = {'description': {'abstract': res_dublin_core_meta['description']}}
+                metadata.append(description)
             # add source
-            source = {'source': {'derived_from': res_dublin_core_meta['source']}}
-            metadata.append(source)
+            if 'source' in res_dublin_core_meta.keys():
+                source = {'source': {'derived_from': res_dublin_core_meta['source']}}
+                metadata.append(source)
             # add relation
-            relation = {'relation': {'type': 'cites', 'value': res_dublin_core_meta['references']}}
-            metadata.append(relation)
+            if 'references' in res_dublin_core_meta.keys():
+                relation = {'relation': {'type': 'cites', 'value': res_dublin_core_meta['references']}}
+                metadata.append(relation)
             # add coverage - period
-            period = {'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
-            metadata.append(period)
+            if 'period' in res_dublin_core_meta.keys():
+                period = {'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
+                metadata.append(period)
             # add coverage - box
-            box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
-            metadata.append(box)
+            if 'box' in res_dublin_core_meta.keys():
+                box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
+                metadata.append(box)
 
             # Save extended meta to metadata variable
             for var_name, var_meta in res_type_specific_meta.items():
