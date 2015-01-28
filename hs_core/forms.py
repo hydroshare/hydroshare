@@ -1499,20 +1499,20 @@ class CoverageSpatialForm(forms.Form):
     type = forms.ChoiceField(choices=TYPE_CHOICES, widget=forms.RadioSelect(renderer=HorizontalRadioRenderer), label='')
     name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
     projection = forms.CharField(max_length=100, required=False, label='Coordinate System/Geographic Projection',
-                                 help_text='Name of the projection used with any parameters required, '
-                                           'such as ellipsoid parameters, datum, standard parallels and meridians, '
-                                           'zone, etc')
-    east = forms.DecimalField(label='East Coordinate')
-    north = forms.DecimalField(label='North Coordinate')
+                                 help_text='Include the name and where known the standard  '
+                                           '<a href="http://spatialreference.org/ref/epsg/">EPSG codes</a> for horizontal and vertical '
+                                           'geographic coordinate system, datum and projection.')
+    east = forms.DecimalField(label='East Coordinate', widget=forms.TextInput())
+    north = forms.DecimalField(label='North Coordinate', widget=forms.TextInput())
     units = forms.CharField(max_length=50, label='Coordinate Units', help_text='e.g., degrees, meters')
-    elevation = forms.DecimalField(required=False)
+    elevation = forms.DecimalField(required=False, widget=forms.TextInput())
     zunits = forms.CharField(max_length=50, required=False, label='Elevation Units', help_text='e.g., meters')
-    northlimit = forms.DecimalField(label='North Limit Coordinate')
-    eastlimit = forms.DecimalField(label='East Limit Coordinate')
-    southlimit = forms.DecimalField(label='South Limit Coordinate')
-    westlimit = forms.DecimalField(label='West Limit Coordinate')
-    uplimit = forms.DecimalField(required=False, label='Up Limit')
-    downlimit = forms.DecimalField(required=False, label='Down Limit')
+    northlimit = forms.DecimalField(label='North Limit Coordinate', widget=forms.TextInput())
+    eastlimit = forms.DecimalField(label='East Limit Coordinate', widget=forms.TextInput())
+    southlimit = forms.DecimalField(label='South Limit Coordinate', widget=forms.TextInput())
+    westlimit = forms.DecimalField(label='West Limit Coordinate', widget=forms.TextInput())
+    uplimit = forms.DecimalField(required=False, label='Up Limit', widget=forms.TextInput())
+    downlimit = forms.DecimalField(required=False, label='Down Limit', widget=forms.TextInput())
 
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
         super(CoverageSpatialForm, self).__init__(*args, **kwargs)

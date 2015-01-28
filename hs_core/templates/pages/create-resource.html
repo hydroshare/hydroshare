@@ -4,7 +4,7 @@
 
 {% block title %}
 
-    Select resource
+    Create resource
 
 {% endblock %}
 
@@ -13,16 +13,14 @@
     <h2>Select a resource type and upload files as needed to create a new resource</h2>
 
     <ul>
-    <li>All of the files you upload here will be grouped together into a "Resource"</li>
+    <li>Files you upload here will be grouped together into a "Resource"</li>
     <li>File size is limited to 10 GB per file</li>
-    <li>Once you've added all of your files, you can describe your Resource on the next page</li>
-    <li>Files are private, until you choose to share them</li>
     </ul>
 
-<form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-resource/">
+<form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-resource/do/">
     {% csrf_token %}
     <div class="form-group">
-        <label for="" class="col-sm-2 control-label">Select a resource Type:</label>
+        <label for="" class="col-sm-2 control-label">Select a resource type</label>
         <div class="col-sm-10">
             <select class="form-control" name="resource-type" id="resource-type">
                 <option value="GenericResource">Generic Resource</option>
