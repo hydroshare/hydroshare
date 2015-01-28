@@ -10,7 +10,11 @@
         <label class="control-label" for="{{ field.auto_id }}">{{ field.label }}</label>
     {% endif %}
 
-    {% render_field field readonly=readonly %}
+    {% if readonly }
+        {% render_field field readonly="readonly" %}
+    {% else %}
+        {% render_field field %}
+    {% endif %}
 
     {% if field.errors %}
         <p class="help-block">
