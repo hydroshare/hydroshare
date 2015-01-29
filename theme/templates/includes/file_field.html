@@ -1,8 +1,8 @@
-<fieldset {% if readonly %}disabled="disabled"{% endif %} class="{{ field_classes }}">
+<fieldset class="{{ field_classes }}">
     <div id="{{ field.auto_id }}-upload-name"></div>
     <img id="{{ field.auto_id }}-preview" width="100%" />
     <span class="btn btn-default btn-file">
-        <label id="{{ field.auto_id}}-label">{{ field_label|default:field.label }}</label> <input type="file" id="{{ field.auto_id }}" name="{{ field.name }}" />
+        <label id="{{ field.auto_id}}-label">{{ field_label|default:field.label }}</label> <input type="file" id="{{ field.auto_id }}" name="{{ field.name }}" {% if readonly %}readonly="readonly"{% endif %} />
         <script>
             $('#{{ field.auto_id }}').change(function() {
                 var imageType = /image.*/;
