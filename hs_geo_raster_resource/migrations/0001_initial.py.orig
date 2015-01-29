@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 <<<<<<< develop
-            ('variableName', self.gf('django.db.models.fields.TextField')(null=True)),
-            ('method', self.gf('django.db.models.fields.TextField')(null=True)),
 =======
->>>>>>> HEAD~41
+
+from south.utils import datetime_utils as datetime
+>>>>>>> HEAD~3
+from south.db import db
+from south.v2 import SchemaMigration
 
 from django.db import models, migrations
 from django.conf import settings
@@ -32,12 +33,9 @@ class Migration(migrations.Migration):
                 ('comment', models.TextField(null=True, blank=True)),
             ],
             options={
-<<<<<<< develop
              u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'method': ('django.db.models.fields.TextField', [], {'null': 'True'}),
             'variableName': ('django.db.models.fields.TextField', [], {'null': 'True'}),
-=======
->>>>>>> HEAD~41
             },
             bases=(models.Model,),
         ),
@@ -81,3 +79,4 @@ class Migration(migrations.Migration):
             bases=('pages.page', models.Model),
         ),
     ]
+

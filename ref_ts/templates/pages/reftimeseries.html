@@ -2,7 +2,12 @@
 {% extends "pages/genericresource.html" %}
 {#{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}#}
 
+
 {% block extra_content %}
+    <p> THis is my site NaME: {{ testsite.name }}</p>
+    <p> THIS is my Site LOngGI: {{ testsite.longitude }}</p>
+    <p> THis is my site Lat: {{ testsite.latitude }}</p>
+    <p> THIS is my Site code: {{ testsite.code }}</p>
     <img id="vis" src={{visfile.resource_file.url}}>
 {% endblock %}
 
