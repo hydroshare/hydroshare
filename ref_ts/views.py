@@ -65,7 +65,7 @@ def time_series_from_service(request):
         for_graph = ts['for_graph']
         units = ts['units']
         variable_name = ts['variable_name']
-        vis_file = ts_utils.create_vis("theme/static/img/", site, for_graph, 'Date', variable_name, units)
+        vis_file = ts_utils.create_vis("theme/static/img/", variable, site, for_graph, 'Date', variable_name, units)
         vis_file_name = os.path.basename(vis_file.name)
         return json_or_jsonp(request, {'vis_file_name': vis_file_name})
 
@@ -96,6 +96,7 @@ class CreateRefTimeSeriesForm(forms.Form):
     reference_type = forms.CharField(required=False, min_length=0)
     site = forms.CharField(required=False, min_length=0)
     variable = forms.CharField(required=False, min_length=0)
+
 
 
 @login_required
@@ -163,11 +164,12 @@ def add_dublin_core(request, page):
     res = hydroshare.get_resource_by_shortkey(cm.short_id)
     testsite = res.metadata.sites.first()
     visfile = ''
+    res_files = []
     for f in cm.files.all():
         if 'visual' in str(f.resource_file.name):
             visfile = f
         else:
-            f.delete()
+            res_files.append(f)
 
     try:
         abstract = cm.dublin_metadata.filter(term='AB').first().content
@@ -176,7 +178,8 @@ def add_dublin_core(request, page):
 
     return {
         'testsite': testsite,
-        'visfile': visfile
+        'visfile': visfile,
+        'resfiles': res_files
     }
 
 
