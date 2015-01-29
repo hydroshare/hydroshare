@@ -6,7 +6,7 @@
     <fieldset class="form-group form-group-checkbox input_{{ field.id_for_label }} {{ field.field.type }}
         {% if field.errors %} has-error{% endif %} {{ field_classes }}">
 
-        {% if readonly }
+        {% if readonly %}
             {% render_field field readonly="readonly" %}
         {% else %}
             {% render_field field %}
