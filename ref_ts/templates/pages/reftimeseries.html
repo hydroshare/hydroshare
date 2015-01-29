@@ -8,13 +8,9 @@
 {#                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>#}
 {#                    <select name="designees" id="view_groups-select" multiple class="form-control" size="20">#}
 {% block extra_content %}
-    <p> THis is my site NaME: {{ testsite.name }}</p>
-    <p> THIS is my Site LOngGI: {{ testsite.longitude }}</p>
-    <p> THis is my site Lat: {{ testsite.latitude }}</p>
-    <p> THIS is my Site code: {{ testsite.code }}</p>
     <img id="vis" src={{visfile.resource_file.url}}>
 {% endblock %}
-{% endwith %}
+
 {##}
 {#{% block main %}#}
 {##}
@@ -574,7 +570,7 @@
 {#    </div>#}
 {#    </div>#}
 
-    {% comments_for cm %}
+{#    {% comments_for cm %}#}
 
     {#                #}
     {# dialogs follow #}

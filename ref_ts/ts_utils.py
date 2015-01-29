@@ -162,7 +162,9 @@ def parse_1_0_and_1_1(root):
             methodCode_set = False
             QCcode_set = False
             for element in root.iter():
-                brack_lock = element.tag.index('}')  #The namespace in the tag is enclosed in {}.
+                brack_lock = -1
+                if '}' in element.tag:
+                    brack_lock = element.tag.index('}')  #The namespace in the tag is enclosed in {}.
                 tag = element.tag[brack_lock+1:]     #Takes only actual tag, no namespace
                 if 'unitName' == tag:  # in the xml there is a unit for the value, then for time. just take the first
                     if not unit_is_set:
@@ -366,7 +368,7 @@ due to incorrect formatting in the web service format.")
     else:
         raise Http404()
 
-def create_vis(path, site_code, data, xlab, variable_name, units):
+def create_vis(path, varcode, site_code, data, xlab, variable_name, units):
     loc = AutoDateLocator()
     fmt = AutoDateFormatter(loc)
     fmt.scaled[365.0] = '%y'
@@ -400,7 +402,7 @@ def create_vis(path, site_code, data, xlab, variable_name, units):
     ax.autoscale_view()
 
     ax.grid(True)
-    vis_name = 'visualization-'+site_code+'-'+variable_name+'.png'
+    vis_name = 'visualization-'+site_code+'-'+varcode+'.png'
     vis_path = path+vis_name
     savefig(vis_path, bbox_inches='tight')
     vis_file = open(vis_path, 'r')
@@ -453,7 +455,7 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
     for_graph = ts['for_graph']
     units = ts['units']
     variable_name = ts['variable_name']
-    vis_file = create_vis("", data_site_code, for_graph, 'Date', variable_name, units)
+    vis_file = create_vis("", variable_code, data_site_code, for_graph, 'Date', variable_name, units)
     version = ts['wml_version']
     d = datetime.today()
     date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
