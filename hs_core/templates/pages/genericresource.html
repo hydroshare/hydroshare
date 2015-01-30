@@ -48,6 +48,7 @@
                 {%  else %}
                     <td class="text-success">{{ metadata_status }}</td></tr>
                 {%  endif %}
+            <tr><th>Citation</th><td>{{ citation }}</td></tr>
         </table>
 
     </div>
@@ -58,6 +59,7 @@
             <h2>Science Metadata</h2>
 
             <div class="form-group">
+                <button id="metadata-show-toggle" type="button" class="btn btn-primary" onclick="toogle_metadata_display()">Collapse All</button>
 {#                <label for="" class="col-sm-2 control-label" style="margin-left: -15px"><h4>Science Metadata</h4></label>#}
 {#                <div class="col-sm-12">#}
                     {% crispy metadata_form %}
@@ -132,7 +134,8 @@
                               </ul>
                             </div>
                         </td>
-                        {% if page.perms.change and resource_type != "Geographic Raster Resource" %}
+{#                        {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
+                        {% if page.perms.change %}
                         <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
                         {% endif %}
                     </tr>
@@ -496,6 +499,18 @@
     <script type="text/javascript">
     $(function() {
     });
+
+    function toogle_metadata_display(){
+        if ($("#metadata-show-toggle").text() === 'Show All'){
+            $("#metadata-show-toggle").text('Collapse All');
+            $('.accordion-body:not(".in")').collapse('show');
+        }
+        else {
+            $("#metadata-show-toggle").text('Show All');
+            $('.accordion-body.in').collapse('hide');
+        }
+    }
+
     function metadata_update_ajax_submit(form_id){
             $alert_success = '<div class="alert alert-success" id="success-alert"> \
                 <button type="button" class="close" data-dismiss="alert">x</button> \
@@ -543,8 +558,11 @@
                             }
                         }
                         $('#' + form_id).before($alert_success);
-                        $(".alert-success").fadeTo(2000, 500).slideUp(1000, function()
-                        {
+                        $('#' + form_id).closest('div').find('#error-alert').each(function(){
+                            this.remove();
+                        });
+                        $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
+
                             $(".alert-success").alert('close');
                         });
                     }
@@ -586,27 +604,58 @@
         // disable all save changes button on load
         $("form").each(function(){
             $save_button = $(this).find("button").first();
-            //console.log($(this).attr('id') + ":" + $save_button.text());
             if ($save_button.text() === "Save changes"){
                 $save_button.hide();
             }
         })
+
+        // open all metadata collasible elements on page load
+        $('.accordion-body:not(".in")').collapse('show');
+
+
         $("#select_license").on('change', function(){
             var value = this.value;
             if (value === "other"){
                 $(this).closest("form").find("#id_statement").first().text("");
                 $(this).closest("form").find("#id_url").first().attr('value', "");
+                $(this).closest("form").find("#id_statement").first().attr('readonly', false);
+                $(this).closest("form").find("#id_url").first().attr('readonly', false);
             }
             else{
                 var text = $(this).find('option:selected').text();
                 text = "This resource is shared under the " + text + ".";
                 $(this).closest("form").find("#id_statement").first().text(text);
                 $(this).closest("form").find("#id_url").first().attr('value', value);
+                $(this).closest("form").find("#id_statement").first().attr('readonly', true);
+                $(this).closest("form").find("#id_url").first().attr('readonly', true);
             }
 
         });
-        $("#select_license").val($("#id_url").attr('value'));
-        console.log($("#id_url").attr('value'));
+
+        // set the selected license in the select license dropdown
+        var value_exists = false;
+        $("#select_license option").each(function(){
+            if (this.value == $("#id_url").attr('value')){
+                $("#select_license").val($("#id_url").attr('value'));
+                value_exists = true;
+                return;
+            }
+        })
+
+        if (value_exists == false){
+            // set the selected license type to 'other'
+            $("#select_license").val('other');
+            console.log($("#select_license").attr('readonly'));
+            if($("#select_license").attr('readonly') == undefined){
+                $("#select_license").closest("form").find("#id_statement").first().attr('readonly', false);
+                $("#select_license").closest("form").find("#id_url").first().attr('readonly', false);
+            }
+            else{
+                $("#select_license").attr('style', "background-color:white;");
+                $("#select_license").closest("form").find("#id_statement").first().attr('readonly', true);
+                $("#select_license").closest("form").find("#id_url").first().attr('readonly', true);
+            }
+        }
 
         // show "Save changes" button when form editing starts
         $(".form-control").each(function(){

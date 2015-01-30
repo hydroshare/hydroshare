@@ -609,6 +609,13 @@ def create_resource_new_workflow(request, *args, **kwargs):
     if add_language:
         metadata.append({'language': {'code': 'eng'}})
 
+    # add the default rights/license element
+    metadata.append({'rights':
+                         {'statement': 'This resource is shared under the Creative Commons Attribution CC BY.',
+                          'url': 'http://creativecommons.org/licenses/by/4.0/'
+                         }
+                    })
+
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
             owner=request.user,

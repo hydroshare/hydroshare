@@ -320,7 +320,7 @@ class Party(AbstractMetaDataElement):
             # of the same resource
             if 'order' in kwargs:
                 if isinstance(party, Creator):
-                    if kwargs['order'] == 0:
+                    if kwargs['order'] <= 0:
                         kwargs['order'] = 1
 
                     if party.order != kwargs['order']:
@@ -331,13 +331,15 @@ class Party(AbstractMetaDataElement):
 
                         for res_cr in resource_creators:
                             if party.order > kwargs['order']:
-                                if res_cr.order < party.order:
+                                if res_cr.order < party.order and not res_cr.order < kwargs['order']:
                                     res_cr.order += 1
                                     res_cr.save()
+
                             else:
                                 if res_cr.order > party.order:
                                     res_cr.order -= 1
                                     res_cr.save()
+
 
                         party.order = kwargs['order']
 
@@ -1387,6 +1389,10 @@ class AbstractResource(ResourcePermissionsMixin):
         """
         return None
 
+
+    def get_citation(self):
+        raise NotImplementedError("Please implement this method")
+
     @property
     def can_be_public(self):
         return True
@@ -1434,6 +1440,49 @@ class GenericResource(Page, AbstractResource):
 
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
+
+    def get_citation(self):
+        citation = ''
+
+        first_author = self.metadata.creators.all().filter(order=1)[0]
+        name_parts = first_author.name.split(" ")
+        if len(name_parts) > 2:
+            citation = "{last_name}, {first_initial}.{middle_initial}.".format(last_name=name_parts[-1],
+                                                                              first_initial=name_parts[0][0],
+                                                                              middle_initial=name_parts[1][0]) + ", "
+        else:
+            citation = "{last_name}, {first_initial}.".format(last_name=name_parts[-1],
+                                                              first_initial=name_parts[0][0]) + ", "
+
+        other_authors = self.metadata.creators.all().filter(order__gt=1)
+        for author in other_authors:
+            name_parts = author.name.split(" ")
+            if len(name_parts) > 2:
+                citation += "{first_initial}.{middle_initial}.{last_name}".format(first_initial=name_parts[0][0],
+                                                                                  middle_initial=name_parts[1][0],
+                                                                                  last_name=name_parts[-1]) + ", "
+            else:
+                citation += "{first_initial}.{last_name}".format(first_initial=name_parts[0][0],
+                                                                 last_name=name_parts[-1]) + ", "
+
+        citation = citation[:-2]
+        if self.metadata.dates.all().filter(type='published'):
+            citation_date = self.metadata.dates.all().filter(type='published')[0]
+        else:
+            citation_date = self.metadata.dates.all().filter(type='modified')[0]
+
+        citation += " ({year}). ".format(year=citation_date.start_date.year)
+        citation += self.title
+        citation += ", HydroShare, "
+
+        if self.metadata.identifiers.all().filter(name="doi"):
+            hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
+        else:
+            hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+
+        citation += "{url}".format(url=hs_identifier.url)
+
+        return citation
 
     @property
     def can_be_public(self):

@@ -464,11 +464,6 @@ class MetaDataForm(forms.Form):
                             HTML('<div class="form-group" id="title"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy title_form %} '
-                                    # '{% load inplace_edit %} '
-                                    # '{% for field in title_form %}'
-                                    # '{{ field.label_tag }} {% inplace_edit "field.field" %}'
-                                    #'{% inplace_edit "title_form.value" %} '
-                                    #'{% endfor %}'
                                  '</div>'),
 
                             Accordion(
@@ -549,19 +544,19 @@ class MetaDataForm(forms.Form):
                                     HTML("</div>"),
                                 ),
 
-                                AccordionGroup('Identifiers (read only)',
-                                    HTML("<div class='form-group' id='identifier'>"),
-                                    HTML("{{ identifier_formset.management_form }}"),
-                                    identifier_layout,
-                                    HTML("</div>"),
-                                ),
+                                # AccordionGroup('Identifiers (read only)',
+                                #     HTML("<div class='form-group' id='identifier'>"),
+                                #     HTML("{{ identifier_formset.management_form }}"),
+                                #     identifier_layout,
+                                #     HTML("</div>"),
+                                # ),
 
-                                AccordionGroup('Formats/MIME Types (read only)',
-                                    HTML("<div class='form-group' id='format'>"),
-                                    HTML("{{ format_formset.management_form }}"),
-                                    format_layout,
-                                    HTML("</div>"),
-                                ),
+                                # AccordionGroup('Formats/MIME Types (read only)',
+                                #     HTML("<div class='form-group' id='format'>"),
+                                #     HTML("{{ format_formset.management_form }}"),
+                                #     format_layout,
+                                #     HTML("</div>"),
+                                # ),
 
                             ),
                         ),
@@ -581,11 +576,6 @@ class MetaDataForm(forms.Form):
                             HTML('<div class="form-group" id="title"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy title_form %} '
-                                    # '{% load inplace_edit %} '
-                                    # '{% for field in title_form %}'
-                                    # '{{ field.label_tag }} {% inplace_edit "field.field" %}'
-                                    #'{% inplace_edit "title_form.value" %} '
-                                    #'{% endfor %}'
                                  '</div>'),
 
                             Accordion(
@@ -610,12 +600,12 @@ class MetaDataForm(forms.Form):
                                     HTML("</div>"),
                                 ),
 
-                                AccordionGroup('Valid date (optional)',
-                                    HTML('<div class="form-group" id="validdate"> '
-                                            '{% load crispy_forms_tags %} '
-                                            '{% crispy valid_date_form %} '
-                                         '</div>'),
-                                ),
+                                # AccordionGroup('Valid date (optional)',
+                                #     HTML('<div class="form-group" id="validdate"> '
+                                #             '{% load crispy_forms_tags %} '
+                                #             '{% crispy valid_date_form %} '
+                                #          '</div>'),
+                                # ),
 
                                 AccordionGroup('Temporal Coverage (optional)',
                                     HTML('<div class="form-group" id="coverage-temporal"> '
@@ -666,19 +656,19 @@ class MetaDataForm(forms.Form):
                                     HTML("</div>"),
                                 ),
 
-                                AccordionGroup('Identifiers (read only)',
-                                    HTML("<div class='form-group' id='identifier'>"),
-                                    HTML("{{ identifier_formset.management_form }}"),
-                                    identifier_layout,
-                                    HTML("</div>"),
-                                ),
+                                # AccordionGroup('Identifiers (read only)',
+                                #     HTML("<div class='form-group' id='identifier'>"),
+                                #     HTML("{{ identifier_formset.management_form }}"),
+                                #     identifier_layout,
+                                #     HTML("</div>"),
+                                # ),
 
-                                AccordionGroup('Formats/MIME Types (read only)',
-                                    HTML("<div class='form-group' id='format'>"),
-                                    HTML("{{ format_formset.management_form }}"),
-                                    format_layout,
-                                    HTML("</div>"),
-                                ),
+                                # AccordionGroup('Formats/MIME Types (read only)',
+                                #     HTML("<div class='form-group' id='format'>"),
+                                #     HTML("{{ format_formset.management_form }}"),
+                                #     format_layout,
+                                #     HTML("</div>"),
+                                # ),
 
                             ),
                             modal_dialog_add_creator,
@@ -1338,17 +1328,22 @@ class RightsFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
+        if allow_edit:
+            select_element_start_tag = HTML('<select id="select_license" class="form-control"> ')
+        else:
+            select_element_start_tag = HTML('<select id="select_license" class="form-control" readonly="True"> ')
+
         layout = Layout(
                         HTML('<p>Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)</p>'),
-                        HTML('<label class="control-label" for="select_license"> Select a license </label> '
-                            '<select id="select_license" class="form-control"> '
-                                '<option value="other">Other</option> '
-                                '<option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option> '
+                        HTML('<label class="control-label" for="select_license"> Select a license </label> '),
+                        select_element_start_tag,
+                        HTML('<option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option> '
                                 '<option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option> '
                                 '<option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons Attribution-NoDerivs CC BY-ND</option> '
                                 '<option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA</option> '
                                 '<option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NoCommercial CC BY-NC</option> '
                                 '<option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND</option> '
+                                '<option value="other">Other</option> '
                             '</select>'),
 
                         Field('statement', css_class=field_width),
@@ -1363,7 +1358,13 @@ class RightsForm(ModelForm):
         super(RightsForm, self).__init__(*args, **kwargs)
         self.helper = RightsFormHelper(allow_edit, res_short_id, element_id, element_name='rights')
 
+        self.fields['statement'].widget.attrs['rows'] = 3
+
         if not allow_edit:
+            for fld_name in self.Meta.fields:
+                self.fields[fld_name].widget.attrs['readonly'] = True
+                self.fields[fld_name].widget.attrs['style'] = "background-color:white;"
+        elif len(self.initial) > 0:
             for fld_name in self.Meta.fields:
                 self.fields[fld_name].widget.attrs['readonly'] = True
                 self.fields[fld_name].widget.attrs['style'] = "background-color:white;"
@@ -1400,7 +1401,7 @@ class CoverageTemporalFormHelper(BaseFormHelper):
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('type', css_class=field_width),
-                        Field('name', css_class=field_width),
+                        #Field('name', css_class=field_width),
                         Field('start', css_class=field_width),
                         Field('end', css_class=field_width),
                  )
@@ -1410,9 +1411,9 @@ class CoverageTemporalFormHelper(BaseFormHelper):
         super(CoverageTemporalFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 class CoverageTemporalForm(forms.Form):
-    name = forms.CharField(max_length=200, required=False, label='Name', help_text='e.g., Period of record.')
-    start = forms.DateField(label='Start Date/Time', help_text='e.g., 2005-09-25T14:20-07:00')
-    end = forms.DateField(label='End Date/Time', help_text='e.g., 2006-09-25T16:40-07:00')
+    #name = forms.CharField(max_length=200, required=False, label='Name', help_text='e.g., Period of record.')
+    start = forms.DateField(label='Start Date')
+    end = forms.DateField(label='End Date')
 
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
         super(CoverageTemporalForm, self).__init__(*args, **kwargs)
@@ -1433,14 +1434,18 @@ class CoverageTemporalForm(forms.Form):
         # modify the form's cleaned_data dictionary
         is_form_errors = False
         super(CoverageTemporalForm, self).clean()
-        start_data = self.cleaned_data.get('start', None)
-        end_data = self.cleaned_data.get('end', None)
-        if not start_data:
+        start_date = self.cleaned_data.get('start', None)
+        end_date = self.cleaned_data.get('end', None)
+        if not start_date:
             self._errors['start'] = ["Data for start date is missing"]
             is_form_errors = True
 
-        if not end_data:
+        if not end_date:
             self._errors['end'] = ["Data for end date is missing"]
+            is_form_errors = True
+
+        if start_date > end_date:
+            self._errors['end'] = ["End date should be date after the start date"]
             is_form_errors = True
 
         if is_form_errors:
@@ -1481,10 +1486,10 @@ class CoverageSpatialFormHelper(BaseFormHelper):
                         Field('southlimit', css_class=field_width),
                         Field('westlimit', css_class=field_width),
                         Field('units', css_class=field_width),
-                        Field('uplimit', css_class=field_width),
-                        Field('downlimit', css_class=field_width),
-                        Field('elevation', css_class=field_width),
-                        Field('zunits', css_class=field_width),
+                        #Field('uplimit', css_class=field_width),
+                        #Field('downlimit', css_class=field_width),
+                        #Field('elevation', css_class=field_width),
+                        #Field('zunits', css_class=field_width),
                  )
 
         kwargs['coverage'] = 'spatial'
@@ -1498,21 +1503,19 @@ class CoverageSpatialForm(forms.Form):
     #type = forms.CharField(max_length=20, widget=Select(choices=TYPE_CHOICES, attrs={'class': 'select'}))
     type = forms.ChoiceField(choices=TYPE_CHOICES, widget=forms.RadioSelect(renderer=HorizontalRadioRenderer), label='')
     name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
-    projection = forms.CharField(max_length=100, required=False, label='Coordinate System/Geographic Projection',
-                                 help_text='Include the name and where known the standard  '
-                                           '<a href="http://spatialreference.org/ref/epsg/">EPSG codes</a> for horizontal and vertical '
-                                           'geographic coordinate system, datum and projection.')
-    east = forms.DecimalField(label='East Coordinate', widget=forms.TextInput())
-    north = forms.DecimalField(label='North Coordinate', widget=forms.TextInput())
-    units = forms.CharField(max_length=50, label='Coordinate Units', help_text='e.g., degrees, meters')
-    elevation = forms.DecimalField(required=False, widget=forms.TextInput())
-    zunits = forms.CharField(max_length=50, required=False, label='Elevation Units', help_text='e.g., meters')
-    northlimit = forms.DecimalField(label='North Limit Coordinate', widget=forms.TextInput())
-    eastlimit = forms.DecimalField(label='East Limit Coordinate', widget=forms.TextInput())
-    southlimit = forms.DecimalField(label='South Limit Coordinate', widget=forms.TextInput())
-    westlimit = forms.DecimalField(label='West Limit Coordinate', widget=forms.TextInput())
-    uplimit = forms.DecimalField(required=False, label='Up Limit', widget=forms.TextInput())
-    downlimit = forms.DecimalField(required=False, label='Down Limit', widget=forms.TextInput())
+    projection = forms.CharField(max_length=100, required=False, label='Coordinate System/Geographic Projection')
+
+    east = forms.DecimalField(label='Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    north = forms.DecimalField(label='Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    units = forms.CharField(max_length=50, label='Coordinate Units')
+    #elevation = forms.DecimalField(required=False, widget=forms.TextInput())
+    #zunits = forms.CharField(max_length=50, required=False, label='Elevation Units', help_text='e.g., meters')
+    northlimit = forms.DecimalField(label='North Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    eastlimit = forms.DecimalField(label='East Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    southlimit = forms.DecimalField(label='South Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    westlimit = forms.DecimalField(label='West Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    #uplimit = forms.DecimalField(required=False, label='Up Limit', widget=forms.TextInput())
+    #downlimit = forms.DecimalField(required=False, label='Down Limit', widget=forms.TextInput())
 
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
         super(CoverageSpatialForm, self).__init__(*args, **kwargs)
@@ -1525,12 +1528,20 @@ class CoverageSpatialForm(forms.Form):
         else:
             self.action = ""
 
+        if len(self.initial) == 1:
+            self.initial['projection'] = 'WGS 84 EPSG:4326'
+            self.initial['units'] = 'Decimal degrees'
+
         if not allow_edit:
             for field in self.fields.values():
                 field.widget.attrs['readonly'] = True
                 field.widget.attrs['style'] = "background-color:white;"
+        else:
+            self.fields['projection'].widget.attrs['readonly'] = True
+            self.fields['projection'].widget.attrs['style'] = "background-color:white;"
+            self.fields['units'].widget.attrs['readonly'] = True
+            self.fields['units'].widget.attrs['style'] = "background-color:white;"
 
-    #type = forms.CharField(max_length=20)
     def clean(self):
         # modify the form's cleaned_data dictionary
         super(CoverageSpatialForm, self).clean()
@@ -1543,10 +1554,15 @@ class CoverageSpatialForm(forms.Form):
             if not north:
                 self._errors['north'] = ["Data for north is missing"]
                 is_form_errors = True
+                del self.cleaned_data['north']
+            # elif len(north.trim()) == 0:
+            #     self._errors['north'] = ["Data for north is missing"]
+            #     is_form_errors = True
 
             if not east:
                 self._errors['east'] = ["Data for east is missing"]
                 is_form_errors = True
+                del self.cleaned_data['east']
 
             if is_form_errors:
                 return self.cleaned_data
@@ -1566,11 +1582,11 @@ class CoverageSpatialForm(forms.Form):
 
             temp_cleaned_data['north'] = str(temp_cleaned_data['north'])
             temp_cleaned_data['east'] = str(temp_cleaned_data['east'])
-            if temp_cleaned_data['elevation'] is not None:
-                temp_cleaned_data['elevation'] = str(temp_cleaned_data['elevation'])
-            else:
-                del temp_cleaned_data['zunits']
-                del temp_cleaned_data['elevation']
+            # if temp_cleaned_data['elevation'] is not None:
+            #     temp_cleaned_data['elevation'] = str(temp_cleaned_data['elevation'])
+            # else:
+            #     del temp_cleaned_data['zunits']
+            #     del temp_cleaned_data['elevation']
         else:   # box type coverage
             if 'north' in temp_cleaned_data:
                 del temp_cleaned_data['north']
@@ -1584,17 +1600,18 @@ class CoverageSpatialForm(forms.Form):
                 if not limit_data:
                     self._errors[limit] = ["Data for %s is missing" % limit]
                     is_form_errors = True
+                    del self.cleaned_data[limit]
 
-            uplimit = temp_cleaned_data.get('uplimit', None)
-            downlimit = temp_cleaned_data.get('downlimit', None)
-
-            if uplimit and not downlimit:
-                self._errors['downlimit'] = ["Data for downlimit is missing"]
-                is_form_errors = True
-
-            if downlimit and not uplimit:
-                self._errors['uplimit'] = ["Data for uplimit is missing"]
-                is_form_errors = True
+            # uplimit = temp_cleaned_data.get('uplimit', None)
+            # downlimit = temp_cleaned_data.get('downlimit', None)
+            #
+            # if uplimit and not downlimit:
+            #     self._errors['downlimit'] = ["Data for downlimit is missing"]
+            #     is_form_errors = True
+            #
+            # if downlimit and not uplimit:
+            #     self._errors['uplimit'] = ["Data for uplimit is missing"]
+            #     is_form_errors = True
 
             if is_form_errors:
                 return self.cleaned_data
@@ -1603,18 +1620,18 @@ class CoverageSpatialForm(forms.Form):
             temp_cleaned_data['eastlimit'] = str(temp_cleaned_data['eastlimit'])
             temp_cleaned_data['southlimit'] = str(temp_cleaned_data['southlimit'])
             temp_cleaned_data['westlimit'] = str(temp_cleaned_data['westlimit'])
-            if temp_cleaned_data['uplimit'] is not None:
-                temp_cleaned_data['uplimit'] = str(temp_cleaned_data['uplimit'])
-            else:
-                del temp_cleaned_data['uplimit']
-
-            if temp_cleaned_data['downlimit'] is not None:
-                temp_cleaned_data['downlimit'] = str(temp_cleaned_data['downlimit'])
-            else:
-                del temp_cleaned_data['downlimit']
-
-            if 'uplimit' not in temp_cleaned_data and 'downlimit' not in temp_cleaned_data:
-                del temp_cleaned_data['zunits']
+            # if temp_cleaned_data['uplimit'] is not None:
+            #     temp_cleaned_data['uplimit'] = str(temp_cleaned_data['uplimit'])
+            # else:
+            #     del temp_cleaned_data['uplimit']
+            #
+            # if temp_cleaned_data['downlimit'] is not None:
+            #     temp_cleaned_data['downlimit'] = str(temp_cleaned_data['downlimit'])
+            # else:
+            #     del temp_cleaned_data['downlimit']
+            #
+            # if 'uplimit' not in temp_cleaned_data and 'downlimit' not in temp_cleaned_data:
+            #     del temp_cleaned_data['zunits']
 
         del temp_cleaned_data['type']
         if 'projection' in temp_cleaned_data:
