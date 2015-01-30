@@ -522,35 +522,40 @@ def describe_resource(request, *args, **kwargs):
         context = {
             'file_size_error' : 'The resource file is larger than the supported size limit %s. Select resource files within %s to create resource.' % (file_size_limit_for_display, file_size_limit_for_display)
         }
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
     res_cls = hydroshare.check_resource_type(resource_type)
     # Send pre_describe_resource signal for other resource type apps to listen, extract, and add their own metadata
-    ret_responses = pre_describe_resource.send(sender=res_cls, files=resource_files)
+    ret_responses = pre_describe_resource.send(sender=res_cls, files=resource_files, title=res_title)
 
-    # create barebone resource with resource_files to database model for later update since on Django 1.7, resource_files get closed automatically at the end of each request
-    owner = user_from_id(request.user)
-    resource = res_cls.objects.create(
-            user=owner,
-            creator=owner,
-            title=res_title,
-            last_changed_by=owner,
-            in_menus=[],
-            **kwargs
-    )
-    for file in resource_files:
-        ResourceFile.objects.create(content_object=resource, resource_file=file)
     create_res_context = {
         'resource_type': resource_type,
         'res_title': res_title,
     }
-    page_url = 'pages/create-resource.html.old'
+    page_url = 'pages/create-resource.html'
+    use_generic = True
     for receiver, response in ret_responses:
         if response is not None:
             for key in response:
                 if key != 'create_resource_page_url':
                     create_res_context[key] = response[key]
                 else:
-                    page_url = response.get('create_resource_page_url', 'pages/create-resource.html.old')
+                    page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
+                    use_generic = False
+
+    if use_generic:
+        # create barebone resource with resource_files to database model for later update since on Django 1.7, resource_files get closed automatically at the end of each request
+        owner = user_from_id(request.user)
+        resource = res_cls.objects.create(
+                user=owner,
+                creator=owner,
+                title=res_title,
+                last_changed_by=owner,
+                in_menus=[],
+                **kwargs
+        )
+        for file in resource_files:
+            ResourceFile.objects.create(content_object=resource, resource_file=file)
+
     return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
 
 
@@ -666,7 +671,8 @@ def create_resource(request, *args, **kwargs):
                 dcterms.append({'term': 'CR', 'content': cr})
         global res_cls
         # Send pre_call_create_resource signal
-        pre_call_create_resource.send(sender=res_cls, resource=resource, request_post = qrylst)
+        metadata = []
+        pre_call_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, request_post = qrylst)
         res = hydroshare.create_resource(
             resource_type=qrylst['resource-type'],
             owner=request.user,
@@ -675,7 +681,8 @@ def create_resource(request, *args, **kwargs):
             dublin_metadata=dcterms,
             content=frm.cleaned_data['abstract'] or frm.cleaned_data['title'],
             res_type_cls = res_cls,
-            resource=resource
+            resource=resource,
+            metadata=metadata
         )
         if res is not None:
             return HttpResponseRedirect(res.get_absolute_url())
