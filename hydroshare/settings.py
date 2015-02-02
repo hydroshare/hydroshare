@@ -273,6 +273,7 @@ INSTALLED_APPS = (
     "mezzanine.accounts",
     "mezzanine.mobile",
     "autocomplete_light",
+    "jquery_ui",
     "tastypie",
     # "tastypie_swagger",
     "ga_ows",
@@ -408,3 +409,4 @@ TASTYPIE_SWAGGER_API_MODULE = 'hydroshare.urls.v1_api'
 
 #
 AUTH_PROFILE_MODULE = "theme.UserProfile"
+CRISPY_TEMPLATE_PACK = 'bootstrap'

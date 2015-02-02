@@ -9,14 +9,17 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.utils.timezone import now
+import json
 from mezzanine.conf import settings
 from django import forms
 from mezzanine.generic.models import Keyword
+import mimetypes
+import os
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, user_from_id
 from .utils import authorize
-from hs_core.models import ResourceFile, GenericResource, resource_processor
+from hs_core.models import ResourceFile, GenericResource, resource_processor, CoreMetaData
 import requests
 from django.core import exceptions as ex
 from mezzanine.pages.page_processors import processor_for
@@ -33,6 +36,7 @@ from . import users_api
 from . import discovery_api
 from . import resource_api
 from . import social_api
+from hs_core.hydroshare import utils
 from hs_core.hydroshare import file_size_limit_for_display
 from hs_core.signals import *
 import autocomplete_light
@@ -72,8 +76,15 @@ def add_file_to_resource(request, *args, **kwargs):
         raise TypeError('shortkey must be specified...')
 
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+
     for f in request.FILES.getlist('files'):
         res.files.add(ResourceFile(content_object=res, resource_file=f))
+
+        # add format metadata element if necessary
+        file_format_type = utils.get_file_mime_type(f.name)
+        if file_format_type not in [mime.value for mime in res.metadata.formats.all()]:
+            res.metadata.create_element('format', value=file_format_type)
+
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -95,11 +106,113 @@ def add_metadata_term(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+def _get_resource_sender(element_name, resource):
+    core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
+
+    if element_name in core_metadata_element_names:
+        sender_resource = GenericResource().__class__
+    else:
+        sender_resource = resource.__class__
+
+    return sender_resource
+
+
+def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+
+    sender_resource = _get_resource_sender(element_name, res)
+    handler_response = pre_metadata_element_create.send(sender=sender_resource, element_name=element_name,
+                                                        request=request)
+    is_add_success = False
+    for receiver, response in handler_response:
+        if 'is_valid' in response:
+            if response['is_valid']:
+                element_data_dict = response['element_data_dict']
+                if element_name == 'subject':
+                    keywords = [k.strip() for k in element_data_dict['value'].split(',')]
+                    if res.metadata.subjects.all().count() > 0:
+                        res.metadata.subjects.all().delete()
+                    for kw in keywords:
+                        res.metadata.create_element(element_name, value=kw)
+                else:
+                    element = res.metadata.create_element(element_name, **element_data_dict)
+
+                is_add_success = True
+                resource_modified(res, request.user)
+
+    if request.is_ajax():
+        if is_add_success:
+            if element_name == 'subject':
+                ajax_response_data = {'status': 'success'}
+            else:
+                ajax_response_data = {'status': 'success', 'element_id': element.id, 'element_name': element_name}
+
+            return HttpResponse(json.dumps(ajax_response_data))
+
+        else:
+            ajax_response_data = {'status': 'error'}
+            return HttpResponse (json.dumps(ajax_response_data))
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def update_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    sender_resource = _get_resource_sender(element_name, res)
+    handler_response = pre_metadata_element_update.send(sender=sender_resource, element_name=element_name,
+                                                        element_id=element_id, request=request)
+    is_update_success = False
+
+    for receiver, response in handler_response:
+        if 'is_valid' in response:
+            if response['is_valid']:
+                element_data_dict = response['element_data_dict']
+                res.metadata.update_element(element_name, element_id, **element_data_dict)
+                if element_name == 'title':
+                    res.title = res.metadata.title.value
+                    res.save()
+
+                resource_modified(res, request.user)
+                is_update_success = True
+
+    if request.is_ajax():
+        if is_update_success:
+            ajax_response_data = {'status': 'success', 'element_name': element_name}
+            return HttpResponse(json.dumps(ajax_response_data))
+        else:
+            ajax_response_data = {'status': 'error'}
+            return HttpResponse(json.dumps(ajax_response_data))
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res.metadata.delete_element(element_name, element_id)
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     fl = res.files.filter(pk=int(f)).first()
+    file_name = fl.resource_file.name
     fl.resource_file.delete()
     fl.delete()
+    delete_file_mime_type = utils.get_file_mime_type(file_name)
+    delete_file_extension = os.path.splitext(file_name)[1]
+    # if there is no other resource file with the same extension as the
+    # file just deleted then delete the matching format metadata element for the resource
+    resource_file_extensions = [os.path.splitext(f.resource_file.name)[1] for f in res.files.all()]
+    if delete_file_extension not in resource_file_extensions:
+        format_element = res.metadata.formats.filter(value=delete_file_mime_type).first()
+
+        res.metadata.delete_element(format_element.term, format_element.id)
+
+    if res.public:
+        if not res.can_be_public:
+            res.public = False
+            res.save()
+
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -111,7 +224,12 @@ def delete_resource(request, shortkey, *args, **kwargs):
     for bag in res.bags.all():
         bag.bag.delete()
         bag.delete()
-    res.delete()
+
+    res.metadata.delete_all_elements()
+    res.metadata.delete()
+    # deleting the metadata container object deletes the resource
+    # so no need to delete the resource separately
+    #res.delete()
     return HttpResponseRedirect('/my-resources/')
 
 
@@ -124,6 +242,7 @@ def publish(request, shortkey, *args, **kwargs):
     res.save()
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 def change_permissions(request, shortkey, *args, **kwargs):
 
@@ -168,8 +287,10 @@ def change_permissions(request, shortkey, *args, **kwargs):
         if frm.is_valid():
             res.owners.add(frm.cleaned_data['user'])
     elif t == 'make_public':
-        res.public = True
-        res.save()
+        #if res.metadata.has_all_required_elements():
+        if res.can_be_public:
+            res.public = True
+            res.save()
     elif t == 'make_private':
         res.public = False
         res.save()
@@ -258,6 +379,13 @@ class FilterForm(forms.Form):
 def my_resources(request, page):
 #    if not request.user.is_authenticated():
 #        return HttpResponseRedirect('/accounts/login/')
+
+    # TODO: remove the following 4 lines of debugging code prior to pull request
+    # import sys
+    # sys.path.append("/home/docker/pycharm-debug")
+    # import pydevd
+    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
         res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
@@ -429,6 +557,90 @@ def describe_resource(request, *args, **kwargs):
             ResourceFile.objects.create(content_object=resource, resource_file=file)
 
     return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
+
+
+@login_required
+def create_resource_select_resource_type(request, *args, **kwargs):
+    return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
+
+
+@login_required
+def create_resource_new_workflow(request, *args, **kwargs):
+    resource_type=request.POST['resource-type']
+    res_title = request.POST['title']
+    if len(res_title) == 0:
+        res_title = 'Untitled resource'
+
+    global res_cls, resource
+    resource_files = request.FILES.getlist('files')
+    valid = hydroshare.check_resource_files(resource_files)
+    if not valid:
+        context = {
+            'file_size_error' : 'The resource file is larger than the supported size limit %s. '
+                                'Select resource files within %s to create resource.'
+                                % (file_size_limit_for_display, file_size_limit_for_display)
+        }
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
+    res_cls = hydroshare.check_resource_type(resource_type)
+
+    metadata = []
+    # Send pre-create resource signal - let any other app populate the empty metadata list object
+    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, resource=None, **kwargs)
+
+    add_title = True
+    for element in metadata:
+        if 'title' in element:
+            if 'value' in element['title']:
+                res_title = element['title']['value']
+                add_title = False
+            else:
+                metadata.remove(element)
+            break
+
+    if add_title:
+        metadata.append({'title': {'value': res_title}})
+
+    add_language = True
+    for element in metadata:
+        if 'language' in element:
+            if 'code' in element['language']:
+                #language_code = element['language']['code']
+                add_language = False
+            else:
+                metadata.remove(element)
+            break
+
+    if add_language:
+        metadata.append({'language': {'code': 'eng'}})
+
+    # add the default rights/license element
+    metadata.append({'rights':
+                         {'statement': 'This resource is shared under the Creative Commons Attribution CC BY.',
+                          'url': 'http://creativecommons.org/licenses/by/4.0/'
+                         }
+                    })
+
+    resource = hydroshare.create_resource(
+            resource_type=request.POST['resource-type'],
+            owner=request.user,
+            title=res_title,
+            keywords=None,
+            dublin_metadata=None,
+            metadata=metadata,
+            files=request.FILES.getlist('files'),
+            content=res_title
+    )
+
+    if resource is not None:
+        # go to resource landing page
+        return HttpResponseRedirect(resource.get_absolute_url())
+    else:
+        context = {
+            'resource_creation_error': 'Resource creation failed'
+        }
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
 
 class CreateResourceForm(forms.Form):
     title = forms.CharField(required=True)

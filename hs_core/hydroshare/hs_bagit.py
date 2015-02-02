@@ -73,8 +73,10 @@ def create_bag(resource):
     #serializer = getattr(tastypie_api, tastypie_name)()        # make an instance of the tastypie resource       
 
     with open(bagit_path + '/resourcemetadata.xml', 'w') as out:
-        import utils as hs_utils
-        out.write(hs_utils.serialize_science_metadata_xml(resource))
+        out.write(resource.metadata.get_xml())
+
+        #import utils as hs_utils
+        #out.write(hs_utils.serialize_science_metadata_xml(resource))
     hs_res_url = os.path.join('http://hydroshare.org/resources', resource.title)
     metadata_url = os.path.join(hs_res_url, 'resourcemetadata.json')
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')

@@ -29,7 +29,7 @@
             <tr><th>Added on</th><td>{{ cm.created|date }}</td></tr>
             <tr><th>Last updated by</th><td>{% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
             <tr><th>Updated on</th><td>{{ cm.updated|date }}</td></tr>
-            <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>
+{#            <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>#}
             <tr><th>Size</th><td>{{ cm.bags.first.bag.size|filesizeformat }}</td></tr>
             <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/resource/{{ cm.short_id }}/">http://{{ request.get_host }}/resource/{{ cm.short_id }}/</a></td></tr>
             {% if cm.doi %}
@@ -37,6 +37,18 @@
             {% elif page.perms.change %}
             {% comment %}<tr><th>DOI</th><td><button class='btn btn-danger' data-toggle="modal" data-target="#submit-for-publication-dialog">Submit for publication</button></td></tr>{% endcomment %}
             {% endif %}
+            {% if cm.public %}
+                <tr><th>Sharing Status</th><td>Public</td></tr>
+            {% else %}
+                <tr><th>Sharing Status</th><td>Private</td></tr>
+            {% endif %}
+            <tr><th>Metadata Status</th>
+                {%  if metadata_status == 'Incomplete' %}
+                    <td class="text-danger">{{ metadata_status }}</td></tr>
+                {%  else %}
+                    <td class="text-success">{{ metadata_status }}</td></tr>
+                {%  endif %}
+            <tr><th>Citation</th><td>{{ citation }}</td></tr>
         </table>
 
     </div>
@@ -44,42 +56,16 @@
 
     <div class="row">
         <div class="col-md-12">
-            <h2>Resource Description</h2>
+            <h2>Science Metadata</h2>
 
-            {% if cm.content %}
-                <h4>Abstract</h4>
-                {% inplace_edit "cm.content|linebreaksbr|safe"%}
-            {% endif %}
-
-            <h4>References</h4>
-            <ul class="list-unstyled">
-            {% for citation in citations %}
-                <li>{{ citation }}</li>
-            {% empty %}
-                <p><strong>No citations listed</strong></p>
-            {% endfor %}
-            </ul>
-            {% if page.perms.change %}
-                <button class="btn btn-primary" id="add-reference" data-toggle="modal" data-target="#add-reference-dialog">Add reference</button>
-            {% endif %}
-
-
-            <h4>Other Metadata</h4>
-            <table class="table table-condensed">
-            {% for term in dublin_core %}
-                {% ifnotequal term|dcterm 'Title' %}
-                    <tr>
-                        {% if term|dcterm == 'Date' or term|dcterm == 'Date Created' or term|dcterm == 'Date Modified' or term|dcterm == 'Date Submitted'%}
-                            <th>{{ term|dcterm }}</th>
-                            <td>{{ term.content|slice:":10" }}</td>
-                        {%  else %}
-                            <th>{{ term|dcterm }}</th>
-                            <td>{{ term.content }}</td>
-                        {% endif %}
-                    </tr>
-                {% endifnotequal %}
-            {% endfor %}
-            </table>
+            <div class="form-group">
+                <button id="metadata-show-toggle" type="button" class="btn btn-primary" onclick="toogle_metadata_display()">Collapse All</button>
+{#                <label for="" class="col-sm-2 control-label" style="margin-left: -15px"><h4>Science Metadata</h4></label>#}
+{#                <div class="col-sm-12">#}
+                    {% crispy metadata_form %}
+{#                </div>#}
+            </div>
+            {# TODO: Pabitra to check if this for loop code is relevant #}
             {% for attr, val_dict in core_metadata.items %}
                 <h5>{{ attr }}</h5>
                 <table class="table table-condensed">
@@ -91,11 +77,6 @@
                     {% endfor %}
                 </table>
             {% endfor %}
-
-            {% if page.perms.change %}
-                <button class="btn btn-primary" id="add-dcterm" data-toggle="modal" data-target="#add-dcterm-dialog">Add metadata term</button>
-            {% endif %}
-
 
         </div>
     </div>
@@ -141,7 +122,7 @@
                         <td></td>
                         <td>
                             <div class="btn-group">
-                              <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Export all</a>
+                              <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Download all</a>
                               <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
                                 <span class="caret"></span>
                                 <span class="sr-only">Toggle Dropdown</span>
@@ -153,10 +134,9 @@
                               </ul>
                             </div>
                         </td>
+{#                        {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
                         {% if page.perms.change %}
-                            {% if resource_type != "Geographic Raster Resource" or not cm.files.all %}
-                                <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
-                            {% endif %}
+                        <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
                         {% endif %}
                     </tr>
                 </tfoot>
@@ -179,8 +159,10 @@
             {% else %}
                 This resource can be viewed and downloaded only by designated users or research groups.
                 {% if user == cm.user %}
-                    <input name="t" type="hidden" value="make_public"/>
-                    <button type="submit" class="btn btn-danger">Make public</button>
+                    {%  if cm.can_be_public %}
+                        <input name="t" type="hidden" value="make_public"/>
+                        <button type="submit" class="btn btn-danger">Make public</button>
+                    {% endif %}
                 {% endif %}
             {% endif %}
             </form>
@@ -510,12 +492,437 @@
       </div>
     </div>
 
+
 {% endwith %}
 
 {% block extra_js %}
     <script type="text/javascript">
     $(function() {
+    });
 
+    function toogle_metadata_display(){
+        if ($("#metadata-show-toggle").text() === 'Show All'){
+            $("#metadata-show-toggle").text('Collapse All');
+            $('.accordion-body:not(".in")').collapse('show');
+        }
+        else {
+            $("#metadata-show-toggle").text('Show All');
+            $('.accordion-body.in').collapse('hide');
+        }
+    }
+
+    function metadata_update_ajax_submit(form_id){
+            $alert_success = '<div class="alert alert-success" id="success-alert"> \
+                <button type="button" class="close" data-dismiss="alert">x</button> \
+                <strong>Success! </strong> \
+                Metadata updated.\
+            </div>'
+
+            $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+                <button type="button" class="close" data-dismiss="alert">x</button> \
+                <strong>Error! </strong> \
+                Metadata updated failed.\
+            </div>'
+
+            $form=$('#' + form_id);
+            var datastring = $form.serialize();
+            $.ajax({
+                type: "POST",
+                url: $form.attr('action'),
+                dataType: 'html',
+                data: datastring,
+                success: function(result)
+                {
+                    /* The div contains now the updated form */
+                    //$('#' + form_id).html(result);
+                    console.log(result);
+                    json_response = JSON.parse(result);
+                    console.log(json_response);
+                    if (json_response.status === 'success')
+                    {
+                        $form.find("button").hide();
+                        if (json_response.hasOwnProperty('element_id')){
+                            form_update_action = $form.attr('action');
+                            res_short_id = form_update_action.split('/')[3];
+                            update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/"
+                            $form.attr('action', update_url);
+
+                        }
+                        if (json_response.hasOwnProperty('element_name')){
+                            if(json_response.element_name === 'title'){
+                                $res_title = $(".section-header").find("span").first();
+                                field_name_value = $res_title.text();
+                                console.log(field_name_value);
+                                updated_title = $form.find("#id_value").val();
+                                $res_title.text(updated_title);
+                            }
+                        }
+                        $('#' + form_id).before($alert_success);
+                        $('#' + form_id).closest('div').find('#error-alert').each(function(){
+                            this.remove();
+                        });
+                        $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
+
+                            $(".alert-success").alert('close');
+                        });
+                    }
+                    else{
+                        $('#' + form_id).before($alert_error);
+
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown)
+                {
+                    $('#' + form_id).before($alert_error)
+                    $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                        $(".alert-error").alert('close');
+                    });
+                }
+            });
+
+            //don't submit the form
+            return false;
+        }
+
+    $(document).ready(function () {
+        if($("#id_type_1").is(':checked')){ //box type coverage
+             $("#div_id_north").hide();
+             $("#div_id_east").hide();
+             $("#div_id_elevation").hide();
+        }
+        if($("#id_type_2").is(':checked')){ // point type coverage
+            $("#div_id_northlimit").hide();
+            $("#div_id_eastlimit").hide();
+            $("#div_id_southlimit").hide();
+            $("#div_id_westlimit").hide();
+            $("#div_id_uplimit").hide();
+            $("#div_id_downlimit").hide();
+        }
+        if ($("input:button[value='Delete creator']").length == 1){
+            $("input:button[value='Delete creator']").first().hide();
+        }
+        // disable all save changes button on load
+        $("form").each(function(){
+            $save_button = $(this).find("button").first();
+            if ($save_button.text() === "Save changes"){
+                $save_button.hide();
+            }
+        })
+
+        // open all metadata collasible elements on page load
+        $('.accordion-body:not(".in")').collapse('show');
+
+
+        $("#select_license").on('change', function(){
+            var value = this.value;
+            if (value === "other"){
+                $(this).closest("form").find("#id_statement").first().text("");
+                $(this).closest("form").find("#id_url").first().attr('value', "");
+                $(this).closest("form").find("#id_statement").first().attr('readonly', false);
+                $(this).closest("form").find("#id_url").first().attr('readonly', false);
+            }
+            else{
+                var text = $(this).find('option:selected').text();
+                text = "This resource is shared under the " + text + ".";
+                $(this).closest("form").find("#id_statement").first().text(text);
+                $(this).closest("form").find("#id_url").first().attr('value', value);
+                $(this).closest("form").find("#id_statement").first().attr('readonly', true);
+                $(this).closest("form").find("#id_url").first().attr('readonly', true);
+            }
+
+        });
+
+        // set the selected license in the select license dropdown
+        var value_exists = false;
+        $("#select_license option").each(function(){
+            if (this.value == $("#id_url").attr('value')){
+                $("#select_license").val($("#id_url").attr('value'));
+                value_exists = true;
+                return;
+            }
+        })
+
+        if (value_exists == false){
+            // set the selected license type to 'other'
+            $("#select_license").val('other');
+            console.log($("#select_license").attr('readonly'));
+            if($("#select_license").attr('readonly') == undefined){
+                $("#select_license").closest("form").find("#id_statement").first().attr('readonly', false);
+                $("#select_license").closest("form").find("#id_url").first().attr('readonly', false);
+            }
+            else{
+                $("#select_license").attr('style', "background-color:white;");
+                $("#select_license").closest("form").find("#id_statement").first().attr('readonly', true);
+                $("#select_license").closest("form").find("#id_url").first().attr('readonly', true);
+            }
+        }
+
+        // show "Save changes" button when form editing starts
+        $(".form-control").each(function(){
+            $(this).on('input', function(e){
+                //$(this).css('border-color', 'gray');
+                $(this).closest("form").find("button").show();
+            });
+            $(this).on('change', function(e){
+                //$(this).css('border-color', 'gray');
+                $(this).closest("form").find("button").show();
+            });
+        })
+        $(".dateinput").each(function(){
+            $(this).datepicker({
+                format: 'mm-dd-yyyy',
+                changeMonth: true,
+                changeYear: true
+             });
+
+            $(this).on('change', function(){
+                $(this).closest("form").find("button").show();
+            });
+        })
+        // Code adapted from http://djangosnippets.org/snippets/1389/
+        function updateElementIndex(el, prefix, ndx) {
+            var id_regex = new RegExp('(' + prefix + '-\\d+-)');
+            var replacement = prefix + '-' + ndx + '-';
+            if ($(el).attr("for")) $(el).attr("for", $(el).attr("for").replace(id_regex,
+            replacement));
+            if (el.id) el.id = el.id.replace(id_regex, replacement);
+            if (el.name) el.name = el.name.replace(id_regex, replacement);
+        }
+        function deleteForm(btn, prefix) {
+            var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+            if (formCount > 1) {
+                // Delete the item/form
+                $(btn).parents('.item').slideUp(300);
+                $(btn).parents('.item').remove();
+                var forms = $("#" + prefix + ' .item'); // Get all the forms
+                // Update the total number of forms (1 less than before)
+                $('#id_' + prefix + '-TOTAL_FORMS').val(forms.length);
+                var i = 0;
+                // Go through the forms and set their indices, names and IDs
+                for (formCount = forms.length; i < formCount; i++) {
+                    $(forms.get(i)).children().children().each(function () {
+                        if ($(this).attr('type') == 'text') updateElementIndex(this, prefix, i);
+                        if($(this).is('input')) updateElementIndex(this, prefix, i);
+                    });
+                    $(forms.get(i)).find('input').each(function (){
+                        updateElementIndex(this, prefix, i);
+                    })
+                }
+            } // End if
+            else {
+                if (prefix == 'creators'){
+                    alert("Resource needs to have at least one creator!");
+                }
+            }
+            return false;
+        }
+        function addForm(btn, prefix) {
+            var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+            // You can only submit a maximum of 10 todo items
+            if (formCount < 10) {
+                // Clone a form (without event handlers) from the first form
+                var row = $("#" + prefix + " .item:first").clone(false).get(0);
+                // Insert it after the last form
+                $(row).removeAttr('id').hide().insertAfter("#" + prefix + " .item:last").slideDown(300);
+                // Remove the bits we don't want in the new row/form
+                // e.g. error messages
+                $(".errorlist", row).remove();
+                $(row).children().removeClass("error");
+                $(row).find(".item_link:not(:first)").remove();
+                // Relabel or rename all the relevant bits of the main form
+                $(row).children().children().each(function () {
+                    updateElementIndex(this, prefix, formCount);
+                    $(this).val("");
+                });
+                // Relabel or rename all the relevant bits of the child form
+                var link_prefix = prefix + '_links'
+                $(row).find("*").each(function () {
+                    updateElementIndex(this, link_prefix, formCount);
+                    if ($(this).attr("id")){
+                        if($(this).attr("id").substr(-6) !== "_FORMS"){
+                            $(this).val("");
+                        }
+                        else{
+                            if($(this).attr("id").substr(-11) === "TOTAL_FORMS"){
+                                $(this).val("1");
+                            }
+                        }
+                    }
+                    else{
+                        $(this).val("");
+                    }
+                });
+                $(row).find('input').each(function () {
+                    updateElementIndex(this, prefix, formCount);
+                    if ($(this).attr('type') == 'button'){
+                        if (prefix === 'creator'){
+                            $(this).attr('value', 'Delete creator');
+                        }
+                        else if(prefix === 'contributor'){
+                            $(this).attr('value', 'Delete contributor');
+                        }
+                        else{
+                            $(this).attr('value', 'Delete');
+                        }
+                    }
+                    if ($(this).attr('type') == 'submit'){
+                        $(this).attr('value', 'Save');
+                    }
+                })
+                // Add an event handler for the delete item/form link
+                $(row).find(".delete-creator").click(function () {
+                    return deleteForm(this, prefix);
+                });
+                $(row).find(".delete-contributor").click(function () {
+                    return deleteForm(this, prefix);
+                });
+                $(row).find("#addLinkCreator").click(function () {
+                    return addLink(this, "creator");
+                });
+                // Add an event handler for the delete item/form link
+                $(row).find(".delete-link-creator").click(function () {
+                    return deleteLink(this, prefix);
+                });
+                $(row).find(".delete-link-contributor").click(function () {
+                    return deleteLink(this, prefix);
+                });
+                // Update the total form count
+                $("#id_" + prefix + "-TOTAL_FORMS").val(formCount + 1);
+            } // End if
+            else {
+                alert("Sorry, you can only enter a maximum of ten items.");
+            }
+            return false;
+        }
+        function deleteLink(btn, prefix) {
+            var link_form_input = $(btn).parents('.item').children('input:first');
+            var id = $(link_form_input).attr('id');
+            var link_formset_index = id.split("-")[1];
+            var formCount = parseInt($('#id_' + prefix + '_links-' + link_formset_index+ '-TOTAL_FORMS').val());
+            if (formCount > 1) {
+                // Delete the item/form
+                $(btn).parents('.item_link').slideUp(300);
+                $(btn).parents('.item_link').remove();
+                var forms = $("#" + prefix + ' .item_link'); // Get all the forms
+                // Update the total number of forms (1 less than before)
+                var update_prefix = prefix + '_links-' + link_formset_index;
+                $('#id_' + update_prefix + '-TOTAL_FORMS').val(forms.length);
+                var i = 0;
+                // Go through the forms and set their indices, names and IDs
+                for (formCount = forms.length; i < formCount; i++) {
+                    $(forms.get(i)).children().children().each(function () {
+                        if ($(this).attr('type') == 'text') updateElementIndex(this, update_prefix, i);
+                        if($(this).is('input')) updateElementIndex(this, update_prefix, i);
+                    });
+                    $(forms.get(i)).find('input').each(function (){
+                        updateElementIndex(this, update_prefix, i);
+                    })
+                }
+            } // End if
+
+            return false;
+        }
+        function addLink(btn, prefix) {
+            var link_form_input = $(btn).parents('.item').children('input:first');
+            var id = $(link_form_input).attr('id');
+            var link_formset_index = id.split("-")[1];
+            var formCount = parseInt($('#id_' + prefix + '_links-' + link_formset_index + '-TOTAL_FORMS').val());
+            // You can only submit a maximum of 10 todo items
+            if (formCount < 10) {
+                // Clone a form (without event handlers) from the first form
+                //var row = $("#" + prefix + " .item_link:first").clone(false).get(0);
+                var row = $(btn).parents(".item").find(".item_link:last").clone(false).get(0);
+                // Insert it after the last form
+                $(row).removeAttr('id').hide().insertAfter("#" + prefix + " .item_link:last").slideDown(300);
+                // Remove the bits we don't want in the new row/form
+                // e.g. error messages
+                $(".errorlist", row).remove();
+                $(row).children().removeClass("error");
+                var update_prefix = prefix + '_links-' + link_formset_index;
+                // Relabel or rename all the relevant bits
+                $(row).find('*').each(function (){
+                    updateElementIndex(this, update_prefix, formCount);
+                    $(this).val("");
+                })
+
+                $(row).find('button').each(function () {
+                    updateElementIndex(this, update_prefix, formCount);
+                    if ($(this).attr('type') == 'button'){
+                        $(this).text('Delete Link');
+                    }
+
+                })
+                // Add an event handler for the delete item/form link
+                $(row).find(".delete-link-creator").click(function () {
+                    return deleteLink(this, prefix);
+                });
+                $(row).find(".delete-link-contributor").click(function () {
+                    return deleteLink(this, prefix);
+                });
+                // Update the total form count
+                $("#id_" + update_prefix + "-TOTAL_FORMS").val(formCount + 1);
+            } // End if
+            else {
+                alert("Sorry, you can only enter a maximum of ten links.");
+            }
+            return false;
+        }
+
+
+
+        // Register the click event handlers
+        $("#addCreator").click(function () {
+            return addForm(this, "creator");
+        });
+        $(".delete-creator").click(function () {
+            return deleteForm(this, "creator");
+        });
+        $("#addContributor").click(function () {
+            return addForm(this, "contributor");
+        });
+        $("#addLinkCreator").click(function () {
+            return addLink(this, "creator");
+        });
+        $(".delete-contributor").click(function () {
+            return deleteForm(this, "contributors");
+        });
+        $(".delete-link-contributor").click(function () {
+            return deleteLink(this, "contributors");
+        });
+        $(".delete-link-creator").click(function () {
+            return deleteLink(this, "creator");
+        });
+
+        $("#addSource").click(function () {
+            return addForm(this, "source");
+        });
+
+        $("form input:radio").change(function () {
+            if ($(this).val() == "point") {
+                //alert('you select the point radio button');
+                $("#div_id_north").show();
+                $("#div_id_east").show();
+                $("#div_id_elevation").show();
+                $("#div_id_northlimit").hide();
+                $("#div_id_eastlimit").hide();
+                $("#div_id_southlimit").hide();
+                $("#div_id_westlimit").hide();
+                $("#div_id_uplimit").hide();
+                $("#div_id_downlimit").hide();
+            }
+            else {
+                //alert('you select the box radio button');
+                $("#div_id_north").hide();
+                $("#div_id_east").hide();
+                $("#div_id_elevation").hide();
+                $("#div_id_northlimit").show();
+                $("#div_id_eastlimit").show();
+                $("#div_id_southlimit").show();
+                $("#div_id_westlimit").show();
+                $("#div_id_uplimit").show();
+                $("#div_id_downlimit").show();
+            }
+        });
     });
     </script>
 {% endblock %}

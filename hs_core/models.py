@@ -320,7 +320,7 @@ class Party(AbstractMetaDataElement):
             # of the same resource
             if 'order' in kwargs:
                 if isinstance(party, Creator):
-                    if kwargs['order'] == 0:
+                    if kwargs['order'] <= 0:
                         kwargs['order'] = 1
 
                     if party.order != kwargs['order']:
@@ -331,13 +331,15 @@ class Party(AbstractMetaDataElement):
 
                         for res_cr in resource_creators:
                             if party.order > kwargs['order']:
-                                if res_cr.order < party.order:
+                                if res_cr.order < party.order and not res_cr.order < kwargs['order']:
                                     res_cr.order += 1
                                     res_cr.save()
+
                             else:
                                 if res_cr.order > party.order:
                                     res_cr.order -= 1
                                     res_cr.save()
+
 
                         party.order = kwargs['order']
 
@@ -507,6 +509,11 @@ class Title(AbstractMetaDataElement):
             if 'value' in kwargs:
                 title.value = kwargs['value']
                 title.save()
+                # This way of updating the resource title field does not work
+                # so updating code is in in resource.py
+                # res = title.content_object.resource
+                # res.title = title.value
+                # res.save()
             else:
                 raise ValidationError('Value for title is missing.')
         else:
@@ -663,6 +670,7 @@ class Relation(AbstractMetaDataElement):
         ('isCreatedBy', 'Created By'),
         ('isVersionOf', 'Version Of'),
         ('isDataFor', 'Data For'),
+        ('cites', 'Cites'),
     )
 
     term = 'Relation'
@@ -1381,6 +1389,14 @@ class AbstractResource(ResourcePermissionsMixin):
         """
         return None
 
+
+    def get_citation(self):
+        raise NotImplementedError("Please implement this method")
+
+    @property
+    def can_be_public(self):
+        return True
+
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
@@ -1425,11 +1441,60 @@ class GenericResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
+    def get_citation(self):
+        citation = ''
+
+        first_author = self.metadata.creators.all().filter(order=1)[0]
+        name_parts = first_author.name.split(" ")
+        if len(name_parts) > 2:
+            citation = "{last_name}, {first_initial}.{middle_initial}.".format(last_name=name_parts[-1],
+                                                                              first_initial=name_parts[0][0],
+                                                                              middle_initial=name_parts[1][0]) + ", "
+        else:
+            citation = "{last_name}, {first_initial}.".format(last_name=name_parts[-1],
+                                                              first_initial=name_parts[0][0]) + ", "
+
+        other_authors = self.metadata.creators.all().filter(order__gt=1)
+        for author in other_authors:
+            name_parts = author.name.split(" ")
+            if len(name_parts) > 2:
+                citation += "{first_initial}.{middle_initial}.{last_name}".format(first_initial=name_parts[0][0],
+                                                                                  middle_initial=name_parts[1][0],
+                                                                                  last_name=name_parts[-1]) + ", "
+            else:
+                citation += "{first_initial}.{last_name}".format(first_initial=name_parts[0][0],
+                                                                 last_name=name_parts[-1]) + ", "
+
+        citation = citation[:-2]
+        if self.metadata.dates.all().filter(type='published'):
+            citation_date = self.metadata.dates.all().filter(type='published')[0]
+        else:
+            citation_date = self.metadata.dates.all().filter(type='modified')[0]
+
+        citation += " ({year}). ".format(year=citation_date.start_date.year)
+        citation += self.title
+        citation += ", HydroShare, "
+
+        if self.metadata.identifiers.all().filter(name="doi"):
+            hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
+        else:
+            hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+
+        citation += "{url}".format(url=hs_identifier.url)
+
+        return citation
+
+    @property
+    def can_be_public(self):
+        if self.metadata.has_all_required_elements():
+            return True
+
+        return False
 
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
     #from django.contrib.sites.models import Site
-    _domain = 'hydroshare.org'  #Site.objects.get_current() # this one giving error since the database does not have a related table called 'django_site'
+    #_domain = 'hydroshare.org'  #Site.objects.get_current() # this one giving error since the database does not have a related table called 'django_site'
 
     XML_HEADER = '''<?xml version="1.0"?>
 <!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
@@ -1441,7 +1506,7 @@ class CoreMetaData(models.Model):
                   'hsterms': "http://hydroshare.org/terms/"}
 
     DATE_FORMAT = "YYYY-MM-DDThh:mm:ssTZD"
-    HYDROSHARE_URL = 'http://%s' % _domain
+    #HYDROSHARE_URL = 'http://%s' % _domain
 
     id = models.AutoField(primary_key=True)
 
@@ -1509,6 +1574,35 @@ class CoreMetaData(models.Model):
                 'Publisher']
 
     # this method needs to be overriden by any subclass of this class
+    # if they implement additional metadata elements that are required
+    def has_all_required_elements(self):
+        if not self.title:
+            return False
+        elif self.title.value.lower() == 'untitled resource':
+            return False
+
+        if not self.description:
+            return False
+        elif len(self.description.abstract.strip()) == 0:
+            return False
+
+        if self.creators.count() == 0:
+            return False
+
+        if not self.rights:
+            return False
+        elif len(self.rights.statement.strip()) == 0:
+            return False
+
+        # if self.coverages.count() == 0:
+        #     return False
+
+        if self.subjects.count() == 0:
+            return False
+
+        return True
+
+    # this method needs to be overriden by any subclass of this class
     def delete_all_elements(self):
         if self.title: self.title.delete()
         if self.description: self.description.delete()
@@ -1534,7 +1628,8 @@ class CoreMetaData(models.Model):
         # create the Description element -this is not exactly a dc element
         rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' % self.NAMESPACES['rdf'])
 
-        resource_uri = self.HYDROSHARE_URL + '/resource/' + self.resource.short_id
+        #resource_uri = self.HYDROSHARE_URL + '/resource/' + self.resource.short_id
+        resource_uri = self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
         rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], resource_uri)
 
         # create the title element
@@ -1735,6 +1830,7 @@ class CoreMetaData(models.Model):
                 kwargs['content_object'] = self
                 element = model_type.model_class().create(**kwargs)
                 element.save()
+                return element
             else:
                 raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
         else:
@@ -1787,13 +1883,14 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
     """Create initial dublin core elements"""
     if isinstance(instance, AbstractResource):
         if created:
-            from hs_core.hydroshare import utils
-            import json
-            instance.metadata.create_element('title', value=instance.title)
-            if instance.content:
-                instance.metadata.create_element('description', abstract=instance.content)
-            else:
-                instance.metadata.create_element('description', abstract=instance.description)
+            pass
+            # from hs_core.hydroshare import utils
+            # import json
+            # instance.metadata.create_element('title', value=instance.title)
+            # if instance.content:
+            #     instance.metadata.create_element('description', abstract=instance.content)
+            # else:
+            #     instance.metadata.create_element('description', abstract=instance.description)
 
             # TODO: With the current VM the get_user_info() method fails. So we can't get the resource uri for
             # the user now.
@@ -1802,17 +1899,17 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
             #                                  email=instance.creator.email,
             #                                  description=creator_dict['resource_uri'])
 
-            instance.metadata.create_element('creator', name=instance.creator.get_full_name(), email=instance.creator.email)
+            #instance.metadata.create_element('creator', name=instance.creator.get_full_name(), email=instance.creator.email)
 
             # TODO: The element 'Type' can't be created as we do not have an URI for specific resource types yet
 
-            instance.metadata.create_element('date', type='created', start_date=instance.created)
-            instance.metadata.create_element('date', type='modified', start_date=instance.updated)
+            # instance.metadata.create_element('date', type='created', start_date=instance.created)
+            # instance.metadata.create_element('date', type='modified', start_date=instance.updated)
 
             # res_json = utils.serialize_science_metadata(instance)
             # res_dict = json.loads(res_json)
-            instance.metadata.create_element('identifier', name='hydroShareIdentifier', url='http://hydroshare.org/resource{0}{1}'.format('/', instance.short_id))
-            instance.set_slug('resource{0}{1}'.format('/', instance.short_id))
+            #instance.metadata.create_element('identifier', name='hydroShareIdentifier', url='http://hydroshare.org/resource{0}{1}'.format('/', instance.short_id))
+
         else:
             resource_update_signal_handler(sender, instance, created, **kwargs)
 
@@ -1840,6 +1937,8 @@ def user_creation_signal_handler(sender, instance, created, **kwargs):
             instance.save()
             instance.groups.add(Group.objects.get(name='Hydroshare Author'))
 
-
-
-
+# this import statement is necessary in models.py to receive signals
+# any hydroshare app that needs to listen to signals from hs_core also needs to
+# implement the appropriate signal handlers in receivers.py and then include this import statement
+# in the app's models.py as the last line of code
+import receivers

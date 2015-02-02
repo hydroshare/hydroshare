@@ -1,5 +1,6 @@
 postgis:
   image: mjstealey/postgresql
+  #image: jamesbrink/postgresql
 redis:
   image: dockerfile/redis
 rabbitmq: 
