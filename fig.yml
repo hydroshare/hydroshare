@@ -21,14 +21,14 @@ hydroshare:
     #- "media:/home/docker/hydroshare/hydroshare/static/media"
     # for VM
     # Specific to hydro user on the hydrodev Xubuntu VM
-    #- "/home/hydro/hydroshare:/home/docker/hydroshare"
+    - "/home/hydro/hydroshare:/home/docker/hydroshare"
     # Specific to hydro user for pycharm debugging on hydrodev Xubuntu VM
-    #- "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
+    - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
     # for mac
     # Specific to hydro user on the hydrodev Xubuntu VM
-    - "/Users/jamy/Desktop/hydroshare:/home/docker/hydroshare"
+    #- "/Users/jamy/Desktop/hydroshare:/home/docker/hydroshare"
     # Specific to hydro user for pycharm debugging on hydrodev Xubuntu VM
-    - "/Users/jamy/Desktop/pycharm-debug:/home/docker/pycharm-debug"
+    #- "/Users/jamy/Desktop/pycharm-debug:/home/docker/pycharm-debug"
 
 
   ports:
