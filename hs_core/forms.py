@@ -7,6 +7,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
 from crispy_forms.bootstrap import *
 import arrow
+from django.contrib.admin.widgets import *
 from django.forms.extras.widgets import SelectDateWidget
 from django.utils.safestring import mark_safe
 from functools import partial, wraps
@@ -180,13 +181,13 @@ CreatorLayoutEdit = Layout(
                                                     '{% crispy link_form %} '
                                                 '</div>'
                                             '{% endfor %} '
-                                        '<div style="margin-top:10px"><a id="addLinkCreator" class="btn btn-success" disabled="disabled" href="#"><i class="fa fa-plus"></i>Add another link</a></div>'
+                                        # '<div style="margin-top:10px"><a id="addLinkCreator" class="btn btn-success" disabled="disabled" href="#"><i class="fa fa-plus"></i>Add another link</a></div>'
                                         '<div class="row" style="margin-top:10px">'
                                             '<div class="col-md-10">'
                                                 '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-creator-element-dialog_{{ form.number }}" value="Delete creator">'
                                             '</div>'
                                             '<div class="col-md-2">'
-                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'
+                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save changes</button>'
                                             '</div>'
                                         '</div>'
                                         '{% crispy form.delete_modal_form %} '
@@ -249,13 +250,13 @@ ContributorLayoutEdit = Layout(
                                                     '{% crispy link_form %} '
                                                 '</div>'
                                             '{% endfor %} '
-                                        '<div style="margin-top:10px"><a id="addLinkContributor" class="btn btn-success" disabled="disabled" href="#"><i class="fa fa-plus"></i>Add another link</a></div>'
+                                        # '<div style="margin-top:10px"><a id="addLinkContributor" class="btn btn-success" disabled="disabled" href="#"><i class="fa fa-plus"></i>Add another link</a></div>'
                                         '<div class="row" style="margin-top:10px">'
                                             '<div class="col-md-10">'
                                                 '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-contributor-element-dialog_{{ form.number }}" value="Delete contributor">'
                                             '</div>'
                                             '<div class="col-md-2">'
-                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'
+                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save changes</button>'
                                             '</div>'
                                         '</div>'
                                         '{% crispy form.delete_modal_form %} '
@@ -304,7 +305,7 @@ RelationLayoutEdit = Layout(
                                                 '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-relation-element-dialog_{{ form.number }}" value="Delete relation">'
                                             '</div>'
                                             '<div class="col-md-2">'
-                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'
+                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save changes</button>'
                                             '</div>'
                                         '</div>'
                                         '{% crispy form.delete_modal_form %} '
@@ -353,7 +354,7 @@ SourceLayoutEdit = Layout(
                                                 '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-source-element-dialog_{{ form.number }}" value="Delete source">'
                                             '</div>'
                                             '<div class="col-md-2">'
-                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'
+                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save changes</button>'
                                             '</div>'
                                         '</div>'
                                         '{% crispy form.delete_modal_form %} '
@@ -425,8 +426,8 @@ class MetaDataElementDeleteForm(forms.Form):
 class MetaDataForm(forms.Form):
     def __init__(self, resource_mode='view', extended_metadata_layout=None, *args, **kwargs):
         super(MetaDataForm, self).__init__(*args, **kwargs)
-        if not extended_metadata_layout:
-            extended_metadata_layout = HTML('<h3>No extended metadata for this resource.</h3>')
+        # if not extended_metadata_layout:
+        #     extended_metadata_layout = HTML('<h3>No extended metadata for this resource.</h3>')
 
         if resource_mode == 'edit':
             creator_layout = CreatorLayoutEdit
@@ -456,112 +457,226 @@ class MetaDataForm(forms.Form):
         self.helper.form_action = "/hsapi/_internal/create-resource/"
         self.helper.form_tag = False
 
-        layout = Layout(
-                TabHolder(
-                    Tab("Core Metadata",
-                        HTML('<div class="form-group" id="title"> '
-                                '{% load crispy_forms_tags %} '
-                                '{% crispy title_form %} '
-                                # '{% load inplace_edit %} '
-                                # '{% for field in title_form %}'
-                                # '{{ field.label_tag }} {% inplace_edit "field.field" %}'
-                                #'{% inplace_edit "title_form.value" %} '
-                                #'{% endfor %}'
-                             '</div>'),
+        if extended_metadata_layout:
+            layout = Layout(
+                    TabHolder(
+                        Tab("Core Metadata",
+                            HTML('<div class="form-group" id="title"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy title_form %} '
+                                 '</div>'),
 
-                        Accordion(
-                            AccordionGroup('Keywords (required)',
-                                 HTML('<div class="form-group" id="subjects"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy subjects_form %} '
-                                      '</div>'),
-                            ),
-                            AccordionGroup('Abstract (required)',
-                                 HTML('<div class="form-group" id="abstract"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy abstract_form %} '
-                                      '</div>'),
-                            ),
-                            AccordionGroup('Rights (required)',
-                                HTML('<div class="form-group" id="source"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy rights_form %} '
-                                     '</div>'),
-                            ),
-                            AccordionGroup('Creators (required)',
-                                HTML("<div class='form-group' id='creator'>"),
-                                HTML("{{ creator_formset.management_form }}"),
-                                creator_layout,
-                                HTML("</div>"),
-                            ),
-                            AccordionGroup('Contributors (optional)',
-                                HTML("<div class='form-group' id='contributor'>"),
-                                HTML("{{ contributor_formset.management_form }}"),
-                                contributor_layout,
-                                HTML("</div>"),
-                            ),
-                            AccordionGroup('Relations (optional)',
-                                HTML("<div class='form-group' id='relation'>"),
-                                HTML("{{ relation_formset.management_form }}"),
-                                relation_layout,
-                                HTML("</div>"),
-                            ),
-                            AccordionGroup('Sources (optional)',
-                                HTML("<div class='form-group' id='source'>"),
-                                HTML("{{ source_formset.management_form }}"),
-                                source_layout,
-                                HTML("</div>"),
-                            ),
-                            AccordionGroup('Identifiers (required)',
-                                HTML("<div class='form-group' id='identifier'>"),
-                                HTML("{{ identifier_formset.management_form }}"),
-                                identifier_layout,
-                                HTML("</div>"),
-                            ),
+                            Accordion(
+                                AccordionGroup('Abstract (required)',
+                                     HTML('<div class="form-group" id="abstract"> '
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy abstract_form %} '
+                                          '</div>'),
+                                ),
 
-                            AccordionGroup('Language (optional)',
-                                HTML('<div class="form-group" id="language"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy language_form %} '
-                                     '</div>'),
-                            ),
-                            AccordionGroup('Valid date (optional)',
-                                HTML('<div class="form-group" id="validdate"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy valid_date_form %} '
-                                     '</div>'),
-                            ),
-                            AccordionGroup('Formats/MIME Types (optional)',
-                                HTML("<div class='form-group' id='format'>"),
-                                HTML("{{ format_formset.management_form }}"),
-                                format_layout,
-                                HTML("</div>"),
-                            ),
-                            AccordionGroup('Temporal Coverage (required)',
-                                HTML('<div class="form-group" id="coverage-temporal"> '
-                                         '{% load crispy_forms_tags %} '
-                                         '{% crispy coverage_temporal_form %} '
-                                     '</div>'),
-                            ),
-                            AccordionGroup('Spatial Coverage (required)',
-                                HTML('<div class="form-group" id="coverage-spatial"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy coverage_spatial_form %} '
-                                     '</div>'),
+                                AccordionGroup('Creators (required)',
+                                    HTML("<div class='form-group' id='creator'>"),
+                                    HTML("{{ creator_formset.management_form }}"),
+                                    creator_layout,
+                                    HTML("</div>"),
+                                ),
+
+                                AccordionGroup('Contributors (optional)',
+                                    HTML("<div class='form-group' id='contributor'>"),
+                                    HTML("{{ contributor_formset.management_form }}"),
+                                    contributor_layout,
+                                    HTML("</div>"),
+                                ),
+
+                                AccordionGroup('Valid date (optional)',
+                                    HTML('<div class="form-group" id="validdate"> '
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy valid_date_form %} '
+                                         '</div>'),
+                                ),
+
+                                AccordionGroup('Temporal Coverage (optional)',
+                                    HTML('<div class="form-group" id="coverage-temporal"> '
+                                             '{% load crispy_forms_tags %} '
+                                             '{% crispy coverage_temporal_form %} '
+                                         '</div>'),
+                                ),
+
+                                AccordionGroup('Spatial Coverage (optional)',
+                                    HTML('<div class="form-group" id="coverage-spatial"> '
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy coverage_spatial_form %} '
+                                         '</div>'),
+                                ),
+
+                                AccordionGroup('Language (optional)',
+                                    HTML('<div class="form-group" id="language"> '
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy language_form %} '
+                                         '</div>'),
+                                ),
+
+                                AccordionGroup('Keywords (required)',
+                                     HTML('<div class="form-group" id="subjects"> '
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy subjects_form %} '
+                                          '</div>'),
+                                ),
+
+                                AccordionGroup('Rights (required)',
+                                    HTML('<div class="form-group" id="source"> '
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy rights_form %} '
+                                         '</div>'),
+                                ),
+
+                                AccordionGroup('Sources (optional)',
+                                    HTML("<div class='form-group' id='source'>"),
+                                    HTML("{{ source_formset.management_form }}"),
+                                    source_layout,
+                                    HTML("</div>"),
+                                ),
+
+                                AccordionGroup('Relations (optional)',
+                                    HTML("<div class='form-group' id='relation'>"),
+                                    HTML("{{ relation_formset.management_form }}"),
+                                    relation_layout,
+                                    HTML("</div>"),
+                                ),
+
+                                # AccordionGroup('Identifiers (read only)',
+                                #     HTML("<div class='form-group' id='identifier'>"),
+                                #     HTML("{{ identifier_formset.management_form }}"),
+                                #     identifier_layout,
+                                #     HTML("</div>"),
+                                # ),
+
+                                # AccordionGroup('Formats/MIME Types (read only)',
+                                #     HTML("<div class='form-group' id='format'>"),
+                                #     HTML("{{ format_formset.management_form }}"),
+                                #     format_layout,
+                                #     HTML("</div>"),
+                                # ),
+
                             ),
                         ),
-                    ),
 
-                    # Specific resource type app needs to provide the crispy form Layout object: extended_metadata_layout
-                    Tab("Extended Metadata",
-                        extended_metadata_layout,
+                        # Specific resource type app needs to provide the crispy form Layout object: extended_metadata_layout
+                        Tab("Extended Metadata",
+                            extended_metadata_layout,
+                        ),
                     ),
-                ),
-                modal_dialog_add_creator,
-                modal_dialog_add_contributor,
-                modal_dialog_add_relation,
-                modal_dialog_add_source,
-            )
+                    modal_dialog_add_creator,
+                    modal_dialog_add_contributor,
+                    modal_dialog_add_relation,
+                    modal_dialog_add_source,
+                )
+        else:
+            layout = Layout(
+                            HTML('<div class="form-group" id="title"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy title_form %} '
+                                 '</div>'),
+
+                            Accordion(
+                                AccordionGroup('Abstract (required)',
+                                     HTML('<div class="form-group" id="abstract"> '
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy abstract_form %} '
+                                          '</div>'),
+                                ),
+
+                                AccordionGroup('Creators (required)',
+                                    HTML("<div class='form-group' id='creator'>"),
+                                    HTML("{{ creator_formset.management_form }}"),
+                                    creator_layout,
+                                    HTML("</div>"),
+                                ),
+
+                                AccordionGroup('Contributors (optional)',
+                                    HTML("<div class='form-group' id='contributor'>"),
+                                    HTML("{{ contributor_formset.management_form }}"),
+                                    contributor_layout,
+                                    HTML("</div>"),
+                                ),
+
+                                # AccordionGroup('Valid date (optional)',
+                                #     HTML('<div class="form-group" id="validdate"> '
+                                #             '{% load crispy_forms_tags %} '
+                                #             '{% crispy valid_date_form %} '
+                                #          '</div>'),
+                                # ),
+
+                                AccordionGroup('Temporal Coverage (optional)',
+                                    HTML('<div class="form-group" id="coverage-temporal"> '
+                                             '{% load crispy_forms_tags %} '
+                                             '{% crispy coverage_temporal_form %} '
+                                         '</div>'),
+                                ),
+
+                                AccordionGroup('Spatial Coverage (optional)',
+                                    HTML('<div class="form-group" id="coverage-spatial"> '
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy coverage_spatial_form %} '
+                                         '</div>'),
+                                ),
+
+                                AccordionGroup('Language (optional)',
+                                    HTML('<div class="form-group" id="language"> '
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy language_form %} '
+                                         '</div>'),
+                                ),
+
+                                AccordionGroup('Keywords (required)',
+                                     HTML('<div class="form-group" id="subjects"> '
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy subjects_form %} '
+                                          '</div>'),
+                                ),
+
+                                AccordionGroup('Rights (required)',
+                                    HTML('<div class="form-group" id="source"> '
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy rights_form %} '
+                                         '</div>'),
+                                ),
+
+                                AccordionGroup('Sources (optional)',
+                                    HTML("<div class='form-group' id='source'>"),
+                                    HTML("{{ source_formset.management_form }}"),
+                                    source_layout,
+                                    HTML("</div>"),
+                                ),
+
+                                AccordionGroup('Relations (optional)',
+                                    HTML("<div class='form-group' id='relation'>"),
+                                    HTML("{{ relation_formset.management_form }}"),
+                                    relation_layout,
+                                    HTML("</div>"),
+                                ),
+
+                                # AccordionGroup('Identifiers (read only)',
+                                #     HTML("<div class='form-group' id='identifier'>"),
+                                #     HTML("{{ identifier_formset.management_form }}"),
+                                #     identifier_layout,
+                                #     HTML("</div>"),
+                                # ),
+
+                                # AccordionGroup('Formats/MIME Types (read only)',
+                                #     HTML("<div class='form-group' id='format'>"),
+                                #     HTML("{{ format_formset.management_form }}"),
+                                #     format_layout,
+                                #     HTML("</div>"),
+                                # ),
+
+                            ),
+                            modal_dialog_add_creator,
+                            modal_dialog_add_contributor,
+                            modal_dialog_add_relation,
+                            modal_dialog_add_source,
+                        )
+
 
         self.helper.layout = layout
 
@@ -677,6 +792,9 @@ class CreatorForm(PartyForm):
 
             self.fields['order'].widget.attrs['readonly'] = True
             self.fields['order'].widget.attrs['style'] = "background-color:white;"
+        else:
+            if 'add-metadata' in self.action:
+                del self.fields['order']
 
     @property
     def form_id(self):
@@ -705,7 +823,7 @@ class PartyValidationForm(forms.Form):
 
 
 class CreatorValidationForm(PartyValidationForm):
-    order = forms.IntegerField()
+    order = forms.IntegerField(required=False)
 
 
 class ContributorValidationForm(PartyValidationForm):
@@ -1210,7 +1328,24 @@ class RightsFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
+        if allow_edit:
+            select_element_start_tag = HTML('<select id="select_license" class="form-control"> ')
+        else:
+            select_element_start_tag = HTML('<select id="select_license" class="form-control" readonly="True"> ')
+
         layout = Layout(
+                        HTML('<p>Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)</p>'),
+                        HTML('<label class="control-label" for="select_license"> Select a license </label> '),
+                        select_element_start_tag,
+                        HTML('<option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option> '
+                                '<option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option> '
+                                '<option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons Attribution-NoDerivs CC BY-ND</option> '
+                                '<option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA</option> '
+                                '<option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NoCommercial CC BY-NC</option> '
+                                '<option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND</option> '
+                                '<option value="other">Other</option> '
+                            '</select>'),
+
                         Field('statement', css_class=field_width),
                         Field('url', css_class=field_width),
                  )
@@ -1223,7 +1358,13 @@ class RightsForm(ModelForm):
         super(RightsForm, self).__init__(*args, **kwargs)
         self.helper = RightsFormHelper(allow_edit, res_short_id, element_id, element_name='rights')
 
+        self.fields['statement'].widget.attrs['rows'] = 3
+
         if not allow_edit:
+            for fld_name in self.Meta.fields:
+                self.fields[fld_name].widget.attrs['readonly'] = True
+                self.fields[fld_name].widget.attrs['style'] = "background-color:white;"
+        elif len(self.initial) > 0:
             for fld_name in self.Meta.fields:
                 self.fields[fld_name].widget.attrs['readonly'] = True
                 self.fields[fld_name].widget.attrs['style'] = "background-color:white;"
@@ -1232,11 +1373,22 @@ class RightsForm(ModelForm):
         model = Rights
         fields = ['statement', 'url']
         exclude = ['content_object']
+        help_texts = {'url': 'A value for Statement or Url is required.'}
 
 
 class RightsValidationForm(forms.Form):
     statement = forms.CharField(required=False)
     url = forms.URLField(required=False, max_length=500)
+
+    def clean(self):
+        cleaned_data = super(RightsValidationForm, self).clean()
+        statement = cleaned_data.get('statement', None)
+        url = cleaned_data.get('url', None)
+        if not statement and not url:
+            self._errors['statement'] = ["A value for statement is missing"]
+            self._errors['url'] = ["A value for Url is missing"]
+
+        return self.cleaned_data
 
     def get_metadata(self):
         return {'rights': self.cleaned_data}
@@ -1249,7 +1401,7 @@ class CoverageTemporalFormHelper(BaseFormHelper):
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('type', css_class=field_width),
-                        Field('name', css_class=field_width),
+                        #Field('name', css_class=field_width),
                         Field('start', css_class=field_width),
                         Field('end', css_class=field_width),
                  )
@@ -1259,7 +1411,7 @@ class CoverageTemporalFormHelper(BaseFormHelper):
         super(CoverageTemporalFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 class CoverageTemporalForm(forms.Form):
-    name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
+    #name = forms.CharField(max_length=200, required=False, label='Name', help_text='e.g., Period of record.')
     start = forms.DateField(label='Start Date')
     end = forms.DateField(label='End Date')
 
@@ -1282,14 +1434,18 @@ class CoverageTemporalForm(forms.Form):
         # modify the form's cleaned_data dictionary
         is_form_errors = False
         super(CoverageTemporalForm, self).clean()
-        start_data = self.cleaned_data.get('start', None)
-        end_data = self.cleaned_data.get('end', None)
-        if not start_data:
+        start_date = self.cleaned_data.get('start', None)
+        end_date = self.cleaned_data.get('end', None)
+        if not start_date:
             self._errors['start'] = ["Data for start date is missing"]
             is_form_errors = True
 
-        if not end_data:
+        if not end_date:
             self._errors['end'] = ["Data for end date is missing"]
+            is_form_errors = True
+
+        if start_date > end_date:
+            self._errors['end'] = ["End date should be date after the start date"]
             is_form_errors = True
 
         if is_form_errors:
@@ -1322,6 +1478,7 @@ class CoverageSpatialFormHelper(BaseFormHelper):
         layout = Layout(
                         Field('type'),
                         Field('name', css_class=field_width),
+                        Field('projection', css_class=field_width),
                         Field('east', css_class=field_width),
                         Field('north', css_class=field_width),
                         Field('northlimit', css_class=field_width),
@@ -1329,11 +1486,10 @@ class CoverageSpatialFormHelper(BaseFormHelper):
                         Field('southlimit', css_class=field_width),
                         Field('westlimit', css_class=field_width),
                         Field('units', css_class=field_width),
-                        Field('uplimit', css_class=field_width),
-                        Field('downlimit', css_class=field_width),
-                        Field('elevation', css_class=field_width),
-                        Field('zunits', css_class=field_width),
-                        Field('projection', css_class=field_width),
+                        #Field('uplimit', css_class=field_width),
+                        #Field('downlimit', css_class=field_width),
+                        #Field('elevation', css_class=field_width),
+                        #Field('zunits', css_class=field_width),
                  )
 
         kwargs['coverage'] = 'spatial'
@@ -1345,20 +1501,21 @@ class CoverageSpatialForm(forms.Form):
         ('point', 'Point')
     )
     #type = forms.CharField(max_length=20, widget=Select(choices=TYPE_CHOICES, attrs={'class': 'select'}))
-    type = forms.ChoiceField(choices=TYPE_CHOICES, widget=forms.RadioSelect(renderer=HorizontalRadioRenderer))
+    type = forms.ChoiceField(choices=TYPE_CHOICES, widget=forms.RadioSelect(renderer=HorizontalRadioRenderer), label='')
     name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
-    east = forms.DecimalField()
-    north = forms.DecimalField()
-    units = forms.CharField(max_length=50)
-    elevation = forms.DecimalField(required=False)
-    zunits = forms.CharField(max_length=50, required=False)
-    projection = forms.CharField(max_length=100, required=False)
-    northlimit = forms.DecimalField(label='North Limit')
-    eastlimit = forms.DecimalField(label='East Limit')
-    southlimit = forms.DecimalField(label='South Limit')
-    westlimit = forms.DecimalField(label='West Limit')
-    uplimit = forms.DecimalField(required=False, label='Up Limit')
-    downlimit = forms.DecimalField(required=False, label='Down Limit')
+    projection = forms.CharField(max_length=100, required=False, label='Coordinate System/Geographic Projection')
+
+    east = forms.DecimalField(label='Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    north = forms.DecimalField(label='Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    units = forms.CharField(max_length=50, label='Coordinate Units')
+    #elevation = forms.DecimalField(required=False, widget=forms.TextInput())
+    #zunits = forms.CharField(max_length=50, required=False, label='Elevation Units', help_text='e.g., meters')
+    northlimit = forms.DecimalField(label='North Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    eastlimit = forms.DecimalField(label='East Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    southlimit = forms.DecimalField(label='South Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    westlimit = forms.DecimalField(label='West Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    #uplimit = forms.DecimalField(required=False, label='Up Limit', widget=forms.TextInput())
+    #downlimit = forms.DecimalField(required=False, label='Down Limit', widget=forms.TextInput())
 
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
         super(CoverageSpatialForm, self).__init__(*args, **kwargs)
@@ -1371,12 +1528,20 @@ class CoverageSpatialForm(forms.Form):
         else:
             self.action = ""
 
+        if len(self.initial) == 1:
+            self.initial['projection'] = 'WGS 84 EPSG:4326'
+            self.initial['units'] = 'Decimal degrees'
+
         if not allow_edit:
             for field in self.fields.values():
                 field.widget.attrs['readonly'] = True
                 field.widget.attrs['style'] = "background-color:white;"
+        else:
+            self.fields['projection'].widget.attrs['readonly'] = True
+            self.fields['projection'].widget.attrs['style'] = "background-color:white;"
+            self.fields['units'].widget.attrs['readonly'] = True
+            self.fields['units'].widget.attrs['style'] = "background-color:white;"
 
-    #type = forms.CharField(max_length=20)
     def clean(self):
         # modify the form's cleaned_data dictionary
         super(CoverageSpatialForm, self).clean()
@@ -1389,10 +1554,15 @@ class CoverageSpatialForm(forms.Form):
             if not north:
                 self._errors['north'] = ["Data for north is missing"]
                 is_form_errors = True
+                del self.cleaned_data['north']
+            # elif len(north.trim()) == 0:
+            #     self._errors['north'] = ["Data for north is missing"]
+            #     is_form_errors = True
 
             if not east:
                 self._errors['east'] = ["Data for east is missing"]
                 is_form_errors = True
+                del self.cleaned_data['east']
 
             if is_form_errors:
                 return self.cleaned_data
@@ -1412,11 +1582,11 @@ class CoverageSpatialForm(forms.Form):
 
             temp_cleaned_data['north'] = str(temp_cleaned_data['north'])
             temp_cleaned_data['east'] = str(temp_cleaned_data['east'])
-            if temp_cleaned_data['elevation'] is not None:
-                temp_cleaned_data['elevation'] = str(temp_cleaned_data['elevation'])
-            else:
-                del temp_cleaned_data['zunits']
-                del temp_cleaned_data['elevation']
+            # if temp_cleaned_data['elevation'] is not None:
+            #     temp_cleaned_data['elevation'] = str(temp_cleaned_data['elevation'])
+            # else:
+            #     del temp_cleaned_data['zunits']
+            #     del temp_cleaned_data['elevation']
         else:   # box type coverage
             if 'north' in temp_cleaned_data:
                 del temp_cleaned_data['north']
@@ -1430,17 +1600,18 @@ class CoverageSpatialForm(forms.Form):
                 if not limit_data:
                     self._errors[limit] = ["Data for %s is missing" % limit]
                     is_form_errors = True
+                    del self.cleaned_data[limit]
 
-            uplimit = temp_cleaned_data.get('uplimit', None)
-            downlimit = temp_cleaned_data.get('downlimit', None)
-
-            if uplimit and not downlimit:
-                self._errors['downlimit'] = ["Data for downlimit is missing"]
-                is_form_errors = True
-
-            if downlimit and not uplimit:
-                self._errors['uplimit'] = ["Data for uplimit is missing"]
-                is_form_errors = True
+            # uplimit = temp_cleaned_data.get('uplimit', None)
+            # downlimit = temp_cleaned_data.get('downlimit', None)
+            #
+            # if uplimit and not downlimit:
+            #     self._errors['downlimit'] = ["Data for downlimit is missing"]
+            #     is_form_errors = True
+            #
+            # if downlimit and not uplimit:
+            #     self._errors['uplimit'] = ["Data for uplimit is missing"]
+            #     is_form_errors = True
 
             if is_form_errors:
                 return self.cleaned_data
@@ -1449,18 +1620,18 @@ class CoverageSpatialForm(forms.Form):
             temp_cleaned_data['eastlimit'] = str(temp_cleaned_data['eastlimit'])
             temp_cleaned_data['southlimit'] = str(temp_cleaned_data['southlimit'])
             temp_cleaned_data['westlimit'] = str(temp_cleaned_data['westlimit'])
-            if temp_cleaned_data['uplimit'] is not None:
-                temp_cleaned_data['uplimit'] = str(temp_cleaned_data['uplimit'])
-            else:
-                del temp_cleaned_data['uplimit']
-
-            if temp_cleaned_data['downlimit'] is not None:
-                temp_cleaned_data['downlimit'] = str(temp_cleaned_data['downlimit'])
-            else:
-                del temp_cleaned_data['downlimit']
-
-            if 'uplimit' not in temp_cleaned_data and 'downlimit' not in temp_cleaned_data:
-                del temp_cleaned_data['zunits']
+            # if temp_cleaned_data['uplimit'] is not None:
+            #     temp_cleaned_data['uplimit'] = str(temp_cleaned_data['uplimit'])
+            # else:
+            #     del temp_cleaned_data['uplimit']
+            #
+            # if temp_cleaned_data['downlimit'] is not None:
+            #     temp_cleaned_data['downlimit'] = str(temp_cleaned_data['downlimit'])
+            # else:
+            #     del temp_cleaned_data['downlimit']
+            #
+            # if 'uplimit' not in temp_cleaned_data and 'downlimit' not in temp_cleaned_data:
+            #     del temp_cleaned_data['zunits']
 
         del temp_cleaned_data['type']
         if 'projection' in temp_cleaned_data:
@@ -1551,8 +1722,9 @@ class ValidDateFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
+        field_width = 'form-control input-sm datepicker'
         layout = Layout(
+                        HTML('<p>Date range over which this resource is valid.</p>'),
                         Field('start_date', css_class=field_width),
                         Field('end_date', css_class=field_width),
                  )
@@ -1574,9 +1746,9 @@ class ValidDateForm(ModelForm):
         model = Date
         fields = ['start_date', 'end_date']
         exclude = ['content_object']
-        labels = {'start_date': 'Start date', 'end_date': 'End date'}
-        widgets = {'start_date': DateInput(), 'end_date': DateInput()}
-
+        labels = {'start_date': 'Start date', 'end_date': 'End date*'}
+        #widgets = {'start_date': DateInput(), 'end_date': DateInput()}
+        widgets = {'start_date': DateInput(attrs={'class': 'datepicker', 'data-date-format': 'yyyy/mm/dd',}), 'end_date': DateInput(attrs={'class': 'datepicker', 'data-date-format': 'yyyy/mm/dd',})}
 
 class ValidDateValidationForm(forms.Form):
     start_date = forms.DateField()

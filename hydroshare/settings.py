@@ -273,6 +273,7 @@ INSTALLED_APPS = (
     "mezzanine.accounts",
     "mezzanine.mobile",
     "autocomplete_light",
+    "jquery_ui",
     "tastypie",
     # "tastypie_swagger",
     "ga_ows",
@@ -282,10 +283,11 @@ INSTALLED_APPS = (
     "hs_metrics",
     "hs_rhessys_inst_resource",
     "django_docker_processes",
-    "hs_geo_raster_resource",
+    #"hs_geo_raster_resource",
     "djcelery",
     "ref_ts",
-    "hs_app_netCDF"
+    "hs_app_netCDF",
+    "widget_tweaks",
 )
 
 # List of processors used by RequestContext to populate the context.

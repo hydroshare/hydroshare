@@ -13,8 +13,12 @@ def landing_page(request, page):
 def get_page_context(page, user, extended_metadata_layout=None):
     content_model = page.get_content_model()
     edit_mode = False
-    if content_model.creator == user or user in content_model.owners.all() or user in content_model.edit_users.all():
+    if user.username == 'admin' or \
+                    content_model.creator == user or \
+                    user in content_model.owners.all(): # or \
+                    #user in content_model.edit_users.all():
         edit_mode = True
+
     add_creator_modal_form = CreatorForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
     add_contributor_modal_form = ContributorForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
     add_relation_modal_form = RelationForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
@@ -156,6 +160,11 @@ def get_page_context(page, user, extended_metadata_layout=None):
 
     metadata_form = MetaDataForm(resource_mode='edit' if edit_mode else 'view', extended_metadata_layout=extended_metadata_layout)
 
+    if content_model.metadata.has_all_required_elements():
+        metadata_status = "Complete"
+    else:
+        metadata_status = "Incomplete"
+
     context = {'metadata_form': metadata_form,
                'title_form': title_form,
                'creator_formset': creator_formset,
@@ -177,6 +186,8 @@ def get_page_context(page, user, extended_metadata_layout=None):
                'coverage_spatial_form': coverage_spatial_form,
                'format_formset': format_formset,
                'subjects_form': subjects_form,
+               'metadata_status': metadata_status,
+               'citation': content_model.get_citation(),
                'extended_metadata_layout': extended_metadata_layout}
 
     return context

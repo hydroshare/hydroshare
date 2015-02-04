@@ -802,6 +802,10 @@ def delete_resource_file(pk, filename):
     else:
         raise ObjectDoesNotExist(filename)
 
+    if resource.public:
+        if not resource.can_be_public:
+            resource.public = False
+            resource.save()
     return filename
 
 

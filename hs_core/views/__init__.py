@@ -177,7 +177,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     if request.is_ajax():
         if is_update_success:
-            ajax_response_data = {'status': 'success'}
+            ajax_response_data = {'status': 'success', 'element_name': element_name}
             return HttpResponse(json.dumps(ajax_response_data))
         else:
             ajax_response_data = {'status': 'error'}
@@ -205,7 +205,13 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     resource_file_extensions = [os.path.splitext(f.resource_file.name)[1] for f in res.files.all()]
     if delete_file_extension not in resource_file_extensions:
         format_element = res.metadata.formats.filter(value=delete_file_mime_type).first()
+
         res.metadata.delete_element(format_element.term, format_element.id)
+
+    if res.public:
+        if not res.can_be_public:
+            res.public = False
+            res.save()
 
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -281,8 +287,10 @@ def change_permissions(request, shortkey, *args, **kwargs):
         if frm.is_valid():
             res.owners.add(frm.cleaned_data['user'])
     elif t == 'make_public':
-        res.public = True
-        res.save()
+        #if res.metadata.has_all_required_elements():
+        if res.can_be_public:
+            res.public = True
+            res.save()
     elif t == 'make_private':
         res.public = False
         res.save()
@@ -373,11 +381,10 @@ def my_resources(request, page):
 #        return HttpResponseRedirect('/accounts/login/')
 
     # TODO: remove the following 4 lines of debugging code prior to pull request
-    import sys
-    sys.path.append("/home/docker/pycharm-debug")
-    import pydevd
-    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
-    #pydevd.settrace('144.39.193.115', port=21000, suspend=False)
+    # import sys
+    # sys.path.append("/home/docker/pycharm-debug")
+    # import pydevd
+    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
@@ -518,25 +525,14 @@ def describe_resource(request, *args, **kwargs):
         return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
     res_cls = hydroshare.check_resource_type(resource_type)
     # Send pre_describe_resource signal for other resource type apps to listen, extract, and add their own metadata
-    ret_responses = pre_describe_resource.send(sender=res_cls, files=resource_files)
+    ret_responses = pre_describe_resource.send(sender=res_cls, files=resource_files, title=res_title)
 
-    # create barebone resource with resource_files to database model for later update since on Django 1.7, resource_files get closed automatically at the end of each request
-    owner = user_from_id(request.user)
-    resource = res_cls.objects.create(
-            user=owner,
-            creator=owner,
-            title=res_title,
-            last_changed_by=owner,
-            in_menus=[],
-            **kwargs
-    )
-    for file in resource_files:
-        ResourceFile.objects.create(content_object=resource, resource_file=file)
     create_res_context = {
         'resource_type': resource_type,
         'res_title': res_title,
     }
     page_url = 'pages/create-resource.html'
+    use_generic = True
     for receiver, response in ret_responses:
         if response is not None:
             for key in response:
@@ -544,7 +540,29 @@ def describe_resource(request, *args, **kwargs):
                     create_res_context[key] = response[key]
                 else:
                     page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
+                    use_generic = False
+
+    if use_generic:
+        # create barebone resource with resource_files to database model for later update since on Django 1.7, resource_files get closed automatically at the end of each request
+        owner = user_from_id(request.user)
+        resource = res_cls.objects.create(
+                user=owner,
+                creator=owner,
+                title=res_title,
+                last_changed_by=owner,
+                in_menus=[],
+                **kwargs
+        )
+        for file in resource_files:
+            ResourceFile.objects.create(content_object=resource, resource_file=file)
+
     return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
+
+
+@login_required
+def create_resource_select_resource_type(request, *args, **kwargs):
+    return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
+
 
 @login_required
 def create_resource_new_workflow(request, *args, **kwargs):
@@ -562,12 +580,12 @@ def create_resource_new_workflow(request, *args, **kwargs):
                                 'Select resource files within %s to create resource.'
                                 % (file_size_limit_for_display, file_size_limit_for_display)
         }
-        return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     res_cls = hydroshare.check_resource_type(resource_type)
 
     metadata = []
-    # Send pre-create resource signal - let any other app populate the metadata list object
+    # Send pre-create resource signal - let any other app populate the empty metadata list object
     pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, resource=None, **kwargs)
 
     add_title = True
@@ -583,9 +601,25 @@ def create_resource_new_workflow(request, *args, **kwargs):
     if add_title:
         metadata.append({'title': {'value': res_title}})
 
+    add_language = True
+    for element in metadata:
+        if 'language' in element:
+            if 'code' in element['language']:
+                #language_code = element['language']['code']
+                add_language = False
+            else:
+                metadata.remove(element)
+            break
 
+    if add_language:
+        metadata.append({'language': {'code': 'eng'}})
 
-    #owner = user_from_id(request.user)
+    # add the default rights/license element
+    metadata.append({'rights':
+                         {'statement': 'This resource is shared under the Creative Commons Attribution CC BY.',
+                          'url': 'http://creativecommons.org/licenses/by/4.0/'
+                         }
+                    })
 
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
@@ -605,7 +639,7 @@ def create_resource_new_workflow(request, *args, **kwargs):
         context = {
             'resource_creation_error': 'Resource creation failed'
         }
-        return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
 
 class CreateResourceForm(forms.Form):
@@ -637,7 +671,8 @@ def create_resource(request, *args, **kwargs):
                 dcterms.append({'term': 'CR', 'content': cr})
         global res_cls
         # Send pre_call_create_resource signal
-        pre_call_create_resource.send(sender=res_cls, resource=resource, request_post = qrylst)
+        metadata = []
+        pre_call_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, request_post = qrylst)
         res = hydroshare.create_resource(
             resource_type=qrylst['resource-type'],
             owner=request.user,
@@ -646,7 +681,8 @@ def create_resource(request, *args, **kwargs):
             dublin_metadata=dcterms,
             content=frm.cleaned_data['abstract'] or frm.cleaned_data['title'],
             res_type_cls = res_cls,
-            resource=resource
+            resource=resource,
+            metadata=metadata
         )
         if res is not None:
             return HttpResponseRedirect(res.get_absolute_url())

@@ -11,14 +11,11 @@
     <h2>Resource Details</h2>
 
 <div class="btn-toolbar" style="padding-bottom: 0.5em;">
-{#    {% if page.perms.change %}#}
-
-    {% if can_edit %}
+    {% if page.perms.change %}
     <a class="btn btn-primary" id="share" href="#sharing">Share</a>
     {% endif %}
 
-{#    {% if page.perms.delete %}#}
-    {% if can_edit %}
+    {% if page.perms.delete %}
     <button class="btn btn-danger" id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">Delete</button>
     {% endif %}
 </div>
@@ -34,12 +31,24 @@
             <tr><th>Updated on</th><td>{{ cm.updated|date }}</td></tr>
 {#            <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>#}
             <tr><th>Size</th><td>{{ cm.bags.first.bag.size|filesizeformat }}</td></tr>
-            <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/r/{{ cm.short_id }}/">http://{{ request.get_host }}/r/{{ cm.short_id }}/</a></td></tr>
+            <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/resource/{{ cm.short_id }}/">http://{{ request.get_host }}/resource/{{ cm.short_id }}/</a></td></tr>
             {% if cm.doi %}
             <tr><th>DOI</th><td><a id="permalink" href="http://{{ request.get_host }}/r/doi/{{ cm.doi }}/">{{ cm.doi }}</a></td></tr>
             {% elif page.perms.change %}
             {% comment %}<tr><th>DOI</th><td><button class='btn btn-danger' data-toggle="modal" data-target="#submit-for-publication-dialog">Submit for publication</button></td></tr>{% endcomment %}
             {% endif %}
+            {% if cm.public %}
+                <tr><th>Sharing Status</th><td>Public</td></tr>
+            {% else %}
+                <tr><th>Sharing Status</th><td>Private</td></tr>
+            {% endif %}
+            <tr><th>Metadata Status</th>
+                {%  if metadata_status == 'Incomplete' %}
+                    <td class="text-danger">{{ metadata_status }}</td></tr>
+                {%  else %}
+                    <td class="text-success">{{ metadata_status }}</td></tr>
+                {%  endif %}
+            <tr><th>Citation</th><td>{{ citation }}</td></tr>
         </table>
 
     </div>
@@ -47,51 +56,16 @@
 
     <div class="row">
         <div class="col-md-12">
-            <h2>Resource Description</h2>
+            <h2>Science Metadata</h2>
 
-            {% if cm.content %}
-                <h4>Abstract</h4>
-                {% inplace_edit "cm.content|linebreaksbr|safe"%}
-            {% endif %}
-
-            <h4>References</h4>
-            <ul class="list-unstyled">
-            {% for citation in citations %}
-                <li>{{ citation }}</li>
-            {% empty %}
-                <p><strong>No citations listed</strong></p>
-            {% endfor %}
-            </ul>
-{#            {% if page.perms.change %}#}
-            {%  if can_edit %}
-                {# Pabitra: This needs to be enabled once this functionality is mapped to the new metadata element #}
-                <button class="btn btn-primary" id="add-reference" data-toggle="modal" data-target="#add-reference-dialog" disabled>Add reference</button>
-            {% endif %}
-
-
-{#            <h4>Other Metadata</h4>#}
             <div class="form-group">
-                <label for="" class="col-sm-2 control-label" style="margin-left: -15px"><h4>Science Metadata</h4></label>
-                <div class="col-sm-10">
+                <button id="metadata-show-toggle" type="button" class="btn btn-primary" onclick="toogle_metadata_display()">Collapse All</button>
+{#                <label for="" class="col-sm-2 control-label" style="margin-left: -15px"><h4>Science Metadata</h4></label>#}
+{#                <div class="col-sm-12">#}
                     {% crispy metadata_form %}
-                </div>
+{#                </div>#}
             </div>
-
-{#            <table class="table table-condensed">#}
-{#            {% for term in dublin_core %}#}
-{#                {% ifnotequal term|dcterm 'Title' %}#}
-{#                    <tr>#}
-{#                        {% if term|dcterm == 'Date' or term|dcterm == 'Date Created' or term|dcterm == 'Date Modified' or term|dcterm == 'Date Submitted'%}#}
-{#                            <th>{{ term|dcterm }}</th>#}
-{#                            <td>{{ term.content|slice:":10" }}</td>#}
-{#                        {%  else %}#}
-{#                            <th>{{ term|dcterm }}</th>#}
-{#                            <td>{{ term.content }}</td>#}
-{#                        {% endif %}#}
-{#                    </tr>#}
-{#                {% endifnotequal %}#}
-{#            {% endfor %}#}
-{#            </table>#}
+            {# TODO: Pabitra to check if this for loop code is relevant #}
             {% for attr, val_dict in core_metadata.items %}
                 <h5>{{ attr }}</h5>
                 <table class="table table-condensed">
@@ -103,11 +77,6 @@
                     {% endfor %}
                 </table>
             {% endfor %}
-
-{#            {% if page.perms.change %}#}
-{#                <button class="btn btn-primary" id="add-dcterm" data-toggle="modal" data-target="#add-dcterm-dialog">Add metadata term</button>#}
-{#            {% endif %}#}
-
 
         </div>
     </div>
@@ -124,26 +93,25 @@
                     <td>{{ f.resource_file.name|slice:"33:" }}</td>
                     <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
                     <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>
-{#                    {% if page.perms.change %}#}
-                      {% if can_edit %}
-                        <div class="modal fade" id="delete-resource-file" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    {% if page.perms.change %}
+                        <div class="modal fade" id="delete-resource-file-{{f.pk}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                           <div class="modal-dialog">
                             <div class="modal-content">
                               <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                <h4 class="modal-title" id="submit-for-publication-title">Confirm file deletion</h4>
+                                <h4 class="modal-title">Confirm file deletion</h4>
                               </div>
                               <div class="modal-body">
                                   This will delete the file from the resource. Consider saving a copy if it is important to you.
                               </div>
                               <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
+                                <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{f.pk}}/">Delete</a>
                               </div>
                             </div>
                           </div>
                         </div>
-                        <td><a class="btn btn-danger btn-block" data-toggle="modal" data-target="#delete-resource-file">Delete</a></td>
+                        <td><a class="btn btn-danger btn-block" data-toggle="modal" data-target="#delete-resource-file-{{f.pk}}">Delete</a></td>
                     {% endif %}
                 </tr>
                 {% endfor %}
@@ -154,7 +122,7 @@
                         <td></td>
                         <td>
                             <div class="btn-group">
-                              <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Export all</a>
+                              <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Download all</a>
                               <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
                                 <span class="caret"></span>
                                 <span class="sr-only">Toggle Dropdown</span>
@@ -167,7 +135,7 @@
                             </div>
                         </td>
 {#                        {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
-                        {% if can_edit and resource_type != "Geographic Raster Resource" %}
+                        {% if page.perms.change %}
                         <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
                         {% endif %}
                     </tr>
@@ -191,8 +159,10 @@
             {% else %}
                 This resource can be viewed and downloaded only by designated users or research groups.
                 {% if user == cm.user %}
-                    <input name="t" type="hidden" value="make_public"/>
-                    <button type="submit" class="btn btn-danger">Make public</button>
+                    {%  if cm.can_be_public %}
+                        <input name="t" type="hidden" value="make_public"/>
+                        <button type="submit" class="btn btn-danger">Make public</button>
+                    {% endif %}
                 {% endif %}
             {% endif %}
             </form>
@@ -522,12 +492,25 @@
       </div>
     </div>
 
+
 {% endwith %}
 
 {% block extra_js %}
     <script type="text/javascript">
     $(function() {
     });
+
+    function toogle_metadata_display(){
+        if ($("#metadata-show-toggle").text() === 'Show All'){
+            $("#metadata-show-toggle").text('Collapse All');
+            $('.accordion-body:not(".in")').collapse('show');
+        }
+        else {
+            $("#metadata-show-toggle").text('Show All');
+            $('.accordion-body.in').collapse('hide');
+        }
+    }
+
     function metadata_update_ajax_submit(form_id){
             $alert_success = '<div class="alert alert-success" id="success-alert"> \
                 <button type="button" class="close" data-dismiss="alert">x</button> \
@@ -557,34 +540,36 @@
                     console.log(json_response);
                     if (json_response.status === 'success')
                     {
+                        $form.find("button").hide();
                         if (json_response.hasOwnProperty('element_id')){
                             form_update_action = $form.attr('action');
                             res_short_id = form_update_action.split('/')[3];
                             update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/"
                             $form.attr('action', update_url);
-                        }
 
+                        }
+                        if (json_response.hasOwnProperty('element_name')){
+                            if(json_response.element_name === 'title'){
+                                $res_title = $(".section-header").find("span").first();
+                                field_name_value = $res_title.text();
+                                console.log(field_name_value);
+                                updated_title = $form.find("#id_value").val();
+                                $res_title.text(updated_title);
+                            }
+                        }
                         $('#' + form_id).before($alert_success);
-                        $(".alert-success").fadeTo(2000, 500).slideUp(1000, function()
-                        {
+                        $('#' + form_id).closest('div').find('#error-alert').each(function(){
+                            this.remove();
+                        });
+                        $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
+
                             $(".alert-success").alert('close');
                         });
-                        // "/hsapi/_internal/%s/%s/%s/update-metadata/" % (res_short_id, element_name.lower(), element_id)
                     }
-{#                    if (result === "success")#}
-{#                    {#}
-{#                        $('#' + form_id).before($alert_success);#}
-{#                        $(".alert-success").fadeTo(2000, 500).slideUp(1000, function()#}
-{#                        {#}
-{#                            $(".alert-success").alert('close');#}
-{#                        });#}
-{#                    }#}
                     else{
                         $('#' + form_id).before($alert_error);
 
                     }
-
-                    //alert("Save success")
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown)
                 {
@@ -616,7 +601,84 @@
         if ($("input:button[value='Delete creator']").length == 1){
             $("input:button[value='Delete creator']").first().hide();
         }
+        // disable all save changes button on load
+        $("form").each(function(){
+            $save_button = $(this).find("button").first();
+            if ($save_button.text() === "Save changes"){
+                $save_button.hide();
+            }
+        })
 
+        // open all metadata collasible elements on page load
+        $('.accordion-body:not(".in")').collapse('show');
+
+
+        $("#select_license").on('change', function(){
+            var value = this.value;
+            if (value === "other"){
+                $(this).closest("form").find("#id_statement").first().text("");
+                $(this).closest("form").find("#id_url").first().attr('value', "");
+                $(this).closest("form").find("#id_statement").first().attr('readonly', false);
+                $(this).closest("form").find("#id_url").first().attr('readonly', false);
+            }
+            else{
+                var text = $(this).find('option:selected').text();
+                text = "This resource is shared under the " + text + ".";
+                $(this).closest("form").find("#id_statement").first().text(text);
+                $(this).closest("form").find("#id_url").first().attr('value', value);
+                $(this).closest("form").find("#id_statement").first().attr('readonly', true);
+                $(this).closest("form").find("#id_url").first().attr('readonly', true);
+            }
+
+        });
+
+        // set the selected license in the select license dropdown
+        var value_exists = false;
+        $("#select_license option").each(function(){
+            if (this.value == $("#id_url").attr('value')){
+                $("#select_license").val($("#id_url").attr('value'));
+                value_exists = true;
+                return;
+            }
+        })
+
+        if (value_exists == false){
+            // set the selected license type to 'other'
+            $("#select_license").val('other');
+            console.log($("#select_license").attr('readonly'));
+            if($("#select_license").attr('readonly') == undefined){
+                $("#select_license").closest("form").find("#id_statement").first().attr('readonly', false);
+                $("#select_license").closest("form").find("#id_url").first().attr('readonly', false);
+            }
+            else{
+                $("#select_license").attr('style', "background-color:white;");
+                $("#select_license").closest("form").find("#id_statement").first().attr('readonly', true);
+                $("#select_license").closest("form").find("#id_url").first().attr('readonly', true);
+            }
+        }
+
+        // show "Save changes" button when form editing starts
+        $(".form-control").each(function(){
+            $(this).on('input', function(e){
+                //$(this).css('border-color', 'gray');
+                $(this).closest("form").find("button").show();
+            });
+            $(this).on('change', function(e){
+                //$(this).css('border-color', 'gray');
+                $(this).closest("form").find("button").show();
+            });
+        })
+        $(".dateinput").each(function(){
+            $(this).datepicker({
+                format: 'mm-dd-yyyy',
+                changeMonth: true,
+                changeYear: true
+             });
+
+            $(this).on('change', function(){
+                $(this).closest("form").find("button").show();
+            });
+        })
         // Code adapted from http://djangosnippets.org/snippets/1389/
         function updateElementIndex(el, prefix, ndx) {
             var id_regex = new RegExp('(' + prefix + '-\\d+-)');
