@@ -1,11 +1,17 @@
 """
 Module extracts metadata from NetCDF file to complete the required HydroShare NetCDF Science Metadata
+
+Reference code：
+reprojection:
+http://gis.stackexchange.com/questions/78838/how-to-convert-projected-coordinates-to-lat-lon-using-python
+
 """
 __author__ = 'Tian Gan'
 
 from nc_utils import *
 import json
 import netCDF4
+from pyproj import Proj, transform
 from collections import OrderedDict
 
 
@@ -99,10 +105,12 @@ def extract_nc_coverage_meta(nc_dataset):
 
     nc_coverage_meta = {
         'period': {},
-        'box': {}
+        'box': {},
+        'original-box': {}
     }
     nc_coordinate_variables_detail = get_nc_coordinate_variables_detail(nc_dataset)
 
+    # get the info of 'period' and 'original-box'
     for var_name, var_detail in nc_coordinate_variables_detail.items():
         coor_type = var_detail['coordinate_type']
         if coor_type == 'T':
@@ -112,20 +120,41 @@ def extract_nc_coverage_meta(nc_dataset):
                 #'units': var_detail['coordinate_units']
             }
         elif coor_type == 'X':
-            nc_coverage_meta['box']['westlimit'] = var_detail['coordinate_start']
-            nc_coverage_meta['box']['eastlimit'] = var_detail['coordinate_end']
-            nc_coverage_meta['box']['units'] = var_detail['coordinate_units']
+            nc_coverage_meta['original-box']['westlimit'] = var_detail['coordinate_start']
+            nc_coverage_meta['original-box']['eastlimit'] = var_detail['coordinate_end']
+            nc_coverage_meta['original-box']['units'] = var_detail['coordinate_units']
 
         elif coor_type == 'Y':
-            nc_coverage_meta['box']['southlimit'] = var_detail['coordinate_start']
-            nc_coverage_meta['box']['northlimit'] = var_detail['coordinate_end']
-            nc_coverage_meta['box']['units'] = var_detail['coordinate_units']
+            nc_coverage_meta['original-box']['southlimit'] = var_detail['coordinate_start']
+            nc_coverage_meta['original-box']['northlimit'] = var_detail['coordinate_end']
+            nc_coverage_meta['original-box']['units'] = var_detail['coordinate_units']
 
-    if ('units' in nc_coverage_meta['box']) and (re.match('degree', nc_coverage_meta['box']['units'], re.I)):
-        nc_coverage_meta['box']['units'] = 'degree'
+    if ('units' in nc_coverage_meta['original-box']) and (re.match('degree', nc_coverage_meta['original-box']['units'], re.I)):
+        nc_coverage_meta['original-box']['units'] = 'degree'
 
-    nc_coverage_meta['box']['projection'] = get_nc_grid_mapping_projection_name(nc_dataset)
+    nc_coverage_meta['original-box']['projection'] = get_nc_grid_mapping_projection_name(nc_dataset)
     ## ToDo consider the boundary variable info for spatial meta!
+
+    # get the info of the 'box' as wgs84 web mercator
+    if set(['northlimit','westlimit','southlimit','eastlimit']).issubset(nc_coverage_meta['original-box'].keys()):
+        if nc_coverage_meta['original-box']['projection'] != 'Unknown':
+                pass
+        elif nc_coverage_meta['original-box'].get('units', None) == 'degree':
+            ori_proj = Proj(init='epsg:4326')  # suppose the ggeographic cs is wgs84 refer to how arcgis is doing
+            wgs84_proj = Proj(init='epsg:3875')
+
+            westlimit,northlimit = transform(ori_proj,wgs84_proj,
+                                              nc_coverage_meta['original-box']['westlimit'],
+                                              nc_coverage_meta['original-box']['northlimit'])
+
+            eastlimit,southlimit = transform(ori_proj,wgs84_proj,
+                                              nc_coverage_meta['original-box']['eastlimit'],
+                                              nc_coverage_meta['original-box']['southlimit'])
+
+            nc_coverage_meta['box']['southlimit'] = southlimit
+            nc_coverage_meta['box']['northlimit'] = northlimit
+            nc_coverage_meta['box']['eastlimit'] = eastlimit
+            nc_coverage_meta['box']['westlimit'] = westlimit
 
     return nc_coverage_meta
 

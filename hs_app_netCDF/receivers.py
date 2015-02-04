@@ -36,11 +36,11 @@ def netcdf_create_resource_trigger(sender, **kwargs):
                 relation = {'relation': {'type': 'cites', 'value': res_dublin_core_meta['references']}}
                 metadata.append(relation)
             # add coverage - period
-            if 'period' in res_dublin_core_meta.keys():
+            if res_dublin_core_meta['period']:
                 period = {'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
                 metadata.append(period)
             # add coverage - box
-            if 'box' in res_dublin_core_meta.keys():
+            if res_dublin_core_meta['box']:
                 box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
                 metadata.append(box)
 
