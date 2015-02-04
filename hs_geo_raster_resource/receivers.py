@@ -38,7 +38,6 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
                 ('noDataValue', res_md_dict['cell_and_band_info']['noDataValue'])
                 ])
             metadata.append({'CellInformation': cellInfo})
-            bcount = res_md_dict['cell_and_band_info']['bandCount']
 
         else:
             # initialize required raster metadata to be place holders to be edited later by users

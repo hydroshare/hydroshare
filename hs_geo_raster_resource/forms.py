@@ -4,6 +4,9 @@ from crispy_forms.layout import *
 from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
+from django.forms.models import modelformset_factory
+from hs_geo_raster_resource.models import *
+from functools import partial, wraps
 
 class CellInfoFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
@@ -34,6 +37,12 @@ class CellInfoForm(ModelForm):
         widgets = {'CellInformation': forms.TextInput()}
 
 class CellInfoValidationForm(forms.Form):
+                            Fieldset(element_name,
+                            element_layout,
+                            ),
+                        )
+
+class RasterMetadataValidationForm(forms.Form):
     rows = forms.IntegerField(required=True)
     columns = forms.IntegerField(required=True)
     cellSizeXValue = forms.FloatField(required = True)
