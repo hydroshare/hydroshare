@@ -590,7 +590,7 @@ def create_resource_new_workflow(request, *args, **kwargs):
 
     metadata = []
     # Send pre-create resource signal - let any other app populate the empty metadata list object
-    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, resource=None, **kwargs)
+    pre_create_resource.send(sender=res_cls, metadata=metadata, files=resource_files, **kwargs)
 
     add_title = True
     for element in metadata:
