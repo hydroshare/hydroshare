@@ -1,8 +1,8 @@
 """
 Module extracts metadata from NetCDF file to complete the required HydroShare NetCDF Science Metadata
 
-Reference code：
-reprojection:
+Reference code
+reprojection
 http://gis.stackexchange.com/questions/78838/how-to-convert-projected-coordinates-to-lat-lon-using-python
 
 """
@@ -155,6 +155,14 @@ def extract_nc_coverage_meta(nc_dataset):
             nc_coverage_meta['box']['northlimit'] = northlimit
             nc_coverage_meta['box']['eastlimit'] = eastlimit
             nc_coverage_meta['box']['westlimit'] = westlimit
+
+        nc_coverage_meta['box']['units'] = 'meters'
+    else:
+        nc_coverage_meta['box']['southlimit'] = 0
+        nc_coverage_meta['box']['northlimit'] = 0
+        nc_coverage_meta['box']['eastlimit'] = 0
+        nc_coverage_meta['box']['westlimit'] = 0
+        nc_coverage_meta['box']['units'] = 'Unknown'
 
     return nc_coverage_meta
 

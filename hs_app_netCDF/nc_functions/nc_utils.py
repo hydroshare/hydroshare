@@ -3,7 +3,7 @@ Module provides utility functions to manipulate netCDF dataset.
 - classify variable types of coordinate, coordinate bounds, grid mapping, scientific data, auxiliary coordinate
 - show original metadata of a variable
 
-Reference code:
+Reference code
 http://netcdf4-python.googlecode.com/svn/trunk/docs/netCDF4-module.html
 """
 __author__ = 'Tian Gan'
