@@ -595,9 +595,7 @@ def create_resource_new_workflow(request, *args, **kwargs):
     # also pass title to other apps, and give other apps a chance to populate page_redirect_url if they want
     # to redirect to their own page for resource creation rather than use core resource creation code
     pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, title=res_title, url_key=url_key, page_url_dict=page_url_dict, **kwargs)
-
     # redirect to a specific resource creation page if other apps choose so
-
     if url_key in page_url_dict:
         return HttpResponseRedirect(page_url_dict[url_key])
 
