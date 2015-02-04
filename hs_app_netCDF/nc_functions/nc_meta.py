@@ -71,10 +71,10 @@ def extract_nc_global_meta(nc_dataset):
     nc_global_meta = {}
 
     dublincore_vs_convention = {
-        'creator_name': ['creator_name', 'creator_institution'],
-        'creator_email': ['creator_email'],
-        'creator_uri': ['creator_uri'],
-        'contributor_name': ['contributor_name'],
+        #'creator_name': ['creator_name', 'creator_institution'],
+        #'creator_email': ['creator_email'],
+        #'creator_uri': ['creator_uri'],
+        #'contributor_name': ['contributor_name'],
         #'convention': ['Conventions'],
         'title': ['title'],
         'subject': ['keywords'],
