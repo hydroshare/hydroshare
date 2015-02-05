@@ -120,13 +120,13 @@ def extract_nc_coverage_meta(nc_dataset):
                 #'units': var_detail['coordinate_units']
             }
         elif coor_type == 'X':
-            nc_coverage_meta['original-box']['westlimit'] = var_detail['coordinate_start']
-            nc_coverage_meta['original-box']['eastlimit'] = var_detail['coordinate_end']
+            nc_coverage_meta['original-box']['westlimit'] = min(var_detail['coordinate_start'], var_detail['coordinate_end'])
+            nc_coverage_meta['original-box']['eastlimit'] = max(var_detail['coordinate_start'], var_detail['coordinate_end'])
             nc_coverage_meta['original-box']['units'] = var_detail['coordinate_units']
 
         elif coor_type == 'Y':
-            nc_coverage_meta['original-box']['southlimit'] = var_detail['coordinate_start']
-            nc_coverage_meta['original-box']['northlimit'] = var_detail['coordinate_end']
+            nc_coverage_meta['original-box']['southlimit'] = min(var_detail['coordinate_start'], var_detail['coordinate_end'])
+            nc_coverage_meta['original-box']['northlimit'] = max(var_detail['coordinate_start'], var_detail['coordinate_end'])
             nc_coverage_meta['original-box']['units'] = var_detail['coordinate_units']
 
     if ('units' in nc_coverage_meta['original-box']) and (re.match('degree', nc_coverage_meta['original-box']['units'], re.I)):
@@ -135,34 +135,28 @@ def extract_nc_coverage_meta(nc_dataset):
     nc_coverage_meta['original-box']['projection'] = get_nc_grid_mapping_projection_name(nc_dataset)
     ## ToDo consider the boundary variable info for spatial meta!
 
-    # get the info of the 'box' as wgs84 web mercator
+    # get the info of the 'box' as wgs84
     if set(['northlimit','westlimit','southlimit','eastlimit']).issubset(nc_coverage_meta['original-box'].keys()):
-        if nc_coverage_meta['original-box']['projection'] != 'Unknown':
-                pass
+
+        proj_name = nc_coverage_meta['original-box']['projection']
+        southlimit = nc_coverage_meta['original-box']['southlimit']
+        northlimit = nc_coverage_meta['original-box']['northlimit']
+        eastlimit = nc_coverage_meta['original-box']['eastlimit']
+        westlimit = nc_coverage_meta['original-box']['westlimit']
+
+        if proj_name != 'Unknown':
+            projection_import_string = get_nc_grid_mapping_projection_import_string(nc_dataset)
+            if projection_import_string != '':
+                ori_proj = Proj(projection_import_string)
+                wgs84_proj = Proj(init='epsg:4326')
+                nc_coverage_meta['box']['westlimit'], nc_coverage_meta['box']['northlimit'] = transform(ori_proj, wgs84_proj, westlimit, northlimit)
+                nc_coverage_meta['box']['eastlimit'], nc_coverage_meta['box']['southlimit'] = transform(ori_proj, wgs84_proj, eastlimit, southlimit)
+
         elif nc_coverage_meta['original-box'].get('units', None) == 'degree':
-            ori_proj = Proj(init='epsg:4326')  # suppose the ggeographic cs is wgs84 refer to how arcgis is doing
-            wgs84_proj = Proj(init='epsg:3875')
-
-            westlimit,northlimit = transform(ori_proj,wgs84_proj,
-                                              nc_coverage_meta['original-box']['westlimit'],
-                                              nc_coverage_meta['original-box']['northlimit'])
-
-            eastlimit,southlimit = transform(ori_proj,wgs84_proj,
-                                              nc_coverage_meta['original-box']['eastlimit'],
-                                              nc_coverage_meta['original-box']['southlimit'])
-
             nc_coverage_meta['box']['southlimit'] = southlimit
             nc_coverage_meta['box']['northlimit'] = northlimit
-            nc_coverage_meta['box']['eastlimit'] = eastlimit
-            nc_coverage_meta['box']['westlimit'] = westlimit
-
-        nc_coverage_meta['box']['units'] = 'meters'
-    else:
-        nc_coverage_meta['box']['southlimit'] = 0
-        nc_coverage_meta['box']['northlimit'] = 0
-        nc_coverage_meta['box']['eastlimit'] = 0
-        nc_coverage_meta['box']['westlimit'] = 0
-        nc_coverage_meta['box']['units'] = 'Unknown'
+            nc_coverage_meta['box']['eastlimit'] = eastlimit if eastlimit <= 180 else eastlimit-360
+            nc_coverage_meta['box']['westlimit'] = westlimit if westlimit <= 180 else westlimit-360
 
     return nc_coverage_meta
 
