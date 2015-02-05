@@ -12,6 +12,7 @@ from nc_utils import *
 import json
 import netCDF4
 from pyproj import Proj, transform
+import numpy
 from collections import OrderedDict
 
 
@@ -75,7 +76,7 @@ def extract_nc_global_meta(nc_dataset):
         #'creator_email': ['creator_email'],
         #'creator_uri': ['creator_uri'],
         #'contributor_name': ['contributor_name'],
-        #'convention': ['Conventions'],
+        'convention': ['Conventions'],
         'title': ['title'],
         'subject': ['keywords'],
         'description': ['summary', 'comment', ],
@@ -102,63 +103,113 @@ def extract_nc_coverage_meta(nc_dataset):
 
     Return netCDF time start and end info
     """
+    period_info = get_period_info(nc_dataset)
+    original_box_info = get_original_box_info(nc_dataset)
+    box_info = get_box_info(nc_dataset, original_box_info)
 
     nc_coverage_meta = {
-        'period': {},
-        'box': {},
-        'original-box': {}
+        'period': period_info,
+        'box': box_info,
+        'original-box': original_box_info,
     }
-    nc_coordinate_variables_detail = get_nc_coordinate_variables_detail(nc_dataset)
+    return nc_coverage_meta
 
-    # get the info of 'period' and 'original-box'
+
+def get_period_info(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF original coverage period info
+    """
+    nc_coordinate_variables_detail = get_nc_coordinate_variables_detail(nc_dataset)
+    period_info = {}
     for var_name, var_detail in nc_coordinate_variables_detail.items():
         coor_type = var_detail['coordinate_type']
         if coor_type == 'T':
-            nc_coverage_meta['period'] = {
+            period_info = {
                 'start': var_detail['coordinate_start'],
                 'end': var_detail['coordinate_end'],
                 #'units': var_detail['coordinate_units']
             }
-        elif coor_type == 'X':
-            nc_coverage_meta['original-box']['westlimit'] = min(var_detail['coordinate_start'], var_detail['coordinate_end'])
-            nc_coverage_meta['original-box']['eastlimit'] = max(var_detail['coordinate_start'], var_detail['coordinate_end'])
-            nc_coverage_meta['original-box']['units'] = var_detail['coordinate_units']
+    return period_info
 
+
+def get_original_box_info(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF original coverage box info
+    """
+
+    nc_coordinate_variables_detail = get_nc_coordinate_variables_detail(nc_dataset)
+    original_box_info = {}
+    for var_name, var_detail in nc_coordinate_variables_detail.items():
+        coor_type = var_detail['coordinate_type']
+        if coor_type == 'X':
+            original_box_info['westlimit'] = min(var_detail['coordinate_start'], var_detail['coordinate_end'])
+            original_box_info['eastlimit'] = max(var_detail['coordinate_start'], var_detail['coordinate_end'])
+            original_box_info['units'] = var_detail['coordinate_units']
         elif coor_type == 'Y':
-            nc_coverage_meta['original-box']['southlimit'] = min(var_detail['coordinate_start'], var_detail['coordinate_end'])
-            nc_coverage_meta['original-box']['northlimit'] = max(var_detail['coordinate_start'], var_detail['coordinate_end'])
-            nc_coverage_meta['original-box']['units'] = var_detail['coordinate_units']
+            original_box_info['southlimit'] = min(var_detail['coordinate_start'], var_detail['coordinate_end'])
+            original_box_info['northlimit'] = max(var_detail['coordinate_start'], var_detail['coordinate_end'])
+            original_box_info['units'] = var_detail['coordinate_units']
 
-    if ('units' in nc_coverage_meta['original-box']) and (re.match('degree', nc_coverage_meta['original-box']['units'], re.I)):
-        nc_coverage_meta['original-box']['units'] = 'degree'
+    if re.match('degree', original_box_info.get('units', ''), re.I):
+        original_box_info['units'] = 'degree'
 
-    nc_coverage_meta['original-box']['projection'] = get_nc_grid_mapping_projection_name(nc_dataset)
-    ## ToDo consider the boundary variable info for spatial meta!
+    if original_box_info:
+        original_box_info['projection'] = get_nc_grid_mapping_projection_name(nc_dataset)
 
-    # get the info of the 'box' as wgs84
-    if set(['northlimit','westlimit','southlimit','eastlimit']).issubset(nc_coverage_meta['original-box'].keys()):
+    return original_box_info
 
-        proj_name = nc_coverage_meta['original-box']['projection']
-        southlimit = nc_coverage_meta['original-box']['southlimit']
-        northlimit = nc_coverage_meta['original-box']['northlimit']
-        eastlimit = nc_coverage_meta['original-box']['eastlimit']
-        westlimit = nc_coverage_meta['original-box']['westlimit']
 
-        if proj_name != 'Unknown':
-            projection_import_string = get_nc_grid_mapping_projection_import_string(nc_dataset)
-            if projection_import_string != '':
-                ori_proj = Proj(projection_import_string)
-                wgs84_proj = Proj(init='epsg:4326')
-                nc_coverage_meta['box']['westlimit'], nc_coverage_meta['box']['northlimit'] = transform(ori_proj, wgs84_proj, westlimit, northlimit)
-                nc_coverage_meta['box']['eastlimit'], nc_coverage_meta['box']['southlimit'] = transform(ori_proj, wgs84_proj, eastlimit, southlimit)
+def get_box_info(nc_dataset, original_box_info):
+    """
+    (object)-> dict
 
-        elif nc_coverage_meta['original-box'].get('units', None) == 'degree':
-            nc_coverage_meta['box']['southlimit'] = southlimit
-            nc_coverage_meta['box']['northlimit'] = northlimit
-            nc_coverage_meta['box']['eastlimit'] = eastlimit if eastlimit <= 180 else eastlimit-360
-            nc_coverage_meta['box']['westlimit'] = westlimit if westlimit <= 180 else westlimit-360
+    Return: the netCDF coverage box info as wgs84 crs
+    """
+    box_info = {}
 
-    return nc_coverage_meta
+    # condition 1: check the original-box info
+    if original_box_info.get('projection', ''):
+        projection_import_string = get_nc_grid_mapping_projection_import_string(nc_dataset)
+        if projection_import_string:
+            ori_proj = Proj(projection_import_string)
+            wgs84_proj = Proj(init='epsg:4326')
+            box_info['westlimit'], box_info['northlimit'] = transform(ori_proj, wgs84_proj,
+                                                                      original_box_info['westlimit'],
+                                                                      original_box_info['northlimit'])
+            box_info['eastlimit'], box_info['southlimit'] = transform(ori_proj, wgs84_proj,
+                                                                      original_box_info['eastlimit'],
+                                                                      original_box_info['southlimit'])
+    elif original_box_info.get('units', '') == 'degree':
+        box_info['southlimit'] = original_box_info['southlimit']
+        box_info['northlimit'] = original_box_info['northlimit']
+        box_info['eastlimit'] = original_box_info['eastlimit'] #if original_box_info['eastlimit'] <= 180 else original_box_info['eastlimit']-360
+        box_info['westlimit'] = original_box_info['westlimit'] #if original_box_info['westlimit'] <= 180 else original_box_info['westlimit']-360
+
+    # condition 2: check the auxiliary coordinate
+    nc_variables = get_nc_auxiliary_coordinate_variables(nc_dataset)
+    if (not box_info) and nc_variables:
+        for var_name, nc_variable in nc_variables.items():
+            var_standard_name = getattr(nc_variable, 'standard_name', getattr(nc_variable, 'long_name', None))
+            if var_standard_name:
+                if re.match(var_standard_name, 'latitude', re.I):
+                    lat_data = nc_variable[:]
+                    box_info['southlimit'] = lat_data[numpy.unravel_index(lat_data.argmin(), lat_data.shape)]
+                    box_info['northlimit'] = lat_data[numpy.unravel_index(lat_data.argmax(), lat_data.shape)]
+                elif re.match(var_standard_name, 'longitude', re.I):
+                    lon_data = nc_variable[:]
+                    westlimit = lon_data[numpy.unravel_index(lon_data.argmin(), lon_data.shape)]
+                    eastlimit = lon_data[numpy.unravel_index(lon_data.argmax(), lon_data.shape)]
+                    box_info['westlimit'] = westlimit #if westlimit <= 180 else westlimit-360
+                    box_info['eastlimit'] = eastlimit #if eastlimit <= 180 else eastlimit-360
+
+    if box_info:
+        box_info['units'] = 'degree'
+
+    return box_info
 
 
 def get_type_specific_meta(nc_dataset):
