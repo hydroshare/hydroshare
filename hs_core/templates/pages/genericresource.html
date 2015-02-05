@@ -853,23 +853,6 @@
                                 $res_title.text(updated_title);
                             }
                         }
-
-                        if (json_response.hasOwnProperty('metadata_status')){
-                            if(json_response.metadata_status !== $('#metadata-status').text()){
-                                $('#metadata-status').text(json_response.metadata_status);
-                                if(json_response.metadata_status == "Complete")
-                                {
-                                    alert("Metadata Status:Complete");
-                                    $('#metadata-status').removeClass('text-danger');
-                                    $('#metadata-status').addClass('text-success')
-                                }
-                                else{
-                                    $('#metadata-status').removeClass('text-success');
-                                    $('#metadata-status').addClass('text-danger')
-                                }
-                            }
-                        }
-
                         $('#' + form_id).before($alert_success);
                         $('#' + form_id).closest('div').find('#error-alert').each(function(){
                             this.remove();
