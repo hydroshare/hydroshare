@@ -224,6 +224,7 @@ def get_nc_coordinate_bounds_variable_namelist(nc_dataset):
 
     Return: the netCDF coordinate bound variable names
     """
+
     nc_coordinate_bound_variables = get_nc_coordinate_bounds_variables(nc_dataset)
     nc_coordinate_bound_variable_namelist = list(nc_coordinate_bound_variables.keys())
 
@@ -276,7 +277,8 @@ def get_nc_auxiliary_coordinate_variables(nc_dataset):
     nc_auxiliary_coordinate_variable_namelist = get_nc_auxiliary_coordinate_variable_namelist(nc_dataset)
     nc_auxiliary_coordinate_variables = {}
     for name in nc_auxiliary_coordinate_variable_namelist:
-        nc_auxiliary_coordinate_variables[name] = nc_dataset.variables[name]
+        if nc_dataset.variables.get(name, ''):
+            nc_auxiliary_coordinate_variables[name] = nc_dataset.variables[name]
 
     return nc_auxiliary_coordinate_variables
 
@@ -284,9 +286,9 @@ def get_nc_auxiliary_coordinate_variables(nc_dataset):
 # Function for Grid Mapping Variable ###############################################################################
 def get_nc_grid_mapping_variable(nc_dataset):
     """
-    (object)-> list or None
+    (object)-> object
 
-    Return: the netCDF grid mapping variable object else none
+    Return: the netCDF grid mapping variable object
     """
 
     nc_all_variables = nc_dataset.variables
@@ -300,16 +302,16 @@ def get_nc_grid_mapping_variable(nc_dataset):
 
 def get_nc_grid_mapping_projection_name(nc_dataset):
     """
-    (object)-> list
+    (object)-> string
 
-    Return: the netCDF grid mapping variable names
+    Return: the netCDF grid mapping projection name
     """
 
     nc_grid_mapping_variable = get_nc_grid_mapping_variable(nc_dataset)
     if nc_grid_mapping_variable is not None:
         nc_grid_mapping_projection_name = nc_grid_mapping_variable.grid_mapping_name
     else:
-        nc_grid_mapping_projection_name = 'Unknown'
+        nc_grid_mapping_projection_name = ''
 
     return nc_grid_mapping_projection_name
 
