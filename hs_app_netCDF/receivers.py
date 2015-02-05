@@ -14,9 +14,13 @@ def netcdf_create_resource_trigger(sender, **kwargs):
             # Extract the metadata from netcdf file
             infile = files[0]
             import nc_functions.nc_meta as nc_meta
-            res_md_dict = nc_meta.get_nc_meta_dict(infile.file.name)
-            res_dublin_core_meta = res_md_dict['dublin_core_meta']
-            res_type_specific_meta = res_md_dict['type_specific_meta']
+            try:
+                res_md_dict = nc_meta.get_nc_meta_dict(infile.file.name)
+                res_dublin_core_meta = res_md_dict['dublin_core_meta']
+                res_type_specific_meta = res_md_dict['type_specific_meta']
+            except:
+                res_dublin_core_meta = {}
+                res_type_specific_meta = {}
 
             # For dict key name and structure refer to the hs_core/models.py
             # add title
