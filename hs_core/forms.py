@@ -22,6 +22,8 @@ ModalDialogLayoutAddCreator = Layout(
                                     '<div class="modal-dialog">'
                                         '<div class="modal-content">'
                                             '<form action="{{ add_creator_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
+                                            '{% csrf_token %} '
+                                            '<input name="resource-mode" type="hidden" value="edit"/>'
                                             '<div class="modal-header">'
                                                 '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
                                                 '<h4 class="modal-title" id="myModalLabel">Add Creator</h4>'
@@ -53,6 +55,8 @@ ModalDialogLayoutAddContributor = Layout(
                                     '<div class="modal-dialog">'
                                         '<div class="modal-content">'
                                             '<form action="{{ add_contributor_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
+                                            '{% csrf_token %} '
+                                            '<input name="resource-mode" type="hidden" value="edit"/>'
                                             '<div class="modal-header">'
                                                 '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
                                                 '<h4 class="modal-title" id="myModalLabel">Add Contributor</h4>'
@@ -84,6 +88,8 @@ ModalDialogLayoutAddRelation = Layout(
                                         '<div class="modal-dialog">'
                                             '<div class="modal-content">'
                                                 '<form action="{{ add_relation_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
+                                                '{% csrf_token %} '
+                                                '<input name="resource-mode" type="hidden" value="edit"/>'
                                                 '<div class="modal-header">'
                                                     '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
                                                     '<h4 class="modal-title" id="myModalLabel">Add Relation</h4>'
@@ -111,6 +117,8 @@ ModalDialogLayoutAddSource = Layout(
                                         '<div class="modal-dialog">'
                                             '<div class="modal-content">'
                                                 '<form action="{{ add_source_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
+                                                '{% csrf_token %} '
+                                                '<input name="resource-mode" type="hidden" value="edit"/>'
                                                 '<div class="modal-header">'
                                                     '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
                                                     '<h4 class="modal-title" id="myModalLabel">Add Source</h4>'
@@ -426,8 +434,6 @@ class MetaDataElementDeleteForm(forms.Form):
 class MetaDataForm(forms.Form):
     def __init__(self, resource_mode='view', extended_metadata_layout=None, *args, **kwargs):
         super(MetaDataForm, self).__init__(*args, **kwargs)
-        # if not extended_metadata_layout:
-        #     extended_metadata_layout = HTML('<h3>No extended metadata for this resource.</h3>')
 
         if resource_mode == 'edit':
             creator_layout = CreatorLayoutEdit
@@ -544,20 +550,6 @@ class MetaDataForm(forms.Form):
                                     HTML("</div>"),
                                 ),
 
-                                # AccordionGroup('Identifiers (read only)',
-                                #     HTML("<div class='form-group' id='identifier'>"),
-                                #     HTML("{{ identifier_formset.management_form }}"),
-                                #     identifier_layout,
-                                #     HTML("</div>"),
-                                # ),
-
-                                # AccordionGroup('Formats/MIME Types (read only)',
-                                #     HTML("<div class='form-group' id='format'>"),
-                                #     HTML("{{ format_formset.management_form }}"),
-                                #     format_layout,
-                                #     HTML("</div>"),
-                                # ),
-
                             ),
                         ),
 
@@ -599,13 +591,6 @@ class MetaDataForm(forms.Form):
                                     contributor_layout,
                                     HTML("</div>"),
                                 ),
-
-                                # AccordionGroup('Valid date (optional)',
-                                #     HTML('<div class="form-group" id="validdate"> '
-                                #             '{% load crispy_forms_tags %} '
-                                #             '{% crispy valid_date_form %} '
-                                #          '</div>'),
-                                # ),
 
                                 AccordionGroup('Temporal Coverage (optional)',
                                     HTML('<div class="form-group" id="coverage-temporal"> '
@@ -655,20 +640,6 @@ class MetaDataForm(forms.Form):
                                     relation_layout,
                                     HTML("</div>"),
                                 ),
-
-                                # AccordionGroup('Identifiers (read only)',
-                                #     HTML("<div class='form-group' id='identifier'>"),
-                                #     HTML("{{ identifier_formset.management_form }}"),
-                                #     identifier_layout,
-                                #     HTML("</div>"),
-                                # ),
-
-                                # AccordionGroup('Formats/MIME Types (read only)',
-                                #     HTML("<div class='form-group' id='format'>"),
-                                #     HTML("{{ format_formset.management_form }}"),
-                                #     format_layout,
-                                #     HTML("</div>"),
-                                # ),
 
                             ),
                             modal_dialog_add_creator,
@@ -773,7 +744,7 @@ class PartyForm(ModelForm):
         fields = ['name', 'description', 'organization', 'email', 'address', 'phone', 'homepage']
 
         # TODO: field labels and widgets types to be specified
-
+        labels = {'description': 'HydroShare User Identifier (URL)'}
 
 class CreatorForm(PartyForm):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
@@ -810,6 +781,7 @@ class CreatorForm(PartyForm):
         model = Creator
         fields = PartyForm.Meta.fields
         fields.append("order")
+        labels = PartyForm.Meta.labels
 
 
 class PartyValidationForm(forms.Form):
@@ -903,6 +875,7 @@ class ContributorForm(PartyForm):
     class Meta:
         model = Contributor
         fields = PartyForm.Meta.fields
+        labels = PartyForm.Meta.labels
         if 'order' in fields:
             fields.remove('order')
 
@@ -992,14 +965,13 @@ class RelationForm(ModelForm):
         fields = ['type', 'value']
         labels = {'type': 'Relation type', 'value': 'Related to'}
 
-        # TODO: field labels and widgets types to be specified
-
 
 class RelationValidationForm(forms.Form):
     type = forms.CharField(max_length=100)
     value = forms.CharField(max_length=500)
 
 RelationFormSet = formset_factory(RelationForm, formset=BaseRelationFormSet)
+
 
 class SourceFormSetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
@@ -1059,9 +1031,6 @@ class SourceForm(ModelForm):
         fields = ['derived_from']
 
 
-        # TODO: field labels and widgets types to be specified
-
-
 class SourceValidationForm(forms.Form):
     derived_from = forms.CharField(max_length=300)
 
@@ -1117,7 +1086,6 @@ class IdentifierForm(ModelForm):
         # fields that will be displayed are specified here - but not necessarily in the same order
         fields = ['name', 'url']
 
-        # TODO: field labels and widgets types to be specified
 
 IdentifierFormSet = formset_factory(IdentifierForm, formset=BaseIdentifierFormSet)
 
@@ -1167,8 +1135,6 @@ class FormatForm(ModelForm):
         # fields that will be displayed are specified here - but not necessarily in the same order
         fields = ['value']
         labels = {'value': 'Mime type'}
-
-        # TODO: field labels and widgets types to be specified
 
 FormatFormSet = formset_factory(FormatForm, formset=BaseFormatFormSet)
 
@@ -1247,11 +1213,13 @@ class TitleForm(ModelForm):
         exclude = ['content_object']
         labels = {'value': ''}
 
+
 class TitleValidationForm(forms.Form):
     value = forms.CharField(max_length=300)
 
     def get_metadata(self):
         return {'title': self.cleaned_data}
+
 
 # This form handles multiple subject elements - this was not implemented as formset
 # since we are providing one input field to enter multiple keywords (subjects) as comma separated values
@@ -1317,11 +1285,13 @@ class AbstractForm(ModelForm):
         exclude = ['content_object']
         labels = {'abstract': ''}
 
+
 class AbstractValidationForm(forms.Form):
     abstract = forms.CharField(max_length=5000)
 
     def get_metadata(self):
         return {'description': self.cleaned_data}
+
 
 class RightsFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
@@ -1495,6 +1465,7 @@ class CoverageSpatialFormHelper(BaseFormHelper):
         kwargs['coverage'] = 'spatial'
         super(CoverageSpatialFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
+
 class CoverageSpatialForm(forms.Form):
     TYPE_CHOICES = (
         ('box', 'Box'),
@@ -1555,9 +1526,6 @@ class CoverageSpatialForm(forms.Form):
                 self._errors['north'] = ["Data for north is missing"]
                 is_form_errors = True
                 del self.cleaned_data['north']
-            # elif len(north.trim()) == 0:
-            #     self._errors['north'] = ["Data for north is missing"]
-            #     is_form_errors = True
 
             if not east:
                 self._errors['east'] = ["Data for east is missing"]
@@ -1582,11 +1550,7 @@ class CoverageSpatialForm(forms.Form):
 
             temp_cleaned_data['north'] = str(temp_cleaned_data['north'])
             temp_cleaned_data['east'] = str(temp_cleaned_data['east'])
-            # if temp_cleaned_data['elevation'] is not None:
-            #     temp_cleaned_data['elevation'] = str(temp_cleaned_data['elevation'])
-            # else:
-            #     del temp_cleaned_data['zunits']
-            #     del temp_cleaned_data['elevation']
+
         else:   # box type coverage
             if 'north' in temp_cleaned_data:
                 del temp_cleaned_data['north']
@@ -1602,17 +1566,6 @@ class CoverageSpatialForm(forms.Form):
                     is_form_errors = True
                     del self.cleaned_data[limit]
 
-            # uplimit = temp_cleaned_data.get('uplimit', None)
-            # downlimit = temp_cleaned_data.get('downlimit', None)
-            #
-            # if uplimit and not downlimit:
-            #     self._errors['downlimit'] = ["Data for downlimit is missing"]
-            #     is_form_errors = True
-            #
-            # if downlimit and not uplimit:
-            #     self._errors['uplimit'] = ["Data for uplimit is missing"]
-            #     is_form_errors = True
-
             if is_form_errors:
                 return self.cleaned_data
 
@@ -1620,18 +1573,6 @@ class CoverageSpatialForm(forms.Form):
             temp_cleaned_data['eastlimit'] = str(temp_cleaned_data['eastlimit'])
             temp_cleaned_data['southlimit'] = str(temp_cleaned_data['southlimit'])
             temp_cleaned_data['westlimit'] = str(temp_cleaned_data['westlimit'])
-            # if temp_cleaned_data['uplimit'] is not None:
-            #     temp_cleaned_data['uplimit'] = str(temp_cleaned_data['uplimit'])
-            # else:
-            #     del temp_cleaned_data['uplimit']
-            #
-            # if temp_cleaned_data['downlimit'] is not None:
-            #     temp_cleaned_data['downlimit'] = str(temp_cleaned_data['downlimit'])
-            # else:
-            #     del temp_cleaned_data['downlimit']
-            #
-            # if 'uplimit' not in temp_cleaned_data and 'downlimit' not in temp_cleaned_data:
-            #     del temp_cleaned_data['zunits']
 
         del temp_cleaned_data['type']
         if 'projection' in temp_cleaned_data:

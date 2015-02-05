@@ -59,25 +59,318 @@
             <h2>Science Metadata</h2>
 
             <div class="form-group">
-                <button id="metadata-show-toggle" type="button" class="btn btn-primary" onclick="toogle_metadata_display()">Collapse All</button>
-{#                <label for="" class="col-sm-2 control-label" style="margin-left: -15px"><h4>Science Metadata</h4></label>#}
-{#                <div class="col-sm-12">#}
-                    {% crispy metadata_form %}
-{#                </div>#}
-            </div>
-            {# TODO: Pabitra to check if this for loop code is relevant #}
-            {% for attr, val_dict in core_metadata.items %}
-                <h5>{{ attr }}</h5>
-                <table class="table table-condensed">
-                    {% for subattr, subval in val_dict.items %}
-                    <tr>
-                        <th>{{ subattr }}</th>
-                        <td>{{ subval }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
-            {% endfor %}
+               {% if metadata_form %}
+                    <button id="metadata-show-toggle" type="button" class="btn btn-primary" onclick="toogle_metadata_display()">Collapse All</button>
+                     {% crispy metadata_form %}
+               {% else %}
+                   {% if page.perms.change %}
+                       <form action="{{ cm.get_absolute_url }}" method="post">
+                        {% csrf_token %}
+                        <input name="resource-mode" type="hidden" value="edit"/>
+                        <button id="edit-metadata" type="submit" class="btn btn-primary">Edit</button>
+                        </form>
+                   {% endif %}
+                   <div>
+                       {% if metadata_status == 'Incomplete' %}
+                            <table class="table table-condensed" style="margin-top: 2px; border: 2px solid red">
+                                <tr style="color: red"><td><h4>Data for the following required elements are missing:</h4></td></tr>
+                                {% if not abstract %}
+                                    <tr><td>Abstract</td></tr>
+                                {% endif %}
+                                {% if not keywords %}
+                                    <tr><td>Keywords</td></tr>
+                                {% endif %}
+                            </table>
+                       {% endif %}
+                   </div>
+                   <div>
+                    <h4><strong>Title:</strong></h4>
+                    <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                    {{ title }}
+                    <hr>
+                   </div>
+                   <div>
+                   {%  if abstract %}
+                    <h4><strong>Abstract:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        {{ abstract }}
+                    <hr>
+                   {%  endif %}
+                   </div>
+                   <div>
+                    <h4><strong>Creators:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                       {% for cr in creators %}
+                           <div class="row">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ cr.name }}</div>
+                           </div>
+                           {% if cr.description %}
+                               <div class="row">
+                               <div class="col-sm-4"><strong>HydroShare User Identifier:</strong></div>
+                               <div class="col-sm-8">{{ cr.description }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cr.organization %}
+                               <div class="row">
+                               <div class="col-sm-4"><strong>Organization:</strong></div>
+                               <div class="col-sm-8">{{ cr.organization }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cr.email %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Email:</strong></div>
+                                <div class="col-sm-8">{{ cr.email }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cr.address %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Address:</strong></div>
+                                <div class="col-sm-8">{{ cr.address }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cr.phone %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Phone:</strong></div>
+                                <div class="col-sm-8">{{ cr.phone }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cr.homepage %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Home Page:</strong></div>
+                                <div class="col-sm-8">{{ cr.homepage }}</div>
+                               </div>
+                           {% endif %}
+                        <hr>
+                       {% endfor %}
+                    </div>
+                   <div>
+                   {% if contributors %}
+                    <h4><strong>Contributors:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                       {% for cont in contributors %}
+                           <div class="row">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ cont.name }}</div>
+                           </div>
+                           {% if cont.description %}
+                               <div class="row">
+                               <div class="col-sm-4"><strong>HydroShare User Identifier:</strong></div>
+                               <div class="col-sm-8">{{ cont.description }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cont.organization %}
+                               <div class="row">
+                               <div class="col-sm-4"><strong>Organization:</strong></div>
+                               <div class="col-sm-8">{{ cont.organization }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cont.email %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Email:</strong></div>
+                                <div class="col-sm-8">{{ cont.email }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cont.address %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Address:</strong></div>
+                                <div class="col-sm-8">{{ cont.address }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cont.phone %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Phone:</strong></div>
+                                <div class="col-sm-8">{{ cont.phone }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cont.homepage %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Home Page:</strong></div>
+                                <div class="col-sm-8">{{ cont.homepage }}</div>
+                               </div>
+                           {% endif %}
+                           <hr>
+                       {% endfor %}
+                   {% endif %}
+                   </div>
+                   <div>
+                   {%  if temporal_coverage %}
+                    <h4><strong>Temporal Coverage:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Start Date:</strong></div>
+                            <div class="col-sm-8">{{ temporal_coverage.start_date }}</div>
+                       </div>
+                       <div class="row">
+                            <div class="col-sm-4"><strong>End Date:</strong></div>
+                            <div class="col-sm-8">{{ temporal_coverage.end_date }}</div>
+                       </div>
+                       <hr>
+                   {%  endif %}
+                   </div>
+                   <div>
+                   {% if spatial_coverage %}
+                        <h4><strong>Spatial Coverage:</strong></h4>
+                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                             <div class="row">
+                                <div class="col-sm-4"><strong>Coverage Type:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.type }}</div>
+                             </div>
 
+                            {% if spatial_coverage.type == 'point' %}
+                                {% if spatial_coverage.name %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.name}}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.projection %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Coordinate System/Geographic Projection:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.projection}}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.east %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Longitude:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.east}}</div>
+                                    </div>
+                                {%  endif %}
+                                {% if spatial_coverage.north %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Latitude:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.north}}</div>
+                                    </div>
+                                {%  endif %}
+                                {% if spatial_coverage.units %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.units}}</div>
+                                    </div>
+                                {%  endif %}
+                            {% else %}
+                                {% if spatial_coverage.name %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.name}}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.projection %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Coordinate System/Geographic Projection:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.projection}}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.northlimit %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>North Latitude:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.northlimit }}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.eastlimit %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>East Longitude:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.eastlimit }}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.southlimit %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>South Longitude:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.southlimit }}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.westlimit %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>West Latitude:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.westlimit}}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.units %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.units}}</div>
+                                    </div>
+                                {%  endif %}
+                            {% endif %}
+                        <hr>
+                   {% endif %}
+                   </div>
+                   <div>
+                       <h4><strong>Language:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        {{ language }}
+                       <hr>
+                   </div>
+                   <div>
+                   {% if keywords %}
+                       <h4><strong>Keywords:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        {{ keywords }}
+                       <hr>
+                   {% endif %}
+                   </div>
+                   <div>
+                       <h4><strong>Rights:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                           {% if rights.statement %}
+                               <div class="row">
+                                   <div class="col-sm-4"><strong>Statement:</strong></div>
+                                   <div class="col-sm-8">{{ rights.statement }}</div>
+                               </div>
+                           {% endif %}
+                           {% if rights.url %}
+                               <div class="row">
+                                   <div class="col-sm-4"><strong>URL:</strong></div>
+                                   <div class="col-sm-8">{{ rights.url }}</div>
+                               </div>
+                           {% endif %}
+                           <hr>
+                   </div>
+                   <div>
+                   {% if sources %}
+                       <h4><strong>Sources:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                       {% for source in sources %}
+                            <div class="row">
+                               <div class="col-sm-4"><strong>Derived From:</strong></div>
+                               <div class="col-sm-8">{{ source.derived_from }}</div>
+                            </div>
+                            <hr>
+                       {%  endfor %}
+                   {%  endif %}
+                   </div>
+                   <div>
+                   {% if relations %}
+                       <h4><strong>Relations:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                       {% for relation in relations %}
+                            <div class="row">
+                               <div class="col-sm-4"><strong>Type:</strong></div>
+                               <div class="col-sm-8">{{ relation.type }}</div>
+                               <div class="col-sm-4"><strong>Value:</strong></div>
+                               <div class="col-sm-8">{{ relation.value }}</div>
+                            </div>
+                            <hr>
+                       {%  endfor %}
+                   {%  endif %}
+                   </div>
+               {% endif %}
+
+                <div>
+                {# TODO: Pabitra to check if this for loop code is relevant #}
+                {% for attr, val_dict in core_metadata.items %}
+                    <h5>{{ attr }}</h5>
+                    <table class="table table-condensed">
+                        {% for subattr, subval in val_dict.items %}
+                        <tr>
+                            <th>{{ subattr }}</th>
+                            <td>{{ subval }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
 

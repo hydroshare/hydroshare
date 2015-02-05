@@ -1,16 +1,25 @@
 from mezzanine.pages.page_processors import processor_for
 from hs_core.models import GenericResource
+from hs_core import languages_iso
 from forms import *
 
 @processor_for(GenericResource)
 def landing_page(request, page):
     if request.method == "GET":
-        return get_page_context(page, request.user)
+        resource_mode = request.session.get('resource-mode', None)
+        if resource_mode == 'edit':
+            edit_resource = True
+            del request.session['resource-mode']
+        else:
+            edit_resource = False
+    else:
+        edit_resource = True
 
+    return get_page_context(page, request.user, resource_edit=edit_resource)
 
 # resource type specific app needs to call this method to inject a crispy_form layout
 # object for displaying metadata UI for the extended metadata for their resource
-def get_page_context(page, user, extended_metadata_layout=None):
+def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None):
     content_model = page.get_content_model()
     edit_mode = False
     if user.username == 'admin' or \
@@ -19,6 +28,69 @@ def get_page_context(page, user, extended_metadata_layout=None):
                     #user in content_model.edit_users.all():
         edit_mode = True
 
+    if not resource_edit:
+        temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
+        if len(temporal_coverages) > 0:
+            temporal_coverage_data_dict = {}
+            temporal_coverage = temporal_coverages[0]
+            temporal_coverage_data_dict['start_date'] = temporal_coverage.value['start']
+            temporal_coverage_data_dict['end_date'] = temporal_coverage.value['end']
+            temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
+        else:
+            temporal_coverage_data_dict = None
+
+        spatial_coverages = content_model.metadata.coverages.all().exclude(type='period')
+
+        if len(spatial_coverages) > 0:
+            spatial_coverage_data_dict = {}
+            spatial_coverage = spatial_coverages[0]
+            spatial_coverage_data_dict['name'] = spatial_coverage.value.get('name', None)
+            spatial_coverage_data_dict['units'] = spatial_coverage.value['units']
+            spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
+            spatial_coverage_data_dict['projection'] = spatial_coverage.value.get('projection', None)
+            spatial_coverage_data_dict['type'] = spatial_coverage.type
+            if spatial_coverage.type == 'point':
+                spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
+                spatial_coverage_data_dict['north'] = spatial_coverage.value['north']
+                spatial_coverage_data_dict['elevation'] = spatial_coverage.value.get('elevation', None)
+            else:
+                spatial_coverage_data_dict['northlimit'] = spatial_coverage.value['northlimit']
+                spatial_coverage_data_dict['eastlimit'] = spatial_coverage.value['eastlimit']
+                spatial_coverage_data_dict['southlimit'] = spatial_coverage.value['southlimit']
+                spatial_coverage_data_dict['westlimit'] = spatial_coverage.value['westlimit']
+                spatial_coverage_data_dict['uplimit'] = spatial_coverage.value.get('uplimit', None)
+                spatial_coverage_data_dict['downlimit'] = spatial_coverage.value.get('downlimit', None)
+        else:
+            spatial_coverage_data_dict = None
+
+        keywords = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
+
+        if content_model.metadata.has_all_required_elements():
+            metadata_status = "Complete"
+        else:
+            metadata_status = "Incomplete"
+
+        languages_dict = dict(languages_iso.languages)
+
+        context = {'metadata_form': None,
+                   'citation': content_model.get_citation(),
+                   'title': content_model.metadata.title,
+                   'abstract': content_model.metadata.description,
+                   'creators': content_model.metadata.creators.all(),
+                   'contributors': content_model.metadata.contributors.all(),
+                   'temporal_coverage': temporal_coverage_data_dict,
+                   'spatial_coverage': spatial_coverage_data_dict,
+                   'language': languages_dict[content_model.metadata.language.code],
+                   'keywords': keywords,
+                   'rights': content_model.metadata.rights,
+                   'sources': content_model.metadata.sources.all(),
+                   'relations': content_model.metadata.relations.all(),
+                   'metadata_status': metadata_status
+
+        }
+        return context
+
+    # resource in edit mode
     add_creator_modal_form = CreatorForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
     add_contributor_modal_form = ContributorForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
     add_relation_modal_form = RelationForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
@@ -81,11 +153,11 @@ def get_page_context(page, user, extended_metadata_layout=None):
     SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm, allow_edit=edit_mode)), formset=BaseSourceFormSet, extra=0)
     source_formset = SourceFormSetEdit(initial=content_model.metadata.sources.all().values(), prefix='source')
 
-    IdentifierFormSetEdit = formset_factory(IdentifierForm, formset=BaseIdentifierFormSet, extra=0)
-    identifier_formset = IdentifierFormSetEdit(initial=content_model.metadata.identifiers.all().values(), prefix='identifier')
-
-    FormatFormSetEdit = formset_factory(FormatForm, formset=BaseFormatFormSet, extra=0)
-    format_formset = FormatFormSetEdit(initial=content_model.metadata.formats.all().values(), prefix='format')
+    # IdentifierFormSetEdit = formset_factory(IdentifierForm, formset=BaseIdentifierFormSet, extra=0)
+    # identifier_formset = IdentifierFormSetEdit(initial=content_model.metadata.identifiers.all().values(), prefix='identifier')
+    #
+    # FormatFormSetEdit = formset_factory(FormatForm, formset=BaseFormatFormSet, extra=0)
+    # format_formset = FormatFormSetEdit(initial=content_model.metadata.formats.all().values(), prefix='format')
 
     for source_form in source_formset.forms:
         source_form.action = "/hsapi/_internal/%s/source/%s/update-metadata/" % (content_model.short_id, source_form.initial['id'])
@@ -103,16 +175,16 @@ def get_page_context(page, user, extended_metadata_layout=None):
                                  element_id=content_model.metadata.language.id if content_model.metadata.language
                                  else None)
 
-    valid_dates = content_model.metadata.dates.all().filter(type='valid')
-    if len(valid_dates) > 0:
-        valid_date = valid_dates[0]
-    else:
-        valid_date = None
+    # valid_dates = content_model.metadata.dates.all().filter(type='valid')
+    # if len(valid_dates) > 0:
+    #     valid_date = valid_dates[0]
+    # else:
+    #     valid_date = None
 
-    valid_date_form = ValidDateForm(instance=valid_date,
-                                    allow_edit=edit_mode,
-                                    res_short_id=content_model.short_id,
-                                    element_id=valid_date.id if valid_date else None)
+    # valid_date_form = ValidDateForm(instance=valid_date,
+    #                                 allow_edit=edit_mode,
+    #                                 res_short_id=content_model.short_id,
+    #                                 element_id=valid_date.id if valid_date else None)
 
     temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
     temporal_coverage_data_dict = {}
@@ -128,7 +200,6 @@ def get_page_context(page, user, extended_metadata_layout=None):
                                                   allow_edit=edit_mode,
                                                   res_short_id=content_model.short_id,
                                                   element_id=temporal_coverage.id if temporal_coverage else None)
-
 
     spatial_coverages = content_model.metadata.coverages.all().exclude(type='period')
     spatial_coverage_data_dict = {'type': 'point'}
@@ -153,12 +224,13 @@ def get_page_context(page, user, extended_metadata_layout=None):
     else:
         spatial_coverage = None
 
-    coverage_spatial_form = CoverageSpatialForm(initial= spatial_coverage_data_dict,
+    coverage_spatial_form = CoverageSpatialForm(initial=spatial_coverage_data_dict,
                                                 allow_edit=edit_mode,
                                                 res_short_id=content_model.short_id,
                                                 element_id=spatial_coverage.id if spatial_coverage else None)
 
-    metadata_form = MetaDataForm(resource_mode='edit' if edit_mode else 'view', extended_metadata_layout=extended_metadata_layout)
+    metadata_form = MetaDataForm(resource_mode='edit' if edit_mode else 'view',
+                                 extended_metadata_layout=extended_metadata_layout)
 
     if content_model.metadata.has_all_required_elements():
         metadata_status = "Complete"
@@ -179,12 +251,12 @@ def get_page_context(page, user, extended_metadata_layout=None):
                'source_formset': source_formset,
                'add_source_modal_form': add_source_modal_form,
                'rights_form': rights_form,
-               'identifier_formset': identifier_formset,
+               #'identifier_formset': identifier_formset,
                'language_form': language_form,
-               'valid_date_form': valid_date_form,
+               #'valid_date_form': valid_date_form,
                'coverage_temporal_form': coverage_temporal_form,
                'coverage_spatial_form': coverage_spatial_form,
-               'format_formset': format_formset,
+               #'format_formset': format_formset,
                'subjects_form': subjects_form,
                'metadata_status': metadata_status,
                'citation': content_model.get_citation(),

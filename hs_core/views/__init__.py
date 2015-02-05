@@ -153,6 +153,9 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             ajax_response_data = {'status': 'error'}
             return HttpResponse (json.dumps(ajax_response_data))
 
+    if 'resource-mode' in request.POST:
+        request.session['resource-mode'] = 'edit'
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -189,6 +192,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     res.metadata.delete_element(element_name, element_id)
+    request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
