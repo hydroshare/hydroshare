@@ -39,6 +39,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
                 ])
             metadata.append({'CellInformation': cellInfo})
 
+
         else:
             # initialize required raster metadata to be place holders to be edited later by users
             spatial_coverage_info = OrderedDict([

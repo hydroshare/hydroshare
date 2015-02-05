@@ -259,7 +259,7 @@ class RasterMetaData(CoreMetaData):
             return False
         if not self.cellInformation:
             return False
-        if not self.bandInformation:
+        if not self.bandInforhs_geo_raster_resource/models.pymation:
             return False
         return True
 
