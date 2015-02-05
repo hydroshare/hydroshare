@@ -43,7 +43,7 @@
                 <tr><th>Sharing Status</th><td>Private</td></tr>
             {% endif %}
             <tr><th>Metadata Status</th>
-                {%  if metadata_status == 'Incomplete' %}
+                {%  if metadata_status == "Incomplete" %}
                     <td class="text-danger">{{ metadata_status }}</td></tr>
                 {%  else %}
                     <td class="text-success">{{ metadata_status }}</td></tr>
@@ -71,7 +71,7 @@
                         </form>
                    {% endif %}
                    <div>
-                       {% if metadata_status == 'Incomplete' %}
+                       {% if metadata_status == "Incomplete" %}
                             <table class="table table-condensed" style="margin-top: 2px; border: 2px solid red">
                                 <tr style="color: red"><td><h4>Data for the following required elements are missing:</h4></td></tr>
                                 {% if not abstract %}
@@ -79,6 +79,9 @@
                                 {% endif %}
                                 {% if not keywords %}
                                     <tr><td>Keywords</td></tr>
+                                {% endif %}
+                                {% if title|stringformat:"s" == "Untitled resource" %}
+                                    <tr><td>Title:Needs to be changed</td></tr>
                                 {% endif %}
                             </table>
                        {% endif %}
