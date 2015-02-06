@@ -207,7 +207,7 @@ def get_box_info(nc_dataset, original_box_info):
                     box_info['eastlimit'] = eastlimit #if eastlimit <= 180 else eastlimit-360
 
     if box_info:
-        box_info['units'] = 'degree'
+        box_info['units'] = 'Decimal degrees'
 
     return box_info
 
