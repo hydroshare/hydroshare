@@ -589,9 +589,19 @@ def create_resource_new_workflow(request, *args, **kwargs):
     res_cls = hydroshare.check_resource_type(resource_type)
 
     metadata = []
+    page_url_dict = {}
+    url_key = "page_redirect_url"
     # Send pre-create resource signal - let any other app populate the empty metadata list object
-    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, resource=None, **kwargs)
+    # also pass title to other apps, and give other apps a chance to populate page_redirect_url if they want
+    # to redirect to their own page for resource creation rather than use core resource creation code
+    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, title=res_title, url_key=url_key, page_url_dict=page_url_dict, **kwargs)
 
+    # redirect to a specific resource creation page if other apps choose so
+
+    if url_key in page_url_dict:
+        return HttpResponseRedirect(page_url_dict[url_key])
+
+    # generic resource core metadata and resource creation
     add_title = True
     for element in metadata:
         if 'title' in element:
