@@ -200,8 +200,13 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     fl = res.files.filter(pk=int(f)).first()
     file_name = fl.resource_file.name
+    file_path_to_delete = os.path.dirname(fl.resource_file.path)
     fl.resource_file.delete()
     fl.delete()
+    # delete the file path if there are no other files for the resource
+    if resource.files.count() == 0:
+        os.rmdir(file_path_to_delete)
+
     delete_file_mime_type = utils.get_file_mime_type(file_name)
     delete_file_extension = os.path.splitext(file_name)[1]
     # if there is no other resource file with the same extension as the
@@ -223,11 +228,22 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+
+    res_file = res.files.all()[0].resource_file if res.files.all() else None
+    if res_file:
+        res_file_path_to_delete = os.path.dirname(res_file.path)
+    else:
+        res_file_path_to_delete = None
+
     for fl in res.files.all():
         fl.resource_file.delete()
+
     for bag in res.bags.all():
         bag.bag.delete()
         bag.delete()
+
+    if res_file_path_to_delete:
+        os.rmdir(res_file_path_to_delete)
 
     res.metadata.delete_all_elements()
     res.metadata.delete()
