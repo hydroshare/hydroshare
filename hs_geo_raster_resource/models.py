@@ -5,6 +5,7 @@ from hs_core.models import AbstractResource, resource_processor, CoreMetaData, A
 from mezzanine.pages.page_processors import processor_for
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from hs_core import page_processors
 
 class BandInformation(AbstractMetaDataElement):
     term = 'BandInformation'
