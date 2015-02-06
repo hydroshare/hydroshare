@@ -5,6 +5,7 @@ from hs_core.models import AbstractResource, resource_processor, CoreMetaData, A
 from mezzanine.pages.page_processors import processor_for
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from hs_core import page_processors
 
 class BandInformation(AbstractMetaDataElement):
     term = 'BandInformation'
@@ -202,6 +203,49 @@ class RasterResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
+    def get_citation(self):
+        citation = ''
+
+        first_author = self.metadata.creators.all().filter(order=1)[0]
+        name_parts = first_author.name.split(" ")
+        if len(name_parts) > 2:
+            citation = "{last_name}, {first_initial}.{middle_initial}.".format(last_name=name_parts[-1],
+                                                                              first_initial=name_parts[0][0],
+                                                                              middle_initial=name_parts[1][0]) + ", "
+        else:
+            citation = "{last_name}, {first_initial}.".format(last_name=name_parts[-1],
+                                                              first_initial=name_parts[0][0]) + ", "
+
+        other_authors = self.metadata.creators.all().filter(order__gt=1)
+        for author in other_authors:
+            name_parts = author.name.split(" ")
+            if len(name_parts) > 2:
+                citation += "{first_initial}.{middle_initial}.{last_name}".format(first_initial=name_parts[0][0],
+                                                                                  middle_initial=name_parts[1][0],
+                                                                                  last_name=name_parts[-1]) + ", "
+            else:
+                citation += "{first_initial}.{last_name}".format(first_initial=name_parts[0][0],
+                                                                 last_name=name_parts[-1]) + ", "
+
+        citation = citation[:-2]
+        if self.metadata.dates.all().filter(type='published'):
+            citation_date = self.metadata.dates.all().filter(type='published')[0]
+        else:
+            citation_date = self.metadata.dates.all().filter(type='modified')[0]
+
+        citation += " ({year}). ".format(year=citation_date.start_date.year)
+        citation += self.title
+        citation += ", HydroShare, "
+
+        if self.metadata.identifiers.all().filter(name="doi"):
+            hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
+        else:
+            hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+
+        citation += "{url}".format(url=hs_identifier.url)
+
+        return citation
+
 class RasterMetaData(CoreMetaData):
     # required non-repeatable cell information metadata elements
     cellInformation = generic.GenericRelation(CellInformation)
@@ -292,14 +336,12 @@ def main_page(request, page):
     from dublincore import models as dc
     from django import forms
     from collections import OrderedDict
-    class DCTerm(forms.ModelForm):
-        class Meta:
-            model=dc.QualifiedDublinCoreElement
-            fields = ['term', 'content']
 
     content_model = page.get_content_model()
+    edit_mode = False
+    if content_model.creator == request.user or request.user in content_model.owners.all() or request.user in content_model.edit_users.all():
+        edit_mode = True
 
-    # create Coverage metadata
     md_dict = OrderedDict()
 
     md_dict['rows'] = content_model.metadata.cellInformation.all()[0].rows
@@ -320,10 +362,15 @@ def main_page(request, page):
          band_dict['comment (band '+str(i)+')'] = band.comment
          i = i+1
 
-    return  { 'res_add_metadata': md_dict,
-              'band_metadata': band_dict,
-              'resource_type' : content_model._meta.verbose_name,
-              'dublin_core' : [t for t in content_model.dublin_metadata.all().exclude(term='AB')],
-              'dcterm_frm' : DCTerm()
-            }
+    context = page_processors.get_page_context(page, request.user)
+    context['res_add_metadata'] = md_dict
+    context['band_metadata'] = band_dict
+    context['resource_type'] = content_model._meta.verbose_name
+
+    return context
+
+    # return  { 'res_add_metadata': md_dict,
+    #           'band_metadata': band_dict,
+    #           'resource_type' : content_model._meta.verbose_name
+    #         }
 import receivers
