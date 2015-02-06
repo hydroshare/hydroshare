@@ -241,26 +241,26 @@ class RasterMetaData(CoreMetaData):
             hsterms_name.text = cell_info.name
 
             hsterms_rows = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}rows' % self.NAMESPACES['hsterms'])
-            hsterms_rows.text = cell_info.raster_resource.rows
+            hsterms_rows.text = str(cell_info.rows)
 
             hsterms_columns = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}columns' % self.NAMESPACES['hsterms'])
-            hsterms_columns.text = cell_info.raster_resource.columns
+            hsterms_columns.text = str(cell_info.columns)
 
             hsterms_cellSizeXValue = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellSizeXValue' % self.NAMESPACES['hsterms'])
-            hsterms_cellSizeXValue.text = cell_info.raster_resource.cellSizeXValue
+            hsterms_cellSizeXValue.text = str(cell_info.cellSizeXValue)
 
             hsterms_cellSizeYValue = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellSizeYValue' % self.NAMESPACES['hsterms'])
-            hsterms_cellSizeYValue.text = cell_info.raster_resource.cellSizeYValue
+            hsterms_cellSizeYValue.text = str(cell_info.cellSizeYValue)
 
             hsterms_cellSizeUnit = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellSizeUnit' % self.NAMESPACES['hsterms'])
-            hsterms_cellSizeUnit.text = cell_info.raster_resource.cellSizeUnit
+            hsterms_cellSizeUnit.text = cell_info.cellSizeUnit
 
-            hsterms_cellSizeType = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellSizeType' % self.NAMESPACES['hsterms'])
-            hsterms_cellSizeType.text = cell_info.raster_resource.cellSizeType
+            hsterms_cellDataType = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellDataType' % self.NAMESPACES['hsterms'])
+            hsterms_cellDataType.text = cell_info.cellDataType
 
         if cell_info.noDataValue:
             hsterms_noDataValue = etree.SubElement(hsterms_cellInfo_rdf_Description,'{%s}noDataValue' % self.NAMESPACES['hsterms'])
-            hsterms_noDataValue.text = cell_info.raster_resource.noDataValue
+            hsterms_noDataValue.text = str(cell_info.noDataValue)
 
         for band_info in self.bandInformation.all():
             hsterms_bandInfo = etree.SubElement(container, '{%s}rasterBandInformation' % self.NAMESPACES['hsterms'])
@@ -302,14 +302,13 @@ def main_page(request, page):
     # create Coverage metadata
     md_dict = OrderedDict()
 
-    md_dict['rows'] = content_model.rows
-    md_dict['columns'] = content_model.columns
-    md_dict['cellSizeXValue'] = content_model.cellSizeXValue
-    md_dict['cellSizeYValue'] = content_model.cellSizeYValue
-    md_dict['cellSizeUnit'] = content_model.cellSizeUnit
-    md_dict['cellDataType'] = content_model.cellDataType
-    md_dict['noDataValue'] = content_model.noDataValue
-    md_dict['bandCount'] = content_model.bandCount
+    md_dict['rows'] = content_model.metadata.cellInformation.all()[0].rows
+    md_dict['columns'] = content_model.metadata.cellInformation.all()[0].columns
+    md_dict['cellSizeXValue'] = content_model.metadata.cellInformation.all()[0].cellSizeXValue
+    md_dict['cellSizeYValue'] = content_model.metadata.cellInformation.all()[0].cellSizeYValue
+    md_dict['cellSizeUnit'] = content_model.metadata.cellInformation.all()[0].cellSizeUnit
+    md_dict['cellDataType'] = content_model.metadata.cellInformation.all()[0].cellDataType
+    md_dict['noDataValue'] = content_model.metadata.cellInformation.all()[0].noDataValue
 
     band_dict = OrderedDict()
     i = 1
@@ -321,31 +320,10 @@ def main_page(request, page):
          band_dict['comment (band '+str(i)+')'] = band.comment
          i = i+1
 
-    cvg = content_model.metadata.coverages.all()
-    core_md = {}
-    if cvg:
-        coverage = cvg[0]
-        core_md = OrderedDict()
-        core_md['place/area name'] = coverage.value['name']
-        core_md['projection'] = coverage.value['projection']
-        core_md['units'] = coverage.value['units']
-        core_md['northLimit'] = coverage.value['northlimit']
-        core_md['eastLimit'] = coverage.value['eastlimit']
-        core_md['southLimit'] = coverage.value['southlimit']
-        core_md['westLimit'] = coverage.value['westlimit']
-        core_md_dict = {'Coverage': core_md}
-        return  { 'res_add_metadata': md_dict,
-                  'band_metadata': band_dict,
-                  'resource_type' : content_model._meta.verbose_name,
-                  'dublin_core' : [t for t in content_model.dublin_metadata.all().exclude(term='AB')],
-                  'core_metadata' : core_md_dict,
-                  'dcterm_frm' : DCTerm()
-                }
-    else:
-        return  { 'res_add_metadata': md_dict,
-                  'band_metadata': band_dict,
-                  'resource_type' : content_model._meta.verbose_name,
-                  'dublin_core' : [t for t in content_model.dublin_metadata.all().exclude(term='AB')],
-                  'dcterm_frm' : DCTerm()
-                }
+    return  { 'res_add_metadata': md_dict,
+              'band_metadata': band_dict,
+              'resource_type' : content_model._meta.verbose_name,
+              'dublin_core' : [t for t in content_model.dublin_metadata.all().exclude(term='AB')],
+              'dcterm_frm' : DCTerm()
+            }
 import receivers

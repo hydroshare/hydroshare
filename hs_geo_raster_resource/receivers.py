@@ -12,6 +12,8 @@ from hs_geo_raster_resource.models import BandInformation
 def raster_pre_create_resource_trigger(sender, **kwargs):
     if(sender is RasterResource):
         files = kwargs['files']
+        title = kwargs['title']
+
         metadata = kwargs['metadata']
         from collections import OrderedDict
         if(files):
@@ -41,7 +43,6 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         else:
             # initialize required raster metadata to be place holders to be edited later by users
             spatial_coverage_info = OrderedDict([
-                ('projection', "Unnamed"),
                 ('units', "Unnamed"),
                 ('northlimit', 0),
                 ('southlimit', 0),
@@ -49,6 +50,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
                 ('westlimit', 0)
             ])
             cell_info = OrderedDict([
+                ('name', title),
                 ('rows', 0),
                 ('columns', 0),
                 ('cellSizeXValue', 0),
