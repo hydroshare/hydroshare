@@ -679,6 +679,8 @@ def create_resource_new_workflow(request, *args, **kwargs):
             files=request.FILES.getlist('files'),
             content=res_title
     )
+    # Send post-create resource signal
+    post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, **kwargs)
 
     if resource is not None:
         # go to resource landing page
