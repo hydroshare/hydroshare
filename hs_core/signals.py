@@ -1,7 +1,5 @@
 __author__ = 'Hong Yi'
 import django.dispatch
-pre_describe_resource = django.dispatch.Signal(providing_args=['files'])
-pre_call_create_resource = django.dispatch.Signal(providing_args=['request_post'])
 
 # TODO: remove 'dublin_metadata' from the list of providing_args
 pre_create_resource = django.dispatch.Signal(providing_args=['dublin_metadata', 'metadata', 'files'])
