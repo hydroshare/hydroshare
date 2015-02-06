@@ -38,12 +38,12 @@
             {% comment %}<tr><th>DOI</th><td><button class='btn btn-danger' data-toggle="modal" data-target="#submit-for-publication-dialog">Submit for publication</button></td></tr>{% endcomment %}
             {% endif %}
             {% if cm.public %}
-                <tr><th>Sharing Status</th><td>Public</td></tr>
+                <tr><th>Sharing Status</th><td id="sharing-status">Public</td></tr>
             {% else %}
-                <tr><th>Sharing Status</th><td>Private</td></tr>
+                <tr><th>Sharing Status</th><td id="sharing-status">Private</td></tr>
             {% endif %}
             <tr><th>Metadata Status</th>
-                {%  if metadata_status == "Incomplete" %}
+                {%  if metadata_status == "Insufficient to make public" %}
                     <td id="metadata-status" class="text-danger">{{ metadata_status }}</td></tr>
                 {%  else %}
                     <td id="metadata-status" class="text-success">{{ metadata_status }}</td></tr>
@@ -444,20 +444,20 @@
     <div class="row" id="sharing">
         <div class="col-lg-12">
         <h2>Sharing</h2>
-            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+            <form id="id_sharing" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
             {% csrf_token %}
             {% if cm.public %}
                 This resource can be viewed and downloaded by anyone.
                 {% if user == cm.user %}
                     <input name="t" type="hidden" value="make_private"/>
-                    <button type="submit" class="btn btn-danger">Make private</button>
+                    <button id="make-private" type="submit" class="btn btn-danger">Make private</button>
                 {% endif %}
             {% else %}
                 This resource can be viewed and downloaded only by designated users or research groups.
                 {% if user == cm.user %}
                     {%  if cm.can_be_public %}
                         <input name="t" type="hidden" value="make_public"/>
-                        <button type="submit" class="btn btn-danger">Make public</button>
+                        <button id="make-public" type="submit" class="btn btn-danger">Make public</button>
                     {% endif %}
                 {% endif %}
             {% endif %}
@@ -857,15 +857,20 @@
                         if (json_response.hasOwnProperty('metadata_status')){
                             if(json_response.metadata_status !== $('#metadata-status').text()){
                                 $('#metadata-status').text(json_response.metadata_status);
-                                if(json_response.metadata_status == "Complete")
+                                if(json_response.metadata_status == "Sufficient to make public")
                                 {
-                                    alert("Metadata Status:Complete");
+                                    alert("Metadata Status:Sufficient to make public");
                                     $('#metadata-status').removeClass('text-danger');
-                                    $('#metadata-status').addClass('text-success')
+                                    $('#metadata-status').addClass('text-success');
+                                    $('#id_sharing').find('#make-public').remove();
+                                    $('#id_sharing').append('<input name="t" type="hidden" value="make_public"/><button id="make-public" type="submit" class="btn btn-danger">Make public</button>');
                                 }
                                 else{
                                     $('#metadata-status').removeClass('text-success');
-                                    $('#metadata-status').addClass('text-danger')
+                                    $('#metadata-status').addClass('text-danger');
+                                    $('#id_sharing').find('#make-public').hide();
+                                    $('#id_sharing').find('#make-private').hide();
+                                    $('#sharing-status').text('Private');
                                 }
                             }
                         }
