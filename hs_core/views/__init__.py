@@ -142,10 +142,15 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
     if request.is_ajax():
         if is_add_success:
-            if element_name == 'subject':
-                ajax_response_data = {'status': 'success'}
+            if res.metadata.has_all_required_elements():
+                metadata_status = "Complete"
             else:
-                ajax_response_data = {'status': 'success', 'element_id': element.id, 'element_name': element_name}
+                metadata_status = "Incomplete"
+
+            if element_name == 'subject':
+                ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
+            else:
+                ajax_response_data = {'status': 'success', 'element_id': element.id, 'element_name': element_name, 'metadata_status': metadata_status}
 
             return HttpResponse(json.dumps(ajax_response_data))
 
@@ -180,7 +185,12 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     if request.is_ajax():
         if is_update_success:
-            ajax_response_data = {'status': 'success', 'element_name': element_name}
+            if res.metadata.has_all_required_elements():
+                metadata_status = "Complete"
+            else:
+                metadata_status = "Incomplete"
+
+            ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
             return HttpResponse(json.dumps(ajax_response_data))
         else:
             ajax_response_data = {'status': 'error'}
