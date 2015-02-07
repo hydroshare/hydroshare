@@ -16,6 +16,23 @@ nc_subset_info = {
     'time': [0, 0],
     }
 
+nc_subset_info = {
+    'file_name': 'prcp.nc',
+    'var_name': 'prcp',
+    'x': [0, 3],
+    'y': [0, 6],
+    'time': [0, 1],
+    }
+
+nc_subset_info = {
+    'file_name': 'rtof.nc',
+    'var_name': 'salinity',
+    'MT': [0, 0],
+    'Depth': [2, 2],
+    'Y': [0, 5],
+    'X': [0, 5]
+    }
+
 
 def create_subset_nc_file(nc_subset_info):
     """
@@ -31,8 +48,12 @@ def create_subset_nc_file(nc_subset_info):
     nc_rootgroup = define_nc_dimensions(nc_rootgroup, nc_subset_info)
     # define coordinate variable
     nc_rootgroup = define_nc_coordinate_variables(nc_rootgroup, nc_subset_info)
+    # define grid mapping variable
+    nc_rootgroup = define_nc_grid_mapping_variable(nc_rootgroup,nc_subset_info)
     # define data variable
     nc_rootgroup = define_nc_data_variable(nc_rootgroup, nc_subset_info)
+    # define auxiliary coordinate variable
+    nc_rootgroup = define_auxiliary_coordinate_variable(nc_rootgroup, nc_subset_info)
 
     nc_rootgroup.close()
     return nc_rootgroup
@@ -60,7 +81,7 @@ def get_nc_global_attributes(nc_subset_info):
     nc_global_attributes['file_name'] = nc_subset_info['file_name']
 
     # add or modify the history info
-    new_history = u'\n {0}: subset of {1} variable from the original netCDF data by HydroShare website.'\
+    new_history = u'\n {0}: subset of "{1}" variable from the original netCDF data by HydroShare website.'\
         .format(datetime.now().strftime('%a %b %d %X %Y'), nc_subset_info['var_name'])
     if nc_global_attributes.has_key('history'):
         nc_global_attributes['history'] += new_history
@@ -125,7 +146,7 @@ def define_nc_coordinate_variables(nc_rootgroup, nc_subset_info):
     nc_all_variables = nc_dataset.variables
     nc_dim_coor_mapping = {}
     for var_name, var_obj in nc_all_variables.items():
-        if len(var_obj.shape) == 1 and var_obj.dimensions[0]in nc_dimensions:
+        if len(var_obj.shape) == 1 and var_name == var_obj.dimensions[0]:
             nc_dim_coor_mapping[var_obj.dimensions[0]] = var_name
 
     # add coordinate variable info
@@ -174,3 +195,45 @@ def define_nc_data_variable(nc_rootgroup, nc_subset_info):
     return nc_rootgroup
 
 
+# define grid mapping variable ###################################################################################
+def define_nc_grid_mapping_variable(nc_rootgroup, nc_subset_info):
+    nc_dataset = get_nc_dataset(nc_subset_info['file_name'])
+    nc_grid_mapping_variable_name = get_nc_grid_mapping_variable_name(nc_dataset)
+    if nc_grid_mapping_variable_name:
+        nc_grid_mapping_variable = get_nc_grid_mapping_variable(nc_dataset)
+        # initiate grid mappping variable variable
+        nc_rootgroup.createVariable(nc_grid_mapping_variable_name, nc_grid_mapping_variable.dtype)
+        # copy grid mappping variable attributes
+        for attr_name, attr_info in nc_grid_mapping_variable .__dict__.items():
+            nc_rootgroup.variables[nc_grid_mapping_variable_name].__setattr__(attr_name, attr_info)
+
+    return nc_rootgroup
+
+
+# define auxiliary coordinate variable for data variable ##########################################################
+def define_auxiliary_coordinate_variable(nc_rootgroup, nc_subset_info):
+    nc_dataset = get_nc_dataset(nc_subset_info['file_name'])
+    nc_auxiliary_coordinate_variables = get_nc_auxiliary_coordinate_variables(nc_dataset)
+    if nc_auxiliary_coordinate_variables:
+        for nc_variable_name, nc_variable in nc_auxiliary_coordinate_variables.items():
+            nc_variable_dimension_namelist = nc_variable.dimensions
+            if set(nc_variable_dimension_namelist).issubset(nc_subset_info.keys()):
+                # initiate coordinate variable
+                nc_rootgroup.createVariable(nc_variable_name, nc_variable.dtype,
+                                            nc_variable.dimensions,
+                                            fill_value=nc_variable._FillValue if hasattr(nc_variable, '_FillValue')else None)
+                # copy coordinate attributes
+                for attr_name, attr_info in nc_variable.__dict__.items():
+                    if attr_name != '_FillValue':
+                        nc_rootgroup.variables[nc_variable_name].__setattr__(attr_name, attr_info)
+                # assign data variable value
+                nc_variable_data = nc_variable[:]
+                slice_obj = []
+                for dim_name in nc_variable_dimension_namelist:
+                    slice_start = nc_subset_info[dim_name][0]
+                    slice_end = nc_subset_info[dim_name][1]
+                    slice_obj.append(slice(slice_start, slice_end+1, 1))
+                    subset_data = nc_variable_data[tuple(slice_obj)]
+                nc_rootgroup.variables[nc_variable_name][:] = subset_data
+
+    return nc_rootgroup

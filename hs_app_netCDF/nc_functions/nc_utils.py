@@ -212,7 +212,7 @@ def get_nc_coordinate_bounds_variables(nc_dataset):
     nc_coordinate_variables = get_nc_coordinate_variables(nc_dataset)
     nc_coordinate_bound_variables = {}
     for var_name, var_obj in nc_coordinate_variables.items():
-        if hasattr(var_obj, 'bounds'):
+        if hasattr(var_obj, 'bounds') and nc_dataset.variables.get(var_obj.bounds, None):
             nc_coordinate_bound_variables[var_obj.bounds] = nc_dataset.variables[var_obj.bounds]
 
     return nc_coordinate_bound_variables
@@ -271,7 +271,7 @@ def get_nc_auxiliary_coordinate_variables(nc_dataset):
     """
     (object) -> dict
 
-    Return: the netCDF auxiliary coordinate variable
+    Return: the netCDF auxiliary coordinate variables
     """
 
     nc_auxiliary_coordinate_variable_namelist = get_nc_auxiliary_coordinate_variable_namelist(nc_dataset)
@@ -284,6 +284,21 @@ def get_nc_auxiliary_coordinate_variables(nc_dataset):
 
 
 # Function for Grid Mapping Variable ###############################################################################
+def get_nc_grid_mapping_variable_name(nc_dataset):
+    """
+    (object)-> string
+
+    Return: the netCDF grid mapping variable name
+    """
+    nc_all_variables = nc_dataset.variables
+    nc_grid_mapping_variable_name = ''
+    for var_name, var_obj in nc_all_variables.items():
+        if hasattr(var_obj, 'grid_mapping_name'):
+            nc_grid_mapping_variable_name = var_name
+
+    return nc_grid_mapping_variable_name
+
+
 def get_nc_grid_mapping_variable(nc_dataset):
     """
     (object)-> object
