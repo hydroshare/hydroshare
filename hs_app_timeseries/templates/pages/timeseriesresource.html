@@ -1,0 +1,176 @@
+{# This template is used as the landing page for TimeSeriesResource #}
+
+{% extends "pages/genericresource.html" %}
+{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
+
+{% block extended_metadata %}
+    {% if extended_metadata_exists %}
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Extended Metadata</h2>
+                <div>
+                    {% if site %}
+                        <h4><strong>Site:</strong></h4>
+                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Code:</strong></div>
+                            <div class="col-sm-8">{{ site.site_code }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ site.site_name }}</div>
+                        </div>
+                        {% if site.elevation_m %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Elevation M:</strong></div>
+                                <div class="col-sm-8">{{ site.elevation_m }}</div>
+                            </div>
+                        {% endif %}
+                        {% if site.elevation_datum %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Elevation Datum:</strong></div>
+                                <div class="col-sm-8">{{ site.elevation_datum }}</div>
+                            </div>
+                        {% endif %}
+                        {% if site.site_type %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Site Type:</strong></div>
+                                <div class="col-sm-8">{{ site.site_type }}</div>
+                            </div>
+                        {% endif %}
+                    <hr>
+                    {%  endif %}
+                </div>
+                <div>
+                    {% if variable %}
+                        <h4><strong>Variable:</strong></h4>
+                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Code:</strong></div>
+                            <div class="col-sm-8">{{ variable.variable_code }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ variable.variable_name }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Type:</strong></div>
+                            <div class="col-sm-8">{{ variable.variable_type }}</div>
+                        </div>
+                        <div class="row">
+                                <div class="col-sm-4"><strong>No Data Value:</strong></div>
+                                <div class="col-sm-8">{{ variable.no_data_value }}</div>
+                        </div>
+                        {% if variable.variable_definition %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Definition:</strong></div>
+                                <div class="col-sm-8">{{ variable.variable_definition }}</div>
+                            </div>
+                        {% endif %}
+                        {% if variable.speciation %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Speciation:</strong></div>
+                                <div class="col-sm-8">{{ variable.speciation }}</div>
+                            </div>
+                        {% endif %}
+                    <hr>
+                    {% endif %}
+                </div>
+                <div>
+                    {% if method %}
+                        <h4><strong>Method:</strong></h4>
+                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Code:</strong></div>
+                            <div class="col-sm-8">{{ method.method_code }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ method.method_name }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Type:</strong></div>
+                            <div class="col-sm-8">{{ method.method_type }}</div>
+                        </div>
+                        {% if method.method_description %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Description:</strong></div>
+                                <div class="col-sm-8">{{ method.method_description }}</div>
+                            </div>
+                        {% endif %}
+                        {% if method.method_link %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Link:</strong></div>
+                                <div class="col-sm-8">{{ method.method_link }}</div>
+                            </div>
+                        {% endif %}
+                    <hr>
+                    {% endif %}
+                </div>
+                <div>
+                    {% if processing_level %}
+                        <h4><strong>Processing Level:</strong></h4>
+                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Code:</strong></div>
+                            <div class="col-sm-8">{{ processing_level.processing_level_code }}</div>
+                        </div>
+                        {% if processing_level.definition %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Definition:</strong></div>
+                                <div class="col-sm-8">{{ processing_level.definition }}</div>
+                            </div>
+                        {% endif %}
+                        {% if processing_level.explanation %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Explanation:</strong></div>
+                                <div class="col-sm-8">{{ processing_level.explanation }}</div>
+                            </div>
+                        {% endif %}
+                    <hr>
+                    {% endif %}
+                </div>
+                <div>
+                    {% if timeseries_result %}
+                        <h4><strong>Time Series Result:</strong></h4>
+                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Units Type:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.units_type }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Units Name:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.units_name }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Units Abbreviation:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.units_abbreviation }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Status:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.status }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Sample Medium:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.sample_medium }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Value Count:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.value_count }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Aggregation Statistics:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.aggregation_statistics }}</div>
+                        </div>
+                    <hr>
+                    {% endif %}
+                </div>
+            </div>
+    {%  endif %}
+{%  endblock %}
+{% block extra_js %}
+    {{ block.super }}
+
+    {# resource specific js can go here #}
+
+{%  endblock %}

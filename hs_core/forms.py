@@ -495,12 +495,12 @@ class MetaDataForm(forms.Form):
                                     HTML("</div>"),
                                 ),
 
-                                AccordionGroup('Valid date (optional)',
-                                    HTML('<div class="form-group" id="validdate"> '
-                                            '{% load crispy_forms_tags %} '
-                                            '{% crispy valid_date_form %} '
-                                         '</div>'),
-                                ),
+                                # AccordionGroup('Valid date (optional)',
+                                #     HTML('<div class="form-group" id="validdate"> '
+                                #             '{% load crispy_forms_tags %} '
+                                #             '{% crispy valid_date_form %} '
+                                #          '</div>'),
+                                # ),
 
                                 AccordionGroup('Temporal Coverage (optional)',
                                     HTML('<div class="form-group" id="coverage-temporal"> '
@@ -1137,6 +1137,7 @@ FormatFormSet = formset_factory(FormatForm, formset=BaseFormatFormSet)
 class BaseFormHelper(FormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None, element_layout=None,  *args, **kwargs):
         coverage_type = kwargs.pop('coverage', None)
+        element_name_label = kwargs.pop('element_name_label', None)
 
         super(BaseFormHelper, self).__init__(*args, **kwargs)
 
@@ -1160,6 +1161,9 @@ class BaseFormHelper(FormHelper):
 
         # change the first character to uppercase of the element name
         element_name = element_name.title()
+        if element_name_label:
+            element_name = element_name_label
+
         if element_name == "Subject":
             element_name = "Keywords"
         elif element_name == "Description":

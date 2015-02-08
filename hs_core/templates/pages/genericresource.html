@@ -54,9 +54,10 @@
     </div>
 </div>
 
-    <div class="row">
+    {% block core_metadata %}
+        <div class="row">
         <div class="col-md-12">
-            <h2>Science Metadata</h2>
+            <h2>Metadata</h2>
 
             <div class="form-group">
                {% if metadata_form %}
@@ -74,15 +75,9 @@
                        {% if metadata_status == "Incomplete" %}
                             <table class="table table-condensed" style="margin-top: 2px; border: 2px solid red">
                                 <tr style="color: red"><td><h4>Data for the following required elements are missing:</h4></td></tr>
-                                {% if not abstract %}
-                                    <tr><td>Abstract</td></tr>
-                                {% endif %}
-                                {% if not keywords %}
-                                    <tr><td>Keywords</td></tr>
-                                {% endif %}
-                                {% if title|stringformat:"s" == "Untitled resource" %}
-                                    <tr><td>Title:Needs to be changed</td></tr>
-                                {% endif %}
+                                {% for element in missing_metadata_elements %}
+                                    <tr><td>{{ element }}</td></tr>
+                                {%  endfor %}
                             </table>
                        {% endif %}
                    </div>
