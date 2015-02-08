@@ -16,6 +16,7 @@ from lxml import etree
 import datetime
 from django.utils.timezone import now
 import os
+from hs_core.signals import *
 
 class ReferencedSitesForm(forms.Form):
     wsdl_url = forms.URLField()
@@ -155,6 +156,7 @@ def create_ref_time_series(request, *args, **kwargs):
             if 'visualization' in file_name:
                 # open(file_name, 'w')
                 os.remove("theme/static/img/"+file_name)
+        post_create_resource.send(sender=RefTimeSeries, resource=res)
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeries)
