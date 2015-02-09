@@ -415,10 +415,9 @@
                               </ul>
                             </div>
                         </td>
-                       {% if page.perms.change %}
-                            {% if resource_type != "Geographic Raster Resource" or not cm.files.all %}
-                                <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
-                            {% endif %}
+{#                        {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
+                        {% if page.perms.change %}
+                        <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
                         {% endif %}
                     </tr>
                 </tfoot>

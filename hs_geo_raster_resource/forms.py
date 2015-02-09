@@ -4,10 +4,6 @@ from crispy_forms.layout import *
 from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
-from django.forms.models import modelformset_factory
-from hs_geo_raster_resource.models import *
-from functools import partial, wraps
-
 class CellInfoFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
@@ -37,12 +33,21 @@ class CellInfoForm(ModelForm):
         widgets = {'CellInformation': forms.TextInput()}
 
 class CellInfoValidationForm(forms.Form):
-                            Fieldset(element_name,
-                            element_layout,
-                            ),
-                        )
 
-class RasterMetadataValidationForm(forms.Form):
+        super(CellInfoFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+class CellInfoForm(ModelForm):
+    def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
+        super(CellInfoForm, self).__init__(*args, **kwargs)
+        self.helper = CellInfoFormHelper(allow_edit, res_short_id, element_id, element_name='CellInformation')
+
+    class Meta:
+        model = CellInformation
+        fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellSizeUnit', 'cellDataType', 'noDataValue']
+        exclude = ['content_object']
+        widgets = {'CellInformation': forms.TextInput()}
+
+class CellInfoValidationForm(forms.Form):
     rows = forms.IntegerField(required=True)
     columns = forms.IntegerField(required=True)
     cellSizeXValue = forms.FloatField(required = True)
