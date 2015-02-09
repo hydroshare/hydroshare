@@ -38,17 +38,17 @@
             {% comment %}<tr><th>DOI</th><td><button class='btn btn-danger' data-toggle="modal" data-target="#submit-for-publication-dialog">Submit for publication</button></td></tr>{% endcomment %}
             {% endif %}
             {% if cm.public %}
-                <tr><th>Sharing Status</th><td>Public</td></tr>
+                <tr><th>Sharing Status</th><td id="sharing-status">Public</td></tr>
             {% else %}
-                <tr><th>Sharing Status</th><td>Private</td></tr>
+                <tr><th>Sharing Status</th><td id="sharing-status">Private</td></tr>
             {% endif %}
             <tr><th>Metadata Status</th>
-                {%  if metadata_status == 'Incomplete' %}
-                    <td class="text-danger">{{ metadata_status }}</td></tr>
+                {%  if metadata_status == "Insufficient to make public" %}
+                    <td id="metadata-status" class="text-danger">{{ metadata_status }}</td></tr>
                 {%  else %}
-                    <td class="text-success">{{ metadata_status }}</td></tr>
+                    <td id="metadata-status" class="text-success">{{ metadata_status }}</td></tr>
                 {%  endif %}
-            <tr><th>Citation</th><td>{{ citation }}</td></tr>
+            <tr><th>How to cite</th><td>{{ citation }}</td></tr>
         </table>
 
     </div>
@@ -60,7 +60,7 @@
 
             <div class="form-group">
                {% if metadata_form %}
-                    <button id="metadata-show-toggle" type="button" class="btn btn-primary" onclick="toogle_metadata_display()">Collapse All</button>
+                    <button id="metadata-show-toggle" type="button" class="btn btn-primary" onclick="toggle_metadata_display()">Collapse All</button>
                      {% crispy metadata_form %}
                {% else %}
                    {% if page.perms.change %}
@@ -71,7 +71,7 @@
                         </form>
                    {% endif %}
                    <div>
-                       {% if metadata_status == 'Incomplete' %}
+                       {% if metadata_status == "Incomplete" %}
                             <table class="table table-condensed" style="margin-top: 2px; border: 2px solid red">
                                 <tr style="color: red"><td><h4>Data for the following required elements are missing:</h4></td></tr>
                                 {% if not abstract %}
@@ -79,6 +79,9 @@
                                 {% endif %}
                                 {% if not keywords %}
                                     <tr><td>Keywords</td></tr>
+                                {% endif %}
+                                {% if title|stringformat:"s" == "Untitled resource" %}
+                                    <tr><td>Title:Needs to be changed</td></tr>
                                 {% endif %}
                             </table>
                        {% endif %}
@@ -115,12 +118,6 @@
                                <div class="row">
                                <div class="col-sm-4"><strong>Organization:</strong></div>
                                <div class="col-sm-8">{{ cr.organization }}</div>
-                               </div>
-                           {% endif %}
-                           {% if cr.email %}
-                               <div class="row">
-                                <div class="col-sm-4"><strong>Email:</strong></div>
-                                <div class="col-sm-8">{{ cr.email }}</div>
                                </div>
                            {% endif %}
                            {% if cr.address %}
@@ -163,12 +160,6 @@
                                <div class="row">
                                <div class="col-sm-4"><strong>Organization:</strong></div>
                                <div class="col-sm-8">{{ cont.organization }}</div>
-                               </div>
-                           {% endif %}
-                           {% if cont.email %}
-                               <div class="row">
-                                <div class="col-sm-4"><strong>Email:</strong></div>
-                                <div class="col-sm-8">{{ cont.email }}</div>
                                </div>
                            {% endif %}
                            {% if cont.address %}
@@ -275,13 +266,13 @@
                                 {% endif %}
                                 {% if spatial_coverage.southlimit %}
                                     <div class="row">
-                                        <div class="col-sm-4"><strong>South Longitude:</strong></div>
+                                        <div class="col-sm-4"><strong>South Latitude:</strong></div>
                                         <div class="col-sm-8">{{ spatial_coverage.southlimit }}</div>
                                     </div>
                                 {% endif %}
                                 {% if spatial_coverage.westlimit %}
                                     <div class="row">
-                                        <div class="col-sm-4"><strong>West Latitude:</strong></div>
+                                        <div class="col-sm-4"><strong>West Longitude:</strong></div>
                                         <div class="col-sm-8">{{ spatial_coverage.westlimit}}</div>
                                     </div>
                                 {% endif %}
@@ -321,7 +312,7 @@
                            {% if rights.url %}
                                <div class="row">
                                    <div class="col-sm-4"><strong>URL:</strong></div>
-                                   <div class="col-sm-8">{{ rights.url }}</div>
+                                   <div class="col-sm-8"><a href="{{ rights.url }}">{{ rights.url }}</a></div>
                                </div>
                            {% endif %}
                            <hr>
@@ -441,20 +432,20 @@
     <div class="row" id="sharing">
         <div class="col-lg-12">
         <h2>Sharing</h2>
-            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+            <form id="id_sharing" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
             {% csrf_token %}
             {% if cm.public %}
                 This resource can be viewed and downloaded by anyone.
                 {% if user == cm.user %}
                     <input name="t" type="hidden" value="make_private"/>
-                    <button type="submit" class="btn btn-danger">Make private</button>
+                    <button id="make-private" type="submit" class="btn btn-danger">Make private</button>
                 {% endif %}
             {% else %}
                 This resource can be viewed and downloaded only by designated users or research groups.
                 {% if user == cm.user %}
                     {%  if cm.can_be_public %}
                         <input name="t" type="hidden" value="make_public"/>
-                        <button type="submit" class="btn btn-danger">Make public</button>
+                        <button id="make-public" type="submit" class="btn btn-danger">Make public</button>
                     {% endif %}
                 {% endif %}
             {% endif %}
@@ -793,7 +784,7 @@
     $(function() {
     });
 
-    function toogle_metadata_display(){
+    function toggle_metadata_display(){
         if ($("#metadata-show-toggle").text() === 'Show All'){
             $("#metadata-show-toggle").text('Collapse All');
             $('.accordion-body:not(".in")').collapse('show');
@@ -850,6 +841,28 @@
                                 $res_title.text(updated_title);
                             }
                         }
+
+                        if (json_response.hasOwnProperty('metadata_status')){
+                            if(json_response.metadata_status !== $('#metadata-status').text()){
+                                $('#metadata-status').text(json_response.metadata_status);
+                                if(json_response.metadata_status == "Sufficient to make public")
+                                {
+                                    customAlert("Metadata Status:Sufficient to make public", 3000);
+                                    $('#metadata-status').removeClass('text-danger');
+                                    $('#metadata-status').addClass('text-success');
+                                    $('#id_sharing #make-public').remove();
+                                    $('#id_sharing').append('<input name="t" type="hidden" value="make_public"/><button id="make-public" type="submit" class="btn btn-danger">Make public</button>');
+                                }
+                                else{
+                                    $('#metadata-status').removeClass('text-success');
+                                    $('#metadata-status').addClass('text-danger');
+                                    $('#id_sharing #make-public').hide();
+                                    $('#id_sharing #make-private').hide();
+                                    $('#sharing-status').text('Private');
+                                }
+                            }
+                        }
+
                         $('#' + form_id).before($alert_success);
                         $('#' + form_id).closest('div').find('#error-alert').each(function(){
                             this.remove();
@@ -876,6 +889,20 @@
             //don't submit the form
             return false;
         }
+
+    function customAlert(msg,duration)
+    {
+        var el = document.createElement("div");
+        var top = ($(window).height() / 2) - 25;
+        var left = ($(window).width() / 2) - 150;
+        var style = "position:fixed;top:" + top + "px;left:" + left + "px;background-color:lightgreen; width:300px; height:50px; text-align:center; line-height:50px";
+        el.setAttribute("style",style);
+        el.innerHTML = msg;
+        setTimeout(function(){
+        el.parentNode.removeChild(el);
+    },duration);
+        document.body.appendChild(el);
+    }
 
     $(document).ready(function () {
         if($("#id_type_1").is(':checked')){ //box type coverage
