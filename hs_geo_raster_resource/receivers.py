@@ -28,7 +28,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
 
             # Save extended meta to metadata variable
             cellInfo = OrderedDict([
-                ('name', infile.file.name),
+                ('name', infile.name),
                 ('rows', res_md_dict['cell_and_band_info']['rows']),
                 ('columns', res_md_dict['cell_and_band_info']['columns']),
                 ('cellSizeXValue', res_md_dict['cell_and_band_info']['cellSizeXValue']),

@@ -5,7 +5,6 @@ from hs_core.models import AbstractResource, resource_processor, CoreMetaData, A
 from mezzanine.pages.page_processors import processor_for
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from hs_core import page_processors
 
 class BandInformation(AbstractMetaDataElement):
     term = 'BandInformation'
@@ -48,7 +47,7 @@ class BandInformation(AbstractMetaDataElement):
             if key in ('method', 'comment'):
                 setattr(band_info, key, value)
 
-            band_info.save()
+        band_info.save()
 
         return band_info
 
@@ -101,49 +100,45 @@ class CellInformation(AbstractMetaDataElement):
 
     def __unicode__(self):
         self.name
+
+    class Meta:
+        # CellInformation element is not repeatable
+        unique_together = ("content_type", "object_id")
+
     @classmethod
     def create(cls, **kwargs):
-        # Check the required fields and create new BandInformation meta instance
-        if 'name' in kwargs:
-            # check if the variable metadata already exists
-            metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            cell_info = CellInformation.objects.filter(name__iexact=kwargs['name'], object_id=metadata_obj.id,
-                                                       content_type=metadata_type).first()
-            if cell_info:
-                raise ValidationError('CellInformation name:%s already exists' % kwargs['name'])
-        else:
-            raise ValidationError("name of CellInformation is missing.")
-
-        if not 'rows' in kwargs:
-            raise ValidationError("CellInformation rows is missing.")
-
-        if not 'columns' in kwargs:
-            raise ValidationError("CellInformation columns is missing.")
-
-        if not 'cellSizeXValue' in kwargs:
-            raise ValidationError("CellInformation cellSizeXValue is missing.")
-
-        if not 'cellSizeYValue' in kwargs:
-            raise ValidationError("CellInformation cellSizeYValue is missing.")
-
-        if not 'cellSizeUnit' in kwargs:
-            raise ValidationError("CellInformation cellSizeUnit is missing.")
-
-        if not 'cellDataType' in kwargs:
-            raise ValidationError("CellInformation cellDataType is missing.")
+        # Check the required fields and create new CellInformation meta instance
+        # if not 'name' in kwargs:
+        #     raise ValidationError("name of CellInformation is missing.")
+        #
+        # if not 'rows' in kwargs:
+        #     raise ValidationError("CellInformation rows is missing.")
+        #
+        # if not 'columns' in kwargs:
+        #     raise ValidationError("CellInformation columns is missing.")
+        #
+        # if not 'cellSizeXValue' in kwargs:
+        #     raise ValidationError("CellInformation cellSizeXValue is missing.")
+        #
+        # if not 'cellSizeYValue' in kwargs:
+        #     raise ValidationError("CellInformation cellSizeYValue is missing.")
+        #
+        # if not 'cellSizeUnit' in kwargs:
+        #     raise ValidationError("CellInformation cellSizeUnit is missing.")
+        #
+        # if not 'cellDataType' in kwargs:
+        #     raise ValidationError("CellInformation cellDataType is missing.")
 
         cell_info = CellInformation.objects.create(name=kwargs['name'], rows=kwargs['rows'], columns=kwargs['columns'],
                                                    cellSizeXValue=kwargs['cellSizeXValue'], cellSizeYValue=kwargs['cellSizeYValue'],
                                                    cellSizeUnit=kwargs['cellSizeUnit'], cellDataType=kwargs['cellDataType'],
-                                                   content_object=metadata_obj)
+                                                   content_object=kwargs['content_object'])
 
-        # check for the optional fields and save them to the BandInformation metadata
-        for key, value in kwargs.iteritems():
-            if key in ('noDataValue'):
-                setattr(cell_info, key, value)
+        # check for the optional fields and save them to the CellInformation metadata
+        if 'noDataValue' in kwargs:
+            setattr(cell_info, 'noDataValue', kwargs['noDataValue'])
 
-            cell_info.save()
+        cell_info.save()
 
         return cell_info
 
@@ -151,18 +146,9 @@ class CellInformation(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         cell_info = CellInformation.objects.get(id=element_id)
         if cell_info:
-            if 'name' in kwargs:
-                if cell_info.name != kwargs['name']:
-                    # check to make sure this new name not already exists
-                    if CellInformation.objects.filter(name_iexact=kwargs['name'], object_id=cell_info.object_id,
-                                                      content_type__pk=cell_info.content_type.id).count()> 0:
-                        raise ValidationError('CellInformation name:%s already exists.' % kwargs['name'])
-
-                cell_info.name = kwargs['name']
-
             for key, value in kwargs.iteritems():
-                if key in ('rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellSizeUnit', 'cellDataType', 'noDataValue'):
-                    setattr(cell_info, key, value)
+                #if key in ('rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellSizeUnit', 'cellDataType', 'noDataValue'):
+                setattr(cell_info, key, value)
 
             cell_info.save()
         else:
@@ -170,14 +156,7 @@ class CellInformation(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        cell_info = CellInformation.objects.get(id=element_id)
-        if cell_info:
-            # make sure we are not deleting all CellInformation of a resource
-            if CellInformation.objects.filter(object_id=cell_info.object_id, content_type__pk=cell_info.content_type.id).count() == 1:
-                raise ValidationError("The only CellInformation of the resource can't be deleted.")
-            cell_info.delete()
-        else:
-            raise ObjectDoesNotExist("No CellInformation element can be found for id:%d." % element_id)
+        raise ValidationError("CellInformation element of a raster resource cannot be removed")
 
 #
 # To create a new resource, use these two super-classes.
@@ -246,11 +225,25 @@ class RasterResource(Page, AbstractResource):
 
         return citation
 
+# this would allow us to pick up additional form elements for the template before the template is displayed via Mezzanine page processor
+processor_for(RasterResource)(resource_processor)
+
 class RasterMetaData(CoreMetaData):
     # required non-repeatable cell information metadata elements
-    cellInformation = generic.GenericRelation(CellInformation)
-    bandInformation = generic.GenericRelation(BandInformation)
-    raster_resource = generic.GenericRelation(RasterResource)
+    _cell_information = generic.GenericRelation(CellInformation)
+    _band_information = generic.GenericRelation(BandInformation)
+    _raster_resource = generic.GenericRelation(RasterResource)
+
+    @property
+    def resource(self):
+        return self._raster_resource.all().first()
+    @property
+    def cellInformation(self):
+        return self._cell_information.all().first()
+
+    @property
+    def bandInformation(self):
+        return self._band_information.all()
 
     @classmethod
     def get_supported_element_names(cls):
@@ -261,9 +254,22 @@ class RasterMetaData(CoreMetaData):
         elements.append('BandInformation')
         return elements
 
-    @property
-    def resource(self):
-        return self.raster_resource.all().first()
+    def has_all_required_elements(self):
+        if not super(RasterMetaData, self).has_all_required_elements():
+            return False
+        if not self.cellInformation:
+            return False
+        if not self.bandInformation:
+            return False
+        return True
+
+    def get_required_missing_elements(self):
+        missing_required_elements = super(RasterMetaData, self).get_required_missing_elements()
+        if not self.cellInformation:
+            missing_required_elements.append('CellInformation')
+        if not self.bandInformation:
+            missing_required_elements.append('BandInformation')
+        return missing_required_elements
 
     def get_xml(self):
         from lxml import etree
@@ -277,36 +283,36 @@ class RasterMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         # inject raster resource specific metadata elements to container element
-        for cell_info in self.cellInformation.all():
-            hsterms_cellInfo = etree.SubElement(container, '{%s}rasterCellInformation' % self.NAMESPACES['hsterms'])
+        if self.cellInformation:
+            hsterms_cellInfo = etree.SubElement(container, '{%s}cellInformation' % self.NAMESPACES['hsterms'])
             hsterms_cellInfo_rdf_Description = etree.SubElement(hsterms_cellInfo, '{%s}Description' % self.NAMESPACES['rdf'])
 
             hsterms_name = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}name' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = cell_info.name
+            hsterms_name.text = self.cellInformation.name
 
             hsterms_rows = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}rows' % self.NAMESPACES['hsterms'])
-            hsterms_rows.text = str(cell_info.rows)
+            hsterms_rows.text = str(self.cellInformation.rows)
 
             hsterms_columns = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}columns' % self.NAMESPACES['hsterms'])
-            hsterms_columns.text = str(cell_info.columns)
+            hsterms_columns.text = str(self.cellInformation.columns)
 
             hsterms_cellSizeXValue = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellSizeXValue' % self.NAMESPACES['hsterms'])
-            hsterms_cellSizeXValue.text = str(cell_info.cellSizeXValue)
+            hsterms_cellSizeXValue.text = str(self.cellInformation.cellSizeXValue)
 
             hsterms_cellSizeYValue = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellSizeYValue' % self.NAMESPACES['hsterms'])
-            hsterms_cellSizeYValue.text = str(cell_info.cellSizeYValue)
+            hsterms_cellSizeYValue.text = str(self.cellInformation.cellSizeYValue)
 
             hsterms_cellSizeUnit = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellSizeUnit' % self.NAMESPACES['hsterms'])
-            hsterms_cellSizeUnit.text = cell_info.cellSizeUnit
+            hsterms_cellSizeUnit.text = self.cellInformation.cellSizeUnit
 
             hsterms_cellDataType = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellDataType' % self.NAMESPACES['hsterms'])
-            hsterms_cellDataType.text = cell_info.cellDataType
+            hsterms_cellDataType.text = self.cellInformation.cellDataType
 
-        if cell_info.noDataValue:
+        if self.cellInformation.noDataValue:
             hsterms_noDataValue = etree.SubElement(hsterms_cellInfo_rdf_Description,'{%s}noDataValue' % self.NAMESPACES['hsterms'])
-            hsterms_noDataValue.text = str(cell_info.noDataValue)
+            hsterms_noDataValue.text = str(self.cellInformation.noDataValue)
 
-        for band_info in self.bandInformation.all():
+        for band_info in self.bandInformation:
             hsterms_bandInfo = etree.SubElement(container, '{%s}rasterBandInformation' % self.NAMESPACES['hsterms'])
             hsterms_bandInfo_rdf_Description = etree.SubElement(hsterms_bandInfo, '{%s}Description' % self.NAMESPACES['rdf'])
 
@@ -329,48 +335,4 @@ class RasterMetaData(CoreMetaData):
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
-processor_for(RasterResource)(resource_processor)
-# page processor to populate raster resource specific metadata into my-resources template page
-@processor_for(RasterResource)
-def main_page(request, page):
-    from dublincore import models as dc
-    from django import forms
-    from collections import OrderedDict
-
-    content_model = page.get_content_model()
-    edit_mode = False
-    if content_model.creator == request.user or request.user in content_model.owners.all() or request.user in content_model.edit_users.all():
-        edit_mode = True
-
-    md_dict = OrderedDict()
-
-    md_dict['rows'] = content_model.metadata.cellInformation.all()[0].rows
-    md_dict['columns'] = content_model.metadata.cellInformation.all()[0].columns
-    md_dict['cellSizeXValue'] = content_model.metadata.cellInformation.all()[0].cellSizeXValue
-    md_dict['cellSizeYValue'] = content_model.metadata.cellInformation.all()[0].cellSizeYValue
-    md_dict['cellSizeUnit'] = content_model.metadata.cellInformation.all()[0].cellSizeUnit
-    md_dict['cellDataType'] = content_model.metadata.cellInformation.all()[0].cellDataType
-    md_dict['noDataValue'] = content_model.metadata.cellInformation.all()[0].noDataValue
-
-    band_dict = OrderedDict()
-    i = 1
-    for band in content_model.metadata.bandInformation.all():
-         band_dict['name (band '+str(i)+')'] = band.name
-         band_dict['variable (band '+str(i)+')'] = band.variableName
-         band_dict['units (band '+str(i)+')'] = band.variableUnit
-         band_dict['method (band '+str(i)+')'] = band.method
-         band_dict['comment (band '+str(i)+')'] = band.comment
-         i = i+1
-
-    context = page_processors.get_page_context(page, request.user)
-    context['res_add_metadata'] = md_dict
-    context['band_metadata'] = band_dict
-    context['resource_type'] = content_model._meta.verbose_name
-
-    return context
-
-    # return  { 'res_add_metadata': md_dict,
-    #           'band_metadata': band_dict,
-    #           'resource_type' : content_model._meta.verbose_name
-    #         }
 import receivers
