@@ -1,5 +1,6 @@
 {% extends "accounts/account_form.html" %}
 {% load i18n future %}
+{% block title %}"Sign In"{% endblock %}
 
 {% block main %}
 
@@ -31,7 +32,7 @@
             {% block account_form_actions %}
                 <div class="row">
                     <div class="col-md-12">
-                        <input class="hl-btn hl-btn-green" type="submit" value="{{ title }}" style="width: 100%;">
+                        <input class="hl-btn hl-btn-green" type="submit" value="Sign In" style="width: 100%;">
                     </div>
                 </div>
             {% endblock %}
