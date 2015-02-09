@@ -231,14 +231,14 @@ def parse_1_0_and_1_1(root):
         return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
 
 def parse_2_0(root):
-    try:
+    #try:
         if 'Collection' in root.tag:
             ts = etree.tostring(root)
             keys = []
             vals = []
             for_graph = []
-            units, site_name, variable_name, latitude, longitude, method = None, None, None, None, None, None
-            name_is_set = False
+            QClevel, units, site_name, variable_name, latitude, longitude, method, site_code, variable_code = None, None, None, None, None, None, None, None, None
+            name_is_set, site_code_set = False, False
             variable_name = root[1].text
             for element in root.iter():
                 if 'MeasurementTVP' in element.tag:
@@ -251,6 +251,9 @@ def parse_2_0(root):
                     units = element.text
                 if 'MonitoringPoint' in element.tag:
                     for e in element.iter():
+                        if 'identifier' in e.tag and not site_code_set:
+                            site_code = e.text
+                            site_code_set = True
                         if 'name' in e.tag and not name_is_set:
                             site_name = e.text
                             name_is_set = True
@@ -263,12 +266,15 @@ def parse_2_0(root):
                     for a in element.attrib:
                         if 'title' in a:
                             variable_name = element.attrib[a]
+                        if 'href' in a:
+                            variable_code = element.attrib[a]
+                            #variable_code = variable_code.replace('#', '')
                 if 'ObservationProcess' in element.tag:
                     for e in element.iter():
                         if 'processType' in e.tag:
                             for a in e.attrib:
                                 if 'title' in a:
-                                    method=e.attrib[a]
+                                    method = e.attrib[a]
             values = dict(zip(keys, vals))
             for k, v in values.items():
                 t = time_to_int(k)
@@ -279,18 +285,22 @@ def parse_2_0(root):
                     smallest_time = t
             return {'time_series': ts,
                     'site_name': site_name,
+                    'site_code': site_code,
                     'start_date': smallest_time,
                     'variable_name': variable_name,
+                    'variable_code': variable_code,
                     'units': units,
                     'values': values,
                     'for_graph': for_graph,
                     'wml_version': '2.0',
                     'latitude': latitude,
-                    'longitude': longitude}
-        else:
-            return "Parsing error: The waterml document doesn't appear to be a WaterML 2.0 time series"
-    except:
-        return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
+                    'longitude': longitude,
+                    'QClevel': 'unknown',
+                    'method': method}
+    #     else:
+    #         return "Parsing error: The waterml document doesn't appear to be a WaterML 2.0 time series"
+    # except:
+    #     return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
 
 def map_waterml(xml_doc):
     root = etree.XML(xml_doc)
