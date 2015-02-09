@@ -84,7 +84,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'rights': content_model.metadata.rights,
                    'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
-                   'metadata_status': metadata_status
+                   'metadata_status': metadata_status,
+                   'missing_metadata_elements': content_model.metadata.get_required_missing_elements()
 
         }
         return context
@@ -257,3 +258,17 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'extended_metadata_layout': extended_metadata_layout}
 
     return context
+
+
+def check_resource_mode(request):
+    if request.method == "GET":
+        resource_mode = request.session.get('resource-mode', None)
+        if resource_mode == 'edit':
+            edit_resource = True
+            del request.session['resource-mode']
+        else:
+            edit_resource = False
+    else:
+        edit_resource = True
+
+    return edit_resource
