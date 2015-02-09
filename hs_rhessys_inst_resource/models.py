@@ -52,11 +52,12 @@ def when_my_process_ends(sender, instance, result_text=None, result_data=None, f
     # make something out of the result data - result_data is a dict, result_text is plaintext
     # files are UploadedFile instances
     # logs are plain text stdout and stderr from the finished container
+    LOGGER.info("Process finished, files: {0}".format(files))
+
+
     from hs_core import hydroshare
     owner = User.objects.first() # FIXME
     hydroshare.create_resource('GenericResource', owner, instance.profile.name + ' - ' + now().isoformat(), files=files, content=logs)
-
-    LOGGER.info('Process finished')
     if logs:
         LOGGER.info(logs)
     #process.delete() # no reason to leave it hanging around in the database

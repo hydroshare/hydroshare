@@ -1,3 +1,4 @@
+import os
 
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -46,15 +47,22 @@ def main_page(request, page):
             process = DockerProcess.objects.create(profile=my_profile) # creates a unique ID
             #promise = tasks.run_process.delay(process, **env_dict)
 
-            logger.info("Calling tasks.run_process.apply_async...")
+            logger.info("content_model.project_name: {0}".format(content_model.project_name))
+
+            logger.info("Calling tasks.run_process.apply_async for process with token {0}...".format(process.token))
+
+            logger.info("Resource ID (for now): {0}".format(content_model.get_slug()))
+            env_dict['RID'] = content_model.get_slug()
+            env_dict['RHESSYS_PROJECT'] = content_model.project_name.strip(os.sep)
 
             keyword_args = {'env': env_dict,
                             'overwrite_images': True}
-            promise = tasks.run_process.apply_async(args=[process, {}], 
+            rebuild_image = True
+            promise = tasks.run_process.apply_async(args=[process, {}, rebuild_image], 
                                                     kwargs=keyword_args)
             logs = promise.get()
             print logs
-            process.delete() # no reason to leave it hanging around in the database
+            #process.delete() # no reason to leave it hanging around in the database
         else:
             logger.info('form not valid')
     else:
