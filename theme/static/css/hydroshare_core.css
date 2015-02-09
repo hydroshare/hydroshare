@@ -828,10 +828,26 @@ html, body{
     top: 6px;
 }
 
-.table-plain > tbody > tr > td > a > .icon-button{
-
+table.table-plain {
+    margin-bottom: 30px;
 }
 
+.tab-elements{
+    border:0;
+}
+
+.tab-elements > .panel-tabs > .nav-tabs{
+    margin-bottom: 0;
+    border:0;
+}
+
+.panel-tabs > .nav-tabs > li > a{
+    color:#555;
+}
+.tab-elements > .tabs-body{
+    border: 1px solid #ddd;
+    border-top:0;
+}
 
 .label-file-name{
     font-weight: bold;

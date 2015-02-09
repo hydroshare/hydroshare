@@ -21,7 +21,6 @@
     </div>
 
     <h2>{{ title }}</h2>
-
     <p class="abstract">{{ abstract }}</p>
 
     <div class="content-block">
@@ -132,6 +131,196 @@
 
         </div>
     </div>
+
+
+    <!-- === Tabs begin === -->
+        <div class="panel tab-elements">
+		<div class="panel-tabs">
+			<ul class="nav nav-tabs">
+				<li class="active">
+					<a href="#contactTab" data-toggle="tab">
+						<span class="glyphicon glyphicon-user"> </span>
+                        Contact
+					</a>
+				</li>
+				<li>
+					<a href="#spatialTab" data-toggle="tab">
+						<i class="icon-globe"></i>
+						Spatial</a>
+				</li>
+                <li>
+					<a href="#temporalTab" data-toggle="tab">
+						<i class="icon-globe"></i>
+						Temporal</a>
+				</li>
+                <li>
+					<a href="#relatedResourcesTab" data-toggle="tab">
+						<i class="icon-globe"></i>
+						Related Resources</a>
+				</li>
+                <li>
+					<a href="#resourceSpecificTab" data-toggle="tab">
+						<i class="icon-globe"></i>
+						Resource Specific</a>
+				</li>
+                <li>
+					<a href="#systemMetadataTab" data-toggle="tab">
+						<i class="icon-globe"></i>
+						System Metadata</a>
+				</li>
+			</ul>
+		</div>
+		<div class="tabs-body">
+			<!-- Tab panes -->
+			<div class="tab-content">
+				<div class="tab-pane active" id="contactTab">
+					<table class="table table-condensed table-no-border-top">
+						<tbody>
+							<tr>
+								<th scope="row" class="dataset-label">Creator</th>
+								<td class="dataset-details"><a href="#">Creator Name</a></td>
+							</tr>
+                            <tr>
+								<th scope="row" class="dataset-label">Contributors</th>
+								<td class="dataset-details"><a href="#">Person 1</a>, <a href="#">Person 2</a>, <a href="#">Person 3</a></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="tab-pane" id="spatialTab">
+					<table class="table  table-condensed table-no-border-top">
+						<tbody>
+							<tr>
+								<th scope="row" class="dataset-label">Spatial Extent</th>
+								<td class="dataset-details">Red Butte Creek</td>
+							</tr>
+                            {% if spatial_coverage.type == 'point' %}
+                                {% if spatial_coverage.name %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Place/Area Name:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.name}}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.projection %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Coordinate System/Geographic Projection:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.projection}}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.east %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Longitude:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.east}}</td>
+                                    </tr>
+                                {%  endif %}
+                                {% if spatial_coverage.north %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Latitude:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.north}}</td>
+                                    </tr>
+                                {%  endif %}
+                                {% if spatial_coverage.units %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Coordinate Units:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.units}}</td>
+                                    </tr>
+                                {%  endif %}
+                            {% else %}
+                                {% if spatial_coverage.name %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Place/Area Name:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.name}}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.projection %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Coordinate System/Geographic Projection:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.projection}}</td>
+                                    </tr>
+
+                                {% endif %}
+                                {% if spatial_coverage.northlimit %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">North Latitude:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.northlimit }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.eastlimit %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">East Longitude:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.eastlimit }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.southlimit %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">South Latitude:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.southlimit }}</td>
+                                    </tr>
+
+                                {% endif %}
+                                {% if spatial_coverage.westlimit %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">West Longitude:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.westlimit}}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.units %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Coordinate Units:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.units}}</td>
+                                    </tr>
+                                {%  endif %}
+                            {% endif %}
+						</tbody>
+					</table>
+				</div>
+                <div class="tab-pane" id="temporalTab">
+					<table class="table  table-condensed table-no-border-top">
+						<tbody>
+							<tr>
+								<th scope="row" class="dataset-label">Label</th>
+								<td class="dataset-details">Text</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+                <div class="tab-pane" id="relatedResourcesTab">
+					<table class="table  table-condensed table-no-border-top">
+						<tbody>
+							<tr>
+								<th scope="row" class="dataset-label">Label</th>
+								<td class="dataset-details">Text</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+                <div class="tab-pane" id="resourceSpecificTab">
+					<table class="table  table-condensed table-no-border-top">
+						<tbody>
+							<tr>
+								<th scope="row" class="dataset-label">Label</th>
+								<td class="dataset-details">Text</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+                <div class="tab-pane" id="systemMetadataTab">
+					<table class="table  table-condensed table-no-border-top">
+						<tbody>
+							<tr>
+								<th scope="row" class="dataset-label">Label</th>
+								<td class="dataset-details">Text</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+			</div>
+		</div>
+
+	</div>
+
+    <!-- ==== Tabs end ==== -->
 
 <!--<div class="btn-toolbar" style="padding-bottom: 0.5em;">
     {% if page.perms.change %}
@@ -317,91 +506,6 @@
                    {%  endif %}
                    </div>
                    <div>
-                   {% if spatial_coverage %}
-                        <h4><strong>Spatial Coverage:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                             <div class="row">
-                                <div class="col-sm-4"><strong>Coverage Type:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.type }}</div>
-                             </div>
-
-                            {% if spatial_coverage.type == 'point' %}
-                                {% if spatial_coverage.name %}
-                                    <div class="row">
-                                        <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
-                                        <div class="col-sm-8">{{ spatial_coverage.name}}</div>
-                                    </div>
-                                {% endif %}
-                                {% if spatial_coverage.projection %}
-                                    <div class="row">
-                                        <div class="col-sm-4"><strong>Coordinate System/Geographic Projection:</strong></div>
-                                        <div class="col-sm-8">{{ spatial_coverage.projection}}</div>
-                                    </div>
-                                {% endif %}
-                                {% if spatial_coverage.east %}
-                                    <div class="row">
-                                        <div class="col-sm-4"><strong>Longitude:</strong></div>
-                                        <div class="col-sm-8">{{ spatial_coverage.east}}</div>
-                                    </div>
-                                {%  endif %}
-                                {% if spatial_coverage.north %}
-                                    <div class="row">
-                                        <div class="col-sm-4"><strong>Latitude:</strong></div>
-                                        <div class="col-sm-8">{{ spatial_coverage.north}}</div>
-                                    </div>
-                                {%  endif %}
-                                {% if spatial_coverage.units %}
-                                    <div class="row">
-                                        <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
-                                        <div class="col-sm-8">{{ spatial_coverage.units}}</div>
-                                    </div>
-                                {%  endif %}
-                            {% else %}
-                                {% if spatial_coverage.name %}
-                                    <div class="row">
-                                        <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
-                                        <div class="col-sm-8">{{ spatial_coverage.name}}</div>
-                                    </div>
-                                {% endif %}
-                                {% if spatial_coverage.projection %}
-                                    <div class="row">
-                                        <div class="col-sm-4"><strong>Coordinate System/Geographic Projection:</strong></div>
-                                        <div class="col-sm-8">{{ spatial_coverage.projection}}</div>
-                                    </div>
-                                {% endif %}
-                                {% if spatial_coverage.northlimit %}
-                                    <div class="row">
-                                        <div class="col-sm-4"><strong>North Latitude:</strong></div>
-                                        <div class="col-sm-8">{{ spatial_coverage.northlimit }}</div>
-                                    </div>
-                                {% endif %}
-                                {% if spatial_coverage.eastlimit %}
-                                    <div class="row">
-                                        <div class="col-sm-4"><strong>East Longitude:</strong></div>
-                                        <div class="col-sm-8">{{ spatial_coverage.eastlimit }}</div>
-                                    </div>
-                                {% endif %}
-                                {% if spatial_coverage.southlimit %}
-                                    <div class="row">
-                                        <div class="col-sm-4"><strong>South Latitude:</strong></div>
-                                        <div class="col-sm-8">{{ spatial_coverage.southlimit }}</div>
-                                    </div>
-                                {% endif %}
-                                {% if spatial_coverage.westlimit %}
-                                    <div class="row">
-                                        <div class="col-sm-4"><strong>West Longitude:</strong></div>
-                                        <div class="col-sm-8">{{ spatial_coverage.westlimit}}</div>
-                                    </div>
-                                {% endif %}
-                                {% if spatial_coverage.units %}
-                                    <div class="row">
-                                        <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
-                                        <div class="col-sm-8">{{ spatial_coverage.units}}</div>
-                                    </div>
-                                {%  endif %}
-                            {% endif %}
-                        <hr>
-                   {% endif %}
                    </div>
                    <div>
                        <h4><strong>Language:</strong></h4>

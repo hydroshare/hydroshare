@@ -75,11 +75,10 @@ $(document).ready(function() {
 
     // Keywords field
 	//===================
-    var keywords = $("#keywords").text().split(" ");
+    var keywords = $("#keywords").text().split(",");
     var list = $("#list-keywords");
     for (var i = 0; i < keywords.length; i++){
         list.append("<li><a class='tag'>" + keywords[i] + "</a></li>");
     }
     $("#keywords").remove();
-    //<li><a class="tag">GAMUT</a></li>
 });
