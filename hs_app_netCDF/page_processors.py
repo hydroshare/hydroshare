@@ -12,7 +12,16 @@ from django.forms.models import formset_factory
 # when the resource is created this page will be shown
 def landing_page(request, page):
     content_model = page.get_content_model()
-    edit_resource = page_processors.check_resource_mode(request)
+    if request.method == "GET":
+        resource_mode = request.session.get('resource-mode', None)
+        if resource_mode == 'edit':
+            edit_resource = True
+            del request.session['resource-mode']
+        else:
+            edit_resource = False
+    else:
+        edit_resource = True
+
 
     if not edit_resource:
         # get the context from hs_core
@@ -22,7 +31,7 @@ def landing_page(request, page):
             extended_metadata_exists = True
 
         context['extended_metadata_exists'] = extended_metadata_exists
-        context['variables'] = content_model.metadata.variable #TODO not clear variable.all()?
+        context['variables'] = content_model.metadata.variables.all() # the variables is the field name from NetCDFMetaData model
     else:
         VariableFormSetEdit = formset_factory(wraps(VariableForm)(partial(VariableForm, allow_edit=edit_resource)), formset=BaseVariableFormSet, extra=0)
         variable_formset = VariableFormSetEdit(initial=content_model.metadata.variables.all().values(), prefix='variable')
@@ -42,4 +51,4 @@ def landing_page(request, page):
         context = page_processors.get_page_context(page, request.user, extended_metadata_layout=ext_md_layout)
         context['variable_formset'] = variable_formset
         context['add_variable_modal_form'] = add_variable_modal_form
-        return context
+    return context
