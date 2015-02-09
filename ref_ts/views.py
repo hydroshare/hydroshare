@@ -163,7 +163,6 @@ def create_ref_time_series(request, *args, **kwargs):
             if 'visualization' in file_name:
                 # open(file_name, 'w')
                 os.remove("theme/static/img/"+file_name)
-        post_create_resource.send(sender=RefTimeSeries, resource=res)
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeries)
