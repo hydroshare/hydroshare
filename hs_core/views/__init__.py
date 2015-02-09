@@ -142,10 +142,15 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
     if request.is_ajax():
         if is_add_success:
-            if element_name == 'subject':
-                ajax_response_data = {'status': 'success'}
+            if res.metadata.has_all_required_elements():
+                metadata_status = "Sufficient to make public"
             else:
-                ajax_response_data = {'status': 'success', 'element_id': element.id, 'element_name': element_name}
+                metadata_status = "Insufficient to make public"
+
+            if element_name == 'subject':
+                ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
+            else:
+                ajax_response_data = {'status': 'success', 'element_id': element.id, 'element_name': element_name, 'metadata_status': metadata_status}
 
             return HttpResponse(json.dumps(ajax_response_data))
 
@@ -166,6 +171,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                                         element_id=element_id, request=request)
     is_update_success = False
 
+    is_redirect = False
     for receiver, response in handler_response:
         if 'is_valid' in response:
             if response['is_valid']:
@@ -174,13 +180,23 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 if element_name == 'title':
                     res.title = res.metadata.title.value
                     res.save()
+                    if res.public:
+                        if not res.can_be_public:
+                            res.public = False
+                            res.save()
+                            is_redirect = True
 
                 resource_modified(res, request.user)
                 is_update_success = True
 
     if request.is_ajax():
         if is_update_success:
-            ajax_response_data = {'status': 'success', 'element_name': element_name}
+            if res.metadata.has_all_required_elements():
+                metadata_status = "Sufficient to make public"
+            else:
+                metadata_status = "Insufficient to make public"
+
+            ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
             return HttpResponse(json.dumps(ajax_response_data))
         else:
             ajax_response_data = {'status': 'error'}
@@ -200,8 +216,13 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     fl = res.files.filter(pk=int(f)).first()
     file_name = fl.resource_file.name
+    file_path_to_delete = os.path.dirname(fl.resource_file.path)
     fl.resource_file.delete()
     fl.delete()
+    # delete the file path if there are no other files for the resource
+    if resource.files.count() == 0:
+        os.rmdir(file_path_to_delete)
+
     delete_file_mime_type = utils.get_file_mime_type(file_name)
     delete_file_extension = os.path.splitext(file_name)[1]
     # if there is no other resource file with the same extension as the
@@ -223,11 +244,22 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+
+    res_file = res.files.all()[0].resource_file if res.files.all() else None
+    if res_file:
+        res_file_path_to_delete = os.path.dirname(res_file.path)
+    else:
+        res_file_path_to_delete = None
+
     for fl in res.files.all():
         fl.resource_file.delete()
+
     for bag in res.bags.all():
         bag.bag.delete()
         bag.delete()
+
+    if res_file_path_to_delete:
+        os.rmdir(res_file_path_to_delete)
 
     res.metadata.delete_all_elements()
     res.metadata.delete()

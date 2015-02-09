@@ -19,7 +19,7 @@ class SiteConfiguration(SiteRelated):
     '''
     col1_heading = models.CharField(max_length=200, default="Contact us")
     col1_content = RichTextField()
-    col2_heading = models.CharField(max_length=200, default="Go social")
+    col2_heading = models.CharField(max_length=200, default="Follow")
     col2_content = RichTextField(blank=True,
                                  help_text="If present will override the "
                                            "social network icons.")
@@ -153,7 +153,7 @@ class UserProfile(models.Model):
     ))
     public = models.BooleanField(default=True, help_text='Uncheck to make your profile contact information and details private.')
     cv = models.FileField(upload_to='profile', help_text='Upload your Curriculum Vitae if you wish people to be able to download it.', null=True, blank=True)
-    details = models.TextField("Description", help_text='Tell the Hydroshare community a little about yourself.', null=True, blank=True)
+    details = models.TextField("Description", help_text='Tell the HydroShare community a little about yourself.', null=True, blank=True)
 
 from django.db.models.signals import post_save
 def create_user_profile(sender, instance, created, **kwargs):

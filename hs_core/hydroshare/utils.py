@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 import mimetypes
 import os
-from hs_core.models import AbstractResource
+from hs_core.models import AbstractResource, Bags
 from dublincore.models import QualifiedDublinCoreElement
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
@@ -433,7 +433,9 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
             )
     resource.save()
     if overwrite_bag:
-        resource.bags.all().delete()
+        for bag in resource.bags.all():
+            bag.bag.delete()
+            bag.delete()
 
     hs_bagit.create_bag(resource)
 
