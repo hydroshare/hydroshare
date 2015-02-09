@@ -24,7 +24,7 @@
     <div class="col-md-12">{# <img src="/placeholder.png"></div> #}
 
         <table class="table">
-            <tr><th>Resource Type</th><td>{{ resource_type }}</td></tr>
+            <tr><th>Resource Type</th><td>{{ cm|resource_type }}</td></tr>
             <tr><th>Owner</th><td>{{ cm.user|contact|safe }}</td></tr>
             <tr><th>Added on</th><td>{{ cm.created|date }}</td></tr>
             <tr><th>Last updated by</th><td>{% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
@@ -72,12 +72,15 @@
                         </form>
                    {% endif %}
                    <div>
-                       {% if metadata_status == "Incomplete" %}
+                       {% if metadata_status == "Insufficient to make public" %}
                             <table class="table table-condensed" style="margin-top: 2px; border: 2px solid red">
                                 <tr style="color: red"><td><h4>Data for the following required elements are missing:</h4></td></tr>
                                 {% for element in missing_metadata_elements %}
                                     <tr><td>{{ element }}</td></tr>
                                 {%  endfor %}
+                                {% if title|stringformat:"s" == "Untitled resource" %}
+                                    <tr><td>Title:Needs to be changed</td></tr>
+                                {% endif %}
                             </table>
                        {% endif %}
                    </div>
@@ -359,7 +362,9 @@
             </div>
         </div>
     </div>
-
+    {% endblock %}
+    {% block extended_metadata %}
+    {%  endblock %}
     <div class="row">
         <div class="col-md-12">
             <h2>Content</h2>
