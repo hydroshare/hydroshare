@@ -509,11 +509,12 @@ img.img-about {
 /* ===== Footer ===== */
 
 footer {
+    width: 100%;
 	margin-top: 60px;
-	padding: 20px 0;
 	background: #0A91AB;
-	color: white;
 	font-weight: 300;
+    color: white;
+    position: absolute;
 }
 footer a {
 	color: #81D685;
@@ -813,6 +814,150 @@ li.account p{
 	text-align: center;
 }
 
+
+/* ===== Resource UI changes ===== */
+html, body{
+    height:100%;
+}
+
+.file-icon{
+    margin-right: 5px;
+    font-size: 28px;
+    color: #8c8c8c;
+    float:left;
+    top: 6px;
+}
+
+.table-plain > tbody > tr > td > a > .icon-button{
+
+}
+
+
+.label-file-name{
+    font-weight: bold;
+}
+
+.label-file-size{
+    font-size:12px;
+    margin-bottom: 0;
+}
+
+.table-plain > tbody > tr{
+    border-bottom: 1px solid #ddd;
+}
+
+body > .container{
+    min-height: calc(100% - 277px);
+    padding-top: 20px;
+}
+
+.icon-button {
+    font-size: 16px;
+    float: right;
+    margin-left: 12px;
+    width:14px;
+    color: #898989;
+    cursor: pointer;
+    align-items: baseline;
+    text-align: center;
+    padding: 0;
+    border: 0;
+    border-image-source: none;
+    border-image-slice: 100%;
+    border-image-width: 100%;
+    border-image-outset: 0;
+    border-image-repeat: stretch;
+    background-color: transparent;
+    box-sizing: inherit;
+}
+
+.icon-button:hover {
+    color: #000;
+}
+
+.custom-btn-toolbar{
+    display: block;
+    height: 14px;
+    width: auto;
+}
+
+.abstract{
+    margin: 30px 0;
+    line-height: 2;
+    font-size: 16px;
+}
+
+.button-label{
+    font-family: Lato, sans-serif;
+}
+
+.btn-remove{
+    color:#d9534f;
+}
+
+.btn-download{
+    color:#428bca;
+}
+
+.content-block{
+    margin-bottom:30px;
+    display: table;
+}
+.citation-label {
+    float:left;
+    font-weight: bold;
+}
+
+.citation-text {
+    display: inline-block;
+    float: left;
+    font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    margin-left:10px;
+    width:90%;
+}
+
+.rights-text, .rights-url{
+    font-style:italic;
+}
+
+.tag-list {
+    margin: 0;
+    list-style: none;
+    padding: 10px 10px 5px 10px;
+}
+
+.tag {
+    display: inline-block;
+    margin-bottom: 4px;
+    color: #111111;
+    background-color: #f6f6f6;
+    padding: 1px 10px;
+    border: 1px solid #dddddd;
+    -webkit-border-radius: 100px;
+    -moz-border-radius: 100px;
+    border-radius: 100px;
+    -webkit-box-shadow: inset 0 1px 0 #ffffff;
+    -moz-box-shadow: inset 0 1px 0 #ffffff;
+    box-shadow: inset 0 1px 0 #ffffff;
+    /*cursor:pointer;*/
+}
+
+.tag-list li {
+    display: inline-block;
+    margin-right: 5px;
+}
+
+a.tag:hover {
+    text-decoration: none;
+    cursor:default;
+    /*color: #fff;*/
+    /*background-color: #30778d;*/
+    /*border: 1px solid #235767;*/
+    /*-webkit-box-shadow: inset 0 1px 0 #3d97b3;*/
+    /*-moz-box-shadow: inset 0 1px 0 #3d97b3;*/
+    /*box-shadow: inset 0 1px 0 #3d97b3;*/
+}
+
 /* ===== Responsive CSS ===== */
 
 .navbar-inverse .navbar-toggle:hover,
@@ -970,5 +1115,5 @@ li.account p{
   .bs-sidebar.affix {
     width: 360px;
   }
-}
+}}
 

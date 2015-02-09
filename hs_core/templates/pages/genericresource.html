@@ -8,9 +8,132 @@
 {% keywords_for page as kws %}
 {% set_page_permissions page %}
 
-    <h2>Resource Details</h2>
+    <div class="custom-btn-toolbar">
+        <a id="delete"  data-toggle="modal" data-target="#delete-resource-dialog"><span data-toggle="tooltip" data-placement="auto" title="Delete" class="glyphicon glyphicon-remove icon-button"></span></a>
+        {% if page.perms.change %}
+            <form action="{{ cm.get_absolute_url }}" method="post">
+                {% csrf_token %}
+                <input name="resource-mode" type="hidden" value="edit"/>
+                <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto" title="Edit" class="glyphicon glyphicon-pencil icon-button"></button>
+            </form>
+        {% endif %}
+        <a id="share" href="#sharing"><span data-toggle="tooltip" data-placement="auto" title="Share" class="glyphicon glyphicon-share-alt icon-button"></span></a>
+    </div>
 
-<div class="btn-toolbar" style="padding-bottom: 0.5em;">
+    <h2>{{ title }}</h2>
+
+    <p class="abstract">{{ abstract }}</p>
+
+    <div class="content-block">
+		<span class="citation-label">Citation:</span>
+		<span class="citation-text">{{ citation }}</span>
+	</div>
+
+    <div class="content-block">
+       {% if rights.statement %}
+            <div class="rights-text">{{ rights.statement }}</div>
+       {% endif %}
+       {% if rights.url %}
+            <a class="rights-url" href="{{ rights.url }}">{{ rights.url }}</a>
+       {% endif %}
+    </div>
+
+    {% if keywords %}
+    <p id="keywords">{{ keywords }}</p>
+    <div class="tags">
+        <ul id="list-keywords" class="tag-list well">
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Content</h3>
+
+            {% block extra_content %}
+            {% endblock %}
+
+            <table class="table-plain">
+
+                {% for f in cm.files.all %}
+                {#======= Modal window begins =======#}
+                <div class="modal fade" id="delete-resource-file-{{f.pk}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Confirm file deletion</h4>
+                      </div>
+                      <div class="modal-body">
+                          This will delete the file from the resource. Consider saving a copy if it is important to you.
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{f.pk}}/">Delete</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {#======= Modal window ends =======#}
+
+                <tr>
+                    <td>
+                        <span class="glyphicon glyphicon-file file-icon"></span>
+                        <span>
+                            <span class="label-file-name">{{ f.resource_file.name|slice:"33:" }}</span>
+                            <p class="label-file-size">{{ f.resource_file.size|filesizeformat }}</p>
+                        </span>
+                    </td>
+{#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
+                    <td>
+                        {% if page.perms.change %}
+                        <a href="{{ f.resource_file.url }}"><span data-toggle="modal" data-target="#delete-resource-file-{{f.pk}}" data-placement="auto" title="Delete" class="glyphicon glyphicon-remove icon-button btn-remove"></span></a>
+                        <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip" data-placement="auto" title="Download" class="glyphicon glyphicon-download icon-button btn-download"></span></a>
+                        {% if preview %}
+                        <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip" data-placement="auto" title="Preview" class="glyphicon glyphicon-eye-open icon-button"></span></a>
+                        {% endif %}
+                    <td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+
+                <tfoot>
+                    <tr>
+                        <td>
+{#                            <div class="btn-group">#}
+                                {% for b in cm.bags.all %}
+                                <a type="button" class="btn btn-default" href="{{ bag.bag.url }}">
+                                    <span class="glyphicon glyphicon-download-alt">
+                                        <span class="button-label">Download All ({{ b.bag.size|filesizeformat }})</span>
+                                    </span>
+                                </a>
+                                {% endfor %}
+{#                              <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">#}
+{#                                <span class="caret"></span>#}
+{#                                <span class="sr-only">Toggle Dropdown</span>#}
+{#                              </button>#}
+{#                              <ul class="dropdown-menu" role="menu">#}
+{#                                  {% for b in cm.bags.all %}#}
+{#                                    <li><a href="{{ b.bag.url }}" style="color:black;">{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>#}
+{#                                  {% endfor %}#}
+{#                              </ul>#}
+{#                            </div>#}
+                        </td>
+{#                      {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
+                        {% if page.perms.change %}
+{#                        <td><button class="btn btn-success"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>#}
+                        <td><a type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">
+                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
+                        </a></td>
+                        {% endif %}
+                    </tr>
+                </tfoot>
+            </table>
+
+        </div>
+    </div>
+
+<!--<div class="btn-toolbar" style="padding-bottom: 0.5em;">
     {% if page.perms.change %}
     <a class="btn btn-primary" id="share" href="#sharing">Share</a>
     {% endif %}
@@ -18,7 +141,7 @@
     {% if page.perms.delete %}
     <button class="btn btn-danger" id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">Delete</button>
     {% endif %}
-</div>
+</div> -->
 
 <div class="row">
     <div class="col-md-12">{# <img src="/placeholder.png"></div> #}
@@ -63,15 +186,8 @@
                     <button id="metadata-show-toggle" type="button" class="btn btn-primary" onclick="toogle_metadata_display()">Collapse All</button>
                      {% crispy metadata_form %}
                {% else %}
-                   {% if page.perms.change %}
-                       <form action="{{ cm.get_absolute_url }}" method="post">
-                        {% csrf_token %}
-                        <input name="resource-mode" type="hidden" value="edit"/>
-                        <button id="edit-metadata" type="submit" class="btn btn-primary">Edit</button>
-                        </form>
-                   {% endif %}
                    <div>
-                       {% if metadata_status == 'Incomplete' %}
+                       {% if not keywords or not abstract%}
                             <table class="table table-condensed" style="margin-top: 2px; border: 2px solid red">
                                 <tr style="color: red"><td><h4>Data for the following required elements are missing:</h4></td></tr>
                                 {% if not abstract %}
@@ -374,69 +490,7 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-12">
-            <h2>Content</h2>
-            {% block extra_content %}
-            {% endblock %}
 
-            <table class="table table-striped">
-                {% for f in cm.files.all %}
-                <tr>
-                    <td>{{ f.resource_file.name|slice:"33:" }}</td>
-                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
-                    <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>
-                    {% if page.perms.change %}
-                        <div class="modal fade" id="delete-resource-file-{{f.pk}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-                          <div class="modal-dialog">
-                            <div class="modal-content">
-                              <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                <h4 class="modal-title">Confirm file deletion</h4>
-                              </div>
-                              <div class="modal-body">
-                                  This will delete the file from the resource. Consider saving a copy if it is important to you.
-                              </div>
-                              <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{f.pk}}/">Delete</a>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <td><a class="btn btn-danger btn-block" data-toggle="modal" data-target="#delete-resource-file-{{f.pk}}">Delete</a></td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-
-                <tfoot>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <td>
-                            <div class="btn-group">
-                              <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Download all</a>
-                              <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                                <span class="caret"></span>
-                                <span class="sr-only">Toggle Dropdown</span>
-                              </button>
-                              <ul class="dropdown-menu" role="menu">
-                                  {% for b in cm.bags.all %}
-                                    <li><a href="{{ b.bag.url }}" style="color:black;">{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>
-                                  {% endfor %}
-                              </ul>
-                            </div>
-                        </td>
-{#                        {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
-                        {% if page.perms.change %}
-                        <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
-                        {% endif %}
-                    </tr>
-                </tfoot>
-            </table>
-
-        </div>
-    </div>
 
     <div class="row" id="sharing">
         <div class="col-lg-12">
