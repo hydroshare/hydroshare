@@ -2,7 +2,6 @@ __author__ = 'jeff'
 
 
 from django.dispatch import receiver
-from hs_core.signals import pre_create_resource, post_create_resource
 from hs_core.signals import *
 from ref_ts.models import RefTimeSeries
 
