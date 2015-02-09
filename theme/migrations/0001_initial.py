@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('col1_heading', models.CharField(default=b'Contact us', max_length=200)),
                 ('col1_content', mezzanine.core.fields.RichTextField()),
-                ('col2_heading', models.CharField(default=b'Go social', max_length=200)),
+                ('col2_heading', models.CharField(default=b'Follow', max_length=200)),
                 ('col2_content', mezzanine.core.fields.RichTextField(help_text=b'If present will override the social network icons.', blank=True)),
                 ('col3_heading', models.CharField(default=b'Subscribe', max_length=200)),
                 ('col3_content', mezzanine.core.fields.RichTextField()),
@@ -100,7 +100,7 @@ class Migration(migrations.Migration):
                 ('phone_2_type', models.CharField(blank=True, max_length=1024, null=True, choices=[(b'Home', b'Home'), (b'Work', b'Work'), (b'Mobile', b'Mobile')])),
                 ('public', models.BooleanField(default=True, help_text=b'Uncheck to make your profile information private.')),
                 ('cv', models.FileField(help_text=b'Upload your Curriculum Vitae if you wish people to be able to download it.', null=True, upload_to=b'profile', blank=True)),
-                ('details', mezzanine.core.fields.RichTextField(help_text=b'Tell the Hydroshare community a little about yourself.', null=True, blank=True)),
+                ('details', mezzanine.core.fields.RichTextField(help_text=b'Tell the HydroShare community a little about yourself.', null=True, blank=True)),
                 ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
             ],
             options={
