@@ -1,20 +1,76 @@
+{# This template is used as the landing page for NetCDF Resource #}
+
 {% extends "pages/genericresource.html" %}
-{% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags crispy_forms_tags %}
+{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
 
-{% block extra_content %}
-    <h4>NetCDF Extended Metadata</h4>
+{% block extended_metadata %}
+    {% if extended_metadata_exists %}
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Extended Metadata</h2>
 
-    {%  csrf_token %}
+                {# Add the view mode html code below #}
+                <div>
+                    {% if variable %}
+                        {% for variable in variables %}
+                            <h4><strong>Variable:</strong></h4>
+                            <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                            {# Required extended meta subelement for Variable #}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Name:</strong></div>
+                                <div class="col-sm-8">{{ variable.name }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Unit:</strong></div>
+                                <div class="col-sm-8">{{ variable.unit }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Type:</strong></div>
+                                <div class="col-sm-8">{{ variable.type }}</div>
+                            </div>
+                            <div class="row">
+                                    <div class="col-sm-4"><strong>Shape:</strong></div>
+                                    <div class="col-sm-8">{{ variable.shape }}</div>
+                            </div>
 
-    {{ variable_formsets |crispy }}
-    {% comment %}
-    {% for lf in variable_formsets %}
-        <div>Variable</div>
-        {% fields_for lf %}
-    {% endfor %}
-    {% endcomment %}
+                            {# Optional extended meta subelement for Variable #}
+                            {% if variable.descriptive_name %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Descriptive Name:</strong></div>
+                                    <div class="col-sm-8">{{ variable.descriptive_name }}</div>
+                                </div>
+                            {% endif %}
+                            {% if variable.method %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Method:</strong></div>
+                                    <div class="col-sm-8">{{ variable.method }}</div>
+                                </div>
+                            {% endif %}
+                            {% if variable.missing_value %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Missing Value:</strong></div>
+                                    <div class="col-sm-8">{{ variable.missing_value }}</div>
+                                </div>
+                            {% endif %}
 
-{% endblock %}
+                        {% endfor %}
+                    <hr>
+                    {% endif %}
+                </div>
+                {# Add the view mode html code above #}
+
+
+                </div>
+            </div>
+    {%  endif %}
+{%  endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+
+    {# resource specific js can go here #}
+
+{%  endblock %}
 
 
 
