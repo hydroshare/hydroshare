@@ -1,48 +1,39 @@
-from django.forms import ModelForm, Textarea, BaseFormSet
+from django.forms import ModelForm
 from django import forms
 from crispy_forms.layout import *
-from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import *
-from django.forms.models import formset_factory
-from django.forms.models import modelformset_factory
-from hs_geo_raster_resource.models import *
-from functools import partial, wraps
+from models import *
+from hs_core.forms import BaseFormHelper
 
-# Keep this one unchanged
-class BaseFormHelper(FormHelper):
-    def __init__(self, res_short_id=None, element_id=None, element_name=None, element_layout=None, *args, **kwargs):
-        super(BaseFormHelper, self).__init__(*args, **kwargs)
+class CellInfoFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
-        if res_short_id:
-            self.form_method = 'post'
-            if element_id:
-                self.form_tag = True
-                self.form_action = "/hsapi/_internal/%s/%s/%s/update-metadata/" % (res_short_id,element_name, element_id)
-            else:
-                self.form_action = "/hsapi/_internal/%s/%s/add-metadata/" % (res_short_id, element_name)
-                self.form_tag = False
-        else:
-            self.form_tag = False
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+                        Field('rows', css_class=field_width),
+                        Field('columns', css_class=field_width),
+                        Field('cellSizeXValue', css_class=field_width),
+                        Field('cellSizeYValue', css_class=field_width),
+                        Field('cellSizeUnit', css_class=field_width),
+                        Field('cellDataType', css_class=field_width),
+                        Field('cellNoDataValue', css_class=field_width),
+                 )
 
-        # change the first character to uppercase of the element name
-        element_name = element_name.title()
-        if res_short_id and element_id:
-            self.layout = Layout(
-                            Fieldset(element_name,
-                            element_layout,
-                            HTML('<div style="margin-top:10px">'),
-                            HTML('<button type="submit" class="btn btn-primary">Save changes</button>'),
-                            HTML('</div>')
-                            ),
-                        )
-        else:
-            self.layout = Layout(
-                            Fieldset(element_name,
-                            element_layout,
-                            ),
-                        )
+        super(CellInfoFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
-class RasterMetadataValidationForm(forms.Form):
+class CellInfoForm(ModelForm):
+    def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
+        super(CellInfoForm, self).__init__(*args, **kwargs)
+        self.helper = CellInfoFormHelper(allow_edit, res_short_id, element_id, element_name='CellInformation')
+
+    class Meta:
+        model = CellInformation
+        fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellSizeUnit', 'cellDataType', 'noDataValue']
+        exclude = ['content_object']
+        widgets = {'CellInformation': forms.TextInput()}
+
+class CellInfoValidationForm(forms.Form):
     rows = forms.IntegerField(required=True)
     columns = forms.IntegerField(required=True)
     cellSizeXValue = forms.FloatField(required = True)
@@ -50,9 +41,36 @@ class RasterMetadataValidationForm(forms.Form):
     cellSizeUnit = forms.CharField(max_length=50, required = True)
     cellDataType = forms.CharField(max_length=50, required=True)
     cellNoDataValue = forms.FloatField(required = False)
-    bandCount =forms.IntegerField(required=True)
-    bandName_1 = forms.CharField(max_length=50, required=True)
-    variableName_1 = forms.CharField(widget=forms.Textarea, required=True)
-    variableUnit_1 = forms.CharField(max_length=50, required=True)
-    method_1 = forms.CharField(widget=forms.Textarea, required=False)
-    comment_1 = forms.CharField(widget=forms.Textarea, required=False)
+
+class BandInfoFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+                        Field('bandName', css_class=field_width),
+                        Field('variableName', css_class=field_width),
+                        Field('variableUnit', css_class=field_width),
+                        Field('method', css_class=field_width),
+                        Field('comment', css_class=field_width)
+                 )
+
+        super(BandInfoFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+class BandInfoForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(BandInfoForm, self).__init__(*args, **kwargs)
+        self.helper = BandInfoFormHelper(allow_edit, res_short_id, element_id, element_name='BandInformation')
+
+    class Meta:
+        model = BandInformation
+        fields = ['name', 'variableName', 'variableUnit', 'method', 'comment']
+        exclude = ['content_object']
+        #widgets = {'BandInformation': forms.TextInput()}
+
+class BandInfoValidationForm(forms.Form):
+    bandName = forms.CharField(max_length=50, required=True)
+    variableName = forms.CharField(widget=forms.Textarea, required=True)
+    variableUnit = forms.CharField(max_length=50, required=True)
+    method = forms.CharField(widget=forms.Textarea, required=False)
+    comment = forms.CharField(widget=forms.Textarea, required=False)
