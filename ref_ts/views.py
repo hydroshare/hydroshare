@@ -139,6 +139,13 @@ def create_ref_time_series(request, *args, **kwargs):
             reference_type=reference_type,
             url=url,
         )
+        post_create_resource.send(sender=RefTimeSeries, resource=res)
+        if reference_type == 'rest':
+            ts = ts_utils.time_series_from_service(url, reference_type)
+            site_code = ts['site_code']
+            site_name = ts['site_name']
+            variable_code = ts['variable_code']
+            variable_name = ts['variable_name']
         hydroshare.resource.create_metadata_element(
             res.short_id,
             'Site',
@@ -156,7 +163,6 @@ def create_ref_time_series(request, *args, **kwargs):
             if 'visualization' in file_name:
                 # open(file_name, 'w')
                 os.remove("theme/static/img/"+file_name)
-        post_create_resource.send(sender=RefTimeSeries, resource=res)
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeries)
