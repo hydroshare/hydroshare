@@ -200,8 +200,13 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     fl = res.files.filter(pk=int(f)).first()
     file_name = fl.resource_file.name
+    file_path_to_delete = os.path.dirname(fl.resource_file.path)
     fl.resource_file.delete()
     fl.delete()
+    # delete the file path if there are no other files for the resource
+    if resource.files.count() == 0:
+        os.rmdir(file_path_to_delete)
+
     delete_file_mime_type = utils.get_file_mime_type(file_name)
     delete_file_extension = os.path.splitext(file_name)[1]
     # if there is no other resource file with the same extension as the
@@ -223,11 +228,22 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+
+    res_file = res.files.all()[0].resource_file if res.files.all() else None
+    if res_file:
+        res_file_path_to_delete = os.path.dirname(res_file.path)
+    else:
+        res_file_path_to_delete = None
+
     for fl in res.files.all():
         fl.resource_file.delete()
+
     for bag in res.bags.all():
         bag.bag.delete()
         bag.delete()
+
+    if res_file_path_to_delete:
+        os.rmdir(res_file_path_to_delete)
 
     res.metadata.delete_all_elements()
     res.metadata.delete()
@@ -589,9 +605,19 @@ def create_resource_new_workflow(request, *args, **kwargs):
     res_cls = hydroshare.check_resource_type(resource_type)
 
     metadata = []
+    page_url_dict = {}
+    url_key = "page_redirect_url"
     # Send pre-create resource signal - let any other app populate the empty metadata list object
-    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, resource=None, **kwargs)
+    # also pass title to other apps, and give other apps a chance to populate page_redirect_url if they want
+    # to redirect to their own page for resource creation rather than use core resource creation code
+    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, title=res_title, url_key=url_key, page_url_dict=page_url_dict, **kwargs)
 
+    # redirect to a specific resource creation page if other apps choose so
+
+    if url_key in page_url_dict:
+        return HttpResponseRedirect(page_url_dict[url_key])
+
+    # generic resource core metadata and resource creation
     add_title = True
     for element in metadata:
         if 'title' in element:
