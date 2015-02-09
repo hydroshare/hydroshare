@@ -60,7 +60,7 @@
 
             <div class="form-group">
                {% if metadata_form %}
-                    <button id="metadata-show-toggle" type="button" class="btn btn-primary" onclick="toogle_metadata_display()">Collapse All</button>
+                    <button id="metadata-show-toggle" type="button" class="btn btn-primary" onclick="toggle_metadata_display()">Collapse All</button>
                      {% crispy metadata_form %}
                {% else %}
                    {% if page.perms.change %}
@@ -120,12 +120,6 @@
                                <div class="col-sm-8">{{ cr.organization }}</div>
                                </div>
                            {% endif %}
-{#                           {% if cr.email %}#}
-{#                               <div class="row">#}
-{#                                <div class="col-sm-4"><strong>Email:</strong></div>#}
-{#                                <div class="col-sm-8">{{ cr.email }}</div>#}
-{#                               </div>#}
-{#                           {% endif %}#}
                            {% if cr.address %}
                                <div class="row">
                                 <div class="col-sm-4"><strong>Address:</strong></div>
@@ -168,12 +162,6 @@
                                <div class="col-sm-8">{{ cont.organization }}</div>
                                </div>
                            {% endif %}
-{#                           {% if cont.email %}#}
-{#                               <div class="row">#}
-{#                                <div class="col-sm-4"><strong>Email:</strong></div>#}
-{#                                <div class="col-sm-8">{{ cont.email }}</div>#}
-{#                               </div>#}
-{#                           {% endif %}#}
                            {% if cont.address %}
                                <div class="row">
                                 <div class="col-sm-4"><strong>Address:</strong></div>
@@ -278,13 +266,13 @@
                                 {% endif %}
                                 {% if spatial_coverage.southlimit %}
                                     <div class="row">
-                                        <div class="col-sm-4"><strong>South Longitude:</strong></div>
+                                        <div class="col-sm-4"><strong>South Latitude:</strong></div>
                                         <div class="col-sm-8">{{ spatial_coverage.southlimit }}</div>
                                     </div>
                                 {% endif %}
                                 {% if spatial_coverage.westlimit %}
                                     <div class="row">
-                                        <div class="col-sm-4"><strong>West Latitude:</strong></div>
+                                        <div class="col-sm-4"><strong>West Longitude:</strong></div>
                                         <div class="col-sm-8">{{ spatial_coverage.westlimit}}</div>
                                     </div>
                                 {% endif %}
@@ -796,7 +784,7 @@
     $(function() {
     });
 
-    function toogle_metadata_display(){
+    function toggle_metadata_display(){
         if ($("#metadata-show-toggle").text() === 'Show All'){
             $("#metadata-show-toggle").text('Collapse All');
             $('.accordion-body:not(".in")').collapse('show');
@@ -859,17 +847,17 @@
                                 $('#metadata-status').text(json_response.metadata_status);
                                 if(json_response.metadata_status == "Sufficient to make public")
                                 {
-                                    alert("Metadata Status:Sufficient to make public");
+                                    customAlert("Metadata Status:Sufficient to make public", 3000);
                                     $('#metadata-status').removeClass('text-danger');
                                     $('#metadata-status').addClass('text-success');
-                                    $('#id_sharing').find('#make-public').remove();
+                                    $('#id_sharing #make-public').remove();
                                     $('#id_sharing').append('<input name="t" type="hidden" value="make_public"/><button id="make-public" type="submit" class="btn btn-danger">Make public</button>');
                                 }
                                 else{
                                     $('#metadata-status').removeClass('text-success');
                                     $('#metadata-status').addClass('text-danger');
-                                    $('#id_sharing').find('#make-public').hide();
-                                    $('#id_sharing').find('#make-private').hide();
+                                    $('#id_sharing #make-public').hide();
+                                    $('#id_sharing #make-private').hide();
                                     $('#sharing-status').text('Private');
                                 }
                             }
@@ -901,6 +889,20 @@
             //don't submit the form
             return false;
         }
+
+    function customAlert(msg,duration)
+    {
+        var el = document.createElement("div");
+        var top = ($(window).height() / 2) - 25;
+        var left = ($(window).width() / 2) - 150;
+        var style = "position:fixed;top:" + top + "px;left:" + left + "px;background-color:lightgreen; width:300px; height:50px; text-align:center; line-height:50px";
+        el.setAttribute("style",style);
+        el.innerHTML = msg;
+        setTimeout(function(){
+        el.parentNode.removeChild(el);
+    },duration);
+        document.body.appendChild(el);
+    }
 
     $(document).ready(function () {
         if($("#id_type_1").is(':checked')){ //box type coverage
