@@ -237,7 +237,7 @@ def parse_2_0(root):
             keys = []
             vals = []
             for_graph = []
-            QClevel, units, site_name, variable_name, latitude, longitude, method, site_code, variable_code = None, None, None, None, None, None, None, None, None
+            QClevel, units, site_name, variable_name, latitude, longitude, method, site_code, variable_code, sample_medium = None, None, None, None, None, None, None, None, None, None
             name_is_set, site_code_set = False, False
             variable_name = root[1].text
             for element in root.iter():
@@ -275,13 +275,16 @@ def parse_2_0(root):
                             variable_name = element.text
                     except:
                         variable_name = 'Unmapped'
-
                 if 'ObservationProcess' in element.tag:
                     for e in element.iter():
                         if 'processType' in e.tag:
                             for a in e.attrib:
                                 if 'title' in a:
                                     method = e.attrib[a]
+                if 'sampledMedium' in element.tag:
+                    for a in element.attrib.iteritems():
+                        if 'title' in a[0]:
+                            sample_medium = a[1]
             values = dict(zip(keys, vals))
             if variable_name=='Unmapped':
                 for element in root.iter():
@@ -289,7 +292,7 @@ def parse_2_0(root):
                         if 'vocabulary' in element.attrib.values()[0]:
                             variable_name = element.text
                         if 'qualityControlLevelCode' in element.attrib.values()[0] and 'name' in element.tag:
-					        QClevel = element.text
+                            QClevel = element.text
             for k, v in values.items():
                 t = time_to_int(k)
                 for_graph.append({'x': t, 'y': float(v)})
@@ -310,7 +313,8 @@ def parse_2_0(root):
                     'latitude': latitude,
                     'longitude': longitude,
                     'QClevel': QClevel,
-                    'method': method}
+                    'method': method,
+                    'sample_medium': sample_medium}
         else:
             return "Parsing error: The waterml document doesn't appear to be a WaterML 2.0 time series"
     except:
@@ -456,13 +460,12 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
         latitude=ts['latitude'],
         longitude=ts['longitude'])
     v = res.metadata.variables.all()[0]
-    # hydroshare.resource.update_metadata_element(
-    #     shortkey,
-    #     'Variable',
-    #     v.id,
-    #     name=ts['variable_name'],
-    #     code=variable_code,
-    #     )
+    hydroshare.resource.update_metadata_element(
+        shortkey,
+        'Variable',
+        v.id,
+        sample_medium=ts.get('sample_medium', 'unknown')
+        )
     hydroshare.resource.create_metadata_element(
         shortkey,
         'QualityControlLevel',
