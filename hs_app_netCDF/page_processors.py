@@ -12,22 +12,13 @@ from django.forms.models import formset_factory
 # when the resource is created this page will be shown
 def landing_page(request, page):
     content_model = page.get_content_model()
-    if request.method == "GET":
-        resource_mode = request.session.get('resource-mode', None)
-        if resource_mode == 'edit':
-            edit_resource = True
-            del request.session['resource-mode']
-        else:
-            edit_resource = False
-    else:
-        edit_resource = True
-
+    edit_resource = page_processors.check_resource_mode(request)
 
     if not edit_resource:
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None)
         extended_metadata_exists = False
-        if content_model.metadata.variables:
+        if content_model.metadata.variables.all():
             extended_metadata_exists = True
 
         context['extended_metadata_exists'] = extended_metadata_exists
@@ -48,7 +39,8 @@ def landing_page(request, page):
             else:
                 form.action = "/hsapi/_internal/%s/variable/add-metadata/" % content_model.short_id
 
-        context = page_processors.get_page_context(page, request.user, extended_metadata_layout=ext_md_layout)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
         context['variable_formset'] = variable_formset
         context['add_variable_modal_form'] = add_variable_modal_form
+
     return context

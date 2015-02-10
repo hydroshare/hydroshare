@@ -126,6 +126,8 @@ ModalDialogLayoutAddVariable = Layout(
                                     '<div class="modal-dialog">'
                                         '<div class="modal-content">'
                                             '<form action="{{ add_variable_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
+                                            '{% csrf_token %} '
+                                            '<input name="resource-mode" type="hidden" value="edit"/>'
                                             '<div class="modal-header">'
                                                 '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
                                                 '<h4 class="modal-title" id="myModalLabel">Add Variable</h4>'
