@@ -14,6 +14,7 @@ from .forms import InputForm
 from mezzanine.pages.page_processors import processor_for
 #from hs_core.hydroshare.resource import post_create_resource
 from hs_core.signals import *
+from hs_core import page_processors
 #from hs_core.views import pre_describe_resource
 from django.utils.timezone import now
 from django.dispatch import receiver
@@ -144,6 +145,10 @@ processor_for(InstResource)(resource_processor)
 @processor_for(InstResource)
 def main_page(request, page):
     content_model = page.get_content_model()
+    edit_resource = page_processors.check_resource_mode(request)
+    context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None)
+    extended_metadata_exists = False
+    context['extended_metadata_exists'] = extended_metadata_exists
     if(request.method == 'POST'):
         form = InputForm(request.POST)
         if(form.is_valid()):
@@ -177,15 +182,5 @@ def main_page(request, page):
             'commit_id' : content_model.commit_id,
             'study_area_bbox' : content_model.study_area_bbox
         })
-    from dublincore import models as dc
-    from django import forms
-    class DCTerm(forms.ModelForm):
-        class Meta:
-            model=dc.QualifiedDublinCoreElement
-            fields = ['term', 'content']
-
-    return  {'form': form,
-             'resource_type' : content_model._meta.verbose_name,
-             'dublin_core' : [t for t in content_model.dublin_metadata.all().exclude(term='AB')],
-             'dcterm_frm' : DCTerm()
-            }
+    context['form'] = form
+    return  context
