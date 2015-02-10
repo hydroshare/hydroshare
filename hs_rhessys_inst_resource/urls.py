@@ -1,7 +1,8 @@
-#from django.conf.urls import patterns, url
-#from hs_inst_res_ui.views import *
+from django.conf.urls import patterns
 
-#urlpatterns = patterns('',
-#    # resource API
-#    url(r'^hs_inst_res_ui/$', main_page),
-#)
+from hs_rhessys_inst_resource.views import RunModelView
+
+
+urlpatterns = patterns('',
+                       (r'(?P<resource_short_id>[A-z0-9]+)/runmodel/$', RunModelView.as_view()),
+                       )

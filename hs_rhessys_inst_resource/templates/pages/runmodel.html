@@ -1,0 +1,32 @@
+{% extends 'pages/page.html' %}
+
+{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags %}
+
+{% block main %}
+
+{% keywords_for page as kws %}
+<!-- { % set_page_permissions page % } -->
+
+    <h2>Run Model</h2>
+
+<div class="btn-toolbar" style="padding-bottom: 0.5em;">
+  <a class="btn btn-primary" id="back" href="http://{{ request.get_host }}/r/{{ resource_short_id }}/">Back to resource</a>
+</div>
+
+<div class="row">
+    <div class="col-md-12">{# <img src="/placeholder.png"></div> #}
+        <table class="table">
+            <tr><th>Resource ID</th><td>{{ resource_short_id }}</td></tr>
+	</table>
+    </div>
+</div>
+
+{% block extra_js %}
+    <script type="text/javascript">
+    $(function() {
+
+    });
+    </script>
+{% endblock %}
+
+{% endblock %}

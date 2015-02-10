@@ -48,6 +48,7 @@ urlpatterns += patterns('',
     url('^hsapi/', include('ref_ts.urls')),
     #url('^hs_party/', include('hs_party.urls')),
     url('^hs_metrics/', include('hs_metrics.urls')),
+    url('^hs_rhessys_inst_resource/', include('hs_rhessys_inst_resource.urls')),
 )
 
 if settings.DEBUG is False:   #if DEBUG is True it will be served automatically
