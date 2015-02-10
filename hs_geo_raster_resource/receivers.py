@@ -4,7 +4,7 @@ __author__ = 'Hong Yi'
 from django.dispatch import receiver
 from hs_core.signals import *
 from hs_geo_raster_resource.models import RasterResource
-from hs_geo_raster_resource.models import BandInformation
+from forms import *
 
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
 # to populate create-resource.html template page
@@ -74,3 +74,35 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
             band_dict['method'] = ''
             band_dict['comment'] = ''
             metadata.append({'BandInformation': band_dict})
+
+@receiver(pre_metadata_element_create, sender=RasterResource)
+def metadata_element_pre_create_handler(sender, **kwargs):
+    element_name = kwargs['element_name'].lower()
+    request = kwargs['request']
+    if element_name == "cellinformation":
+        element_form = CellInfoValidationForm(request.POST)
+    elif element_name == 'bandinformation':
+        element_form = BandInfoValidationForm(request.POST)
+    if element_form.is_valid():
+        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+    else:
+        return {'is_valid': False, 'element_data_dict': None}
+
+@receiver(pre_metadata_element_update, sender=RasterResource)
+def metadata_element_pre_update_handler(sender, **kwargs):
+    element_name = kwargs['element_name'].lower()
+    element_id = kwargs['element_id']
+    request = kwargs['request']
+    if element_name == "cellinformation":
+        element_form = CellInfoValidationForm(request.POST)
+    elif element_name == 'bandinformation':
+        element_form = BandInfoValidationForm(request.POST)
+
+    if element_form.is_valid():
+        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+    else:
+        return {'is_valid': False, 'element_data_dict': None}
+"""
+Since each of the Raster metadata element is required no need to listen to any delete signal
+The Raster landing page should not have delete UI functionality for the resource specific metadata elements
+"""
