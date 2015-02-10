@@ -1389,7 +1389,6 @@ class AbstractResource(ResourcePermissionsMixin):
         """
         return None
 
-
     def get_citation(self):
         citation = ''
 
@@ -1480,49 +1479,6 @@ class GenericResource(Page, AbstractResource):
 
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
-
-    def get_citation(self):
-        citation = ''
-
-        first_author = self.metadata.creators.all().filter(order=1)[0]
-        name_parts = first_author.name.split(" ")
-        if len(name_parts) > 2:
-            citation = "{last_name}, {first_initial}.{middle_initial}.".format(last_name=name_parts[-1],
-                                                                              first_initial=name_parts[0][0],
-                                                                              middle_initial=name_parts[1][0]) + ", "
-        else:
-            citation = "{last_name}, {first_initial}.".format(last_name=name_parts[-1],
-                                                              first_initial=name_parts[0][0]) + ", "
-
-        other_authors = self.metadata.creators.all().filter(order__gt=1)
-        for author in other_authors:
-            name_parts = author.name.split(" ")
-            if len(name_parts) > 2:
-                citation += "{first_initial}.{middle_initial}.{last_name}".format(first_initial=name_parts[0][0],
-                                                                                  middle_initial=name_parts[1][0],
-                                                                                  last_name=name_parts[-1]) + ", "
-            else:
-                citation += "{first_initial}.{last_name}".format(first_initial=name_parts[0][0],
-                                                                 last_name=name_parts[-1]) + ", "
-
-        citation = citation[:-2]
-        if self.metadata.dates.all().filter(type='published'):
-            citation_date = self.metadata.dates.all().filter(type='published')[0]
-        else:
-            citation_date = self.metadata.dates.all().filter(type='modified')[0]
-
-        citation += " ({year}). ".format(year=citation_date.start_date.year)
-        citation += self.title
-        citation += ", HydroShare, "
-
-        if self.metadata.identifiers.all().filter(name="doi"):
-            hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
-        else:
-            hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-
-        citation += "{url}".format(url=hs_identifier.url)
-
-        return citation
 
     @property
     def can_be_public(self):
@@ -1641,6 +1597,22 @@ class CoreMetaData(models.Model):
             return False
 
         return True
+
+    # this method needs to be overriden by any subclass of this class
+    # if they implement additional metadata elements that are required
+    def get_required_missing_elements(self):
+        missing_required_elements = []
+
+        if not self.title:
+            missing_required_elements.append('Title')
+        if not self.description:
+            missing_required_elements.append('Abstract')
+        if not self.rights:
+            missing_required_elements.append('Rights')
+        if self.subjects.count() == 0:
+            missing_required_elements.append('Keywords')
+
+        return missing_required_elements
 
     # this method needs to be overriden by any subclass of this class
     def delete_all_elements(self):

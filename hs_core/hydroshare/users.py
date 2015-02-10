@@ -550,7 +550,7 @@ def get_resource_list(
         full_text_search=None,
         published=False,
         edit_permission=False,
-        public=False
+        public=False, types=None
 ):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
@@ -588,6 +588,7 @@ def get_resource_list(
         start = int
         count = int
         keywords = list of keywords
+        types = list of resource type names, used for filtering
         dc = list of lookups which are dicts following the following specifications:
             { term : dublin core term short name
               qualifier : dublin core term qualifier
@@ -601,7 +602,12 @@ def get_resource_list(
         raise NotImplemented("Returning the full resource list is not supported.")
 
     resource_types = get_resource_types()
-    queries = dict((el, []) for el in resource_types)
+
+    # filtering based on resource type.
+    if types is not None:
+        queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in types)
+    else:
+        queries = dict((el, []) for el in resource_types)
 
     for t, q in queries.items():
         if published:

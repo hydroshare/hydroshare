@@ -28,6 +28,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                     #user in content_model.edit_users.all():
         edit_mode = True
 
+    if content_model.metadata.has_all_required_elements():
+        metadata_status = "Sufficient to make public"
+    else:
+        metadata_status = "Insufficient to make public"
+
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
         if len(temporal_coverages) > 0:
@@ -64,12 +69,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             spatial_coverage_data_dict = None
 
         keywords = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
-
-        if content_model.metadata.has_all_required_elements():
-            metadata_status = "Complete"
-        else:
-            metadata_status = "Incomplete"
-
         languages_dict = dict(languages_iso.languages)
 
         context = {'metadata_form': None,
@@ -85,7 +84,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'rights': content_model.metadata.rights,
                    'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
-                   'metadata_status': metadata_status
+                   'metadata_status': metadata_status,
+                   'missing_metadata_elements': content_model.metadata.get_required_missing_elements()
 
         }
         return context
@@ -232,11 +232,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     metadata_form = MetaDataForm(resource_mode='edit' if edit_mode else 'view',
                                  extended_metadata_layout=extended_metadata_layout)
 
-    if content_model.metadata.has_all_required_elements():
-        metadata_status = "Complete"
-    else:
-        metadata_status = "Incomplete"
-
     context = {'metadata_form': metadata_form,
                'title_form': title_form,
                'creator_formset': creator_formset,
@@ -263,3 +258,17 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'extended_metadata_layout': extended_metadata_layout}
 
     return context
+
+
+def check_resource_mode(request):
+    if request.method == "GET":
+        resource_mode = request.session.get('resource-mode', None)
+        if resource_mode == 'edit':
+            edit_resource = True
+            del request.session['resource-mode']
+        else:
+            edit_resource = False
+    else:
+        edit_resource = True
+
+    return edit_resource

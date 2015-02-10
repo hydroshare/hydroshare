@@ -142,10 +142,15 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
     if request.is_ajax():
         if is_add_success:
-            if element_name == 'subject':
-                ajax_response_data = {'status': 'success'}
+            if res.metadata.has_all_required_elements():
+                metadata_status = "Sufficient to make public"
             else:
-                ajax_response_data = {'status': 'success', 'element_id': element.id, 'element_name': element_name}
+                metadata_status = "Insufficient to make public"
+
+            if element_name == 'subject':
+                ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
+            else:
+                ajax_response_data = {'status': 'success', 'element_id': element.id, 'element_name': element_name, 'metadata_status': metadata_status}
 
             return HttpResponse(json.dumps(ajax_response_data))
 
@@ -166,6 +171,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                                         element_id=element_id, request=request)
     is_update_success = False
 
+    is_redirect = False
     for receiver, response in handler_response:
         if 'is_valid' in response:
             if response['is_valid']:
@@ -174,13 +180,23 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 if element_name == 'title':
                     res.title = res.metadata.title.value
                     res.save()
+                    if res.public:
+                        if not res.can_be_public:
+                            res.public = False
+                            res.save()
+                            is_redirect = True
 
                 resource_modified(res, request.user)
                 is_update_success = True
 
     if request.is_ajax():
         if is_update_success:
-            ajax_response_data = {'status': 'success', 'element_name': element_name}
+            if res.metadata.has_all_required_elements():
+                metadata_status = "Sufficient to make public"
+            else:
+                metadata_status = "Insufficient to make public"
+
+            ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
             return HttpResponse(json.dumps(ajax_response_data))
         else:
             ajax_response_data = {'status': 'error'}
