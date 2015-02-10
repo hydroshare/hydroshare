@@ -231,7 +231,7 @@ def parse_1_0_and_1_1(root):
         return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
 
 def parse_2_0(root):
-    try:
+    #try:
         if 'Collection' in root.tag:
             ts = etree.tostring(root)
             keys = []
@@ -315,10 +315,9 @@ def parse_2_0(root):
                     'QClevel': QClevel,
                     'method': method,
                     'sample_medium': sample_medium}
-        else:
-            return "Parsing error: The waterml document doesn't appear to be a WaterML 2.0 time series"
-    except:
-        return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
+    #         return "Parsing error: The waterml document doesn't appear to be a WaterML 2.0 time series"
+    # except:
+    #     return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
 
 def map_waterml(xml_doc):
     root = etree.XML(xml_doc)
@@ -476,6 +475,7 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
         'Method',
         value=ts['method'],
         )
+
 
 
     vals = ts['values']
