@@ -148,11 +148,13 @@
 						<i class="icon-globe"></i>
 						Spatial</a>
 				</li>
+                {%  if temporal_coverage %}
                 <li>
 					<a href="#temporalTab" data-toggle="tab">
 						<i class="icon-globe"></i>
 						Temporal</a>
 				</li>
+                {%  endif %}
                 <li>
 					<a href="#relatedResourcesTab" data-toggle="tab">
 						<i class="icon-globe"></i>
@@ -173,9 +175,10 @@
 		<div class="tabs-body">
 			<!-- Tab panes -->
 			<div class="tab-content">
+                <!-- ========= CONTACT TAB ========= -->
 				<div class="tab-pane active" id="contactTab">
-                    <div><h3>Creators</h3></div>
-
+                    <div class="division-title"><h3>Creators</h3></div>
+                    <div>
                     {% for cr in creators %}
                         <div class="user-thumbnail">
                             <img class="profile-picture" src="" alt="">
@@ -216,14 +219,57 @@
                             </div>
                         </div>
                     {% endfor %}
+                    </div>
+                    {% if contributors %}
+                        <div class="division-title"><h3>Contributors</h3></div>
+                        <div>
+                        {% for cont in contributors %}
+                         <div class="user-thumbnail">
+                            <img class="profile-picture" src="" alt="">
+                            <div class="caption">
+                                <span class="name-label">{{ cont.name }}</span>
+                                <table>
+                                    {% if cont.description %}
+                                        <tr>
+                                            <td><strong>HydroShare User Identifier:</strong></td>
+                                            <td>{{ cont.description }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if cont.organization %}
+                                        <tr>
+                                            <td><strong>Organization:</strong></td>
+                                            <td>{{ cont.organization }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if cont.address %}
+                                        <tr>
+                                            <td><strong>Address:</strong></td>
+                                            <td>{{ cont.address }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if cont.phone %}
+                                        <tr>
+                                            <td><strong>Phone:</strong></td>
+                                            <td>{{ cont.phone }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if cont.homepage %}
+                                        <tr>
+                                            <td><strong>Home Page:</strong></td>
+                                            <td>{{ cont.homepage }}</td>
+                                        </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                         </div>
+                        {% endfor %}
+                        </div>
+                    {% endif %}
 				</div>
+                <!-- ========= SPATIAL TAB ========= -->
 				<div class="tab-pane" id="spatialTab">
 					<table class="table  table-condensed table-no-border-top">
 						<tbody>
-							<tr>
-								<th scope="row" class="dataset-label">Spatial Extent</th>
-								<td class="dataset-details">Red Butte Creek</td>
-							</tr>
                             {% if spatial_coverage.type == 'point' %}
                                 {% if spatial_coverage.name %}
                                     <tr>
@@ -304,16 +350,23 @@
 						</tbody>
 					</table>
 				</div>
-                <div class="tab-pane" id="temporalTab">
-					<table class="table  table-condensed table-no-border-top">
-						<tbody>
-							<tr>
-								<th scope="row" class="dataset-label">Label</th>
-								<td class="dataset-details">Text</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
+                <!-- ========= TEMPORAL TAB ========= -->
+                 {%  if temporal_coverage %}
+                    <div class="tab-pane" id="temporalTab">
+                        <table class="table  table-condensed table-no-border-top">
+                            <tbody>
+                                <tr>
+                                    <th scope="row" class="dataset-label">Start Date:</th>
+                                    <td class="dataset-details">{{ temporal_coverage.start_date }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="dataset-label">End Date:</th>
+                                    <td class="dataset-details">{{ temporal_coverage.end_date }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                {%  endif %}
                 <div class="tab-pane" id="relatedResourcesTab">
 					<table class="table  table-condensed table-no-border-top">
 						<tbody>
@@ -428,75 +481,7 @@
                     {{ title }}
                     <hr>
                    </div>
-                   <div>
-                   {%  if abstract %}
-                    <h4><strong>Abstract:</strong></h4>
-                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                        {{ abstract }}
-                    <hr>
-                   {%  endif %}
-                   </div>
 
-                   <div>
-                   {% if contributors %}
-                    <h4><strong>Contributors:</strong></h4>
-                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                       {% for cont in contributors %}
-                           <div class="row">
-                            <div class="col-sm-4"><strong>Name:</strong></div>
-                            <div class="col-sm-8">{{ cont.name }}</div>
-                           </div>
-                           {% if cont.description %}
-                               <div class="row">
-                               <div class="col-sm-4"><strong>HydroShare User Identifier:</strong></div>
-                               <div class="col-sm-8">{{ cont.description }}</div>
-                               </div>
-                           {% endif %}
-                           {% if cont.organization %}
-                               <div class="row">
-                               <div class="col-sm-4"><strong>Organization:</strong></div>
-                               <div class="col-sm-8">{{ cont.organization }}</div>
-                               </div>
-                           {% endif %}
-                           {% if cont.address %}
-                               <div class="row">
-                                <div class="col-sm-4"><strong>Address:</strong></div>
-                                <div class="col-sm-8">{{ cont.address }}</div>
-                               </div>
-                           {% endif %}
-                           {% if cont.phone %}
-                               <div class="row">
-                                <div class="col-sm-4"><strong>Phone:</strong></div>
-                                <div class="col-sm-8">{{ cont.phone }}</div>
-                               </div>
-                           {% endif %}
-                           {% if cont.homepage %}
-                               <div class="row">
-                                <div class="col-sm-4"><strong>Home Page:</strong></div>
-                                <div class="col-sm-8">{{ cont.homepage }}</div>
-                               </div>
-                           {% endif %}
-                           <hr>
-                       {% endfor %}
-                   {% endif %}
-                   </div>
-                   <div>
-                   {%  if temporal_coverage %}
-                    <h4><strong>Temporal Coverage:</strong></h4>
-                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Start Date:</strong></div>
-                            <div class="col-sm-8">{{ temporal_coverage.start_date }}</div>
-                       </div>
-                       <div class="row">
-                            <div class="col-sm-4"><strong>End Date:</strong></div>
-                            <div class="col-sm-8">{{ temporal_coverage.end_date }}</div>
-                       </div>
-                       <hr>
-                   {%  endif %}
-                   </div>
-                   <div>
-                   </div>
                    <div>
                        <h4><strong>Language:</strong></h4>
                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">

@@ -853,6 +853,10 @@ table.table-plain {
     overflow: auto;
 }
 
+.division-title{
+    clear:left;
+}
+
 .label-file-name{
     font-weight: bold;
 }
@@ -981,17 +985,21 @@ a.tag:hover {
 .user-thumbnail{
     border: 1px solid #ddd;
     height: 150px;
-    margin-top: 5px;
-    margin-left: 5px;
+    margin: 5px;
     border-radius: 3px;
     display: inline-block;
     float: left;
     padding: 10px;
-    font-size:12px;
+    font-size: 12px;
+    box-shadow: 2px 2px 4px #EFEFEF;
 }
 
 .user-thumbnail strong{
     margin-right:10px;
+}
+
+.user-thumbnail:last-child{
+    margin-bottom: 20px;
 }
 
 .user-thumbnail > .caption{
