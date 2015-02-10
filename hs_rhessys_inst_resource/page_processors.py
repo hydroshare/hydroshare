@@ -57,11 +57,11 @@ def main_page(request, page):
 
             keyword_args = {'env': env_dict,
                             'overwrite_images': True}
-            rebuild_image = True
+            rebuild_image = False
             promise = tasks.run_process.apply_async(args=[process, {}, rebuild_image], 
                                                     kwargs=keyword_args)
             logs = promise.get()
-            print logs
+            #print logs
             #process.delete() # no reason to leave it hanging around in the database
         else:
             logger.info('form not valid')

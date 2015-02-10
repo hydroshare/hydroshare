@@ -48,12 +48,12 @@ class InstResource(Page, RichText, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
-def when_my_process_ends(sender, instance, result_text=None, result_data=None, files=None, logs=None, **kw):
+def when_my_process_ends(sender, instance, result_text=None, result_data=None, result_files=None, logs=None, **kw):
     # make something out of the result data - result_data is a dict, result_text is plaintext
     # files are UploadedFile instances
     # logs are plain text stdout and stderr from the finished container
+    files = result_files.values()
     LOGGER.info("Process finished, files: {0}".format(files))
-
 
     from hs_core import hydroshare
     owner = User.objects.first() # FIXME
