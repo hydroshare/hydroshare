@@ -208,6 +208,7 @@ def get_box_info(nc_dataset, original_box_info):
 
     if box_info:
         box_info['units'] = 'Decimal degrees'
+        box_info['projection'] = 'WGS 84 EPSG:4326'
 
     return box_info
 
