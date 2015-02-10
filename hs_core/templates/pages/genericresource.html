@@ -174,18 +174,48 @@
 			<!-- Tab panes -->
 			<div class="tab-content">
 				<div class="tab-pane active" id="contactTab">
-					<table class="table table-condensed table-no-border-top">
-						<tbody>
-							<tr>
-								<th scope="row" class="dataset-label">Creator</th>
-								<td class="dataset-details"><a href="#">Creator Name</a></td>
-							</tr>
-                            <tr>
-								<th scope="row" class="dataset-label">Contributors</th>
-								<td class="dataset-details"><a href="#">Person 1</a>, <a href="#">Person 2</a>, <a href="#">Person 3</a></td>
-							</tr>
-						</tbody>
-					</table>
+                    <div><h3>Creators</h3></div>
+
+                    {% for cr in creators %}
+                        <div class="user-thumbnail">
+                            <img class="profile-picture" src="" alt="">
+                            <div class="caption">
+                                <span class="name-label">{{ cr.name }}</span>
+                                <table>
+                                    {% if cr.description %}
+                                    <tr>
+                                        <td><strong>HydroShare User Identifier:</strong></td>
+                                        <td>{{ cr.description }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if cr.organization %}
+                                    <tr>
+                                        <td><strong>Organization:</strong></td>
+                                        <td>{{ cr.organization }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if cr.address %}
+                                    <tr>
+                                        <td><strong>Address:</strong></td>
+                                        <td>{{ cr.address }}</td>
+                                    </tr>
+                                   {% endif %}
+                                    {% if cr.phone %}
+                                    <tr>
+                                        <td><strong>Phone:</strong></td>
+                                        <td>{{ cr.phone }}</td>
+                                    </tr>
+                                   {% endif %}
+                                   {% if cr.homepage %}
+                                     <tr>
+                                        <td><strong>Home page:</strong></td>
+                                        <td>{{ cr.homepage }}</td>
+                                     </tr>
+                                   {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    {% endfor %}
 				</div>
 				<div class="tab-pane" id="spatialTab">
 					<table class="table  table-condensed table-no-border-top">
@@ -406,47 +436,7 @@
                     <hr>
                    {%  endif %}
                    </div>
-                   <div>
-                    <h4><strong>Creators:</strong></h4>
-                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                       {% for cr in creators %}
-                           <div class="row">
-                            <div class="col-sm-4"><strong>Name:</strong></div>
-                            <div class="col-sm-8">{{ cr.name }}</div>
-                           </div>
-                           {% if cr.description %}
-                               <div class="row">
-                               <div class="col-sm-4"><strong>HydroShare User Identifier:</strong></div>
-                               <div class="col-sm-8">{{ cr.description }}</div>
-                               </div>
-                           {% endif %}
-                           {% if cr.organization %}
-                               <div class="row">
-                               <div class="col-sm-4"><strong>Organization:</strong></div>
-                               <div class="col-sm-8">{{ cr.organization }}</div>
-                               </div>
-                           {% endif %}
-                           {% if cr.address %}
-                               <div class="row">
-                                <div class="col-sm-4"><strong>Address:</strong></div>
-                                <div class="col-sm-8">{{ cr.address }}</div>
-                               </div>
-                           {% endif %}
-                           {% if cr.phone %}
-                               <div class="row">
-                                <div class="col-sm-4"><strong>Phone:</strong></div>
-                                <div class="col-sm-8">{{ cr.phone }}</div>
-                               </div>
-                           {% endif %}
-                           {% if cr.homepage %}
-                               <div class="row">
-                                <div class="col-sm-4"><strong>Home Page:</strong></div>
-                                <div class="col-sm-8">{{ cr.homepage }}</div>
-                               </div>
-                           {% endif %}
-                        <hr>
-                       {% endfor %}
-                    </div>
+
                    <div>
                    {% if contributors %}
                     <h4><strong>Contributors:</strong></h4>
