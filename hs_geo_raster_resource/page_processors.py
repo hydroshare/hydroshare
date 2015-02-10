@@ -17,7 +17,6 @@ def landing_page(request, page):
         extended_metadata_exists = True
 
     context['extended_metadata_exists'] = extended_metadata_exists
-    context['resource_type'] = content_model._meta.verbose_name
     if not edit_resource:
         # get the context from hs_core
         context['cellInformation'] = content_model.metadata.cellInformation
@@ -35,17 +34,16 @@ def landing_page(request, page):
                 AccordionGroup('Band Information (required)',
                     HTML('<div class="form-group" id="bandinfo"> '
                         '{% load crispy_forms_tags %} '
-                        '{% crispy  band_info_form_0 %} '
+                        '{% crispy  band_form %} '
                         '</div> '),
                     ),
                 )
 
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
-        context['resource_type'] = content_model._meta.verbose_name
         #context['cell_info_form'] = cell_info_form
-        context['cellInformation'] = content_model.metadata.cellInformation
-        for i in range(len(band_info_form)):
-            context['band_info_form_'+str(i)] = band_info_form[i]
-
+        #context['cellInformation'] = content_model.metadata.cellInformation
+        #for i in range(len(band_info_form)):
+        #    context['band_form_'+str(i)] = band_info_form[i]
+        context['band_form']=band_form
     return context

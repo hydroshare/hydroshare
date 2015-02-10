@@ -313,7 +313,7 @@ class RasterMetaData(CoreMetaData):
             hsterms_noDataValue.text = str(self.cellInformation.noDataValue)
 
         for band_info in self.bandInformation:
-            hsterms_bandInfo = etree.SubElement(container, '{%s}rasterBandInformation' % self.NAMESPACES['hsterms'])
+            hsterms_bandInfo = etree.SubElement(container, '{%s}BandInformation' % self.NAMESPACES['hsterms'])
             hsterms_bandInfo_rdf_Description = etree.SubElement(hsterms_bandInfo, '{%s}Description' % self.NAMESPACES['rdf'])
 
             hsterms_name = etree.SubElement(hsterms_bandInfo_rdf_Description, '{%s}name' % self.NAMESPACES['hsterms'])
