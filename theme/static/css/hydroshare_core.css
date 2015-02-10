@@ -831,7 +831,8 @@ html, body{
 }
 
 table.table-plain {
-    margin-bottom: 30px;
+    margin-bottom: 10px;
+    width:100%;
 }
 
 .tab-elements{
@@ -924,6 +925,10 @@ body > .container{
 
 .btn-remove{
     color:#d9534f;
+}
+
+.btn-edit, .btn-share{
+    color: #428BD2;
 }
 
 .btn-download{
