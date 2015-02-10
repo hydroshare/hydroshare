@@ -21,7 +21,9 @@
     </div>
 
     <h2>{{ title }}</h2>
+    {% if "{{ abstract }}" %}
     <p class="abstract">{{ abstract }}</p>
+    {% endif %}
 
     <div class="content-block">
 		<span class="citation-label">Citation:</span>
@@ -367,16 +369,28 @@
                         </table>
                     </div>
                 {%  endif %}
+                <!-- ========= RELATED RESOURCES TAB ========= -->
+                {% if sources  or relations %}
                 <div class="tab-pane" id="relatedResourcesTab">
 					<table class="table  table-condensed table-no-border-top">
 						<tbody>
+                        {% for source in sources %}
 							<tr>
-								<th scope="row" class="dataset-label">Label</th>
-								<td class="dataset-details">Text</td>
+								<th scope="row" class="dataset-label">Derived From:</th>
+								<td class="dataset-details">{{ source.derived_from }}</td>
 							</tr>
+                        {%  endfor %}
+                        {% for relation in relations %}
+                            <tr>
+								<th scope="row" class="dataset-label">{{ relation.type }}:</th>
+								<td class="dataset-details">{{ relation.value }}</td>
+							</tr>
+                        {%  endfor %}
 						</tbody>
 					</table>
 				</div>
+                {%  endif %}
+                <!-- ========= RESOURCE SPECIFIC TAB ========= -->
                 <div class="tab-pane" id="resourceSpecificTab">
 					<table class="table  table-condensed table-no-border-top">
 						<tbody>
@@ -387,12 +401,13 @@
 						</tbody>
 					</table>
 				</div>
+                <!-- ========= SYSTEM METADATA TAB ========= -->
                 <div class="tab-pane" id="systemMetadataTab">
 					<table class="table  table-condensed table-no-border-top">
 						<tbody>
 							<tr>
-								<th scope="row" class="dataset-label">Label</th>
-								<td class="dataset-details">Text</td>
+								<th scope="row" class="dataset-label">Language:</th>
+								<td class="dataset-details">{{ language }}</td>
 							</tr>
 						</tbody>
 					</table>
@@ -460,7 +475,6 @@
                {% else %}
                    <div>
                        {% if not keywords or not abstract%}
-
                             <table class="table table-condensed" style="margin-top: 2px; border: 2px solid red">
                                 <tr style="color: red"><td><h4>Data for the following required elements are missing:</h4></td></tr>
                                 {% if not abstract %}
@@ -474,72 +488,6 @@
                                 {% endif %}
                             </table>
                        {% endif %}
-                   </div>
-                   <div>
-                    <h4><strong>Title:</strong></h4>
-                    <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                    {{ title }}
-                    <hr>
-                   </div>
-
-                   <div>
-                       <h4><strong>Language:</strong></h4>
-                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                        {{ language }}
-                       <hr>
-                   </div>
-                   <div>
-                   {% if keywords %}
-                       <h4><strong>Keywords:</strong></h4>
-                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                        {{ keywords }}
-                       <hr>
-                   {% endif %}
-                   </div>
-                   <div>
-                       <h4><strong>Rights:</strong></h4>
-                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                           {% if rights.statement %}
-                               <div class="row">
-                                   <div class="col-sm-4"><strong>Statement:</strong></div>
-                                   <div class="col-sm-8">{{ rights.statement }}</div>
-                               </div>
-                           {% endif %}
-                           {% if rights.url %}
-                               <div class="row">
-                                   <div class="col-sm-4"><strong>URL:</strong></div>
-                                   <div class="col-sm-8"><a href="{{ rights.url }}">{{ rights.url }}</a></div>
-                               </div>
-                           {% endif %}
-                           <hr>
-                   </div>
-                   <div>
-                   {% if sources %}
-                       <h4><strong>Sources:</strong></h4>
-                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                       {% for source in sources %}
-                            <div class="row">
-                               <div class="col-sm-4"><strong>Derived From:</strong></div>
-                               <div class="col-sm-8">{{ source.derived_from }}</div>
-                            </div>
-                            <hr>
-                       {%  endfor %}
-                   {%  endif %}
-                   </div>
-                   <div>
-                   {% if relations %}
-                       <h4><strong>Relations:</strong></h4>
-                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                       {% for relation in relations %}
-                            <div class="row">
-                               <div class="col-sm-4"><strong>Type:</strong></div>
-                               <div class="col-sm-8">{{ relation.type }}</div>
-                               <div class="col-sm-4"><strong>Value:</strong></div>
-                               <div class="col-sm-8">{{ relation.value }}</div>
-                            </div>
-                            <hr>
-                       {%  endfor %}
-                   {%  endif %}
                    </div>
                {% endif %}
 
