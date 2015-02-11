@@ -15,10 +15,10 @@
             <form action="{{ cm.get_absolute_url }}" method="post">
                 {% csrf_token %}
                 <input name="resource-mode" type="hidden" value="edit"/>
-                <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto" title="Edit" class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
+                <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto" title="Edit" class="glyphicon glyphicon-edit icon-button btn-edit"></button>
             </form>
         {% endif %}
-        <a id="share" href="#sharing"><span data-toggle="tooltip" data-placement="auto" title="Share" class="glyphicon glyphicon-share-alt icon-button btn-share"></span></a>
+        <a id="share" href="#sharing"><span data-toggle="tooltip" data-placement="auto" title="Share" class="glyphicon glyphicon-share icon-button btn-share"></span></a>
     </div>
 
     <h2>{{ title }}</h2>
@@ -45,7 +45,7 @@
         <h3>Keywords</h3>
         <p id="keywords">{{ keywords }}</p>
         <div class="tags">
-            <ul id="list-keywords" class="tag-list well">
+            <ul id="list-keywords" class="tag-list custom-well">
             </ul>
         </div>
     {% endif %}
@@ -53,7 +53,7 @@
 
     <div>
         <h3>Content</h3>
-        <div class="well">
+        <div class="custom-well">
             {% block extra_content %}
             {% endblock %}
 
@@ -90,7 +90,7 @@
         {#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
                         <td>
                             {% if page.perms.change %}
-                                <a href="{{ f.resource_file.url }}"><span data-toggle="modal" data-target="#delete-resource-file-{{f.pk}}" data-placement="auto" title="Delete" class="glyphicon glyphicon-remove icon-button btn-remove"></span></a>
+                                <a href="{{ f.resource_file.url }}"><span data-toggle="modal" data-target="#delete-resource-file-{{f.pk}}" data-placement="auto" title="Delete" class="glyphicon glyphicon-remove-circle icon-button btn-remove"></span></a>
                                 <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip" data-placement="auto" title="Download" class="glyphicon glyphicon-download icon-button btn-download"></span></a>
                                 {% if preview %}
                                     <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip" data-placement="auto" title="Preview" class="glyphicon glyphicon-eye-open icon-button"></span></a>
@@ -133,30 +133,35 @@
 				</li>
 				<li>
 					<a href="#spatialTab" data-toggle="tab">
-						<i class="icon-globe"></i>
-						Spatial</a>
+						<span class="glyphicon glyphicon-globe"></span>
+						Spatial
+                    </a>
 				</li>
                 {%  if temporal_coverage %}
                 <li>
 					<a href="#temporalTab" data-toggle="tab">
-						<i class="icon-globe"></i>
-						Temporal</a>
+						<span class="glyphicon glyphicon-time"></span>
+						Temporal
+                    </a>
 				</li>
                 {%  endif %}
                 <li>
 					<a href="#relatedResourcesTab" data-toggle="tab">
-						<i class="icon-globe"></i>
-						Related Resources</a>
+						<span class="glyphicon glyphicon-book"></span>
+						Related Resources
+                    </a>
 				</li>
                 <li>
 					<a href="#resourceSpecificTab" data-toggle="tab">
-						<i class="icon-globe"></i>
-						Resource Specific</a>
+						<span class="glyphicon glyphicon-folder-close"></span>
+						Resource Specific
+                    </a>
 				</li>
                 <li>
 					<a href="#systemMetadataTab" data-toggle="tab">
-						<i class="icon-globe"></i>
-						System Metadata</a>
+						<span class="glyphicon glyphicon-cog"></span>
+						System Metadata
+                    </a>
 				</li>
 			</ul>
 		</div>
@@ -165,7 +170,7 @@
 			<div class="tab-content">
                 <!-- ========= CONTACT TAB ========= -->
 				<div class="tab-pane active" id="contactTab">
-                    <div class="division-title"><h3>Creators</h3></div>
+                    <div class="division-title"><p>Creators</p></div>
                     <div>
                     {% for cr in creators %}
                         <div class="user-thumbnail">
@@ -208,8 +213,9 @@
                         </div>
                     {% endfor %}
                     </div>
+
                     {% if contributors %}
-                        <div class="division-title"><h3>Contributors</h3></div>
+                        <div class="division-title"><p>Contributors</p></div>
                         <div>
                         {% for cont in contributors %}
                          <div class="user-thumbnail">
@@ -256,7 +262,7 @@
 				</div>
                 <!-- ========= SPATIAL TAB ========= -->
 				<div class="tab-pane" id="spatialTab">
-					<table class="table  table-condensed table-no-border-top">
+					<table class="table">
 						<tbody>
                             {% if spatial_coverage.type == 'point' %}
                                 {% if spatial_coverage.name %}
@@ -341,7 +347,7 @@
                 <!-- ========= TEMPORAL TAB ========= -->
                  {%  if temporal_coverage %}
                     <div class="tab-pane" id="temporalTab">
-                        <table class="table  table-condensed table-no-border-top">
+                        <table class="table">
                             <tbody>
                                 <tr>
                                     <th scope="row" class="dataset-label">Start Date:</th>
@@ -358,7 +364,7 @@
                 <!-- ========= RELATED RESOURCES TAB ========= -->
                 {% if sources  or relations %}
                 <div class="tab-pane" id="relatedResourcesTab">
-					<table class="table  table-condensed table-no-border-top">
+					<table class="table">
 						<tbody>
                         {% for source in sources %}
 							<tr>
@@ -378,18 +384,15 @@
                 {%  endif %}
                 <!-- ========= RESOURCE SPECIFIC TAB ========= -->
                 <div class="tab-pane" id="resourceSpecificTab">
-					<table class="table  table-condensed table-no-border-top">
+					<table class="table">
 						<tbody>
-							<tr>
-								<th scope="row" class="dataset-label">Label</th>
-								<td class="dataset-details">Text</td>
-							</tr>
+
 						</tbody>
 					</table>
 				</div>
                 <!-- ========= SYSTEM METADATA TAB ========= -->
                 <div class="tab-pane" id="systemMetadataTab">
-					<table class="table  table-condensed table-no-border-top">
+					<table class="table">
 						<tbody>
 							<tr>
 								<th scope="row" class="dataset-label">Language:</th>
@@ -473,7 +476,6 @@
     {# TODO: Pabitra check if what is left of this division is relevant #}
     <div class="row">
         <div class="col-md-12">
-            <h2>Science Metadata</h2>
 
             <div class="form-group">
                {% if metadata_form %}
@@ -516,7 +518,7 @@
         </div>
     </div>
 
-
+    <hr/>
 
     <div class="row" id="sharing">
         <div class="col-lg-12">
@@ -738,9 +740,10 @@
         {% endif %}
 
 
-    </div>
+        </div>
     </div>
 
+    <hr/>
     {% if not metadata_form %}
         {% comments_for cm %}
     {% endif %}
@@ -830,7 +833,6 @@
                       <label for="add-citation-input">Citation text:</label>
                       <textarea class="form-control" name="content" id="add-citation-input" cols="30" rows="10"></textarea>
                   </div>
-
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
