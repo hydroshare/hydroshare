@@ -835,6 +835,10 @@ table.table-plain {
     width:100%;
 }
 
+table.table-plain tr:hover{
+    background:#EFEFEF;
+}
+
 .tab-elements{
     border:0;
 }
@@ -916,7 +920,12 @@ body > .container{
 .custom-btn-toolbar{
     display: block;
     height: 14px;
-    width: auto;
+    /*border-bottom: 1px solid #ddd;*/
+    /*padding: 30px;*/
+    /*padding-top: 10px;*/
+    /*background: #EAEAEA;*/
+    /*margin: -20px;*/
+    /*margin-bottom: 0;*/
 }
 
 .abstract{
@@ -965,7 +974,7 @@ body > .container{
 .tag-list {
     margin: 0;
     list-style: none;
-    padding: 10px 10px 5px 10px;
+    padding: 10px 10px 5px 10px !important;
 }
 
 .tag {
@@ -1014,6 +1023,14 @@ a.tag:hover {
     box-shadow: inset 0 1px 0 #ffffff;
     box-shadow: 1px 1px 8px #DFDFDF;
     color:#555;
+}
+
+.table-container {
+    max-height: 300px;
+    overflow: auto;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
 }
 
 .custom-well{
