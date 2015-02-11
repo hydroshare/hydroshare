@@ -1,465 +1,745 @@
-{% extends 'pages/page.html' %}
+{#{% extends 'pages/page.html' %}#}
+{% extends "pages/genericresource.html" %}
+{#{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}#}
+{#                    <select name="designees" id="view_groups-select" multiple class="form-control" size="20">#}
+    <p> THIS is my Site LOngGI: {{ testsite.longitude }}</p>
+    <p> THis is my site Lat: {{ testsite.latitude }}</p>
+    <p> THIS is my Site code: {{ testsite.code }}</p>
+{#                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>#}
+{#                    <select name="designees" id="view_groups-select" multiple class="form-control" size="20">#}
+{% block extra_content %}
+    <img id="vis" src={{visfile.resource_file.url}}>
+{% endblock %}
 
-{% load pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags staticfiles %}
+{##}
+{#{% block main %}#}
+{##}
+{#{% with page.get_content_model as cm %}#}
+{#{% keywords_for page as kws %}#}
+{#{% set_page_permissions page %}#}
+{##}
+{#<link id="bsdp-css" href="{% static "ref_ts/datepicker/css/datepicker.css" %}" rel="stylesheet">#}
+{#<link id="vis-css" href="{% static "ref_ts/visualization/css/style.css" %}" rel="stylesheet">#}
+{#<div class="row">#}
+{#        <div class="col-md-12">#}
+{#            {% block extra_content %}#}
+{#                <img id="vis" src={{visfile.resource_file.url}}>#}
+{##}
+{#            {% endblock %}#}
+{##}
+{#            <table class="table table-striped" id="downloads">#}
+{#                {% if resfiles %}#}
+{#                {% for f in resfiles %}#}
+{#                <tr>#}
+{#                    <td>{{ f.resource_file.name|slice:"33:" }}</td>#}
+{#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
+{#                    <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>#}
+{##}
+{#                </tr>#}
+{#                {% endfor %}#}
+{#                {% endif %}#}
+{#                    <td></td>#}
+{#                    <td>#}
+{#                        <div class="btn-group">#}
+{#                          <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Export all</a>#}
+{#                          <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">#}
+{#                            <span class="caret"></span>#}
+{#                            <span class="sr-only">Toggle Dropdown</span>#}
+{#                          </button>#}
+{#                          <ul class="dropdown-menu" role="menu">#}
+{#                              {% for b in cm.bags.all %}#}
+{#                                <li><a href="{{ b.bag.url }}" style="color:black;">{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>#}
+{#                              {% endfor %}#}
+{#                          </ul>#}
+{#                        </div>#}
+{#                    </td>#}
+{##}
+{#                </tr>#}
+{#            </table>#}
+{#        </div>#}
+{#</div>#}
+{##}
+{#<div class="btn-toolbar" style="padding-bottom: 0.5em;">#}
+{#    {% if page.perms.change %}#}
+{#    <a class="btn btn-primary" id="share" href="#sharing">Share</a>#}
+{#    <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="edit">Edit</a>#}
+{#    {% endif %}#}
+{##}
+{#    {% if page.perms.delete %}#}
+{#    <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="switch-to-static" data-toggle="tooltip" data-placement="top"#}
+{#       title="This converts the most up to date data, and converts the resource to a non referenced time series">Switch to Static</a>#}
+{#    <button class="btn btn-danger" id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">Delete</button>#}
+{#    {% endif %}#}
+{#</div>#}
+{##}
+{#<div class="row">#}
+{#    <div class="col-md-12">{# <img src="/placeholder.png"></div> #}
+{##}
+{#        <table class="table">#}
+{#            <tr><th>Resource Type</th><td>{{ resource_type }}</td></tr>#}
+{#            <tr><th>URL (type: '{{ reference_type|upper }}')</th><td>{{ url }}</tr>#}
+{#            {% if site_name %}<tr><th>Site</th><td>{{ site_name }}</td></tr>{% endif %}#}
+{#            {% if site_code %}<tr><th>Site Code</th><td>{{ site_code }}</td></tr>{% endif %}#}
+{#            {% if variable_name %}<tr><th>Variable</th><td>{{ variable_name }}</td></tr>{% endif %}#}
+{#            {% if variable_code %}<tr><th>Variable Code</th><td>{{ variable_code }}</td></tr>{% endif %}#}
+{#            <tr><th>Owner</th><td>{{ cm.user|contact|safe }}</td></tr>#}
+{#            <tr><th>Added on</th><td>{{ cm.created|date }}</td></tr>#}
+{#            <tr><th>Start Date</th><td>{{ cm.start_date }}</td></tr>#}
+{#            <tr><th>Last updated by</th><td>{% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>#}
+{#            <tr><th>Updated on</th><td>{{ cm.updated|date }}</td></tr>#}
+{#            <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>#}
+{#            <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/r/{{ cm.short_id }}/">http://{{ request.get_host }}/r/{{ cm.short_id }}/</a></td></tr>#}
+{#        </table>#}
+{##}
+{#    </div>#}
+{#</div>#}
+{##}
+{#    <div class="row">#}
+{#        <div class="col-md-12">#}
+{#            <h2>Resource Description</h2>#}
+{##}
+{#            {% if cm.content %}#}
+{#                {% editable cm.content %}#}
+{#                <h4>Abstract</h4>#}
+{#                {{ cm.content|richtext_filters|safe }}#}
+{#                {% endeditable %}#}
+{#            {% endif %}#}
+{##}
+{#            <h4>References</h4>#}
+{#            <ul class="list-unstyled">#}
+{#            {% for citation in citations %}#}
+{#                <li>{{ citation }}</li>#}
+{#            {% empty %}#}
+{#                <p><strong>No citations listed</strong></p>#}
+{#            {% endfor %}#}
+{#            </ul>#}
+{#            {% if page.perms.change %}#}
+{#                <button class="btn btn-primary" id="add-reference" data-toggle="modal" data-target="#add-reference-dialog">Add reference</button>#}
+{#            {% endif %}#}
+{##}
+{##}
+{#            <h4>Other Metadata</h4>#}
+{#            <table class="table table-condensed">#}
+{#            {% for term in dublin_core %}#}
+{#                <tr>#}
+{#                    <th>{{ term|dcterm }}</th>#}
+{#                    <td>{{ term.content }}</td>#}
+{#                </tr>#}
+{#            {% endfor %}#}
+{#            </table>#}
+{#            {% if page.perms.change %}#}
+{#                <button class="btn btn-primary" id="add-dcterm" data-toggle="modal" data-target="#add-dcterm-dialog">Add metadata term</button>#}
+{#            {% endif %}#}
+{##}
+{##}
+{#        </div>#}
+{#    </div>#}
+{##}
+{#    <div class="row" id="sharing">#}
+{#        <div class="col-lg-12">#}
+{#        <h2>Sharing</h2>#}
+{##}
+{#        {% editable cm.public %}#}
+{#            {% if cm.public %}#}
+{#                This resource can be viewed and downloaded by anyone.#}
+{#            {% else %}#}
+{#                This resource can be viewed and downloaded only by designated users or research groups.#}
+{#            {% endif %}#}
+{#        {% endeditable %}#}
+{##}
+{#        <div style="padding-top:0.5em">#}
+{#        {% if user == cm.user %}#}
+{#            You are the owner of this resource.#}
+{#        {% elif is_edit_user %}#}
+{#            You have been given specific permission to edit this resource.#}
+{#        {% elif in_edit_group %}#}
+{#            Your research group(s) have been given specific permission to edit this resource.#}
+{#        {% elif is_view_user %}#}
+{#            You have been given specific permission to view this resource.#}
+{#        {% elif in_view_group %}#}
+{#            Your research group(s) have been given specific permission to view this resource.#}
+{#        {% endif %}#}
+{#        </div>#}
+{##}
+{#        {% if page.perms.change %}#}
+{#        <div class="panel-group" id="accordion">#}
+{#          <div class="panel panel-default">#}
+{#            <div class="panel-heading">#}
+{#              <h4 class="panel-title">#}
+{#                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">#}
+{#                  Users with full read/write permissions on this resource#}
+{#                </a>#}
+{#              </h4>#}
+{#            </div>#}
+{#            <div id="collapseOne" class="panel-collapse collapse in">#}
+{#              <div class="panel-body">#}
+{#                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">#}
+{#                        {% csrf_token %}#}
+{#                        <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>#}
+{#                        <select name="designees" id="owners-select" multiple class="form-control" size="20">#}
+{#                            {% for u in users %}#}
+{#                                <option value="{{ u.pk }}" {% if u in owners %}selected{% endif %}>{{ u|best_name }}</option>#}
+{#                            {% endfor %}#}
+{#                        </select>#}
+{#                        <input name="t" value="owners" type="hidden"/>#}
+{#                        <button type="submit" class="btn btn-primary btn-block">Update access list</button>#}
+{#                    </form>#}
+{#              </div>#}
+{#            </div>#}
+{#          </div>#}
+{##}
+{#          <div class="panel panel-default">#}
+{#            <div class="panel-heading">#}
+{#              <h4 class="panel-title">#}
+{#                <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">#}
+{#                  Users who can edit the content of this resource#}
+{#                </a>#}
+{#              </h4>#}
+{#            </div>#}
+{#            <div id="collapseTwo" class="panel-collapse collapse">#}
+{#              <div class="panel-body">#}
+{#                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">#}
+{#                    {% csrf_token %}#}
+{#                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>#}
+{#                    <select name="designees" id="edit_users-select" multiple class="form-control" size="20">#}
+{#                        {% for u in users %}#}
+{#                            <option value="{{ u.pk }}" {% if u in edit_users %}selected{% endif %}>{{ u|best_name }}</option>#}
+{#                        {% endfor %}#}
+{#                    </select>#}
+{#                    <input name="t" value="edit_users" type="hidden"/>#}
+{#                    <button type="submit" class="btn btn-primary btn-block">Update access list</button>#}
+{#                </form>#}
+{#              </div>#}
+{#            </div>#}
+{#          </div>#}
+{##}
+{#          <div class="panel panel-default">#}
+{#            <div class="panel-heading">#}
+{#              <h4 class="panel-title">#}
+{#                <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">#}
+{#                  Research groups that can edit the content of this resource#}
+{#                </a>#}
+{#              </h4>#}
+{#            </div>#}
+{#            <div id="collapseThree" class="panel-collapse collapse">#}
+{#              <div class="panel-body">#}
+{#                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">#}
+{#                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">#}
+{#                        {% csrf_token %}#}
+{#                        <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>#}
+{#                        <select name="designees" id="edit_groups-select" multiple class="form-control" size="20">#}
+{#                            {% for u in groups %}#}
+{#                                <option value="{{ u.pk }}" {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>#}
+{#                            {% endfor %}#}
+{#                        </select>#}
+{#                        <input name="t" value="edit_groups" type="hidden"/>#}
+{#                        <button type="submit" class="btn btn-primary btn-block">Update access list</button>#}
+{#                    </form>#}
+{#                </form>#}
+{#              </div>#}
+{#            </div>#}
+{#          </div>#}
+{##}
+{#          {% if not cm.public %}#}
+{#          <div class="panel panel-default">#}
+{#            <div class="panel-heading">#}
+{#              <h4 class="panel-title">#}
+{#                <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">#}
+{#                  Users who can view and download the resource#}
+{#                </a>#}
+{#              </h4>#}
+{#            </div>#}
+{#            <div id="collapseFour" class="panel-collapse collapse">#}
+{#              <div class="panel-body">#}
+{#                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">#}
+{#                    {% csrf_token %}#}
+{#                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>#}
+{#                    <select name="designees" id="view_users-select" multiple class="form-control" size="20">#}
+{#                        {% for u in users %}#}
+{#                            <option value="{{ u.pk }}" {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>#}
+{#                        {% endfor %}#}
+{#                    </select>#}
+{#                    <input name="t" value="view_users" type="hidden"/>#}
+{#                    <button type="submit" class="btn btn-primary btn-block">Update access list</button>#}
+{#                </form>#}
+{#              </div>#}
+{#            </div>#}
+{#          </div>#}
+{##}
+{#          <div class="panel panel-default">#}
+{#            <div class="panel-heading">#}
+{#              <h4 class="panel-title">#}
+{#                <a data-toggle="collapse" data-parent="#accordion" href="#collapseFive">#}
+{#                  Research groups that can view and download the resource#}
+{#                </a>#}
+{#              </h4>#}
+{#            </div>#}
+{#            <div id="collapseFive" class="panel-collapse collapse">#}
+{#              <div class="panel-body">#}
+{#                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">#}
+{#                    {% csrf_token %}#}
+{#                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>#}
+{#                    <select name="designees" id="view_groups-select" multiple class="form-control" size="20">#}
+{#                        {% for u in groups %}#}
+{#                            <option value="{{ u.pk }}" {% if u in view_groups %}selected{% endif %}>{{ u }}</option>#}
+{#                        {% endfor %}#}
+{#                    </select>#}
+{#                    <input name="t" value="view_groups" type="hidden"/>#}
+{#                    <button type="submit" class="btn btn-primary btn-block">Update access list</button>#}
+{#                </form>#}
+{#              </div>#}
+{#            </div>#}
+{#          </div>#}
+{#          {% endif %}#}
+{##}
+{#        </div>#}
+{##}
+{#        {% endif %}#}
+{##}
+{##}
+{#    </div>#}
+{#    </div>#}
+{#                {% for f in resfiles %}#}
+{#                <tr>#}
+{#                    <td>{{ f.resource_file.name|slice:"33:" }}</td>#}
+{#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
+{#                    <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>#}
+{##}
+{#                </tr>#}
+{#                {% endfor %}#}
+{#                {% endif %}#}
+{#                    <td></td>#}
+{#                    <td>#}
+{#                        <div class="btn-group">#}
+{#                          <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Export all</a>#}
+{#                          <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">#}
+{#                            <span class="caret"></span>#}
+{#                            <span class="sr-only">Toggle Dropdown</span>#}
+{#                          </button>#}
+{#                          <ul class="dropdown-menu" role="menu">#}
+{#                              {% for b in cm.bags.all %}#}
+{#                                <li><a href="{{ b.bag.url }}" style="color:black;">{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>#}
+{#                              {% endfor %}#}
+{#                          </ul>#}
+{#                        </div>#}
+{#                    </td>#}
+{##}
+{#                </tr>#}
+{#            </table>#}
+{#        </div>#}
+{#</div>#}
+{##}
+{#<div class="btn-toolbar" style="padding-bottom: 0.5em;">#}
+{#    {% if page.perms.change %}#}
+{#    <a class="btn btn-primary" id="share" href="#sharing">Share</a>#}
+{#    <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="edit">Edit</a>#}
+{#    {% endif %}#}
+{##}
+{#    {% if page.perms.delete %}#}
+{#    <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="switch-to-static" data-toggle="tooltip" data-placement="top"#}
+{#       title="This converts the most up to date data, and converts the resource to a non referenced time series">Switch to Static</a>#}
+{#    <button class="btn btn-danger" id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">Delete</button>#}
+{#    {% endif %}#}
+{#</div>#}
+{##}
+{#<div class="row">#}
+{#    <div class="col-md-12">{# <img src="/placeholder.png"></div> #}
+{##}
+{#        <table class="table">#}
+{#            <tr><th>Resource Type</th><td>{{ resource_type }}</td></tr>#}
+{#            <tr><th>URL (type: '{{ reference_type|upper }}')</th><td>{{ url }}</tr>#}
+{#            {% if site_name %}<tr><th>Site</th><td>{{ site_name }}</td></tr>{% endif %}#}
+{#            {% if site_code %}<tr><th>Site Code</th><td>{{ site_code }}</td></tr>{% endif %}#}
+{#            {% if variable_name %}<tr><th>Variable</th><td>{{ variable_name }}</td></tr>{% endif %}#}
+{#            {% if variable_code %}<tr><th>Variable Code</th><td>{{ variable_code }}</td></tr>{% endif %}#}
+{#            <tr><th>Owner</th><td>{{ cm.user|contact|safe }}</td></tr>#}
+{#            <tr><th>Added on</th><td>{{ cm.created|date }}</td></tr>#}
+{#            <tr><th>Start Date</th><td>{{ cm.start_date }}</td></tr>#}
+{#            <tr><th>Last updated by</th><td>{% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>#}
+{#            <tr><th>Updated on</th><td>{{ cm.updated|date }}</td></tr>#}
+{#            <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>#}
+{#            <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/r/{{ cm.short_id }}/">http://{{ request.get_host }}/r/{{ cm.short_id }}/</a></td></tr>#}
+{#        </table>#}
+{##}
+{#    </div>#}
+{#</div>#}
+{##}
+{#    <div class="row">#}
+{#        <div class="col-md-12">#}
+{#            <h2>Resource Description</h2>#}
+{##}
+{#            {% if cm.content %}#}
+{#                {% editable cm.content %}#}
+{#                <h4>Abstract</h4>#}
+{#                {{ cm.content|richtext_filters|safe }}#}
+{#                {% endeditable %}#}
+{#            {% endif %}#}
+{##}
+{#            <h4>References</h4>#}
+{#            <ul class="list-unstyled">#}
+{#            {% for citation in citations %}#}
+{#                <li>{{ citation }}</li>#}
+{#            {% empty %}#}
+{#                <p><strong>No citations listed</strong></p>#}
+{#            {% endfor %}#}
+{#            </ul>#}
+{#            {% if page.perms.change %}#}
+{#                <button class="btn btn-primary" id="add-reference" data-toggle="modal" data-target="#add-reference-dialog">Add reference</button>#}
+{#            {% endif %}#}
+{##}
+{##}
+{#            <h4>Other Metadata</h4>#}
+{#            <table class="table table-condensed">#}
+{#            {% for term in dublin_core %}#}
+{#                <tr>#}
+{#                    <th>{{ term|dcterm }}</th>#}
+{#                    <td>{{ term.content }}</td>#}
+{#                </tr>#}
+{#            {% endfor %}#}
+{#            </table>#}
+{#            {% if page.perms.change %}#}
+{#                <button class="btn btn-primary" id="add-dcterm" data-toggle="modal" data-target="#add-dcterm-dialog">Add metadata term</button>#}
+{#            {% endif %}#}
+{##}
+{##}
+{#        </div>#}
+{#    </div>#}
+{##}
+{#    <div class="row" id="sharing">#}
+{#        <div class="col-lg-12">#}
+{#        <h2>Sharing</h2>#}
+{##}
+{#        {% editable cm.public %}#}
+{#            {% if cm.public %}#}
+{#                This resource can be viewed and downloaded by anyone.#}
+{#            {% else %}#}
+{#                This resource can be viewed and downloaded only by designated users or research groups.#}
+{#            {% endif %}#}
+{#        {% endeditable %}#}
+{##}
+{#        <div style="padding-top:0.5em">#}
+{#        {% if user == cm.user %}#}
+{#            You are the owner of this resource.#}
+{#        {% elif is_edit_user %}#}
+{#            You have been given specific permission to edit this resource.#}
+{#        {% elif in_edit_group %}#}
+{#            Your research group(s) have been given specific permission to edit this resource.#}
+{#        {% elif is_view_user %}#}
+{#            You have been given specific permission to view this resource.#}
+{#        {% elif in_view_group %}#}
+{#            Your research group(s) have been given specific permission to view this resource.#}
+{#        {% endif %}#}
+{#        </div>#}
+{##}
+{#        {% if page.perms.change %}#}
+{#        <div class="panel-group" id="accordion">#}
+{#          <div class="panel panel-default">#}
+{#            <div class="panel-heading">#}
+{#              <h4 class="panel-title">#}
+{#                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">#}
+{#                  Users with full read/write permissions on this resource#}
+{#                </a>#}
+{#              </h4>#}
+{#            </div>#}
+{#            <div id="collapseOne" class="panel-collapse collapse in">#}
+{#              <div class="panel-body">#}
+{#                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">#}
+{#                        {% csrf_token %}#}
+{#                        <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>#}
+{#                        <select name="designees" id="owners-select" multiple class="form-control" size="20">#}
+{#                            {% for u in users %}#}
+{#                                <option value="{{ u.pk }}" {% if u in owners %}selected{% endif %}>{{ u|best_name }}</option>#}
+{#                            {% endfor %}#}
+{#                        </select>#}
+{#                        <input name="t" value="owners" type="hidden"/>#}
+{#                        <button type="submit" class="btn btn-primary btn-block">Update access list</button>#}
+{#                    </form>#}
+{#              </div>#}
+{#            </div>#}
+{#          </div>#}
+{##}
+{#          <div class="panel panel-default">#}
+{#            <div class="panel-heading">#}
+{#              <h4 class="panel-title">#}
+{#                <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">#}
+{#                  Users who can edit the content of this resource#}
+{#                </a>#}
+{#              </h4>#}
+{#            </div>#}
+{#            <div id="collapseTwo" class="panel-collapse collapse">#}
+{#              <div class="panel-body">#}
+{#                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">#}
+{#                    {% csrf_token %}#}
+{#                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>#}
+{#                    <select name="designees" id="edit_users-select" multiple class="form-control" size="20">#}
+{#                        {% for u in users %}#}
+{#                            <option value="{{ u.pk }}" {% if u in edit_users %}selected{% endif %}>{{ u|best_name }}</option>#}
+{#                        {% endfor %}#}
+{#                    </select>#}
+{#                    <input name="t" value="edit_users" type="hidden"/>#}
+{#                    <button type="submit" class="btn btn-primary btn-block">Update access list</button>#}
+{#                </form>#}
+{#              </div>#}
+{#            </div>#}
+{#          </div>#}
+{##}
+{#          <div class="panel panel-default">#}
+{#            <div class="panel-heading">#}
+{#              <h4 class="panel-title">#}
+{#                <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">#}
+{#                  Research groups that can edit the content of this resource#}
+{#                </a>#}
+{#              </h4>#}
+{#            </div>#}
+{#            <div id="collapseThree" class="panel-collapse collapse">#}
+{#              <div class="panel-body">#}
+{#                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">#}
+{#                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">#}
+{#                        {% csrf_token %}#}
+{#                        <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>#}
+{#                        <select name="designees" id="edit_groups-select" multiple class="form-control" size="20">#}
+{#                            {% for u in groups %}#}
+{#                                <option value="{{ u.pk }}" {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>#}
+{#                            {% endfor %}#}
+{#                        </select>#}
+{#                        <input name="t" value="edit_groups" type="hidden"/>#}
+{#                        <button type="submit" class="btn btn-primary btn-block">Update access list</button>#}
+{#                    </form>#}
+{#                </form>#}
+{#              </div>#}
+{#            </div>#}
+{#          </div>#}
+{##}
+{#          {% if not cm.public %}#}
+{#          <div class="panel panel-default">#}
+{#            <div class="panel-heading">#}
+{#              <h4 class="panel-title">#}
+{#                <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">#}
+{#                  Users who can view and download the resource#}
+{#                </a>#}
+{#              </h4>#}
+{#            </div>#}
+{#            <div id="collapseFour" class="panel-collapse collapse">#}
+{#              <div class="panel-body">#}
+{#                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">#}
+{#                    {% csrf_token %}#}
+{#                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>#}
+{#                    <select name="designees" id="view_users-select" multiple class="form-control" size="20">#}
+{#                        {% for u in users %}#}
+{#                            <option value="{{ u.pk }}" {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>#}
+{#                        {% endfor %}#}
+{#                    </select>#}
+{#                    <input name="t" value="view_users" type="hidden"/>#}
+{#                    <button type="submit" class="btn btn-primary btn-block">Update access list</button>#}
+{#                </form>#}
+{#              </div>#}
+{#            </div>#}
+{#          </div>#}
+{##}
+{#          <div class="panel panel-default">#}
+{#            <div class="panel-heading">#}
+{#              <h4 class="panel-title">#}
+{#                <a data-toggle="collapse" data-parent="#accordion" href="#collapseFive">#}
+{#                  Research groups that can view and download the resource#}
+{#                </a>#}
+{#              </h4>#}
+{#            </div>#}
+{#            <div id="collapseFive" class="panel-collapse collapse">#}
+{#              <div class="panel-body">#}
+{#                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">#}
+{#                    {% csrf_token %}#}
+{#                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>#}
+{#                    <select name="designees" id="view_groups-select" multiple class="form-control" size="20">#}
+{#                        {% for u in groups %}#}
+{#                            <option value="{{ u.pk }}" {% if u in view_groups %}selected{% endif %}>{{ u }}</option>#}
+{#                        {% endfor %}#}
+{#                    </select>#}
+{#                    <input name="t" value="view_groups" type="hidden"/>#}
+{#                    <button type="submit" class="btn btn-primary btn-block">Update access list</button>#}
+{#                </form>#}
+{#              </div>#}
+{#            </div>#}
+{#          </div>#}
+{#          {% endif %}#}
+{##}
+{#        </div>#}
+{##}
+{#        {% endif %}#}
+{##}
+{##}
+{#    </div>#}
+{#    </div>#}
 
-{% block main %}
-
-{% with page.get_content_model as cm %}
-{% keywords_for page as kws %}
-{% set_page_permissions page %}
-
-<link id="bsdp-css" href="{% static "ref_ts/datepicker/css/datepicker.css" %}" rel="stylesheet">
-<link id="vis-css" href="{% static "ref_ts/visualization/css/style.css" %}" rel="stylesheet">
-<div class="row">
-        <div class="col-md-12">
-            {% block extra_content %}
-                <img id="vis" src={{visfile.resource_file.url}}>
-
-            {% endblock %}
-
-            <table class="table table-striped" id="downloads">
-                {% if resfiles %}
-                {% for f in resfiles %}
-                <tr>
-                    <td>{{ f.resource_file.name|slice:"33:" }}</td>
-                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
-                    <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>
-
-                </tr>
-                {% endfor %}
-                {% endif %}
-                    <td></td>
-                    <td>
-                        <div class="btn-group">
-                          <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Export all</a>
-                          <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                            <span class="caret"></span>
-                            <span class="sr-only">Toggle Dropdown</span>
-                          </button>
-                          <ul class="dropdown-menu" role="menu">
-                              {% for b in cm.bags.all %}
-                                <li><a href="{{ b.bag.url }}" style="color:black;">{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>
-                              {% endfor %}
-                          </ul>
-                        </div>
-                    </td>
-
-                </tr>
-            </table>
-        </div>
-</div>
-
-<div class="btn-toolbar" style="padding-bottom: 0.5em;">
-    {% if page.perms.change %}
-    <a class="btn btn-primary" id="share" href="#sharing">Share</a>
-    <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="edit">Edit</a>
-    {% endif %}
-
-    {% if page.perms.delete %}
-    <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="switch-to-static" data-toggle="tooltip" data-placement="top"
-       title="This converts the most up to date data, and converts the resource to a non referenced time series">Switch to Static</a>
-    <button class="btn btn-danger" id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">Delete</button>
-    {% endif %}
-</div>
-
-<div class="row">
-    <div class="col-md-12">{# <img src="/placeholder.png"></div> #}
-
-        <table class="table">
-            <tr><th>Resource Type</th><td>{{ resource_type }}</td></tr>
-            <tr><th>URL (type: '{{ reference_type|upper }}')</th><td>{{ url }}</tr>
-            {% if site_name %}<tr><th>Site</th><td>{{ site_name }}</td></tr>{% endif %}
-            {% if site_code %}<tr><th>Site Code</th><td>{{ site_code }}</td></tr>{% endif %}
-            {% if variable_name %}<tr><th>Variable</th><td>{{ variable_name }}</td></tr>{% endif %}
-            {% if variable_code %}<tr><th>Variable Code</th><td>{{ variable_code }}</td></tr>{% endif %}
-            <tr><th>Owner</th><td>{{ cm.user|contact|safe }}</td></tr>
-            <tr><th>Added on</th><td>{{ cm.created|date }}</td></tr>
-            <tr><th>Start Date</th><td>{{ cm.start_date }}</td></tr>
-            <tr><th>Last updated by</th><td>{% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
-            <tr><th>Updated on</th><td>{{ cm.updated|date }}</td></tr>
-            <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>
-            <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/r/{{ cm.short_id }}/">http://{{ request.get_host }}/r/{{ cm.short_id }}/</a></td></tr>
-        </table>
-
-    </div>
-</div>
-
-    <div class="row">
-        <div class="col-md-12">
-            <h2>Resource Description</h2>
-
-            {% if cm.content %}
-                {% editable cm.content %}
-                <h4>Abstract</h4>
-                {{ cm.content|richtext_filters|safe }}
-                {% endeditable %}
-            {% endif %}
-
-            <h4>References</h4>
-            <ul class="list-unstyled">
-            {% for citation in citations %}
-                <li>{{ citation }}</li>
-            {% empty %}
-                <p><strong>No citations listed</strong></p>
-            {% endfor %}
-            </ul>
-            {% if page.perms.change %}
-                <button class="btn btn-primary" id="add-reference" data-toggle="modal" data-target="#add-reference-dialog">Add reference</button>
-            {% endif %}
-
-
-            <h4>Other Metadata</h4>
-            <table class="table table-condensed">
-            {% for term in dublin_core %}
-                <tr>
-                    <th>{{ term|dcterm }}</th>
-                    <td>{{ term.content }}</td>
-                </tr>
-            {% endfor %}
-            </table>
-            {% if page.perms.change %}
-                <button class="btn btn-primary" id="add-dcterm" data-toggle="modal" data-target="#add-dcterm-dialog">Add metadata term</button>
-            {% endif %}
-
-
-        </div>
-    </div>
-
-    <div class="row" id="sharing">
-        <div class="col-lg-12">
-        <h2>Sharing</h2>
-
-        {% editable cm.public %}
-            {% if cm.public %}
-                This resource can be viewed and downloaded by anyone.
-            {% else %}
-                This resource can be viewed and downloaded only by designated users or research groups.
-            {% endif %}
-        {% endeditable %}
-
-        <div style="padding-top:0.5em">
-        {% if user == cm.user %}
-            You are the owner of this resource.
-        {% elif is_edit_user %}
-            You have been given specific permission to edit this resource.
-        {% elif in_edit_group %}
-            Your research group(s) have been given specific permission to edit this resource.
-        {% elif is_view_user %}
-            You have been given specific permission to view this resource.
-        {% elif in_view_group %}
-            Your research group(s) have been given specific permission to view this resource.
-        {% endif %}
-        </div>
-
-        {% if page.perms.change %}
-        <div class="panel-group" id="accordion">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h4 class="panel-title">
-                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-                  Users with full read/write permissions on this resource
-                </a>
-              </h4>
-            </div>
-            <div id="collapseOne" class="panel-collapse collapse in">
-              <div class="panel-body">
-                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                        {% csrf_token %}
-                        <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>
-                        <select name="designees" id="owners-select" multiple class="form-control" size="20">
-                            {% for u in users %}
-                                <option value="{{ u.pk }}" {% if u in owners %}selected{% endif %}>{{ u|best_name }}</option>
-                            {% endfor %}
-                        </select>
-                        <input name="t" value="owners" type="hidden"/>
-                        <button type="submit" class="btn btn-primary btn-block">Update access list</button>
-                    </form>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h4 class="panel-title">
-                <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-                  Users who can edit the content of this resource
-                </a>
-              </h4>
-            </div>
-            <div id="collapseTwo" class="panel-collapse collapse">
-              <div class="panel-body">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                    {% csrf_token %}
-                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>
-                    <select name="designees" id="edit_users-select" multiple class="form-control" size="20">
-                        {% for u in users %}
-                            <option value="{{ u.pk }}" {% if u in edit_users %}selected{% endif %}>{{ u|best_name }}</option>
-                        {% endfor %}
-                    </select>
-                    <input name="t" value="edit_users" type="hidden"/>
-                    <button type="submit" class="btn btn-primary btn-block">Update access list</button>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h4 class="panel-title">
-                <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
-                  Research groups that can edit the content of this resource
-                </a>
-              </h4>
-            </div>
-            <div id="collapseThree" class="panel-collapse collapse">
-              <div class="panel-body">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                        {% csrf_token %}
-                        <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>
-                        <select name="designees" id="edit_groups-select" multiple class="form-control" size="20">
-                            {% for u in groups %}
-                                <option value="{{ u.pk }}" {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>
-                            {% endfor %}
-                        </select>
-                        <input name="t" value="edit_groups" type="hidden"/>
-                        <button type="submit" class="btn btn-primary btn-block">Update access list</button>
-                    </form>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          {% if not cm.public %}
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h4 class="panel-title">
-                <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
-                  Users who can view and download the resource
-                </a>
-              </h4>
-            </div>
-            <div id="collapseFour" class="panel-collapse collapse">
-              <div class="panel-body">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                    {% csrf_token %}
-                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>
-                    <select name="designees" id="view_users-select" multiple class="form-control" size="20">
-                        {% for u in users %}
-                            <option value="{{ u.pk }}" {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>
-                        {% endfor %}
-                    </select>
-                    <input name="t" value="view_users" type="hidden"/>
-                    <button type="submit" class="btn btn-primary btn-block">Update access list</button>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h4 class="panel-title">
-                <a data-toggle="collapse" data-parent="#accordion" href="#collapseFive">
-                  Research groups that can view and download the resource
-                </a>
-              </h4>
-            </div>
-            <div id="collapseFive" class="panel-collapse collapse">
-              <div class="panel-body">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                    {% csrf_token %}
-                    <small>Hold down "Control", or "Command" on a Mac, to select more than one.</small>
-                    <select name="designees" id="view_groups-select" multiple class="form-control" size="20">
-                        {% for u in groups %}
-                            <option value="{{ u.pk }}" {% if u in view_groups %}selected{% endif %}>{{ u }}</option>
-                        {% endfor %}
-                    </select>
-                    <input name="t" value="view_groups" type="hidden"/>
-                    <button type="submit" class="btn btn-primary btn-block">Update access list</button>
-                </form>
-              </div>
-            </div>
-          </div>
-          {% endif %}
-
-        </div>
-
-        {% endif %}
-
-
-    </div>
-    </div>
-
-    {% comments_for cm %}
+{#    {% comments_for cm %}#}
 
     {#                #}
     {# dialogs follow #}
     {#                #}
 
-    <!-- Modal -->
-
-    <div class="modal fade" id="delete-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="submit-for-publication-title">Submit resource for publication</h4>
-          </div>
-          <div class="modal-body">
-
-                <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource entirely. A copy of your
-                resource data will not be retained by Hydroshare.  We recommend highly that you download the latest copy
-                of your resource before confirming this action.
-              <hr/>
-                <a class="btn btn-primary btn-block" href="{{ bag.bag.url }}">Download resource package</a>
-
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
-          </div>
-        </div>
-      </div>
-    </div>
-        <!-- Modal -->
-    <div class="modal fade" id="add-dcterm-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-        <form action="/hsapi/_internal/{{ cm.short_id }}/add-metadata/">
-
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="myModalLabel">Add metadata term</h4>
-          </div>
-          <div class="modal-body">
-                    {% csrf_token %}
-
-                    {{ dcterm_frm|crispy }}
-
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary">Save changes</button>
-          </div>
-        </form>
-        </div>
-      </div>
-    </div>
-        <!-- Modal -->
-    <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <form action="/hsapi/_internal/{{ cm.short_id }}/add-citation/">
-
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="myModalLabel">Add reference</h4>
-          </div>
-          <div class="modal-body">
-                  {% csrf_token %}
-                  <div class="form-group">
-                      <label for="add-citation-input">Citation text:</label>
-                      <textarea class="form-control" name="content" id="add-citation-input" cols="30" rows="10"></textarea>
-                  </div>
-
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary">Save changes</button>
-          </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST" enctype="multipart/form-data">
-
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>
-          </div>
-          <div class="modal-body">
-                  {% csrf_token %}
-                  <div class="form-group">
-                      <label for="add-citation-input">Select file:</label>
-                      <input type="file" class="form-control" name="file" id="add-file-input" />
-                  </div>
-
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary">Save changes</button>
-          </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-
-    <script src=" {% static "ref_ts/d3/d3.min.js" %}"></script>
-    <script src=" {% static "ref_ts/datepicker/js/bootstrap-datepicker.js" %}"></script>
-    <script src=" {% static "ref_ts/visualization/js/visualization.js" %}"></script>
-    <script type="text/javascript">
-    $(function() {
-        function compare(a,b) {
-            if (a.x < b.x)
-                return -1;
-            if (a.x > b.x)
-                return 1;
-            return 0;
-        }
-        function humanFileSize(bytes) {
-            var thresh = 1024;
-            if(bytes < thresh) return bytes + ' B';
-            var units = ['kB','MB','GB','TB','PB','EB','ZB','YB'];
-            var u = -1;
-            do {
-                bytes /= thresh;
-                ++u;
-            } while(bytes >= thresh);
-            return bytes.toFixed(1)+' '+units[u];
-        }
-        function endsWith(str, suffix) {
-            return str.indexOf(suffix, str.length - suffix.length) !== -1;
-        }
-        function updateFiles() {
-             $.ajax({
-                 type:"GET",
-                 url:'/hsapi/_internal/{{ short_id }}/update-files/',
-                 success:function (data, xhr, status) {
-                     $('#downloads').html("<tr><td>"+ data.csv_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.csv_link + "'>Download(Updated)</td></tr><tr><td>"+ data.wml1_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.wml1_link + "'>Download(Updated)</td></tr><tr><td>"+ data.wml2_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.wml2_link + "'>Download(Updated)</td></tr><td></td><td><div class='btn-group'><a type='button' class='btn btn-primary' href='{{ bag.bag.url }}'>Export all</a><button type='button' class='btn btn-primary dropdown-toggle' data-toggle='dropdown'><span class='caret'></span><span class='sr-only'>Toggle Dropdown</span></button><ul class='dropdown-menu' role='menu'><li><a href='" + data.bag_url + "' style='color:black;'>" + data.bag_time + " (latest)</a></li>{% for b in first_4_bags %}<li><a href='{{ b.bag.url }}' style='color:black;'>{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>{% endfor %}</ul></div></td></tr>");
-            },
-                 error:function(data){
-                     console.log('error', data);
-                 }
-        });
-        }
-    function update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size){
-            $('#csv-name').html(csv_name);
-            $('#csv-link').html('Download (' + humanFileSize(csv_size) +')');
-            document.getElementById('csv-link').href = csv_link;
-            if (wml1_name != ""){
-                 $('#xml-name').html(wml1_name);
-                 $('#xml-link').html('Download (' + humanFileSize(wml1_size) +')');
-                 document.getElementById('xml-link').href = wml1_link;
-                 var xml_text = "<td>" + wml2_name + "</td>" + "<td><a class='btn btn-primary btn-block' href=" + wml2_link + ">Download (" + humanFileSize(wml2_size) + ")</a></td>";
-                 $('#xml2').html(xml_text);
-                        }
-            else{
-                 $('#xml-name').html(wml2_name);
-                 $('#xml-link').html('Download (' + humanFileSize(wml2_size) +')');
-                 document.getElementById('xml-link').href = wml2_link;
-            }
-                 $('#downloads').show();
-        }
-        updateFiles();
-        $('#graph-area').hide();
-        $('#loading').hide();
-        $('#switch-to-static').tooltip({animation: true, delay: { show: 500, hide: 100 }});
-    });
-    </script>
-{% endwith %}
-{% endblock %}
+{#    <!-- Modal -->#}
+{##}
+{#    <div class="modal fade" id="delete-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">#}
+{#      <div class="modal-dialog">#}
+{#        <div class="modal-content">#}
+{#          <div class="modal-header">#}
+{#            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>#}
+{#            <h4 class="modal-title" id="submit-for-publication-title">Submit resource for publication</h4>#}
+{#          </div>#}
+{#          <div class="modal-body">#}
+{##}
+{#                <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource entirely. A copy of your#}
+{#                resource data will not be retained by Hydroshare.  We recommend highly that you download the latest copy#}
+{#                of your resource before confirming this action.#}
+{#              <hr/>#}
+{#                <a class="btn btn-primary btn-block" href="{{ bag.bag.url }}">Download resource package</a>#}
+{##}
+{#          </div>#}
+{#          <div class="modal-footer">#}
+{#            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>#}
+{#            <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>#}
+{#          </div>#}
+{#        </div>#}
+{#      </div>#}
+{#    </div>#}
+{#        <!-- Modal -->#}
+{#    <div class="modal fade" id="add-dcterm-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">#}
+{#      <div class="modal-dialog">#}
+{#        <div class="modal-content">#}
+{#        <form action="/hsapi/_internal/{{ cm.short_id }}/add-metadata/">#}
+{##}
+{#          <div class="modal-header">#}
+{#            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>#}
+{#            <h4 class="modal-title" id="myModalLabel">Add metadata term</h4>#}
+{#          </div>#}
+{#          <div class="modal-body">#}
+{#                    {% csrf_token %}#}
+{##}
+{#                    {{ dcterm_frm|crispy }}#}
+{##}
+{#          </div>#}
+{#          <div class="modal-footer">#}
+{#            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>#}
+{#            <button type="submit" class="btn btn-primary">Save changes</button>#}
+{#          </div>#}
+{#        </form>#}
+{#        </div>#}
+{#      </div>#}
+{#    </div>#}
+{#        <!-- Modal -->#}
+{#    <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">#}
+{#      <div class="modal-dialog">#}
+{#        <div class="modal-content">#}
+{#          <form action="/hsapi/_internal/{{ cm.short_id }}/add-citation/">#}
+{##}
+{#          <div class="modal-header">#}
+{#            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>#}
+{#            <h4 class="modal-title" id="myModalLabel">Add reference</h4>#}
+{#          </div>#}
+{#          <div class="modal-body">#}
+{#                  {% csrf_token %}#}
+{#                  <div class="form-group">#}
+{#                      <label for="add-citation-input">Citation text:</label>#}
+{#                      <textarea class="form-control" name="content" id="add-citation-input" cols="30" rows="10"></textarea>#}
+{#                  </div>#}
+{##}
+{#          </div>#}
+{#          <div class="modal-footer">#}
+{#            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>#}
+{#            <button type="submit" class="btn btn-primary">Save changes</button>#}
+{#          </div>#}
+{#          </form>#}
+{#        </div>#}
+{#      </div>#}
+{#    </div>#}
+{##}
+{#    <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">#}
+{#      <div class="modal-dialog">#}
+{#        <div class="modal-content">#}
+{#          <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST" enctype="multipart/form-data">#}
+{##}
+{#          <div class="modal-header">#}
+{#            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>#}
+{#            <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>#}
+{#          </div>#}
+{#          <div class="modal-body">#}
+{#                  {% csrf_token %}#}
+{#                  <div class="form-group">#}
+{#                      <label for="add-citation-input">Select file:</label>#}
+{#                      <input type="file" class="form-control" name="file" id="add-file-input" />#}
+{#                  </div>#}
+{##}
+{#          </div>#}
+{#          <div class="modal-footer">#}
+{#            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>#}
+{#            <button type="submit" class="btn btn-primary">Save changes</button>#}
+{#          </div>#}
+{#          </form>#}
+{#        </div>#}
+{#      </div>#}
+{#    </div>#}
+{##}
+{##}
+{#    <script src=" {% static "ref_ts/d3/d3.min.js" %}"></script>#}
+{#    <script src=" {% static "ref_ts/datepicker/js/bootstrap-datepicker.js" %}"></script>#}
+{#    <script src=" {% static "ref_ts/visualization/js/visualization.js" %}"></script>#}
+{#    <script type="text/javascript">#}
+{#    $(function() {#}
+{#        function compare(a,b) {#}
+{#            if (a.x < b.x)#}
+{#                return -1;#}
+{#            if (a.x > b.x)#}
+{#                return 1;#}
+{#            return 0;#}
+{#        }#}
+{#        function humanFileSize(bytes) {#}
+{#            var thresh = 1024;#}
+{#            if(bytes < thresh) return bytes + ' B';#}
+{#            var units = ['kB','MB','GB','TB','PB','EB','ZB','YB'];#}
+{#            var u = -1;#}
+{#            do {#}
+{#                bytes /= thresh;#}
+{#                ++u;#}
+{#            } while(bytes >= thresh);#}
+{#            return bytes.toFixed(1)+' '+units[u];#}
+{#        }#}
+{#        function endsWith(str, suffix) {#}
+{#            return str.indexOf(suffix, str.length - suffix.length) !== -1;#}
+{#        }#}
+{#        function updateFiles() {#}
+{#             $.ajax({#}
+{#                 type:"GET",#}
+{#                 url:'/hsapi/_internal/{{ short_id }}/update-files/',#}
+{#                 success:function (data, xhr, status) {#}
+{#                     $('#downloads').html("<tr><td>"+ data.csv_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.csv_link + "'>Download(Updated)</td></tr><tr><td>"+ data.wml1_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.wml1_link + "'>Download(Updated)</td></tr><tr><td>"+ data.wml2_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.wml2_link + "'>Download(Updated)</td></tr><td></td><td><div class='btn-group'><a type='button' class='btn btn-primary' href='{{ bag.bag.url }}'>Export all</a><button type='button' class='btn btn-primary dropdown-toggle' data-toggle='dropdown'><span class='caret'></span><span class='sr-only'>Toggle Dropdown</span></button><ul class='dropdown-menu' role='menu'><li><a href='" + data.bag_url + "' style='color:black;'>" + data.bag_time + " (latest)</a></li>{% for b in first_4_bags %}<li><a href='{{ b.bag.url }}' style='color:black;'>{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>{% endfor %}</ul></div></td></tr>");#}
+{#            },#}
+{#                 error:function(data){#}
+{#                     console.log('error', data);#}
+{#                 }#}
+{#        });#}
+{#        }#}
+{#    function update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size){#}
+{#            $('#csv-name').html(csv_name);#}
+{#            $('#csv-link').html('Download (' + humanFileSize(csv_size) +')');#}
+{#            document.getElementById('csv-link').href = csv_link;#}
+{#            if (wml1_name != ""){#}
+{#                 $('#xml-name').html(wml1_name);#}
+{#                 $('#xml-link').html('Download (' + humanFileSize(wml1_size) +')');#}
+{#                 document.getElementById('xml-link').href = wml1_link;#}
+{#                 var xml_text = "<td>" + wml2_name + "</td>" + "<td><a class='btn btn-primary btn-block' href=" + wml2_link + ">Download (" + humanFileSize(wml2_size) + ")</a></td>";#}
+{#                 $('#xml2').html(xml_text);#}
+{#                        }#}
+{#            else{#}
+{#                 $('#xml-name').html(wml2_name);#}
+{#                 $('#xml-link').html('Download (' + humanFileSize(wml2_size) +')');#}
+{#                 document.getElementById('xml-link').href = wml2_link;#}
+{#            }#}
+{#                 $('#downloads').show();#}
+{#        }#}
+{#        updateFiles();#}
+{#        $('#graph-area').hide();#}
+{#        $('#loading').hide();#}
+{#        $('#switch-to-static').tooltip({animation: true, delay: { show: 500, hide: 100 }});#}
+{#    });#}
+{#    </script>#}
+{#{% endwith %}#}
+{#{% endblock %}#}
