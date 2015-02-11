@@ -43,6 +43,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
             # initialize required raster metadata to be place holders to be edited later by users
             spatial_coverage_info = OrderedDict([
                 ('units', "Unnamed"),
+                ('projection', 'Unnamed'),
                 ('northlimit', 0),
                 ('southlimit', 0),
                 ('eastlimit', 0),
@@ -97,7 +98,6 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         element_form = CellInfoValidationForm(request.POST)
     elif element_name == 'bandinformation':
         element_form = BandInfoValidationForm(request.POST)
-
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
