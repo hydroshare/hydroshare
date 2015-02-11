@@ -126,11 +126,19 @@ def get_period_info(nc_dataset):
     for var_name, var_detail in nc_coordinate_variables_detail.items():
         coor_type = var_detail['coordinate_type']
         if coor_type == 'T':
+            start = var_detail['coordinate_start']
+            end = var_detail['coordinate_end']
+            # check coordinate bounds variable
+            bounds_info = get_nc_coordinate_bounds_variable_info(nc_dataset, var_name)
+            if bounds_info:
+                start = bounds_info['coordinate_bounds_start']
+                end = bounds_info['coordinate_bounds_end']
+
             period_info = {
-                'start': var_detail['coordinate_start'],
-                'end': var_detail['coordinate_end'],
-                #'units': var_detail['coordinate_units']
+                'start': start,
+                'end': end,
             }
+
     return period_info
 
 
@@ -143,16 +151,28 @@ def get_original_box_info(nc_dataset):
 
     nc_coordinate_variables_detail = get_nc_coordinate_variables_detail(nc_dataset)
     original_box_info = {}
+    # check the coordinate variable for box value
     for var_name, var_detail in nc_coordinate_variables_detail.items():
         coor_type = var_detail['coordinate_type']
         if coor_type == 'X':
             original_box_info['westlimit'] = min(var_detail['coordinate_start'], var_detail['coordinate_end'])
             original_box_info['eastlimit'] = max(var_detail['coordinate_start'], var_detail['coordinate_end'])
             original_box_info['units'] = var_detail['coordinate_units']
+            # check coordinate bounds variable
+            bounds_info = get_nc_coordinate_bounds_variable_info(nc_dataset, var_name)
+            if bounds_info:
+                original_box_info['westlimit'] = bounds_info['coordinate_bounds_start']
+                original_box_info['eastlimit'] = bounds_info['coordinate_bounds_end']
+
         elif coor_type == 'Y':
             original_box_info['southlimit'] = min(var_detail['coordinate_start'], var_detail['coordinate_end'])
             original_box_info['northlimit'] = max(var_detail['coordinate_start'], var_detail['coordinate_end'])
             original_box_info['units'] = var_detail['coordinate_units']
+            # check coordinate bounds variable
+            bounds_info = get_nc_coordinate_bounds_variable_info(nc_dataset, var_name)
+            if bounds_info:
+                original_box_info['southlimit'] = bounds_info['coordinate_bounds_start']
+                original_box_info['northlimit'] = bounds_info['coordinate_bounds_end']
 
     if re.match('degree', original_box_info.get('units', ''), re.I):
         original_box_info['units'] = 'degree'

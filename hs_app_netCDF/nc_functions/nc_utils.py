@@ -12,6 +12,7 @@ __author__ = 'Tian Gan'
 import netCDF4
 import re
 from collections import OrderedDict
+import numpy
 
 
 # Functions for General Purpose ####################################################################################
@@ -195,7 +196,7 @@ def get_nc_coordinate_variable_info(nc_dataset, nc_coordinate_variable_name):
         'coordinate_data': coordinate_data,
         'coordinate_start': coordinate_data[0],
         'coordinate_end': coordinate_data[-1],
-        'coordinate_size': len(coordinate_data)
+        'coordinate_size': len(coordinate_data),
     }
 
     return nc_coordinate_variable_info
@@ -207,15 +208,16 @@ def get_nc_coordinate_bounds_variables(nc_dataset):
     (object) -> dict
 
     Return: the netCDF coordinate bound variable
+    { bounds
     """
 
     nc_coordinate_variables = get_nc_coordinate_variables(nc_dataset)
-    nc_coordinate_bound_variables = {}
+    nc_coordinate_bounds_variables = {}
     for var_name, var_obj in nc_coordinate_variables.items():
         if hasattr(var_obj, 'bounds') and nc_dataset.variables.get(var_obj.bounds, None):
-            nc_coordinate_bound_variables[var_obj.bounds] = nc_dataset.variables[var_obj.bounds]
+            nc_coordinate_bounds_variables[var_obj.bounds] = nc_dataset.variables[var_obj.bounds]
 
-    return nc_coordinate_bound_variables
+    return nc_coordinate_bounds_variables
 
 
 def get_nc_coordinate_bounds_variable_namelist(nc_dataset):
@@ -225,28 +227,84 @@ def get_nc_coordinate_bounds_variable_namelist(nc_dataset):
     Return: the netCDF coordinate bound variable names
     """
 
-    nc_coordinate_bound_variables = get_nc_coordinate_bounds_variables(nc_dataset)
-    nc_coordinate_bound_variable_namelist = list(nc_coordinate_bound_variables.keys())
+    nc_coordinate_bounds_variables = get_nc_coordinate_bounds_variables(nc_dataset)
+    nc_coordinate_bounds_variable_namelist = list(nc_coordinate_bounds_variables.keys())
 
-    return nc_coordinate_bound_variable_namelist
+    return nc_coordinate_bounds_variable_namelist
 
 
 def get_nc_coordinate_bounds_variables_mapping(nc_dataset):
     """
     (object)-> dict
 
-    Return: assign X_bounds, Y_bounds, Z_bounds, T_bounds to the coordinate bounds variables in netCDF.
-    If not discerned then Unknown_bounds is returned to that variable
+    Return: the coordinate bounds variable name and the coordinate variable name
     """
 
     nc_coordinate_variables = get_nc_coordinate_variables(nc_dataset)
     nc_coordinate_bounds_variables_mapping = {}
     for var_name, var_obj in nc_coordinate_variables.items():
-        coordinate_variable_type = get_coordinate_variable_type(var_obj)
-        if hasattr(var_obj, 'bounds'):
-            nc_coordinate_bounds_variables_mapping[coordinate_variable_type + '_bounds'] = var_obj.bounds
+        if hasattr(var_obj, 'bounds') and nc_dataset.variables.get(var_obj.bounds, None):
+            nc_coordinate_bounds_variables_mapping[var_obj.bounds] = var_name
 
     return nc_coordinate_bounds_variables_mapping
+
+
+def get_nc_coordinate_bounds_variables_mapping(nc_dataset):
+    """
+    (string) -> dict
+
+    Return: coordinate bounds metadata for all the netCDF coordinate bounds variables
+    """
+
+    nc_coordinate_bounds_variable_namelist = get_nc_coordinate_bounds_variable_namelist(nc_dataset)
+    nc_coordinate_bound_variables_detail = {}
+    for coor_bounds_var_name, coor_var_name in nc_coordinate_bounds_variable_namelist:
+        nc_coordinate_bound_variables_detail[coor_bounds_var_name] = \
+            get_nc_coordinate_bounds_variable_info(nc_dataset, coor_var_name)
+
+    return nc_coordinate_bound_variables_detail
+
+
+def get_nc_coordinate_bounds_variable_info(nc_dataset, nc_coordinate_variable_name):
+    """
+    (object, string) -> dict
+
+    Return: coordinate bounds metadata and data for the given netCDF coordinate variable name
+    """
+    nc_coordinate_bounds_variable_info = {}
+    nc_coordinate_variable = nc_dataset.variables.get(nc_coordinate_variable_name, None)
+    nc_coordinate_bounds = hasattr(nc_coordinate_variable,'bounds')
+    if nc_coordinate_variable and nc_coordinate_bounds:
+        if nc_dataset.variables.get(nc_coordinate_variable.bounds, None):
+            nc_coordinate_bounds_variable = nc_dataset.variables[nc_coordinate_variable.bounds]
+            coordinate_bounds_variable_data = nc_coordinate_bounds_variable[:]
+            coordinate_variable_type = get_coordinate_variable_type(nc_coordinate_variable)
+            coordinate_bounds_variable_type = coordinate_variable_type + '_bounds'
+
+            if coordinate_bounds_variable_data.size:
+                coordinate_bounds_min = coordinate_bounds_variable_data[numpy.unravel_index(
+                    coordinate_bounds_variable_data.argmin(), coordinate_bounds_variable_data.shape)]
+
+                coordinate_bounds_max = coordinate_bounds_variable_data[numpy.unravel_index(
+                    coordinate_bounds_variable_data.argmax(), coordinate_bounds_variable_data.shape)]
+
+                if coordinate_bounds_variable_type == 'T_bounds' and hasattr(nc_coordinate_variable, 'units'):
+                    nc_time_calendar = nc_coordinate_variable.calendar if hasattr(nc_coordinate_variable, 'calendar') else 'standard'
+                    coordinate_bounds_min = str(netCDF4.num2date(coordinate_bounds_min,
+                                                                  units=nc_coordinate_variable.units,
+                                                                  calendar=nc_time_calendar))
+                    coordinate_bounds_max = str(netCDF4.num2date(coordinate_bounds_max,
+                                                                  units=nc_coordinate_variable.units,
+                                                                  calendar=nc_time_calendar))
+
+                nc_coordinate_bounds_variable_info = {
+                    'coordinate_bounds_type': coordinate_bounds_variable_type,
+                    'coordinate_bounds_units': nc_coordinate_variable.units if hasattr(nc_coordinate_variable, 'units') else '',
+                    'coordinate_bounds_start': coordinate_bounds_min,
+                    'coordinate_bounds_end': coordinate_bounds_max,
+                }
+
+    return nc_coordinate_bounds_variable_info
 
 
 # Function for Auxiliary Coordinate Variable ########################################################################
