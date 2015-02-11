@@ -9,6 +9,6 @@
         {{ form|crispy }}
 
         <input type="submit" class="btn btn-primary" style="margin-top: 0.5em;" value="Save model"/>
-	<a class="btn btn-primary" id="back" href="http://{{ request.get_host }}/hs_rhessys_inst_resource/{{ cm.short_id }}/runmodel/">Run model</a>
+	<a class="btn btn-primary" style="margin-top: 0.5em;" id="back" href="http://{{ request.get_host }}/hs_rhessys_inst_resource/{{ cm.short_id }}/runmodel/">Run model</a>
     </form>
 {% endblock %}

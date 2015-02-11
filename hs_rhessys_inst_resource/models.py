@@ -16,6 +16,11 @@ import cStringIO as StringIO
 import os
 import logging
 
+from hs_core.models import GenericResource
+
+from django_docker_processes.models import DockerProfile
+from django_docker_processes.models import DockerProcess
+
 LOGGER = logging.getLogger('django')
 
 #
@@ -26,15 +31,16 @@ class InstResource(Page, RichText, AbstractResource):
         verbose_name = 'RHESSys Instance Resource'
     name = models.CharField(max_length=50)
     git_repo = models.URLField()
-    git_username = models.CharField(max_length=50)
+    git_username = models.CharField(max_length=50, blank=True, null=True)
     # later change it to use Jeff's password encode function with django SECRET_KEY
-    git_password = models.CharField(max_length=50)
+    git_password = models.CharField(max_length=50, blank=True, null=True)
     commit_id = models.CharField(max_length=50)
     model_desc = models.CharField(max_length=500)
-    git_branch = models.CharField(max_length=50)
+    git_branch = models.CharField(max_length=50, blank=True, null=True)
     study_area_bbox = models.CharField(max_length = 50)
-    model_command_line_parameters = models.CharField(max_length=500)
+    #model_command_line_parameters = models.CharField(max_length=500, blank=True, null=True)
     project_name = models.CharField(max_length=100)
+    docker_profile = models.ForeignKey(DockerProfile, blank=True, null=True)
 
     def can_add(self, request):
         return AbstractResource.can_add(self, request)
@@ -116,4 +122,19 @@ def rhessys_post_trigger(sender, **kwargs):
             resource.save()
             zfile.close()
 
-#processor_for(InstResource)(resource_processor)
+class ModelRun(models.Model):
+    class Meta:
+        verbose_name = 'RHESSys Model Run'
+    
+    model_instance = models.ForeignKey(InstResource)
+    docker_process = models.ForeignKey(DockerProcess)
+
+    model_command_line_parameters = models.CharField(max_length=1024, blank=True, null=True)
+
+    status = models.CharField(max_length=32, blank=True, null=True,
+                              choices=(('Running', 'Running'),
+                                       ('Finished', 'Finished'),
+                                       ('Error', 'Error')))
+    date_started = models.DateTimeField(blank=True, null=True)
+    date_finished = models.DateTimeField(blank=True, null=True)
+    model_results = models.ForeignKey(GenericResource, blank=True, null=True)

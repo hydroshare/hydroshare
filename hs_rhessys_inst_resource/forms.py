@@ -22,3 +22,10 @@ class InputForm(forms.Form):
                                                     widget=forms.TextInput(attrs={'size':80}))
     project_name = forms.CharField(label="project name", max_length=100, 
                                    widget=forms.TextInput(attrs={'size':80, 'readonly':'readonly'}))
+
+class RunModelForm(forms.Form):
+    model_command_line_parameters = forms.CharField(label="model command line parameters", 
+                                                    max_length=1024, required=True, 
+                                                    widget=forms.TextInput(attrs={'size':80}))
+
+    

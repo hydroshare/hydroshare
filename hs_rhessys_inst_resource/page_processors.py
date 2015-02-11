@@ -41,11 +41,8 @@ def main_page(request, page):
             logger.info("Running model, input_url: {0}".format(input_url))
 
             env_dict = {'INPUT_URL':input_url}
-            my_profile = get_object_or_404(DockerProfile, name='RHESSys_Docker_Profile')
-            #my_profile = get_object_or_404(DockerProfile, name='Pandoc')
-            #global process
-            process = DockerProcess.objects.create(profile=my_profile) # creates a unique ID
-            #promise = tasks.run_process.delay(process, **env_dict)
+            #my_profile = get_object_or_404(DockerProfile, name='RHESSys_Docker_Profile')
+            #process = DockerProcess.objects.create(profile=my_profile) # creates a unique ID
 
             logger.info("content_model.project_name: {0}".format(content_model.project_name))
 
@@ -57,7 +54,7 @@ def main_page(request, page):
 
             keyword_args = {'env': env_dict,
                             'overwrite_images': True}
-            rebuild_image = False
+            #rebuild_image = False
             #promise = tasks.run_process.apply_async(args=[process, {}, rebuild_image], 
             #                                        kwargs=keyword_args)
             #logs = promise.get()
