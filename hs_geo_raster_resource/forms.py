@@ -48,7 +48,7 @@ class BandInfoFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('bandName', css_class=field_width),
+                        Field('name', css_class=field_width),
                         Field('variableName', css_class=field_width),
                         Field('variableUnit', css_class=field_width),
                         Field('method', css_class=field_width),
@@ -69,7 +69,7 @@ class BandInfoForm(ModelForm):
         #widgets = {'BandInformation': forms.TextInput()}
 
 class BandInfoValidationForm(forms.Form):
-    bandName = forms.CharField(max_length=50, required=True)
+    name = forms.CharField(max_length=50, required=True)
     variableName = forms.CharField(widget=forms.Textarea, required=True)
     variableUnit = forms.CharField(max_length=50, required=True)
     method = forms.CharField(widget=forms.Textarea, required=False)
