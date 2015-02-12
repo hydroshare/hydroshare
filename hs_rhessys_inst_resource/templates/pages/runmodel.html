@@ -10,12 +10,11 @@
     <h2>Run Model</h2>
 
 <div class="btn-toolbar" style="padding-bottom: 0.5em;">
-  <a class="btn btn-primary" id="back" href="http://{{ request.get_host }}/r/{{ resource_short_id }}/">Back to resource</a>
+  <a class="btn btn-primary" id="back" href="http://{{ request.get_host }}/r/{{ resource_short_id }}/">Back to model details</a>
 </div>
 
 <div class="row">
     <div class="col-md-12">{# <img src="/placeholder.png"></div> #}
-
     {% if not can_run %}
     <p>Unable to run model.  Please ask the administrator to associated an execution profile with this model.</p>
     {% else %}
@@ -23,18 +22,34 @@
     <form action="/hs_rhessys_inst_resource/{{ resource_short_id }}/runmodel/" metho="POST">
       {% csrf_token %}
       <h3>New model run</h3>
-      {{ form }}
+      {{ form|crispy }}
       <br />
       <input type="submit" class="btn btn-success" style="margin-top: 0.5em;" value="Run model"/>
     </form>
 
-    <h3>Existing model runs</h3>
-    <table class="table table-striped table-hover">
-      
-    </table>
-
     {% endif %}
     </div>
+
+    <h3>Existing model runs</h3>
+    <div class="col-md-12">
+    {% for run in run_info %}
+      <em>Title:</em>&nbsp;{{ run.title }}<br />
+      {% if run.description %}
+      <em>Description:</em>&nbsp;{{ run.description }}<br />
+      {% endif %}
+      <em>Status:</em>&nbsp;<span id="status">{{ run.status }}</span><br /><br />
+      {% if run.results_url %}
+      <a class="btn btn-primary" target="_blank" href="{{ run.results_url }}">View results</a><br /><br />
+      {% endif %}
+      <div>
+	<em>Model command line parameters:</em><br />{{ run.model_command_line_parameters }}<br /><br />
+	<em>Time started:</em>&nbsp;{{ run.date_started }}<br />
+	<em>Time finished:</em>&nbsp;{{ run.date_finished }}<br />
+      Poll URL: {{ run.docker_process_poll_url }}
+    <hr />
+    {% endfor %}
+    </div>
+
 </div>
 
 </form>

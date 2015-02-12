@@ -24,8 +24,12 @@ class InputForm(forms.Form):
                                    widget=forms.TextInput(attrs={'size':80, 'readonly':'readonly'}))
 
 class RunModelForm(forms.Form):
-    model_command_line_parameters = forms.CharField(label="model command line parameters", 
+    title = forms.CharField(label="Title", max_length=64, required=True,
+                            widget=forms.TextInput(attrs={'size':80}))
+    description = forms.CharField(label="Description", max_length=1024, required=False,
+                                  widget=forms.TextInput(attrs={'size':80, 'rows':1}))
+    model_command_line_parameters = forms.CharField(label="Model command line parameters", 
                                                     max_length=1024, required=True, 
-                                                    widget=forms.TextInput(attrs={'size':80}))
+                                                    widget=forms.Textarea(attrs={'cols':80, 'rows':4}))
 
     

@@ -129,8 +129,6 @@ class ModelRun(models.Model):
     model_instance = models.ForeignKey(InstResource)
     docker_process = models.ForeignKey(DockerProcess)
 
-    model_command_line_parameters = models.CharField(max_length=1024, blank=True, null=True)
-
     status = models.CharField(max_length=32, blank=True, null=True,
                               choices=(('Running', 'Running'),
                                        ('Finished', 'Finished'),
@@ -138,3 +136,7 @@ class ModelRun(models.Model):
     date_started = models.DateTimeField(blank=True, null=True)
     date_finished = models.DateTimeField(blank=True, null=True)
     model_results = models.ForeignKey(GenericResource, blank=True, null=True)
+
+    title = models.CharField(max_length=64)
+    description = models.CharField(max_length=1024, blank=True, null=True)
+    model_command_line_parameters = models.CharField(max_length=1024, blank=True, null=True)
