@@ -15,6 +15,7 @@ import ConfigParser
 import cStringIO as StringIO
 import os
 import logging
+from django.shortcuts import get_object_or_404
 
 from hs_core.models import GenericResource
 
@@ -58,21 +59,33 @@ def when_my_process_ends(sender, instance, result_text=None, result_data=None, r
     # make something out of the result data - result_data is a dict, result_text is plaintext
     # files are UploadedFile instances
     # logs are plain text stdout and stderr from the finished container
+    
+    # TODO filter for our type of instance
+    run = get_object_or_404(ModelRun, docker_process=instance)
+
     files = result_files.values()
     LOGGER.info("Process finished, files: {0}".format(files))
 
+    # Create resource to store results in
     from hs_core import hydroshare
-    owner = User.objects.first() # FIXME
-    hydroshare.create_resource('GenericResource', owner, instance.profile.name + ' - ' + now().isoformat(), files=files, content=logs)
-    if logs:
-        LOGGER.info(logs)
-    #process.delete() # no reason to leave it hanging around in the database
+    owner = User.objects.first() # TODO get user name properly
+    model_results = hydroshare.create_resource('GenericResource', owner, instance.profile.name + ' - ' + now().isoformat(), files=files, content=logs)
+
+    # Save results resource to model run, update status, and end date
+    run.date_finished = now()
+    run.model_results = model_results
+    run.status = 'Finished'
+    run.save()
 
 def when_my_process_fails(sender, instance, error_text=None, error_data=None, logs=None, **kw):
     # do something out of the error data
     # error_data is a dict
     # error_text is plain text
     # logs are plain text stdout and stderr from the dead container
+
+    # TODO filter for our type of instance
+    run = get_object_or_404(ModelRun, docker_process=instance)
+
     LOGGER.info('Process failed')
     if error_text:
         if instance.logs is None:
@@ -80,7 +93,12 @@ def when_my_process_fails(sender, instance, error_text=None, error_data=None, lo
         instance.logs += error_text
         LOGGER.info(error_text)
     instance.save()
-    #process.delete() # no reason to leave it hanging around in the database
+
+    # Update status, and end date
+    run.date_finished = now()
+    run.status = 'Error'
+    run.save()
+
 
 finished = signals.process_finished.connect(when_my_process_ends, weak=False)
 error_handler = signals.process_aborted.connect(when_my_process_fails, weak=False)
@@ -133,7 +151,7 @@ class ModelRun(models.Model):
                               choices=(('Running', 'Running'),
                                        ('Finished', 'Finished'),
                                        ('Error', 'Error')))
-    date_started = models.DateTimeField(blank=True, null=True)
+    date_started = models.DateTimeField(auto_now_add=True)
     date_finished = models.DateTimeField(blank=True, null=True)
     model_results = models.ForeignKey(GenericResource, blank=True, null=True)
 

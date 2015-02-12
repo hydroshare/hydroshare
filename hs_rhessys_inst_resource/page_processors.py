@@ -36,24 +36,24 @@ def main_page(request, page):
             #content_model.commit_id = form.cleaned_data['commit_id']
             content_model.save()
 
-            input_url = request.build_absolute_uri(content_model.bags.first().bag.url)
+#            input_url = request.build_absolute_uri(content_model.bags.first().bag.url)
 
-            logger.info("Running model, input_url: {0}".format(input_url))
+#            logger.info("Running model, input_url: {0}".format(input_url))
 
-            env_dict = {'INPUT_URL':input_url}
+#            env_dict = {'INPUT_URL':input_url}
             #my_profile = get_object_or_404(DockerProfile, name='RHESSys_Docker_Profile')
             #process = DockerProcess.objects.create(profile=my_profile) # creates a unique ID
 
-            logger.info("content_model.project_name: {0}".format(content_model.project_name))
+#            logger.info("content_model.project_name: {0}".format(content_model.project_name))
 
-            logger.info("Calling tasks.run_process.apply_async for process with token {0}...".format(process.token))
+#            logger.info("Calling tasks.run_process.apply_async for process with token {0}...".format(process.token))
 
             logger.info("Resource ID (for now): {0}".format(content_model.get_slug()))
-            env_dict['RID'] = content_model.get_slug()
-            env_dict['RHESSYS_PROJECT'] = content_model.project_name.strip(os.sep)
+#            env_dict['RID'] = content_model.get_slug()
+#            env_dict['RHESSYS_PROJECT'] = content_model.project_name.strip(os.sep)
 
-            keyword_args = {'env': env_dict,
-                            'overwrite_images': True}
+#            keyword_args = {'env': env_dict,
+#                            'overwrite_images': True}
             #rebuild_image = False
             #promise = tasks.run_process.apply_async(args=[process, {}, rebuild_image], 
             #                                        kwargs=keyword_args)

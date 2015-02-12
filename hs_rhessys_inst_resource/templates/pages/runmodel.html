@@ -229,7 +229,7 @@
     <p>Unable to run model.  Please ask the administrator to associated an execution profile with this model.</p>
     {% else %}
 
-    <form action="/hs_rhessys_inst_resource/{{ resource_short_id }}/runmodel/" metho="POST">
+    <form action="/hs_rhessys_inst_resource/{{ resource_short_id }}/runmodel/" method="POST">
       {% csrf_token %}
       <h3>New model run</h3>
       {{ form|crispy }}
@@ -242,6 +242,9 @@
 
     <h3>Existing model runs</h3>
     <div class="col-md-12">
+    {% if run_info|length == 0 %}
+    There are no previous model runs.
+    {% endif %}
     {% for run in run_info %}
       <em>Title:</em>&nbsp;{{ run.title }}<br />
       {% if run.description %}
@@ -271,17 +274,22 @@
 	<em>Model command line parameters:</em><br />{{ run.model_command_line_parameters }}<br /><br />
 	<em>Time started:</em>&nbsp;{{ run.date_started }}<br />
 	<em>Time finished:</em>&nbsp;<span id="date-finished-{{ run.token}}">{{ run.date_finished }}</span><br />
+      </div>
+      <br />
+      <em>Log output:</em>
+      <div style="height: 64px; overflow: auto; border: 1px solid; border-radius: 4px;"><p id="log-{{ run.token }}">{{ run.logs }}</p></div>
     <hr />
     {% if run.status == 'Running' %}
     <script type="text/javascript">
       $(function poll() {
         timeout = setTimeout(function(){
           $.ajax({ url: "{{ run.poll_url }}", success: function(runs) {
-            run = runs[0]
+            run = runs[0];
             if ( run.status == 'Finished' ) {
               $("#status-{{ run.token }}").html(run.status).css('color', 'black');
               $("#date-finished-{{ run.token }}").html(run.date_finished);
               $("#floatingBarsG").css('display', 'none');
+              $("#log-{{ run.token }}").html(run.logs);
 
               results_url = run.results_url;
               $("#results-link-{{ run.token }}").attr('href', results_url).css('visibility', 'visible');
@@ -289,12 +297,13 @@
               $("#status-{{ run.token }}").html(run.status).css('color', 'red');
               $("#date-finished-{{ run.token }}").html(run.date_finished);
               $("#floatingBarsG").css('display', 'none');
+              $("#log-{{ run.token }}").html(run.logs);
             } else {
               poll();
             }
           }, dataType: "json"});
-        }, 5000);
-      })() ;
+        }, 10000);
+      })();
     </script>
     {% endif %}
     {% endfor %}
