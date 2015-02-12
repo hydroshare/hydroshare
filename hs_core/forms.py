@@ -792,6 +792,13 @@ class PartyValidationForm(forms.Form):
     phone = forms.CharField(max_length=25, required=False)
     homepage = forms.URLField(required=False)
 
+    def clean(self):
+        cleaned_data = super(PartyValidationForm, self).clean()
+        name = cleaned_data.get('name', None)
+        if not name or len(name.strip()) == 0:
+            self._errors['name'] = ["A value for name is missing"]
+
+        return self.cleaned_data
 
 class CreatorValidationForm(PartyValidationForm):
     order = forms.IntegerField(required=False)

@@ -262,6 +262,9 @@ class Party(AbstractMetaDataElement):
                 creator_order = 1
                 if party:
                     creator_order = party.order + 1
+                if len(kwargs['name'].strip()) == 0:
+                    raise ValidationError("Invalid name for the %s." % element_name.lower())
+
                 party = Creator.objects.create(name=kwargs['name'], order=creator_order, content_object=metadata_obj)
             else:
                 party = Contributor.objects.create(name=kwargs['name'], content_object=metadata_obj)
@@ -1394,6 +1397,10 @@ class AbstractResource(ResourcePermissionsMixin):
 
         first_author = self.metadata.creators.all().filter(order=1)[0]
         name_parts = first_author.name.split(" ")
+        if len(name_parts) == 0:
+            citation = "Failed to generate citation - invalid creator name (%s)." % first_author.name
+            return citation
+
         if len(name_parts) > 2:
             citation = "{last_name}, {first_initial}.{middle_initial}.".format(last_name=name_parts[-1],
                                                                               first_initial=name_parts[0][0],
@@ -1405,6 +1412,10 @@ class AbstractResource(ResourcePermissionsMixin):
         other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
             name_parts = author.name.split(" ")
+            if len(name_parts) == 0:
+                citation = "Failed to generate citation - invalid creator name (%s)." % author.name
+                return citation
+
             if len(name_parts) > 2:
                 citation += "{first_initial}.{middle_initial}.{last_name}".format(first_initial=name_parts[0][0],
                                                                                   middle_initial=name_parts[1][0],
