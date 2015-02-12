@@ -1076,6 +1076,9 @@ span.name-label{
     display: table;
 }
 
+.tab-elements{
+    height:441px;
+}
 .tab-elements .table{
     width:auto;
 }
