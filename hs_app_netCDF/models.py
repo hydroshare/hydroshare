@@ -10,13 +10,14 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 # Define netCDF metadata
 class Variable(AbstractMetaDataElement):
     # variable types are defined in OGC enhanced_data_model_extension_standard
+    # left is the given value stored in database right is the value for the drop down list
     VARIABLE_TYPES = (
-        ('S1', 'Char'), # 8-bit byte that contains uninterpreted character data
-        ('int8', 'Byte'), # integer(8bit)
-        ('int16', 'Short'),  # signed integer (16bit)
-        ('int32', 'Int'),  # signed integer (32bit)
-        ('float32', 'Float'),  # floating point (32bit)
-        ('float64', 'Double'),  # floating point(64bit)
+        ('Char', 'Char'), # 8-bit byte that contains uninterpreted character data
+        ('Byte', 'Byte'), # integer(8bit)
+        ('Short', 'Short'),  # signed integer (16bit)
+        ('Int', 'Int'),  # signed integer (32bit)
+        ('Float', 'Float'),  # floating point (32bit)
+        ('Double', 'Double'),  # floating point(64bit)
         ('unknown', 'Unknown')
     )
     term = 'Variable'
@@ -51,7 +52,7 @@ class Variable(AbstractMetaDataElement):
             raise ValidationError("Variable unit is missing.")
 
         if 'type' in kwargs:
-            if not kwargs['type'] in ['S1', 'int8', 'int16', 'int32', 'float32', 'float64']:
+            if not kwargs['type'] in ['Char', 'Byte', 'Short', 'Int', 'Float', 'Double']:
                 raise ValidationError('Invalid variable type:%s' % kwargs['type'])
         else:
             raise ValidationError("Variable type is missing.")

@@ -226,9 +226,13 @@ def get_box_info(nc_dataset, original_box_info):
                     box_info['westlimit'] = westlimit #if westlimit <= 180 else westlimit-360
                     box_info['eastlimit'] = eastlimit #if eastlimit <= 180 else eastlimit-360
 
-    if box_info:
+    if set(['westlimit','eastlimit','northlimit','southlimit']).issubset(box_info.keys()):
         box_info['units'] = 'Decimal degrees'
         box_info['projection'] = 'WGS 84 EPSG:4326'
+        box_info['westlimit'] = str(box_info['westlimit'])
+        box_info['eastlimit'] = str(box_info['eastlimit'])
+        box_info['northlimit'] = str(box_info['northlimit'])
+        box_info['southlimit'] = str(box_info['southlimit'])
 
     return box_info
 
@@ -264,8 +268,19 @@ def extract_nc_data_variables_meta(nc_data_variables):
         }
 
         # check type element info:
-        nc_type_list = ['S1', 'int8', 'int16', 'int32', 'float32', 'float64']
-        if nc_data_variables_meta[var_name]['type'] not in nc_type_list:
+        nc_type_dict = {
+            'S1': 'Char',
+            'int8': 'Byte',
+            'int16': 'Short',
+            'int32': 'Int',
+            'float32': 'Float',
+            'float64': 'Double'
+        }
+
+        nc_type_original_name = nc_data_variables_meta[var_name]['type']
+        if nc_type_original_name in nc_type_dict.keys():
+            nc_data_variables_meta[var_name]['type'] = nc_type_dict[nc_type_original_name]
+        else:
             nc_data_variables_meta[var_name]['type'] = 'unknown'
 
     return nc_data_variables_meta
