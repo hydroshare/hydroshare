@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import get_object_or_404, render_to_response, render
+from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.utils.timezone import now
 import json
@@ -631,7 +631,7 @@ def create_resource_new_workflow(request, *args, **kwargs):
     # redirect to a specific resource creation page if other apps choose so
 
     if url_key in page_url_dict:
-        return render(request, page_url_dict[url_key])
+        return HttpResponseRedirect(page_url_dict[url_key])
 
     # generic resource core metadata and resource creation
     add_title = True
