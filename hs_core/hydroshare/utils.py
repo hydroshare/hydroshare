@@ -431,7 +431,13 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
         content=now().isoformat(),
         content_object=resource
             )
+
+    resource.updated = now().isoformat()
     resource.save()
+    if resource.metadata.dates.all().filter(type='modified'):
+        res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
+        resource.metadata.update_element('date', res_modified_date.id)
+
     if overwrite_bag:
         for bag in resource.bags.all():
             bag.bag.delete()

@@ -650,6 +650,9 @@ class Date(AbstractMetaDataElement):
                 else:
                     dt.start_date = start_dt
                     dt.save()
+            elif dt.type == 'modified':
+                dt.start_date = metadata_obj.resource.updated
+                dt.save()
             else:
                 raise ValidationError("Date value is missing.")
         else:
@@ -1395,10 +1398,13 @@ class AbstractResource(ResourcePermissionsMixin):
     def get_citation(self):
         citation = ''
 
+        CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
+        CITATION_ERROR = "Failed to generate citation."
+
         first_author = self.metadata.creators.all().filter(order=1)[0]
-        name_parts = first_author.name.split(" ")
+        name_parts = first_author.name.split()
         if len(name_parts) == 0:
-            citation = "Failed to generate citation - invalid creator name (%s)." % first_author.name
+            citation = CREATOR_NAME_ERROR
             return citation
 
         if len(name_parts) > 2:
@@ -1411,9 +1417,9 @@ class AbstractResource(ResourcePermissionsMixin):
 
         other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
-            name_parts = author.name.split(" ")
+            name_parts = author.name.split()
             if len(name_parts) == 0:
-                citation = "Failed to generate citation - invalid creator name (%s)." % author.name
+                citation = CREATOR_NAME_ERROR
                 return citation
 
             if len(name_parts) > 2:
@@ -1424,11 +1430,18 @@ class AbstractResource(ResourcePermissionsMixin):
                 citation += "{first_initial}.{last_name}".format(first_initial=name_parts[0][0],
                                                                  last_name=name_parts[-1]) + ", "
 
-        citation = citation[:-2]
+        #  remove the last added comma and the space
+        if len(citation) > 2:
+            citation = citation[:-2]
+        else:
+            return CITATION_ERROR
+
         if self.metadata.dates.all().filter(type='published'):
             citation_date = self.metadata.dates.all().filter(type='published')[0]
-        else:
+        elif self.metadata.dates.all().filter(type='modified'):
             citation_date = self.metadata.dates.all().filter(type='modified')[0]
+        else:
+            return CITATION_ERROR
 
         citation += " ({year}). ".format(year=citation_date.start_date.year)
         citation += self.title
@@ -1436,8 +1449,10 @@ class AbstractResource(ResourcePermissionsMixin):
 
         if self.metadata.identifiers.all().filter(name="doi"):
             hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
-        else:
+        elif self.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
             hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+        else:
+            return CITATION_ERROR
 
         citation += "{url}".format(url=hs_identifier.url)
 
