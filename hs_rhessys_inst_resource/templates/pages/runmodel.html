@@ -14,6 +14,216 @@
 </div>
 
 <div class="row">
+  <style type="text/css" scoped>
+    /* Spinning loader from http://cssload.net/en/ */
+    #floatingBarsG{
+    position:relative;
+    width:24px;
+    height:30px}
+    
+    .blockG{
+    position:absolute;
+    background-color:#FFFFFF;
+    width:4px;
+    height:9px;
+    -moz-border-radius:4px 4px 0 0;
+    -moz-transform:scale(0.4);
+    -moz-animation-name:fadeG;
+    -moz-animation-duration:1.04s;
+    -moz-animation-iteration-count:infinite;
+    -moz-animation-direction:linear;
+    -webkit-border-radius:4px 4px 0 0;
+    -webkit-transform:scale(0.4);
+    -webkit-animation-name:fadeG;
+    -webkit-animation-duration:1.04s;
+    -webkit-animation-iteration-count:infinite;
+    -webkit-animation-direction:linear;
+    -ms-border-radius:4px 4px 0 0;
+    -ms-transform:scale(0.4);
+    -ms-animation-name:fadeG;
+    -ms-animation-duration:1.04s;
+    -ms-animation-iteration-count:infinite;
+    -ms-animation-direction:linear;
+    -o-border-radius:4px 4px 0 0;
+    -o-transform:scale(0.4);
+    -o-animation-name:fadeG;
+    -o-animation-duration:1.04s;
+    -o-animation-iteration-count:infinite;
+    -o-animation-direction:linear;
+    border-radius:4px 4px 0 0;
+    transform:scale(0.4);
+    animation-name:fadeG;
+    animation-duration:1.04s;
+    animation-iteration-count:infinite;
+    animation-direction:linear;
+    }
+    
+    #rotateG_01{
+    left:0;
+    top:11px;
+    -moz-animation-delay:0.39s;
+    -moz-transform:rotate(-90deg);
+    -webkit-animation-delay:0.39s;
+    -webkit-transform:rotate(-90deg);
+    -ms-animation-delay:0.39s;
+    -ms-transform:rotate(-90deg);
+    -o-animation-delay:0.39s;
+    -o-transform:rotate(-90deg);
+    animation-delay:0.39s;
+    transform:rotate(-90deg);
+    }
+    
+    #rotateG_02{
+    left:3px;
+    top:4px;
+    -moz-animation-delay:0.52s;
+    -moz-transform:rotate(-45deg);
+    -webkit-animation-delay:0.52s;
+    -webkit-transform:rotate(-45deg);
+    -ms-animation-delay:0.52s;
+    -ms-transform:rotate(-45deg);
+    -o-animation-delay:0.52s;
+    -o-transform:rotate(-45deg);
+    animation-delay:0.52s;
+    transform:rotate(-45deg);
+    }
+    
+    #rotateG_03{
+    left:10px;
+    top:1px;
+    -moz-animation-delay:0.65s;
+    -moz-transform:rotate(0deg);
+    -webkit-animation-delay:0.65s;
+    -webkit-transform:rotate(0deg);
+    -ms-animation-delay:0.65s;
+    -ms-transform:rotate(0deg);
+    -o-animation-delay:0.65s;
+    -o-transform:rotate(0deg);
+    animation-delay:0.65s;
+    transform:rotate(0deg);
+    }
+    
+    #rotateG_04{
+    right:3px;
+    top:4px;
+    -moz-animation-delay:0.78s;
+    -moz-transform:rotate(45deg);
+    -webkit-animation-delay:0.78s;
+    -webkit-transform:rotate(45deg);
+    -ms-animation-delay:0.78s;
+    -ms-transform:rotate(45deg);
+    -o-animation-delay:0.78s;
+    -o-transform:rotate(45deg);
+    animation-delay:0.78s;
+    transform:rotate(45deg);
+    }
+    
+    #rotateG_05{
+    right:0;
+    top:11px;
+    -moz-animation-delay:0.9099999999999999s;
+    -moz-transform:rotate(90deg);
+    -webkit-animation-delay:0.9099999999999999s;
+    -webkit-transform:rotate(90deg);
+    -ms-animation-delay:0.9099999999999999s;
+    -ms-transform:rotate(90deg);
+    -o-animation-delay:0.9099999999999999s;
+    -o-transform:rotate(90deg);
+    animation-delay:0.9099999999999999s;
+    transform:rotate(90deg);
+    }
+    
+    #rotateG_06{
+    right:3px;
+    bottom:3px;
+    -moz-animation-delay:1.04s;
+    -moz-transform:rotate(135deg);
+    -webkit-animation-delay:1.04s;
+    -webkit-transform:rotate(135deg);
+    -ms-animation-delay:1.04s;
+    -ms-transform:rotate(135deg);
+    -o-animation-delay:1.04s;
+    -o-transform:rotate(135deg);
+    animation-delay:1.04s;
+    transform:rotate(135deg);
+    }
+    
+    #rotateG_07{
+    bottom:0;
+    left:10px;
+    -moz-animation-delay:1.1700000000000002s;
+    -moz-transform:rotate(180deg);
+    -webkit-animation-delay:1.1700000000000002s;
+    -webkit-transform:rotate(180deg);
+    -ms-animation-delay:1.1700000000000002s;
+    -ms-transform:rotate(180deg);
+    -o-animation-delay:1.1700000000000002s;
+    -o-transform:rotate(180deg);
+    animation-delay:1.1700000000000002s;
+    transform:rotate(180deg);
+    }
+    
+    #rotateG_08{
+    left:3px;
+    bottom:3px;
+    -moz-animation-delay:1.3s;
+    -moz-transform:rotate(-135deg);
+    -webkit-animation-delay:1.3s;
+    -webkit-transform:rotate(-135deg);
+    -ms-animation-delay:1.3s;
+    -ms-transform:rotate(-135deg);
+    -o-animation-delay:1.3s;
+    -o-transform:rotate(-135deg);
+    animation-delay:1.3s;
+    transform:rotate(-135deg);
+    }
+    
+    @-moz-keyframes fadeG{
+    0%{
+    background-color:#000000}
+    
+    100%{
+    background-color:#FFFFFF}
+    
+    }
+    
+    @-webkit-keyframes fadeG{
+    0%{
+    background-color:#000000}
+    
+    100%{
+    background-color:#FFFFFF}
+    
+    }
+    
+    @-ms-keyframes fadeG{
+    0%{
+    background-color:#000000}
+    
+    100%{
+    background-color:#FFFFFF}
+    
+    }
+    
+    @-o-keyframes fadeG{
+    0%{
+    background-color:#000000}
+    
+    100%{
+    background-color:#FFFFFF}
+    
+    }
+    
+    @keyframes fadeG{
+    0%{
+    background-color:#000000}
+    
+    100%{
+    background-color:#FFFFFF}
+
+    }
+  </style>
+
     <div class="col-md-12">{# <img src="/placeholder.png"></div> #}
     {% if not can_run %}
     <p>Unable to run model.  Please ask the administrator to associated an execution profile with this model.</p>
@@ -37,16 +247,56 @@
       {% if run.description %}
       <em>Description:</em>&nbsp;{{ run.description }}<br />
       {% endif %}
-      <em>Status:</em>&nbsp;<span id="status">{{ run.status }}</span><br /><br />
-      {% if run.results_url %}
-      <a class="btn btn-primary" target="_blank" href="{{ run.results_url }}">View results</a><br /><br />
+      {% if run.status == 'Finished' %}
+      <em>Status:</em>&nbsp;<span id="status-{{ run.token }}" style='color: black;'>{{ run.status }}</span><br /><br />
+      <div style="display: inline-block;"><a id="results-link-{{ run.token }}" class="btn btn-primary" target="_blank" href="{{ run.results_url }}">View results</a></div>
+      <br /><br />
+      {% elif run.status == 'Running' %}
+      <em>Status:</em>&nbsp;<span id="status-{{ run.token }}" style='color: green;'>{{ run.status }}</span><br /><br />
+      <!-- Spinning loader from http://cssload.net/en/ -->
+      <div id="floatingBarsG" style="display: inline-block;">
+	<div class="blockG" id="rotateG_01"></div>
+	<div class="blockG" id="rotateG_02"></div>
+	<div class="blockG" id="rotateG_03"></div>
+	<div class="blockG" id="rotateG_04"></div>
+	<div class="blockG" id="rotateG_05"></div>
+	<div class="blockG" id="rotateG_06"></div>
+	<div class="blockG" id="rotateG_07"></div>
+	<div class="blockG" id="rotateG_08"></div>
+      </div> 
+      <div style="display: inline-block;"><a id="results-link-{{ run.token }}" class="btn btn-primary" target="_blank" href="#" style="visibility: hidden">View results</a></div>
+      <br /><br />
       {% endif %}
       <div>
 	<em>Model command line parameters:</em><br />{{ run.model_command_line_parameters }}<br /><br />
 	<em>Time started:</em>&nbsp;{{ run.date_started }}<br />
-	<em>Time finished:</em>&nbsp;{{ run.date_finished }}<br />
-      Poll URL: {{ run.docker_process_poll_url }}
+	<em>Time finished:</em>&nbsp;<span id="date-finished-{{ run.token}}">{{ run.date_finished }}</span><br />
     <hr />
+    {% if run.status == 'Running' %}
+    <script type="text/javascript">
+      $(function poll() {
+        timeout = setTimeout(function(){
+          $.ajax({ url: "{{ run.poll_url }}", success: function(runs) {
+            run = runs[0]
+            if ( run.status == 'Finished' ) {
+              $("#status-{{ run.token }}").html(run.status).css('color', 'black');
+              $("#date-finished-{{ run.token }}").html(run.date_finished);
+              $("#floatingBarsG").css('display', 'none');
+
+              results_url = run.results_url;
+              $("#results-link-{{ run.token }}").attr('href', results_url).css('visibility', 'visible');
+            } else if ( run.status == 'Error' ) {
+              $("#status-{{ run.token }}").html(run.status).css('color', 'red');
+              $("#date-finished-{{ run.token }}").html(run.date_finished);
+              $("#floatingBarsG").css('display', 'none');
+            } else {
+              poll();
+            }
+          }, dataType: "json"});
+        }, 5000);
+      })() ;
+    </script>
+    {% endif %}
     {% endfor %}
     </div>
 
