@@ -38,12 +38,12 @@
 
 {% compress js %}
 <script src="{% static "mezzanine/js/"|add:settings.JQUERY_FILENAME %}"></script>
+<script src="{% static "js/bootstrap.3.0.2.min.js" %}"></script>
+<script src="{% static "js/bootstrap-extras.js" %}"></script>
 <script src="{% static "js/custom.js" %}"></script>
 <script src="{% static "js/scrolltopcontrol.js" %}"></script><!-- Scroll to top javascript -->
 <script src="{% static "js/jqcsrf.js" %}"></script>
 <script src='{% static 'js/jquery-ui.js' %}'></script>
-<script src="{% static "js/bootstrap.3.0.2.min.js" %}"></script>
-<script src="{% static "js/bootstrap-extras.js" %}"></script>
 {% block extra_js %}{% endblock %}
 {% endcompress %}
 {% include 'autocomplete_light/static.html' %}
