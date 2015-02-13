@@ -73,7 +73,7 @@ $(document).ready(function() {
 		return false;
 	});
 
-    // Keywords field
+    // Restyle keywords field
 	//===================
     var keywords = $("#keywords").text().split(",");
     var list = $("#list-keywords");
@@ -81,4 +81,26 @@ $(document).ready(function() {
         list.append("<li><a class='tag'>" + keywords[i] + "</a></li>");
     }
     $("#keywords").remove();
+
+    if ($("#citation-text").length > 0){
+        // Make links in citation clickable
+        //===================
+        var citationText = $("#citation-text").text();
+        var citationUrl;
+
+        // Regular expression to find FTP, HTTP(S) and email URLs.
+        var regexToken = /(((ftp|https?):\/\/)[\-\w@:%_\+.~#?,&\/\/=]+)|((mailto:)?[_.\w-]+@([\w][\w\-]+\.)+[a-zA-Z]{2,3})/g;
+
+        var matchArray
+        // Extract the url
+        while( (matchArray = regexToken.exec(citationText)) !== null ){
+            citationUrl = matchArray[0];
+        }
+
+        $("#citation-text").text(citationText.replace(citationUrl, ""));                                // Remove the url
+        $("#citation-text").append("<a href='" + citationUrl + "'>" + citationUrl + "</a>");        // Append the clickable url
+    }
+
+
+
 });

@@ -10,40 +10,58 @@
 
 {% if not metadata_form %}
     <div class="custom-btn-toolbar">
-        <a id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">
-            <span data-toggle="tooltip" data-placement="auto" title="Delete" class="glyphicon glyphicon-remove icon-button btn-remove"></span>
-        </a>
         {% if page.perms.change %}
+            <a id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">
+                <span data-toggle="tooltip" data-placement="auto" title="Delete" class="glyphicon glyphicon-remove icon-button btn-remove"></span>
+            </a>
+
             <form action="{{ cm.get_absolute_url }}" method="post">
                 {% csrf_token %}
                 <input name="resource-mode" type="hidden" value="edit"/>
                 <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto" title="Edit" class="glyphicon glyphicon-edit icon-button btn-edit"></button>
             </form>
+
+            <a id="share" href="#sharing">
+                <span data-toggle="tooltip" data-placement="auto" title="Share" class="glyphicon glyphicon-share icon-button btn-share"></span>
+            </a>
         {% endif %}
-        <a id="share" href="#sharing">
-            <span data-toggle="tooltip" data-placement="auto" title="Share" class="glyphicon glyphicon-share icon-button btn-share"></span>
-        </a>
     </div>
 
     <h2 class="page-title">{{ title }}</h2>
     {% if abstract%}
+        <h3>Abstract</h3>
         <p class="abstract">{{ abstract }}</p>
     {% endif %}
 
     <div class="content-block">
-		<span class="citation-label">Citation:</span>
-		<span class="citation-text">{{ citation }}</span>
+        <h3>How to cite</h3>
+		<span id="citation-text">{{ citation }}</span>
 	</div>
 
     <div class="content-block">
        {% if rights.statement %}
-            <div class="rights-text">{{ rights.statement }}</div>
+            <span class="rights-text">{{ rights.statement }} </span>
        {% endif %}
 
        {% if rights.url %}
-            <a class="rights-url" href="{{ rights.url }}">{{ rights.url }}</a>
+            <a class="rights-url" href="{{ rights.url }}">&nbsp{{ rights.url }}</a>
        {% endif %}
     </div>
+
+    <strong>Sharing Status:</strong>
+    {% if cm.public %}
+        <span>Private</span>
+    {% else %}
+            <span>Private</span>
+    {% endif %}
+
+
+    {% if cm.public %}
+        <span>(This resource can be viewed and downloaded by anyone)</span>
+    {% else %}
+        <span>(This resource can be viewed and downloaded only by designated users or research groups)</span>
+    {% endif %}
+
 
 
     {% if keywords %}
@@ -59,8 +77,8 @@
     <div>
         <h3>Content</h3>
         <div class="custom-well">
-            {% block extra_content %}
-            {% endblock %}
+{#            {% block extra_content %}#}
+{#            {% endblock %}#}
             <div class="table-container">
                 <table class="table-plain">
                     {% for f in cm.files.all %}
@@ -142,14 +160,7 @@
 						Spatial
                     </a>
 				</li>
-                {%  if temporal_coverage %}
-                <li>
-					<a href="#temporalTab" data-toggle="tab">
-						<span class="glyphicon glyphicon-time"></span>
-						Temporal
-                    </a>
-				</li>
-                {%  endif %}
+
                 <li>
 					<a href="#relatedResourcesTab" data-toggle="tab">
 						<span class="glyphicon glyphicon-book"></span>
@@ -189,93 +200,61 @@
 				<div class="tab-pane active" id="contactTab">
                     <div class="division-title"><p>Creators</p></div>
                     <div>
-                    {% for cr in creators %}
-                        <div class="user-thumbnail">
-                            <img class="profile-picture" src="" alt="">
-                            <div class="caption">
-                                <span class="name-label">{{ cr.name }}</span>
-                                <table>
-                                    {% if cr.description %}
-                                    <tr>
-                                        <td><strong>HydroShare User Identifier:</strong></td>
-                                        <td>{{ cr.description }}</td>
-                                    </tr>
-                                    {% endif %}
-                                    {% if cr.organization %}
-                                    <tr>
-                                        <td><strong>Organization:</strong></td>
-                                        <td>{{ cr.organization }}</td>
-                                    </tr>
-                                    {% endif %}
-                                    {% if cr.address %}
-                                    <tr>
-                                        <td><strong>Address:</strong></td>
-                                        <td>{{ cr.address }}</td>
-                                    </tr>
-                                   {% endif %}
-                                    {% if cr.phone %}
-                                    <tr>
-                                        <td><strong>Phone:</strong></td>
-                                        <td>{{ cr.phone }}</td>
-                                    </tr>
-                                   {% endif %}
-                                   {% if cr.homepage %}
-                                     <tr>
-                                        <td><strong>Home page:</strong></td>
-                                        <td>{{ cr.homepage }}</td>
-                                     </tr>
-                                   {% endif %}
-                                </table>
-                            </div>
-                        </div>
-                    {% endfor %}
-                    </div>
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>HydroShare User Identifier</th>
+                                    <th>Organization</th>
+                                    <th>Address</th>
+                                    <th>Phone</th>
+                                    <th>Home page</th>
+                                </tr>
+                            </thead>
 
-                    {% if contributors %}
-                        <div class="division-title"><p>Contributors</p></div>
-                        <div>
-                        {% for cont in contributors %}
-                         <div class="user-thumbnail">
-                            <img class="profile-picture" src="" alt="">
-                            <div class="caption">
-                                <span class="name-label">{{ cont.name }}</span>
-                                <table>
-                                    {% if cont.description %}
+                            <tbody>
+                                {% for cr in creators %}
+                                    <tr>
+                                        <td>{{ cr.name }}</td>
+                                        <td>{{ cr.description }}</td>
+                                        <td>{{ cr.organization }}</td>
+                                        <td>{{ cr.address }}</td>
+                                        <td>{{ cr.phone }}</td>
+                                        <td>{{ cr.homepage }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% if contributors %}
+                            <hr>
+                            <div class="division-title"><p>Contributors</p></div>
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>HydroShare User Identifier</th>
+                                        <th>Organization</th>
+                                        <th>Address</th>
+                                        <th>Phone</th>
+                                        <th>Home page</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {% for cont in contributors %}
                                         <tr>
-                                            <td><strong>HydroShare User Identifier:</strong></td>
+                                            <td>{{ cont.name }}</td>
                                             <td>{{ cont.description }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if cont.organization %}
-                                        <tr>
-                                            <td><strong>Organization:</strong></td>
                                             <td>{{ cont.organization }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if cont.address %}
-                                        <tr>
-                                            <td><strong>Address:</strong></td>
                                             <td>{{ cont.address }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if cont.phone %}
-                                        <tr>
-                                            <td><strong>Phone:</strong></td>
                                             <td>{{ cont.phone }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if cont.homepage %}
-                                        <tr>
-                                            <td><strong>Home Page:</strong></td>
                                             <td>{{ cont.homepage }}</td>
                                         </tr>
-                                    {% endif %}
-                                </table>
-                            </div>
-                         </div>
-                        {% endfor %}
-                        </div>
-                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    </div>
 				</div>
                 <!-- ========= SPATIAL TAB ========= -->
 				<div class="tab-pane" id="spatialTab">
@@ -361,25 +340,8 @@
 						</tbody>
 					</table>
 				</div>
-                <!-- ========= TEMPORAL TAB ========= -->
-                 {%  if temporal_coverage %}
-                    <div class="tab-pane" id="temporalTab">
-                        <table class="table">
-                            <tbody>
-                                <tr>
-                                    <th scope="row" class="dataset-label">Start Date:</th>
-                                    <td class="dataset-details">{{ temporal_coverage.start_date }}</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row" class="dataset-label">End Date:</th>
-                                    <td class="dataset-details">{{ temporal_coverage.end_date }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                {%  endif %}
+
                 <!-- ========= RELATED RESOURCES TAB ========= -->
-                {% if sources  or relations %}
                 <div class="tab-pane" id="relatedResourcesTab">
 					<table class="table">
 						<tbody>
@@ -398,7 +360,6 @@
 						</tbody>
 					</table>
 				</div>
-                {%  endif %}
                 <!-- ========= RESOURCE SPECIFIC TAB ========= -->
                 <div class="tab-pane" id="resourceSpecificTab">
 					<table class="table">
@@ -427,6 +388,18 @@
 								<th scope="row" class="dataset-label">Added on:</th>
 								<td class="dataset-details">{{ cm.created|date }}</td>
 							</tr>
+
+                            {%  if temporal_coverage %}
+                                <tr>
+                                    <th scope="row" class="dataset-label">Start Date:</th>
+                                    <td class="dataset-details">{{ temporal_coverage.start_date }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="dataset-label">End Date:</th>
+                                    <td class="dataset-details">{{ temporal_coverage.end_date }}</td>
+                                </tr>
+                            {%  endif %}
+
                             <tr>
 								<th scope="row" class="dataset-label">Last updated:</th>
 								<td class="dataset-details">{{ cm.updated|date }}, by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td>

@@ -859,6 +859,7 @@ table.table-plain tr:hover{
 }
 .tab-elements > .tabs-body{
     max-height: 400px;
+    min-height: 200px;
     border: 1px solid #ddd;
     padding: 10px;
     overflow: auto;
@@ -895,13 +896,17 @@ table.table-plain tr:hover{
     border-bottom: 1px solid #ddd;
 }
 
+.table-plain > tbody > tr:last-child{
+    border:none;
+}
+
 body > .container{
     min-height: calc(100% - 277px);
     padding-top: 20px;
 }
 
 .icon-button {
-    font-size: 16px;
+    font-size: 22px;
     float: right;
     margin-left: 12px;
     width:14px;
@@ -926,17 +931,18 @@ body > .container{
 
 .custom-btn-toolbar{
     display: block;
-    height: 14px;
-    /*border-bottom: 1px solid #ddd;*/
-    /*padding: 30px;*/
-    /*padding-top: 10px;*/
-    /*background: #EAEAEA;*/
-    /*margin: -20px;*/
-    /*margin-bottom: 0;*/
+    float: right;
+    width: 122px;
+    height: 30px;
+    padding: 2px 9px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0px 1px 2px #949494;
+    border: 1px solid #DDD;
 }
 
 .abstract{
-    line-height: 2;
+    /*line-height: 2;*/
     font-size: 16px;
 }
 
@@ -965,16 +971,16 @@ body > .container{
     font-weight: bold;
 }
 
-.citation-text {
+#citation-text {
     display: inline-block;
     float: left;
-    font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-    margin-left:10px;
-    width:90%;
+    /*font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;*/
+    /*margin-left:10px;*/
+    /*width:90%;*/
 }
 
 .rights-text, .rights-url{
-    font-style:italic;
+    /*font-style:italic;*/
 }
 
 .tag-list {
@@ -1078,10 +1084,20 @@ span.name-label{
 
 .tab-elements{
     height:441px;
+    overflow-x:auto;
+    overflow-y:hidden;
 }
-.tab-elements .table{
+
+.tab-elements .panel-tabs, .tab-elements .tabs-body{
+    min-width:1020px;
+}
+
+
+.tab-elements .table:not(.table-striped) {
     width:auto;
 }
+
+
 
 .tab-elements .table td, .tab-elements .table th{
     border:0;
