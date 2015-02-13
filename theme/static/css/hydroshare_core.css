@@ -936,8 +936,7 @@ body > .container{
     height: 30px;
     padding: 2px 9px;
     margin-bottom: 10px;
-    border-radius: 5px;
-    box-shadow: 0px 1px 2px #949494;
+    box-shadow: 0px 1px 1px #949494;
     border: 1px solid #DDD;
 }
 
