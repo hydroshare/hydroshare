@@ -964,6 +964,25 @@ body > .container{
 .content-block{
     margin-bottom:5px;
     display: table;
+    width:100%;
+}
+
+.sharing-public{
+    border: 1px solid #6E6E6E;
+    padding: 3px 6px;
+    background: #5CB85C;
+    color: #FFF;
+    margin: 3px;
+    border-radius: 15px
+}
+
+.sharing-private{
+    border: 1px solid #6E6E6E;
+    padding: 3px 6px;
+    background: #D9534F;
+    color: #FFF;
+    margin: 3px;
+    border-radius: 3px;
 }
 .citation-label {
     float:left;
