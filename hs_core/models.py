@@ -1133,7 +1133,7 @@ class Coverage(AbstractMetaDataElement):
 
 class Format(AbstractMetaDataElement):
     term = 'Format'
-    value = models.CharField(max_length=50)
+    value = models.CharField(max_length=150)
 
     def __unicode__(self):
         return self.value
