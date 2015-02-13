@@ -12,8 +12,7 @@ from nc_utils import *
 import json
 import netCDF4
 from pyproj import Proj, transform
-import numpy
-from collections import OrderedDict
+
 
 
 def get_nc_meta_json(nc_file_name):
@@ -40,14 +39,43 @@ def get_nc_meta_dict(nc_file_name):
     else:
         nc_dataset = get_nc_dataset(nc_file_name)
 
-    dublin_core_meta = get_dublin_core_meta(nc_dataset)
-    type_specific_meta = get_type_specific_meta(nc_dataset)
+    try:
+        dublin_core_meta = get_dublin_core_meta(nc_dataset)
+    except:
+        dublin_core_meta = {}
+
+    try:
+        type_specific_meta = get_type_specific_meta(nc_dataset)
+    except:
+        type_specific_meta = {}
+
     nc_meta_dict = {'dublin_core_meta': dublin_core_meta, 'type_specific_meta': type_specific_meta}
     nc_dataset.close()
 
     return nc_meta_dict
 
 
+# def get_nc_meta_dict(nc_file_name):
+#     """
+#     (string)-> dict
+#
+#     Return: the netCDF Dublincore and Type specific Metadata
+#     """
+#
+#     if isinstance(nc_file_name, netCDF4.Dataset):
+#         nc_dataset = nc_file_name
+#     else:
+#         nc_dataset = get_nc_dataset(nc_file_name)
+#
+#     dublin_core_meta = get_dublin_core_meta(nc_dataset)
+#     type_specific_meta = get_type_specific_meta(nc_dataset)
+#     nc_meta_dict = {'dublin_core_meta': dublin_core_meta, 'type_specific_meta': type_specific_meta}
+#     nc_dataset.close()
+#
+#     return nc_meta_dict
+
+
+## Functions for dublin  core meta #####################################################################################
 def get_dublin_core_meta(nc_dataset):
     """
     (object)-> dict
@@ -105,7 +133,7 @@ def extract_nc_coverage_meta(nc_dataset):
     """
     period_info = get_period_info(nc_dataset)
     original_box_info = get_original_box_info(nc_dataset)
-    box_info = get_box_info(nc_dataset, original_box_info)
+    box_info = get_box_info(nc_dataset)
 
     nc_coverage_meta = {
         'period': period_info,
@@ -121,25 +149,51 @@ def get_period_info(nc_dataset):
 
     Return: the netCDF original coverage period info
     """
-    nc_coordinate_variables_detail = get_nc_coordinate_variables_detail(nc_dataset)
-    period_info = {}
-    for var_name, var_detail in nc_coordinate_variables_detail.items():
-        coor_type = var_detail['coordinate_type']
-        if coor_type == 'T':
-            start = var_detail['coordinate_start']
-            end = var_detail['coordinate_end']
-            # check coordinate bounds variable
-            bounds_info = get_nc_coordinate_bounds_variable_info(nc_dataset, var_name)
-            if bounds_info:
-                start = bounds_info['coordinate_bounds_start']
-                end = bounds_info['coordinate_bounds_end']
 
-            period_info = {
-                'start': start,
-                'end': end,
-            }
+    period_info = {}
+    coor_type_mapping = get_nc_variables_coordinate_type_mapping(nc_dataset)
+    for coor_type in ['TA', 'TC']:
+        limit_meta = get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping)
+        if limit_meta:
+            period_info['start'] = limit_meta['start']
+            period_info['end'] = limit_meta['end']
+            break
 
     return period_info
+
+
+def get_box_info(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF coverage box info as wgs84 crs
+    """
+    box_info = {}
+    original_box_info = get_original_box_info(nc_dataset)
+
+    if original_box_info:
+        if original_box_info.get('units', '') == 'degree':  # geographic coor x, y
+            box_info = original_box_info
+        elif original_box_info.get('projection', ''):  # projection coor x, y
+            projection_import_string = get_nc_grid_mapping_projection_import_string(nc_dataset)
+            if projection_import_string:
+                try:
+                    ori_proj = Proj(projection_import_string)
+                    wgs84_proj = Proj(init='epsg:4326')
+                    box_info['westlimit'], box_info['northlimit'] = transform(ori_proj, wgs84_proj,
+                                                                              original_box_info['westlimit'],
+                                                                              original_box_info['northlimit'])
+                    box_info['eastlimit'], box_info['southlimit'] = transform(ori_proj, wgs84_proj,
+                                                                              original_box_info['eastlimit'],
+                                                                              original_box_info['southlimit'])
+                except:
+                    pass
+
+    if box_info:
+        box_info['units'] = 'Decimal degrees'
+        box_info['projection'] = 'WGS 84 EPSG:4326'
+
+    return box_info
 
 
 def get_original_box_info(nc_dataset):
@@ -149,94 +203,120 @@ def get_original_box_info(nc_dataset):
     Return: the netCDF original coverage box info
     """
 
-    nc_coordinate_variables_detail = get_nc_coordinate_variables_detail(nc_dataset)
     original_box_info = {}
-    # check the coordinate variable for box value
-    for var_name, var_detail in nc_coordinate_variables_detail.items():
-        coor_type = var_detail['coordinate_type']
-        if coor_type == 'X':
-            original_box_info['westlimit'] = min(var_detail['coordinate_start'], var_detail['coordinate_end'])
-            original_box_info['eastlimit'] = max(var_detail['coordinate_start'], var_detail['coordinate_end'])
-            original_box_info['units'] = var_detail['coordinate_units']
-            # check coordinate bounds variable
-            bounds_info = get_nc_coordinate_bounds_variable_info(nc_dataset, var_name)
-            if bounds_info:
-                original_box_info['westlimit'] = bounds_info['coordinate_bounds_start']
-                original_box_info['eastlimit'] = bounds_info['coordinate_bounds_end']
 
-        elif coor_type == 'Y':
-            original_box_info['southlimit'] = min(var_detail['coordinate_start'], var_detail['coordinate_end'])
-            original_box_info['northlimit'] = max(var_detail['coordinate_start'], var_detail['coordinate_end'])
-            original_box_info['units'] = var_detail['coordinate_units']
-            # check coordinate bounds variable
-            bounds_info = get_nc_coordinate_bounds_variable_info(nc_dataset, var_name)
-            if bounds_info:
-                original_box_info['southlimit'] = bounds_info['coordinate_bounds_start']
-                original_box_info['northlimit'] = bounds_info['coordinate_bounds_end']
-
-    if re.match('degree', original_box_info.get('units', ''), re.I):
-        original_box_info['units'] = 'degree'
-
-    if original_box_info:
-        original_box_info['projection'] = get_nc_grid_mapping_projection_name(nc_dataset)
+    for info_source in ['A', 'C']:  # check auxiliary and coordinate variables
+        limits_info = get_limits_info(nc_dataset, info_source)
+        if limits_info:
+            original_box_info = limits_info
+            original_box_info['projection'] = get_nc_grid_mapping_projection_name(nc_dataset)
+            break
 
     return original_box_info
 
 
-def get_box_info(nc_dataset, original_box_info):
+def get_limits_info(nc_dataset, info_source):
     """
-    (object)-> dict
+    (obj, str) -> dict
 
-    Return: the netCDF coverage box info as wgs84 crs
+    Return: dictionary including the 4 box limits name and their values and the units
     """
-    box_info = {}
 
-    # condition 1: check the original-box info
-    if original_box_info.get('projection', ''):
-        projection_import_string = get_nc_grid_mapping_projection_import_string(nc_dataset)
-        if projection_import_string:
-            ori_proj = Proj(projection_import_string)
-            wgs84_proj = Proj(init='epsg:4326')
-            box_info['westlimit'], box_info['northlimit'] = transform(ori_proj, wgs84_proj,
-                                                                      original_box_info['westlimit'],
-                                                                      original_box_info['northlimit'])
-            box_info['eastlimit'], box_info['southlimit'] = transform(ori_proj, wgs84_proj,
-                                                                      original_box_info['eastlimit'],
-                                                                      original_box_info['southlimit'])
-    elif original_box_info.get('units', '') == 'degree':
-        box_info['southlimit'] = original_box_info['southlimit']
-        box_info['northlimit'] = original_box_info['northlimit']
-        box_info['eastlimit'] = original_box_info['eastlimit'] #if original_box_info['eastlimit'] <= 180 else original_box_info['eastlimit']-360
-        box_info['westlimit'] = original_box_info['westlimit'] #if original_box_info['westlimit'] <= 180 else original_box_info['westlimit']-360
+    limits_info = {}
+    coor_type_mapping = get_nc_variables_coordinate_type_mapping(nc_dataset)
 
-    # condition 2: check the auxiliary coordinate
-    nc_variables = get_nc_auxiliary_coordinate_variables(nc_dataset)
-    if (not box_info) and nc_variables:
-        for var_name, nc_variable in nc_variables.items():
-            var_standard_name = getattr(nc_variable, 'standard_name', getattr(nc_variable, 'long_name', None))
-            if var_standard_name:
-                if re.match(var_standard_name, 'latitude', re.I):
-                    lat_data = nc_variable[:]
-                    box_info['southlimit'] = lat_data[numpy.unravel_index(lat_data.argmin(), lat_data.shape)]
-                    box_info['northlimit'] = lat_data[numpy.unravel_index(lat_data.argmax(), lat_data.shape)]
-                elif re.match(var_standard_name, 'longitude', re.I):
-                    lon_data = nc_variable[:]
-                    westlimit = lon_data[numpy.unravel_index(lon_data.argmin(), lon_data.shape)]
-                    eastlimit = lon_data[numpy.unravel_index(lon_data.argmax(), lon_data.shape)]
-                    box_info['westlimit'] = westlimit #if westlimit <= 180 else westlimit-360
-                    box_info['eastlimit'] = eastlimit #if eastlimit <= 180 else eastlimit-360
+    # get all limits values and units
+    for coor_dir in ['X', 'Y']:
+        coor_type = coor_dir + info_source
+        limit_meta = get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping)
+        if limit_meta:
+            limits_info = dict(limits_info.items()+limit_meta.items())
+        else:
+            limits_info = {}
+            break
 
-    if set(['westlimit','eastlimit','northlimit','southlimit']).issubset(box_info.keys()):
-        box_info['units'] = 'Decimal degrees'
-        box_info['projection'] = 'WGS 84 EPSG:4326'
-        box_info['westlimit'] = str(box_info['westlimit'])
-        box_info['eastlimit'] = str(box_info['eastlimit'])
-        box_info['northlimit'] = str(box_info['northlimit'])
-        box_info['southlimit'] = str(box_info['southlimit'])
+    # refine X value when longitude is larger than 180
+    if limits_info.get('units', '') == 'degree':
+        westlimit = limits_info['westlimit']
+        eastlimit = limits_info['eastlimit']
+        if westlimit > 180 or eastlimit > 180:
+            if eastlimit - westlimit == 360:
+                westlimit = -180
+                eastlimit = 180
+            else:
+                if westlimit >= 180:
+                    westlimit -= 360
+                    eastlimit -= 360
+                else:
+                    if (180 - westlimit) >= (eastlimit-180):
+                        eastlimit = 180
+                    else:
+                        westlimit = -180
+                        eastlimit -= 360
+        limits_info['westlimit'] = westlimit
+        limits_info['eastlimit'] = eastlimit
 
-    return box_info
+    return limits_info
 
 
+def get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping):
+    """
+    (obj, str, dict) -> dict
+
+    Return: based on the coordinate type (XA,YA,XC,YC,TA,TC) return the limits start and end values and units
+    """
+
+    limit_meta = {}
+    coor_start = []
+    coor_end = []
+    coor_units = ''
+
+    var_name_list = coor_type_mapping.keys()
+    coor_type_list = coor_type_mapping.values()
+
+    for coor_type_name in [coor_type, coor_type+'_bnd']:
+        if coor_type_name in coor_type_list:
+            index = coor_type_list.index(coor_type_name)
+            var_name = var_name_list[index]
+            var_coor_meta = get_nc_variable_coordinate_meta(nc_dataset, var_name)
+
+            if var_coor_meta.get('coordinate_start') is not None:
+                coor_start.append(var_coor_meta.get('coordinate_start'))
+            if var_coor_meta.get('coordinate_end') is not None:
+                coor_end.append(var_coor_meta.get('coordinate_end'))
+            if coor_units == '':
+                coor_units = var_coor_meta.get('coordinate_units', '')
+                if re.match('degree', coor_units, re.I):
+                    coor_units = 'degree'
+
+    if coor_start and coor_end:
+        coor_min = min(coor_start)
+        coor_max = max(coor_end)
+        if "X" in coor_type:
+            limit_meta = {
+                'westlimit': str(coor_min),
+                'eastlimit': str(coor_max),
+            }
+        elif "Y" in coor_type:
+            limit_meta = {
+                'southlimit': str(coor_min),
+                'northlimit': str(coor_max)
+            }
+        if "T" in coor_type:
+            limit_meta = {
+                'start': str(coor_min),
+                'end': str(coor_max)
+            }
+
+        if coor_units:
+            limit_meta['units'] = coor_units
+    else:
+        limit_meta = {}
+
+    return limit_meta
+
+
+# Functions for type specific meta ##################################################################################
 def get_type_specific_meta(nc_dataset):
     """
     (object)-> dict
