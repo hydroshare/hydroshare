@@ -28,9 +28,12 @@
     </div>
 
     <h2 class="page-title">{{ title }}</h2>
+
     {% if abstract%}
-        <h3>Abstract</h3>
-        <p class="abstract">{{ abstract }}</p>
+        <div class="content-block">
+            <h3>Abstract</h3>
+            <span class="abstract">{{ abstract }}</span>
+        </div>
     {% endif %}
 
     <div class="content-block">
@@ -67,15 +70,14 @@
     </div>
 
 
-
-
-
     {% if keywords %}
-        <h3>Keywords</h3>
-        <p id="keywords">{{ keywords }}</p>
-        <div class="tags">
-            <ul id="list-keywords" class="tag-list custom-well">
-            </ul>
+        <div class="content-block">
+            <h3>Keywords</h3>
+            <p id="keywords">{{ keywords }}</p>
+            <div class="tags">
+                <ul id="list-keywords" class="tag-list custom-well">
+                </ul>
+            </div>
         </div>
     {% endif %}
 
