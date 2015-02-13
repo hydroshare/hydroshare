@@ -40,28 +40,33 @@
 
     <div class="content-block">
         <h3>Sharing</h3>
-       {% if rights.statement %}
-            <span class="rights-text">{{ rights.statement }} </span>
-       {% endif %}
+       <p>
+           {% if rights.statement %}
+                <span class="rights-text">{{ rights.statement }} </span>
+           {% endif %}
 
-       {% if rights.url %}
-            <a class="rights-url" href="{{ rights.url }}">&nbsp{{ rights.url }}</a>
-       {% endif %}
+           {% if rights.url %}
+                <a class="rights-url" href="{{ rights.url }}">&nbsp{{ rights.url }}</a>
+           {% endif %}
+        </p>
+        <p>
+            <strong>Sharing Status:</strong>
+            {% if cm.public %}
+                <span>Private</span>
+            {% else %}
+                <span>Private</span>
+            {% endif %}
+
+            {% if cm.public %}
+                <span>(This resource can be viewed and downloaded by anyone)</span>
+            {% else %}
+                <span>(This resource can be viewed and downloaded only by designated users or research groups)</span>
+            {% endif %}
+
+        </p>
     </div>
 
-    <strong>Sharing Status:</strong>
-    {% if cm.public %}
-        <span>Private</span>
-    {% else %}
-            <span>Private</span>
-    {% endif %}
 
-
-    {% if cm.public %}
-        <span>(This resource can be viewed and downloaded by anyone)</span>
-    {% else %}
-        <span>(This resource can be viewed and downloaded only by designated users or research groups)</span>
-    {% endif %}
 
 
 
