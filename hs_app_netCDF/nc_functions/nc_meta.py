@@ -14,7 +14,6 @@ import netCDF4
 from pyproj import Proj, transform
 
 
-
 def get_nc_meta_json(nc_file_name):
     """
     (string)-> json string
@@ -75,7 +74,7 @@ def get_nc_meta_dict(nc_file_name):
 #     return nc_meta_dict
 
 
-## Functions for dublin  core meta #####################################################################################
+# Functions for dublin  core meta #####################################################################################
 def get_dublin_core_meta(nc_dataset):
     """
     (object)-> dict
@@ -345,7 +344,7 @@ def extract_nc_data_variables_meta(nc_data_variables):
     for var_name, var_obj in nc_data_variables.items():
         nc_data_variables_meta[var_name] = {
             'name': var_name,
-            'unit': var_obj.units if hasattr(var_obj, 'units') else '',
+            'unit': var_obj.units if hasattr(var_obj, 'units') else 'Unknown',
             'shape': ','.join(var_obj.dimensions),
             'type': str(var_obj.dtype),
             'descriptive_name': var_obj.long_name if hasattr(var_obj, 'long_name') else '',
