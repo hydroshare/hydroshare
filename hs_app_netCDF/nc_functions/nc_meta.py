@@ -256,6 +256,11 @@ def get_limits_info(nc_dataset, info_source):
         limits_info['westlimit'] = westlimit
         limits_info['eastlimit'] = eastlimit
 
+    # change the value as string
+    if limits_info:
+        for name, value in limits_info.items():
+            limits_info[name] = str(value)
+
     return limits_info
 
 
@@ -294,18 +299,18 @@ def get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping):
         coor_max = max(coor_end)
         if "X" in coor_type:
             limit_meta = {
-                'westlimit': str(coor_min),
-                'eastlimit': str(coor_max),
+                'westlimit': coor_min,
+                'eastlimit': coor_max,
             }
         elif "Y" in coor_type:
             limit_meta = {
-                'southlimit': str(coor_min),
-                'northlimit': str(coor_max)
+                'southlimit': coor_min,
+                'northlimit': coor_max
             }
         if "T" in coor_type:
             limit_meta = {
-                'start': str(coor_min),
-                'end': str(coor_max)
+                'start': coor_min,
+                'end': coor_max
             }
 
         if coor_units:
