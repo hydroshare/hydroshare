@@ -18,7 +18,7 @@ class Variable(AbstractMetaDataElement):
         ('Int', 'Int'),  # signed integer (32bit)
         ('Float', 'Float'),  # floating point (32bit)
         ('Double', 'Double'),  # floating point(64bit)
-        ('unknown', 'Unknown')
+        ('Unknown', 'Unknown')
     )
     term = 'Variable'
     # required variable attributes
@@ -27,7 +27,7 @@ class Variable(AbstractMetaDataElement):
     type = models.CharField(max_length=100, choices=VARIABLE_TYPES)
     shape = models.CharField(max_length=100)
     # optional variable attributes
-    descriptive_name = models.CharField(max_length=100,null=True,blank=True)
+    descriptive_name = models.CharField(max_length=100, null=True,blank=True)
     method = models.TextField(null=True, blank=True)
     missing_value = models.CharField(max_length=100, null=True, blank=True)
 
@@ -52,7 +52,7 @@ class Variable(AbstractMetaDataElement):
             raise ValidationError("Variable unit is missing.")
 
         if 'type' in kwargs:
-            if not kwargs['type'] in ['Char', 'Byte', 'Short', 'Int', 'Float', 'Double']:
+            if not kwargs['type'] in ['Char', 'Byte', 'Short', 'Int', 'Float', 'Double', 'Unknown']:
                 raise ValidationError('Invalid variable type:%s' % kwargs['type'])
         else:
             raise ValidationError("Variable type is missing.")

@@ -28,6 +28,25 @@ def get_nc_dataset(nc_file_name):
     return nc_dataset
 
 
+def get_nc_variable(nc_file_name, nc_variable_name):
+    """
+    (string, string) -> obj
+
+    Return: netcdf variable by the given variable name
+    """
+
+    if isinstance(nc_file_name, netCDF4.Dataset):
+        nc_dataset = nc_file_name
+    else:
+        nc_dataset = get_nc_dataset(nc_file_name)
+
+    if nc_variable_name in nc_dataset.variables.keys():
+        nc_variable = nc_dataset.variables[nc_variable_name]
+    else:
+        nc_variable = None
+
+    return nc_variable
+
 def get_nc_variable_original_meta(nc_dataset, nc_variable_name):
     """
     (object, string)-> OrderedDict
@@ -135,8 +154,8 @@ def get_nc_variable_coordinate_meta(nc_dataset, nc_variable_name):
                 time_calendar = var_obj.calendar if hasattr(var_obj, 'calendar') else 'standard'
 
                 if time_units and time_calendar:
-                    coordinate_min = str(netCDF4.num2date(coordinate_min, units=time_units, calendar=time_calendar))
-                    coordinate_max = str(netCDF4.num2date(coordinate_max, units=time_units, calendar=time_calendar))
+                    coordinate_min = netCDF4.num2date(coordinate_min, units=time_units, calendar=time_calendar)
+                    coordinate_max = netCDF4.num2date(coordinate_max, units=time_units, calendar=time_calendar)
                     coordinate_units = time_units
 
             nc_variable_coordinate_meta = {

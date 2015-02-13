@@ -38,40 +38,12 @@ def get_nc_meta_dict(nc_file_name):
     else:
         nc_dataset = get_nc_dataset(nc_file_name)
 
-    try:
-        dublin_core_meta = get_dublin_core_meta(nc_dataset)
-    except:
-        dublin_core_meta = {}
-
-    try:
-        type_specific_meta = get_type_specific_meta(nc_dataset)
-    except:
-        type_specific_meta = {}
-
+    dublin_core_meta = get_dublin_core_meta(nc_dataset)
+    type_specific_meta = get_type_specific_meta(nc_dataset)
     nc_meta_dict = {'dublin_core_meta': dublin_core_meta, 'type_specific_meta': type_specific_meta}
     nc_dataset.close()
 
     return nc_meta_dict
-
-
-# def get_nc_meta_dict(nc_file_name):
-#     """
-#     (string)-> dict
-#
-#     Return: the netCDF Dublincore and Type specific Metadata
-#     """
-#
-#     if isinstance(nc_file_name, netCDF4.Dataset):
-#         nc_dataset = nc_file_name
-#     else:
-#         nc_dataset = get_nc_dataset(nc_file_name)
-#
-#     dublin_core_meta = get_dublin_core_meta(nc_dataset)
-#     type_specific_meta = get_type_specific_meta(nc_dataset)
-#     nc_meta_dict = {'dublin_core_meta': dublin_core_meta, 'type_specific_meta': type_specific_meta}
-#     nc_dataset.close()
-#
-#     return nc_meta_dict
 
 
 # Functions for dublin  core meta #####################################################################################
@@ -153,10 +125,14 @@ def get_period_info(nc_dataset):
     coor_type_mapping = get_nc_variables_coordinate_type_mapping(nc_dataset)
     for coor_type in ['TA', 'TC']:
         limit_meta = get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping)
-        if limit_meta:
-            period_info['start'] = limit_meta['start']
-            period_info['end'] = limit_meta['end']
-            break
+        try:
+            if limit_meta:
+                if limit_meta['start'].year and limit_meta['end'].year:
+                    period_info['start'] = limit_meta['start'].strftime('%Y-%m-%d %H:%M:%S')
+                    period_info['end'] = limit_meta['end'].strftime('%Y-%m-%d %H:%M:%S')
+                    break
+        except:
+            continue
 
     return period_info
 
@@ -344,7 +320,7 @@ def extract_nc_data_variables_meta(nc_data_variables):
     for var_name, var_obj in nc_data_variables.items():
         nc_data_variables_meta[var_name] = {
             'name': var_name,
-            'unit': var_obj.units if hasattr(var_obj, 'units') else 'Unknown',
+            'unit': var_obj.units if (hasattr(var_obj, 'units') and var_obj.units) else 'Unknown',
             'shape': ','.join(var_obj.dimensions),
             'type': str(var_obj.dtype),
             'descriptive_name': var_obj.long_name if hasattr(var_obj, 'long_name') else '',
@@ -365,7 +341,7 @@ def extract_nc_data_variables_meta(nc_data_variables):
         if nc_type_original_name in nc_type_dict.keys():
             nc_data_variables_meta[var_name]['type'] = nc_type_dict[nc_type_original_name]
         else:
-            nc_data_variables_meta[var_name]['type'] = 'unknown'
+            nc_data_variables_meta[var_name]['type'] = 'Unknown'
 
     return nc_data_variables_meta
 
