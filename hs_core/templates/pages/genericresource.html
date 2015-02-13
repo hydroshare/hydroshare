@@ -10,23 +10,29 @@
 
 {% if not metadata_form %}
 
-{% if page.perms.change %}
+
     <div class="custom-btn-toolbar">
-        <a id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">
-            <span data-toggle="tooltip" data-placement="auto" title="Delete" class="glyphicon glyphicon-remove icon-button btn-remove"></span>
-        </a>
+        {% if page.perms.change %}
+            <a id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">
+                <span data-toggle="tooltip" data-placement="auto" title="Delete" class="glyphicon glyphicon-remove icon-button btn-remove"></span>
+            </a>
+        {% endif %}
+
 
         <a id="share" href="#sharing">
             <span data-toggle="tooltip" data-placement="auto" title="Share" class="glyphicon glyphicon-share icon-button btn-share"></span>
         </a>
 
+        {% if page.perms.change %}
         <form action="{{ cm.get_absolute_url }}" method="post">
             {% csrf_token %}
             <input name="resource-mode" type="hidden" value="edit"/>
             <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto" title="Edit" class="glyphicon glyphicon-edit icon-button btn-edit"></button>
         </form>
+        {% endif %}
     </div>
-{% endif %}
+
+
 
 
     <h2 class="page-title">{{ title }}</h2>
