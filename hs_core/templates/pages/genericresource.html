@@ -9,15 +9,12 @@
 {% set_page_permissions page %}
 
 {% if not metadata_form %}
-
-
     <div class="custom-btn-toolbar">
         {% if page.perms.change %}
             <a id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">
                 <span data-toggle="tooltip" data-placement="auto" title="Delete" class="glyphicon glyphicon-remove icon-button btn-remove"></span>
             </a>
         {% endif %}
-
 
         <a id="share" href="#sharing">
             <span data-toggle="tooltip" data-placement="auto" title="Share" class="glyphicon glyphicon-share icon-button btn-share"></span>
@@ -31,9 +28,6 @@
         </form>
         {% endif %}
     </div>
-
-
-
 
     <h2 class="page-title">{{ title }}</h2>
 
@@ -49,7 +43,7 @@
 		<span id="citation-text">{{ citation }}</span>
 	</div>
 
-    <div class="content-block">
+    <div id="sharing" class="content-block">
         <h3>Sharing</h3>
        <p>
            {% if rights.statement %}
@@ -75,7 +69,7 @@
             {% endif %}
         </p>
 
-        <div id="sharing">
+        <div>
             <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
                 {% csrf_token %}
                 {% if cm.public %}
