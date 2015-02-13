@@ -254,6 +254,8 @@
       <em>Status:</em>&nbsp;<span id="status-{{ run.token }}" style='color: black;'>{{ run.status }}</span><br /><br />
       <div style="display: inline-block;"><a id="results-link-{{ run.token }}" class="btn btn-primary" target="_blank" href="{{ run.results_url }}">View results</a></div>
       <br /><br />
+      {% elif run.status == 'Error' %}
+      <em>Status:</em>&nbsp;<span id="status-{{ run.token }}" style='color: red;'>{{ run.status }}</span><br /><br />
       {% elif run.status == 'Running' %}
       <em>Status:</em>&nbsp;<span id="status-{{ run.token }}" style='color: green;'>{{ run.status }}</span><br /><br />
       <!-- Spinning loader from http://cssload.net/en/ -->
@@ -277,7 +279,7 @@
       </div>
       <br />
       <em>Log output:</em>
-      <div style="height: 64px; overflow: auto; border: 1px solid; border-radius: 4px;"><p id="log-{{ run.token }}">{{ run.logs }}</p></div>
+      <div style="height: 64px; overflow: auto; border: 1px solid; border-radius: 4px;"><pre id="log-{{ run.token }}">{{ run.logs }}</pre></div>
     <hr />
     {% if run.status == 'Running' %}
     <script type="text/javascript">
@@ -302,7 +304,7 @@
               poll();
             }
           }, dataType: "json"});
-        }, 10000);
+        }, 30000);
       })();
     </script>
     {% endif %}
