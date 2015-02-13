@@ -302,7 +302,7 @@
 {#            {% block extra_content %}#}
 {#            {% endblock %}#}
             <div class="table-container">
-                <table class="table-plain">
+                <table class="table-plain table-striped">
                     {% for f in cm.files.all %}
                         {#======= Modal window begins =======#}
                         <div class="modal fade" id="delete-resource-file-{{f.pk}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -436,7 +436,7 @@
                                         <td>{{ cr.organization }}</td>
                                         <td>{{ cr.address }}</td>
                                         <td>{{ cr.phone }}</td>
-                                        <td>{{ cr.homepage }}</td>
+                                        <td><a target="_blank" href="{{ cr.homepage }}">{{ cr.homepage }}</a></td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
@@ -464,7 +464,7 @@
                                             <td>{{ cont.organization }}</td>
                                             <td>{{ cont.address }}</td>
                                             <td>{{ cont.phone }}</td>
-                                            <td>{{ cont.homepage }}</td>
+                                            <td><a target="_blank" href="{{ cont.homepage }}">{{ cont.homepage }}</a></td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>

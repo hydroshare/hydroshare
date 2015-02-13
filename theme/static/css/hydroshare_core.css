@@ -835,10 +835,6 @@ table.table-plain {
     width:100%;
 }
 
-table.table-plain tr:hover{
-    background:#EFEFEF;
-}
-
 .tab-elements{
     border:0;
 }
@@ -893,7 +889,7 @@ table.table-plain tr:hover{
 }
 
 .table-plain > tbody > tr{
-    border-bottom: 1px solid #ddd;
+    /*border-bottom: 1px solid #ddd;*/
 }
 
 .table-plain > tbody > tr:last-child{
