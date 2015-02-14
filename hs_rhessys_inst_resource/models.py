@@ -158,3 +158,12 @@ class ModelRun(models.Model):
     title = models.CharField(max_length=64)
     description = models.CharField(max_length=1024, blank=True, null=True)
     model_command_line_parameters = models.CharField(max_length=1024, blank=True, null=True)
+
+class ModelRunOptions(models.Model):
+    class Meta:
+        verbose_name ='Model run options'
+
+    model_run = models.ForeignKey(ModelRun)
+    name = models.CharField(max_length=64)
+    value = models.CharField(max_length=4096)
+

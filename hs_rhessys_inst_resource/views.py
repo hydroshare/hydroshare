@@ -22,7 +22,7 @@ def _getModelRunsForModel(request, model, token=None):
     run_info = []
     for run in model_runs:
         my_run = {}
-
+        
         my_run['token'] = run.docker_process.token
         poll_url = reverse('hs_rhessys_inst_resource-getruninfo', kwargs={
                 'resource_short_id': model.short_id,
@@ -38,6 +38,12 @@ def _getModelRunsForModel(request, model, token=None):
         my_run['date_started'] = str(run.date_started)
         my_run['date_finished'] = str(run.date_finished)
         my_run['logs'] = run.docker_process.logs
+
+        # Check for run options
+        options = run.modelrunoptions_set.all()
+        for option in options:
+            if option.name == 'TEC_FILE':
+                my_run['TEC_FILE'] = option.value
         
         if run.model_results:
             results_url = "/r/{0}/".format(run.model_results.short_id) # TODO: use reverse to build this URL
@@ -87,15 +93,21 @@ class RunModelView(View):
 
             form = RunModelForm(request.POST)
             if form.is_valid():
+                has_run_options = True
                 input_url = request.build_absolute_uri(my_model.bags.first().bag.url)
                 
                 title = form.cleaned_data['title']
                 description = form.cleaned_data['description']
                 model_command_line_parameters = form.cleaned_data['model_command_line_parameters']
+                tecfile = form.cleaned_data['tec_file']
+                if tecfile == '':
+                    tecfile = None
+                    has_run_options = False
 
                 logger.info("Running model, input_url: {0}".format(input_url))
                 logger.info("Form title: {0}".format(title))
-        
+                logger.info("TEC file: |{0}|".format(tecfile))
+                
                 env_dict = {'INPUT_URL':input_url}
 
                 process = DockerProcess.objects.create(profile=my_model.docker_profile)
@@ -106,6 +118,17 @@ class RunModelView(View):
                                               description=description,
                                               model_command_line_parameters=model_command_line_parameters)
                 
+                # Build run options (if needed)
+                if has_run_options:
+                    options = {}
+                    if tecfile:
+                        options['TEC_FILE'] = tecfile
+                        ModelRunOptions.objects.create(model_run=run,
+                                                       name='TEC_FILE',
+                                                       value=tecfile)
+
+                    env_dict['MODEL_OPTIONS'] = json.dumps(options)
+
                 logger.info("Resource ID (for now): {0}".format(my_model.get_slug()))
                 env_dict['RID'] = my_model.get_slug()
                 env_dict['RHESSYS_PROJECT'] = my_model.project_name.strip(os.sep)
