@@ -208,6 +208,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     res.metadata.delete_element(element_name, element_id)
+    resource_modified(res, request.user)
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -216,12 +217,8 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     fl = res.files.filter(pk=int(f)).first()
     file_name = fl.resource_file.name
-    file_path_to_delete = os.path.dirname(fl.resource_file.path)
     fl.resource_file.delete()
     fl.delete()
-    # delete the file path if there are no other files for the resource
-    if resource.files.count() == 0:
-        os.rmdir(file_path_to_delete)
 
     delete_file_mime_type = utils.get_file_mime_type(file_name)
     delete_file_extension = os.path.splitext(file_name)[1]
@@ -245,21 +242,12 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
-    res_file = res.files.all()[0].resource_file if res.files.all() else None
-    if res_file:
-        res_file_path_to_delete = os.path.dirname(res_file.path)
-    else:
-        res_file_path_to_delete = None
-
     for fl in res.files.all():
         fl.resource_file.delete()
 
     for bag in res.bags.all():
         bag.bag.delete()
         bag.delete()
-
-    if res_file_path_to_delete:
-        os.rmdir(res_file_path_to_delete)
 
     res.metadata.delete_all_elements()
     res.metadata.delete()
@@ -421,6 +409,9 @@ def my_resources(request, page):
     # sys.path.append("/home/docker/pycharm-debug")
     # import pydevd
     # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+
+    # from hs_core.hydroshare import users
+    # users.create_account(email="hong.yi.hello@gmail.com", username="test1", first_name="Hong", last_name="Yi", password="test123")
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
