@@ -70,7 +70,7 @@ class BandInfoForm(ModelForm):
 
 class BandInfoValidationForm(forms.Form):
     name = forms.CharField(max_length=50, required=True)
-    variableName = forms.CharField(widget=forms.Textarea, required=True)
+    variableName = forms.CharField(max_length=100, required=True)
     variableUnit = forms.CharField(max_length=50, required=True)
     method = forms.CharField(widget=forms.Textarea, required=False)
     comment = forms.CharField(widget=forms.Textarea, required=False)

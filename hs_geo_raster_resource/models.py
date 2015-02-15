@@ -12,7 +12,7 @@ class BandInformation(AbstractMetaDataElement):
     # has to call the field name rather than bandName, which seems to be enforced by the AbstractMetaDataElement;
     # otherwise, got an error indicating required "name" field does not exist
     name = models.CharField(max_length=50, null=True)
-    variableName = models.TextField(null=True)
+    variableName = models.TextField(max_length=100, null=True)
     variableUnit = models.CharField(max_length=50, null=True)
     # optional fields
     method = models.TextField(null=True, blank=True)

@@ -34,7 +34,9 @@ def landing_page(request, page):
                 AccordionGroup('Band Information (required)',
                     HTML('<div class="form-group" id="bandinfo"> '
                         '{% load crispy_forms_tags %} '
+                        '{% for band_form in band_info_form %} '
                         '{% crispy  band_form %} '
+                        '{% endfor %}'
                         '</div> '),
                     ),
                 )
@@ -45,5 +47,5 @@ def landing_page(request, page):
         #context['cellInformation'] = content_model.metadata.cellInformation
         #for i in range(len(band_info_form)):
         #    context['band_form_'+str(i)] = band_info_form[i]
-        context['band_form']=band_form
+        context['band_info_form']=band_info_form
     return context
