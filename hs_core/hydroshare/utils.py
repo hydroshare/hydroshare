@@ -440,8 +440,15 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
 
     if overwrite_bag:
         for bag in resource.bags.all():
-            bag.bag.delete()
-            bag.delete()
+            try:
+                bag.bag.delete()
+            except:
+                pass
+
+            try:
+                bag.delete()
+            except:
+                pass
 
     hs_bagit.create_bag(resource)
 
