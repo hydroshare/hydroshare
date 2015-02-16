@@ -44,6 +44,8 @@ def _getModelRunsForModel(request, model, token=None):
         for option in options:
             if option.name == 'TEC_FILE':
                 my_run['TEC_FILE'] = option.value
+            elif option.name == 'CLIMATE_STATION':
+                my_run['CLIMATE_STATION'] = option.value
         
         if run.model_results:
             results_url = "/r/{0}/".format(run.model_results.short_id) # TODO: use reverse to build this URL

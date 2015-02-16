@@ -55,6 +55,15 @@ class InstResource(Page, RichText, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
+class ResourceOption(models.Model):
+    class Meta:
+        verbose_name ='Resource option'
+
+    resource = models.ForeignKey(InstResource)
+    name = models.CharField(max_length=64)
+    value = models.CharField(max_length=4096)
+
+
 def when_my_process_ends(sender, instance, result_text=None, result_data=None, result_files=None, logs=None, **kw):
     # make something out of the result data - result_data is a dict, result_text is plaintext
     # files are UploadedFile instances
@@ -138,6 +147,12 @@ def rhessys_post_trigger(sender, **kwargs):
 
             resource.study_area_bbox = md.get('study_area', 'bbox_wgs84')
             resource.save()
+
+            climate_stations = md.get('rhessys', 'climate_stations')
+            ResourceOption.objects.create(resource=resource,
+                                          name='climate_stations',
+                                          value=climate_stations)
+
             zfile.close()
 
 class ModelRun(models.Model):
@@ -161,7 +176,7 @@ class ModelRun(models.Model):
 
 class ModelRunOptions(models.Model):
     class Meta:
-        verbose_name ='Model run options'
+        verbose_name ='Model run option'
 
     model_run = models.ForeignKey(ModelRun)
     name = models.CharField(max_length=64)
