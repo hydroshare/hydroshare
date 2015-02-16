@@ -66,7 +66,7 @@ class BandInfoForm(ModelForm):
         model = BandInformation
         fields = ['name', 'variableName', 'variableUnit', 'method', 'comment']
         exclude = ['content_object']
-        #widgets = {'BandInformation': forms.TextInput()}
+        widgets = {'variableName': forms.TextInput()}
 
 class BandInfoValidationForm(forms.Form):
     name = forms.CharField(max_length=50, required=True)

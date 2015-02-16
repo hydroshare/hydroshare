@@ -25,11 +25,11 @@ class BandInformation(AbstractMetaDataElement):
         if 'name' in kwargs:
             # check if the variable metadata already exists
             metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            band_info = BandInformation.objects.filter(name__iexact=kwargs['name'], object_id=metadata_obj.id,
-                                                       content_type=metadata_type).first()
-            if band_info:
-                raise ValidationError('BandInformation name:%s already exists' % kwargs['name'])
+            # metadata_type = ContentType.objects.get_for_model(metadata_obj)
+            # band_info = BandInformation.objects.filter(name__iexact=kwargs['name'], object_id=metadata_obj.id,
+            #                                            content_type=metadata_type).first()
+            # if band_info:
+            #     raise ValidationError('BandInformation name:%s already exists' % kwargs['name'])
         else:
             raise ValidationError("name of BandInformation is missing.")
 
@@ -55,17 +55,17 @@ class BandInformation(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         band_info = BandInformation.objects.get(id=element_id)
         if band_info:
-            if 'name' in kwargs:
-                if band_info.name != kwargs['name']:
-                    # check to make sure this new name not already exists
-                    if BandInformation.objects.filter(name_iexact=kwargs['name'], object_id=band_info.object_id,
-                                                      content_type__pk=band_info.content_type.id).count()> 0:
-                        raise ValidationError('BandInformation name:%s already exists.' % kwargs['name'])
-
-                band_info.name = kwargs['name']
+            # if 'name' in kwargs:
+            #     if band_info.name != kwargs['name']:
+            #         # check to make sure this new name not already exists
+            #         if BandInformation.objects.filter(name_iexact=kwargs['name'], object_id=band_info.object_id,
+            #                                           content_type__pk=band_info.content_type.id).count()> 0:
+            #             raise ValidationError('BandInformation name:%s already exists.' % kwargs['name'])
+            #
+            #     band_info.name = kwargs['name']
 
             for key, value in kwargs.iteritems():
-                if key in ('variableName', 'variableUnit', 'method', 'comment'):
+                if key in ('name', 'variableName', 'variableUnit', 'method', 'comment'):
                     setattr(band_info, key, value)
 
             band_info.save()
@@ -74,14 +74,7 @@ class BandInformation(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        band_info = BandInformation.objects.get(id=element_id)
-        if band_info:
-            # make sure we are not deleting all bandInformation of a resource
-            if BandInformation.objects.filter(object_id=band_info.object_id, content_type__pk=band_info.content_type.id).count() == 1:
-                raise ValidationError("The only BandInformation of the resource can't be deleted.")
-            band_info.delete()
-        else:
-            raise ObjectDoesNotExist("No BandInformation element can be found for id:%d." % element_id)
+        raise ValidationError("BandInformation element of the raster resource cannot be deleted.")
 
 class CellInformation(AbstractMetaDataElement):
     term = 'CellInformation'

@@ -9,10 +9,10 @@ import hs_core.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0002_auto_20150127_1847'),
         ('auth', '0001_initial'),
         ('pages', '__first__'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('hs_core', '0003_auto_20150130_2158'),
         ('contenttypes', '0001_initial'),
     ]
 
@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
                 ('name', models.CharField(max_length=50, null=True)),
-                ('variableName', models.TextField(null=True)),
+                ('variableName', models.TextField(max_length=100, null=True)),
                 ('variableUnit', models.CharField(max_length=50, null=True)),
                 ('method', models.TextField(null=True, blank=True)),
                 ('comment', models.TextField(null=True, blank=True)),
@@ -31,6 +31,25 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='CellInformation',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('object_id', models.PositiveIntegerField()),
+                ('name', models.CharField(max_length=50, null=True)),
+                ('rows', models.IntegerField(null=True)),
+                ('columns', models.IntegerField(null=True)),
+                ('cellSizeXValue', models.FloatField(null=True)),
+                ('cellSizeYValue', models.FloatField(null=True)),
+                ('cellSizeUnit', models.CharField(max_length=50, null=True)),
+                ('cellDataType', models.CharField(max_length=50, null=True)),
+                ('noDataValue', models.FloatField(null=True)),
+                ('content_type', models.ForeignKey(related_name='hs_geo_raster_resource_cellinformation_related', to='contenttypes.ContentType')),
+            ],
+            options={
             },
             bases=(models.Model,),
         ),
@@ -57,14 +76,6 @@ class Migration(migrations.Migration):
                 ('short_id', models.CharField(default=hs_core.models.short_id, max_length=32, db_index=True)),
                 ('doi', models.CharField(help_text=b"Permanent identifier. Never changes once it's been set.", max_length=1024, null=True, db_index=True, blank=True)),
                 ('object_id', models.PositiveIntegerField(null=True, blank=True)),
-                ('rows', models.IntegerField(null=True)),
-                ('columns', models.IntegerField(null=True)),
-                ('cellSizeXValue', models.FloatField(null=True)),
-                ('cellSizeYValue', models.FloatField(null=True)),
-                ('cellSizeUnit', models.CharField(max_length=50, null=True)),
-                ('cellDataType', models.CharField(max_length=50, null=True)),
-                ('noDataValue', models.FloatField(null=True)),
-                ('bandCount', models.IntegerField(null=True)),
                 ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
                 ('creator', models.ForeignKey(related_name='creator_of_hs_geo_raster_resource_rasterresource', to=settings.AUTH_USER_MODEL, help_text=b'This is the person who first uploaded the resource')),
                 ('edit_groups', models.ManyToManyField(help_text=b'This is the set of Hydroshare Groups who can edit the resource', related_name='group_editable_hs_geo_raster_resource_rasterresource', null=True, to='auth.Group', blank=True)),
@@ -80,5 +91,9 @@ class Migration(migrations.Migration):
                 'verbose_name': 'Geographic Raster Resource',
             },
             bases=('pages.page', models.Model),
+        ),
+        migrations.AlterUniqueTogether(
+            name='cellinformation',
+            unique_together=set([('content_type', 'object_id')]),
         ),
     ]

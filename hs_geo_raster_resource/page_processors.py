@@ -24,20 +24,22 @@ def landing_page(request, page):
     else:
         # cell_info_form = CellInfoForm(instance=content_model.metadata.cellInformation, res_short_id=content_model.short_id,
         #                 element_id=content_model.metadata.cellInformation.id if content_model.metadata.cellInformation else None)
-        band_info_form = []
+        band_info_dict = {}
+        index = 0
         for band in content_model.metadata.bandInformation:
             band_form = BandInfoForm(instance=band, res_short_id=content_model.short_id,
                             element_id=band.id if band else None)
-            band_info_form.append(band_form)
+            band_info_dict["bandinfo_%s" % index] = band_form
+            index = index + 1
 
         ext_md_layout = Layout(
                 AccordionGroup('Band Information (required)',
-                    HTML('<div class="form-group" id="bandinfo"> '
-                        '{% load crispy_forms_tags %} '
-                        '{% for band_form in band_info_form %} '
-                        '{% crispy  band_form %} '
-                        '{% endfor %}'
-                        '</div> '),
+                    HTML('{% for idx, bform in band_info_dict.items %} '
+                            '<div class="form-group" id = {{ idx }}>'
+                            '{% load crispy_forms_tags %} '
+                            '{% crispy bform %} '
+                            '</div> '
+                        '{% endfor %}'),
                     ),
                 )
 
@@ -47,5 +49,5 @@ def landing_page(request, page):
         #context['cellInformation'] = content_model.metadata.cellInformation
         #for i in range(len(band_info_form)):
         #    context['band_form_'+str(i)] = band_info_form[i]
-        context['band_info_form']=band_info_form
+        context['band_info_dict']=band_info_dict
     return context
