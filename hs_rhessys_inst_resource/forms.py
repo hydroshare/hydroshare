@@ -34,7 +34,6 @@ class RunModelForm(forms.Form):
     tec_file = forms.CharField(label="TEC file",
                                max_length=1024, required=False,
                                widget=forms.Textarea(attrs={'cols':80, 'rows':4}))
-    climate_station = forms.CharField(label="Climate station",
-                                      max_length=1024, required=False)
+    climate_station = forms.ChoiceField(label="Climate station", choices=(('','')), required=False)
 
     

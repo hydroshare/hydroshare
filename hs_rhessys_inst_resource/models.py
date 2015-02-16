@@ -39,7 +39,6 @@ class InstResource(Page, RichText, AbstractResource):
     model_desc = models.CharField(max_length=500)
     git_branch = models.CharField(max_length=50, blank=True, null=True)
     study_area_bbox = models.CharField(max_length = 50)
-    #model_command_line_parameters = models.CharField(max_length=500, blank=True, null=True)
     project_name = models.CharField(max_length=100)
     docker_profile = models.ForeignKey(DockerProfile, blank=True, null=True)
 
@@ -71,13 +70,13 @@ def when_my_process_ends(sender, instance, result_text=None, result_data=None, r
     
     # TODO filter for our type of instance
     run = get_object_or_404(ModelRun, docker_process=instance)
+    owner = run.model_instance.creator
 
     files = result_files.values()
     LOGGER.info("Process finished, files: {0}".format(files))
 
     # Create resource to store results in
     from hs_core import hydroshare
-    owner = User.objects.first() # TODO get user name properly
     model_results = hydroshare.create_resource('GenericResource', owner, instance.profile.name + ' - ' + now().isoformat(), files=files, content=logs)
 
     # Save results resource to model run, update status, and end date

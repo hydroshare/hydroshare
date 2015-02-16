@@ -277,12 +277,15 @@
 	{% if run.TEC_FILE %}
 	<em>TEC file:</em><br /><pre>{{ run.TEC_FILE }}</pre><br /><br />
 	{% endif %}
+	{% if run.CLIMATE_STATION %}
+	<em>Climate station:</em>&nbsp;{{ run.CLIMATE_STATION }}<br />
+	{% endif %}
 	<em>Time started:</em>&nbsp;{{ run.date_started }}<br />
 	<em>Time finished:</em>&nbsp;<span id="date-finished-{{ run.token}}">{{ run.date_finished }}</span><br />
       </div>
       <br />
       <em>Log output:</em>
-      <div style="height: 64px; overflow: auto; border: 1px solid; border-radius: 4px;"><pre id="log-{{ run.token }}">{{ run.logs }}</pre></div>
+      <div style="height: 64px; overflow: auto; border: 1px solid #ccc; border-radius: 4px; background-color: #f5f5f5;"><pre style="border: 0px;" id="log-{{ run.token }}">{{ run.logs }}</pre></div>
     <hr />
     {% if run.status == 'Running' %}
     <script type="text/javascript">
@@ -307,7 +310,7 @@
               poll();
             }
           }, dataType: "json", error: poll});
-        }, 30000);
+        }, 45000);
       })();
     </script>
     {% endif %}

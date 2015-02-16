@@ -55,19 +55,38 @@ def _getModelRunsForModel(request, model, token=None):
         run_info.append(my_run)
     return run_info
 
+def _getForm(model, data=None):
+    form = RunModelForm(data)
+    options = model.resourceoption_set.filter(name='climate_stations')
+    if options:
+        # This model has climate stations defined, add them to the list 
+        # of climate station options
+        climate_stations = options[0]
+        climate_stations = climate_stations.value.split(',')
+        choices = zip(climate_stations, climate_stations)
+        choices.insert(0, ('',''))
+        form.fields['climate_station'].choices = choices
+    else:
+        # This model has no climate stations defined, remove the field
+        form.fields.pop('climate_station')
+    return form
+
 
 class RunModelView(View):
     template_name = 'pages/runmodel.html'
 
     def get(self, request, *args, **kwargs):
 
+        import logging
+        logger = logging.getLogger('django')
+        
         my_model = get_object_or_404(InstResource, short_id=kwargs['resource_short_id'])
         if my_model.docker_profile:
             kwargs['can_run'] = True
         else:
             kwargs['can_run'] = False
 
-        kwargs['form'] = RunModelForm()
+        kwargs['form'] = _getForm(my_model)
 
         run_info = _getModelRunsForModel(request, my_model)
         kwargs['run_info'] = run_info
@@ -85,15 +104,13 @@ class RunModelView(View):
         import logging
         logger = logging.getLogger('django')
         
-        form = RunModelForm()
-
         my_model = get_object_or_404(InstResource, short_id=kwargs['resource_short_id'])
         logger.info(str(my_model))
 
         if my_model.docker_profile:
             kwargs['can_run'] = True
 
-            form = RunModelForm(request.POST)
+            form = _getForm(my_model, request.POST)
             if form.is_valid():
                 has_run_options = True
                 input_url = request.build_absolute_uri(my_model.bags.first().bag.url)
@@ -102,15 +119,23 @@ class RunModelView(View):
                 description = form.cleaned_data['description']
                 model_command_line_parameters = form.cleaned_data['model_command_line_parameters']
                 tecfile = form.cleaned_data['tec_file']
+                climate_station = form.cleaned_data['climate_station']
+
                 if tecfile == '':
                     tecfile = None
+                if climate_station == '':
+                    climate_station = None
+
+                if tecfile == None and climate_station == None:
                     has_run_options = False
 
                 logger.info("Running model, input_url: {0}".format(input_url))
                 logger.info("Form title: {0}".format(title))
                 logger.info("TEC file: |{0}|".format(tecfile))
+                logger.info("Climate station: |{0}|".format(climate_station))
                 
                 env_dict = {'INPUT_URL':input_url}
+                logger.info("INPUT_URL: {0}".format(input_url))
 
                 process = DockerProcess.objects.create(profile=my_model.docker_profile)
                 run = ModelRun.objects.create(model_instance=my_model,
@@ -128,6 +153,11 @@ class RunModelView(View):
                         ModelRunOptions.objects.create(model_run=run,
                                                        name='TEC_FILE',
                                                        value=tecfile)
+                    if climate_station:
+                        options['CLIMATE_STATION'] = climate_station
+                        ModelRunOptions.objects.create(model_run=run,
+                                                       name='CLIMATE_STATION',
+                                                       value=climate_station)
 
                     env_dict['MODEL_OPTIONS'] = json.dumps(options)
 
@@ -144,10 +174,11 @@ class RunModelView(View):
                 promise = tasks.run_process.apply_async(args=[process, {}, rebuild_image], 
                                                         kwargs=keyword_args)
                 # Reset form
-                form = RunModelForm()
+                form = _getForm(my_model)
             else:
                 logger.info("Form is not valid")
         else:
+            form = _getForm(my_model)
             logger.info("No docker profile found")
 
         kwargs['form'] = form
