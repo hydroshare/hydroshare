@@ -274,6 +274,11 @@ def _get_metadata_status(resource):
     return metadata_status
 
 def _do_metadata_migration(resource, user):
+    if user.username != 'admin':
+        MIGRATION_ACCESS_ERROR = "We are sorry, this resource is not accessible due to not having been migrated to " \
+                                 "the latest version. Contact stealey@renci.org to report this problem and we will work to fix this."
+        raise ValidationError(MIGRATION_ACCESS_ERROR)
+
     # create title element
     if not resource.metadata.title:
         resource.metadata.create_element('title', value=resource.title)
@@ -285,6 +290,12 @@ def _do_metadata_migration(resource, user):
             abs_element = abs_elements[0]
             if len(abs_element.content.strip()) > 0:
                 resource.metadata.create_element('description', abstract=abs_element.content)
+        else:
+            resource.metadata.create_element('description', abstract='Unknown')
+
+    if resource.metadata.description:
+        if len(resource.metadata.description.abstract.strip()) == 0:
+            resource.metadata.update_element('description', resource.metadata.description.id, abstract='Unknown')
 
     # create language element
     if not resource.metadata.language:
@@ -373,11 +384,17 @@ def _do_metadata_migration(resource, user):
                 if not resource.metadata.subjects.all().filter(value=keyword):
                     resource.metadata.create_element('subject', value=keyword)
 
+    if resource.metadata.subjects.all().count() == 0:
+        resource.metadata.create_element('subject', value='Unknown')
+
     # create hydroshare internal identifier
     if resource.metadata.identifiers.all().count() == 0:
         resource.metadata.create_element('identifier', name='hydroShareIdentifier',
                                      url='{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id))
-
+    else:
+        hydroshare_identifier = resource.metadata.identifiers.all().filter(name='hydroShareIdentifier')[0]
+        resource.metadata.update_element('identifier', hydroshare_identifier.id,  name='hydroShareIdentifier',
+                                     url='{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id), migration=True)
     # create format elements
     if resource.metadata.formats.all().count() == 0:
         for f in resource.files.all():
@@ -385,13 +402,11 @@ def _do_metadata_migration(resource, user):
             if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
                 resource.metadata.create_element('format', value=file_format_type)
 
+    # recreate the resource slug
+    resource.set_slug('resource{0}{1}'.format('/', resource.short_id))
+
     # create bag
     resource_modified(resource, user)
-
-    if resource.public:
-        if not resource.can_be_public:
-            resource.public = False
-            resource.save()
 
 
 def _get_language_code(language):

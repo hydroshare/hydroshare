@@ -476,12 +476,15 @@ class Description(AbstractMetaDataElement):
         description = Description.objects.get(id=element_id)
         if description:
             if 'abstract' in kwargs:
-                description.abstract = kwargs['abstract']
-                description.save()
+                if len(kwargs['abstract'].strip()) > 0:
+                    description.abstract = kwargs['abstract']
+                    description.save()
+                else:
+                    raise ValidationError('A value for the description/abstract element is missing.')
             else:
-                raise ValidationError('Abstract for description element is missing.')
+                raise ValidationError('A value for description/abstract element is missing.')
         else:
-            raise ObjectDoesNotExist("No description element was found for the provided id:%s" % element_id)
+            raise ObjectDoesNotExist("No description/abstract element was found for the provided id:%s" % element_id)
 
     @classmethod
     def remove(cls, element_id):
@@ -762,22 +765,28 @@ class Identifier(AbstractMetaDataElement):
             if 'name' in kwargs:
                 if idf.name.lower() != kwargs['name'].lower():
                     if idf.name.lower() == 'hydroshareidentifier':
-                        raise  ValidationError("Identifier name 'hydroshareIdentifier' can't be changed.")
+                        if not 'migration' in kwargs:
+                            raise ValidationError("Identifier name 'hydroshareIdentifier' can't be changed.")
 
                     if idf.name.lower() == 'doi':
-                        raise  ValidationError("Identifier name 'DOI' can't be changed.")
+                        raise ValidationError("Identifier name 'DOI' can't be changed.")
 
                     # check this new identifier name not already exists
                     if Identifier.objects.filter(name__iexact=kwargs['name'], object_id=idf.object_id,
                                               content_type__pk=idf.content_type.id).count()> 0:
-                        raise ValidationError('Identifier name:%s already exists.' % kwargs['name'])
+                        if not 'migration' in kwargs:
+                            raise ValidationError('Identifier name:%s already exists.' % kwargs['name'])
 
                     idf.name = kwargs['name']
 
             if 'url' in kwargs:
                 if idf.url.lower() != kwargs['url'].lower():
-                    if idf.url.lower().find('http://hydroshare.org/resource') == 0:
-                        raise  ValidationError("Hydroshare identifier url value can't be changed.")
+                    if idf.name.lower() == 'hydroshareidentifier':
+                        if not 'migration' in kwargs:
+                            raise  ValidationError("Hydroshare identifier url value can't be changed.")
+
+                    # if idf.url.lower().find('http://hydroshare.org/resource') == 0:
+                    #     raise  ValidationError("Hydroshare identifier url value can't be changed.")
                     # check this new identifier name not already exists
                     if Identifier.objects.filter(url__iexact=kwargs['url'], object_id=idf.object_id,
                                                  content_type__pk=idf.content_type.id).count()> 0:
