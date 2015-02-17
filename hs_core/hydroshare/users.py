@@ -167,12 +167,12 @@ def create_account(
 
     username = username if username else email
 
-    useirods = getattr(settings,'USE_IRODS', False)
-    if useirods:
-        from django_irods import account
-        iaccount = account.IrodsAccount()
-        iaccount.create(username)
-        iaccount.setPassward(username, password)
+    # useirods = getattr(settings,'USE_IRODS', False)
+    # if useirods:
+    #    from django_irods import account
+    #    iaccount = account.IrodsAccount()
+    #    iaccount.create(username)
+    #    iaccount.setPassward(username, password)
 
     groups = groups if groups else []
     groups = Group.objects.in_bulk(*groups) if groups and isinstance(groups[0], int) else groups
