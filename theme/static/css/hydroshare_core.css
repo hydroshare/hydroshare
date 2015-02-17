@@ -32,18 +32,28 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
   background-color: #eaeaea;
   border: none;
 }
+
+.navbar>.container .navbar-brand {
+    margin-right: 10px;
+}
+
 .navbar-inverse .navbar-nav > .active > a,
 .navbar-inverse .navbar-nav > .active > a:hover,
 .navbar-inverse .navbar-nav > .active > a:focus {
   color: #000;
-  font-weight: bold;
-  background-color: #eaeaea;
+  font-weight: bold !important;
+  background-color: #eaeaea !important;
 }
 .navbar-inverse .navbar-brand {
   color: #EEEEEE;
 }
 .navbar-inverse .navbar-nav > li > a {
-  color: #111;
+  color: #000;
+}
+
+.navbar-inverse .navbar-nav>li>a:hover, .navbar-inverse .navbar-nav>li>a:focus {
+    color: #000;
+    background-color: #EEEEEE;
 }
 .navbar-inverse {
 	font-family: 'Lato', sans-serif;
@@ -65,7 +75,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 .navbar-inverse .navbar-nav > .open > a:hover,
 .navbar-inverse .navbar-nav > .open > a:focus {
   background-color: #EEEEEE;
-  color: #eaeaea;
+  color: #111;
 }
 .dropdown-menu {
   background-color: #EEEEEE;
@@ -815,6 +825,7 @@ li.account p{
 	line-height: 38px;
 	border-radius: 3px;
 	text-align: center;
+    background: rgba(255, 255, 255, 0.5);
 }
 
 
