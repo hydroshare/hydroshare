@@ -821,13 +821,17 @@ li.account p{
 /* ===== Resource UI changes ===== */
 html, body{
     height:100%;
-    background:#F4F4F4;
+    /*background:#F4F4F4;*/
 }
 
 #form-sharing{
     margin-top: -6px;
     margin-left: 5px;
     margin-right: 5px;
+}
+
+form.inline{
+    display:inline;
 }
 
 .file-icon{
@@ -912,40 +916,52 @@ body > .container{
     /*Substract the height of the footer*/
     min-height: calc(100% - 277px);
     padding-top: 20px;
-    background: #FFF;
-    margin-top: 20px;
-    border-radius: 5px;
-    box-shadow: 0px 0px 5px #B5B5B5;
+    /*background: #FFF;*/
+    /*margin-top: 20px;*/
+    /*border-radius: 5px;*/
+    /*box-shadow: 0px 0px 5px #B5B5B5;*/
 }
 
 .icon-button {
     font-size: 22px;
-    float: right;
-    margin-left: 12px;
-    width:14px;
-    color: #898989;
     cursor: pointer;
-    align-items: baseline;
-    text-align: center;
     padding: 0;
     border: 0;
-    border-image-source: none;
-    border-image-slice: 100%;
-    border-image-width: 100%;
-    border-image-outset: 0;
-    border-image-repeat: stretch;
     background-color: transparent;
-    box-sizing: inherit;
+    float:right;
+    margin:0 5px;
 }
 
 .icon-button:hover {
-    color: #000;
+    color: #555;
+}
+
+#permission-panel .custom-well{
+    min-height:204px;
+}
+
+#permission-panel h5{
+    margin-top:0;
+}
+
+.info-icon{
+    color:#B6B6B6;
+    float:right;
+    margin-top: 4px;
+}
+
+.info-icon:hover{
+    color:#555;
+}
+
+.btn-update-list{
+    margin-top:4px;
+    margin-right:4px;
 }
 
 .custom-btn-toolbar{
     display: block;
     float: right;
-    width: 122px;
     height: 30px;
     padding: 2px 9px;
     margin-bottom: 10px;
