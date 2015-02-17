@@ -76,6 +76,40 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
             band_dict['comment'] = ''
             metadata.append({'BandInformation': band_dict})
 
+@receiver(pre_add_files_to_resource, sender=RasterResource)
+def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
+    if(sender is RasterResource):
+        files = kwargs['files']
+        res = kwargs['resource']
+        from collections import OrderedDict
+        if(files):
+            # Assume only one file in files, and that that file is a zipfile
+            infile = files[0]
+            import raster_meta_extract
+            res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
+
+            # update core metadata coverage - box
+            cov_box = res.metadata.coverages.all().filter(type='box').first()
+            res.metadata.update_element('coverage', cov_box.id, type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
+
+            # update extended metadata CellInformation
+            res.metadata.cellInformation.delete()
+            res.metadata.create_element('cellinformation', name=infile.name, rows=res_md_dict['cell_and_band_info']['rows'],
+                                        columns = res_md_dict['cell_and_band_info']['columns'],
+                                        cellSizeXValue = res_md_dict['cell_and_band_info']['cellSizeXValue'],
+                                        cellSizeYValue = res_md_dict['cell_and_band_info']['cellSizeYValue'],
+                                        cellSizeUnit = res_md_dict['cell_and_band_info']['cellSizeUnit'],
+                                        cellDataType = res_md_dict['cell_and_band_info']['cellDataType'],
+                                        noDataValue = res_md_dict['cell_and_band_info']['noDataValue'])
+
+            bcount = res_md_dict['cell_and_band_info']['bandCount']
+
+            # update extended metadata BandInformation
+            for band in res.metadata.bandInformation:
+                band.delete()
+            for i in range(bcount):
+                res.metadata.create_element('bandinformation', name='Band_' + str(i+1), variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
+
 @receiver(pre_metadata_element_create, sender=RasterResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
     element_name = kwargs['element_name'].lower()

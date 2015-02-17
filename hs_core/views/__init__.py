@@ -77,17 +77,17 @@ def add_file_to_resource(request, *args, **kwargs):
 
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
-    for f in request.FILES.getlist('files'):
+    res_files = request.FILES.getlist('files')
+    for f in res_files:
         res.files.add(ResourceFile(content_object=res, resource_file=f))
 
         # add format metadata element if necessary
         file_format_type = utils.get_file_mime_type(f.name)
         if file_format_type not in [mime.value for mime in res.metadata.formats.all()]:
             res.metadata.create_element('format', value=file_format_type)
-
+    pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, **kwargs)
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
 
 def add_citation(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
