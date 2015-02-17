@@ -81,7 +81,6 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
     if(sender is RasterResource):
         files = kwargs['files']
         res = kwargs['resource']
-        from collections import OrderedDict
         if(files):
             # Assume only one file in files, and that that file is a zipfile
             infile = files[0]
@@ -109,6 +108,37 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
                 band.delete()
             for i in range(bcount):
                 res.metadata.create_element('bandinformation', name='Band_' + str(i+1), variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
+
+@receiver(pre_delete_file_from_resource, sender=RasterResource)
+def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
+    if(sender is RasterResource):
+        res = kwargs['resource']
+
+        # reset core metadata coverage - box to be null now that the only file is deleted
+        cov_box = res.metadata.coverages.all().filter(type='box').first()
+        from collections import OrderedDict
+        spatial_coverage_info = OrderedDict([
+                ('units', "Unnamed"),
+                ('projection', 'Unnamed'),
+                ('northlimit', 0),
+                ('southlimit', 0),
+                ('eastlimit', 0),
+                ('westlimit', 0)
+            ])
+        res.metadata.update_element('coverage', cov_box.id, type='box', value=spatial_coverage_info)
+
+        # reset extended metadata CellInformation now that the only file is deleted
+        res.metadata.cellInformation.delete()
+        res.metadata.create_element('cellinformation', name=res.title, rows=0, columns = 0,
+                                        cellSizeXValue = 0, cellSizeYValue = 0,
+                                        cellSizeUnit = "Unnamed",
+                                        cellDataType = "Unnamed",
+                                        noDataValue = 0)
+
+        # reset extended metadata BandInformation now that the only file is deleted
+        for band in res.metadata.bandInformation:
+            band.delete()
+        res.metadata.create_element('bandinformation', name='Band_1', variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
 
 @receiver(pre_metadata_element_create, sender=RasterResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
