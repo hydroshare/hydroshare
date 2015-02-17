@@ -3,7 +3,7 @@ __author__ = 'Hong Yi'
 ## at the end of the models.py for the import of this module
 from django.dispatch import receiver
 from hs_core.signals import *
-from hs_geo_raster_resource.models import RasterResource
+from hs_geo_raster_resource.models import RasterResource, RasterMetaData, BandInformation
 from forms import *
 
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
@@ -97,7 +97,12 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     if element_name == "cellinformation":
         element_form = CellInfoValidationForm(request.POST)
     elif element_name == 'bandinformation':
-        element_form = BandInfoValidationForm(request.POST)
+        form_data = {}
+        for field_name in BandInfoValidationForm().fields:
+            matching_key = [key for key in request.POST if '-'+field_name in key][0]
+            form_data[field_name] = request.POST[matching_key]
+
+        element_form = BandInfoValidationForm(form_data)
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
