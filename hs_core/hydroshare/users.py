@@ -160,7 +160,6 @@ def create_account(
 
     """
 
-    from tastypie.models import ApiKey
     from django.contrib.auth.models import User, Group
     from django.contrib.sites.models import Site
 
@@ -191,7 +190,6 @@ def create_account(
     u.save()
 
     u.groups = groups
-    ApiKey.objects.get_or_create(user=u)
 
     try:
         token = signing.dumps('verify_user_email:{0}:{1}'.format(u.pk, u.email))
@@ -554,7 +552,6 @@ def get_resource_list(
 ):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
-    REST URL:  GET /resourceList?groups__contains={groupID}
 
     Parameters:
     queryType - string specifying the type of query being performed
@@ -570,8 +567,7 @@ def get_resource_list(
     Exceptions.NotFound - The group identified by groupID does not exist
     Exception.ServiceFailure - The service is unable to process the request
 
-    Note:  See http://django-tastypie.readthedocs.org/en/latest/resources.html#basic-filtering for implementation
-    details and example. We may want to modify this method to return more than just the pids for resources so that some
+    We may want to modify this method to return more than just the pids for resources so that some
     metadata for the list of resources returned could be displayed without having to call
     HydroShare.getScienceMetadata() and HydroShare.GetSystemMetadata() for every resource in the returned list.
 

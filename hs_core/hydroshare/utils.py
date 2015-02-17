@@ -202,9 +202,10 @@ def serialize_science_metadata_xml(res):
             hsterms_name = etree.SubElement(dc_creator_rdf_Description, '{%s}name' % NAMESPACES['hsterms'])
 
             if user:
-                user_dict = _get_user_info(user)
-                user_uri = HYDROSHARE_URL + user_dict['resource_uri']
-                dc_creator_rdf_Description.set('{%s}about' % NAMESPACES['rdf'], user_uri)
+                # user_dict = _get_user_info(user)
+                # user_uri = HYDROSHARE_URL + user_dict['resource_uri']
+                # dc_creator_rdf_Description.set('{%s}about' % NAMESPACES['rdf'], user_uri)
+                # TODO: When there is a new user API at some point, restore the above.
                 hsterms_name.text = user.get_full_name()
             else:
                 hsterms_name.text = creator['content']
@@ -265,9 +266,10 @@ def serialize_science_metadata_xml(res):
             hsterms_name = etree.SubElement(dc_contributor_rdf_Description, '{%s}name' % NAMESPACES['hsterms'])
 
             if user:
-                user_dict = _get_user_info(user)
-                user_uri = HYDROSHARE_URL + user_dict['resource_uri']
-                dc_contributor_rdf_Description.set('{%s}about' % NAMESPACES['rdf'], user_uri)
+                # user_dict = _get_user_info(user)
+                # user_uri = HYDROSHARE_URL + user_dict['resource_uri']
+                # dc_contributor_rdf_Description.set('{%s}about' % NAMESPACES['rdf'], user_uri)
+                # TODO: When there is a new user API at some point, restore the above.
                 hsterms_name.text = user.get_full_name()
             else:
                 hsterms_name.text = contributor['content']
@@ -408,19 +410,6 @@ def serialize_science_metadata_xml(res):
             dc_subject.text = sub['content']
 
     return XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=True)
-
-#def serialize_resource_map(res):
-#    pass
-    #serializer = get_serializer(res)
-    #bundle = serializer.build_bundle(obj=res)
-    #return serializer.serialize(None, serializer.full_dehydrate(bundle), 'application/json')
-
-#def get_serializer(resource):
-#    pass
-    #tastypie_module = resource._meta.app_label + '.api'        # the module name should follow this convention
-    #tastypie_name = resource._meta.object_name + 'Resource'    # the classname of the Resource seralizer
-    #tastypie_api = importlib.import_module(tastypie_module)    # import the module
-    #return getattr(tastypie_api, tastypie_name)()        # make an instance of the tastypie resource
 
 
 def resource_modified(resource, by_user=None, overwrite_bag=True):
