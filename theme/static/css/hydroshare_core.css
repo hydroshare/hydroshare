@@ -49,6 +49,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 	font-family: 'Lato', sans-serif;
 	text-transform: uppercase;
 	font-size: 12px;
+    border-bottom:1px solid #DDD;
 }
 .navbar-inverse .navbar-nav > .dropdown > a .caret {
   border-top-color: #EEEEEE;
@@ -820,6 +821,13 @@ li.account p{
 /* ===== Resource UI changes ===== */
 html, body{
     height:100%;
+    background:#F4F4F4;
+}
+
+#form-sharing{
+    margin-top: -6px;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .file-icon{
@@ -833,6 +841,10 @@ html, body{
 table.table-plain {
     margin-bottom: 10px;
     width:100%;
+}
+
+table.table-plain td{
+    padding-right: 10px;
 }
 
 .tab-elements{
@@ -897,8 +909,13 @@ table.table-plain {
 }
 
 body > .container{
+    /*Substract the height of the footer*/
     min-height: calc(100% - 277px);
     padding-top: 20px;
+    background: #FFF;
+    margin-top: 20px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 5px #B5B5B5;
 }
 
 .icon-button {
@@ -932,8 +949,9 @@ body > .container{
     height: 30px;
     padding: 2px 9px;
     margin-bottom: 10px;
-    box-shadow: 0px 1px 1px #949494;
+    box-shadow: 0px 0px 1px #949494;
     border: 1px solid #DDD;
+    border-radius: 4px;
 }
 
 .abstract{

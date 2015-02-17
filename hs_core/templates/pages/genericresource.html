@@ -45,22 +45,33 @@
 
     <div id="sharing" class="content-block">
         <h3>Sharing</h3>
-       <p>
-           {% if rights.statement %}
-                <span class="rights-text">{{ rights.statement }} </span>
-           {% endif %}
-
-           {% if rights.url %}
-                <a class="rights-url" href="{{ rights.url }}">&nbsp{{ rights.url }}</a>
-           {% endif %}
-        </p>
         <p>
-            <strong>Sharing Status:</strong>
-            {% if cm.public %}
-                <span>Public</span>
-            {% else %}
-                <span>Private</span>
-            {% endif %}
+            <span class="pull-left">Sharing status:</span>
+            {% if page.perms.change %}
+                <form id="form-sharing" class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                    {% csrf_token %}
+                    {% if cm.public %}
+                        <input name="t" type="hidden" value="make_private"/>
+                        <div class="btn-group" role="group" aria-label="...">
+                          <button type="button" class="btn btn-default active">Public</button>
+                          <button type="submit" class="btn btn-default">Private</button>
+                        </div>
+                    {% else %}
+                        <input name="t" type="hidden" value="make_public"/>
+                        <div class="btn-group" role="group" aria-label="...">
+                          <button type="submit" class="btn btn-default">Public</button>
+                          <button type="button" class="btn btn-default active">Private</button>
+                        </div>
+                    {% endif %}
+                </form>
+             {% else %}
+                {% if cm.public %}
+                    <strong>&nbspPublic</strong>
+                {% else %}
+                    <strong>&nbspPrivate</strong>
+                {% endif %}
+             {% endif %}
+
 
             {% if cm.public %}
                 <span>(This resource can be viewed and downloaded by anyone)</span>
@@ -68,23 +79,17 @@
                 <span>(This resource can be viewed and downloaded only by designated users or research groups)</span>
             {% endif %}
         </p>
+        <p>
+           {% if rights.statement %}
+                <span class="rights-text">{{ rights.statement }} </span>
+           {% endif %}
+
+           {% if rights.url %}
+                <span class="rights-url" ><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+           {% endif %}
+        </p>
 
         <div>
-            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                {% csrf_token %}
-                {% if cm.public %}
-                    <input name="t" type="hidden" value="make_private"/>
-                    {% if page.perms.change %}
-                        <button type="submit" class="btn btn-danger">Make private</button>
-                    {% endif %}
-                {% else %}
-                    <input name="t" type="hidden" value="make_public"/>
-                    {% if page.perms.change %}
-                        <button type="submit" class="btn btn-success">Make public</button>
-                    {% endif %}
-                {% endif %}
-            </form>
-
             <div style="padding-top:0.5em">
             {% if user == cm.user %}
                 You are the owner of this resource.
@@ -416,7 +421,7 @@
 				<div class="tab-pane active" id="contactTab">
                     <div class="division-title"><p>Creators</p></div>
                     <div>
-                        <table class="table table-striped table-hover">
+                        <table class="table table-striped">
                             <thead>
                                 <tr>
                                     <th>Name</th>
