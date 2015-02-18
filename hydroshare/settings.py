@@ -286,10 +286,7 @@ INSTALLED_APPS = (
     #"hs_geo_raster_resource",
     "djcelery",
     "ref_ts",
-    "hs_app_netCDF",
-    #"ref_ts",
-   # "ref_ts",
-    #"hs_app_timeseries",
+    "hs_app_timeseries",
     "widget_tweaks",
 )
 
