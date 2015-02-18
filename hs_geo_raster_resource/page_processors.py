@@ -23,9 +23,18 @@ def landing_page(request, page):
         context['cellInformation'] = content_model.metadata.cellInformation
         context['bandInformation'] = content_model.metadata.bandInformation
     else:
+        cellinfo_form = CellInfoForm(instance=content_model.metadata.cellInformation, res_short_id=content_model.short_id,
+                                    element_id=content_model.metadata.cellInformation.id if content_model.metadata.cellInformation else None)
+
         BandInfoFormSetEdit = formset_factory(wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=edit_resource)), formset=BaseBandInfoFormSet, extra=0)
         bandinfo_formset = BandInfoFormSetEdit(initial=content_model.metadata.bandInformation.values(), prefix='bandinformation')
         ext_md_layout = Layout(
+                            AccordionGroup('CellInformation (required)',
+                                HTML("<div class='form-group' id='cellinformation'> "
+                                '{% load crispy_forms_tags %} '
+                                '{% crispy cellinfo_form %} '
+                                '</div>'),
+                                ),
                             BandInfoLayoutEdit
                         )
         for form in bandinfo_formset.forms:
@@ -35,6 +44,7 @@ def landing_page(request, page):
 
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
+        context['cellinfo_form']=cellinfo_form
         context['bandinfo_formset']=bandinfo_formset
 
     return context

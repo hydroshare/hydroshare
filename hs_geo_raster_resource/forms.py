@@ -8,10 +8,62 @@ from hs_core.forms import BaseFormHelper
 from django.forms.models import formset_factory
 from functools import partial, wraps
 
-# Non repeatable element related forms
-class BaseFormHelper(FormHelper):
+class CellInfoFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+                        Field('rows', css_class=field_width),
+                        Field('columns', css_class=field_width),
+                        Field('cellSizeXValue', css_class=field_width),
+                        Field('cellSizeYValue', css_class=field_width),
+                        Field('cellSizeUnit', css_class=field_width),
+                        Field('cellDataType', css_class=field_width),
+                        Field('noDataValue', css_class=field_width),
+                 )
+
+        super(CellInfoFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+class CellInfoForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(CellInfoForm, self).__init__(*args, **kwargs)
+        self.helper = CellInfoFormHelper(allow_edit, res_short_id, element_id, element_name='CellInformation')
+        # if not allow_edit:
+        #     for field in self.fields.values():
+        #         field.widget.attrs['readonly'] = True
+        # else: # only cellNoDataValue allows to be edited
+        #     for key, value in self.fields.iteritems():
+        #         if key != 'noDataValue':
+        #             value.widget.attrs['readonly'] = True
+        #         else:
+        #             value.widget.attrs['readonly'] = False
+        #             value.widget.attrs['style'] = "background-color:white;"
+    class Meta:
+        model = CellInformation
+        fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellSizeUnit', 'cellDataType', 'noDataValue']
+        exclude = ['content_object']
+        widgets = { 'rows': forms.TextInput(attrs={'readonly':'readonly'}),
+                    'columns': forms.TextInput(attrs={'readonly':'readonly'}),
+                    'cellSizeXValue': forms.TextInput(attrs={'readonly':'readonly'}),
+                    'cellSizeYValue': forms.TextInput(attrs={'readonly':'readonly'}),
+                    'cellSizeUnit': forms.TextInput(attrs={'readonly':'readonly'}),
+                    'cellDataType': forms.TextInput(attrs={'readonly':'readonly'}),
+                    'noDataValue': forms.TextInput()}
+
+class CellInfoValidationForm(forms.Form):
+    rows = forms.IntegerField(required=True)
+    columns = forms.IntegerField(required=True)
+    cellSizeXValue = forms.FloatField(required = True)
+    cellSizeYValue = forms.FloatField(required = True)
+    cellSizeUnit = forms.CharField(max_length=50, required = True)
+    cellDataType = forms.CharField(max_length=50, required=True)
+    noDataValue = forms.FloatField(required = False)
+
+# repeatable element related forms
+class BandBaseFormHelper(FormHelper):
     def __init__(self, res_short_id=None, element_id=None, element_name=None, element_layout=None,  *args, **kwargs):
-        super(BaseFormHelper, self).__init__(*args, **kwargs)
+        super(BandBaseFormHelper, self).__init__(*args, **kwargs)
 
         if res_short_id:
             self.form_method = 'post'
@@ -43,44 +95,7 @@ class BaseFormHelper(FormHelper):
                             ),
                           )
 
-class CellInfoFormHelper(BaseFormHelper):
-    def __init__(self, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
-
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
-        layout = Layout(
-                        Field('rows', css_class=field_width),
-                        Field('columns', css_class=field_width),
-                        Field('cellSizeXValue', css_class=field_width),
-                        Field('cellSizeYValue', css_class=field_width),
-                        Field('cellSizeUnit', css_class=field_width),
-                        Field('cellDataType', css_class=field_width),
-                        Field('cellNoDataValue', css_class=field_width),
-                 )
-
-        super(CellInfoFormHelper, self).__init__(res_short_id, element_id, element_name, layout,  *args, **kwargs)
-
-class CellInfoForm(ModelForm):
-    def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
-        super(CellInfoForm, self).__init__(*args, **kwargs)
-        self.helper = CellInfoFormHelper(allow_edit, res_short_id, element_id, element_name='CellInformation')
-
-    class Meta:
-        model = CellInformation
-        fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellSizeUnit', 'cellDataType', 'noDataValue']
-        exclude = ['content_object']
-        widgets = {'CellInformation': forms.TextInput()}
-
-class CellInfoValidationForm(forms.Form):
-    rows = forms.IntegerField(required=True)
-    columns = forms.IntegerField(required=True)
-    cellSizeXValue = forms.FloatField(required = True)
-    cellSizeYValue = forms.FloatField(required = True)
-    cellSizeUnit = forms.CharField(max_length=50, required = True)
-    cellDataType = forms.CharField(max_length=50, required=True)
-    cellNoDataValue = forms.FloatField(required = False)
-
-class BandInfoFormHelper(BaseFormHelper):
+class BandInfoFormHelper(BandBaseFormHelper):
     def __init__(self, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
