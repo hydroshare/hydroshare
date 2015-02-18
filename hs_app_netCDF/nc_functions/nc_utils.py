@@ -102,26 +102,35 @@ def get_nc_variable_coordinate_type(nc_variable):
             If not discerned as X, Y, Z, T, Unknown is returned
     """
 
-    if hasattr(nc_variable, 'axis'):
+    if hasattr(nc_variable, 'axis') and nc_variable.axis:
         return nc_variable.axis
 
     nc_variable_standard_name = getattr(nc_variable, 'standard_name', getattr(nc_variable, 'long_name', None))
     if nc_variable_standard_name:
         compare_dict = {
-            u'latitude': u'Y',
-            u'longitude': u'X',
-            u'time': u'T',
-            u'projection_x_coordinate': u'X',
-            u'projection_y_coordinate': u'Y'
+            'latitude': 'Y',
+            'longitude': 'X',
+            'time': 'T',
+            'projection_x_coordinate': 'X',
+            'projection_y_coordinate': 'Y'
         }
         for standard_name, coor_type in compare_dict.items():
-            if re.match(nc_variable_standard_name, standard_name, re.I):
+            if re.match(standard_name, nc_variable_standard_name, re.I):
                 return coor_type
 
     if hasattr(nc_variable, 'positive'):
-        return u'Z'
+        return 'Z'
 
-    # unit is not a good way to tell the type as it might be a bound variable not a coordinate variable
+    if hasattr(nc_variable, 'units') and nc_variable.units:
+        if re.match('degree(s)?.e(ast)?', nc_variable.units, re.I):
+            return 'X'
+        elif re.match('degree(s)?.n(orth)?', nc_variable.units, re.I):
+            return 'Y'
+        else:
+            info = nc_variable.units.split(' ')
+            time_units = ['days', 'hours', 'minutes', 'seconds', 'milliseconds', 'microseconds'] # see python netcdf4
+            if len(info) >= 3 and (info[0].lower() in time_units) and info[1].lower() == 'since':
+                return 'T'
 
     return 'Unknown'
 
@@ -154,9 +163,12 @@ def get_nc_variable_coordinate_meta(nc_dataset, nc_variable_name):
                 time_calendar = var_obj.calendar if hasattr(var_obj, 'calendar') else 'standard'
 
                 if time_units and time_calendar:
-                    coordinate_min = netCDF4.num2date(coordinate_min, units=time_units, calendar=time_calendar)
-                    coordinate_max = netCDF4.num2date(coordinate_max, units=time_units, calendar=time_calendar)
-                    coordinate_units = time_units
+                    try:
+                        coordinate_min = netCDF4.num2date(coordinate_min, units=time_units, calendar=time_calendar)
+                        coordinate_max = netCDF4.num2date(coordinate_max, units=time_units, calendar=time_calendar)
+                        coordinate_units = time_units
+                    except:
+                        pass
 
             nc_variable_coordinate_meta = {
                 'coordinate_type': nc_variable_coordinate_type,
@@ -175,6 +187,7 @@ def get_nc_variable_coordinate_meta(nc_dataset, nc_variable_name):
 # 3) data variable dimension is defined base on the coordinate variable
 # 4) coordinate variable sometimes doesn't represent the real lat lon time vertical info
 # 5) coordinate variable sometimes has associated bound variable if it represents the real lat lon time vertical info
+
 def get_nc_coordinate_variables(nc_dataset):
     """
     (object)-> dict
@@ -291,7 +304,7 @@ def get_nc_data_variables(nc_dataset):
 
     nc_data_variables = {}
     for var_name, var_obj in nc_dataset.variables.items():
-        if (var_name not in nc_non_data_variables_namelist) and (len(var_obj.shape) > 1):
+        if (var_name not in nc_non_data_variables_namelist) and (len(var_obj.shape) >= 1):
             nc_data_variables[var_name] = var_obj
 
     return nc_data_variables
@@ -320,7 +333,7 @@ def get_nc_grid_mapping_variable_name(nc_dataset):
     nc_all_variables = nc_dataset.variables
     nc_grid_mapping_variable_name = ''
     for var_name, var_obj in nc_all_variables.items():
-        if hasattr(var_obj, 'grid_mapping_name'):
+        if hasattr(var_obj, 'grid_mapping_name')and var_obj.grid_mapping_name:
             nc_grid_mapping_variable_name = var_name
 
     return nc_grid_mapping_variable_name

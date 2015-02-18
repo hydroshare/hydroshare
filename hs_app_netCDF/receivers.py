@@ -24,27 +24,27 @@ def netcdf_create_resource_trigger(sender, **kwargs):
 
             # For dict key name and structure refer to the hs_core/models.py
             # add title
-            if 'title' in res_dublin_core_meta.keys():
+            if res_dublin_core_meta.get('title'):
                 title = {'title': {'value': res_dublin_core_meta['title']}}
                 metadata.append(title)
             # add description
-            if 'description' in res_dublin_core_meta.keys():
+            if res_dublin_core_meta.get('description'):
                 description = {'description': {'abstract': res_dublin_core_meta['description']}}
                 metadata.append(description)
             # add source
-            if 'source' in res_dublin_core_meta.keys():
+            if res_dublin_core_meta.get('source'):
                 source = {'source': {'derived_from': res_dublin_core_meta['source']}}
                 metadata.append(source)
             # add relation
-            if 'references' in res_dublin_core_meta.keys():
+            if res_dublin_core_meta.get('references'):
                 relation = {'relation': {'type': 'cites', 'value': res_dublin_core_meta['references']}}
                 metadata.append(relation)
             # add coverage - period
-            if res_dublin_core_meta['period']:
+            if res_dublin_core_meta.get('period'):
                 period = {'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
                 metadata.append(period)
             # add coverage - box
-            if res_dublin_core_meta['box']:
+            if res_dublin_core_meta.get('box'):
                 box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
                 metadata.append(box)
 

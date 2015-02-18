@@ -78,7 +78,7 @@ def extract_nc_global_meta(nc_dataset):
         'convention': ['Conventions'],
         'title': ['title'],
         'subject': ['keywords'],
-        'description': ['summary', 'comment', ],
+        'description': ['summary', 'comment'],
         'rights': ['license'],
         'references': ['references'],
         'source': ['source']
@@ -87,7 +87,7 @@ def extract_nc_global_meta(nc_dataset):
 
     for dublincore, convention in dublincore_vs_convention.items():
         for option in convention:
-            if hasattr(nc_dataset, option):
+            if hasattr(nc_dataset, option) and nc_dataset.__dict__[option]:
                 raw_str = nc_dataset.__dict__[option]
                 refined_str = raw_str.replace("\\n", '')
                 nc_global_meta[dublincore] = ' '.join(refined_str.split())
@@ -165,6 +165,8 @@ def get_box_info(nc_dataset):
                     pass
 
     if box_info:
+        for name in box_info.keys():
+            box_info[name] = str(box_info[name])
         box_info['units'] = 'Decimal degrees'
         box_info['projection'] = 'WGS 84 EPSG:4326'
 
@@ -230,11 +232,6 @@ def get_limits_info(nc_dataset, info_source):
                         eastlimit -= 360
         limits_info['westlimit'] = westlimit
         limits_info['eastlimit'] = eastlimit
-
-    # change the value as string
-    if limits_info:
-        for name, value in limits_info.items():
-            limits_info[name] = str(value)
 
     return limits_info
 
