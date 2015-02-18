@@ -12,13 +12,9 @@
     <div class="custom-btn-toolbar">
         {% if page.perms.change %}
             <a id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">
-                <span data-toggle="tooltip" data-placement="auto" title="Delete" class="glyphicon glyphicon-remove icon-button btn-remove"></span>
+                <span data-toggle="tooltip" data-placement="auto" title="Delete" class="glyphicon glyphicon-trash icon-button btn-remove"></span>
             </a>
         {% endif %}
-
-        <a id="share" href="#sharing">
-            <span data-toggle="tooltip" data-placement="auto" title="Share" class="glyphicon glyphicon-share-alt icon-button btn-share"></span>
-        </a>
 
         {% if page.perms.change %}
         <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
@@ -30,7 +26,18 @@
     </div>
 
     <h2 class="page-title">{{ title }}</h2>
-
+    <div class="info-group">
+        <div>
+            <span id="authors">Authors:
+                {% for cr in creators %}
+                    {{ cr.name }},&nbsp
+                {% endfor %}
+            </span>
+        </div>
+        <div><span>Owner: {{ cm.user }}</span></div>
+        <div><span>Created on {{ cm.created|date }}. Last updated on {{ cm.updated|date }}.</span></div>
+        <div><span>Resource type: {{ resource_type }}</span></div>
+    </div>
     {% if abstract%}
         <div class="content-block">
             <h3>Abstract</h3>
@@ -43,9 +50,9 @@
 		<span id="citation-text">{{ citation }}</span>
 	</div>
 
-    <div id="sharing" class="content-block">
+    <div class="content-block">
         <h3>Sharing</h3>
-        <p>
+        <div id="sharing-status">
             <span class="pull-left">Sharing status:</span>
             {% if page.perms.change %}
                 <form id="form-sharing" class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
@@ -53,14 +60,14 @@
                     {% if cm.public %}
                         <input name="t" type="hidden" value="make_private"/>
                         <div class="btn-group" role="group" aria-label="...">
-                          <button type="button" class="btn btn-default active">Public</button>
-                          <button type="submit" class="btn btn-default">Private</button>
+                          <button data-toggle="tooltip" data-placement="auto" title='Can be viewed and downloaded by anyone.' type="button" class="btn btn-default active">Public</button>
+                          <button data-toggle="tooltip" data-placement="auto" title='Can be viewed and downloaded only by designated users or research groups.' type="submit" class="btn btn-default">Private</button>
                         </div>
                     {% else %}
                         <input name="t" type="hidden" value="make_public"/>
                         <div class="btn-group" role="group" aria-label="...">
-                          <button type="submit" class="btn btn-default">Public</button>
-                          <button type="button" class="btn btn-default active">Private</button>
+                          <button data-toggle="tooltip" data-placement="auto" title='Can be viewed and downloaded by anyone.' type="submit" class="btn btn-default">Public</button>
+                          <button data-toggle="tooltip" data-placement="auto" title='Can be viewed and downloaded only by designated users or research groups.' type="button" class="btn btn-default active">Private</button>
                         </div>
                     {% endif %}
                 </form>
@@ -72,21 +79,21 @@
                 {% endif %}
              {% endif %}
 
-            {% if cm.public %}
-                <span>(This resource can be viewed and downloaded by anyone)</span>
-            {% else %}
-                <span>(This resource can be viewed and downloaded only by designated users or research groups)</span>
-            {% endif %}
-        </p>
-        <p>
-           {% if rights.statement %}
-                <span class="rights-text">{{ rights.statement }} </span>
-           {% endif %}
 
-           {% if rights.url %}
-                <span class="rights-url" ><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
-           {% endif %}
-        </p>
+        </div>
+
+       {% if rights.statement or rights.url %}
+           <div id="rights">
+               {% if rights.statement %}
+                    <span class="rights-text">{{ rights.statement }} </span>
+               {% endif %}
+
+               {% if rights.url %}
+                    <span class="rights-url" ><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+               {% endif %}
+            </div>
+       {% endif %}
+
 
         <div id="permission-panel">
             {% if user == cm.user %}
@@ -102,133 +109,149 @@
             {% endif %}
 
             {% if page.perms.change %}
+
+                <div class="panel panel-default panel-faq">
+                    <div class="panel-heading">
+                        <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
+                            <h4 class="panel-title">
+                                Manage access
+                                <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
+                            </h4>
+                        </a>
+                    </div>
+                    <div id="faq-cat-1-sub-1" class="panel-collapse collapse" style="height: auto;">
+                        <div class="panel-body">
+                            <div class="col-md-4">
+                                <div class="custom-well">
+                                    <h5><strong>Users with full read/write permissions on this resource</strong></h5>
+                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                                        {% csrf_token %}
+                                        <select name="designees" id="owners-select" multiple class="form-control" size="{{ owners.count }}">
+                                            {% for u in owners %}
+                                                <option value="{{ u.pk }}" selected>{{ u|best_name }} ({{ u.username }})</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input name="t" value="owners" type="hidden"/>
+                                        <button type="submit" class="btn btn-update-list pull-left btn-default glyphicon"><span class="button-label">&nbspUpdate access list</span></button>
+                                        <span data-toggle="tooltip" data-placement="auto" title='Hold down "Control", or "Command" on a Mac, to select more than one.' class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                    </form>
+                                    <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <input name="t" value="add_owner" type="hidden"/>
+                                            {{ add_owner_user_form.user }}
+                                            <button type="submit" class="btn btn-success pull-left glyphicon glyphicon-plus"><span class="button-label">&nbspAdd User</span></button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="custom-well">
+                                    <h5><strong>Users who can edit the content of this resource</strong></h5>
+                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                                        {% csrf_token %}
+                                        <select name="designees" id="edit_users-select" multiple class="form-control" size="{{ edit_users.count }}">
+                                            {% for u in edit_users %}
+                                                <option value="{{ u.pk }}" selected>{{ u|best_name }} ({{ u.username }})</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input name="t" value="edit_users" type="hidden"/>
+                                        <button type="submit" class="btn btn-update-list pull-left btn-default glyphicon"><span class="button-label">&nbspUpdate access list</span></button>
+                                        <span data-toggle="tooltip" data-placement="auto" title='Hold down "Control", or "Command" on a Mac, to select more than one.' class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                    </form>
+                                    <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <input name="t" value="add_edit_user" type="hidden"/>
+                                            {{ add_edit_user_form.user }}
+                                            <button type="submit" class="btn btn-success pull-left glyphicon glyphicon-plus"><span class="button-label">&nbspAdd User</span></button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="custom-well">
+                                    <h5><strong>Research groups that can edit the content of this resource</strong></h5>
+                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                                            {% csrf_token %}
+                                            <select name="designees" id="edit_groups-select" multiple class="form-control" size="{{ edit_groups.count }}">
+                                                {% for u in edit_groups %}
+                                                    <option value="{{ u.pk }}" {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <input name="t" value="edit_groups" type="hidden"/>
+                                            <button type="submit" class="btn btn-update-list pull-left btn-default glyphicon"><span class="button-label">&nbspUpdate access list</span></button>
+                                            <span data-toggle="tooltip" data-placement="auto" title='Hold down "Control", or "Command" on a Mac, to select more than one.' class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                    </form>
+                                    <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <input name="t" value="add_edit_group" type="hidden"/>
+                                            {{ add_edit_group_form.user }}
+                                            <button type="submit" class="btn btn-success pull-left glyphicon glyphicon-plus"><span class="button-label">&nbspAdd Group</span></button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                              {% if not cm.public %}
+                                <div class="col-md-4">
+                                    <div class="custom-well">
+                                        <h5><strong>Users who can view and download the resource</strong></h5>
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                                            {% csrf_token %}
+                                            <select name="designees" id="view_users-select" multiple class="form-control" size="{{ view_users.count }}">
+                                                {% for u in view_users %}
+                                                    <option value="{{ u.pk }}" {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <input name="t" value="view_users" type="hidden"/>
+                                            <button type="submit" class="btn btn-update-list pull-left btn-default glyphicon"><span class="button-label">&nbspUpdate access list</span></button>
+                                            <span data-toggle="tooltip" data-placement="auto" title='Hold down "Control", or "Command" on a Mac, to select more than one.' class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                        </form>
+                                        <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
+                                            {% csrf_token %}
+                                            <div class="form-group">
+                                                <input name="t" value="add_view_user" type="hidden"/>
+                                                {{ add_view_user_form.user }}
+                                                <button type="submit" class="btn btn-success pull-left glyphicon glyphicon-plus"><span class="button-label">&nbspAdd User</span></button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="custom-well">
+                                        <h5><strong>Research groups that can view and download the resource</strong></h5>
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                                            {% csrf_token %}
+                                            <select name="designees" id="view_groups-select" multiple class="form-control" size="{{ view_groups.count }}">
+                                                {% for u in view_groups %}
+                                                    <option value="{{ u.pk }}" {% if u in view_groups %}selected{% endif %}>{{ u }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <input name="t" value="view_groups" type="hidden"/>
+                                            <button type="submit" class="btn btn-update-list pull-left btn-default glyphicon"><span class="button-label">&nbspUpdate access list</span></button>
+                                            <span data-toggle="tooltip" data-placement="auto" title='Hold down "Control", or "Command" on a Mac, to select more than one.' class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                        </form>
+                                        <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
+                                            {% csrf_token %}
+                                            <div class="form-group">
+                                                <input name="t" value="add_view_group" type="hidden"/>
+                                                {{ add_view_group_form.user }}
+                                                <button type="submit" class="btn btn-success pull-left glyphicon glyphicon-plus"><span class="button-label">&nbspAdd Group</span></button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                              {% endif %}
+                        </div>
+                    </div>
+                </div>
             <div>
-                <div class="col-md-4">
-                    <div class="custom-well">
-                        <h5><strong>Users with full read/write permissions on this resource</strong></h5>
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                            {% csrf_token %}
-                            <select name="designees" id="owners-select" multiple class="form-control" size="{{ owners.count }}">
-                                {% for u in owners %}
-                                    <option value="{{ u.pk }}" selected>{{ u|best_name }} ({{ u.username }})</option>
-                                {% endfor %}
-                            </select>
-                            <input name="t" value="owners" type="hidden"/>
-                            <button type="submit" class="btn btn-update-list pull-left btn-default glyphicon"><span class="button-label">&nbspUpdate access list</span></button>
-                            <span data-toggle="tooltip" data-placement="auto" title='Hold down "Control", or "Command" on a Mac, to select more than one.' class="glyphicon glyphicon-info-sign info-icon"></span>
-                        </form>
-                        <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <input name="t" value="add_owner" type="hidden"/>
-                                {{ add_owner_user_form.user }}
-                                <button type="submit" class="btn btn-success pull-left glyphicon glyphicon-plus"><span class="button-label">&nbspAdd User</span></button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
-                <div class="col-md-4">
-                    <div class="custom-well">
-                        <h5><strong>Users who can edit the content of this resource</strong></h5>
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                            {% csrf_token %}
-                            <select name="designees" id="edit_users-select" multiple class="form-control" size="{{ edit_users.count }}">
-                                {% for u in edit_users %}
-                                    <option value="{{ u.pk }}" selected>{{ u|best_name }} ({{ u.username }})</option>
-                                {% endfor %}
-                            </select>
-                            <input name="t" value="edit_users" type="hidden"/>
-                            <button type="submit" class="btn btn-update-list pull-left btn-default glyphicon"><span class="button-label">&nbspUpdate access list</span></button>
-                            <span data-toggle="tooltip" data-placement="auto" title='Hold down "Control", or "Command" on a Mac, to select more than one.' class="glyphicon glyphicon-info-sign info-icon"></span>
-                        </form>
-                        <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <input name="t" value="add_edit_user" type="hidden"/>
-                                {{ add_edit_user_form.user }}
-                                <button type="submit" class="btn btn-success pull-left glyphicon glyphicon-plus"><span class="button-label">&nbspAdd User</span></button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="custom-well">
-                        <h5><strong>Research groups that can edit the content of this resource</strong></h5>
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                                {% csrf_token %}
-                                <select name="designees" id="edit_groups-select" multiple class="form-control" size="{{ edit_groups.count }}">
-                                    {% for u in edit_groups %}
-                                        <option value="{{ u.pk }}" {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>
-                                    {% endfor %}
-                                </select>
-                                <input name="t" value="edit_groups" type="hidden"/>
-                                <button type="submit" class="btn btn-update-list pull-left btn-default glyphicon"><span class="button-label">&nbspUpdate access list</span></button>
-                                <span data-toggle="tooltip" data-placement="auto" title='Hold down "Control", or "Command" on a Mac, to select more than one.' class="glyphicon glyphicon-info-sign info-icon"></span>
-                        </form>
-                        <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <input name="t" value="add_edit_group" type="hidden"/>
-                                {{ add_edit_group_form.user }}
-                                <button type="submit" class="btn btn-success pull-left glyphicon glyphicon-plus"><span class="button-label">&nbspAdd Group</span></button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-              {% if not cm.public %}
-                <div class="col-md-4">
-                    <div class="custom-well">
-                        <h5><strong>Users who can view and download the resource</strong></h5>
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                            {% csrf_token %}
-                            <select name="designees" id="view_users-select" multiple class="form-control" size="{{ view_users.count }}">
-                                {% for u in view_users %}
-                                    <option value="{{ u.pk }}" {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>
-                                {% endfor %}
-                            </select>
-                            <input name="t" value="view_users" type="hidden"/>
-                            <button type="submit" class="btn btn-update-list pull-left btn-default glyphicon"><span class="button-label">&nbspUpdate access list</span></button>
-                            <span data-toggle="tooltip" data-placement="auto" title='Hold down "Control", or "Command" on a Mac, to select more than one.' class="glyphicon glyphicon-info-sign info-icon"></span>
-                        </form>
-                        <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <input name="t" value="add_view_user" type="hidden"/>
-                                {{ add_view_user_form.user }}
-                                <button type="submit" class="btn btn-success pull-left glyphicon glyphicon-plus"><span class="button-label">&nbspAdd User</span></button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="custom-well">
-                        <h5><strong>Research groups that can view and download the resource</strong></h5>
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                            {% csrf_token %}
-                            <select name="designees" id="view_groups-select" multiple class="form-control" size="{{ view_groups.count }}">
-                                {% for u in view_groups %}
-                                    <option value="{{ u.pk }}" {% if u in view_groups %}selected{% endif %}>{{ u }}</option>
-                                {% endfor %}
-                            </select>
-                            <input name="t" value="view_groups" type="hidden"/>
-                            <button type="submit" class="btn btn-update-list pull-left btn-default glyphicon"><span class="button-label">&nbspUpdate access list</span></button>
-                            <span data-toggle="tooltip" data-placement="auto" title='Hold down "Control", or "Command" on a Mac, to select more than one.' class="glyphicon glyphicon-info-sign info-icon"></span>
-                        </form>
-                        <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <input name="t" value="add_view_group" type="hidden"/>
-                                {{ add_view_group_form.user }}
-                                <button type="submit" class="btn btn-success pull-left glyphicon glyphicon-plus"><span class="button-label">&nbspAdd Group</span></button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-              {% endif %}
             </div>
             {% endif %}
         </div>
@@ -286,7 +309,7 @@
             {#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
                             <td>
                                 {% if page.perms.change %}
-                                    <a href="{{ f.resource_file.url }}"><span data-toggle="modal" data-target="#delete-resource-file-{{f.pk}}" data-placement="auto" title="Delete" class="glyphicon glyphicon-remove-circle icon-button btn-remove"></span></a>
+                                    <a href="{{ f.resource_file.url }}"><span data-toggle="modal" data-target="#delete-resource-file-{{f.pk}}" data-placement="auto" title="Delete" class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>
                                 {% endif %}
                                 <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip" data-placement="auto" title="Download" class="glyphicon glyphicon-download icon-button btn-download"></span></a>
                                 {% if preview %}
@@ -297,6 +320,7 @@
                     {% endfor %}
                 </table>
             </div>
+
             <!-- Buttons -->
             {% for b in cm.bags.all %}
                 <a type="button" class="btn btn-default" href="{{ bag.bag.url }}">
@@ -328,34 +352,23 @@
 					</a>
 				</li>
 				<li>
-					<a href="#spatialTab" data-toggle="tab">
+					<a href="#coveragelTab" data-toggle="tab">
 						<span class="glyphicon glyphicon-globe"></span>
-						&nbspSpatial
+						&nbspCoverage
                     </a>
 				</li>
-
+                {%  if sources %}
                 <li>
 					<a href="#relatedResourcesTab" data-toggle="tab">
 						<span class="glyphicon glyphicon-book"></span>
 						&nbspRelated Resources
                     </a>
 				</li>
+                {%  endif %}
                 <li>
 					<a href="#resourceSpecificTab" data-toggle="tab">
 						<span class="glyphicon glyphicon-folder-close"></span>
 						&nbspResource Specific
-                    </a>
-				</li>
-                <li>
-					<a href="#systemMetadataTab" data-toggle="tab">
-						<span class="glyphicon glyphicon-cog"></span>
-						&nbspSystem Metadata
-                    </a>
-				</li>
-                <li>
-					<a href="#commentsTab" data-toggle="tab">
-						<span class="glyphicon glyphicon-comment"></span>
-						&nbspComments
                     </a>
 				</li>
 			</ul>
@@ -365,69 +378,60 @@
 			<div class="tab-content">
                 <!-- ========= CONTACT TAB ========= -->
 				<div class="tab-pane active" id="contactTab">
-                    <div class="division-title"><p>Creators</p></div>
+
                     <div>
                         <table class="table table-striped">
-                            <thead>
-                                <tr>
+                            <tbody>
+                                <tr><th class="division-title">Authors</th></tr>
+                                 <tr class="header-row">
                                     <th>Name</th>
-                                    <th>HydroShare User Identifier</th>
                                     <th>Organization</th>
                                     <th>Address</th>
                                     <th>Phone</th>
-                                    <th>Home page</th>
                                 </tr>
-                            </thead>
-
-                            <tbody>
                                 {% for cr in creators %}
                                     <tr>
                                         <td>{{ cr.name }}</td>
-                                        <td>{{ cr.description }}</td>
                                         <td>{{ cr.organization }}</td>
                                         <td>{{ cr.address }}</td>
                                         <td>{{ cr.phone }}</td>
-                                        <td><a target="_blank" href="{{ cr.homepage }}">{{ cr.homepage }}</a></td>
                                     </tr>
                                 {% endfor %}
-                            </tbody>
-                        </table>
-                        {% if contributors %}
-                            <hr>
-                            <div class="division-title"><p>Contributors</p></div>
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>HydroShare User Identifier</th>
-                                        <th>Organization</th>
-                                        <th>Address</th>
-                                        <th>Phone</th>
-                                        <th>Home page</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
+                                <tr><th class="division-title">Contributors</th></tr>
+                                 <tr class="header-row">
+                                    <th>Name</th>
+                                    <th>Organization</th>
+                                    <th>Address</th>
+                                    <th>Phone</th>
+                                </tr>
+                                {% if contributors %}
                                     {% for cont in contributors %}
                                         <tr>
                                             <td>{{ cont.name }}</td>
-                                            <td>{{ cont.description }}</td>
                                             <td>{{ cont.organization }}</td>
                                             <td>{{ cont.address }}</td>
                                             <td>{{ cont.phone }}</td>
-                                            <td><a target="_blank" href="{{ cont.homepage }}">{{ cont.homepage }}</a></td>
                                         </tr>
                                     {% endfor %}
-                                </tbody>
-                            </table>
-                        {% endif %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+
                     </div>
 				</div>
-                <!-- ========= SPATIAL TAB ========= -->
-				<div class="tab-pane" id="spatialTab">
+                <!-- ========= COVERAGE TAB ========= -->
+				<div class="tab-pane" id="coveragelTab">
+                    <div class="division-title"><p>Spatial</p></div>
 					<table class="table">
 						<tbody>
                             {% if spatial_coverage.type == 'point' %}
+{#                                TODO: find a place for doi field#}
+{#                                {% if cm.doi %}#}
+{#                                <tr>#}
+{#								    <th scope="row" class="dataset-label">DOI:</th>#}
+{#								    <td class="dataset-details"><a id="permalink" href="http://{{ request.get_host }}/r/doi/{{ cm.doi }}/">{{ cm.doi }}</a></td>#}
+{#							    </tr>#}
+{#                                {% endif %}#}
                                 {% if spatial_coverage.name %}
                                     <tr>
                                         <th scope="row" class="dataset-label">Place/Area Name:</th>
@@ -506,9 +510,24 @@
                             {% endif %}
 						</tbody>
 					</table>
+                    <div class="division-title"><p>Temporal</p></div>
+                    {%  if temporal_coverage %}
+                        <table class="table">
+						    <tbody>
+                                <tr>
+                                    <th scope="row" class="dataset-label">Start Date:</th>
+                                    <td class="dataset-details">{{ temporal_coverage.start_date }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="dataset-label">End Date:</th>
+                                    <td class="dataset-details">{{ temporal_coverage.end_date }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    {%  endif %}
 				</div>
-
                 <!-- ========= RELATED RESOURCES TAB ========= -->
+                {%  if sources %}
                 <div class="tab-pane" id="relatedResourcesTab">
 					<table class="table">
 						<tbody>
@@ -527,6 +546,7 @@
 						</tbody>
 					</table>
 				</div>
+                {%  endif %}
                 <!-- ========= RESOURCE SPECIFIC TAB ========= -->
                 <div class="tab-pane" id="resourceSpecificTab">
 {#                    TODO: resource specific fields#}
@@ -544,94 +564,15 @@
 {#                        <button class="btn btn-primary" id="add-dcterm" data-toggle="modal" data-target="#add-dcterm-dialog">Add metadata term</button>#}
 {#                    {% endif %}#}
 				</div>
-                <!-- ========= SYSTEM METADATA TAB ========= -->
-                <div class="tab-pane" id="systemMetadataTab">
-					<table class="table">
-						<tbody>
-							<tr>
-								<th scope="row" class="dataset-label">Language:</th>
-								<td class="dataset-details">{{ language }}</td>
-							</tr>
-                            <tr>
-								<th scope="row" class="dataset-label">Resource Type:</th>
-								<td class="dataset-details">{{ resource_type }}</td>
-							</tr>
-                            <tr>
-								<th scope="row" class="dataset-label">Owner:</th>
-								<td class="dataset-details">{{ cm.user|contact|safe }}</td>
-							</tr>
-                            <tr>
-								<th scope="row" class="dataset-label">Added on:</th>
-								<td class="dataset-details">{{ cm.created|date }}</td>
-							</tr>
-
-                            {%  if temporal_coverage %}
-                                <tr>
-                                    <th scope="row" class="dataset-label">Start Date:</th>
-                                    <td class="dataset-details">{{ temporal_coverage.start_date }}</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row" class="dataset-label">End Date:</th>
-                                    <td class="dataset-details">{{ temporal_coverage.end_date }}</td>
-                                </tr>
-                            {%  endif %}
-
-                            <tr>
-								<th scope="row" class="dataset-label">Last updated:</th>
-								<td class="dataset-details">{{ cm.updated|date }}, by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td>
-							</tr>
-                            <tr>
-								<th scope="row" class="dataset-label">Permalink:</th>
-								<td class="dataset-details"><a id="permalink" href="http://{{ request.get_host }}/resource/{{ cm.short_id }}/">http://{{ request.get_host }}/resource/{{ cm.short_id }}/</a></td>
-							</tr>
-
-                            {% if cm.doi %}
-                                <tr>
-								    <th scope="row" class="dataset-label">DOI:</th>
-								    <td class="dataset-details"><a id="permalink" href="http://{{ request.get_host }}/r/doi/{{ cm.doi }}/">{{ cm.doi }}</a></td>
-							    </tr>
-                            {% elif page.perms.change %}
-                                {% comment %}
-                                <tr>
-								    <th scope="row" class="dataset-label">DOI:</th>
-								    <td class="dataset-details"><button class='btn btn-danger' data-toggle="modal" data-target="#submit-for-publication-dialog">Submit for publication</button></td>
-							    </tr>
-							    {% endcomment %}
-                            {% endif %}
-                            {% if cm.public %}
-                                <tr>
-								    <th scope="row" class="dataset-label">Sharing Status:</th>
-								    <td class="dataset-details text-success">Public</td>
-							    </tr>
-                            {% else %}
-                                <tr>
-								    <th scope="row" class="dataset-label">Sharing Status:</th>
-								    <td class="dataset-details text-danger">Private</td>
-							    </tr>
-                            {% endif %}
-{#                            <tr>#}
-{#                                <th scope="row" class="dataset-label">Metadata Status:</th>#}
-{##}
-{#                                {%  if metadata_status == "Insufficient to make public" %}#}
-{#                                    <td class="dataset-details text-danger">{{ metadata_status }}</td>#}
-{#                                {%  else %}#}
-{#                                    <td class="dataset-details text-success">{{ metadata_status }}</td>#}
-{#                                {%  endif %}#}
-{#                            </tr>#}
-						</tbody>
-					</table>
-				</div>
-                <!-- ========= COMMENTS  TAB ========= -->
-                <div class="tab-pane" id="commentsTab">
-                    {% if not metadata_form %}
-                        {% comments_for cm %}
-                    {% endif %}
-                </div>
 			</div>
 		</div>
 	</div>
 {% endif %}
     <!-- ==== Tabs end ==== -->
+
+    {% if not metadata_form %}
+        {% comments_for cm %}
+    {% endif %}
 
     <div class="row">
         <div class="col-md-12">

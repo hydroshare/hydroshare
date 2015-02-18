@@ -101,6 +101,9 @@ $(document).ready(function() {
         $("#citation-text").append("<a href='" + citationUrl + "'>" + citationUrl + "</a>");        // Append the clickable url
     }
 
-
-
+    // Remove last comma from authors list
+	//===================
+    var authors = $("#authors");
+    var str = authors.text();
+    authors.text(str.substr(0, str.lastIndexOf(",")));
 });

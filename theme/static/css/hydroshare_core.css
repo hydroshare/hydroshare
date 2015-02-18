@@ -897,13 +897,14 @@ table.table-plain td{
     font-size: 20px;
     font-weight: 500;
     margin-left: 7px;
+    background-color: #FFF !important;
 
 }
 
 .page-title{
     font-weight: 500;
     margin: 30px 0px;
-    margin-top: 0;
+    margin-top: 10px;
 }
 
 .label-file-name{
@@ -940,7 +941,7 @@ body > .container{
     border: 0;
     background-color: transparent;
     float:right;
-    margin:0 5px;
+    margin:0 10px;
 }
 
 .icon-button:hover {
@@ -957,7 +958,6 @@ body > .container{
 
 .info-icon{
     color:#B6B6B6;
-    float:right;
     margin-top: 4px;
 }
 
@@ -1042,6 +1042,19 @@ body > .container{
     /*font-style:italic;*/
 }
 
+#rights{
+    /*margin-top: 50px;*/
+    /*margin-bottom:10px;*/
+}
+
+div#sharing-status {
+    height: 34px;
+}
+
+.info-group {
+    margin-top: -30px;
+}
+
 .tag-list {
     margin: 0;
     list-style: none;
@@ -1102,6 +1115,10 @@ a.tag:hover {
     margin-bottom: 20px;
     border: 1px solid #ddd;
     padding: 5px 10px;
+}
+
+.header-row{
+    border-bottom:1px solid #ddd;
 }
 
 .custom-well{
