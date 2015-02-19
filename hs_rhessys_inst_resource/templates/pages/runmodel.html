@@ -275,7 +275,7 @@
       <div>
 	<em>Model command line parameters:</em><br />{{ run.model_command_line_parameters }}<br /><br />
 	{% if run.TEC_FILE %}
-	<em>TEC file:</em><br /><pre>{{ run.TEC_FILE }}</pre><br /><br />
+	<em>TEC events:</em><br /><pre>{{ run.TEC_FILE }}</pre><br /><br />
 	{% endif %}
 	{% if run.CLIMATE_STATION %}
 	<em>Climate station:</em>&nbsp;{{ run.CLIMATE_STATION }}<br />
@@ -310,7 +310,7 @@
               poll();
             }
           }, dataType: "json", error: poll});
-        }, 45000);
+        }, 60000);
       })();
     </script>
     {% endif %}

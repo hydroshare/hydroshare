@@ -31,7 +31,7 @@ class RunModelForm(forms.Form):
     model_command_line_parameters = forms.CharField(label="Model command line parameters", 
                                                     max_length=1024, required=True, 
                                                     widget=forms.Textarea(attrs={'cols':80, 'rows':4}))
-    tec_file = forms.CharField(label="TEC file",
+    tec_file = forms.CharField(label="TEC events",
                                max_length=1024, required=False,
                                widget=forms.Textarea(attrs={'cols':80, 'rows':4}))
     climate_station = forms.ChoiceField(label="Climate station", choices=(('','')), required=False)
