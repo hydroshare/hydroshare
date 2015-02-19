@@ -21,18 +21,29 @@ class ModelOutputFormHelper(BaseFormHelper):
 
 
 class ModelOutputForm(ModelForm):
+    includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelOutputForm, self).__init__(*args, **kwargs)
         self.helper = ModelOutputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelOutput')
+        self.fields['includes_output'].widget.attrs['style'] = "width:auto;margin-top:-5px"
+
+        if len(self.initial) == 0:
+            self.initial['includes_output'] = False
 
     class Meta:
         model = ModelOutput
         fields = ['includes_output']
         exclude = ['content_object']
-        #widgets = {'includes_output': forms.TextInput()}
 
 class ModelOutputValidationForm(forms.Form):
-    includes_output = forms.CharField(max_length=200)
+    includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
+
+    def clean_includes_output(self):
+        data = self.cleaned_data['includes_output']
+        if data == u'False':
+            return False
+        else:
+            return True
 
 #ExecutedBy element forms
 class ExecutedByFormHelper(BaseFormHelper):
