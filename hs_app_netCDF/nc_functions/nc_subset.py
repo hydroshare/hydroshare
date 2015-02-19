@@ -14,6 +14,22 @@ __author__ = 'Tian Gan'
 from nc_utils import *
 from datetime import datetime
 
+request_info = {
+    'file_name': 'prcp.nc',
+    'var_name': 'prcp',
+    'x': ['1', '3'],
+    'y': ['2', '5'],
+    'time': ['2', '8']
+} # false info
+
+request_info = {
+    'file_name': 'prcp.nc',
+    'var_name': 'prcp',
+    'x': ['-974500.0', '-971500.0'],
+    'y': ['14500.0', '8500.0'],
+    'time': ['2011-01-01 12:00:00', '2011-01-02 12:00:00']
+} # true info
+
 nc_subset_info = {
     'file_name': 'sample1.nc',
     'var_name': 'pr',
@@ -76,30 +92,57 @@ def get_nc_variable_dimensions_value(nc_file_name, nc_var_name):
     Return: dimension values for each dimension of the variable
     """
     nc_variable_dimensions_value = OrderedDict()
-    nc_dataset = get_nc_dataset(nc_file_name)
-    nc_variable = get_nc_variable(nc_dataset, nc_var_name)
-    nc_coordinate_variable_namelist = get_nc_coordinate_variable_namelist(nc_dataset)
+    try:
+        nc_dataset = get_nc_dataset(nc_file_name)
+        nc_variable = get_nc_variable(nc_dataset, nc_var_name)
+        nc_coordinate_variable_namelist = get_nc_coordinate_variable_namelist(nc_dataset)
 
-    for var_dim_name in nc_variable.dimensions:
-        if var_dim_name in nc_coordinate_variable_namelist:
-            dim_var = nc_dataset.variables[var_dim_name]
-            dim_values = dim_var[:].tolist()
-            dim_coor_type = get_nc_variable_coordinate_type(dim_var)
-            if dim_coor_type == 'T':
-                time_units = dim_var.units if hasattr(dim_var, 'units') else ''
-                time_calendar = dim_var.calendar if hasattr(dim_var, 'calendar') else 'standard'
-                if time_units and time_calendar:
-                    try:
-                        for i in range(0, len(dim_values)):
-                            dim_values[i] = netCDF4.num2date(dim_values[i], units=time_units, calendar=time_calendar)
-                    except:
-                        pass
-        else:
-            dim_values = range(1, len(nc_dataset.dimensions[var_dim_name])+1)
+        for var_dim_name in nc_variable.dimensions:
+            if var_dim_name in nc_coordinate_variable_namelist:
+                dim_var = nc_dataset.variables[var_dim_name]
+                dim_values = dim_var[:].tolist()
+                dim_coor_type = get_nc_variable_coordinate_type(dim_var)
+                if dim_coor_type == 'T':
+                    time_units = dim_var.units if hasattr(dim_var, 'units') else ''
+                    time_calendar = dim_var.calendar if hasattr(dim_var, 'calendar') else 'standard'
+                    if time_units and time_calendar:
+                        try:
+                            for i in range(0, len(dim_values)):
+                                dim_values[i] = netCDF4.num2date(dim_values[i], units=time_units, calendar=time_calendar)
+                        except:
+                            pass
+            else:
+                dim_values = range(1, len(nc_dataset.dimensions[var_dim_name])+1)
 
-        nc_variable_dimensions_value[var_dim_name] = [str(i) for i in dim_values]
+            nc_variable_dimensions_value[var_dim_name] = [str(i) for i in dim_values]
+    except:
+        pass
 
     return nc_variable_dimensions_value
+
+
+def create_nc_subset_info(request_info):
+    """
+    (dict) -> dict
+
+    Return: the subset info for netcdf. this will be the valid info for subsetting a netcdf variable
+    """
+    nc_subset_info = {}
+    nc_variable_dimensions_value = get_nc_variable_dimensions_value(request_info['file_name'], request_info['var_name'])
+    if set(nc_variable_dimensions_value.keys()).issubset(request_info.keys()):
+        nc_subset_info['file_name'] = request_info['file_name']
+        nc_subset_info['var_name'] = request_info['var_name']
+        for attr, val in request_info.items():
+            if nc_variable_dimensions_value.get(attr) and len(val) == 2:
+                if set(val).issubset(nc_variable_dimensions_value[attr]):
+                    start_index = nc_variable_dimensions_value[attr].index(val[0])
+                    end_index = nc_variable_dimensions_value[attr].index(val[1])
+                    if start_index <= end_index:
+                        nc_subset_info[attr] = [start_index, end_index]
+                    else:
+                        nc_subset_info[attr] = [end_index, start_index]
+
+    return nc_subset_info
 
 
 # Functions for Creating subset Netcdf file ############################################################################
@@ -111,31 +154,33 @@ def create_subset_nc_file(nc_subset_info):
             the netCDF must follow the CF convention otherwise it won't work well
 
     """
+    if nc_subset_info:
+        # define nc_rootgroup
+        nc_rootgroup = define_nc_rootgroup(nc_subset_info)
 
-    # define nc_rootgroup
-    nc_rootgroup = define_nc_rootgroup(nc_subset_info)
+        # define dimensions
+        nc_rootgroup = define_nc_dimensions(nc_rootgroup, nc_subset_info)
 
-    # define dimensions
-    nc_rootgroup = define_nc_dimensions(nc_rootgroup, nc_subset_info)
+        # define coordinate variable
+        nc_rootgroup = define_nc_coordinate_variables(nc_rootgroup, nc_subset_info)
 
-    # define coordinate variable
-    nc_rootgroup = define_nc_coordinate_variables(nc_rootgroup, nc_subset_info)
+        # define data variable
+        nc_rootgroup = define_nc_data_variable(nc_rootgroup, nc_subset_info)
 
-    # define data variable
-    nc_rootgroup = define_nc_data_variable(nc_rootgroup, nc_subset_info)
+        # define grid mapping variable
+        nc_rootgroup = define_nc_grid_mapping_variable(nc_rootgroup, nc_subset_info)
 
-    # define grid mapping variable
-    nc_rootgroup = define_nc_grid_mapping_variable(nc_rootgroup, nc_subset_info)
+        # define auxiliary coordinate variable
+        nc_rootgroup = define_auxiliary_coordinate_variable(nc_rootgroup, nc_subset_info)
 
-    # define auxiliary coordinate variable
-    nc_rootgroup = define_auxiliary_coordinate_variable(nc_rootgroup, nc_subset_info)
+        # define bounds variable
+        nc_rootgroup = define_coordinate_bounds_variable(nc_rootgroup, nc_subset_info)
 
-    # define bounds variable
-    nc_rootgroup = define_coordinate_bounds_variable(nc_rootgroup, nc_subset_info)
+        nc_rootgroup.close()
 
-    nc_rootgroup.close()
-
-    return nc_rootgroup
+        return nc_rootgroup
+    else:
+        return 'Fail to subset netcdf '
 
 
 #  define nc_rootgroup ##############################################################################
