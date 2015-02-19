@@ -89,8 +89,11 @@ def get_nc_variable_dimensions_value(nc_file_name, nc_var_name):
                 time_units = dim_var.units if hasattr(dim_var, 'units') else ''
                 time_calendar = dim_var.calendar if hasattr(dim_var, 'calendar') else 'standard'
                 if time_units and time_calendar:
-                    for i in range(0, len(dim_values)):
-                        dim_values[i] = netCDF4.num2date(dim_values[i], units=time_units, calendar=time_calendar)
+                    try:
+                        for i in range(0, len(dim_values)):
+                            dim_values[i] = netCDF4.num2date(dim_values[i], units=time_units, calendar=time_calendar)
+                    except:
+                        pass
         else:
             dim_values = range(1, len(nc_dataset.dimensions[var_dim_name])+1)
 
