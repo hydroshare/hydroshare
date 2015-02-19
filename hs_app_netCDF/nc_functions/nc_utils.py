@@ -488,7 +488,7 @@ def get_nc_grid_mapping_projection_import_string(nc_dataset):
 
     # get the projection import string
     for proj_name, proj_para_dict in cf_convention_proj_info.items():
-        if re.match(nc_grid_mapping_projection_name, proj_name, re.I):
+        if re.match(proj_name, nc_grid_mapping_projection_name, re.I):
             proj4_string = ''
             for para_name, para_value in proj_para_dict.items():
                 if para_name == '+proj=':
