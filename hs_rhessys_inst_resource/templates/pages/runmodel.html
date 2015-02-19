@@ -16,7 +16,7 @@
 <div class="row">
   <style type="text/css" scoped>
     /* Spinning loader from http://cssload.net/en/ */
-    #floatingBarsG{
+    .floatingBarsG{
     position:relative;
     width:24px;
     height:30px}
@@ -259,7 +259,7 @@
       {% elif run.status == 'Running' %}
       <em>Status:</em>&nbsp;<span id="status-{{ run.token }}" style='color: green;'>{{ run.status }}</span><br /><br />
       <!-- Spinning loader from http://cssload.net/en/ -->
-      <div id="floatingBarsG" style="display: inline-block;">
+      <div class="floatingBarsG" id="progress-{{ run.token }}" style="display: inline-block;">
 	<div class="blockG" id="rotateG_01"></div>
 	<div class="blockG" id="rotateG_02"></div>
 	<div class="blockG" id="rotateG_03"></div>
@@ -296,7 +296,7 @@
             if ( run.status == 'Finished' ) {
               $("#status-{{ run.token }}").html(run.status).css('color', 'black');
               $("#date-finished-{{ run.token }}").html(run.date_finished);
-              $("#floatingBarsG").css('display', 'none');
+              $("#progress-{{ run.token }}").css('display', 'none');
               $("#log-{{ run.token }}").html(run.logs);
 
               results_url = run.results_url;
@@ -304,7 +304,7 @@
             } else if ( run.status == 'Error' ) {
               $("#status-{{ run.token }}").html(run.status).css('color', 'red');
               $("#date-finished-{{ run.token }}").html(run.date_finished);
-              $("#floatingBarsG").css('display', 'none');
+              $("#progress-{{ run.token }}").css('display', 'none');
               $("#log-{{ run.token }}").html(run.logs);
             } else {
               poll();
