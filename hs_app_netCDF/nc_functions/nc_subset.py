@@ -3,8 +3,9 @@ module used to extract data of a netCDF variable based on subset information.
 
 Subset WorkFlow:
 1 User gives a netcdf file name -> show data variables list
-2 User gives a variable name for subset -> check variable subset availability. If yes, show all dimensions data values
-3 Choose the dimension values (start, end) -> check the dimension value (start <= end)(js check).
+2 User gives a variable name for subset -> check variable subset availability.
+                                           If yes, show all dimensions data values and variable meta
+3 Choose the dimension values (start, end) -> check the dimension value.
                                               If yes, create subset netcdf file
 
 """
@@ -29,6 +30,16 @@ request_info = {
     'y': ['14500.0', '8500.0'],
     'time': ['2011-01-01 12:00:00', '2011-01-02 12:00:00']
 } # true info
+
+request_info = {
+    'file_name': 'rtof.nc',
+    'var_name': 'salinity',
+    'MT': ['2013-04-25 06:00:00', '2013-04-25 06:00:00'],
+    'Depth': ['0.0', '200.0'],
+    'Y': ['1', '6'],
+    'X': ['1', '6']
+    }
+
 
 nc_subset_info = {
     'file_name': 'sample1.nc',
@@ -203,13 +214,10 @@ def get_nc_global_attributes(nc_subset_info):
     nc_global_attributes['file_format'] = nc_dataset.file_format
     nc_global_attributes['file_name'] = nc_subset_info['file_name']
 
-    # add or modify the history info
-    new_history = u'\n {0}: subset of "{1}" variable from the original netCDF data by HydroShare website.'\
-        .format(datetime.now().strftime('%a %b %d %X %Y'), nc_subset_info['var_name'])
-    if nc_global_attributes.has_key('history'):
-        nc_global_attributes['history'] += new_history
-    else:
-        nc_global_attributes['history'] = new_history
+    # add or modify the source info
+    new_source = u'{0}: subset of "{1}" variable from the netCDF file {2} shared in HydroShare website.'\
+        .format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), nc_subset_info['var_name'], nc_subset_info['file_name'])
+    nc_global_attributes['source'] = new_source
 
     nc_dataset.close()
     return nc_global_attributes
