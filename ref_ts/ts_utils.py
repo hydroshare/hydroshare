@@ -157,10 +157,14 @@ def parse_1_0_and_1_1(root):
             ts = etree.tostring(time_series)
             values = {}
             for_graph = []
-            units, site_name, variable_name = None, None, None
+            units, site_name, variable_name, latitude, longitude, methodCode, method, QCcode, QClevel = None, None, None, None, None, None, None, None, None
             unit_is_set = False
+            methodCode_set = False
+            QCcode_set = False
             for element in root.iter():
-                brack_lock = element.tag.index('}')  #The namespace in the tag is enclosed in {}.
+                brack_lock = -1
+                if '}' in element.tag:
+                    brack_lock = element.tag.index('}')  #The namespace in the tag is enclosed in {}.
                 tag = element.tag[brack_lock+1:]     #Takes only actual tag, no namespace
                 if 'unitName' == tag:  # in the xml there is a unit for the value, then for time. just take the first
                     if not unit_is_set:
@@ -168,10 +172,40 @@ def parse_1_0_and_1_1(root):
                         unit_is_set = True
                 if 'value' == tag:
                     values[element.attrib['dateTime']] = element.text
+                    if not methodCode_set:
+                        for a in element.attrib:
+                            if 'methodCode' in a:
+                                methodCode = element.attrib[a]
+                                methodCode_set = True
+                            if 'qualityControlLevelCode' in a:
+                                QCcode = element.attrib[a]
+                                QCcode_set = True
                 if 'siteName' == tag:
                     site_name = element.text
                 if 'variableName' == tag:
                     variable_name = element.text
+                if 'latitude' == tag:
+                    latitude = element.text
+                if 'longitude' == tag:
+                    longitude = element.text
+            if methodCode == 1:
+                method = 'No method specified'
+            else:
+                method = 'Unknown method'
+
+            if QCcode == 0:
+                QClevel = "Raw Data"
+            elif QCcode == 1:
+                QClevel = "Quality Controlled Data"
+            elif QCcode == 2:
+                QClevel = "Derived Products"
+            elif QCcode == 3:
+                QClevel = "Interpreted Products"
+            elif QCcode == 4:
+                QClevel = "Knowledge Products"
+            else:
+                QClevel = 'Unknown'
+
             for k, v in values.items():
                 t = time_to_int(k)
                 for_graph.append({'x': t, 'y': float(v)})
@@ -186,21 +220,25 @@ def parse_1_0_and_1_1(root):
                     'units': units,
                     'values': values,
                     'for_graph': for_graph,
-                    'wml_version': '1'}
+                    'wml_version': '1',
+                    'latitude': latitude,
+                    'longitude': longitude,
+                    'QClevel': QClevel,
+                    'method': method}
         else:
             return "Parsing error: The waterml document doesn't appear to be a WaterML 1.0/1.1 time series"
     except:
         return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
 
 def parse_2_0(root):
-    try:
+    #try:
         if 'Collection' in root.tag:
             ts = etree.tostring(root)
             keys = []
             vals = []
             for_graph = []
-            units, site_name, variable_name = None, None, None
-            name_is_set = False
+            QClevel, units, site_name, variable_name, latitude, longitude, method, site_code, variable_code, sample_medium = None, None, None, None, None, None, None, None, None, None
+            name_is_set, site_code_set = False, False
             variable_name = root[1].text
             for element in root.iter():
                 if 'MeasurementTVP' in element.tag:
@@ -210,17 +248,51 @@ def parse_2_0(root):
                             if 'value' in e.tag:
                                 vals.append(e.text)
                 if 'uom' in element.tag:
-                    units = element.text
+                    units = element.attrib['code']
                 if 'MonitoringPoint' in element.tag:
                     for e in element.iter():
+                        if 'identifier' in e.tag and not site_code_set:
+                            site_code = e.text
+                            site_code_set = True
                         if 'name' in e.tag and not name_is_set:
                             site_name = e.text
                             name_is_set = True
+                        if 'pos' in e.tag:
+                            lat_long = e.text
+                            lat_long = lat_long.split(' ')
+                            latitude = lat_long[0]
+                            longitude = lat_long[1]
                 if 'observedProperty' in element.tag:
                     for a in element.attrib:
                         if 'title' in a:
                             variable_name = element.attrib[a]
+                        if 'href' in a:
+                            variable_code = element.attrib[a]
+                            variable_code = variable_code.replace('#', '')
+                if variable_name == 'Unmapped':
+                    try:
+                        if 'vocabulary' in element.attrib:
+                            variable_name = element.text
+                    except:
+                        variable_name = 'Unmapped'
+                if 'ObservationProcess' in element.tag:
+                    for e in element.iter():
+                        if 'processType' in e.tag:
+                            for a in e.attrib:
+                                if 'title' in a:
+                                    method = e.attrib[a]
+                if 'sampledMedium' in element.tag:
+                    for a in element.attrib.iteritems():
+                        if 'title' in a[0]:
+                            sample_medium = a[1]
             values = dict(zip(keys, vals))
+            if variable_name=='Unmapped':
+                for element in root.iter():
+                    if len(element.attrib.values())>0:
+                        if 'vocabulary' in element.attrib.values()[0]:
+                            variable_name = element.text
+                        if 'qualityControlLevelCode' in element.attrib.values()[0] and 'name' in element.tag:
+                            QClevel = element.text
             for k, v in values.items():
                 t = time_to_int(k)
                 for_graph.append({'x': t, 'y': float(v)})
@@ -230,16 +302,22 @@ def parse_2_0(root):
                     smallest_time = t
             return {'time_series': ts,
                     'site_name': site_name,
+                    'site_code': site_code,
                     'start_date': smallest_time,
                     'variable_name': variable_name,
+                    'variable_code': variable_code,
                     'units': units,
                     'values': values,
                     'for_graph': for_graph,
-                    'wml_version': '2.0'}
-        else:
-            return "Parsing error: The waterml document doesn't appear to be a WaterML 2.0 time series"
-    except:
-        return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
+                    'wml_version': '2.0',
+                    'latitude': latitude,
+                    'longitude': longitude,
+                    'QClevel': QClevel,
+                    'method': method,
+                    'sample_medium': sample_medium}
+    #         return "Parsing error: The waterml document doesn't appear to be a WaterML 2.0 time series"
+    # except:
+    #     return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
 
 def map_waterml(xml_doc):
     root = etree.XML(xml_doc)
@@ -255,6 +333,7 @@ def map_waterml(xml_doc):
     elif not version:
         return False
 
+#performs getValues call and returns (through parsing fxns) time series and parsed data from response
 def time_series_from_service(service_url, soap_or_rest, **kwargs):
     """
     keyword arguments are given by CAUHSI WOF standard :
@@ -317,7 +396,8 @@ due to incorrect formatting in the web service format.")
     else:
         raise Http404()
 
-def create_vis(data, xlab, variable_name, units):
+#creates vis and returns open file
+def create_vis(path, varcode, site_code, data, xlab, variable_name, units):
     loc = AutoDateLocator()
     fmt = AutoDateFormatter(loc)
     fmt.scaled[365.0] = '%y'
@@ -351,10 +431,14 @@ def create_vis(data, xlab, variable_name, units):
     ax.autoscale_view()
 
     ax.grid(True)
-    savefig('visualization.png', bbox_inches='tight')
-    return 'visualization.png'
+    vis_name = 'visualization-'+site_code+'-'+varcode+'.png'
+    vis_path = path+vis_name
+    savefig(vis_path, bbox_inches='tight')
+    vis_file = open(vis_path, 'r')
+    return vis_file
 
-def make_files(reference_type, url, data_site_code, variable_code, title):
+#gets time series, creates the metadata terms, creates the files and returns them
+def make_files(shortkey, reference_type, url, data_site_code, variable_code, title):
 
     ts, csv_link, csv_size, xml_link, xml_size = {}, '', '', '', ''
     if reference_type == 'rest':
@@ -367,12 +451,40 @@ def make_files(reference_type, url, data_site_code, variable_code, title):
                                       site_name_or_code=data_site_code,
                                       variable_code=variable_code)
 
+    #update/create metadata elements
+    res = hydroshare.get_resource_by_shortkey(shortkey)
+    s = res.metadata.sites.all()[0]
+    hydroshare.resource.update_metadata_element(
+        shortkey,
+        'Site',
+        s.id,
+        latitude=ts['latitude'],
+        longitude=ts['longitude'])
+    v = res.metadata.variables.all()[0]
+    hydroshare.resource.update_metadata_element(
+        shortkey,
+        'Variable',
+        v.id,
+        sample_medium=ts.get('sample_medium', 'unknown')
+        )
+    hydroshare.resource.create_metadata_element(
+        shortkey,
+        'QualityControlLevel',
+        value=ts['QClevel'],
+        )
+    hydroshare.resource.create_metadata_element(
+        shortkey,
+        'Method',
+        value=ts['method'],
+        )
+
+
 
     vals = ts['values']
     for_graph = ts['for_graph']
     units = ts['units']
     variable_name = ts['variable_name']
-    vis_name = create_vis(for_graph, 'Date', variable_name, units)
+    vis_file = create_vis("", variable_code, data_site_code, for_graph, 'Date', variable_name, units)
     version = ts['wml_version']
     d = datetime.today()
     date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
@@ -399,7 +511,6 @@ def make_files(reference_type, url, data_site_code, variable_code, title):
     with open(xml_name, 'wb') as xml_file:
         xml_file.write(ts['time_series'])
     csv_file = open(csv_name, 'r')
-    vis_file = open(vis_name, 'r')
     files = []
     if version == '1' or version == '1.0':
         wml1_file = open(xml_name, 'r')
@@ -411,16 +522,16 @@ def make_files(reference_type, url, data_site_code, variable_code, title):
         files = [csv_file, wml2_file, vis_file]
         return files
 
-
+#this fxn creates the calls the make files fxn and adds the files as resource files
 def generate_files(shortkey):
     res = hydroshare.get_resource_by_shortkey(shortkey)
-    files = make_files(res.reference_type, res.url, res.data_site_code, res.variable_code, res.title)
+    files = make_files(res.short_id, res.reference_type, res.url, res.metadata.sites.all()[0].code, res.metadata.variables.all()[0].code, res.title)
     for f in files:
         hydroshare.add_resource_files(res.short_id, f)
         os.remove(f.name)
     create_bag(res)
 
-
+#transforms wml1.1 to wml2.0
 def transform_file(reference_type, url, data_site_code, variable_code, title):
     if reference_type == 'soap':
         client = Client(url)

@@ -1634,6 +1634,22 @@ class CoreMetaData(models.Model):
         return True
 
     # this method needs to be overriden by any subclass of this class
+    # if they implement additional metadata elements that are required
+    def get_required_missing_elements(self):
+        missing_required_elements = []
+
+        if not self.title:
+            missing_required_elements.append('Title')
+        if not self.description:
+            missing_required_elements.append('Abstract')
+        if not self.rights:
+            missing_required_elements.append('Rights')
+        if self.subjects.count() == 0:
+            missing_required_elements.append('Keywords')
+
+        return missing_required_elements
+
+    # this method needs to be overriden by any subclass of this class
     def delete_all_elements(self):
         if self.title: self.title.delete()
         if self.description: self.description.delete()

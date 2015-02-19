@@ -285,7 +285,9 @@ INSTALLED_APPS = (
     "django_docker_processes",
     #"hs_geo_raster_resource",
     "djcelery",
-    #"ref_ts",
+    "ref_ts",
+    "hs_modelinstance",
+    "hs_app_timeseries",
     "widget_tweaks",
 )
 
