@@ -275,7 +275,7 @@ INSTALLED_APPS = (
     "autocomplete_light",
     "jquery_ui",
     "tastypie",
-    # "tastypie_swagger",
+    #"tastypie_swagger",
     "ga_ows",
     "ga_resources",
     "dublincore",
