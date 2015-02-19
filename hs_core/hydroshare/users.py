@@ -1,9 +1,13 @@
+import json
+
 from django.core.exceptions import MultipleObjectsReturned
 from django.contrib.auth.models import User, Group
+from django.core import exceptions
+from django.core import signing
+
 from hs_core.models import GroupOwnership
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
-from django.core import exceptions
-import json
+
 
 def set_resource_owner(pk, user):
     """
@@ -190,14 +194,15 @@ def create_account(
     ApiKey.objects.get_or_create(user=u)
 
     try:
+        token = signing.dumps('verify_user_email:{0}:{1}'.format(u.pk, u.email))
         u.email_user(
             'Please verify your new Hydroshare account.',
             """
 This is an automated email from Hydroshare.org. If you requested a Hydroshare account, please
-go to http://{domain}/verify/{uid}/ and verify your account.
+go to http://{domain}/verify/{token}/ and verify your account.
 """.format(
             domain=Site.objects.get_current().domain,
-            uid=u.pk
+            token=token
         ))
     except:
         pass # FIXME should log this instead of ignoring it.

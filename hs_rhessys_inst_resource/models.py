@@ -12,7 +12,9 @@ from django.shortcuts import get_object_or_404
 import django.dispatch
 from .forms import InputForm
 from mezzanine.pages.page_processors import processor_for
-from hs_core.hydroshare.resource import post_create_resource
+#from hs_core.hydroshare.resource import post_create_resource
+from hs_core.signals import *
+#from hs_core.views import pre_describe_resource
 from django.utils.timezone import now
 from django.dispatch import receiver
 import zipfile
@@ -21,9 +23,9 @@ import cStringIO as StringIO
 import os
 
 #
-# To create a new resource, use these three super-classes.
+# To create a new resource, use these two super-classes.
 #
-class InstResource(Page, RichText, AbstractResource):
+class InstResource(Page, AbstractResource):
     class Meta:
         verbose_name = 'RHESSys Instance Resource'
     name = models.CharField(max_length=50)
@@ -71,7 +73,36 @@ def when_my_process_fails(sender, instance, error_text=None, error_data=None, lo
 finished = signals.process_finished.connect(when_my_process_ends, weak=False)
 error_handler = signals.process_aborted.connect(when_my_process_fails, weak=False)
 
-@receiver(post_create_resource)
+# @receiver(pre_describe_resource, sender=InstResource)
+# def rhessys_describe_resource_trigger(sender, **kwargs):
+#     if(sender is InstResource):
+#         files = kwargs['files']
+#         if(files):
+#             # Assume only one file in files, and that that file is a zipfile
+#             infile = files[0]
+#             infile.open('rb')
+#             zfile = zipfile.ZipFile(infile)
+#
+#             # Get list of files in zipfile
+#             zlist = zfile.namelist()
+#             # Assume zipfile contains a single directory
+#             root = zlist[0]
+#
+#             # Read metadata.txt from zipfile
+#             metadataFilename = os.path.join(root, 'metadata.txt')
+#
+#             metadata = zfile.read(metadataFilename)
+#
+#             # Read metadata into ConfigParser
+#             md = ConfigParser.ConfigParser()
+#             md.readfp(StringIO.StringIO(metadata))
+#
+#             text = md.get('rhessys', 'model_description')
+#             zfile.close()
+#             return {"res_title": text}
+
+
+@receiver(post_create_resource, sender=InstResource)
 def rhessys_post_trigger(sender, **kwargs):
     if sender is InstResource:
         resource = kwargs['resource']
@@ -146,5 +177,15 @@ def main_page(request, page):
             'commit_id' : content_model.commit_id,
             'study_area_bbox' : content_model.study_area_bbox
         })
+    from dublincore import models as dc
+    from django import forms
+    class DCTerm(forms.ModelForm):
+        class Meta:
+            model=dc.QualifiedDublinCoreElement
+            fields = ['term', 'content']
 
-    return  {'form': form}
+    return  {'form': form,
+             'resource_type' : content_model._meta.verbose_name,
+             'dublin_core' : [t for t in content_model.dublin_metadata.all().exclude(term='AB')],
+             'dcterm_frm' : DCTerm()
+            }

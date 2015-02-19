@@ -7,16 +7,18 @@ from django.contrib.auth.models import User
 from mezzanine.generic.models import Keyword, AssignedKeyword
 from dublincore.models import QualifiedDublinCoreElement
 from hs_core.hydroshare import hs_bagit
-from hs_core.hydroshare.utils import get_resource_types
+from hs_core.hydroshare.utils import get_resource_types, current_site_url
 from hs_core.models import ResourceFile
+from hs_core import signals
 from . import utils
 import os
+import mimetypes
 
-pre_create_resource = django.dispatch.Signal(providing_args=['dublin_metadata', 'files'])
-post_create_resource = django.dispatch.Signal(providing_args=['resource'])
+#pre_create_resource = django.dispatch.Signal(providing_args=['dublin_metadata', 'metadata', 'files'])
+#post_create_resource = django.dispatch.Signal(providing_args=['resource', 'metadata'])
 
-file_size_limit =  4*(1024 ** 3)
-file_size_limit_for_display = '4G'
+file_size_limit = 10*(1024 ** 3)
+file_size_limit_for_display = '10G'
 
 def get_resource(pk):
     """
@@ -262,12 +264,47 @@ def get_checksum(pk):
     """
     raise NotImplemented()
 
+def check_resource_files(files=()):
+    """
+    internally used method to check whether the uploaded files are within
+    the supported maximal size limit
+
+    Parameters:
+    files - list of Django File or UploadedFile objects to be attached to the resource
+    Returns:    True if files are supported; otherwise, returns False
+    """
+    for file in files:
+        if hasattr(file, '_size'):
+            if file._size > file_size_limit:
+                # file is greater than file_size_limit, which is not allowed
+                return False
+        else:
+            if os.stat(file).st_size > file_size_limit:
+                # file is greater than file_size_limit, which is not allowed
+                return False
+    return True
+
+def check_resource_type(resource_type):
+    """
+    internally used method to check the resource type
+
+    Parameters:
+    resource_type: the resource type string to check
+    Returns:  the resource type class matching the resource type string; if no match is found, returns None
+    """
+    for tp in get_resource_types():
+        if resource_type == tp.__name__:
+            res_cls = tp
+            break
+    else:
+        raise NotImplementedError("Type {resource_type} does not exist".format(resource_type=resource_type))
+    return res_cls
 
 def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=None, dublin_metadata=None, metadata=None,
-        files=(), **kwargs):
+        keywords=None, dublin_metadata=None, metadata=None, content=None,
+        files=(), res_type_cls=None, resource=None, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
     HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method
@@ -314,6 +351,20 @@ def create_resource(
 
     :return: a new resource which is an instance of resource_type.
     """
+    # if files:
+    #     check_file = True
+    #     for file in files:
+    #         if file.closed:
+    #             check_file = False
+    # else:
+    #     check_file = False
+    # if check_file:
+    #     valid = check_resource_files(files)
+    #     if not valid:
+    #         return None
+    # if res_type_cls is None:
+    #     res_type_cls = check_resource_type(resource_type)
+
     for tp in get_resource_types():
         if resource_type == tp.__name__:
             cls = tp
@@ -327,9 +378,32 @@ def create_resource(
             return None
 
     # Send pre-create resource signal
-    pre_create_resource.send(sender=cls, dublin_metadata=dublin_metadata, files=files, **kwargs)
 
+    #signals.pre_create_resource.send(sender=res_type_cls, dublin_metadata=dublin_metadata, metadata=metadata, files=files, resource=resource, **kwargs)
     owner = utils.user_from_id(owner)
+
+    # if resource is None:
+    #     # create the resource
+    #     resource = res_type_cls.objects.create(
+    #         user=owner,
+    #         creator=owner,
+    #         title=title,
+    #         last_changed_by=owner,
+    #         in_menus=[],
+    #         **kwargs
+    #     )
+    #     for file in files:
+    #         ResourceFile.objects.create(content_object=resource, resource_file=file)
+    # else:
+    #     # resource is already created with minimum barebone right after the resource files are uploaded, update resource accordingly with more info
+    #     resource.user = owner
+    #     resource.creator = owner
+    #     resource.title = title
+    #     #tid = resource.content_object.Title.object_id
+    #     #resource.title.update(res_type_cls, tid, {"value":title})
+    #     resource.last_changed_by = owner
+    #     resource.content = content
+    #     resource.save()
 
     # create the resource
     resource = cls.objects.create(
@@ -340,8 +414,28 @@ def create_resource(
         in_menus=[],
         **kwargs
     )
+
+    # by default make resource private
+    resource.public = False
+    resource.save()
+
+    if not metadata:
+        metadata = []
+
+    file_format_types = []
     for file in files:
         ResourceFile.objects.create(content_object=resource, resource_file=file)
+
+        file_format_type = utils.get_file_mime_type(file.name)
+        if file_format_type not in file_format_types:
+            file_format_types.append(file_format_type)
+            metadata.append({'format': {'value': file_format_type}})
+
+    if 'owner' in kwargs:
+        owner = utils.user_from_id(kwargs['owner'])
+        resource.view_users.add(owner)
+        resource.edit_users.add(owner)
+        resource.owners.add(owner)
 
     resource.view_users.add(owner)
     resource.edit_users.add(owner)
@@ -375,6 +469,7 @@ def create_resource(
             AssignedKeyword.objects.create(content_object=resource, keyword=k)
 
     # for creating metadata elements based on the old metadata implementation
+    # TODO: Pabitra: This needs to go
     if dublin_metadata:
         for d in dublin_metadata:
             QualifiedDublinCoreElement.objects.create(
@@ -391,6 +486,21 @@ def create_resource(
             k, v = element.items()[0]
             resource.metadata.create_element(k, **v)
 
+    resource.metadata.create_element('identifier', name='hydroShareIdentifier',
+                                     url='{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id))
+    resource.metadata.create_element('date', type='created', start_date=resource.created)
+    resource.metadata.create_element('date', type='modified', start_date=resource.updated)
+
+    if resource.creator.first_name:
+        first_creator_name = "{first_name} {last_name}".format(first_name=resource.creator.first_name,
+                                                                   last_name=resource.creator.last_name)
+    else:
+        first_creator_name = resource.creator.username
+
+    first_creator_email = resource.creator.email
+
+    resource.metadata.create_element('creator', name=first_creator_name, email=first_creator_email, order=1)
+
     # add the subject elements from the AssignedKeywords (new metadata implementation)
     for akw in AssignedKeyword.objects.filter(object_pk=resource.id).all():
         resource.metadata.create_element('subject', value=akw.keyword.title)
@@ -400,13 +510,12 @@ def create_resource(
                 content_object=resource
             )
 
+    # Send post-create resource signal
+    signals.post_create_resource.send(sender=res_type_cls, resource=resource, metadata=metadata, **kwargs)
+
     hs_bagit.create_bag(resource)
 
-    # Send post-create resource signal
-    post_create_resource.send(sender=cls, resource=resource)
-
     return resource
-        
 
 def update_resource(
         pk,
@@ -693,6 +802,10 @@ def delete_resource_file(pk, filename):
     else:
         raise ObjectDoesNotExist(filename)
 
+    if resource.public:
+        if not resource.can_be_public:
+            resource.public = False
+            resource.save()
     return filename
 
 

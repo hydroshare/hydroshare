@@ -149,6 +149,14 @@ TEMPLATE_LOADERS = (
     "django.template.loaders.app_directories.Loader",
 )
 
+# make django file uploader to always write uploaded file to a temporary directory
+# rather than holding uploaded file in memory for small files. This is due to
+# the difficulty of metadata extraction from an uploaded file being held in memory
+# by Django, e.g., gdal raster metadata extraction opens file from disk to extract
+# metadata. Besides, performance gain from holding small uploaded files in memory
+# is not that great for our project use case
+FILE_UPLOAD_MAX_MEMORY_SIZE = 0
+
 AUTHENTICATION_BACKENDS = ("mezzanine.core.auth_backends.MezzanineBackend",)
 
 # List of finder classes that know how to find static files in
@@ -231,6 +239,8 @@ ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
 # Don't forget to use absolute paths, not relative paths.
 TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
 
+ADAPTOR_INPLACEEDIT_EDIT = 'hs_core.models.HSAdaptorEditInline'
+INPLACE_SAVE_URL = '/hsapi/save_inline/'
 
 ################
 # APPLICATIONS #
@@ -246,6 +256,7 @@ INSTALLED_APPS = (
     "django.contrib.sitemaps",
     "django.contrib.staticfiles",
     "django.contrib.gis",
+    "inplaceeditform",
     "django_nose",
     "django_irods",
     "theme",
@@ -262,16 +273,20 @@ INSTALLED_APPS = (
     "mezzanine.accounts",
     "mezzanine.mobile",
     "autocomplete_light",
+    "jquery_ui",
     "tastypie",
-    # "tastypie_swagger",
+    #"tastypie_swagger",
     "ga_ows",
     "ga_resources",
     "dublincore",
     "hs_core",
     "hs_metrics",
-    "hs_rhessys_inst_resource",
+    #"hs_rhessys_inst_resource",
     "django_docker_processes",
+    #"hs_geo_raster_resource",
     "djcelery",
+    #"ref_ts",
+    "widget_tweaks",
 )
 
 # List of processors used by RequestContext to populate the context.
@@ -394,3 +409,4 @@ TASTYPIE_SWAGGER_API_MODULE = 'hydroshare.urls.v1_api'
 
 #
 AUTH_PROFILE_MODULE = "theme.UserProfile"
+CRISPY_TEMPLATE_PACK = 'bootstrap'

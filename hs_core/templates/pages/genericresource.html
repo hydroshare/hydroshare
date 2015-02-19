@@ -1,6 +1,6 @@
 {% extends 'pages/page.html' %}
 
-{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags %}
+{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags inplace_edit %}
 
 {% block main %}
 
@@ -29,14 +29,26 @@
             <tr><th>Added on</th><td>{{ cm.created|date }}</td></tr>
             <tr><th>Last updated by</th><td>{% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
             <tr><th>Updated on</th><td>{{ cm.updated|date }}</td></tr>
-            <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>
+{#            <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>#}
             <tr><th>Size</th><td>{{ cm.bags.first.bag.size|filesizeformat }}</td></tr>
-            <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/r/{{ cm.short_id }}/">http://{{ request.get_host }}/r/{{ cm.short_id }}/</a></td></tr>
+            <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/resource/{{ cm.short_id }}/">http://{{ request.get_host }}/resource/{{ cm.short_id }}/</a></td></tr>
             {% if cm.doi %}
             <tr><th>DOI</th><td><a id="permalink" href="http://{{ request.get_host }}/r/doi/{{ cm.doi }}/">{{ cm.doi }}</a></td></tr>
             {% elif page.perms.change %}
             {% comment %}<tr><th>DOI</th><td><button class='btn btn-danger' data-toggle="modal" data-target="#submit-for-publication-dialog">Submit for publication</button></td></tr>{% endcomment %}
             {% endif %}
+            {% if cm.public %}
+                <tr><th>Sharing Status</th><td id="sharing-status">Public</td></tr>
+            {% else %}
+                <tr><th>Sharing Status</th><td id="sharing-status">Private</td></tr>
+            {% endif %}
+            <tr><th>Metadata Status</th>
+                {%  if metadata_status == "Insufficient to make public" %}
+                    <td id="metadata-status" class="text-danger">{{ metadata_status }}</td></tr>
+                {%  else %}
+                    <td id="metadata-status" class="text-success">{{ metadata_status }}</td></tr>
+                {%  endif %}
+            <tr><th>How to cite</th><td>{{ citation }}</td></tr>
         </table>
 
     </div>
@@ -44,44 +56,312 @@
 
     <div class="row">
         <div class="col-md-12">
-            <h2>Resource Description</h2>
+            <h2>Science Metadata</h2>
 
-            {% if cm.content %}
-                {% editable cm.content %}
-                <h4>Abstract</h4>
-                {{ cm.content|richtext_filters|safe }}
-                {% endeditable %}
-            {% endif %}
+            <div class="form-group">
+               {% if metadata_form %}
+                    <button id="metadata-show-toggle" type="button" class="btn btn-primary" onclick="toggle_metadata_display()">Collapse All</button>
+                     {% crispy metadata_form %}
+               {% else %}
+                   {% if page.perms.change %}
+                       <form action="{{ cm.get_absolute_url }}" method="post">
+                        {% csrf_token %}
+                        <input name="resource-mode" type="hidden" value="edit"/>
+                        <button id="edit-metadata" type="submit" class="btn btn-primary">Edit</button>
+                        </form>
+                   {% endif %}
+                   <div>
+                       {% if metadata_status == "Insufficient to make public" %}
+                            <table class="table table-condensed" style="margin-top: 2px; border: 2px solid red">
+                                <tr style="color: red"><td><h4>Data for the following required elements are missing:</h4></td></tr>
+                                {% if not abstract %}
+                                    <tr><td>Abstract</td></tr>
+                                {% endif %}
+                                {% if not keywords %}
+                                    <tr><td>Keywords</td></tr>
+                                {% endif %}
+                                {% if title|stringformat:"s" == "Untitled resource" %}
+                                    <tr><td>Title:Needs to be changed</td></tr>
+                                {% endif %}
+                            </table>
+                       {% endif %}
+                   </div>
+                   <div>
+                    <h4><strong>Title:</strong></h4>
+                    <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                    {{ title }}
+                    <hr>
+                   </div>
+                   <div>
+                   {%  if abstract %}
+                    <h4><strong>Abstract:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        {{ abstract }}
+                    <hr>
+                   {%  endif %}
+                   </div>
+                   <div>
+                    <h4><strong>Creators:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                       {% for cr in creators %}
+                           <div class="row">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ cr.name }}</div>
+                           </div>
+                           {% if cr.description %}
+                               <div class="row">
+                               <div class="col-sm-4"><strong>HydroShare User Identifier:</strong></div>
+                               <div class="col-sm-8">{{ cr.description }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cr.organization %}
+                               <div class="row">
+                               <div class="col-sm-4"><strong>Organization:</strong></div>
+                               <div class="col-sm-8">{{ cr.organization }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cr.address %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Address:</strong></div>
+                                <div class="col-sm-8">{{ cr.address }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cr.phone %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Phone:</strong></div>
+                                <div class="col-sm-8">{{ cr.phone }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cr.homepage %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Home Page:</strong></div>
+                                <div class="col-sm-8">{{ cr.homepage }}</div>
+                               </div>
+                           {% endif %}
+                        <hr>
+                       {% endfor %}
+                    </div>
+                   <div>
+                   {% if contributors %}
+                    <h4><strong>Contributors:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                       {% for cont in contributors %}
+                           <div class="row">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ cont.name }}</div>
+                           </div>
+                           {% if cont.description %}
+                               <div class="row">
+                               <div class="col-sm-4"><strong>HydroShare User Identifier:</strong></div>
+                               <div class="col-sm-8">{{ cont.description }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cont.organization %}
+                               <div class="row">
+                               <div class="col-sm-4"><strong>Organization:</strong></div>
+                               <div class="col-sm-8">{{ cont.organization }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cont.address %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Address:</strong></div>
+                                <div class="col-sm-8">{{ cont.address }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cont.phone %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Phone:</strong></div>
+                                <div class="col-sm-8">{{ cont.phone }}</div>
+                               </div>
+                           {% endif %}
+                           {% if cont.homepage %}
+                               <div class="row">
+                                <div class="col-sm-4"><strong>Home Page:</strong></div>
+                                <div class="col-sm-8">{{ cont.homepage }}</div>
+                               </div>
+                           {% endif %}
+                           <hr>
+                       {% endfor %}
+                   {% endif %}
+                   </div>
+                   <div>
+                   {%  if temporal_coverage %}
+                    <h4><strong>Temporal Coverage:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Start Date:</strong></div>
+                            <div class="col-sm-8">{{ temporal_coverage.start_date }}</div>
+                       </div>
+                       <div class="row">
+                            <div class="col-sm-4"><strong>End Date:</strong></div>
+                            <div class="col-sm-8">{{ temporal_coverage.end_date }}</div>
+                       </div>
+                       <hr>
+                   {%  endif %}
+                   </div>
+                   <div>
+                   {% if spatial_coverage %}
+                        <h4><strong>Spatial Coverage:</strong></h4>
+                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                             <div class="row">
+                                <div class="col-sm-4"><strong>Coverage Type:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.type }}</div>
+                             </div>
 
-            <h4>References</h4>
-            <ul class="list-unstyled">
-            {% for citation in citations %}
-                <li>{{ citation }}</li>
-            {% empty %}
-                <p><strong>No citations listed</strong></p>
-            {% endfor %}
-            </ul>
-            {% if page.perms.change %}
-                <button class="btn btn-primary" id="add-reference" data-toggle="modal" data-target="#add-reference-dialog">Add reference</button>
-            {% endif %}
+                            {% if spatial_coverage.type == 'point' %}
+                                {% if spatial_coverage.name %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.name}}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.projection %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Coordinate System/Geographic Projection:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.projection}}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.east %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Longitude:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.east}}</div>
+                                    </div>
+                                {%  endif %}
+                                {% if spatial_coverage.north %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Latitude:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.north}}</div>
+                                    </div>
+                                {%  endif %}
+                                {% if spatial_coverage.units %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.units}}</div>
+                                    </div>
+                                {%  endif %}
+                            {% else %}
+                                {% if spatial_coverage.name %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.name}}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.projection %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Coordinate System/Geographic Projection:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.projection}}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.northlimit %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>North Latitude:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.northlimit }}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.eastlimit %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>East Longitude:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.eastlimit }}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.southlimit %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>South Latitude:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.southlimit }}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.westlimit %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>West Longitude:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.westlimit}}</div>
+                                    </div>
+                                {% endif %}
+                                {% if spatial_coverage.units %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                        <div class="col-sm-8">{{ spatial_coverage.units}}</div>
+                                    </div>
+                                {%  endif %}
+                            {% endif %}
+                        <hr>
+                   {% endif %}
+                   </div>
+                   <div>
+                       <h4><strong>Language:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        {{ language }}
+                       <hr>
+                   </div>
+                   <div>
+                   {% if keywords %}
+                       <h4><strong>Keywords:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        {{ keywords }}
+                       <hr>
+                   {% endif %}
+                   </div>
+                   <div>
+                       <h4><strong>Rights:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                           {% if rights.statement %}
+                               <div class="row">
+                                   <div class="col-sm-4"><strong>Statement:</strong></div>
+                                   <div class="col-sm-8">{{ rights.statement }}</div>
+                               </div>
+                           {% endif %}
+                           {% if rights.url %}
+                               <div class="row">
+                                   <div class="col-sm-4"><strong>URL:</strong></div>
+                                   <div class="col-sm-8"><a href="{{ rights.url }}">{{ rights.url }}</a></div>
+                               </div>
+                           {% endif %}
+                           <hr>
+                   </div>
+                   <div>
+                   {% if sources %}
+                       <h4><strong>Sources:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                       {% for source in sources %}
+                            <div class="row">
+                               <div class="col-sm-4"><strong>Derived From:</strong></div>
+                               <div class="col-sm-8">{{ source.derived_from }}</div>
+                            </div>
+                            <hr>
+                       {%  endfor %}
+                   {%  endif %}
+                   </div>
+                   <div>
+                   {% if relations %}
+                       <h4><strong>Relations:</strong></h4>
+                       <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                       {% for relation in relations %}
+                            <div class="row">
+                               <div class="col-sm-4"><strong>Type:</strong></div>
+                               <div class="col-sm-8">{{ relation.type }}</div>
+                               <div class="col-sm-4"><strong>Value:</strong></div>
+                               <div class="col-sm-8">{{ relation.value }}</div>
+                            </div>
+                            <hr>
+                       {%  endfor %}
+                   {%  endif %}
+                   </div>
+               {% endif %}
 
-
-            <h4>Other Metadata</h4>
-            <table class="table table-condensed">
-            {% for term in dublin_core %}
-                {% ifnotequal term|dcterm 'Title' %}
-                    <tr>
-                        <th>{{ term|dcterm }}</th>
-                        <td>{{ term.content }}</td>
-                    </tr>
-                {% endifnotequal %}
-            {% endfor %}
-            </table>
-            {% if page.perms.change %}
-                <button class="btn btn-primary" id="add-dcterm" data-toggle="modal" data-target="#add-dcterm-dialog">Add metadata term</button>
-            {% endif %}
-
-
+                <div>
+                {# TODO: Pabitra to check if this for loop code is relevant #}
+                {% for attr, val_dict in core_metadata.items %}
+                    <h5>{{ attr }}</h5>
+                    <table class="table table-condensed">
+                        {% for subattr, subval in val_dict.items %}
+                        <tr>
+                            <th>{{ subattr }}</th>
+                            <td>{{ subval }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
 
@@ -98,26 +378,24 @@
                     <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
                     <td><a class="btn btn-primary btn-block" href="{{ f.resource_file.url }}">Download ({{ f.resource_file.size|filesizeformat }})</a></td>
                     {% if page.perms.change %}
-                        <div class="modal fade" id="delete-resource-file" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal fade" id="delete-resource-file-{{f.pk}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                           <div class="modal-dialog">
                             <div class="modal-content">
                               <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                <h4 class="modal-title" id="submit-for-publication-title">Confirm resource file deletion</h4>
+                                <h4 class="modal-title">Confirm file deletion</h4>
                               </div>
                               <div class="modal-body">
-                                  <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource file. A copy of your
-                                    resource file will not be retained by Hydroshare.  We recommend highly that you download the latest copy
-                                    of your resource file before confirming this action.
+                                  This will delete the file from the resource. Consider saving a copy if it is important to you.
                               </div>
                               <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
+                                <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{f.pk}}/">Delete</a>
                               </div>
                             </div>
                           </div>
                         </div>
-                        <td><a class="btn btn-danger btn-block" data-toggle="modal" data-target="#delete-resource-file">Delete</a></td>
+                        <td><a class="btn btn-danger btn-block" data-toggle="modal" data-target="#delete-resource-file-{{f.pk}}">Delete</a></td>
                     {% endif %}
                 </tr>
                 {% endfor %}
@@ -128,7 +406,7 @@
                         <td></td>
                         <td>
                             <div class="btn-group">
-                              <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Export all</a>
+                              <a type="button" class="btn btn-primary" href="{{ bag.bag.url }}">Download all</a>
                               <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
                                 <span class="caret"></span>
                                 <span class="sr-only">Toggle Dropdown</span>
@@ -140,6 +418,7 @@
                               </ul>
                             </div>
                         </td>
+{#                        {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
                         {% if page.perms.change %}
                         <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
                         {% endif %}
@@ -153,16 +432,22 @@
     <div class="row" id="sharing">
         <div class="col-lg-12">
         <h2>Sharing</h2>
-            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+            <form id="id_sharing" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
             {% csrf_token %}
             {% if cm.public %}
                 This resource can be viewed and downloaded by anyone.
-                <input name="t" type="hidden" value="make_private"/>
-                <button type="submit" class="btn btn-danger">Make private</button>
+                {% if user == cm.user %}
+                    <input name="t" type="hidden" value="make_private"/>
+                    <button id="make-private" type="submit" class="btn btn-danger">Make private</button>
+                {% endif %}
             {% else %}
                 This resource can be viewed and downloaded only by designated users or research groups.
-                <input name="t" type="hidden" value="make_public"/>
-                <button type="submit" class="btn btn-danger">Make public</button>
+                {% if user == cm.user %}
+                    {%  if cm.can_be_public %}
+                        <input name="t" type="hidden" value="make_public"/>
+                        <button id="make-public" type="submit" class="btn btn-danger">Make public</button>
+                    {% endif %}
+                {% endif %}
             {% endif %}
             </form>
 
@@ -402,16 +687,10 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="submit-for-publication-title">Submit resource for publication</h4>
+            <h4 class="modal-title" id="delete-resource-title">Delete Resource</h4>
           </div>
           <div class="modal-body">
-
-                <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource entirely. A copy of your 
-                resource data will not be retained by Hydroshare.  We recommend highly that you download the latest copy
-                of your resource before confirming this action.
-              <hr/>
-                <a class="btn btn-primary btn-block" href="{{ bag.bag.url }}">Download resource package</a>
-
+                <strong>THIS IS A PERMANENT ACTION </strong> that will delete the resource entirely. Keep a copy if you still need this information.
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -497,12 +776,473 @@
       </div>
     </div>
 
+
 {% endwith %}
 
 {% block extra_js %}
     <script type="text/javascript">
     $(function() {
+    });
 
+    function toggle_metadata_display(){
+        if ($("#metadata-show-toggle").text() === 'Show All'){
+            $("#metadata-show-toggle").text('Collapse All');
+            $('.accordion-body:not(".in")').collapse('show');
+        }
+        else {
+            $("#metadata-show-toggle").text('Show All');
+            $('.accordion-body.in').collapse('hide');
+        }
+    }
+
+    function metadata_update_ajax_submit(form_id){
+            $alert_success = '<div class="alert alert-success" id="success-alert"> \
+                <button type="button" class="close" data-dismiss="alert">x</button> \
+                <strong>Success! </strong> \
+                Metadata updated.\
+            </div>'
+
+            $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+                <button type="button" class="close" data-dismiss="alert">x</button> \
+                <strong>Error! </strong> \
+                Metadata updated failed.\
+            </div>'
+
+            $form=$('#' + form_id);
+            var datastring = $form.serialize();
+            $.ajax({
+                type: "POST",
+                url: $form.attr('action'),
+                dataType: 'html',
+                data: datastring,
+                success: function(result)
+                {
+                    /* The div contains now the updated form */
+                    //$('#' + form_id).html(result);
+                    console.log(result);
+                    json_response = JSON.parse(result);
+                    console.log(json_response);
+                    if (json_response.status === 'success')
+                    {
+                        $form.find("button").hide();
+                        if (json_response.hasOwnProperty('element_id')){
+                            form_update_action = $form.attr('action');
+                            res_short_id = form_update_action.split('/')[3];
+                            update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/"
+                            $form.attr('action', update_url);
+
+                        }
+                        if (json_response.hasOwnProperty('element_name')){
+                            if(json_response.element_name === 'title'){
+                                $res_title = $(".section-header").find("span").first();
+                                field_name_value = $res_title.text();
+                                console.log(field_name_value);
+                                updated_title = $form.find("#id_value").val();
+                                $res_title.text(updated_title);
+                            }
+                        }
+
+                        if (json_response.hasOwnProperty('metadata_status')){
+                            if(json_response.metadata_status !== $('#metadata-status').text()){
+                                $('#metadata-status').text(json_response.metadata_status);
+                                if(json_response.metadata_status == "Sufficient to make public")
+                                {
+                                    customAlert("Metadata Status:Sufficient to make public", 3000);
+                                    $('#metadata-status').removeClass('text-danger');
+                                    $('#metadata-status').addClass('text-success');
+                                    $('#id_sharing #make-public').remove();
+                                    $('#id_sharing').append('<input name="t" type="hidden" value="make_public"/><button id="make-public" type="submit" class="btn btn-danger">Make public</button>');
+                                }
+                                else{
+                                    $('#metadata-status').removeClass('text-success');
+                                    $('#metadata-status').addClass('text-danger');
+                                    $('#id_sharing #make-public').hide();
+                                    $('#id_sharing #make-private').hide();
+                                    $('#sharing-status').text('Private');
+                                }
+                            }
+                        }
+
+                        $('#' + form_id).before($alert_success);
+                        $('#' + form_id).closest('div').find('#error-alert').each(function(){
+                            this.remove();
+                        });
+                        $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
+
+                            $(".alert-success").alert('close');
+                        });
+                    }
+                    else{
+                        $('#' + form_id).before($alert_error);
+
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown)
+                {
+                    $('#' + form_id).before($alert_error)
+                    $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                        $(".alert-error").alert('close');
+                    });
+                }
+            });
+
+            //don't submit the form
+            return false;
+        }
+
+    function customAlert(msg,duration)
+    {
+        var el = document.createElement("div");
+        var top = ($(window).height() / 2) - 25;
+        var left = ($(window).width() / 2) - 150;
+        var style = "position:fixed;top:" + top + "px;left:" + left + "px;background-color:lightgreen; width:300px; height:50px; text-align:center; line-height:50px";
+        el.setAttribute("style",style);
+        el.innerHTML = msg;
+        setTimeout(function(){
+        el.parentNode.removeChild(el);
+    },duration);
+        document.body.appendChild(el);
+    }
+
+    $(document).ready(function () {
+        if($("#id_type_1").is(':checked')){ //box type coverage
+             $("#div_id_north").hide();
+             $("#div_id_east").hide();
+             $("#div_id_elevation").hide();
+        }
+        if($("#id_type_2").is(':checked')){ // point type coverage
+            $("#div_id_northlimit").hide();
+            $("#div_id_eastlimit").hide();
+            $("#div_id_southlimit").hide();
+            $("#div_id_westlimit").hide();
+            $("#div_id_uplimit").hide();
+            $("#div_id_downlimit").hide();
+        }
+        if ($("input:button[value='Delete creator']").length == 1){
+            $("input:button[value='Delete creator']").first().hide();
+        }
+        // disable all save changes button on load
+        $("form").each(function(){
+            $save_button = $(this).find("button").first();
+            if ($save_button.text() === "Save changes"){
+                $save_button.hide();
+            }
+        })
+
+        // open all metadata collasible elements on page load
+        $('.accordion-body:not(".in")').collapse('show');
+
+
+        $("#select_license").on('change', function(){
+            var value = this.value;
+            if (value === "other"){
+                $(this).closest("form").find("#id_statement").first().text("");
+                $(this).closest("form").find("#id_url").first().attr('value', "");
+                $(this).closest("form").find("#id_statement").first().attr('readonly', false);
+                $(this).closest("form").find("#id_url").first().attr('readonly', false);
+            }
+            else{
+                var text = $(this).find('option:selected').text();
+                text = "This resource is shared under the " + text + ".";
+                $(this).closest("form").find("#id_statement").first().text(text);
+                $(this).closest("form").find("#id_url").first().attr('value', value);
+                $(this).closest("form").find("#id_statement").first().attr('readonly', true);
+                $(this).closest("form").find("#id_url").first().attr('readonly', true);
+            }
+
+        });
+
+        // set the selected license in the select license dropdown
+        var value_exists = false;
+        $("#select_license option").each(function(){
+            if (this.value == $("#id_url").attr('value')){
+                $("#select_license").val($("#id_url").attr('value'));
+                value_exists = true;
+                return;
+            }
+        })
+
+        if (value_exists == false){
+            // set the selected license type to 'other'
+            $("#select_license").val('other');
+            console.log($("#select_license").attr('readonly'));
+            if($("#select_license").attr('readonly') == undefined){
+                $("#select_license").closest("form").find("#id_statement").first().attr('readonly', false);
+                $("#select_license").closest("form").find("#id_url").first().attr('readonly', false);
+            }
+            else{
+                $("#select_license").attr('style', "background-color:white;");
+                $("#select_license").closest("form").find("#id_statement").first().attr('readonly', true);
+                $("#select_license").closest("form").find("#id_url").first().attr('readonly', true);
+            }
+        }
+
+        // show "Save changes" button when form editing starts
+        $(".form-control").each(function(){
+            $(this).on('input', function(e){
+                //$(this).css('border-color', 'gray');
+                $(this).closest("form").find("button").show();
+            });
+            $(this).on('change', function(e){
+                //$(this).css('border-color', 'gray');
+                $(this).closest("form").find("button").show();
+            });
+        })
+        $(".dateinput").each(function(){
+            $(this).datepicker({
+                format: 'mm-dd-yyyy',
+                changeMonth: true,
+                changeYear: true
+             });
+
+            $(this).on('change', function(){
+                $(this).closest("form").find("button").show();
+            });
+        })
+        // Code adapted from http://djangosnippets.org/snippets/1389/
+        function updateElementIndex(el, prefix, ndx) {
+            var id_regex = new RegExp('(' + prefix + '-\\d+-)');
+            var replacement = prefix + '-' + ndx + '-';
+            if ($(el).attr("for")) $(el).attr("for", $(el).attr("for").replace(id_regex,
+            replacement));
+            if (el.id) el.id = el.id.replace(id_regex, replacement);
+            if (el.name) el.name = el.name.replace(id_regex, replacement);
+        }
+        function deleteForm(btn, prefix) {
+            var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+            if (formCount > 1) {
+                // Delete the item/form
+                $(btn).parents('.item').slideUp(300);
+                $(btn).parents('.item').remove();
+                var forms = $("#" + prefix + ' .item'); // Get all the forms
+                // Update the total number of forms (1 less than before)
+                $('#id_' + prefix + '-TOTAL_FORMS').val(forms.length);
+                var i = 0;
+                // Go through the forms and set their indices, names and IDs
+                for (formCount = forms.length; i < formCount; i++) {
+                    $(forms.get(i)).children().children().each(function () {
+                        if ($(this).attr('type') == 'text') updateElementIndex(this, prefix, i);
+                        if($(this).is('input')) updateElementIndex(this, prefix, i);
+                    });
+                    $(forms.get(i)).find('input').each(function (){
+                        updateElementIndex(this, prefix, i);
+                    })
+                }
+            } // End if
+            else {
+                if (prefix == 'creators'){
+                    alert("Resource needs to have at least one creator!");
+                }
+            }
+            return false;
+        }
+        function addForm(btn, prefix) {
+            var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+            // You can only submit a maximum of 10 todo items
+            if (formCount < 10) {
+                // Clone a form (without event handlers) from the first form
+                var row = $("#" + prefix + " .item:first").clone(false).get(0);
+                // Insert it after the last form
+                $(row).removeAttr('id').hide().insertAfter("#" + prefix + " .item:last").slideDown(300);
+                // Remove the bits we don't want in the new row/form
+                // e.g. error messages
+                $(".errorlist", row).remove();
+                $(row).children().removeClass("error");
+                $(row).find(".item_link:not(:first)").remove();
+                // Relabel or rename all the relevant bits of the main form
+                $(row).children().children().each(function () {
+                    updateElementIndex(this, prefix, formCount);
+                    $(this).val("");
+                });
+                // Relabel or rename all the relevant bits of the child form
+                var link_prefix = prefix + '_links'
+                $(row).find("*").each(function () {
+                    updateElementIndex(this, link_prefix, formCount);
+                    if ($(this).attr("id")){
+                        if($(this).attr("id").substr(-6) !== "_FORMS"){
+                            $(this).val("");
+                        }
+                        else{
+                            if($(this).attr("id").substr(-11) === "TOTAL_FORMS"){
+                                $(this).val("1");
+                            }
+                        }
+                    }
+                    else{
+                        $(this).val("");
+                    }
+                });
+                $(row).find('input').each(function () {
+                    updateElementIndex(this, prefix, formCount);
+                    if ($(this).attr('type') == 'button'){
+                        if (prefix === 'creator'){
+                            $(this).attr('value', 'Delete creator');
+                        }
+                        else if(prefix === 'contributor'){
+                            $(this).attr('value', 'Delete contributor');
+                        }
+                        else{
+                            $(this).attr('value', 'Delete');
+                        }
+                    }
+                    if ($(this).attr('type') == 'submit'){
+                        $(this).attr('value', 'Save');
+                    }
+                })
+                // Add an event handler for the delete item/form link
+                $(row).find(".delete-creator").click(function () {
+                    return deleteForm(this, prefix);
+                });
+                $(row).find(".delete-contributor").click(function () {
+                    return deleteForm(this, prefix);
+                });
+                $(row).find("#addLinkCreator").click(function () {
+                    return addLink(this, "creator");
+                });
+                // Add an event handler for the delete item/form link
+                $(row).find(".delete-link-creator").click(function () {
+                    return deleteLink(this, prefix);
+                });
+                $(row).find(".delete-link-contributor").click(function () {
+                    return deleteLink(this, prefix);
+                });
+                // Update the total form count
+                $("#id_" + prefix + "-TOTAL_FORMS").val(formCount + 1);
+            } // End if
+            else {
+                alert("Sorry, you can only enter a maximum of ten items.");
+            }
+            return false;
+        }
+        function deleteLink(btn, prefix) {
+            var link_form_input = $(btn).parents('.item').children('input:first');
+            var id = $(link_form_input).attr('id');
+            var link_formset_index = id.split("-")[1];
+            var formCount = parseInt($('#id_' + prefix + '_links-' + link_formset_index+ '-TOTAL_FORMS').val());
+            if (formCount > 1) {
+                // Delete the item/form
+                $(btn).parents('.item_link').slideUp(300);
+                $(btn).parents('.item_link').remove();
+                var forms = $("#" + prefix + ' .item_link'); // Get all the forms
+                // Update the total number of forms (1 less than before)
+                var update_prefix = prefix + '_links-' + link_formset_index;
+                $('#id_' + update_prefix + '-TOTAL_FORMS').val(forms.length);
+                var i = 0;
+                // Go through the forms and set their indices, names and IDs
+                for (formCount = forms.length; i < formCount; i++) {
+                    $(forms.get(i)).children().children().each(function () {
+                        if ($(this).attr('type') == 'text') updateElementIndex(this, update_prefix, i);
+                        if($(this).is('input')) updateElementIndex(this, update_prefix, i);
+                    });
+                    $(forms.get(i)).find('input').each(function (){
+                        updateElementIndex(this, update_prefix, i);
+                    })
+                }
+            } // End if
+
+            return false;
+        }
+        function addLink(btn, prefix) {
+            var link_form_input = $(btn).parents('.item').children('input:first');
+            var id = $(link_form_input).attr('id');
+            var link_formset_index = id.split("-")[1];
+            var formCount = parseInt($('#id_' + prefix + '_links-' + link_formset_index + '-TOTAL_FORMS').val());
+            // You can only submit a maximum of 10 todo items
+            if (formCount < 10) {
+                // Clone a form (without event handlers) from the first form
+                //var row = $("#" + prefix + " .item_link:first").clone(false).get(0);
+                var row = $(btn).parents(".item").find(".item_link:last").clone(false).get(0);
+                // Insert it after the last form
+                $(row).removeAttr('id').hide().insertAfter("#" + prefix + " .item_link:last").slideDown(300);
+                // Remove the bits we don't want in the new row/form
+                // e.g. error messages
+                $(".errorlist", row).remove();
+                $(row).children().removeClass("error");
+                var update_prefix = prefix + '_links-' + link_formset_index;
+                // Relabel or rename all the relevant bits
+                $(row).find('*').each(function (){
+                    updateElementIndex(this, update_prefix, formCount);
+                    $(this).val("");
+                })
+
+                $(row).find('button').each(function () {
+                    updateElementIndex(this, update_prefix, formCount);
+                    if ($(this).attr('type') == 'button'){
+                        $(this).text('Delete Link');
+                    }
+
+                })
+                // Add an event handler for the delete item/form link
+                $(row).find(".delete-link-creator").click(function () {
+                    return deleteLink(this, prefix);
+                });
+                $(row).find(".delete-link-contributor").click(function () {
+                    return deleteLink(this, prefix);
+                });
+                // Update the total form count
+                $("#id_" + update_prefix + "-TOTAL_FORMS").val(formCount + 1);
+            } // End if
+            else {
+                alert("Sorry, you can only enter a maximum of ten links.");
+            }
+            return false;
+        }
+
+
+
+        // Register the click event handlers
+        $("#addCreator").click(function () {
+            return addForm(this, "creator");
+        });
+        $(".delete-creator").click(function () {
+            return deleteForm(this, "creator");
+        });
+        $("#addContributor").click(function () {
+            return addForm(this, "contributor");
+        });
+        $("#addLinkCreator").click(function () {
+            return addLink(this, "creator");
+        });
+        $(".delete-contributor").click(function () {
+            return deleteForm(this, "contributors");
+        });
+        $(".delete-link-contributor").click(function () {
+            return deleteLink(this, "contributors");
+        });
+        $(".delete-link-creator").click(function () {
+            return deleteLink(this, "creator");
+        });
+
+        $("#addSource").click(function () {
+            return addForm(this, "source");
+        });
+
+        $("form input:radio").change(function () {
+            if ($(this).val() == "point") {
+                //alert('you select the point radio button');
+                $("#div_id_north").show();
+                $("#div_id_east").show();
+                $("#div_id_elevation").show();
+                $("#div_id_northlimit").hide();
+                $("#div_id_eastlimit").hide();
+                $("#div_id_southlimit").hide();
+                $("#div_id_westlimit").hide();
+                $("#div_id_uplimit").hide();
+                $("#div_id_downlimit").hide();
+            }
+            else {
+                //alert('you select the box radio button');
+                $("#div_id_north").hide();
+                $("#div_id_east").hide();
+                $("#div_id_elevation").hide();
+                $("#div_id_northlimit").show();
+                $("#div_id_eastlimit").show();
+                $("#div_id_southlimit").show();
+                $("#div_id_westlimit").show();
+                $("#div_id_uplimit").show();
+                $("#div_id_downlimit").show();
+            }
+        });
     });
     </script>
 {% endblock %}

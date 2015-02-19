@@ -4,11 +4,14 @@ from django.db.models import get_model, get_models
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
-from hs_core.models import AbstractResource
+import mimetypes
+import os
+from hs_core.models import AbstractResource, Bags
 from dublincore.models import QualifiedDublinCoreElement
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
 from django.core.serializers import get_serializer
+from mezzanine.conf import settings
 from . import hs_bagit
 #from hs_scholar_profile.models import *
 
@@ -16,13 +19,15 @@ import importlib
 import json
 from lxml import etree
 import arrow
+#from hydroshare import settings
 
 cached_resource_types = None
 
 def get_resource_types():
     global cached_resource_types
-    cached_resource_types = filter(lambda x: issubclass(x, AbstractResource), get_models()) if\
-        not cached_resource_types else cached_resource_types
+    #cached_resource_types = filter(lambda x: issubclass(x, AbstractResource), get_models()) if\
+    #    not cached_resource_types else cached_resource_types
+    cached_resource_types = filter(lambda x: issubclass(x, AbstractResource), get_models())
 
     return cached_resource_types
 
@@ -418,7 +423,7 @@ def serialize_science_metadata_xml(res):
     #return getattr(tastypie_api, tastypie_name)()        # make an instance of the tastypie resource
 
 
-def resource_modified(resource, by_user=None):
+def resource_modified(resource, by_user=None, overwrite_bag=True):
     resource.last_changed_by = by_user
     QualifiedDublinCoreElement.objects.filter(term='DM', object_id=resource.pk).delete()
     QualifiedDublinCoreElement.objects.create(
@@ -426,7 +431,25 @@ def resource_modified(resource, by_user=None):
         content=now().isoformat(),
         content_object=resource
             )
+
+    resource.updated = now().isoformat()
     resource.save()
+    if resource.metadata.dates.all().filter(type='modified'):
+        res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
+        resource.metadata.update_element('date', res_modified_date.id)
+
+    if overwrite_bag:
+        for bag in resource.bags.all():
+            try:
+                bag.bag.delete()
+            except:
+                pass
+
+            try:
+                bag.delete()
+            except:
+                pass
+
     hs_bagit.create_bag(resource)
 
 def _get_dc_term_objects(resource_dc_elements, term):
@@ -448,6 +471,29 @@ def _validate_email( email ):
     except ValidationError:
         return False
 
+
 def get_profile(user):
     return user.userprofile
 
+
+def current_site_url():
+    """Returns fully qualified URL (no trailing slash) for the current site."""
+    from django.contrib.sites.models import Site
+    current_site = Site.objects.get_current()
+    protocol = getattr(settings, 'MY_SITE_PROTOCOL', 'http')
+    port     = getattr(settings, 'MY_SITE_PORT', '')
+    url = '%s://%s' % (protocol, current_site.domain)
+    if port:
+        url += ':%s' % port
+    return url
+
+
+def get_file_mime_type(file_name):
+    # TODO: looks like the mimetypes module can't find all mime types
+    # We may need to user the python magic module instead
+    file_format_type = mimetypes.guess_type(file_name)[0]
+    if not file_format_type:
+        # TODO: this is probably not the right way to get the mime type
+        file_format_type ='application/%s' % os.path.splitext(file_name)[1][1:]
+
+    return file_format_type

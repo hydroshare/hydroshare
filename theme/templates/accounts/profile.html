@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% load mezzanine_tags geoanalytics_tags hydroshare_tags %}
 
-{% block title %}User profile for {{ u|best_name }}{% endblock %}
+{% block meta_title %}User profile for {{ u|best_name }}{% endblock %}
 
 {% block main %}
-{% with u.get_profile as profile %}
+{% with u.userprofile as profile %}
 <div class="row">
 <div class="col-md-3">
     <h2>Profile information</h2>
 
     {% if profile.picture %}
-    <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>
+        <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>
     {% endif %}
 
     <ul class="list-unstyled">
@@ -60,13 +60,15 @@
 </div>
 
 <div class="col-md-5 text-justify">
-<h2>About {{ u.first_name }}</h2>{{ profile.details|richtext_filters|safe }}</div>
+<h2>About {{ u.first_name }}</h2>{{ profile.details }}</div>
 
 <div class="col-md-4">
 <h2>Resources</h2>
     <ul class="nav nav-stacked">
     {% for res in resources %}
         <li><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></li>
+    {% empty %}
+        <li>This user has no Resources, yet.</li>
     {% endfor %}
     </ul>
 </div>

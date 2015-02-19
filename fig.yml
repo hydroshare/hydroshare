@@ -1,5 +1,6 @@
 postgis:
-  image: jamesbrink/postgresql
+  image: mjstealey/postgresql
+  #image: jamesbrink/postgresql
 redis:
   image: dockerfile/redis
 rabbitmq: 
@@ -20,6 +21,8 @@ hydroshare:
     #- "media:/home/docker/hydroshare/hydroshare/static/media"
     # Specific to hydro user on the hydrodev Xubuntu VM
     - "/home/hydro/hydroshare:/home/docker/hydroshare"
+    # Specific to hydro user for pycharm debugging on hydrodev Xubuntu VM
+    #- "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
   ports:
     - "1338:22"
     - "8000:8000"
@@ -27,7 +30,7 @@ hydroshare:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
-  command: python manage.py runserver 0.0.0.0:8000
+  command: /bin/bash init
 defaultworker:
   build: .
   environment:

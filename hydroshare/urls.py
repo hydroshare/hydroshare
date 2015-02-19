@@ -23,13 +23,14 @@ urlpatterns = i18n_patterns("",
     # Change the admin prefix here to use an alternate URL for the
     # admin interface, which would be marginally more secure.
     url("^admin/", include(admin.site.urls)),
+    url("^inplaceeditform/", include("inplaceeditform.urls")),
     url('^ga_resources/', include('ga_resources.urls')),
     #url('^ga_interactive/', include('ga_interactive.urls')),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', 'hs_core.views.short_url'),
     # url('^party/', include('hs_scholar_profile.urls'))
     url(r'^user/$', theme.UserProfileView.as_view()),
     url(r'^user/(?P<user>.*)/', theme.UserProfileView.as_view()),
-    url(r'^verify/(?P<pk>[0-9]*)/', 'hs_core.views.verify'),
+    url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', 'hs_core.views.verify'),
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
@@ -45,6 +46,7 @@ if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += patterns('',
     url('^hsapi/', include('hs_core.urls')),
+    url('^hsapi/', include('ref_ts.urls')),
     #url('^hs_party/', include('hs_party.urls')),
     url('^hs_metrics/', include('hs_metrics.urls')),
 )
