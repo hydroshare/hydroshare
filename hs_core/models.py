@@ -262,6 +262,9 @@ class Party(AbstractMetaDataElement):
                 creator_order = 1
                 if party:
                     creator_order = party.order + 1
+                if len(kwargs['name'].strip()) == 0:
+                    raise ValidationError("Invalid name for the %s." % element_name.lower())
+
                 party = Creator.objects.create(name=kwargs['name'], order=creator_order, content_object=metadata_obj)
             else:
                 party = Contributor.objects.create(name=kwargs['name'], content_object=metadata_obj)
@@ -473,12 +476,15 @@ class Description(AbstractMetaDataElement):
         description = Description.objects.get(id=element_id)
         if description:
             if 'abstract' in kwargs:
-                description.abstract = kwargs['abstract']
-                description.save()
+                if len(kwargs['abstract'].strip()) > 0:
+                    description.abstract = kwargs['abstract']
+                    description.save()
+                else:
+                    raise ValidationError('A value for the description/abstract element is missing.')
             else:
-                raise ValidationError('Abstract for description element is missing.')
+                raise ValidationError('A value for description/abstract element is missing.')
         else:
-            raise ObjectDoesNotExist("No description element was found for the provided id:%s" % element_id)
+            raise ObjectDoesNotExist("No description/abstract element was found for the provided id:%s" % element_id)
 
     @classmethod
     def remove(cls, element_id):
@@ -647,6 +653,9 @@ class Date(AbstractMetaDataElement):
                 else:
                     dt.start_date = start_dt
                     dt.save()
+            elif dt.type == 'modified':
+                dt.start_date = metadata_obj.resource.updated
+                dt.save()
             else:
                 raise ValidationError("Date value is missing.")
         else:
@@ -756,22 +765,28 @@ class Identifier(AbstractMetaDataElement):
             if 'name' in kwargs:
                 if idf.name.lower() != kwargs['name'].lower():
                     if idf.name.lower() == 'hydroshareidentifier':
-                        raise  ValidationError("Identifier name 'hydroshareIdentifier' can't be changed.")
+                        if not 'migration' in kwargs:
+                            raise ValidationError("Identifier name 'hydroshareIdentifier' can't be changed.")
 
                     if idf.name.lower() == 'doi':
-                        raise  ValidationError("Identifier name 'DOI' can't be changed.")
+                        raise ValidationError("Identifier name 'DOI' can't be changed.")
 
                     # check this new identifier name not already exists
                     if Identifier.objects.filter(name__iexact=kwargs['name'], object_id=idf.object_id,
                                               content_type__pk=idf.content_type.id).count()> 0:
-                        raise ValidationError('Identifier name:%s already exists.' % kwargs['name'])
+                        if not 'migration' in kwargs:
+                            raise ValidationError('Identifier name:%s already exists.' % kwargs['name'])
 
                     idf.name = kwargs['name']
 
             if 'url' in kwargs:
                 if idf.url.lower() != kwargs['url'].lower():
-                    if idf.url.lower().find('http://hydroshare.org/resource') == 0:
-                        raise  ValidationError("Hydroshare identifier url value can't be changed.")
+                    if idf.name.lower() == 'hydroshareidentifier':
+                        if not 'migration' in kwargs:
+                            raise  ValidationError("Hydroshare identifier url value can't be changed.")
+
+                    # if idf.url.lower().find('http://hydroshare.org/resource') == 0:
+                    #     raise  ValidationError("Hydroshare identifier url value can't be changed.")
                     # check this new identifier name not already exists
                     if Identifier.objects.filter(url__iexact=kwargs['url'], object_id=idf.object_id,
                                                  content_type__pk=idf.content_type.id).count()> 0:
@@ -1133,7 +1148,7 @@ class Coverage(AbstractMetaDataElement):
 
 class Format(AbstractMetaDataElement):
     term = 'Format'
-    value = models.CharField(max_length=50)
+    value = models.CharField(max_length=150)
 
     def __unicode__(self):
         return self.value
@@ -1392,8 +1407,15 @@ class AbstractResource(ResourcePermissionsMixin):
     def get_citation(self):
         citation = ''
 
+        CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
+        CITATION_ERROR = "Failed to generate citation."
+
         first_author = self.metadata.creators.all().filter(order=1)[0]
-        name_parts = first_author.name.split(" ")
+        name_parts = first_author.name.split()
+        if len(name_parts) == 0:
+            citation = CREATOR_NAME_ERROR
+            return citation
+
         if len(name_parts) > 2:
             citation = "{last_name}, {first_initial}.{middle_initial}.".format(last_name=name_parts[-1],
                                                                               first_initial=name_parts[0][0],
@@ -1404,7 +1426,11 @@ class AbstractResource(ResourcePermissionsMixin):
 
         other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
-            name_parts = author.name.split(" ")
+            name_parts = author.name.split()
+            if len(name_parts) == 0:
+                citation = CREATOR_NAME_ERROR
+                return citation
+
             if len(name_parts) > 2:
                 citation += "{first_initial}.{middle_initial}.{last_name}".format(first_initial=name_parts[0][0],
                                                                                   middle_initial=name_parts[1][0],
@@ -1413,11 +1439,18 @@ class AbstractResource(ResourcePermissionsMixin):
                 citation += "{first_initial}.{last_name}".format(first_initial=name_parts[0][0],
                                                                  last_name=name_parts[-1]) + ", "
 
-        citation = citation[:-2]
+        #  remove the last added comma and the space
+        if len(citation) > 2:
+            citation = citation[:-2]
+        else:
+            return CITATION_ERROR
+
         if self.metadata.dates.all().filter(type='published'):
             citation_date = self.metadata.dates.all().filter(type='published')[0]
-        else:
+        elif self.metadata.dates.all().filter(type='modified'):
             citation_date = self.metadata.dates.all().filter(type='modified')[0]
+        else:
+            return CITATION_ERROR
 
         citation += " ({year}). ".format(year=citation_date.start_date.year)
         citation += self.title
@@ -1425,8 +1458,10 @@ class AbstractResource(ResourcePermissionsMixin):
 
         if self.metadata.identifiers.all().filter(name="doi"):
             hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
-        else:
+        elif self.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
             hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+        else:
+            return CITATION_ERROR
 
         citation += "{url}".format(url=hs_identifier.url)
 
