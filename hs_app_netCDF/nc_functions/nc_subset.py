@@ -2,12 +2,14 @@
 module used to extract data of a netCDF variable based on subset information.
 
 Subset WorkFlow:
-1 User gives a netcdf file name -> show data variables list
-2 User gives a variable name for subset -> check variable subset availability.
-                                           If yes, show all dimensions data values and variable meta
-3 Choose the dimension values (start, end) -> check the dimension value.
-                                              If yes, create subset netcdf file
+1 User gives a netcdf file name or system gets default netcdf file name
+  -> show data variables name list with check boxes (js)
+     show all dimensions values (all dimension names used by data variables)
 
+2 User selects data variable names for subset
+  User sets the start and end values for all dimensions based on the given dimension values
+  -> based on request info create nc_subset_info
+     based on nc_subset_info, subset netcdf file
 """
 
 __author__ = 'Tian Gan'
@@ -18,56 +20,68 @@ from datetime import datetime
 request_info = {
     'file_name': 'prcp.nc',
     'var_name': 'prcp',
-    'x': ['1', '3'],
-    'y': ['2', '5'],
-    'time': ['2', '8']
+    'dim_info': {
+        'x': ['1', '3'],
+        'y': ['2', '5'],
+        'time': ['2', '8']
+    }
+
 } # false info
 
 request_info = {
     'file_name': 'prcp.nc',
-    'var_name': 'prcp',
-    'x': ['-974500.0', '-971500.0'],
-    'y': ['14500.0', '8500.0'],
-    'time': ['2011-01-01 12:00:00', '2011-01-02 12:00:00']
+    'var_name': ['prcp', ],
+    'dim_info': {
+        'x': ['-974500.0', '-971500.0'],
+        'y': ['14500.0', '8500.0'],
+        'time': ['2011-01-01 12:00:00', '2011-01-02 12:00:00']
+    }
 } # true info
 
 request_info = {
     'file_name': 'rtof.nc',
-    'var_name': 'salinity',
-    'MT': ['2013-04-25 06:00:00', '2013-04-25 06:00:00'],
-    'Depth': ['0.0', '200.0'],
-    'Y': ['1', '6'],
-    'X': ['1', '6']
-    }
-
+    'var_name': ['salinity', ],
+    'dim_info': {
+        'MT': ['2013-04-25 06:00:00', '2013-04-25 06:00:00'],
+        'Depth': ['0.0', '200.0'],
+        'Y': ['1', '6'],
+        'X': ['1', '6']
+        }
+}
 
 nc_subset_info = {
     'file_name': 'sample1.nc',
-    'var_name': 'pr',
+    'var_name': ['pr', ],
+    'dim_info': {
     'lon': [0, 0],
     'lat': [0, 6],
     'time': [0, 0],
     }
+}
 
 nc_subset_info = {
     'file_name': 'prcp.nc',
-    'var_name': 'prcp',
+    'var_name': ['prcp','yearday','jamy' ],
+    'dim_info': {
     'x': [0, 3],
     'y': [0, 6],
     'time': [0, 1],
     } # has time bounds and grid mapping
+}
 
 nc_subset_info = {
     'file_name': 'rtof.nc',
-    'var_name': 'salinity',
+    'var_name': ['salinity',],
+    'dim_info': {
     'MT': [0, 0],
-    'Depth': [2, 2],
+    'Depth': [0, 2],
     'Y': [0, 5],
     'X': [0, 5]
     }
+}
 
 
-# Functions for Creating subset info ###################################################################################
+# Functions for Step1 ###################################################################################
 def get_nc_data_variable_names(nc_file_name):
     """
     (string) -> list
@@ -80,58 +94,61 @@ def get_nc_data_variable_names(nc_file_name):
     return nc_data_variable_names
 
 
-def check_nc_variable_for_subset(nc_file_name, nc_var_name):
+def get_nc_data_variables_dimensions_value(nc_file_name):
     """
-    (string, string) -> bool
+    (string) -> Dict
 
-    Return: True if the variable is available for subsetting
+    Return: values of the dimensions which are used to define the data variables in netCDF file
     """
+
+    nc_dataset_dimensions_value = {}
     nc_dataset = get_nc_dataset(nc_file_name)
-    nc_variable = get_nc_variable(nc_dataset, nc_var_name)
-    if nc_variable and set(nc_variable.dimensions).issubset(nc_dataset.dimensions.keys()):
-        check_file = True
-    else:
-        check_file = False
+    nc_coordinate_variable_namelist = get_nc_coordinate_variable_namelist(nc_dataset)
+    nc_data_variables_dimension_names = get_nc_data_variables_dimension_names(nc_dataset)
 
-    return check_file
+    for dim_name in nc_data_variables_dimension_names:
+        if dim_name in nc_coordinate_variable_namelist:
+            dim_var = nc_dataset.variables[dim_name]
+            dim_values = dim_var[:].tolist()
+            dim_coor_type = get_nc_variable_coordinate_type(dim_var)
+            if dim_coor_type == 'T':
+                time_units = dim_var.units if hasattr(dim_var, 'units') else ''
+                time_calendar = dim_var.calendar if hasattr(dim_var, 'calendar') else 'standard'
+                if time_units and time_calendar:
+                    try:
+                        for i in range(0, len(dim_values)):
+                            dim_values[i] = netCDF4.num2date(dim_values[i], units=time_units, calendar=time_calendar)
+                    except:
+                        pass
+        else:
+            dim_values = range(1, len(nc_dataset.dimensions[dim_name])+1)
+
+        nc_dataset_dimensions_value[dim_name] = [str(i) for i in dim_values]
+
+    return nc_dataset_dimensions_value
 
 
-def get_nc_variable_dimensions_value(nc_file_name, nc_var_name):
+def get_nc_data_variables_dimension_names(nc_dataset):
     """
-    (string,string) -> Dict
+    (obj) ->  list
 
-    Return: dimension values for each dimension of the variable
+    Return: all the dimension names used for defining all the data variables in netcdf file
     """
-    nc_variable_dimensions_value = OrderedDict()
-    try:
-        nc_dataset = get_nc_dataset(nc_file_name)
-        nc_variable = get_nc_variable(nc_dataset, nc_var_name)
-        nc_coordinate_variable_namelist = get_nc_coordinate_variable_namelist(nc_dataset)
+    if not isinstance(nc_dataset, netCDF4.Dataset):
+        nc_dataset = get_nc_dataset(nc_dataset)
 
-        for var_dim_name in nc_variable.dimensions:
-            if var_dim_name in nc_coordinate_variable_namelist:
-                dim_var = nc_dataset.variables[var_dim_name]
-                dim_values = dim_var[:].tolist()
-                dim_coor_type = get_nc_variable_coordinate_type(dim_var)
-                if dim_coor_type == 'T':
-                    time_units = dim_var.units if hasattr(dim_var, 'units') else ''
-                    time_calendar = dim_var.calendar if hasattr(dim_var, 'calendar') else 'standard'
-                    if time_units and time_calendar:
-                        try:
-                            for i in range(0, len(dim_values)):
-                                dim_values[i] = netCDF4.num2date(dim_values[i], units=time_units, calendar=time_calendar)
-                        except:
-                            pass
-            else:
-                dim_values = range(1, len(nc_dataset.dimensions[var_dim_name])+1)
+    nc_data_variables = get_nc_data_variables(nc_dataset)
+    nc_data_variable_dimension_names = []
 
-            nc_variable_dimensions_value[var_dim_name] = [str(i) for i in dim_values]
-    except:
-        pass
+    for var_obj in nc_data_variables.values():
+        var_dim_list = list(var_obj.dimensions)
+        nc_data_variable_dimension_names += var_dim_list
+    nc_data_variable_dimension_names = list(set(nc_data_variable_dimension_names))
 
-    return nc_variable_dimensions_value
+    return nc_data_variable_dimension_names
 
 
+# Functions for Step2 #################################################################################################
 def create_nc_subset_info(request_info):
     """
     (dict) -> dict
@@ -139,24 +156,24 @@ def create_nc_subset_info(request_info):
     Return: the subset info for netcdf. this will be the valid info for subsetting a netcdf variable
     """
     nc_subset_info = {}
-    nc_variable_dimensions_value = get_nc_variable_dimensions_value(request_info['file_name'], request_info['var_name'])
-    if set(nc_variable_dimensions_value.keys()).issubset(request_info.keys()):
+    nc_dataset = get_nc_dataset(request_info['file_name'])
+    nc_data_variables_dimensions_value = get_nc_data_variables_dimensions_value(request_info['file_name'])
+    if set(request_info['dim_info'].keys()).issubset(nc_dataset.dimensions.keys()):
         nc_subset_info['file_name'] = request_info['file_name']
         nc_subset_info['var_name'] = request_info['var_name']
-        for attr, val in request_info.items():
-            if nc_variable_dimensions_value.get(attr) and len(val) == 2:
-                if set(val).issubset(nc_variable_dimensions_value[attr]):
-                    start_index = nc_variable_dimensions_value[attr].index(val[0])
-                    end_index = nc_variable_dimensions_value[attr].index(val[1])
-                    if start_index <= end_index:
-                        nc_subset_info[attr] = [start_index, end_index]
-                    else:
-                        nc_subset_info[attr] = [end_index, start_index]
+        nc_subset_info['dim_info'] ={}
+        for attr, val in request_info['dim_info'].items():
+            if set(val).issubset(nc_data_variables_dimensions_value[attr]):
+                start_index = nc_data_variables_dimensions_value[attr].index(val[0])
+                end_index = nc_data_variables_dimensions_value[attr].index(val[1])
+                nc_subset_info['dim_info'][attr] = [start_index, end_index] if start_index <= end_index else [end_index, start_index]
+            else:
+                nc_subset_info = {}
+                break
 
     return nc_subset_info
 
 
-# Functions for Creating subset Netcdf file ############################################################################
 def create_subset_nc_file(nc_subset_info):
     """
     (dict) -> file
@@ -176,7 +193,7 @@ def create_subset_nc_file(nc_subset_info):
         nc_rootgroup = define_nc_coordinate_variables(nc_rootgroup, nc_subset_info)
 
         # define data variable
-        nc_rootgroup = define_nc_data_variable(nc_rootgroup, nc_subset_info)
+        nc_rootgroup = define_nc_all_data_variables(nc_rootgroup, nc_subset_info)
 
         # define grid mapping variable
         nc_rootgroup = define_nc_grid_mapping_variable(nc_rootgroup, nc_subset_info)
@@ -203,7 +220,7 @@ def define_nc_rootgroup(nc_subset_info):
 
 
 def get_nc_global_attributes(nc_subset_info):
-    # copy all global attribute info from original file
+    # copy all global attributes info from original file
     nc_dataset = get_nc_dataset(nc_subset_info['file_name'])
     nc_global_attributes = {}
     for attr_name, attr_info in nc_dataset.__dict__.items():
@@ -215,8 +232,9 @@ def get_nc_global_attributes(nc_subset_info):
     nc_global_attributes['file_name'] = nc_subset_info['file_name']
 
     # add or modify the source info
-    new_source = u'{0}: subset of "{1}" variable from the netCDF file {2} shared in HydroShare website.'\
-        .format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), nc_subset_info['var_name'], nc_subset_info['file_name'])
+    from os.path import basename
+    new_source = u'{0}: subset of "{1}" variable from the netCDF file "{2}" by HydroShare Website.'\
+        .format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), ','.join(nc_subset_info['var_name']), basename(nc_subset_info['file_name']))
     nc_global_attributes['source'] = new_source
 
     nc_dataset.close()
@@ -246,17 +264,15 @@ def define_nc_dimensions(nc_rootgroup, nc_subset_info):
 
 def get_nc_dimension_info(nc_subset_info):
     nc_dataset = get_nc_dataset(nc_subset_info['file_name'])
-    nc_dimensions = nc_dataset.dimensions
     nc_dimension_info = OrderedDict([])
 
-    for dim_name, dim_obj in nc_dimensions.items():
-        if nc_subset_info.has_key(dim_name):
+    for dim_name, dim_obj in nc_dataset.dimensions.items():
+        if nc_subset_info['dim_info'].get(dim_name):
             if dim_obj.isunlimited():
                 nc_dimension_info[dim_name] = None
             else:
-                nc_dimension_info[dim_name] = nc_subset_info[dim_name][1]-nc_subset_info[dim_name][0]+1
+                nc_dimension_info[dim_name] = nc_subset_info['dim_info'][dim_name][1]-nc_subset_info['dim_info'][dim_name][0]+1
 
-    nc_dataset.close()
     return nc_dimension_info
 
 
@@ -270,26 +286,24 @@ def create_nc_dimensions(nc_rootgroup, nc_dimension_info):
 # define coordinate variables ###############################################################################
 def define_nc_coordinate_variables(nc_rootgroup, nc_subset_info):
 
-    # find out dimension corresponding coordinate variable name
+    # find out dimension corresponding coordinate variable names
     nc_dataset = get_nc_dataset(nc_subset_info['file_name'])
-    nc_dimensions = nc_dataset.variables[nc_subset_info['var_name']].dimensions
-    nc_all_variables = nc_dataset.variables
-    nc_dim_coor_mapping = {}
-    for var_name, var_obj in nc_all_variables.items():
-        if len(var_obj.shape) == 1 and var_name == var_obj.dimensions[0]:
-            nc_dim_coor_mapping[var_obj.dimensions[0]] = var_name
+    nc_dim_coor_var_names = []
+    for dim_name in nc_rootgroup.dimensions.keys():
+        if nc_dataset.variables.get(dim_name)and len(nc_dataset.variables[dim_name].shape) == 1:
+            nc_dim_coor_var_names.append(dim_name)
 
     # add coordinate variable info
-    for dim_name, coor_var_name in nc_dim_coor_mapping.items():
+    for coor_var_name in nc_dim_coor_var_names:
         coor_var = nc_dataset.variables[coor_var_name]
         # initiate coordinate variable
-        nc_rootgroup.createVariable(coor_var_name, coor_var.dtype, (dim_name,))
+        nc_rootgroup.createVariable(coor_var_name, coor_var.dtype, (coor_var_name,))
         # copy coordinate attributes
         for attr_name, attr_info in coor_var.__dict__.items():
             nc_rootgroup.variables[coor_var_name].__setattr__(attr_name, attr_info)
         # assign coordinate subset value
-        slice_start = nc_subset_info[dim_name][0]
-        slice_end = nc_subset_info[dim_name][1]
+        slice_start = nc_subset_info['dim_info'][coor_var_name][0]
+        slice_end = nc_subset_info['dim_info'][coor_var_name][1]
         slice_obj = slice(slice_start, slice_end+1, 1)
         subset_data = coor_var[:][slice_obj]
         nc_rootgroup.variables[coor_var_name][:] = subset_data
@@ -298,29 +312,37 @@ def define_nc_coordinate_variables(nc_rootgroup, nc_subset_info):
 
 
 # define data variable #######################################################################################
-def define_nc_data_variable(nc_rootgroup, nc_subset_info):
-    nc_dataset = get_nc_dataset(nc_subset_info['file_name'])
-    nc_variable_name = nc_subset_info['var_name']
-    nc_variable = nc_dataset.variables[nc_variable_name]
+def define_nc_all_data_variables(nc_rootgroup, nc_subset_info):
+    for nc_variable_name in nc_subset_info['var_name']:
+        try:
+            nc_rootgroup = define_nc_data_variable(nc_rootgroup, nc_subset_info, nc_variable_name)
+        except:
+            continue
 
-    # initiate coordinate variable
-    nc_rootgroup.createVariable(nc_variable_name, nc_variable.dtype,
-                                nc_variable.dimensions,
-                                fill_value=nc_variable._FillValue if hasattr(nc_variable, '_FillValue')else None)
-    # copy coordinate attributes
-    for attr_name, attr_info in nc_variable.__dict__.items():
-        if attr_name != '_FillValue':
-            nc_rootgroup.variables[nc_variable_name].__setattr__(attr_name, attr_info)
-    # assign data variable value
-    nc_variable_data = nc_variable[:]
-    nc_variable_dimension_namelist = nc_variable.dimensions
-    slice_obj = []
-    for dim_name in nc_variable_dimension_namelist:
-        slice_start = nc_subset_info[dim_name][0]
-        slice_end = nc_subset_info[dim_name][1]
-        slice_obj.append(slice(slice_start, slice_end+1, 1))
-    subset_data = nc_variable_data[tuple(slice_obj)]
-    nc_rootgroup.variables[nc_variable_name][:] = subset_data
+    return nc_rootgroup
+
+
+def define_nc_data_variable(nc_rootgroup, nc_subset_info, nc_variable_name):
+    nc_dataset = get_nc_dataset(nc_subset_info['file_name'])
+    if nc_dataset.variables.has_key(nc_variable_name):
+        nc_variable = nc_dataset.variables[nc_variable_name]
+        # initiate data variable
+        nc_rootgroup.createVariable(nc_variable_name, nc_variable.dtype,
+                                    nc_variable.dimensions,
+                                    fill_value=nc_variable._FillValue if hasattr(nc_variable, '_FillValue')else None)
+        # copy data variable attributes
+        for attr_name, attr_info in nc_variable.__dict__.items():
+            if attr_name not in ['_FillValue', 'valid_range', 'valid_min', 'valid_max']:
+                nc_rootgroup.variables[nc_variable_name].__setattr__(attr_name, attr_info)
+        # assign data variable value
+        nc_variable_data = nc_variable[:]
+        slice_obj = []
+        for dim_name in nc_variable.dimensions:
+            slice_start = nc_subset_info['dim_info'][dim_name][0]
+            slice_end = nc_subset_info['dim_info'][dim_name][1]
+            slice_obj.append(slice(slice_start, slice_end+1, 1))
+        subset_data = nc_variable_data[tuple(slice_obj)]
+        nc_rootgroup.variables[nc_variable_name][:] = subset_data
 
     return nc_rootgroup
 
@@ -360,8 +382,8 @@ def define_auxiliary_coordinate_variable(nc_rootgroup, nc_subset_info):
                 nc_variable_data = nc_variable[:]
                 slice_obj = []
                 for dim_name in nc_variable_dimension_namelist:
-                    slice_start = nc_subset_info[dim_name][0]
-                    slice_end = nc_subset_info[dim_name][1]
+                    slice_start = nc_subset_info['dim_info'][dim_name][0]
+                    slice_end = nc_subset_info['dim_info'][dim_name][1]
                     slice_obj.append(slice(slice_start, slice_end+1, 1))
                     subset_data = nc_variable_data[tuple(slice_obj)]
                 nc_rootgroup.variables[nc_variable_name][:] = subset_data
@@ -401,9 +423,9 @@ def define_coordinate_bounds_variable(nc_rootgroup, nc_subset_info):
                 nc_variable_data = nc_variable[:]
                 slice_obj = []
                 for dim_name in nc_variable_dimension_namelist:
-                    if dim_name in nc_subset_info.keys():
-                        slice_start = nc_subset_info[dim_name][0]
-                        slice_end = nc_subset_info[dim_name][1]
+                    if dim_name in nc_subset_info['dim_info'].keys():
+                        slice_start = nc_subset_info['dim_info'][dim_name][0]
+                        slice_end = nc_subset_info['dim_info'][dim_name][1]
                         slice_obj.append(slice(slice_start, slice_end+1, 1))
                     else:
                         slice_start = 0

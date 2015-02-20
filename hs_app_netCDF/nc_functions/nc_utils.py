@@ -184,9 +184,8 @@ def get_nc_variable_coordinate_meta(nc_dataset, nc_variable_name):
 # coordinate variable has the following attributes:
 # 1) it has 1 dimension
 # 2) its name is the same as its dimension name (COARDS convention)
-# 3) data variable dimension is defined base on the coordinate variable
-# 4) coordinate variable sometimes doesn't represent the real lat lon time vertical info
-# 5) coordinate variable sometimes has associated bound variable if it represents the real lat lon time vertical info
+# 3) coordinate variable sometimes doesn't represent the real lat lon time vertical info
+# 4) coordinate variable sometimes has associated bound variable if it represents the real lat lon time vertical info
 
 def get_nc_coordinate_variables(nc_dataset):
     """
