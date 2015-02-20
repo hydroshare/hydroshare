@@ -1009,10 +1009,10 @@ body > .container{
     margin-top:20px;
 }
 
-
 #permission-panel .custom-well{
     height: 235px;
     background: #F7F7F7;
+    min-width:339px;
 }
 
 #permission-panel h5{
