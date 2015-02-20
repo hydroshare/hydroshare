@@ -105,17 +105,17 @@
                     {% endif %}
                 </div>
                 {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                    <img class="cc-image" src="{{ STATIC_URL }}img/creative-commons/CC-BY.png" alt="CC-BY"/>
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
                 {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                    <img class="cc-image" src="{{ STATIC_URL }}img/creative-commons/CC-BY-SA.png" alt="CC-BY-SA"/>
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
                 {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                    <img class="cc-image" src="{{ STATIC_URL }}img/creative-commons/CC-BY-ND.png" alt="CC-BY-ND"/>
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
                 {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                    <img class="cc-image" src="{{ STATIC_URL }}img/creative-commons/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
                 {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                    <img class="cc-image" src="{{ STATIC_URL }}img/creative-commons/CC-BY-NC.png" alt="CC-BY-NC"/>
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
                 {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                    <img class="cc-image" src="{{ STATIC_URL }}img/creative-commons/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
                 {% endif %}
             {% endif %}
 
@@ -397,7 +397,6 @@
                                     </div>
                                 </div>
                                 {#======= Modal window ends =======#}
-
                                 <tr>
                                     <td>
                                         <span class="glyphicon glyphicon-file file-icon"></span>
