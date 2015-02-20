@@ -40,7 +40,7 @@ request_info = {
 
 request_info = {
     'file_name': 'rtof.nc',
-    'var_name': ['salinity', ],
+    'var_name': ['salinity','temperature' ],
     'dim_info': {
         'MT': ['2013-04-25 06:00:00', '2013-04-25 06:00:00'],
         'Depth': ['0.0', '200.0'],
@@ -71,7 +71,7 @@ nc_subset_info = {
 
 nc_subset_info = {
     'file_name': 'rtof.nc',
-    'var_name': ['salinity',],
+    'var_name': ['salinity','temperature'],
     'dim_info': {
     'MT': [0, 0],
     'Depth': [0, 2],
@@ -368,20 +368,19 @@ def define_auxiliary_coordinate_variable(nc_rootgroup, nc_subset_info):
     nc_auxiliary_coordinate_variables = get_nc_auxiliary_coordinate_variables(nc_dataset)
     if nc_auxiliary_coordinate_variables:
         for nc_variable_name, nc_variable in nc_auxiliary_coordinate_variables.items():
-            nc_variable_dimension_namelist = nc_variable.dimensions
-            if set(nc_variable_dimension_namelist).issubset(nc_subset_info.keys()):
+            if set(nc_variable.dimensions).issubset(nc_subset_info['dim_info'].keys()):
                 # initiate coordinate variable
                 nc_rootgroup.createVariable(nc_variable_name, nc_variable.dtype,
                                             nc_variable.dimensions,
                                             fill_value=nc_variable._FillValue if hasattr(nc_variable, '_FillValue')else None)
                 # copy coordinate attributes
                 for attr_name, attr_info in nc_variable.__dict__.items():
-                    if attr_name != '_FillValue':
+                    if attr_name not in ['_FillValue', 'valid_range', 'valid_min', 'valid_max']:
                         nc_rootgroup.variables[nc_variable_name].__setattr__(attr_name, attr_info)
                 # assign data variable value
                 nc_variable_data = nc_variable[:]
                 slice_obj = []
-                for dim_name in nc_variable_dimension_namelist:
+                for dim_name in nc_variable.dimensions:
                     slice_start = nc_subset_info['dim_info'][dim_name][0]
                     slice_end = nc_subset_info['dim_info'][dim_name][1]
                     slice_obj.append(slice(slice_start, slice_end+1, 1))
@@ -397,7 +396,6 @@ def define_coordinate_bounds_variable(nc_rootgroup, nc_subset_info):
     nc_coordinate_bounds_variables = get_nc_coordinate_bounds_variables(nc_dataset)
     if nc_coordinate_bounds_variables:
         for nc_variable_name, nc_variable in nc_coordinate_bounds_variables.items():
-
             # define the dimension variable if this is not defined before
             nc_variable_dimension_namelist = nc_variable.dimensions
             nc_rootgroup_dimension_namelist = nc_rootgroup.dimensions
@@ -417,7 +415,7 @@ def define_coordinate_bounds_variable(nc_rootgroup, nc_subset_info):
                                             fill_value=nc_variable._FillValue if hasattr(nc_variable, '_FillValue')else None)
                 # copy coordinate attributes
                 for attr_name, attr_info in nc_variable.__dict__.items():
-                    if attr_name != '_FillValue':
+                    if attr_name not in ['_FillValue', 'valid_range', 'valid_min', 'valid_max']:
                         nc_rootgroup.variables[nc_variable_name].__setattr__(attr_name, attr_info)
                 # assign data variable value
                 nc_variable_data = nc_variable[:]
