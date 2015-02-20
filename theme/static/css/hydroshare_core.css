@@ -1000,6 +1000,15 @@ body > .container{
     -webkit-border-radius: 6px;
 }
 
+.cc-image{
+    width:88px;
+    height:31px;
+}
+
+#permission-panel{
+    margin-top:20px;
+}
+
 
 #permission-panel .custom-well{
     height: 235px;
