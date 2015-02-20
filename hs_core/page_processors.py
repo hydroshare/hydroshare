@@ -266,6 +266,19 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     return context
 
 
+def check_resource_mode(request):
+    if request.method == "GET":
+        resource_mode = request.session.get('resource-mode', None)
+        if resource_mode == 'edit':
+            edit_resource = True
+            del request.session['resource-mode']
+        else:
+            edit_resource = False
+    else:
+        edit_resource = True
+
+    return edit_resource
+
 def _get_metadata_status(resource):
     if resource.metadata.has_all_required_elements():
         metadata_status = "Sufficient to make public"

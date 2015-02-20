@@ -7,8 +7,8 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ref_ts', '0003_auto_20150122_2231'),
-        ('ref_ts', '0002_auto_20150130_2158'),
+        ('theme', '0003_auto_20150219_1815'),
+        ('theme', '0003_auto_20150218_2116'),
     ]
 
     operations = [
