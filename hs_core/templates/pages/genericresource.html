@@ -62,11 +62,11 @@
                         {% if cm.public %}
                             <input name="t" type="hidden" value="make_private"/>
                             <div class="btn-group" role="group" aria-label="...">
-                                <button data-toggle="tooltip" data-placement="auto"
+                                <button id="btn-public" data-toggle="tooltip" data-placement="auto"
                                         title='Can be viewed and downloaded by anyone.' type="button"
                                         class="btn btn-default active">Public
                                 </button>
-                                <button data-toggle="tooltip" data-placement="auto"
+                                <button id="btn-private" data-toggle="tooltip" data-placement="auto"
                                         title='Can be viewed and downloaded only by designated users or research groups.'
                                         type="submit" class="btn btn-default">Private
                                 </button>
@@ -74,11 +74,11 @@
                         {% else %}
                             <input name="t" type="hidden" value="make_public"/>
                             <div class="btn-group" role="group" aria-label="...">
-                                <button data-toggle="tooltip" data-placement="auto"
+                                <button id="btn-public" data-toggle="tooltip" data-placement="auto"
                                         title='Can be viewed and downloaded by anyone.' type="submit"
                                         class="btn btn-default">Public
                                 </button>
-                                <button data-toggle="tooltip" data-placement="auto"
+                                <button id="btn-private" data-toggle="tooltip" data-placement="auto"
                                         title='Can be viewed and downloaded only by designated users or research groups.'
                                         type="button" class="btn btn-default active">Private
                                 </button>
@@ -476,24 +476,42 @@
                             </a>
                         </li>
                     {% endif %}
-                    <li>
-                        <a href="#resourceSpecificTab" data-toggle="tab">
-                            <span class="glyphicon glyphicon-folder-close"></span>
-                            &nbspResource Specific
-                        </a>
-                    </li>
+                    {#                    <li>#}
+                    {#                        <a href="#resourceSpecificTab" data-toggle="tab">#}
+                    {#                            <span class="glyphicon glyphicon-folder-close"></span>#}
+                    {#                            &nbspResource Specific#}
+                    {#                        </a>#}
+                    {#                    </li>#}
                 </ul>
             </div>
             <div class="tabs-body">
-                <!-- Tab panes -->
-                <div class="tab-content">
-                    <!-- ========= CONTACT TAB ========= -->
-                    <div class="tab-pane active" id="contactTab">
-                        <div>
-                            <table class="table table-striped">
-                                <tbody>
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <!-- ========= CONTACT TAB ========= -->
+                <div class="tab-pane active" id="contactTab">
+                    <div>
+                        <table class="table table-striped">
+                            <tbody>
+                            <tr>
+                                <th class="division-title">Authors</th>
+                            </tr>
+                            <tr class="header-row">
+                                <th>Name</th>
+                                <th>Organization</th>
+                                <th>Address</th>
+                                <th>Phone</th>
+                            </tr>
+                            {% for cr in creators %}
                                 <tr>
-                                    <th class="division-title">Authors</th>
+                                    <td>{{ cr.name }}</td>
+                                    <td>{% if cr.organization %} {{ cr.organization }}{% endif %}</td>
+                                    <td>{% if cr.organization %} {{ cr.address }}{% endif %}</td>
+                                    <td>{% if cr.organization %} {{ cr.phone }}{% endif %}</td>
+                                </tr>
+                            {% endfor %}
+                            {% if contributors %}
+                                <tr>
+                                    <th class="division-title">Contributors</th>
                                 </tr>
                                 <tr class="header-row">
                                     <th>Name</th>
@@ -501,391 +519,882 @@
                                     <th>Address</th>
                                     <th>Phone</th>
                                 </tr>
-                                {% for cr in creators %}
+
+                                {% for cont in contributors %}
                                     <tr>
-                                        <td>{{ cr.name }}</td>
-                                        <td>{% if cr.organization %} {{ cr.organization }}{% endif %}</td>
-                                        <td>{% if cr.organization %} {{ cr.address }}{% endif %}</td>
-                                        <td>{% if cr.organization %} {{ cr.phone }}{% endif %}</td>
+                                        <td>{{ cont.name }}</td>
+                                        <td>{{ cont.organization }}</td>
+                                        <td>{{ cont.address }}</td>
+                                        <td>{{ cont.phone }}</td>
                                     </tr>
                                 {% endfor %}
-                                {% if contributors %}
-                                    <tr>
-                                        <th class="division-title">Contributors</th>
-                                    </tr>
-                                    <tr class="header-row">
-                                        <th>Name</th>
-                                        <th>Organization</th>
-                                        <th>Address</th>
-                                        <th>Phone</th>
-                                    </tr>
-
-                                    {% for cont in contributors %}
-                                        <tr>
-                                            <td>{{ cont.name }}</td>
-                                            <td>{{ cont.organization }}</td>
-                                            <td>{{ cont.address }}</td>
-                                            <td>{{ cont.phone }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                {% endif %}
-                                </tbody>
-                            </table>
-
-                        </div>
-                    </div>
-                    <!-- ========= COVERAGE TAB ========= -->
-                    {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
-                        <div class="tab-pane" id="coveragelTab">
-                            <div class="division-title"><p>Spatial</p></div>
-                            <table class="table">
-                                <tbody>
-                                {% if spatial_coverage.type == 'point' %}
-                                    {#                                TODO: find a place for doi field#}
-                                    {#                                {% if cm.doi %}#}
-                                    {#                                <tr>#}
-                                    {#								    <th scope="row" class="dataset-label">DOI:</th>#}
-                                    {#								    <td class="dataset-details"><a id="permalink" href="http://{{ request.get_host }}/r/doi/{{ cm.doi }}/">{{ cm.doi }}</a></td>#}
-                                    {#							    </tr>#}
-                                    {#                                {% endif %}#}
-                                    {% if spatial_coverage.name %}
-                                        <tr>
-                                            <th scope="row" class="dataset-label">Place/Area Name:</th>
-                                            <td class="dataset-details">{{ spatial_coverage.name }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if spatial_coverage.projection %}
-                                        <tr>
-                                            <th scope="row" class="dataset-label">Coordinate System/Geographic
-                                                Projection:
-                                            </th>
-                                            <td class="dataset-details">{{ spatial_coverage.projection }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if spatial_coverage.east %}
-                                        <tr>
-                                            <th scope="row" class="dataset-label">Longitude:</th>
-                                            <td class="dataset-details">{{ spatial_coverage.east }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if spatial_coverage.north %}
-                                        <tr>
-                                            <th scope="row" class="dataset-label">Latitude:</th>
-                                            <td class="dataset-details">{{ spatial_coverage.north }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if spatial_coverage.units %}
-                                        <tr>
-                                            <th scope="row" class="dataset-label">Coordinate Units:</th>
-                                            <td class="dataset-details">{{ spatial_coverage.units }}</td>
-                                        </tr>
-                                    {% endif %}
-                                {% else %}
-                                    {% if spatial_coverage.name %}
-                                        <tr>
-                                            <th scope="row" class="dataset-label">Place/Area Name:</th>
-                                            <td class="dataset-details">{{ spatial_coverage.name }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if spatial_coverage.projection %}
-                                        <tr>
-                                            <th scope="row" class="dataset-label">Coordinate System/Geographic
-                                                Projection:
-                                            </th>
-                                            <td class="dataset-details">{{ spatial_coverage.projection }}</td>
-                                        </tr>
-
-                                    {% endif %}
-                                    {% if spatial_coverage.northlimit %}
-                                        <tr>
-                                            <th scope="row" class="dataset-label">North Latitude:</th>
-                                            <td class="dataset-details">{{ spatial_coverage.northlimit }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if spatial_coverage.eastlimit %}
-                                        <tr>
-                                            <th scope="row" class="dataset-label">East Longitude:</th>
-                                            <td class="dataset-details">{{ spatial_coverage.eastlimit }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if spatial_coverage.southlimit %}
-                                        <tr>
-                                            <th scope="row" class="dataset-label">South Latitude:</th>
-                                            <td class="dataset-details">{{ spatial_coverage.southlimit }}</td>
-                                        </tr>
-
-                                    {% endif %}
-                                    {% if spatial_coverage.westlimit %}
-                                        <tr>
-                                            <th scope="row" class="dataset-label">West Longitude:</th>
-                                            <td class="dataset-details">{{ spatial_coverage.westlimit }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if spatial_coverage.units %}
-                                        <tr>
-                                            <th scope="row" class="dataset-label">Coordinate Units:</th>
-                                            <td class="dataset-details">{{ spatial_coverage.units }}</td>
-                                        </tr>
-                                    {% endif %}
-                                {% endif %}
-                                </tbody>
-                            </table>
-                            {% if temporal_coverage %}
-                                <div class="division-title"><p>Temporal</p></div>
-                                <table class="table">
-                                    <tbody>
-                                    <tr>
-                                        <th scope="row" class="dataset-label">Start Date:</th>
-                                        <td class="dataset-details">{{ temporal_coverage.start_date }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row" class="dataset-label">End Date:</th>
-                                        <td class="dataset-details">{{ temporal_coverage.end_date }}</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
                             {% endif %}
-                        </div>
-                    {% endif %}
-                    <!-- ========= RELATED RESOURCES TAB ========= -->
-                    {% if sources %}
-                        <div class="tab-pane" id="relatedResourcesTab">
-                            <table class="table">
-                                <tbody>
-                                {% for source in sources %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">Derived From:</th>
-                                        <td class="dataset-details">{{ source.derived_from }}</td>
-                                    </tr>
-                                {% endfor %}
-                                {% for relation in relations %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                        <td class="dataset-details">{{ relation.value }}</td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% endif %}
-                    <!-- ========= RESOURCE SPECIFIC TAB ========= -->
-                    <div class="tab-pane" id="resourceSpecificTab">
-                        {#                    TODO: resource specific fields#}
-                        {#                    <table class="table">#}
-                        {#                        {% for term in dublin_core %}#}
-                        {#                            {% ifnotequal term|dcterm 'Title' %}#}
-                        {#                                <tr>#}
-                        {#                                    <th>{{ term|dcterm }}</th>#}
-                        {#                                    <td>{{ term.content }}</td>#}
-                        {#                                </tr>#}
-                        {#                            {% endifnotequal %}#}
-                        {#                        {% endfor %}#}
-                        {#                    </table>#}
-                        {#                    {% if page.perms.change %}#}
-                        {#                        <button class="btn btn-primary" id="add-dcterm" data-toggle="modal" data-target="#add-dcterm-dialog">Add metadata term</button>#}
-                        {#                    {% endif %}#}
+                            </tbody>
+                        </table>
+
                     </div>
                 </div>
-            </div>
-            </div>
-        {% endif %}
-        <!-- ==== Tabs end ==== -->
+                <!-- ========= COVERAGE TAB ========= -->
+                {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
+                    <div class="tab-pane" id="coveragelTab">
+                        <div class="division-title"><p>Spatial</p></div>
+                        <table class="table">
+                            <tbody>
+                            {% if spatial_coverage.type == 'point' %}
+                                {#                                TODO: find a place for doi field#}
+                                {#                                {% if cm.doi %}#}
+                                {#                                <tr>#}
+                                {#								    <th scope="row" class="dataset-label">DOI:</th>#}
+                                {#								    <td class="dataset-details"><a id="permalink" href="http://{{ request.get_host }}/r/doi/{{ cm.doi }}/">{{ cm.doi }}</a></td>#}
+                                {#							    </tr>#}
+                                {#                                {% endif %}#}
+                                {% if spatial_coverage.name %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Place/Area Name:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.name }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.projection %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Coordinate System/Geographic
+                                            Projection:
+                                        </th>
+                                        <td class="dataset-details">{{ spatial_coverage.projection }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.east %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Longitude:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.east }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.north %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Latitude:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.north }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.units %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Coordinate Units:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.units }}</td>
+                                    </tr>
+                                {% endif %}
+                            {% else %}
+                                {% if spatial_coverage.name %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Place/Area Name:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.name }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.projection %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Coordinate System/Geographic
+                                            Projection:
+                                        </th>
+                                        <td class="dataset-details">{{ spatial_coverage.projection }}</td>
+                                    </tr>
 
-        {% if not metadata_form %}
+                                {% endif %}
+                                {% if spatial_coverage.northlimit %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">North Latitude:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.northlimit }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.eastlimit %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">East Longitude:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.eastlimit }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.southlimit %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">South Latitude:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.southlimit }}</td>
+                                    </tr>
+
+                                {% endif %}
+                                {% if spatial_coverage.westlimit %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">West Longitude:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.westlimit }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if spatial_coverage.units %}
+                                    <tr>
+                                        <th scope="row" class="dataset-label">Coordinate Units:</th>
+                                        <td class="dataset-details">{{ spatial_coverage.units }}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endif %}
+                            </tbody>
+                        </table>
+                        {% if temporal_coverage %}
+                            <div class="division-title"><p>Temporal</p></div>
+                            <table class="table">
+                                <tbody>
+                                <tr>
+                                    <th scope="row" class="dataset-label">Start Date:</th>
+                                    <td class="dataset-details">{{ temporal_coverage.start_date }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="dataset-label">End Date:</th>
+                                    <td class="dataset-details">{{ temporal_coverage.end_date }}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                <!-- ========= RELATED RESOURCES TAB ========= -->
+                {% if sources %}
+                    <div class="tab-pane" id="relatedResourcesTab">
+                        <table class="table">
+                            <tbody>
+                            {% for source in sources %}
+                                <tr>
+                                    <th scope="row" class="dataset-label">Derived From:</th>
+                                    <td class="dataset-details">{{ source.derived_from }}</td>
+                                </tr>
+                            {% endfor %}
+                            {% for relation in relations %}
+                                <tr>
+                                    <th scope="row" class="dataset-label">{{ relation.type }}:</th>
+                                    <td class="dataset-details">{{ relation.value }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+                <!-- ========= RESOURCE SPECIFIC TAB ========= -->
+                {#                    <div class="tab-pane" id="resourceSpecificTab">#}
+                {#                    TODO: resource specific fields#}
+                {#                    <table class="table">#}
+                {#                        {% for term in dublin_core %}#}
+                {#                            {% ifnotequal term|dcterm 'Title' %}#}
+                {#                                <tr>#}
+                {#                                    <th>{{ term|dcterm }}</th>#}
+                {#                                    <td>{{ term.content }}</td>#}
+                {#                                </tr>#}
+                {#                            {% endifnotequal %}#}
+                {#                        {% endfor %}#}
+                {#                    </table>#}
+                {#                    {% if page.perms.change %}#}
+                {#                        <button class="btn btn-primary" id="add-dcterm" data-toggle="modal" data-target="#add-dcterm-dialog">Add metadata term</button>#}
+                {#                    {% endif %}#}
+                {#                    </div>#}
+            </div>
+            <!-- ==== Tabs end ==== -->
+            </div>
+            </div>
+            {% if not keywords or not abstract %}
+                <table class="table table-condensed" style="margin-top: 2px; border: 2px solid red">
+                    <tr style="color: red">
+                        <td><h4>Data for the following required elements are missing:</h4></td>
+                    </tr>
+                    {% if not abstract %}
+                        <tr>
+                            <td>Abstract</td>
+                        </tr>
+                    {% endif %}
+                    {% if not keywords %}
+                        <tr>
+                            <td>Keywords</td>
+                        </tr>
+                    {% endif %}
+                    {% if title|stringformat:"s" == "Untitled resource" %}
+                        <tr>
+                            <td>Title:Needs to be changed</td>
+                        </tr>
+                    {% endif %}
+                </table>
+            {% endif %}
             {% comments_for cm %}
         {% endif %}
 
-        <div class="row">
-            <div class="col-md-12">
-                <div class="form-group">
-                    {% if metadata_form %}
-                        <button id="metadata-show-toggle" type="button" class="btn btn-primary"
-                                onclick="toggle_metadata_display()">Collapse All
-                        </button>
-                        {% crispy metadata_form %}
-                    {% else %}
-                        <div>
-                            {% if not keywords or not abstract %}
-                                <table class="table table-condensed" style="margin-top: 2px; border: 2px solid red">
-                                    <tr style="color: red">
-                                        <td><h4>Data for the following required elements are missing:</h4></td>
-                                    </tr>
-                                    {% if not abstract %}
-                                        <tr>
-                                            <td>Abstract</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if not keywords %}
-                                        <tr>
-                                            <td>Keywords</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if title|stringformat:"s" == "Untitled resource" %}
-                                        <tr>
-                                            <td>Title:Needs to be changed</td>
-                                        </tr>
-                                    {% endif %}
-                                </table>
-                            {% endif %}
-                        </div>
-                    {% endif %}
 
-                    <div>
-                        {# TODO: Pabitra to check if this for loop code is relevant #}
-                        {% for attr, val_dict in core_metadata.items %}
-                            <h5>{{ attr }}</h5>
-                            <table class="table table-condensed">
-                                {% for subattr, subval in val_dict.items %}
-                                    <tr>
-                                        <th>{{ subattr }}</th>
-                                        <td>{{ subval }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </table>
+        {#        ============= FORM EDIT BEGINS ==============#}
+        {% if metadata_form %}
+            <div class="custom-btn-toolbar">
+                <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
+                    {% csrf_token %}
+                    <button id="save" type="submit" data-toggle="tooltip" data-placement="auto"
+                            title="Edit" class="glyphicon glyphicon-floppy-disk icon-button btn-edit"></button>
+                    <button id="btn-cancel" type="submit" data-toggle="tooltip" data-placement="auto"
+                            title="Cancel" class="glyphicon glyphicon-remove-sign icon-button btn-remove"></button>
+                </form>
+            </div>
+            {#           ------- TITLE -------  #}
+            <input id="txt-title" type="text" class="form-control input-md textinput textInput" value="{{ title }}"/>
+
+            <div class="info-group">
+                <div>
+                    <span id="authors">Authors:
+                        {% for cr in creators %}
+                            {{ cr.name }},&nbsp
                         {% endfor %}
-                    </div>
+                    </span>
                 </div>
+                <div><span>Owner: {{ cm.user }}</span></div>
+                <div><span>Created on {{ cm.created|date }}. Last updated on {{ cm.updated|date }}.</span></div>
+                <div><span>Resource type: {{ resource_type }}</span></div>
             </div>
-        </div>
 
-        {#                #}
-        {# dialogs follow #}
-        {#                #}
-
-        <!-- Modal -->
-        <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title" id="submit-for-publication-title">Submit resource for publication</h4>
-                    </div>
-                    <div class="modal-body">
-                        <p>
-                            Once you submit the resource for publication it cannot be changed again. This will assign a
-                            DOI to the
-                            resource as it stands now and mark it as permanent. To make any changes after this, you
-                            <strong>must</strong>
-                            create a brand new resource. Click "Publish" if you really intend to do this.
-                        </p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/">Publish</a>
-                    </div>
-                </div>
+            {#           ------- ABSTRACT -------  #}
+            <div class="content-block">
+                <h3>Abstract</h3>
+                <textarea id="txt-abstract" class="form-control input-md">This dataset contains observations for
+                    multiple water quality variables recorded every 30 minutes in the Little Bear River at Mendon Road
+                    near Mendon, UT, USA. The values were recorded using a Hydrolab Minisonde 5 multiparameter water
+                    quality sonde connected to a Campbell Scientific datalogger. Values represent raw data recorded by
+                    the datalogger in the field and have not undergone any data quality control.</textarea>
             </div>
-        </div>
 
-
-        <div class="modal fade" id="delete-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title" id="delete-resource-title">Delete Resource</h4>
-                    </div>
-                    <div class="modal-body">
-                        <strong>THIS IS A PERMANENT ACTION. </strong>
-                        <ul>
-                            <li>This will delete the resource file.</li>
-                            <li>A copy of your resource file will not be retained by Hydroshare.</li>
-                            <li>We highly recommend that you download the latest copy of your resource file before
-                                confirming this action.
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <a type="button" class="btn btn-danger"
-                           href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
-                    </div>
-                </div>
+            {#           ------- CITATION -------  #}
+            <div class="content-block">
+                <h3>How to cite</h3>
+                <span id="citation-text">{{ citation }}</span>
             </div>
-        </div>
-        <!-- Modal -->
-        <div class="modal fade" id="add-dcterm-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form action="/hsapi/_internal/{{ cm.short_id }}/add-metadata/">
 
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" id="myModalLabel">Add metadata term</h4>
-                        </div>
-                        <div class="modal-body">
-                            {% csrf_token %}
 
-                            {{ dcterm_frm|crispy }}
+            {#           ------- SHARING -------  #}
+            <div class="content-block">
+            <h3>Sharing</h3>
 
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Save changes</button>
-                        </div>
+            <div id="sharing-status">
+                <span class="pull-left">Sharing status:</span>
+                {% if page.perms.change %}
+                    <form id="form-sharing" class="pull-left"
+                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                        {% csrf_token %}
+                        {% if cm.public %}
+                            <input name="t" type="hidden" value="make_private"/>
+                            <div class="btn-group" role="group" aria-label="...">
+                                <button id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                        title='Can be viewed and downloaded by anyone.' type="button"
+                                        class="btn btn-default active">Public
+                                </button>
+                                <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                        title='Can be viewed and downloaded only by designated users or research groups.'
+                                        type="submit" class="btn btn-default">Private
+                                </button>
+                            </div>
+                        {% else %}
+                            <input name="t" type="hidden" value="make_public"/>
+                            <div class="btn-group" role="group" aria-label="...">
+                                <button id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                        title='Can be viewed and downloaded by anyone.' type="submit"
+                                        class="btn btn-default">Public
+                                </button>
+                                <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                        title='Can be viewed and downloaded only by designated users or research groups.'
+                                        type="button" class="btn btn-default active">Private
+                                </button>
+                            </div>
+                        {% endif %}
                     </form>
+                {% else %}
+                    {% if cm.public %}
+                        <strong>&nbspPublic</strong>
+                    {% else %}
+                        <strong>&nbspPrivate</strong>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+
+            <div id="rights">
+                <div class="col-md-6 col-sm-12" id="panel-left">
+                    <label class="control-label" for="select_license"> Select a license </label>
+                    <select id="select_license" class="form-control">
+                        <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY
+                        </option>
+                        <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons
+                            Attribution-ShareAlike CC BY-SA
+                        </option>
+                        <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons
+                            Attribution-NoDerivs
+                            CC BY-ND
+                        </option>
+                        <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons
+                            Attribution-NoCommercial-ShareAlike CC BY-NC-SA
+                        </option>
+                        <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons
+                            Attribution-NoCommercial CC BY-NC
+                        </option>
+                        <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons
+                            Attribution-NoCommercial-NoDerivs CC BY-NC-ND
+                        </option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6 col-sm-12 no-padding" id="panel-right">
+                    <label for="id_statement" class="control-label">
+                        Statement
+                    </label>
+                    <textarea class="form-control input-md textarea" cols="40" id="id_statement" name="statement"
+                              readonly="True" rows="3" style="background-color:white;">This resource is shared under the
+                        Creative Commons Attribution CC BY.</textarea>
+                    <label for="id_url" class="control-label">Url</label>
+                    <input class="form-control input-md urlinput" id="id_url" maxlength="200"
+                           readonly="True" style="background-color:white;"
+                           type="url" value="http://creativecommons.org/licenses/by/4.0/">
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
                 </div>
             </div>
-        </div>
-        <!-- Modal -->
-        <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form action="/hsapi/_internal/{{ cm.short_id }}/add-citation/">
+            {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
+            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
+            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
+            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
+            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
+            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
+            {% endif %}
 
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" id="myModalLabel">Add reference</h4>
-                        </div>
-                        <div class="modal-body">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="add-citation-input">Citation text:</label>
-                                <textarea class="form-control" name="content" id="add-citation-input" cols="30"
-                                          rows="10"></textarea>
+            <div id="permission-panel">
+            {% if user == cm.user %}
+                <p>You are the owner of this resource.</p>
+            {% elif is_edit_user %}
+                <p>You have been given specific permission to edit this resource.</p>
+            {% elif in_edit_group %}
+                Your research group(s) have been given specific permission to edit this resource.</p>
+            {% elif is_view_user %}
+                <p>You have been given specific permission to view this resource.</p>
+            {% elif in_view_group %}
+                <p>Your research group(s) have been given specific permission to view this resource.</p>
+            {% endif %}
+
+            {% if page.perms.change %}
+                <div class="panel panel-default panel-faq">
+                <div class="panel-heading">
+                    <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
+                        <h4 class="panel-title">
+                            Manage access
+                            <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
+                        </h4>
+                    </a>
+                </div>
+                <div id="faq-cat-1-sub-1" class="panel-collapse in" style="height: auto;">
+                    <div class="panel-body">
+                        <div class="col-md-4">
+                            <div class="custom-well">
+                                <h5><strong>Users with full read/write permissions on this resource</strong></h5>
+
+                                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                      method="POST">
+                                    {% csrf_token %}
+                                    <select name="designees" id="owners-select" multiple class="form-control"
+                                            size="{{ owners.count }}">
+                                        {% for u in owners %}
+                                            <option value="{{ u.pk }}" selected>{{ u|best_name }}
+                                                ({{ u.username }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <input name="t" value="owners" type="hidden"/>
+                                    <button type="submit"
+                                            class="btn btn-update-list pull-left btn-primary glyphicon"><span
+                                            class="button-label">&nbspUpdate access list</span></button>
+                                        <span data-toggle="tooltip" data-placement="auto"
+                                              title='Hold down "Control", or "Command" on a Mac, to select more than one.'
+                                              class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                </form>
+                                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                      method="POST" style="padding-top:0.3em">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <button type="submit"
+                                                class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
+                                                class="button-label">&nbspAdd user</span></button>
+                                        {{ add_owner_user_form.user }}
+                                        <input name="t" value="add_owner" type="hidden"/>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Save changes</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
 
-        <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST"
-                          enctype="multipart/form-data">
+                        <div class="col-md-4">
+                            <div class="custom-well">
+                                <h5><strong>Users who can edit the content of this resource</strong></h5>
 
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>
+                                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                      method="POST">
+                                    {% csrf_token %}
+                                    <select name="designees" id="edit_users-select" multiple
+                                            class="form-control" size="{{ edit_users.count }}">
+                                        {% for u in edit_users %}
+                                            <option value="{{ u.pk }}" selected>{{ u|best_name }}
+                                                ({{ u.username }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <input name="t" value="edit_users" type="hidden"/>
+                                    <button type="submit"
+                                            class="btn btn-update-list pull-left btn-primary glyphicon"><span
+                                            class="button-label">&nbspUpdate access list</span></button>
+                                        <span data-toggle="tooltip" data-placement="auto"
+                                              title='Hold down "Control", or "Command" on a Mac, to select more than one.'
+                                              class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                </form>
+                                <form class="form-inline"
+                                      action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                      method="POST" style="padding-top:0.3em">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+
+
+                                        <button type="submit"
+                                                class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus"><span
+                                                class="button-label">&nbspAdd user</span></button>
+                                        {{ add_edit_user_form.user }}
+                                        <input name="t" value="add_edit_user" type="hidden"/>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                        <div class="modal-body">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="add-citation-input">Select files:</label>
-                                <input type="file" name="files" id="add-file-input" multiple/>
+
+                        <div class="col-md-4">
+                            <div class="custom-well">
+                                <h5><strong>Research groups that can edit the content of this resource</strong>
+                                </h5>
+
+                                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                      method="POST">
+                                    {% csrf_token %}
+                                    <select name="designees" id="edit_groups-select" multiple
+                                            class="form-control" size="{{ edit_groups.count }}">
+                                        {% for u in edit_groups %}
+                                            <option value="{{ u.pk }}"
+                                                    {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input name="t" value="edit_groups" type="hidden"/>
+                                    <button type="submit"
+                                            class="btn btn-update-list pull-left btn-primary glyphicon"><span
+                                            class="button-label">&nbspUpdate access list</span></button>
+                                        <span data-toggle="tooltip" data-placement="auto"
+                                              title='Hold down "Control", or "Command" on a Mac, to select more than one.'
+                                              class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                </form>
+                                <form class="form-inline"
+                                      action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                      method="POST" style="padding-top:0.3em">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+
+
+                                        <button type="submit"
+                                                class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus"><span
+                                                class="button-label">&nbspAdd group</span></button>
+                                        {{ add_edit_group_form.user }}
+                                        <input name="t" value="add_edit_group" type="hidden"/>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        {% if not cm.public %}
+                            <div class="col-md-4">
+                                <div class="custom-well">
+                                    <h5><strong>Users who can view and download the resource</strong></h5>
+
+                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <select name="designees" id="view_users-select" multiple
+                                                class="form-control" size="{{ view_users.count }}">
+                                            {% for u in view_users %}
+                                                <option value="{{ u.pk }}"
+                                                        {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input name="t" value="view_users" type="hidden"/>
+                                        <button type="submit"
+                                                class="btn btn-update-list pull-left btn-primary glyphicon">
+                                            <span class="button-label">&nbspUpdate access list</span></button>
+                                            <span data-toggle="tooltip" data-placement="auto"
+                                                  title='Hold down "Control", or "Command" on a Mac, to select more than one.'
+                                                  class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                    </form>
+                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                          method="POST" style="padding-top:0.3em">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <button type="submit"
+                                                    class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
+                                                    class="button-label">&nbspAdd user</span></button>
+                                            {{ add_view_user_form.user }}
+                                            <input name="t" value="add_view_user" type="hidden"/>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
 
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Save changes</button>
-                        </div>
-                    </form>
+                            <div class="col-md-4">
+                                <div class="custom-well">
+                                    <h5><strong>Research groups that can view and download the resource</strong>
+                                    </h5>
+
+                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <select name="designees" id="view_groups-select" multiple
+                                                class="form-control" size="{{ view_groups.count }}">
+                                            {% for u in view_groups %}
+                                                <option value="{{ u.pk }}"
+                                                        {% if u in view_groups %}selected{% endif %}>{{ u }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input name="t" value="view_groups" type="hidden"/>
+                                        <button type="submit"
+                                                class="btn btn-update-list pull-left btn-primary glyphicon">
+                                            <span class="button-label">&nbspUpdate access list</span></button>
+                                            <span data-toggle="tooltip" data-placement="auto"
+                                                  title='Hold down "Control", or "Command" on a Mac, to select more than one.'
+                                                  class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                    </form>
+                                    <form class="form-inline"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                          method="POST" style="padding-top:0.3em">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <button type="submit"
+                                                    class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus">
+                                                <span class="button-label">&nbspAdd group</span></button>
+                                            {{ add_view_group_form.user }}
+                                            <input name="t" value="add_view_group" type="hidden"/>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                </div>
+                <div>
+
+                </div>
+            {% endif %}
+
+            </div>
+            <div class="content-block">
+                <h3>Keywords</h3>
+
+                <div class="tags">
+                    <ul class="tag-list custom-well">
+                        <li class="tag"><span>These</span>&nbsp<a><span
+                                class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>
+                        <li class="tag"><span>are</span>&nbsp<a><span
+                                class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>
+                        <li class="tag"><span>some</span>&nbsp<a><span
+                                class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>
+                        <li class="tag"><span>keywords</span>&nbsp<a><span
+                                class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>
+                        <li class="tag"><span class="glyphicon glyphicon-plus icon-add"></span></li>
+                    </ul>
+                </div>
+            </div>
+            </div>
+
+            <div>
+                <h3>Content</h3>
+
+                <div class="custom-well">
+                    {#            {% block extra_content %}#}
+                    {#            {% endblock %}#}
+                    <div class="table-container">
+                        <table class="table-plain table-striped">
+                            {% for f in cm.files.all %}
+                                {#======= Modal window begins =======#}
+                                <div class="modal fade" id="delete-resource-file-{{ f.pk }}" tabindex="-1" role="dialog"
+                                     aria-labelledby="myModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal"
+                                                        aria-hidden="true">&times;</button>
+                                                <h4 class="modal-title">Confirm file deletion</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                This will delete the file from the resource. Consider saving a copy if
+                                                it is important to you.
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default" data-dismiss="modal">
+                                                    Cancel
+                                                </button>
+                                                <a type="button" class="btn btn-danger"
+                                                   href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {#======= Modal window ends =======#}
+                                <tr>
+                                    <td>
+                                        <span class="glyphicon glyphicon-file file-icon"></span>
+                            <span>
+                                <span class="label-file-name">{{ f.resource_file.name|slice:"33:" }}</span>
+                                <p class="label-file-size">{{ f.resource_file.size|filesizeformat }}</p>
+                            </span>
+                                    </td>
+                                    {#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
+                                    <td>
+                                        {% if page.perms.change %}
+                                            <a href="{{ f.resource_file.url }}"><span data-toggle="modal"
+                                                                                      data-target="#delete-resource-file-{{ f.pk }}"
+                                                                                      data-placement="auto"
+                                                                                      title="Delete"
+                                                                                      class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>
+                                        {% endif %}
+                                        <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"
+                                                                                  data-placement="auto" title="Download"
+                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>
+                                        {% if preview %}
+                                            <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"
+                                                                                      data-placement="auto"
+                                                                                      title="Preview"
+                                                                                      class="glyphicon glyphicon-eye-open icon-button"></span></a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+
+                    <!-- Buttons -->
+                    {% for b in cm.bags.all %}
+                        <a type="button" class="btn btn-default" href="{{ bag.bag.url }}">
+                <span class="glyphicon glyphicon-download-alt">
+                    <span class="button-label">Download All ({{ b.bag.size|filesizeformat }})</span>
+                </span>
+                        </a>
+                    {% endfor %}
+
+                    {#                      {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
+                    {% if page.perms.change %}
+                        {#                        <td><button class="btn btn-success"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>#}
+                        <td><a type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
+                               multiple="multiple">
+                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
+                        </a></td>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- === Tabs begin === -->
+            <div class="tab-elements">
+            <div class="panel-tabs">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="#contactTab" data-toggle="tab">
+                            <span class="glyphicon glyphicon-user"> </span>
+                            &nbspContact
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#coveragelTab" data-toggle="tab">
+                            <span class="glyphicon glyphicon-globe"></span>
+                            &nbspCoverage
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#relatedResourcesTab" data-toggle="tab">
+                            <span class="glyphicon glyphicon-book"></span>
+                            &nbspRelated Resources
+                        </a>
+                    </li>
+                    {#                    <li>#}
+                    {#                        <a href="#resourceSpecificTab" data-toggle="tab">#}
+                    {#                            <span class="glyphicon glyphicon-folder-close"></span>#}
+                    {#                            &nbspResource Specific#}
+                    {#                        </a>#}
+                    {#                    </li>#}
+                </ul>
+            </div>
+            <div class="tabs-body">
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <!-- ========= CONTACT TAB ========= -->
+                    <div class="tab-pane active" id="contactTab">
+
+                    </div>
+                    <!-- ========= COVERAGE TAB ========= -->
+                    <div class="tab-pane" id="coveragelTab">
+
+                    </div>
+
+                    <!-- ========= RELATED RESOURCES TAB ========= -->
+                    <div class="tab-pane" id="relatedResourcesTab">
+                        <table class="table">
+                            <tbody>
+                            {% for source in sources %}
+                                <tr>
+                                    <th scope="row" class="dataset-label">Derived From:</th>
+                                    <td class="dataset-details">{{ source.derived_from }}</td>
+                                </tr>
+                            {% endfor %}
+                            {% for relation in relations %}
+                                <tr>
+                                    <th scope="row" class="dataset-label">{{ relation.type }}:</th>
+                                    <td class="dataset-details">{{ relation.value }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- ==== Tabs end ==== -->
+        {% endif %}
+
+    {#        ============= FORM EDIT ENDS ==============#}
+
+
+    {#                #}
+    {# dialogs follow #}
+    {#                #}
+
+    <!-- Modal -->
+    <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="submit-for-publication-title">Submit resource for publication</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Once you submit the resource for publication it cannot be changed again. This will assign a
+                        DOI to the
+                        resource as it stands now and mark it as permanent. To make any changes after this, you
+                        <strong>must</strong>
+                        create a brand new resource. Click "Publish" if you really intend to do this.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a type="button" class="btn btn-danger"
+                       href="/hsapi/_internal/{{ cm.short_id }}/publish/">Publish</a>
                 </div>
             </div>
         </div>
+    </div>
 
+    <div class="modal fade" id="delete-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="delete-resource-title">Delete Resource</h4>
+                </div>
+                <div class="modal-body">
+                    <strong>THIS IS A PERMANENT ACTION. </strong>
+                    <ul>
+                        <li>This will delete the resource file.</li>
+                        <li>A copy of your resource file will not be retained by Hydroshare.</li>
+                        <li>We highly recommend that you download the latest copy of your resource file before
+                            confirming this action.
+                        </li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a type="button" class="btn btn-danger"
+                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="add-dcterm-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/hsapi/_internal/{{ cm.short_id }}/add-metadata/">
+
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">Add metadata term</h4>
+                    </div>
+                    <div class="modal-body">
+                        {% csrf_token %}
+
+                        {{ dcterm_frm|crispy }}
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/hsapi/_internal/{{ cm.short_id }}/add-citation/">
+
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">Add reference</h4>
+                    </div>
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="add-citation-input">Citation text:</label>
+                            <textarea class="form-control" name="content" id="add-citation-input" cols="30"
+                                      rows="10"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST"
+                      enctype="multipart/form-data">
+
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>
+                    </div>
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="add-citation-input">Select files:</label>
+                            <input type="file" name="files" id="add-file-input" multiple/>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
 
     {% endwith %}
 
