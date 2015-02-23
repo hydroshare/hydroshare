@@ -5560,6 +5560,7 @@ ALTER TABLE ONLY theme_userprofile ALTER COLUMN id SET DEFAULT nextval('theme_us
 --
 
 COPY auth_group (id, name) FROM stdin;
+1	Hydroshare Author
 \.
 
 
@@ -5567,7 +5568,7 @@ COPY auth_group (id, name) FROM stdin;
 -- Name: auth_group_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_group_id_seq', 1, false);
+SELECT pg_catalog.setval('auth_group_id_seq', 1, true);
 
 
 --
@@ -5575,6 +5576,132 @@ SELECT pg_catalog.setval('auth_group_id_seq', 1, false);
 --
 
 COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
+1	1	46
+2	1	47
+3	1	48
+4	1	49
+5	1	50
+6	1	51
+7	1	52
+8	1	53
+9	1	54
+10	1	55
+11	1	56
+12	1	57
+13	1	133
+14	1	134
+15	1	135
+16	1	136
+17	1	137
+18	1	138
+19	1	139
+20	1	140
+21	1	141
+22	1	142
+23	1	143
+24	1	144
+25	1	145
+26	1	146
+27	1	147
+28	1	148
+29	1	149
+30	1	150
+31	1	151
+32	1	152
+33	1	153
+34	1	154
+35	1	155
+36	1	156
+37	1	157
+38	1	158
+39	1	159
+40	1	160
+41	1	161
+42	1	162
+43	1	163
+44	1	164
+45	1	165
+46	1	166
+47	1	167
+48	1	168
+49	1	169
+50	1	170
+51	1	171
+52	1	172
+53	1	173
+54	1	174
+55	1	175
+56	1	176
+57	1	177
+58	1	178
+59	1	179
+60	1	180
+61	1	181
+62	1	182
+63	1	183
+64	1	184
+65	1	185
+66	1	186
+67	1	187
+68	1	188
+69	1	189
+70	1	190
+71	1	191
+72	1	192
+73	1	193
+74	1	194
+75	1	195
+76	1	220
+77	1	221
+78	1	222
+79	1	223
+80	1	224
+81	1	225
+82	1	226
+83	1	227
+84	1	228
+85	1	229
+86	1	230
+87	1	231
+88	1	232
+89	1	233
+90	1	234
+91	1	235
+92	1	236
+93	1	237
+94	1	238
+95	1	239
+96	1	240
+97	1	241
+98	1	242
+99	1	243
+100	1	244
+101	1	245
+102	1	246
+103	1	247
+104	1	248
+105	1	249
+106	1	250
+107	1	251
+108	1	252
+109	1	253
+110	1	254
+111	1	255
+112	1	256
+113	1	257
+114	1	258
+115	1	259
+116	1	260
+117	1	261
+118	1	262
+119	1	263
+120	1	264
+121	1	265
+122	1	266
+123	1	267
+124	1	268
+125	1	269
+126	1	270
 \.
 
 
@@ -5582,7 +5709,7 @@ COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_group_permissions_id_seq', 1, false);
+SELECT pg_catalog.setval('auth_group_permissions_id_seq', 126, true);
 
 
 --
@@ -5885,7 +6012,7 @@ SELECT pg_catalog.setval('auth_permission_id_seq', 280, true);
 --
 
 COPY auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-1	pbkdf2_sha256$12000$F4ezWSZtocyC$DvXSzCkSiqVRV8fyLyWMRSo8qN5x1Braaycywf0N7Ew=	2015-02-20 19:49:18.919465+00	t	admin			admin@example.com	t	t	2015-02-20 17:57:34.138827+00
+1	pbkdf2_sha256$12000$F4ezWSZtocyC$DvXSzCkSiqVRV8fyLyWMRSo8qN5x1Braaycywf0N7Ew=	2015-02-20 20:56:31.600618+00	t	admin			admin@example.com	t	t	2015-02-20 17:57:34.138827+00
 \.
 
 
@@ -6080,6 +6207,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 12	2015-02-20 18:29:53.937873+00	7	Statement of Privacy	1		27	1
 13	2015-02-20 19:47:05.583342+00	8	Create Resource	1		27	1
 14	2015-02-20 19:50:01.526894+00	1	localhost:8000	2	Changed domain.	7	1
+15	2015-02-20 20:58:50.091029+00	1	Hydroshare Author	1		2	1
 \.
 
 
@@ -6087,7 +6215,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_admin_log_id_seq', 14, true);
+SELECT pg_catalog.setval('django_admin_log_id_seq', 15, true);
 
 
 --
@@ -6279,6 +6407,7 @@ SELECT pg_catalog.setval('django_redirect_id_seq', 1, false);
 
 COPY django_session (session_key, session_data, expire_date) FROM stdin;
 4wnn0du59bazqan8g84u3f9rqdxlyuw1	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-03-06 19:50:14.538231+00
+w8yc9sfoywubbrfpuxzrjql8a6zbtaj6	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-03-06 20:59:02.345296+00
 \.
 
 
