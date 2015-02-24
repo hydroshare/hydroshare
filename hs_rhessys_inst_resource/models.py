@@ -77,6 +77,8 @@ def when_my_process_ends(sender, instance, result_text=None, result_data=None, r
 
     # Create resource to store results in
     from hs_core import hydroshare
+    if logs is None:
+        logs = 'No log output from process'
     model_results = hydroshare.create_resource('GenericResource', owner, instance.profile.name + ' - ' + now().isoformat(), files=files, content=logs)
 
     # Save results resource to model run, update status, and end date

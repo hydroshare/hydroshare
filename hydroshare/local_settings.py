@@ -68,7 +68,7 @@ CELERY_ROUTES = ('django_docker_processes.router.DockerRouter',)
 
 #DOCKER_URL = 'tcp://localhost:2375/'
 DOCKER_URL = 'unix://docker.sock/'
-DOCKER_API_VERSION = '1.15'
+DOCKER_API_VERSION = '1.17'
 
 
 # CartoCSS

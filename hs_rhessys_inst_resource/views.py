@@ -165,6 +165,7 @@ class RunModelView(View):
                 env_dict['RID'] = my_model.get_slug()
                 env_dict['RHESSYS_PROJECT'] = my_model.project_name.strip(os.sep)
                 env_dict['RHESSYS_PARAMS'] = model_command_line_parameters
+                env_dict['UUID'] = process.token
 
                 keyword_args = {'env': env_dict,
                                 'overwrite_images': True}
