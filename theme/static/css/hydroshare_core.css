@@ -828,6 +828,12 @@ li.account p{
     background: rgba(255, 255, 255, 0.5);
 }
 /* ===== Resource edit page changes ===== */
+
+#contact-table .icon-button{
+    float:left;
+    background-color: transparent;
+    border: 0;
+}
 #txt-title{
     width: calc(100% - 100px);
     font-size: 30px;
@@ -837,6 +843,14 @@ li.account p{
 
 #txt-abstract{
     height: 155px;
+}
+
+span.remove{
+    position: absolute;
+    left: 0;
+    height: 100% !important;
+    background: #EEE;
+    top: 0;
 }
 
 .form-control{
@@ -882,6 +896,11 @@ li.account p{
     padding-right:0;
     margin-bottom: 10px;
 }
+#add-keyword-wrapper{
+    width: 200px;
+    display: inline-flex;
+}
+
 
 /* ===== Resource UI changes ===== */
 html, body{
@@ -900,8 +919,7 @@ html, body{
 }
 
 #id_user-wrapper{
-    width: 200px;
-    border-left: 0px;
+    width: calc(100% - 97px);
     padding: 1px;
     border: 1px solid #CCC;
     height: 30px;
@@ -925,9 +943,14 @@ html, body{
     padding: 0px 4px;
 }
 
+#permission-panel .panel-body{
+    padding: 15px 0px;
+}
+
 span.hilight {
     background: #EEE;
-    width: 100%;
+    margin-left: 14px;
+    width: calc(100% - 14px);
     height: 100%;
     display: block;
 }
@@ -1077,7 +1100,6 @@ body > .container{
 #permission-panel .custom-well{
     height: 235px;
     background: #F7F7F7;
-    min-width:339px;
 }
 
 #permission-panel h5{
@@ -1137,7 +1159,7 @@ body > .container{
 
 .content-block{
     margin-bottom:5px;
-    display: table;
+    /*display: table;*/
     width:100%;
 }
 
@@ -1171,14 +1193,6 @@ body > .container{
     /*width:90%;*/
 }
 
-.rights-text, .rights-url{
-    /*font-style:italic;*/
-}
-
-#rights{
-    /*margin-top: 50px;*/
-    /*margin-bottom:10px;*/
-}
 
 div#sharing-status {
     height: 34px;
@@ -1298,15 +1312,13 @@ span.name-label{
 }
 
 .tab-elements .panel-tabs, .tab-elements .tabs-body{
-    min-width:1020px;
+    min-width:403px;
 }
 
 
 .tab-elements .table:not(.table-striped) {
     width:auto;
 }
-
-
 
 .tab-elements .table td, .tab-elements .table th{
     border:0;
