@@ -79,7 +79,7 @@
                                     <tr><td>{{ element }}</td></tr>
                                 {%  endfor %}
                                 {% if title|stringformat:"s" == "Untitled resource" %}
-                                    <tr><td>Title:Needs to be changed</td></tr>
+                                    <tr><td>Title needs to be changed</td></tr>
                                 {% endif %}
                             </table>
                        {% endif %}
@@ -418,9 +418,11 @@
                               </ul>
                             </div>
                         </td>
-{#                        {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
+
                         {% if page.perms.change %}
-                        <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
+                            {% if cm|resource_type != "Geographic Raster Resource" or not cm.files.all %}
+                                <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
+                            {% endif %}
                         {% endif %}
                     </tr>
                 </tfoot>
