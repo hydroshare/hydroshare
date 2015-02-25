@@ -12,8 +12,8 @@ class Migration(migrations.Migration):
         ('auth', '0001_initial'),
         ('pages', '__first__'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('hs_core', '0003_auto_20150130_2158'),
         ('contenttypes', '0001_initial'),
+        ('hs_core', '0001_initial'),
     ]
 
     operations = [
