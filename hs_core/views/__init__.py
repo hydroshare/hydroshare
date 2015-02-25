@@ -619,13 +619,6 @@ def create_resource_new_workflow(request, *args, **kwargs):
     # also pass title to other apps, and give other apps a chance to populate page_redirect_url if they want
     # to redirect to their own page for resource creation rather than use core resource creation code
     pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, title=res_title, url_key=url_key, page_url_dict=page_url_dict, **kwargs)
-    # redirect to a specific resource creation page if other apps choose so
-    #if url_key in page_url_dict:
-    #    return HttpResponseRedirect(page_url_dict[url_key])
-            'resource_type': resource_type,
-            'res_title': res_title,
-        }
-        return render_to_response(page_url_dict[url_key], create_res_context, context_instance=RequestContext(request))
 
     # generic resource core metadata and resource creation
     add_title = True
@@ -674,6 +667,7 @@ def create_resource_new_workflow(request, *args, **kwargs):
 
     # Send post-create resource signal
     post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, **kwargs)
+
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'resource': resource})
 
