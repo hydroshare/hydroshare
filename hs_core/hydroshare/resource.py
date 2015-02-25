@@ -511,7 +511,7 @@ def create_resource(
             )
 
     # Send post-create resource signal
-    signals.post_create_resource.send(sender=res_type_cls, resource=resource, metadata=metadata, **kwargs)
+    #signals.post_create_resource.send(sender=res_type_cls, resource=resource, metadata=metadata, **kwargs)
 
     hs_bagit.create_bag(resource)
 

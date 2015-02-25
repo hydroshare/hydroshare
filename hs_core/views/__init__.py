@@ -77,17 +77,17 @@ def add_file_to_resource(request, *args, **kwargs):
 
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
-    for f in request.FILES.getlist('files'):
+    res_files = request.FILES.getlist('files')
+    for f in res_files:
         res.files.add(ResourceFile(content_object=res, resource_file=f))
 
         # add format metadata element if necessary
         file_format_type = utils.get_file_mime_type(f.name)
         if file_format_type not in [mime.value for mime in res.metadata.formats.all()]:
             res.metadata.create_element('format', value=file_format_type)
-
+    pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, **kwargs)
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
 
 def add_citation(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
@@ -208,6 +208,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     res.metadata.delete_element(element_name, element_id)
+    resource_modified(res, request.user)
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -216,12 +217,9 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     fl = res.files.filter(pk=int(f)).first()
     file_name = fl.resource_file.name
-    file_path_to_delete = os.path.dirname(fl.resource_file.path)
+    pre_delete_file_from_resource.send(sender=res_cls, file=fl, resource=res, **kwargs)
     fl.resource_file.delete()
     fl.delete()
-    # delete the file path if there are no other files for the resource
-    if resource.files.count() == 0:
-        os.rmdir(file_path_to_delete)
 
     delete_file_mime_type = utils.get_file_mime_type(file_name)
     delete_file_extension = os.path.splitext(file_name)[1]
@@ -245,21 +243,12 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
-    res_file = res.files.all()[0].resource_file if res.files.all() else None
-    if res_file:
-        res_file_path_to_delete = os.path.dirname(res_file.path)
-    else:
-        res_file_path_to_delete = None
-
     for fl in res.files.all():
         fl.resource_file.delete()
 
     for bag in res.bags.all():
         bag.bag.delete()
         bag.delete()
-
-    if res_file_path_to_delete:
-        os.rmdir(res_file_path_to_delete)
 
     res.metadata.delete_all_elements()
     res.metadata.delete()
@@ -421,6 +410,9 @@ def my_resources(request, page):
     # sys.path.append("/home/docker/pycharm-debug")
     # import pydevd
     # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+
+    # from hs_core.hydroshare import users
+    # users.create_account(email="hong.yi.hello@gmail.com", username="test1", first_name="Hong", last_name="Yi", password="test123")
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
@@ -628,11 +620,6 @@ def create_resource_new_workflow(request, *args, **kwargs):
     # to redirect to their own page for resource creation rather than use core resource creation code
     pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, title=res_title, url_key=url_key, page_url_dict=page_url_dict, **kwargs)
 
-    # redirect to a specific resource creation page if other apps choose so
-
-    #if url_key in page_url_dict:
-    #    return HttpResponseRedirect(page_url_dict[url_key])
-
     # generic resource core metadata and resource creation
     add_title = True
     for element in metadata:
@@ -677,6 +664,9 @@ def create_resource_new_workflow(request, *args, **kwargs):
             files=request.FILES.getlist('files'),
             content=res_title
     )
+
+    # Send post-create resource signal
+    post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, **kwargs)
 
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'resource': resource})

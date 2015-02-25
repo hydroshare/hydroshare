@@ -12,7 +12,6 @@ from django.forms.extras.widgets import SelectDateWidget
 from django.utils.safestring import mark_safe
 from functools import partial, wraps
 
-FORM_FIELD_CLASSES = 'form-control input-md'
 
 class HorizontalRadioRenderer(forms.RadioSelect.renderer):
     def render(self):
@@ -658,6 +657,7 @@ class ProfileLinksFormSetHelper(FormHelper):
         super(ProfileLinksFormSetHelper, self).__init__(*args, **kwargs)
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         self.form_tag = False
         if link_for == 'creator':
             self.delete_btn_class = 'btn-danger delete-link-creator'
@@ -668,8 +668,8 @@ class ProfileLinksFormSetHelper(FormHelper):
 
         self.layout = Layout(
             Fieldset('External Profile Link',
-                     Field('type', css_class=FORM_FIELD_CLASSES),
-                     Field('url', css_class=FORM_FIELD_CLASSES),
+                     Field('type', css_class=field_width),
+                     Field('url', css_class=field_width),
                      HTML('<div style="margin-top:10px"></div>')
                      ),
             ButtonHolder(
@@ -713,20 +713,21 @@ class CreatorFormSetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
         super(CreatorFormSetHelper, self).__init__(*args, **kwargs)
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         self.form_tag = False
         self.form_show_errors = True
         self.error_text_inline = True
         self.html5_required = True
         self.layout = Layout(
             Fieldset('Creator',
-                     Field('name', css_class=FORM_FIELD_CLASSES),
-                     Field('description', css_class=FORM_FIELD_CLASSES),
-                     Field('organization', css_class=FORM_FIELD_CLASSES),
-                     Field('email', css_class=FORM_FIELD_CLASSES),
-                     Field('address', css_class=FORM_FIELD_CLASSES),
-                     Field('phone', css_class=FORM_FIELD_CLASSES),
-                     Field('homepage', css_class=FORM_FIELD_CLASSES),
-                     Field('order', css_class=FORM_FIELD_CLASSES),
+                     Field('name', css_class=field_width),
+                     Field('description', css_class=field_width),
+                     Field('organization', css_class=field_width),
+                     Field('email', css_class=field_width),
+                     Field('address', css_class=field_width),
+                     Field('phone', css_class=field_width),
+                     Field('homepage', css_class=field_width),
+                     Field('order', css_class=field_width),
                      ),
         )
 
@@ -792,6 +793,13 @@ class PartyValidationForm(forms.Form):
     phone = forms.CharField(max_length=25, required=False)
     homepage = forms.URLField(required=False)
 
+    def clean(self):
+        cleaned_data = super(PartyValidationForm, self).clean()
+        name = cleaned_data.get('name', None)
+        if not name or len(name.strip()) == 0:
+            self._errors['name'] = ["A value for name is missing"]
+
+        return self.cleaned_data
 
 class CreatorValidationForm(PartyValidationForm):
     order = forms.IntegerField(required=False)
@@ -828,16 +836,17 @@ class ContributorFormSetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
         super(ContributorFormSetHelper, self).__init__(*args, **kwargs)
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         self.form_tag = False
         self.layout = Layout(
             Fieldset('Contributor',
-                     Field('name', css_class=FORM_FIELD_CLASSES),
-                     Field('description', css_class=FORM_FIELD_CLASSES),
-                     Field('organization', css_class=FORM_FIELD_CLASSES),
-                     Field('email', css_class=FORM_FIELD_CLASSES),
-                     Field('address', css_class=FORM_FIELD_CLASSES),
-                     Field('phone', css_class=FORM_FIELD_CLASSES),
-                     Field('homepage', css_class=FORM_FIELD_CLASSES),
+                     Field('name', css_class=field_width),
+                     Field('description', css_class=field_width),
+                     Field('organization', css_class=field_width),
+                     Field('email', css_class=field_width),
+                     Field('address', css_class=field_width),
+                     Field('phone', css_class=field_width),
+                     Field('homepage', css_class=field_width),
                      ),
         )
 
@@ -907,14 +916,15 @@ class RelationFormSetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
         super(RelationFormSetHelper, self).__init__(*args, **kwargs)
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         self.form_tag = False
         self.form_show_errors = True
         self.error_text_inline = True
         self.html5_required = False
         self.layout = Layout(
             Fieldset('Relation',
-                     Field('type', css_class=FORM_FIELD_CLASSES),
-                     Field('value', css_class=FORM_FIELD_CLASSES),
+                     Field('type', css_class=field_width),
+                     Field('value', css_class=field_width),
                      ),
         )
 
@@ -974,13 +984,14 @@ class SourceFormSetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
         super(SourceFormSetHelper, self).__init__(*args, **kwargs)
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         self.form_tag = False
         self.form_show_errors = True
         self.error_text_inline = True
         self.html5_required = False
         self.layout = Layout(
             Fieldset('Source',
-                     Field('derived_from', css_class=FORM_FIELD_CLASSES),
+                     Field('derived_from', css_class=field_width),
                      ),
         )
 
@@ -1038,14 +1049,15 @@ class IdentifierFormSetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
         super(IdentifierFormSetHelper, self).__init__(*args, **kwargs)
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         self.form_tag = False
         self.form_show_errors = True
         self.error_text_inline = True
         self.html5_required = True
         self.layout = Layout(
             Fieldset('Identifier',
-                     Field('name', css_class=FORM_FIELD_CLASSES),
-                     Field('url', css_class=FORM_FIELD_CLASSES),
+                     Field('name', css_class=field_width),
+                     Field('url', css_class=field_width),
                      ),
         )
 
@@ -1089,13 +1101,14 @@ class FormatFormSetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
         super(FormatFormSetHelper, self).__init__(*args, **kwargs)
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         self.form_tag = False
         self.form_show_errors = True
         self.error_text_inline = True
         self.html5_required = True
         self.layout = Layout(
             Fieldset('Format/MIME Type',
-                     Field('value', css_class=FORM_FIELD_CLASSES),
+                     Field('value', css_class=field_width),
                      ),
         )
 
@@ -1189,8 +1202,9 @@ class TitleFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('value', css_class=FORM_FIELD_CLASSES),
+                        Field('value', css_class=field_width),
                  )
 
         super(TitleFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -1224,8 +1238,9 @@ class SubjectsFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('value', css_class=FORM_FIELD_CLASSES),
+                        Field('value', css_class=field_width),
                  )
 
         super(SubjectsFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -1259,8 +1274,9 @@ class AbstractFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('abstract', css_class=FORM_FIELD_CLASSES),
+                        Field('abstract', css_class=field_width),
                  )
 
         super(AbstractFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -1292,6 +1308,7 @@ class RightsFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         if allow_edit:
             select_element_start_tag = HTML('<select id="select_license" class="form-control"> ')
         else:
@@ -1310,8 +1327,8 @@ class RightsFormHelper(BaseFormHelper):
                                 '<option value="other">Other</option> '
                             '</select>'),
 
-                        Field('statement', css_class=FORM_FIELD_CLASSES),
-                        Field('url', css_class=FORM_FIELD_CLASSES),
+                        Field('statement', css_class=field_width),
+                        Field('url', css_class=field_width),
                  )
 
         super(RightsFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -1362,11 +1379,12 @@ class CoverageTemporalFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('type', css_class=FORM_FIELD_CLASSES),
-                        #Field('name', css_class=FORM_FIELD_CLASSES),
-                        Field('start', css_class=FORM_FIELD_CLASSES),
-                        Field('end', css_class=FORM_FIELD_CLASSES),
+                        Field('type', css_class=field_width),
+                        #Field('name', css_class=field_width),
+                        Field('start', css_class=field_width),
+                        Field('end', css_class=field_width),
                  )
 
         kwargs['coverage'] = 'temporal'
@@ -1437,21 +1455,22 @@ class CoverageSpatialFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         layout = Layout(
                         Field('type'),
-                        Field('name', css_class=FORM_FIELD_CLASSES),
-                        Field('projection', css_class=FORM_FIELD_CLASSES),
-                        Field('east', css_class=FORM_FIELD_CLASSES),
-                        Field('north', css_class=FORM_FIELD_CLASSES),
-                        Field('northlimit', css_class=FORM_FIELD_CLASSES),
-                        Field('eastlimit', css_class=FORM_FIELD_CLASSES),
-                        Field('southlimit', css_class=FORM_FIELD_CLASSES),
-                        Field('westlimit', css_class=FORM_FIELD_CLASSES),
-                        Field('units', css_class=FORM_FIELD_CLASSES),
-                        #Field('uplimit', css_class=FORM_FIELD_CLASSES),
-                        #Field('downlimit', css_class=FORM_FIELD_CLASSES),
-                        #Field('elevation', css_class=FORM_FIELD_CLASSES),
-                        #Field('zunits', css_class=FORM_FIELD_CLASSES),
+                        Field('name', css_class=field_width),
+                        Field('projection', css_class=field_width),
+                        Field('east', css_class=field_width),
+                        Field('north', css_class=field_width),
+                        Field('northlimit', css_class=field_width),
+                        Field('eastlimit', css_class=field_width),
+                        Field('southlimit', css_class=field_width),
+                        Field('westlimit', css_class=field_width),
+                        Field('units', css_class=field_width),
+                        #Field('uplimit', css_class=field_width),
+                        #Field('downlimit', css_class=field_width),
+                        #Field('elevation', css_class=field_width),
+                        #Field('zunits', css_class=field_width),
                  )
 
         kwargs['coverage'] = 'spatial'
@@ -1475,8 +1494,8 @@ class CoverageSpatialForm(forms.Form):
     #zunits = forms.CharField(max_length=50, required=False, label='Elevation Units', help_text='e.g., meters')
     northlimit = forms.DecimalField(label='North Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
     eastlimit = forms.DecimalField(label='East Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
-    southlimit = forms.DecimalField(label='South Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
-    westlimit = forms.DecimalField(label='West Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    southlimit = forms.DecimalField(label='South Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    westlimit = forms.DecimalField(label='West Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
     #uplimit = forms.DecimalField(required=False, label='Up Limit', widget=forms.TextInput())
     #downlimit = forms.DecimalField(required=False, label='Down Limit', widget=forms.TextInput())
 
@@ -1618,8 +1637,9 @@ class LanguageFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('code', css_class=FORM_FIELD_CLASSES),
+                        Field('code', css_class=field_width),
                  )
 
         super(LanguageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -1654,10 +1674,11 @@ class ValidDateFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm datepicker'
         layout = Layout(
                         HTML('<p>Date range over which this resource is valid.</p>'),
-                        Field('start_date', css_class=FORM_FIELD_CLASSES),
-                        Field('end_date', css_class=FORM_FIELD_CLASSES),
+                        Field('start_date', css_class=field_width),
+                        Field('end_date', css_class=field_width),
                  )
 
         super(ValidDateFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
