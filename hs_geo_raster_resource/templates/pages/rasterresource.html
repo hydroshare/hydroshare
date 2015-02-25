@@ -1,32 +1,89 @@
+{# This template is used as the landing page for TimeSeriesResource #}
+
 {% extends "pages/genericresource.html" %}
 {% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
 
-{% block extra_content %}
-
-    {% if res_add_metadata %}
-        <h4>Extended metadata terms</h4>
+{% block extended_metadata %}
+    {% if extended_metadata_exists %}
         <div class="row">
             <div class="col-md-12">
-                <table class="table">
-                {% for attr, val in res_add_metadata.items %}
-                    <tr>
-                        <th>{{ attr }}</th>
-                        <td>
-                        {{ val }}
-                        </td>
-                    </tr>
-                {% endfor %}
-                {% for attr, val in band_metadata.items %}
-                    <tr>
-                        <th>{{ attr }}</th>
-                        <td>
-                        {{ val }}
-                        </td>
-                    </tr>
-                {% endfor %}
-                </table>
+                <h2>Extended Metadata</h2>
+                <div>
+                    {% if cellInformation %}
+                        <h4><strong>Cell Information:</strong></h4>
+                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Rows:</strong></div>
+                            <div class="col-sm-8">{{ cellInformation.rows }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Columns:</strong></div>
+                            <div class="col-sm-8">{{ cellInformation.columns }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>CellSizeXValue:</strong></div>
+                            <div class="col-sm-8">{{ cellInformation.cellSizeXValue }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>CellSizeYValue:</strong></div>
+                            <div class="col-sm-8">{{ cellInformation.cellSizeYValue }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>CellSizeUnit:</strong></div>
+                            <div class="col-sm-8">{{ cellInformation.cellSizeUnit }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>CellDataType:</strong></div>
+                            <div class="col-sm-8">{{ cellInformation.cellDataType }}</div>
+                        </div>
+                        {% if cellInformation.noDataValue %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>NoDataValue:</strong></div>
+                                <div class="col-sm-8">{{ cellInformation.noDataValue }}</div>
+                            </div>
+                        {% endif %}
+                    <hr>
+                    {% endif %}
+                </div>
+
+                <div>
+                    {% if bandInformation %}
+                        <h4><strong>Band Information:</strong></h4>
+                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        {% for band in bandInformation %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>BandName:</strong></div>
+                                <div class="col-sm-8">{{ band.name }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>VariableName:</strong></div>
+                                <div class="col-sm-8">{{ band.variableName }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>VariableUnit:</strong></div>
+                                <div class="col-sm-8">{{ band.variableUnit }}</div>
+                            </div>
+                            {% if band.method %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Method:</strong></div>
+                                    <div class="col-sm-8">{{ band.method }}</div>
+                                </div>
+                            {% endif %}
+                            {% if band.comment %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Comment:</strong></div>
+                                    <div class="col-sm-8">{{ band.comment }}</div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    <hr>
+                    {% endif %}
+                </div>
             </div>
         </div>
     {% endif %}
-
+{% endblock %}
+{% block extra_js %}
+    {{ block.super }}
+    {# resource specific js can go here #}
 {% endblock %}

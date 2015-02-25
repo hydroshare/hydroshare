@@ -283,7 +283,7 @@ INSTALLED_APPS = (
     "hs_metrics",
     #"hs_rhessys_inst_resource",
     #"django_docker_processes",
-    #"hs_geo_raster_resource",
+    "hs_geo_raster_resource",
     "djcelery",
     "ref_ts",
     "hs_modelinstance",
