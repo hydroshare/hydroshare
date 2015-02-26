@@ -1,6 +1,4 @@
 __author__ = 'jeffersonheard'
-from __init__ import *
-from __init__ import *
 from test_add_resource_files import *
 from test_add_resource_files import *
 from test_comment_on_resource import *
