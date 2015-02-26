@@ -66,12 +66,6 @@ def create_bag(resource):
             for chunk in f.resource_file.chunks():
                 out.write(chunk)
 
-
-    #tastypie_module = resource._meta.app_label + '.api'        # the module name should follow this convention
-    #tastypie_name = resource._meta.object_name + 'Resource'    # the classname of the Resource seralizer
-    #tastypie_api = importlib.import_module(tastypie_module)    # import the module
-    #serializer = getattr(tastypie_api, tastypie_name)()        # make an instance of the tastypie resource       
-
     with open(bagit_path + '/resourcemetadata.xml', 'w') as out:
         out.write(resource.metadata.get_xml())
 
