@@ -1,4 +1,4 @@
-FROM hs_base
+FROM mjstealey/hs_base
 
 ADD . /home/docker/hydroshare
 WORKDIR /home/docker
@@ -7,13 +7,6 @@ RUN npm install carto
 
 USER root
 WORKDIR /home/docker/hydroshare
-
-RUN apt-get install -y docker.io
-RUN easy_install pip
-RUN pip install django-autocomplete-light
-RUN pip install django-jsonfield
-RUN pip install docker-py
-RUN pip install suds-jurko
 
 RUN rm -rf /tmp/pip-build-root
 RUN mkdir -p /var/run/sshd
