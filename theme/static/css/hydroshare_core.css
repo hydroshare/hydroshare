@@ -827,6 +827,94 @@ li.account p{
 	text-align: center;
     background: rgba(255, 255, 255, 0.5);
 }
+/* ===== Resource edit page changes ===== */
+
+#contact-table .icon-button{
+    float:left;
+    background-color: transparent;
+    border: 0;
+}
+
+#comments{
+    border: 1px solid #ddd;
+    padding: 0 15px;
+    padding-bottom: 15px;
+    background: #F9F9F9;
+}
+
+.info-group table td{
+    padding-left:15px;
+}
+
+#resourceSpecificTab{
+    overflow-x:hidden;
+}
+#txt-title{
+    width: calc(100% - 100px);
+    font-size: 30px;
+    margin-bottom: 30px;
+    height: auto;
+}
+
+#txt-abstract{
+    height: 155px;
+}
+
+span.remove{
+    position: absolute;
+    left: 0;
+    height: 100% !important;
+    background: #EEE;
+    top: 0;
+}
+
+.form-control{
+    margin-bottom:8px;
+}
+
+.no-padding{
+    padding:0;
+}
+
+.icon-remove{
+    font-size: 17px;
+    top: 3px;
+    left: 6px;
+    color: rgb(217, 83, 79);
+    cursor:pointer;
+}
+
+.icon-add{
+    font-size: 17px;
+    top: 3px;
+    left: 1px;
+    color: #5cb85c;
+    cursor:pointer;
+}
+
+.icon-add:hover{
+    color: #47a447;
+}
+
+.icon-remove:hover{
+    color: rgb(168, 69, 66);
+}
+
+#panel-left{
+    padding-right:8px;
+    padding-left:0;
+    margin-bottom: 10px;
+}
+
+#panel-right{
+    padding-left:8px;
+    padding-right:0;
+    margin-bottom: 10px;
+}
+#add-keyword-wrapper{
+    width: 200px;
+    display: inline-flex;
+}
 
 
 /* ===== Resource UI changes ===== */
@@ -835,9 +923,18 @@ html, body{
     /*background:#F4F4F4;*/
 }
 
+#btn-public.active{
+    color:#FFF;
+    background:#5cb85c;
+}
+
+#btn-private.active{
+    color:#FFF;
+    background:#d9534f
+}
+
 #id_user-wrapper{
-    width: 200px;
-    border-left: 0px;
+    width: calc(100% - 97px);
     padding: 1px;
     border: 1px solid #CCC;
     height: 30px;
@@ -861,9 +958,14 @@ html, body{
     padding: 0px 4px;
 }
 
+#permission-panel .panel-body{
+    padding: 15px 0px;
+}
+
 span.hilight {
     background: #EEE;
-    width: 100%;
+    margin-left: 14px;
+    width: calc(100% - 14px);
     height: 100%;
     display: block;
 }
@@ -934,6 +1036,7 @@ table.table-plain td{
     font-weight: 500;
     margin: 30px 0px;
     margin-top: 10px;
+    width: calc(100% - 100px);
 }
 
 .label-file-name{
@@ -969,7 +1072,6 @@ body > .container{
     cursor: pointer;
     float: right;
     margin: 0 4px;
-
     padding: 5px;
     background-color: transparent;
     width: auto !important;
@@ -1012,7 +1114,6 @@ body > .container{
 #permission-panel .custom-well{
     height: 235px;
     background: #F7F7F7;
-    min-width:339px;
 }
 
 #permission-panel h5{
@@ -1106,14 +1207,6 @@ body > .container{
     /*width:90%;*/
 }
 
-.rights-text, .rights-url{
-    /*font-style:italic;*/
-}
-
-#rights{
-    /*margin-top: 50px;*/
-    /*margin-bottom:10px;*/
-}
 
 div#sharing-status {
     height: 34px;
@@ -1233,15 +1326,13 @@ span.name-label{
 }
 
 .tab-elements .panel-tabs, .tab-elements .tabs-body{
-    min-width:1020px;
+    min-width:403px;
 }
 
 
 .tab-elements .table:not(.table-striped) {
     width:auto;
 }
-
-
 
 .tab-elements .table td, .tab-elements .table th{
     border:0;
