@@ -1829,12 +1829,12 @@ class CoreMetaData(models.Model):
                                                     "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
         for md_field in md_fields:
             if hasattr(md_element, md_field):
-                attr = str(getattr(md_element, md_field))
+                attr = getattr(md_element, md_field)
                 if attr:
                     field = etree.SubElement(hsterms_newElem_rdf_Desc,
                                              "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
                                                                   field=md_field))
-                    field.text = attr
+                    field.text = str(attr)
 
     def _create_person_element(self, etree, parent_element, person):
         if isinstance(person, Creator):
