@@ -835,6 +835,10 @@ li.account p{
     border: 0;
 }
 
+#relatedResourcesTab{
+    overflow:hidden;
+}
+
 #comments{
     border: 1px solid #ddd;
     padding: 0 15px;
@@ -1002,6 +1006,10 @@ table.table-plain td{
     border:0;
 }
 
+
+.tab-elements .nav-tabs li{
+    padding:0;
+}
 .panel-tabs > .nav-tabs > li > a{
     color:#555;
     -webkit-border-radius: 4px 4px 0 0;
@@ -1202,11 +1210,15 @@ body > .container{
 #citation-text {
     display: inline-block;
     float: left;
-    /*font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;*/
-    /*margin-left:10px;*/
-    /*width:90%;*/
 }
 
+#citation-text a, .rights-url a{
+    word-break:break-word;
+}
+
+#btn-download-all, #btn-add-file{
+    margin-bottom:5px;
+}
 
 div#sharing-status {
     height: 34px;
@@ -1326,7 +1338,7 @@ span.name-label{
 }
 
 .tab-elements .panel-tabs, .tab-elements .tabs-body{
-    min-width:403px;
+    /*min-width:403px;*/
 }
 
 
