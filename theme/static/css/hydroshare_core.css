@@ -528,6 +528,7 @@ footer {
 	font-weight: 300;
     color: white;
     position: absolute;
+    overflow: hidden;
 }
 footer a {
 	color: #81D685;
@@ -1124,19 +1125,25 @@ body > .container{
     background: #F7F7F7;
 }
 
-#permission-panel h5{
-    margin-top:0;
-}
-
 .info-icon{
-    color:#B6B6B6;
+    color: #FFFFFF;
     margin-top: 4px;
     margin-left: -4px;
     position: absolute;
+    right: 25px;
+    top: 13px;
 }
 
 .info-icon:hover{
-    color: #777;
+    color: #CCC;
+}
+
+#permission-panel .form-control{
+    margin-bottom:0;
+}
+
+#permission-panel .custom-well .form-group{
+    width:100%;
 }
 
 .btn-update-list{
@@ -1156,6 +1163,23 @@ body > .container{
     border-radius: 0px;
     border-top-left-radius: 3px;
     border-bottom-left-radius: 3px;
+}
+
+.access-panel-title{
+    color: #FFF;
+    background-color: #337ab7;
+    margin: -20px;
+    border: 1px solid #337ab7;
+    padding: 10px;
+    padding-right: 30px;
+    height:52px;
+    margin-bottom: 10px;
+    -webkit-border-top-left-radius: 3px;
+    -webkit-border-top-right-radius: 3px;
+    -moz-border-radius-topleft: 3px;
+    -moz-border-radius-topright: 3px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
 }
 
 .abstract{
