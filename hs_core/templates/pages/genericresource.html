@@ -7,7 +7,7 @@
     {% with page.get_content_model as cm %}
         {% keywords_for page as kws %}
         {% set_page_permissions page %}
-        {#        ================ VIEW MODE BEGINS ===============#}
+
         {% if not metadata_form %}
             {% if page.perms.change %}
                 <div class="custom-btn-toolbar">
@@ -26,16 +26,19 @@
 
             <h2 class="page-title">{{ title }}</h2>
             <div class="info-group">
-                <div>
-                    <span id="authors">Authors:
-                        {% for cr in creators %}
-                            {{ cr.name }},&nbsp
-                        {% endfor %}
-                    </span>
-                </div>
-                <div><span>Owner: {{ cm.user }}</span></div>
-                <div><span>Created on {{ cm.created|date }}. Last updated on {{ cm.updated|date }}.</span></div>
-                <div><span>Resource type: {{ resource_type }}</span></div>
+                <table>
+                    <tr><th>Authors:</th><td>
+                        <span id="authors">
+                            {% for cr in creators %}
+                                {{ cr.name }},&nbsp
+                            {% endfor %}
+                        </span>
+                    </td></tr>
+                    <tr><th>Owner:</th><td>{{ cm.user|contact|safe }}</td></tr>
+                    <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
+                    <tr><th>Created:</th><td>{{ cm.created|date }}</td></tr>
+                    <tr><th>Last updated:</th><td> {{ cm.updated|date }}</td></tr>
+                </table>
             </div>
 
             {% if abstract %}
@@ -51,135 +54,135 @@
             </div>
 
             <div class="content-block">
-            <h3>Sharing</h3>
+                <h3>Sharing</h3>
 
-            <div id="sharing-status">
-                <span class="pull-left">Sharing status:</span>
-                {% if page.perms.change %}
-                    <form id="form-sharing" class="pull-left"
-                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                        {% csrf_token %}
-                        {% if cm.public %}
-                            <input name="t" type="hidden" value="make_private"/>
-                            <div class="btn-group" role="group" aria-label="...">
-                                <button id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                        title='Can be viewed and downloaded by anyone.' type="button"
-                                        class="btn btn-default active">Public
-                                </button>
-                                <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                        title='Can be viewed and downloaded only by designated users or research groups.'
-                                        type="submit" class="btn btn-default">Private
-                                </button>
-                            </div>
-                        {% else %}
-                            <input name="t" type="hidden" value="make_public"/>
-                            <div class="btn-group" role="group" aria-label="...">
-                                <button id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                        title='Can be viewed and downloaded by anyone.' type="submit"
-                                        class="btn btn-default">Public
-                                </button>
-                                <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                        title='Can be viewed and downloaded only by designated users or research groups.'
-                                        type="button" class="btn btn-default active">Private
-                                </button>
-                            </div>
-                        {% endif %}
-                    </form>
-                {% else %}
-                    {% if cm.public %}
-                        <strong>&nbspPublic</strong>
+                <div id="sharing-status">
+                    <span class="pull-left">Sharing status:</span>
+                    {% if page.perms.change %}
+                        <form id="form-sharing" class="pull-left"
+                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                            {% csrf_token %}
+                            {% if cm.public %}
+                                <input name="t" type="hidden" value="make_private"/>
+                                <div class="btn-group" role="group" aria-label="...">
+                                    <button id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                            title='Can be viewed and downloaded by anyone.' type="button"
+                                            class="btn btn-default active">Public
+                                    </button>
+                                    <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                            title='Can be viewed and downloaded only by designated users or research groups.'
+                                            type="submit" class="btn btn-default">Private
+                                    </button>
+                                </div>
+                            {% else %}
+                                <input name="t" type="hidden" value="make_public"/>
+                                <div class="btn-group" role="group" aria-label="...">
+                                    <button id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                            title='Can be viewed and downloaded by anyone.' type="submit"
+                                            class="btn btn-default">Public
+                                    </button>
+                                    <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                            title='Can be viewed and downloaded only by designated users or research groups.'
+                                            type="button" class="btn btn-default active">Private
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </form>
                     {% else %}
-                        <strong>&nbspPrivate</strong>
-                    {% endif %}
-                {% endif %}
-            </div>
-
-            {% if rights.statement or rights.url %}
-                <div id="rights">
-                    {% if rights.statement %}
-                        <span class="rights-text">{{ rights.statement }} </span>
-                    {% endif %}
-
-                    {% if rights.url %}
-                        <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                        {% if cm.public %}
+                            <strong>&nbspPublic</strong>
+                        {% else %}
+                            <strong>&nbspPrivate</strong>
+                        {% endif %}
                     {% endif %}
                 </div>
-                {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
-                {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
-                {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
-                {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
-                {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
-                {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
+
+                {% if rights.statement or rights.url %}
+                    <div id="rights">
+                        {% if rights.statement %}
+                            <span class="rights-text">{{ rights.statement }} </span>
+                        {% endif %}
+
+                        {% if rights.url %}
+                            <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                        {% endif %}
+                    </div>
+                    {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
+                    {% endif %}
                 {% endif %}
-            {% endif %}
 
+                <div id="permission-panel">
+                {% if user == cm.user %}
+                    <p>You are the owner of this resource.</p>
+                {% elif is_edit_user %}
+                    <p>You have been given specific permission to edit this resource.</p>
+                {% elif in_edit_group %}
+                    Your research group(s) have been given specific permission to edit this resource.</p>
+                {% elif is_view_user %}
+                    <p>You have been given specific permission to view this resource.</p>
+                {% elif in_view_group %}
+                    <p>Your research group(s) have been given specific permission to view this resource.</p>
+                {% endif %}
 
-            <div id="permission-panel">
-            {% if user == cm.user %}
-                <p>You are the owner of this resource.</p>
-            {% elif is_edit_user %}
-                <p>You have been given specific permission to edit this resource.</p>
-            {% elif in_edit_group %}
-                Your research group(s) have been given specific permission to edit this resource.</p>
-            {% elif is_view_user %}
-                <p>You have been given specific permission to view this resource.</p>
-            {% elif in_view_group %}
-                <p>Your research group(s) have been given specific permission to view this resource.</p>
-            {% endif %}
+                {% if page.perms.change %}
 
-            {% if page.perms.change %}
+                    <div class="panel panel-default panel-faq">
+                    <div class="panel-heading">
+                        <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
+                            <h4 class="panel-title">
+                                Manage access
+                                <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
+                            </h4>
+                        </a>
+                    </div>
+                    <div id="faq-cat-1-sub-1" class="panel-collapse collapse" style="height: auto;">
+                        <div class="panel-body">
+                            <div class="col-md-4">
+                                <div class="custom-well">
+                                    <h5 class="access-panel-title"><strong>Users with full read/write permissions on this resource</strong></h5>
 
-                <div class="panel panel-default panel-faq">
-                <div class="panel-heading">
-                    <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
-                        <h4 class="panel-title">
-                            Manage access
-                            <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
-                        </h4>
-                    </a>
-                </div>
-                <div id="faq-cat-1-sub-1" class="panel-collapse collapse" style="height: auto;">
-                    <div class="panel-body">
-                        <div class="col-md-4">
-                            <div class="custom-well">
-                                <h5><strong>Users with full read/write permissions on this resource</strong></h5>
-
-                                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                      method="POST">
-                                    {% csrf_token %}
-                                    <select name="designees" id="owners-select" multiple class="form-control"
-                                            size="{{ owners.count }}">
-                                        {% for u in owners %}
-                                            <option value="{{ u.pk }}" selected>{{ u|best_name }}
-                                                ({{ u.username }})
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                    <input name="t" value="owners" type="hidden"/>
-                                    <button type="submit"
-                                            class="btn btn-update-list pull-left btn-primary glyphicon"><span
-                                            class="button-label">&nbspUpdate access list</span></button>
-                                            <span data-toggle="tooltip" data-placement="auto"
-                                                  title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                                  class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                                </form>
-                                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                      method="POST" style="padding-top:0.3em">
-                                    {% csrf_token %}
-                                    <div class="form-group">
+                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <select name="designees" id="owners-select" multiple class="form-control"
+                                                size="{{ owners.count }}">
+                                            {% for u in owners %}
+                                                <option value="{{ u.pk }}" selected>{{ u|best_name }}
+                                                    ({{ u.username }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <input name="t" value="owners" type="hidden"/>
                                         <button type="submit"
-                                                class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
-                                                class="button-label">&nbspAdd user</span></button>
-                                        {{ add_owner_user_form.user }}
-                                        <input name="t" value="add_owner" type="hidden"/>
-                                    </div>
-                                </form>
+                                                class="btn btn-update-list pull-left btn-default glyphicon"><span
+                                                class="button-label">&nbspUpdate access list</span></button>
+                                                <span data-toggle="tooltip" data-placement="auto"
+                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'
+                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                    </form>
+                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                          method="POST" style="padding-top:0.3em">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <button type="submit"
+                                                    class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
+                                                    class="button-label">&nbspAdd user</span></button>
+                                            {{ add_owner_user_form.user }}
+                                            <input name="t" value="add_owner" type="hidden"/>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
 
@@ -266,59 +269,23 @@
                         {% if not cm.public %}
                             <div class="col-md-4">
                                 <div class="custom-well">
-                                    <h5><strong>Users who can view and download the resource</strong></h5>
+                                    <h5 class="access-panel-title"><strong>Users who can edit the content of this resource</strong></h5>
 
                                     <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
                                           method="POST">
                                         {% csrf_token %}
-                                        <select name="designees" id="view_users-select" multiple
-                                                class="form-control" size="{{ view_users.count }}">
-                                            {% for u in view_users %}
-                                                <option value="{{ u.pk }}"
-                                                        {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>
+                                        <select name="designees" id="edit_users-select" multiple
+                                                class="form-control" size="{{ edit_users.count }}">
+                                            {% for u in edit_users %}
+                                                <option value="{{ u.pk }}" selected>{{ u|best_name }}
+                                                    ({{ u.username }})
+                                                </option>
                                             {% endfor %}
                                         </select>
-                                        <input name="t" value="view_users" type="hidden"/>
+                                        <input name="t" value="edit_users" type="hidden"/>
                                         <button type="submit"
-                                                class="btn btn-update-list pull-left btn-primary glyphicon">
-                                            <span class="button-label">&nbspUpdate access list</span></button>
-                                                <span data-toggle="tooltip" data-placement="auto"
-                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                                    </form>
-                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                          method="POST" style="padding-top:0.3em">
-                                        {% csrf_token %}
-                                        <div class="form-group">
-                                            <button type="submit"
-                                                    class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
-                                                    class="button-label">&nbspAdd user</span></button>
-                                            {{ add_view_user_form.user }}
-                                            <input name="t" value="add_view_user" type="hidden"/>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="custom-well">
-                                    <h5><strong>Research groups that can view and download the resource</strong>
-                                    </h5>
-
-                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                          method="POST">
-                                        {% csrf_token %}
-                                        <select name="designees" id="view_groups-select" multiple
-                                                class="form-control" size="{{ view_groups.count }}">
-                                            {% for u in view_groups %}
-                                                <option value="{{ u.pk }}"
-                                                        {% if u in view_groups %}selected{% endif %}>{{ u }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <input name="t" value="view_groups" type="hidden"/>
-                                        <button type="submit"
-                                                class="btn btn-update-list pull-left btn-primary glyphicon">
-                                            <span class="button-label">&nbspUpdate access list</span></button>
+                                                class="btn btn-update-list pull-left btn-default glyphicon"><span
+                                                class="button-label">&nbspUpdate access list</span></button>
                                                 <span data-toggle="tooltip" data-placement="auto"
                                                       title='Hold down "Control", or "Command" on a Mac, to select more than one.'
                                                       class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
@@ -329,23 +296,138 @@
                                         {% csrf_token %}
                                         <div class="form-group">
                                             <button type="submit"
-                                                    class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus">
-                                                <span class="button-label">&nbspAdd group</span></button>
-                                            {{ add_view_group_form.user }}
-                                            <input name="t" value="add_view_group" type="hidden"/>
+                                                    class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
+                                                    class="button-label">&nbspAdd user</span></button>
+                                            {{ add_edit_user_form.user }}
+                                            <input name="t" value="add_edit_user" type="hidden"/>
                                         </div>
                                     </form>
                                 </div>
                             </div>
-                        {% endif %}
-                    </div>
-                </div>
-                </div>
-                <div>
 
+                            <div class="col-md-4">
+                                <div class="custom-well">
+                                    <h5 class="access-panel-title"><strong>Research groups that can edit the content of this resource</strong>
+                                    </h5>
+
+                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <select name="designees" id="edit_groups-select" multiple
+                                                class="form-control" size="{{ edit_groups.count }}">
+                                            {% for u in edit_groups %}
+                                                <option value="{{ u.pk }}"
+                                                        {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input name="t" value="edit_groups" type="hidden"/>
+                                        <button type="submit"
+                                                class="btn btn-update-list pull-left btn-default glyphicon"><span
+                                                class="button-label">&nbspUpdate access list</span></button>
+                                                <span data-toggle="tooltip" data-placement="auto"
+                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'
+                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                    </form>
+                                    <form class="form-inline"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                          method="POST" style="padding-top:0.3em">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+
+
+                                            <button type="submit"
+                                                    class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus"><span
+                                                    class="button-label">&nbspAdd group</span></button>
+                                            {{ add_edit_group_form.user }}
+                                            <input name="t" value="add_edit_group" type="hidden"/>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            {% if not cm.public %}
+                                <div class="col-md-4">
+                                    <div class="custom-well">
+                                        <h5 class="access-panel-title"><strong>Users who can view and download the resource</strong></h5>
+
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                              method="POST">
+                                            {% csrf_token %}
+                                            <select name="designees" id="view_users-select" multiple
+                                                    class="form-control" size="{{ view_users.count }}">
+                                                {% for u in view_users %}
+                                                    <option value="{{ u.pk }}"
+                                                            {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <input name="t" value="view_users" type="hidden"/>
+                                            <button type="submit"
+                                                    class="btn btn-update-list pull-left btn-default glyphicon">
+                                                <span class="button-label">&nbspUpdate access list</span></button>
+                                                    <span data-toggle="tooltip" data-placement="auto"
+                                                          title='Hold down "Control", or "Command" on a Mac, to select more than one.'
+                                                          class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                        </form>
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                              method="POST" style="padding-top:0.3em">
+                                            {% csrf_token %}
+                                            <div class="form-group">
+                                                <button type="submit"
+                                                        class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
+                                                        class="button-label">&nbspAdd user</span></button>
+                                                {{ add_view_user_form.user }}
+                                                <input name="t" value="add_view_user" type="hidden"/>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="custom-well">
+                                        <h5 class="access-panel-title"><strong>Research groups that can view and download the resource</strong>
+                                        </h5>
+
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                              method="POST">
+                                            {% csrf_token %}
+                                            <select name="designees" id="view_groups-select" multiple
+                                                    class="form-control" size="{{ view_groups.count }}">
+                                                {% for u in view_groups %}
+                                                    <option value="{{ u.pk }}"
+                                                            {% if u in view_groups %}selected{% endif %}>{{ u }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <input name="t" value="view_groups" type="hidden"/>
+                                            <button type="submit"
+                                                    class="btn btn-update-list pull-left btn-default glyphicon">
+                                                <span class="button-label">&nbspUpdate access list</span></button>
+                                                    <span data-toggle="tooltip" data-placement="auto"
+                                                          title='Hold down "Control", or "Command" on a Mac, to select more than one.'
+                                                          class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                        </form>
+                                        <form class="form-inline"
+                                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                              method="POST" style="padding-top:0.3em">
+                                            {% csrf_token %}
+                                            <div class="form-group">
+                                                <button type="submit"
+                                                        class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus">
+                                                    <span class="button-label">&nbspAdd group</span></button>
+                                                {{ add_view_group_form.user }}
+                                                <input name="t" value="add_view_group" type="hidden"/>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    </div>
+                    <div>
+
+                    </div>
+                {% endif %}
                 </div>
-            {% endif %}
-            </div>
             </div>
 
 
@@ -369,6 +451,7 @@
                 <div class="custom-well">
                     {#            {% block extra_content %}#}
                     {#            {% endblock %}#}
+                    {% if cm.files.all %}
                     <div class="table-container">
                         <table class="table-plain table-striped">
                             {% for f in cm.files.all %}
@@ -426,22 +509,23 @@
                                     </td>
                                 </tr>
                             {% endfor %}
+
                         </table>
                     </div>
-
+                    {% endif %}
                     <!-- Buttons -->
                     {% for b in cm.bags.all %}
-                        <a type="button" class="btn btn-default" href="{{ bag.bag.url }}">
-                    <span class="glyphicon glyphicon-download-alt">
-                        <span class="button-label">Download All ({{ b.bag.size|filesizeformat }})</span>
-                    </span>
+                        <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag.bag.url }}">
+                            <span class="glyphicon glyphicon-download-alt">
+                                <span class="button-label">Download All ({{ b.bag.size|filesizeformat }})</span>
+                            </span>
                         </a>
                     {% endfor %}
 
                     {#                      {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
                     {% if page.perms.change %}
                         {#                        <td><button class="btn btn-success"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>#}
-                        <td><a type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
+                        <td><a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
                                multiple="multiple">
                             <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
                         </a></td>
@@ -449,51 +533,70 @@
                 </div>
             </div>
 
-
             <!-- === Tabs begin === -->
             <div class="tab-elements">
             <div class="panel-tabs">
                 <ul class="nav nav-tabs">
-                    <li class="active">
+                    <li class="active col-md-3 col-sm-3 col-xs-12">
                         <a href="#contactTab" data-toggle="tab">
                             <span class="glyphicon glyphicon-user"> </span>
                             &nbspContact
                         </a>
                     </li>
                     {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
-                        <li>
+                        <li class="col-md-3 col-sm-3 col-xs-12">
                             <a href="#coveragelTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-globe"></span>
                                 &nbspCoverage
                             </a>
                         </li>
                     {% endif %}
-                    {% if sources %}
-                        <li>
+                    {% if sources or relations %}
+                        <li class="col-md-3 col-sm-3 col-xs-12">
                             <a href="#relatedResourcesTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-book"></span>
                                 &nbspRelated Resources
                             </a>
                         </li>
                     {% endif %}
-                    {#                    <li>#}
-                    {#                        <a href="#resourceSpecificTab" data-toggle="tab">#}
-                    {#                            <span class="glyphicon glyphicon-folder-close"></span>#}
-                    {#                            &nbspResource Specific#}
-                    {#                        </a>#}
-                    {#                    </li>#}
+                    {% if site or extended_metadata_exists or res_add_metadata %}
+                        <li class="col-md-3 col-sm-3 col-xs-12">
+                            <a href="#resourceSpecificTab" data-toggle="tab">
+                                <span class="glyphicon glyphicon-folder-close"></span>
+                                &nbspResource Specific
+                            </a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
             <div class="tabs-body">
             <!-- Tab panes -->
             <div class="tab-content">
-                <!-- ========= CONTACT TAB ========= -->
-                <div class="tab-pane active" id="contactTab">
-                    <div>
-                        <table class="table table-striped">
-                            <tbody>
+            <!-- ========= CONTACT TAB ========= -->
+            <div class="tab-pane active" id="contactTab">
+                <div>
+                    <table class="table table-striped">
+                        <tbody>
+                        <tr>
+                            <th class="division-title">Authors</th>
+                        </tr>
+                        <tr class="header-row">
+                            <th>Name</th>
+                            <th>Organization</th>
+                            <th>Address</th>
+                            <th>Phone</th>
+                        </tr>
+                        {% for cr in creators %}
                             <tr>
-                                <th class="division-title">Authors</th>
+                                <td>{% if cr.description %} <a href="{{ cr.description }}">{{ cr.name }}</a>{% else %}{{ cr.name }}{% endif %}</td>
+                                <td>{% if cr.organization %} {{ cr.organization }}{% endif %}</td>
+                                <td>{% if cr.address %} {{ cr.address }}{% endif %}</td>
+                                <td>{% if cr.phone %} {{ cr.phone }}{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                        {% if contributors %}
+                            <tr>
+                                <th class="division-title">Contributors</th>
                             </tr>
                             <tr class="header-row">
                                 <th>Name</th>
@@ -501,211 +604,324 @@
                                 <th>Address</th>
                                 <th>Phone</th>
                             </tr>
-                            {% for cr in creators %}
+
+                            {% for cont in contributors %}
                                 <tr>
-                                    <td>{{ cr.name }}</td>
-                                    <td>{% if cr.organization %} {{ cr.organization }}{% endif %}</td>
-                                    <td>{% if cr.organization %} {{ cr.address }}{% endif %}</td>
-                                    <td>{% if cr.organization %} {{ cr.phone }}{% endif %}</td>
+                                    <td>{{ cont.name }}</td>
+                                    <td>{{ cont.organization }}</td>
+                                    <td>{{ cont.address }}</td>
+                                    <td>{{ cont.phone }}</td>
                                 </tr>
                             {% endfor %}
-                            {% if contributors %}
-                                <tr>
-                                    <th class="division-title">Contributors</th>
-                                </tr>
-                                <tr class="header-row">
-                                    <th>Name</th>
-                                    <th>Organization</th>
-                                    <th>Address</th>
-                                    <th>Phone</th>
-                                </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
 
-                                {% for cont in contributors %}
-                                    <tr>
-                                        <td>{{ cont.name }}</td>
-                                        <td>{{ cont.organization }}</td>
-                                        <td>{{ cont.address }}</td>
-                                        <td>{{ cont.phone }}</td>
-                                    </tr>
-                                {% endfor %}
-                            {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
-                <!-- ========= COVERAGE TAB ========= -->
-                {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
-                    <div class="tab-pane" id="coveragelTab">
-                        <div class="col-md-6 col-sm-12 col-xs-12">
-                        <div class="division-title"><p>Spatial</p></div>
-                        <table class="table">
-                            <tbody>
-                            {% if spatial_coverage.type == 'point' %}
-                                {#                                TODO: find a place for doi field#}
-                                {#                                {% if cm.doi %}#}
-                                {#                                <tr>#}
-                                {#								    <th scope="row" class="dataset-label">DOI:</th>#}
-                                {#								    <td class="dataset-details"><a id="permalink" href="http://{{ request.get_host }}/r/doi/{{ cm.doi }}/">{{ cm.doi }}</a></td>#}
-                                {#							    </tr>#}
-                                {#                                {% endif %}#}
-                                {% if spatial_coverage.name %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">Place/Area Name:</th>
-                                        <td class="dataset-details">{{ spatial_coverage.name }}</td>
-                                    </tr>
-                                {% endif %}
-                                {% if spatial_coverage.projection %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">Coordinate System/Geographic
-                                            Projection:
-                                        </th>
-                                        <td class="dataset-details">{{ spatial_coverage.projection }}</td>
-                                    </tr>
-                                {% endif %}
-                                {% if spatial_coverage.east %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">Longitude:</th>
-                                        <td class="dataset-details">{{ spatial_coverage.east }}</td>
-                                    </tr>
-                                {% endif %}
-                                {% if spatial_coverage.north %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">Latitude:</th>
-                                        <td class="dataset-details">{{ spatial_coverage.north }}</td>
-                                    </tr>
-                                {% endif %}
-                                {% if spatial_coverage.units %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">Coordinate Units:</th>
-                                        <td class="dataset-details">{{ spatial_coverage.units }}</td>
-                                    </tr>
-                                {% endif %}
-                            {% else %}
-                                {% if spatial_coverage.name %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">Place/Area Name:</th>
-                                        <td class="dataset-details">{{ spatial_coverage.name }}</td>
-                                    </tr>
-                                {% endif %}
-                                {% if spatial_coverage.projection %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">Coordinate System/Geographic
-                                            Projection:
-                                        </th>
-                                        <td class="dataset-details">{{ spatial_coverage.projection }}</td>
-                                    </tr>
+            </div>
+            <!-- ========= COVERAGE TAB ========= -->
+            {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
+                <div class="tab-pane" id="coveragelTab">
+                    <h4><strong>Spatial:</strong></h4>
+                    <hr style="margin-top: 0px;margin-bottom: 2px">
 
-                                {% endif %}
-                                {% if spatial_coverage.northlimit %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">North Latitude:</th>
-                                        <td class="dataset-details">{{ spatial_coverage.northlimit }}</td>
-                                    </tr>
-                                {% endif %}
-                                {% if spatial_coverage.eastlimit %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">East Longitude:</th>
-                                        <td class="dataset-details">{{ spatial_coverage.eastlimit }}</td>
-                                    </tr>
-                                {% endif %}
-                                {% if spatial_coverage.southlimit %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">South Latitude:</th>
-                                        <td class="dataset-details">{{ spatial_coverage.southlimit }}</td>
-                                    </tr>
-
-                                {% endif %}
-                                {% if spatial_coverage.westlimit %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">West Longitude:</th>
-                                        <td class="dataset-details">{{ spatial_coverage.westlimit }}</td>
-                                    </tr>
-                                {% endif %}
-                                {% if spatial_coverage.units %}
-                                    <tr>
-                                        <th scope="row" class="dataset-label">Coordinate Units:</th>
-                                        <td class="dataset-details">{{ spatial_coverage.units }}</td>
-                                    </tr>
-                                {% endif %}
-                            {% endif %}
-                            </tbody>
-                        </table>
-                        </div>
-                        {% if temporal_coverage %}
-                            <div class="col-md-6 col-sm-12 col-xs-12">
-                                <div class="division-title"><p>Temporal</p></div>
-                                <table class="table">
-                                    <tbody>
-                                    <tr>
-                                        <th scope="row" class="dataset-label">Start Date:</th>
-                                        <td class="dataset-details">{{ temporal_coverage.start_date }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row" class="dataset-label">End Date:</th>
-                                        <td class="dataset-details">{{ temporal_coverage.end_date }}</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
+                    {% if spatial_coverage.type == 'point' %}
+                        {#                                TODO: find a place for doi field#}
+                        {#                                {% if cm.doi %}#}
+                        {#                                <tr>#}
+                        {#								    <th scope="row" class="dataset-label">DOI:</th>#}
+                        {#								    <td class="dataset-details"><a id="permalink" href="http://{{ request.get_host }}/r/doi/{{ cm.doi }}/">{{ cm.doi }}</a></td>#}
+                        {#							    </tr>#}
+                        {#                                {% endif %}#}
+                        {% if spatial_coverage.name %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.name }}</div>
                             </div>
                         {% endif %}
-                    </div>
-                {% endif %}
-                <!-- ========= RELATED RESOURCES TAB ========= -->
-                {% if sources %}
-                    <div class="tab-pane" id="relatedResourcesTab">
-                        <table class="table">
-                            <tbody>
-                            {% for source in sources %}
-                                <tr>
-                                    <th scope="row" class="dataset-label">Derived From:</th>
-                                    <td class="dataset-details">{{ source.derived_from }}</td>
-                                </tr>
-                            {% endfor %}
-                            {% for relation in relations %}
-                                <tr>
-                                    <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                    <td class="dataset-details">{{ relation.value }}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% endif %}
-                <!-- ========= RESOURCE SPECIFIC TAB ========= -->
-                {#                    <div class="tab-pane" id="resourceSpecificTab">#}
-                {#                    TODO: resource specific fields#}
-                {#                    <table class="table">#}
-                {#                        {% for term in dublin_core %}#}
-                {#                            {% ifnotequal term|dcterm 'Title' %}#}
-                {#                                <tr>#}
-                {#                                    <th>{{ term|dcterm }}</th>#}
-                {#                                    <td>{{ term.content }}</td>#}
-                {#                                </tr>#}
-                {#                            {% endifnotequal %}#}
-                {#                        {% endfor %}#}
-                {#                    </table>#}
-                {#                    {% if page.perms.change %}#}
-                {#                        <button class="btn btn-primary" id="add-dcterm" data-toggle="modal" data-target="#add-dcterm-dialog">Add metadata term</button>#}
-                {#                    {% endif %}#}
-                {#                    </div>#}
-            </div>
-            <!-- ==== Tabs end ==== -->
-            </div>
-            </div>
-            {% if not keywords or not abstract %}
-                <table class="table table-condensed" style="margin-top: 2px; border: 2px solid red">
-                    <tr style="color: red">
-                        <td><h4>Data for the following required elements are missing:</h4></td>
-                    </tr>
-                    {% if not abstract %}
-                        <tr>
-                            <td>Abstract</td>
-                        </tr>
+                        {% if spatial_coverage.projection %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Coordinate System/Geographic
+                                    Projection:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.projection }}</div>
+                            </div>
+                        {% endif %}
+                        {% if spatial_coverage.east %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Longitude:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.east }}</div>
+                            </div>
+                        {% endif %}
+                        {% if spatial_coverage.north %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Latitude:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.north }}</div>
+                            </div>
+                        {% endif %}
+                        {% if spatial_coverage.units %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.units }}</div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        {% if spatial_coverage.name %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>CPlace/Area Name:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.name }}</div>
+                            </div>
+                        {% endif %}
+                        {% if spatial_coverage.projection %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Coordinate System/Geographic
+                                    Projection:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.projection }}</div>
+                            </div>
+                        {% endif %}
+                        {% if spatial_coverage.northlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>North Latitude:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.northlimit }}</div>
+                            </div>
+                        {% endif %}
+                        {% if spatial_coverage.eastlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>East Longitude:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.eastlimit }}</div>
+                            </div>
+                        {% endif %}
+                        {% if spatial_coverage.southlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>South Latitude:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.southlimit }}</div>
+                            </div>
+                        {% endif %}
+                        {% if spatial_coverage.westlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>West Longitude:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.westlimit }}</div>
+                            </div>
+                        {% endif %}
+                        {% if spatial_coverage.units %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                <div class="col-sm-8">{{ spatial_coverage.units }}</div>
+                            </div>
+                        {% endif %}
                     {% endif %}
-                    {% if not keywords %}
-                        <tr>
-                            <td>Keywords</td>
-                        </tr>
+
+                    {% if temporal_coverage %}
+                        <hr style="border: 0;">
+                        <h4><strong>Temporal:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Start Date:</strong></div>
+                            <div class="col-sm-8">{{ temporal_coverage.start_date }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>End Date:</strong></div>
+                            <div class="col-sm-8">{{ temporal_coverage.end_date }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+            <!-- ========= RELATED RESOURCES TAB ========= -->
+            {% if sources or relations %}
+                <div class="tab-pane" id="relatedResourcesTab">
+                {% if sources %}
+                    <h4><strong>Sources:</strong></h4>
+                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                    {% for source in sources %}
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Derived From:</strong></div>
+                            <div class="col-sm-8">{{ source.derived_from }}</div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% if relations %}
+                    <hr style="border: 0;">
+                    <h4><strong>Relations:</strong></h4>
+                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                    {% for relation in relations %}
+                        <div class="row">
+                            <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
+                            <div class="col-sm-8">{{ relation.value }}</div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                </div>
+            {% endif %}
+
+
+            <!-- ========= RESOURCE SPECIFIC TAB ========= -->
+            {% if site or extended_metadata_exists or res_add_metadata %}
+                <div class="tab-pane" id="resourceSpecificTab">
+                {% if extended_metadata_exists %}
+                    <div>
+                        {% if model_output %}
+                            <h4><strong>Model Output:</strong></h4>
+                            <hr style="margin-top: 0px;margin-bottom: 2px">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Includes output files?</strong></div>
+                                {% if model_output.includes_output == True %}
+                                    <div class="col-sm-8">Yes</div>
+                                {% else %}
+                                    <div class="col-sm-8">No</div>
+                                {% endif %}
+
+                            </div>
+                            <hr style="border: 0;">
+                        {% endif %}
+                    </div>
+                    <div>
+                    {% if executed_by.name %}
+                        <h4><strong>Executed By:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Model Program used for execution:</strong></div>
+                            <div class="col-sm-8">{{ executed_by.name }}</div>
+                        </div>
+                        <hr style="border: 0;">
+                    {% endif %}
+                {% endif %}
+                <div>
+                    {% if cellInformation %}
+                        <h4><strong>Cell Information:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Rows:</strong></div>
+                            <div class="col-sm-8">{{ cellInformation.rows }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Columns:</strong></div>
+                            <div class="col-sm-8">{{ cellInformation.columns }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>CellSizeXValue:</strong></div>
+                            <div class="col-sm-8">{{ cellInformation.cellSizeXValue }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>CellSizeYValue:</strong></div>
+                            <div class="col-sm-8">{{ cellInformation.cellSizeYValue }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>CellSizeUnit:</strong></div>
+                            <div class="col-sm-8">{{ cellInformation.cellSizeUnit }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>CellDataType:</strong></div>
+                            <div class="col-sm-8">{{ cellInformation.cellDataType }}</div>
+                        </div>
+                        {% if cellInformation.noDataValue %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>NoDataValue:</strong></div>
+                                <div class="col-sm-8">{{ cellInformation.noDataValue }}</div>
+                            </div>
+                        {% endif %}
+                    <hr style="border: 0;">
+                    {% endif %}
+                </div>
+
+                <div>
+                    {% if bandInformation %}
+                        <h4><strong>Band Information:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        {% for band in bandInformation %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>BandName:</strong></div>
+                                <div class="col-sm-8">{{ band.name }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>VariableName:</strong></div>
+                                <div class="col-sm-8">{{ band.variableName }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>VariableUnit:</strong></div>
+                                <div class="col-sm-8">{{ band.variableUnit }}</div>
+                            </div>
+                            {% if band.method %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Method:</strong></div>
+                                    <div class="col-sm-8">{{ band.method }}</div>
+                                </div>
+                            {% endif %}
+                            {% if band.comment %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Comment:</strong></div>
+                                    <div class="col-sm-8">{{ band.comment }}</div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    <hr style="border: 0;">
+                    {% endif %}
+                </div>
+
+                <div>
+                    {% if site %}
+                        <h4><strong>Site:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Code:</strong></div>
+                            <div class="col-sm-8">{{ site.site_code }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ site.site_name }}</div>
+                        </div>
+                        {% if site.elevation_m %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Elevation M:</strong></div>
+                                <div class="col-sm-8">{{ site.elevation_m }}</div>
+                            </div>
+                        {% endif %}
+                        {% if site.elevation_datum %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Elevation Datum:</strong></div>
+                                <div class="col-sm-8">{{ site.elevation_datum }}</div>
+                            </div>
+                        {% endif %}
+                        {% if site.site_type %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Site Type:</strong></div>
+                                <div class="col-sm-8">{{ site.site_type }}</div>
+                            </div>
+                        {% endif %}
+                        <hr style="border: 0;">
+                    {% endif %}
+                </div>
+                <div>
+                    {% if variable %}
+                        <h4><strong>Variable:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Code:</strong></div>
+                            <div class="col-sm-8">{{ variable.variable_code }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ variable.variable_name }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Type:</strong></div>
+                            <div class="col-sm-8">{{ variable.variable_type }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>No Data Value:</strong></div>
+                            <div class="col-sm-8">{{ variable.no_data_value }}</div>
+                        </div>
+                        {% if variable.variable_definition %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Definition:</strong></div>
+                                <div class="col-sm-8">{{ variable.variable_definition }}</div>
+                            </div>
+                        {% endif %}
+                        {% if variable.speciation %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Speciation:</strong></div>
+                                <div class="col-sm-8">{{ variable.speciation }}</div>
+                            </div>
+                        {% endif %}
+                        <hr style="border: 0;">
                     {% endif %}
                     {% if title|stringformat:"s" == "Untitled resource" %}
                         <tr>
@@ -743,6 +959,99 @@
                         {% endfor %}
                     </span>
                 </div>
+                <div>
+                    {% if method %}
+                        <h4><strong>Method:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Code:</strong></div>
+                            <div class="col-sm-8">{{ method.method_code }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ method.method_name }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Type:</strong></div>
+                            <div class="col-sm-8">{{ method.method_type }}</div>
+                        </div>
+                        {% if method.method_description %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Description:</strong></div>
+                                <div class="col-sm-8">{{ method.method_description }}</div>
+                            </div>
+                        {% endif %}
+                        {% if method.method_link %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Link:</strong></div>
+                                <div class="col-sm-8">{{ method.method_link }}</div>
+                            </div>
+                        {% endif %}
+                        <hr style="border: 0;">
+                    {% endif %}
+                </div>
+                <div>
+                    {% if processing_level %}
+                        <h4><strong>Processing Level:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Code:</strong></div>
+                            <div class="col-sm-8">{{ processing_level.processing_level_code }}</div>
+                        </div>
+                        {% if processing_level.definition %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Definition:</strong></div>
+                                <div class="col-sm-8">{{ processing_level.definition }}</div>
+                            </div>
+                        {% endif %}
+                        {% if processing_level.explanation %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Explanation:</strong></div>
+                                <div class="col-sm-8">{{ processing_level.explanation }}</div>
+                            </div>
+                        {% endif %}
+                        <hr style="border: 0;">
+                    {% endif %}
+                </div>
+                <div>
+                    {% if timeseries_result %}
+                        <h4><strong>Time Series Result:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Units Type:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.units_type }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Units Name:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.units_name }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Units Abbreviation:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.units_abbreviation }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Status:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.status }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Sample Medium:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.sample_medium }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Value Count:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.value_count }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Aggregation Statistics:</strong></div>
+                            <div class="col-sm-8">{{ timeseries_result.aggregation_statistics }}</div>
+                        </div>
+                        <hr style="border: 0;">
+                    {% endif %}
+                </div>
+
+                </div>
+                </div>
+            {% endif %}
                 <div><span>Owner: {{ cm.user }}</span></div>
                 <div><span>Created on {{ cm.created|date }}. Last updated on {{ cm.updated|date }}.</span></div>
                 <div><span>Resource type: {{ resource_type }}</span></div>
@@ -755,6 +1064,9 @@
                 <textarea id="txt-abstract" type="email" class="form-control" id="email"
                           placeholder="Enter abstract"></textarea>
             </div>
+            </div>
+        {% endif %}
+        <!-- ==== Tabs end ==== -->
 
             {#           ------- CITATION -------  #}
             <div class="content-block">
@@ -1461,89 +1773,36 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Modal -->
-    <div class="modal fade" id="add-dcterm-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/add-metadata/">
 
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title" id="myModalLabel">Add metadata term</h4>
-                    </div>
-                    <div class="modal-body">
-                        {% csrf_token %}
+        <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST"
+                          enctype="multipart/form-data">
 
-                        {{ dcterm_frm|crispy }}
-
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <!-- Modal -->
-    <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/add-citation/">
-
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title" id="myModalLabel">Add reference</h4>
-                    </div>
-                    <div class="modal-body">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            <label for="add-citation-input">Citation text:</label>
-                            <textarea class="form-control" name="content" id="add-citation-input" cols="30"
-                                      rows="10"></textarea>
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="add-citation-input">Select files:</label>
+                                <input type="file" name="files" id="add-file-input" multiple/>
+                            </div>
 
-    <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST"
-                      enctype="multipart/form-data">
-
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>
-                    </div>
-                    <div class="modal-body">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            <label for="add-citation-input">Select files:</label>
-                            <input type="file" name="files" id="add-file-input" multiple/>
                         </div>
-
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
-                    </div>
-                </form>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
-    </div>
-    </form>
+
+
     {% endwith %}
 
     {% block extra_js %}

@@ -163,8 +163,16 @@ def create_account(
     from tastypie.models import ApiKey
     from django.contrib.auth.models import User, Group
     from django.contrib.sites.models import Site
+    from django.conf import settings
 
     username = username if username else email
+
+    # useirods = getattr(settings,'USE_IRODS', False)
+    # if useirods:
+    #    from django_irods import account
+    #    iaccount = account.IrodsAccount()
+    #    iaccount.create(username)
+    #    iaccount.setPassward(username, password)
 
     groups = groups if groups else []
     groups = Group.objects.in_bulk(*groups) if groups and isinstance(groups[0], int) else groups
@@ -208,6 +216,8 @@ go to http://{domain}/verify/{token}/ and verify your account.
         pass # FIXME should log this instead of ignoring it.
 
     u.groups = groups
+
+
     return u
 
 

@@ -528,6 +528,7 @@ footer {
 	font-weight: 300;
     color: white;
     position: absolute;
+    overflow: hidden;
 }
 footer a {
 	color: #81D685;
@@ -840,6 +841,97 @@ li.account p{
     margin-bottom: 30px;
     height: auto;
 }
+#contact-table .icon-button{
+    float:left;
+    background-color: transparent;
+    border: 0;
+}
+
+#txt-abstract{
+    height: 155px;
+}
+
+span.remove{
+    position: absolute;
+    left: 0;
+    height: 100% !important;
+    background: #EEE;
+    top: 0;
+}
+
+.form-control{
+    margin-bottom:8px;
+}
+
+.no-padding{
+    padding:0;
+}
+
+.icon-remove{
+    font-size: 17px;
+    top: 3px;
+    left: 6px;
+    color: rgb(217, 83, 79);
+    cursor:pointer;
+}
+
+.icon-add{
+    font-size: 17px;
+    top: 3px;
+    left: 1px;
+    color: #5cb85c;
+    cursor:pointer;
+}
+
+.icon-add:hover{
+    color: #47a447;
+}
+
+.icon-remove:hover{
+    color: rgb(168, 69, 66);
+}
+
+#panel-left{
+    padding-right:8px;
+    padding-left:0;
+    margin-bottom: 10px;
+}
+
+#panel-right{
+    padding-left:8px;
+    padding-right:0;
+    margin-bottom: 10px;
+}
+#add-keyword-wrapper{
+    width: 200px;
+    display: inline-flex;
+}
+
+
+#relatedResourcesTab{
+    overflow:hidden;
+}
+
+#comments{
+    border: 1px solid #ddd;
+    padding: 0 15px;
+    padding-bottom: 15px;
+    background: #F9F9F9;
+}
+
+.info-group table td{
+    padding-left:15px;
+}
+
+#resourceSpecificTab{
+    overflow-x:hidden;
+}
+#txt-title{
+    width: calc(100% - 100px);
+    font-size: 30px;
+    margin-bottom: 30px;
+    height: auto;
+}
 
 #txt-abstract{
     height: 155px;
@@ -987,6 +1079,10 @@ table.table-plain td{
     border:0;
 }
 
+
+.tab-elements .nav-tabs li{
+    padding:0;
+}
 .panel-tabs > .nav-tabs > li > a{
     color:#555;
     -webkit-border-radius: 4px 4px 0 0;
@@ -1057,7 +1153,6 @@ body > .container{
     cursor: pointer;
     float: right;
     margin: 0 4px;
-
     padding: 5px;
     background-color: transparent;
     width: auto !important;
@@ -1102,19 +1197,25 @@ body > .container{
     background: #F7F7F7;
 }
 
-#permission-panel h5{
-    margin-top:0;
-}
-
 .info-icon{
-    color:#B6B6B6;
+    color: #FFFFFF;
     margin-top: 4px;
     margin-left: -4px;
     position: absolute;
+    right: 25px;
+    top: 13px;
 }
 
 .info-icon:hover{
-    color: #777;
+    color: #CCC;
+}
+
+#permission-panel .form-control{
+    margin-bottom:0;
+}
+
+#permission-panel .custom-well .form-group{
+    width:100%;
 }
 
 .btn-update-list{
@@ -1134,6 +1235,23 @@ body > .container{
     border-radius: 0px;
     border-top-left-radius: 3px;
     border-bottom-left-radius: 3px;
+}
+
+.access-panel-title{
+    color: #FFF;
+    background-color: #337ab7;
+    margin: -20px;
+    border: 1px solid #337ab7;
+    padding: 10px;
+    padding-right: 30px;
+    height:52px;
+    margin-bottom: 10px;
+    -webkit-border-top-left-radius: 3px;
+    -webkit-border-top-right-radius: 3px;
+    -moz-border-radius-topleft: 3px;
+    -moz-border-radius-topright: 3px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
 }
 
 .abstract{
@@ -1193,6 +1311,13 @@ body > .container{
     /*width:90%;*/
 }
 
+#citation-text a, .rights-url a{
+    word-break:break-word;
+}
+
+#btn-download-all, #btn-add-file{
+    margin-bottom:5px;
+}
 
 div#sharing-status {
     height: 34px;
@@ -1311,14 +1436,11 @@ span.name-label{
     overflow-y:hidden;
 }
 
-.tab-elements .panel-tabs, .tab-elements .tabs-body{
-    min-width:403px;
-}
-
-
 .tab-elements .table:not(.table-striped) {
     width:auto;
 }
+
+
 
 .tab-elements .table td, .tab-elements .table th{
     border:0;
