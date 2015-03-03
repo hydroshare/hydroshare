@@ -717,6 +717,60 @@
                         </div>
                         <hr style="border: 0;">
                     {% endif %}
+                    <div>
+                    {% if site %}
+                        <h4><strong>Site:</strong></h4>
+                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Code:</strong></div>
+                            <div class="col-sm-8">{{ site.code }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ site.name }}</div>
+                        </div>
+                        <hr style="border: 0;">
+                    {%  endif %}
+                    </div>
+                    <div>
+                    {% if variable %}
+                        <h4><strong>Variable:</strong></h4>
+                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Code:</strong></div>
+                            <div class="col-sm-8">{{ variable.code }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Name:</strong></div>
+                            <div class="col-sm-8">{{ variable.name }}</div>
+                        </div>
+                        <hr style="border: 0;">
+                        {% endif %}
+                    </div>
+                    <div>
+                    {% if method %}
+                        <h4><strong>Method:</strong></h4>
+                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Code:</strong></div>
+                            <div class="col-sm-8">{{ method.value }}</div>
+                        </div>
+                        <hr style="border: 0;">
+                    {% endif %}
+                    </div>
+                    <div>
+                        {% if quality_level %}
+                            <h4><strong>Quality Control Level:</strong></h4>
+                            <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                            {% if quality_level.value %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Definition:</strong></div>
+                                    <div class="col-sm-8">{{ quality_level.value }}</div>
+                                </div>
+                            {% endif %}
+                            <hr style="border: 0;">
+                        {% endif %}
+                    </div>
                 {% endif %}
                 <div>
                     {% if cellInformation %}
@@ -752,7 +806,7 @@
                                 <div class="col-sm-8">{{ cellInformation.noDataValue }}</div>
                             </div>
                         {% endif %}
-                    <hr style="border: 0;">
+                        <hr style="border: 0;">
                     {% endif %}
                 </div>
 
@@ -786,7 +840,7 @@
                                 </div>
                             {% endif %}
                         {% endfor %}
-                    <hr style="border: 0;">
+                        <hr style="border: 0;">
                     {% endif %}
                 </div>
 
@@ -971,20 +1025,20 @@
                         {% crispy metadata_form %}
                     {% endif %}
 
-                    <div>
+{#                    <div>#}
                         {# TODO: Pabitra to check if this for loop code is relevant #}
-                        {% for attr, val_dict in core_metadata.items %}
-                            <h5>{{ attr }}</h5>
-                            <table class="table table-condensed">
-                                {% for subattr, subval in val_dict.items %}
-                                    <tr>
-                                        <th>{{ subattr }}</th>
-                                        <td>{{ subval }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </table>
-                        {% endfor %}
-                    </div>
+{#                        {% for attr, val_dict in core_metadata.items %}#}
+{#                            <h5>{{ attr }}</h5>#}
+{#                            <table class="table table-condensed">#}
+{#                                {% for subattr, subval in val_dict.items %}#}
+{#                                    <tr>#}
+{#                                        <th>{{ subattr }}</th>#}
+{#                                        <td>{{ subval }}</td>#}
+{#                                    </tr>#}
+{#                                {% endfor %}#}
+{#                            </table>#}
+{#                        {% endfor %}#}
+{#                    </div>#}
                 </div>
             </div>
         </div>
