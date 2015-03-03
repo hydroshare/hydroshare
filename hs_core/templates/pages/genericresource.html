@@ -240,45 +240,45 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <div class="custom-well">
-                                    <h5 class="access-panel-title"><strong>Research groups that can edit the content of this resource</strong>
-                                    </h5>
-
-                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                          method="POST">
-                                        {% csrf_token %}
-                                        <select name="designees" id="edit_groups-select" multiple
-                                                class="form-control" size="{{ edit_groups.count }}">
-                                            {% for u in edit_groups %}
-                                                <option value="{{ u.pk }}"
-                                                        {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <input name="t" value="edit_groups" type="hidden"/>
-                                        <button type="submit"
-                                                class="btn btn-update-list pull-left btn-default glyphicon"><span
-                                                class="button-label">&nbspUpdate access list</span></button>
-                                                <span data-toggle="tooltip" data-placement="auto"
-                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                                    </form>
-                                    <form class="form-inline"
-                                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                          method="POST" style="padding-top:0.3em">
-                                        {% csrf_token %}
-                                        <div class="form-group">
-
-
-                                            <button type="submit"
-                                                    class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus"><span
-                                                    class="button-label">&nbspAdd group</span></button>
-                                            {{ add_edit_group_form.user }}
-                                            <input name="t" value="add_edit_group" type="hidden"/>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+{#                            <div class="col-md-4">#}
+{#                                <div class="custom-well">#}
+{#                                    <h5 class="access-panel-title"><strong>Research groups that can edit the content of this resource</strong>#}
+{#                                    </h5>#}
+{##}
+{#                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+{#                                          method="POST">#}
+{#                                        {% csrf_token %}#}
+{#                                        <select name="designees" id="edit_groups-select" multiple#}
+{#                                                class="form-control" size="{{ edit_groups.count }}">#}
+{#                                            {% for u in edit_groups %}#}
+{#                                                <option value="{{ u.pk }}"#}
+{#                                                        {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>#}
+{#                                            {% endfor %}#}
+{#                                        </select>#}
+{#                                        <input name="t" value="edit_groups" type="hidden"/>#}
+{#                                        <button type="submit"#}
+{#                                                class="btn btn-update-list pull-left btn-default glyphicon"><span#}
+{#                                                class="button-label">&nbspUpdate access list</span></button>#}
+{#                                                <span data-toggle="tooltip" data-placement="auto"#}
+{#                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
+{#                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
+{#                                    </form>#}
+{#                                    <form class="form-inline"#}
+{#                                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+{#                                          method="POST" style="padding-top:0.3em">#}
+{#                                        {% csrf_token %}#}
+{#                                        <div class="form-group">#}
+{##}
+{##}
+{#                                            <button type="submit"#}
+{#                                                    class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus"><span#}
+{#                                                    class="button-label">&nbspAdd group</span></button>#}
+{#                                            {{ add_edit_group_form.user }}#}
+{#                                            <input name="t" value="add_edit_group" type="hidden"/>#}
+{#                                        </div>#}
+{#                                    </form>#}
+{#                                </div>#}
+{#                            </div>#}
 
                             {% if not cm.public %}
                                 <div class="col-md-4">
@@ -317,43 +317,43 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-4">
-                                    <div class="custom-well">
-                                        <h5 class="access-panel-title"><strong>Research groups that can view and download the resource</strong>
-                                        </h5>
-
-                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <select name="designees" id="view_groups-select" multiple
-                                                    class="form-control" size="{{ view_groups.count }}">
-                                                {% for u in view_groups %}
-                                                    <option value="{{ u.pk }}"
-                                                            {% if u in view_groups %}selected{% endif %}>{{ u }}</option>
-                                                {% endfor %}
-                                            </select>
-                                            <input name="t" value="view_groups" type="hidden"/>
-                                            <button type="submit"
-                                                    class="btn btn-update-list pull-left btn-default glyphicon">
-                                                <span class="button-label">&nbspUpdate access list</span></button>
-                                                    <span data-toggle="tooltip" data-placement="auto"
-                                                          title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                                          class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                                        </form>
-                                        <form class="form-inline"
-                                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                              method="POST" style="padding-top:0.3em">
-                                            {% csrf_token %}
-                                            <div class="form-group">
-                                                <button type="submit"
-                                                        class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus">
-                                                    <span class="button-label">&nbspAdd group</span></button>
-                                                {{ add_view_group_form.user }}
-                                                <input name="t" value="add_view_group" type="hidden"/>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
+{#                                <div class="col-md-4">#}
+{#                                    <div class="custom-well">#}
+{#                                        <h5 class="access-panel-title"><strong>Research groups that can view and download the resource</strong>#}
+{#                                        </h5>#}
+{##}
+{#                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+{#                                              method="POST">#}
+{#                                            {% csrf_token %}#}
+{#                                            <select name="designees" id="view_groups-select" multiple#}
+{#                                                    class="form-control" size="{{ view_groups.count }}">#}
+{#                                                {% for u in view_groups %}#}
+{#                                                    <option value="{{ u.pk }}"#}
+{#                                                            {% if u in view_groups %}selected{% endif %}>{{ u }}</option>#}
+{#                                                {% endfor %}#}
+{#                                            </select>#}
+{#                                            <input name="t" value="view_groups" type="hidden"/>#}
+{#                                            <button type="submit"#}
+{#                                                    class="btn btn-update-list pull-left btn-default glyphicon">#}
+{#                                                <span class="button-label">&nbspUpdate access list</span></button>#}
+{#                                                    <span data-toggle="tooltip" data-placement="auto"#}
+{#                                                          title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
+{#                                                          class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
+{#                                        </form>#}
+{#                                        <form class="form-inline"#}
+{#                                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+{#                                              method="POST" style="padding-top:0.3em">#}
+{#                                            {% csrf_token %}#}
+{#                                            <div class="form-group">#}
+{#                                                <button type="submit"#}
+{#                                                        class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus">#}
+{#                                                    <span class="button-label">&nbspAdd group</span></button>#}
+{#                                                {{ add_view_group_form.user }}#}
+{#                                                <input name="t" value="add_view_group" type="hidden"/>#}
+{#                                            </div>#}
+{#                                        </form>#}
+{#                                    </div>#}
+{#                                </div>#}
                             {% endif %}
                         </div>
                     </div>
@@ -479,7 +479,7 @@
                     </li>
                     {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
                         <li class="col-md-3 col-sm-3 col-xs-12">
-                            <a href="#coveragelTab" data-toggle="tab">
+                            <a href="#coverageTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-globe"></span>
                                 &nbspCoverage
                             </a>
@@ -555,7 +555,7 @@
             </div>
             <!-- ========= COVERAGE TAB ========= -->
             {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
-                <div class="tab-pane" id="coveragelTab">
+                <div class="tab-pane" id="coverageTab">
                     <h4><strong>Spatial:</strong></h4>
                     <hr style="margin-top: 0px;margin-bottom: 2px">
 
