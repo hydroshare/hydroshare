@@ -20,6 +20,7 @@ hydroshare:
     #- "media:/home/docker/hydroshare/hydroshare/static/media"
     # for VM
     # Specific to hydro user on the hydrodev Xubuntu VM
+
     - "/Users/tonycastronova/Documents/projects/hydroshare/hydroshare:/home/docker/hydroshare"
 
     # Specific to hydro user for pycharm debugging on hydrodev Xubuntu VM

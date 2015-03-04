@@ -404,12 +404,20 @@ class FilterForm(forms.Form):
 def my_resources(request, page):
 #    if not request.user.is_authenticated():
 #        return HttpResponseRedirect('/accounts/login/')
+<<<<<<< HEAD
 #
     import sys
     sys.path.append("/home/docker/pycharm-debug")
     import pydevd
     pydevd.settrace('129.123.51.152', port=21000, suspend=False)
 
+=======
+    
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+>>>>>>> 1469f626b65af670f3caba1f35f1db6c4d14c23c
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
