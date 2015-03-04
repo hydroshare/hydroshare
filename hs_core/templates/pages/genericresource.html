@@ -190,7 +190,7 @@
                                 {% csrf_token %}
                                 <div class="form-group">
                                     <button type="submit"
-                                            class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
+                                            class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
                                             class="button-label">&nbspAdd user</span></button>
                                     {{ add_owner_user_form.user }}
                                     <input name="t" value="add_owner" type="hidden"/>
@@ -228,7 +228,7 @@
                                 {% csrf_token %}
                                 <div class="form-group">
                                     <button type="submit"
-                                            class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
+                                            class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
                                             class="button-label">&nbspAdd user</span></button>
                                     {{ add_edit_user_form.user }}
                                     <input name="t" value="add_edit_user" type="hidden"/>
@@ -237,45 +237,45 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4">
-                        <div class="custom-well">
-                            <h5 class="access-panel-title"><strong>Research groups that can edit the content of this resource</strong>
-                            </h5>
-
-                            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST">
-                                {% csrf_token %}
-                                <select name="designees" id="edit_groups-select" multiple
-                                        class="form-control" size="{{ edit_groups.count }}">
-                                    {% for u in edit_groups %}
-                                        <option value="{{ u.pk }}"
-                                                {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>
-                                    {% endfor %}
-                                </select>
-                                <input name="t" value="edit_groups" type="hidden"/>
-                                <button type="submit"
-                                        class="btn btn-update-list pull-left btn-default glyphicon"><span
-                                        class="button-label">&nbspUpdate access list</span></button>
-                                        <span data-toggle="tooltip" data-placement="auto"
-                                              title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                              class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                            </form>
-                            <form class="form-inline"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST" style="padding-top:0.3em">
-                                {% csrf_token %}
-                                <div class="form-group">
-
-
-                                    <button type="submit"
-                                            class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus"><span
-                                            class="button-label">&nbspAdd group</span></button>
-                                    {{ add_edit_group_form.user }}
-                                    <input name="t" value="add_edit_group" type="hidden"/>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+{#                    <div class="col-md-4">#}
+{#                        <div class="custom-well">#}
+{#                            <h5 class="access-panel-title"><strong>Research groups that can edit the content of this resource</strong>#}
+{#                            </h5>#}
+{##}
+{#                            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+{#                                  method="POST">#}
+{#                                {% csrf_token %}#}
+{#                                <select name="designees" id="edit_groups-select" multiple#}
+{#                                        class="form-control" size="{{ edit_groups.count }}">#}
+{#                                    {% for u in edit_groups %}#}
+{#                                        <option value="{{ u.pk }}"#}
+{#                                                {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>#}
+{#                                    {% endfor %}#}
+{#                                </select>#}
+{#                                <input name="t" value="edit_groups" type="hidden"/>#}
+{#                                <button type="submit"#}
+{#                                        class="btn btn-update-list pull-left btn-default glyphicon"><span#}
+{#                                        class="button-label">&nbspUpdate access list</span></button>#}
+{#                                        <span data-toggle="tooltip" data-placement="auto"#}
+{#                                              title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
+{#                                              class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
+{#                            </form>#}
+{#                            <form class="form-inline"#}
+{#                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+{#                                  method="POST" style="padding-top:0.3em">#}
+{#                                {% csrf_token %}#}
+{#                                <div class="form-group">#}
+{##}
+{##}
+{#                                    <button type="submit"#}
+{#                                            class="btn btn-success btn-add-access pull-left glyphicon glyphicon-plus"><span#}
+{#                                            class="button-label">&nbspAdd group</span></button>#}
+{#                                    {{ add_edit_group_form.user }}#}
+{#                                    <input name="t" value="add_edit_group" type="hidden"/>#}
+{#                                </div>#}
+{#                            </form>#}
+{#                        </div>#}
+{#                    </div>#}
 
                     {% if not cm.public %}
                         <div class="col-md-4">
@@ -305,7 +305,7 @@
                                     {% csrf_token %}
                                     <div class="form-group">
                                         <button type="submit"
-                                                class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
+                                                class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
                                                 class="button-label">&nbspAdd user</span></button>
                                         {{ add_view_user_form.user }}
                                         <input name="t" value="add_view_user" type="hidden"/>
@@ -314,43 +314,43 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
-                            <div class="custom-well">
-                                <h5 class="access-panel-title"><strong>Research groups that can view and download the resource</strong>
-                                </h5>
-
-                                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                      method="POST">
-                                    {% csrf_token %}
-                                    <select name="designees" id="view_groups-select" multiple
-                                            class="form-control" size="{{ view_groups.count }}">
-                                        {% for u in view_groups %}
-                                            <option value="{{ u.pk }}"
-                                                    {% if u in view_groups %}selected{% endif %}>{{ u }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <input name="t" value="view_groups" type="hidden"/>
-                                    <button type="submit"
-                                            class="btn btn-update-list pull-left btn-default glyphicon">
-                                        <span class="button-label">&nbspUpdate access list</span></button>
-                                            <span data-toggle="tooltip" data-placement="auto"
-                                                  title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                                  class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                                </form>
-                                <form class="form-inline"
-                                      action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                      method="POST" style="padding-top:0.3em">
-                                    {% csrf_token %}
-                                    <div class="form-group">
-                                        <button type="submit"
-                                                class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus">
-                                            <span class="button-label">&nbspAdd group</span></button>
-                                        {{ add_view_group_form.user }}
-                                        <input name="t" value="add_view_group" type="hidden"/>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+{#                        <div class="col-md-4">#}
+{#                            <div class="custom-well">#}
+{#                                <h5 class="access-panel-title"><strong>Research groups that can view and download the resource</strong>#}
+{#                                </h5>#}
+{##}
+{#                                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+{#                                      method="POST">#}
+{#                                    {% csrf_token %}#}
+{#                                    <select name="designees" id="view_groups-select" multiple#}
+{#                                            class="form-control" size="{{ view_groups.count }}">#}
+{#                                        {% for u in view_groups %}#}
+{#                                            <option value="{{ u.pk }}"#}
+{#                                                    {% if u in view_groups %}selected{% endif %}>{{ u }}</option>#}
+{#                                        {% endfor %}#}
+{#                                    </select>#}
+{#                                    <input name="t" value="view_groups" type="hidden"/>#}
+{#                                    <button type="submit"#}
+{#                                            class="btn btn-update-list pull-left btn-default glyphicon">#}
+{#                                        <span class="button-label">&nbspUpdate access list</span></button>#}
+{#                                            <span data-toggle="tooltip" data-placement="auto"#}
+{#                                                  title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
+{#                                                  class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
+{#                                </form>#}
+{#                                <form class="form-inline"#}
+{#                                      action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+{#                                      method="POST" style="padding-top:0.3em">#}
+{#                                    {% csrf_token %}#}
+{#                                    <div class="form-group">#}
+{#                                        <button type="submit"#}
+{#                                                class="btn btn-success btn-add-access pull-left glyphicon glyphicon-plus">#}
+{#                                            <span class="button-label">&nbspAdd group</span></button>#}
+{#                                        {{ add_view_group_form.user }}#}
+{#                                        <input name="t" value="add_view_group" type="hidden"/>#}
+{#                                    </div>#}
+{#                                </form>#}
+{#                            </div>#}
+{#                        </div>#}
                     {% endif %}
                 </div>
             </div>
@@ -916,274 +916,139 @@
     </div>
 
         {#           ------- CITATION -------  #}
-        <div class="content-block">
+    <div class="content-block">
         <h3>How to cite</h3>
         <span id="citation-text">{{ citation }}</span>
     </div>
 
         {#           ------- SHARING -------  #}
-        <div class="content-block">
-    <h3>Sharing</h3>
-
-    <div id="sharing-status">
-    <span class="pull-left">Sharing status:</span>
-    {% if page.perms.change %}
-        <form id="form-sharing" class="pull-left"
-              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-            {% csrf_token %}
-            {% if cm.public %}
-                <input name="t" type="hidden" value="make_private"/>
-                <div class="btn-group" role="group" aria-label="...">
-                    <button id="btn-public" data-toggle="tooltip" data-placement="auto"
-                            title='Can be viewed and downloaded by anyone.' type="button"
-                            class="btn btn-default active">Public
-                    </button>
-                    <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                            title='Can be viewed and downloaded only by designated users or research groups.'
-                            type="submit" class="btn btn-default">Private
-                    </button>
-                </div>
-            {% else %}
-                <input name="t" type="hidden" value="make_public"/>
-                <div class="btn-group" role="group" aria-label="...">
-                    <button id="btn-public" data-toggle="tooltip" data-placement="auto"
-                            title='Can be viewed and downloaded by anyone.' type="submit"
-                            class="btn btn-default">Public
-                    </button>
-                    <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                            title='Can be viewed and downloaded only by designated users or research groups.'
-                            type="button" class="btn btn-default active">Private
-                    </button>
-                </div>
-            {% endif %}
-        </form>
-    {% else %}
-        {% if cm.public %}
-            <strong>&nbspPublic</strong>
+    <div class="content-block">
+        <h3>Sharing</h3>
+        <div id="sharing-status">
+        <span class="pull-left">Sharing status:</span>
+        {% if page.perms.change %}
+            <form id="form-sharing" class="pull-left"
+                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                {% csrf_token %}
+                {% if cm.public %}
+                    <input name="t" type="hidden" value="make_private"/>
+                    <div class="btn-group" role="group" aria-label="...">
+                        <button id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                title='Can be viewed and downloaded by anyone.' type="button"
+                                class="btn btn-default active">Public
+                        </button>
+                        <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                title='Can be viewed and downloaded only by designated users or research groups.'
+                                type="submit" class="btn btn-default">Private
+                        </button>
+                    </div>
+                {% else %}
+                    <input name="t" type="hidden" value="make_public"/>
+                    <div class="btn-group" role="group" aria-label="...">
+                        <button id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                title='Can be viewed and downloaded by anyone.' type="submit"
+                                class="btn btn-default">Public
+                        </button>
+                        <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                title='Can be viewed and downloaded only by designated users or research groups.'
+                                type="button" class="btn btn-default active">Private
+                        </button>
+                    </div>
+                {% endif %}
+            </form>
         {% else %}
-            <strong>&nbspPrivate</strong>
+            {% if cm.public %}
+                <strong>&nbspPublic</strong>
+            {% else %}
+                <strong>&nbspPrivate</strong>
+            {% endif %}
         {% endif %}
-    {% endif %}
-    </div>
+        </div>
+        <div id="rights">
+            <form class="form-group">
+                <div class="col-md-6 col-sm-12 col-xs-12">
+                    <label for="select_license">Select a license</label>
+                    <select id="select_license" class="form-control">
+                        <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option>
+                        <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option>
+                        <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons Attribution-NoDerivs CC BY-ND</option>
+                        <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA</option>
+                        <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NoCommercial CC BY-NC</option>
+                        <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6 col-sm-12 col-xs-12">
+                    <label for="id_statement">Statement</label>
+                    <textarea class="form-control input-md textarea" cols="40" id="id_statement" name="statement"
+                              readonly="True" rows="3" style="background-color:white;"></textarea>
 
-    <div id="rights">
-    <div class="col-md-6 col-sm-12 col-xs-12">
-    <div class="form-group">
-        <label for="select_license">Select a license</label>
-        <select id="select_license" class="form-control">
-            <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY
-            </option>
-            <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons
-                Attribution-ShareAlike CC BY-SA
-            </option>
-            <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons
-                Attribution-NoDerivs
-                CC BY-ND
-            </option>
-            <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons
-                Attribution-NoCommercial-ShareAlike CC BY-NC-SA
-            </option>
-            <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons
-                Attribution-NoCommercial CC BY-NC
-            </option>
-            <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons
-                Attribution-NoCommercial-NoDerivs CC BY-NC-ND
-            </option>
-            <option value="other">Other</option>
-        </select>
-    </div>
-    </div>
-    <div class="col-md-6 col-sm-12 col-xs-12">
-        <div class="form-group">
-        <label for="id_statement">Statement</label>
-        <textarea class="form-control input-md textarea" cols="40" id="id_statement" name="statement"
-                  readonly="True" rows="3" style="background-color:white;">This resource is shared under the
-            Creative Commons Attribution CC BY.</textarea>
-    </div>
+                    <label for="id_url">Url</label>
+                    <input class="form-control input-md urlinput" id="id_url" maxlength="200"
+                           readonly="True" style="background-color:white;"
+                           type="url">
+                    <img id="img-badge" class="cc-image"
+                    {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+                        src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+                        src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+                        src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+                        src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+                       src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+                        src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
+                    {% endif %}
+                    />
+                </div>
+            </form>
 
-        <div class="form-group">
-        <label for="id_url">Url</label>
-        <input class="form-control input-md urlinput" id="id_url" maxlength="200"
-               readonly="True" style="background-color:white;"
-               type="url" value="http://creativecommons.org/licenses/by/4.0/">
-    </div>
+            <div id="permission-panel">
+                {% if user == cm.user %}
+                    <p>You are the owner of this resource.</p>
+                {% elif is_edit_user %}
+                    <p>You have been given specific permission to edit this resource.</p>
+                {% elif in_edit_group %}
+                    Your research group(s) have been given specific permission to edit this resource.</p>
+                {% elif is_view_user %}
+                    <p>You have been given specific permission to view this resource.</p>
+                {% elif in_view_group %}
+                    <p>Your research group(s) have been given specific permission to view this resource.</p>
+                {% endif %}
 
-        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
-    </div>
-
-    {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
-    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
-    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
-    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
-    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
-    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
-    {% endif %}
-
-    <div id="permission-panel">
-    {% if user == cm.user %}
-        <p>You are the owner of this resource.</p>
-    {% elif is_edit_user %}
-        <p>You have been given specific permission to edit this resource.</p>
-    {% elif in_edit_group %}
-        Your research group(s) have been given specific permission to edit this resource.</p>
-    {% elif is_view_user %}
-        <p>You have been given specific permission to view this resource.</p>
-    {% elif in_view_group %}
-        <p>Your research group(s) have been given specific permission to view this resource.</p>
-    {% endif %}
-
-     {% if page.perms.change %}
-        <div class="panel panel-default panel-faq">
-            <div class="panel-heading">
-                <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
-                    <h4 class="panel-title">
-                        Manage access
-                        <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
-                    </h4>
-                </a>
-            </div>
-            <div id="faq-cat-1-sub-1" class="panel-collapse collapse" style="height: auto;">
-                <div class="panel-body">
-                    <div class="col-md-4">
-                        <div class="custom-well">
-                            <h5 class="access-panel-title"><strong>Users with full read/write permissions on this resource</strong></h5>
-
-                            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST">
-                                {% csrf_token %}
-                                <select name="designees" id="owners-select" multiple class="form-control"
-                                        size="{{ owners.count }}">
-                                    {% for u in owners %}
-                                        <option value="{{ u.pk }}" selected>{{ u|best_name }}
-                                            ({{ u.username }})
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                <input name="t" value="owners" type="hidden"/>
-                                <button type="submit"
-                                        class="btn btn-update-list pull-left btn-default glyphicon"><span
-                                        class="button-label">&nbspUpdate access list</span></button>
-                                        <span data-toggle="tooltip" data-placement="auto"
-                                              title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                              class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                            </form>
-                            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST" style="padding-top:0.3em">
-                                {% csrf_token %}
-                                <div class="form-group">
-                                    <button type="submit"
-                                            class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
-                                            class="button-label">&nbspAdd user</span></button>
-                                    {{ add_owner_user_form.user }}
-                                    <input name="t" value="add_owner" type="hidden"/>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="custom-well">
-                            <h5 class="access-panel-title"><strong>Users who can edit the content of this resource</strong></h5>
-
-                            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST">
-                                {% csrf_token %}
-                                <select name="designees" id="edit_users-select" multiple
-                                        class="form-control" size="{{ edit_users.count }}">
-                                    {% for u in edit_users %}
-                                        <option value="{{ u.pk }}" selected>{{ u|best_name }}
-                                            ({{ u.username }})
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                                <input name="t" value="edit_users" type="hidden"/>
-                                <button type="submit"
-                                        class="btn btn-update-list pull-left btn-default glyphicon"><span
-                                        class="button-label">&nbspUpdate access list</span></button>
-                                        <span data-toggle="tooltip" data-placement="auto"
-                                              title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                              class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                            </form>
-                            <form class="form-inline"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST" style="padding-top:0.3em">
-                                {% csrf_token %}
-                                <div class="form-group">
-                                    <button type="submit"
-                                            class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
-                                            class="button-label">&nbspAdd user</span></button>
-                                    {{ add_edit_user_form.user }}
-                                    <input name="t" value="add_edit_user" type="hidden"/>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="custom-well">
-                            <h5 class="access-panel-title"><strong>Research groups that can edit the content of this resource</strong>
-                            </h5>
-
-                            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST">
-                                {% csrf_token %}
-                                <select name="designees" id="edit_groups-select" multiple
-                                        class="form-control" size="{{ edit_groups.count }}">
-                                    {% for u in edit_groups %}
-                                        <option value="{{ u.pk }}"
-                                                {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>
-                                    {% endfor %}
-                                </select>
-                                <input name="t" value="edit_groups" type="hidden"/>
-                                <button type="submit"
-                                        class="btn btn-update-list pull-left btn-default glyphicon"><span
-                                        class="button-label">&nbspUpdate access list</span></button>
-                                        <span data-toggle="tooltip" data-placement="auto"
-                                              title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                              class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                            </form>
-                            <form class="form-inline"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST" style="padding-top:0.3em">
-                                {% csrf_token %}
-                                <div class="form-group">
-
-
-                                    <button type="submit"
-                                            class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus"><span
-                                            class="button-label">&nbspAdd group</span></button>
-                                    {{ add_edit_group_form.user }}
-                                    <input name="t" value="add_edit_group" type="hidden"/>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    {% if not cm.public %}
+                {% if page.perms.change %}
+            <div class="panel panel-default panel-faq">
+                <div class="panel-heading">
+                    <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
+                        <h4 class="panel-title">
+                            Manage access
+                            <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
+                        </h4>
+                    </a>
+                </div>
+                <div id="faq-cat-1-sub-1" class="panel-collapse collapse" style="height: auto;">
+                    <div class="panel-body">
                         <div class="col-md-4">
                             <div class="custom-well">
-                                <h5 class="access-panel-title"><strong>Users who can view and download the resource</strong></h5>
+                                <h5 class="access-panel-title"><strong>Users with full read/write permissions on this resource</strong></h5>
 
                                 <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
                                       method="POST">
                                     {% csrf_token %}
-                                    <select name="designees" id="view_users-select" multiple
-                                            class="form-control" size="{{ view_users.count }}">
-                                        {% for u in view_users %}
-                                            <option value="{{ u.pk }}"
-                                                    {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>
+                                    <select name="designees" id="owners-select" multiple class="form-control"
+                                            size="{{ owners.count }}">
+                                        {% for u in owners %}
+                                            <option value="{{ u.pk }}" selected>{{ u|best_name }}
+                                                ({{ u.username }})
+                                            </option>
                                         {% endfor %}
                                     </select>
-                                    <input name="t" value="view_users" type="hidden"/>
+                                    <input name="t" value="owners" type="hidden"/>
                                     <button type="submit"
-                                            class="btn btn-update-list pull-left btn-default glyphicon">
-                                        <span class="button-label">&nbspUpdate access list</span></button>
+                                            class="btn btn-update-list pull-left btn-default glyphicon"><span
+                                            class="button-label">&nbspUpdate access list</span></button>
                                             <span data-toggle="tooltip" data-placement="auto"
                                                   title='Hold down "Control", or "Command" on a Mac, to select more than one.'
                                                   class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
@@ -1193,10 +1058,10 @@
                                     {% csrf_token %}
                                     <div class="form-group">
                                         <button type="submit"
-                                                class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
+                                                class="btn btn-success btn-add-access pull-left glyphicon glyphicon-plus"><span
                                                 class="button-label">&nbspAdd user</span></button>
-                                        {{ add_view_user_form.user }}
-                                        <input name="t" value="add_view_user" type="hidden"/>
+                                        {{ add_owner_user_form.user }}
+                                        <input name="t" value="add_owner" type="hidden"/>
                                     </div>
                                 </form>
                             </div>
@@ -1204,23 +1069,23 @@
 
                         <div class="col-md-4">
                             <div class="custom-well">
-                                <h5 class="access-panel-title"><strong>Research groups that can view and download the resource</strong>
-                                </h5>
+                                <h5 class="access-panel-title"><strong>Users who can edit the content of this resource</strong></h5>
 
                                 <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
                                       method="POST">
                                     {% csrf_token %}
-                                    <select name="designees" id="view_groups-select" multiple
-                                            class="form-control" size="{{ view_groups.count }}">
-                                        {% for u in view_groups %}
-                                            <option value="{{ u.pk }}"
-                                                    {% if u in view_groups %}selected{% endif %}>{{ u }}</option>
+                                    <select name="designees" id="edit_users-select" multiple
+                                            class="form-control" size="{{ edit_users.count }}">
+                                        {% for u in edit_users %}
+                                            <option value="{{ u.pk }}" selected>{{ u|best_name }}
+                                                ({{ u.username }})
+                                            </option>
                                         {% endfor %}
                                     </select>
-                                    <input name="t" value="view_groups" type="hidden"/>
+                                    <input name="t" value="edit_users" type="hidden"/>
                                     <button type="submit"
-                                            class="btn btn-update-list pull-left btn-default glyphicon">
-                                        <span class="button-label">&nbspUpdate access list</span></button>
+                                            class="btn btn-update-list pull-left btn-default glyphicon"><span
+                                            class="button-label">&nbspUpdate access list</span></button>
                                             <span data-toggle="tooltip" data-placement="auto"
                                                   title='Hold down "Control", or "Command" on a Mac, to select more than one.'
                                                   class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
@@ -1231,53 +1096,166 @@
                                     {% csrf_token %}
                                     <div class="form-group">
                                         <button type="submit"
-                                                class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus">
-                                            <span class="button-label">&nbspAdd group</span></button>
-                                        {{ add_view_group_form.user }}
-                                        <input name="t" value="add_view_group" type="hidden"/>
+                                                class="btn btn-success btn-add-access pull-left glyphicon glyphicon-plus"><span
+                                                class="button-label">&nbspAdd user</span></button>
+                                        {{ add_edit_user_form.user }}
+                                        <input name="t" value="add_edit_user" type="hidden"/>
                                     </div>
                                 </form>
                             </div>
                         </div>
-                    {% endif %}
+
+{#                        <div class="col-md-4">#}
+{#                            <div class="custom-well">#}
+{#                                <h5 class="access-panel-title"><strong>Research groups that can edit the content of this resource</strong>#}
+{#                                </h5>#}
+{##}
+{#                                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+{#                                      method="POST">#}
+{#                                    {% csrf_token %}#}
+{#                                    <select name="designees" id="edit_groups-select" multiple#}
+{#                                            class="form-control" size="{{ edit_groups.count }}">#}
+{#                                        {% for u in edit_groups %}#}
+{#                                            <option value="{{ u.pk }}"#}
+{#                                                    {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>#}
+{#                                        {% endfor %}#}
+{#                                    </select>#}
+{#                                    <input name="t" value="edit_groups" type="hidden"/>#}
+{#                                    <button type="submit"#}
+{#                                            class="btn btn-update-list pull-left btn-default glyphicon"><span#}
+{#                                            class="button-label">&nbspUpdate access list</span></button>#}
+{#                                            <span data-toggle="tooltip" data-placement="auto"#}
+{#                                                  title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
+{#                                                  class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
+{#                                </form>#}
+{#                                <form class="form-inline"#}
+{#                                      action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+{#                                      method="POST" style="padding-top:0.3em">#}
+{#                                    {% csrf_token %}#}
+{#                                    <div class="form-group">#}
+{##}
+{##}
+{#                                        <button type="submit"#}
+{#                                                class="btn btn-success btn-add-access pull-left glyphicon glyphicon-plus"><span#}
+{#                                                class="button-label">&nbspAdd group</span></button>#}
+{#                                        {{ add_edit_group_form.user }}#}
+{#                                        <input name="t" value="add_edit_group" type="hidden"/>#}
+{#                                    </div>#}
+{#                                </form>#}
+{#                            </div>#}
+{#                        </div>#}
+
+                        {% if not cm.public %}
+                            <div class="col-md-4">
+                                <div class="custom-well">
+                                    <h5 class="access-panel-title"><strong>Users who can view and download the resource</strong></h5>
+
+                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <select name="designees" id="view_users-select" multiple
+                                                class="form-control" size="{{ view_users.count }}">
+                                            {% for u in view_users %}
+                                                <option value="{{ u.pk }}"
+                                                        {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input name="t" value="view_users" type="hidden"/>
+                                        <button type="submit"
+                                                class="btn btn-update-list pull-left btn-default glyphicon">
+                                            <span class="button-label">&nbspUpdate access list</span></button>
+                                                <span data-toggle="tooltip" data-placement="auto"
+                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'
+                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                    </form>
+                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                          method="POST" style="padding-top:0.3em">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <button type="submit"
+                                                    class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
+                                                    class="button-label">&nbspAdd user</span></button>
+                                            {{ add_view_user_form.user }}
+                                            <input name="t" value="add_view_user" type="hidden"/>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+{#                            <div class="col-md-4">#}
+{#                                <div class="custom-well">#}
+{#                                    <h5 class="access-panel-title"><strong>Research groups that can view and download the resource</strong>#}
+{#                                    </h5>#}
+{##}
+{#                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+{#                                          method="POST">#}
+{#                                        {% csrf_token %}#}
+{#                                        <select name="designees" id="view_groups-select" multiple#}
+{#                                                class="form-control" size="{{ view_groups.count }}">#}
+{#                                            {% for u in view_groups %}#}
+{#                                                <option value="{{ u.pk }}"#}
+{#                                                        {% if u in view_groups %}selected{% endif %}>{{ u }}</option>#}
+{#                                            {% endfor %}#}
+{#                                        </select>#}
+{#                                        <input name="t" value="view_groups" type="hidden"/>#}
+{#                                        <button type="submit"#}
+{#                                                class="btn btn-update-list pull-left btn-default glyphicon">#}
+{#                                            <span class="button-label">&nbspUpdate access list</span></button>#}
+{#                                                <span data-toggle="tooltip" data-placement="auto"#}
+{#                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
+{#                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
+{#                                    </form>#}
+{#                                    <form class="form-inline"#}
+{#                                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+{#                                          method="POST" style="padding-top:0.3em">#}
+{#                                        {% csrf_token %}#}
+{#                                        <div class="form-group">#}
+{#                                            <button type="submit"#}
+{#                                                    class="btn btn-success btn-add-access pull-left glyphicon glyphicon-plus">#}
+{#                                                <span class="button-label">&nbspAdd group</span></button>#}
+{#                                            {{ add_view_group_form.user }}#}
+{#                                            <input name="t" value="add_view_group" type="hidden"/>#}
+{#                                        </div>#}
+{#                                    </form>#}
+{#                                </div>#}
+{#                            </div>#}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
+        {% endif %}
+            </div>
         </div>
-    {% endif %}
-
-    </div>
-</div>
     </div>
 
         {#           ------- Keywords -------  #}
-        <div class="content-block">
+    <div class="content-block">
         <h3>Keywords</h3>
         <div class="tags">
-        <ul class="tag-list custom-well">
-            <li class="tag"><span>These</span>&nbsp<a><span
-                    class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>
-            <li class="tag"><span>are</span>&nbsp<a><span
-                    class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>
-            <li class="tag"><span>some</span>&nbsp<a><span
-                    class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>
-            <li class="tag"><span>keywords</span>&nbsp<a><span
-                    class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>
-            <li>
-                <div id="add-keyword-wrapper" class="input-group">
-                    <input type="text" class="form-control" placeholder="Keyword">
-                              <span class="input-group-btn">
-                                <button class="btn btn-default" type="button">Add</button>
-                              </span>
-                </div>
-            </li>
-        </ul>
-    </div>
+            <div id="add-keyword-wrapper" class="input-group">
+                <input id="txt-keyword" type="text" class="form-control" placeholder="Keyword">
+                <span class="input-group-btn">
+                    <button id="btn-add-keyword" class="btn btn-success" type="button">Add</button>
+                </span>
+            </div>
+            <ul id="lst-tags" class="custom-well tag-list">
+                <li class="tag"><span>These</span>&nbsp<a><span
+                        class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>
+                <li class="tag"><span>are</span>&nbsp<a><span
+                        class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>
+                <li class="tag"><span>some</span>&nbsp<a><span
+                        class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>
+                <li class="tag"><span>keywords</span>&nbsp<a><span
+                        class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>
+            </ul>
+
+        </div>
     </div>
 
-        {#           ------- Content -------  #}
-        <div>
-    <h3>Content</h3>
-    <div class="custom-well">
+    {#           ------- Content -------  #}
+    <div>
+        <h3>Content</h3>
+        <div class="custom-well">
         {#            {% block extra_content %}#}
         {#            {% endblock %}#}
         <div class="table-container">
@@ -1343,9 +1321,9 @@
             <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
         </a>
     </div>
-</div>
+    </div>
         <!-- === Tabs begin === -->
-        <div class="tab-elements">
+    <div class="tab-elements">
         <div class="panel-tabs">
             <ul class="nav nav-tabs">
                 <li class="active col-md-3 col-sm-3 col-xs-12">
@@ -1375,10 +1353,10 @@
             </ul>
         </div>
         <div class="tabs-body">
-    <!-- Tab panes -->
-    <div class="tab-content">
-        <!-- ========= CONTACT TAB ========= -->
-        <div class="tab-pane active" id="contactTab">
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <!-- ========= CONTACT TAB ========= -->
+                <div class="tab-pane active" id="contactTab">
             <table id="contact-table" class="table table-striped">
                 <tbody>
                 <tr>
@@ -1464,8 +1442,8 @@
                 </tbody>
             </table>
         </div>
-        <!-- ========= COVERAGE TAB ========= -->
-        <div class="tab-pane" id="coverageTab">
+                <!-- ========= COVERAGE TAB ========= -->
+                <div class="tab-pane" id="coverageTab">
             <form class="col-md-6 col-sm-12 col-xs-12" role="form">
                 <h4>Spatial</h4>
 
@@ -1537,8 +1515,8 @@
                 </div>
             </form>
         </div>
-        <!-- ========= RELATED RESOURCES TAB ========= -->
-        <div class="tab-pane" id="relatedResourcesTab">
+                <!-- ========= RELATED RESOURCES TAB ========= -->
+                <div class="tab-pane" id="relatedResourcesTab">
             <table class="table">
                 <tbody>
                 {% for source in sources %}
@@ -1558,15 +1536,14 @@
             <a id="add-relation" class="btn btn-success" data-toggle="modal" data-target="#add-relation-dialog"><i
                     class="fa fa-plus"></i> Add relation</a>
         </div>
-         <!-- ========= RESOURCE SPECIFIC TAB ========= -->
-        <div class="tab-pane" id="resourceSpecificTab">
+                <!-- ========= RESOURCE SPECIFIC TAB ========= -->
+                <div class="tab-pane" id="resourceSpecificTab">
+                </div>
+            </div>
         </div>
     </div>
-</div>
-    </div>
-    <!-- ==== Tabs end ==== -->
     {#        ============= FORM EDIT ENDS ==============#}
-    </form>
+</form>
 {% endif %}
 
 {# dialogs follow #}
@@ -1719,7 +1696,6 @@
                     {% csrf_token %}
                     <div class="form-group">
                         <fieldset>
-                            <legend>Creator</legend>
                             <div id="div_id_name" class="control-group">
                                 <label for="id_name" class="control-label requiredField">Name<span class="asteriskField">*</span></label>
                                 <div class="controls">
@@ -1963,6 +1939,33 @@
         // open all metadata collasible elements on page load
         $('.accordion-body:not(".in")').collapse('show');
 
+        $(".icon-remove").on('click', onTagRemove);
+
+
+        function onTagRemove(){
+            $(this).closest(".tag").remove();
+        };
+
+
+        function onAddKeyword(){
+            var text = $("#txt-keyword").val();
+            $("#txt-keyword").val("")
+            $("#txt-keyword").text("");
+            if (text != ""){
+                var item = $("#lst-tags").append('<li class="tag"><span>'+ text +'</span>&nbsp<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>');
+                item.find(".icon-remove").on('click', onTagRemove);
+            }
+        }
+
+
+        $("#txt-keyword").keyup(function(e){
+            if (e.keyCode == 13){
+                onAddKeyword();
+            }
+        });
+
+        $("#btn-add-keyword").click(onAddKeyword);
+
 
         $("#select_license").on('change', function () {
             var value = this.value;
@@ -1971,6 +1974,7 @@
                 $(this).closest("form").find("#id_url").first().attr('value', "");
                 $(this).closest("form").find("#id_statement").first().attr('readonly', false);
                 $(this).closest("form").find("#id_url").first().attr('readonly', false);
+                $("#img-badge").first().hide();
             }
             else {
                 var text = $(this).find('option:selected').text();
@@ -1979,8 +1983,32 @@
                 $(this).closest("form").find("#id_url").first().attr('value', value);
                 $(this).closest("form").find("#id_statement").first().attr('readonly', true);
                 $(this).closest("form").find("#id_url").first().attr('readonly', true);
+                $("#img-badge").first().show();
+                if (text == "This resource is shared under the Creative Commons Attribution CC BY."){
+                    $(this).closest("form").find("#img-badge").first().attr('src',"{{ STATIC_URL }}img/cc-badges/CC-BY.png");
+                    $(this).closest("form").find("#img-badge").first().attr('alt',"CC-BY");
+                }
+                else if (text == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA."){
+                    $(this).closest("form").find("#img-badge").first().attr('src',"{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png");
+                    $(this).closest("form").find("#img-badge").first().attr('alt',"CC-BY-SA");
+                }
+                else if (text == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND."){
+                    $(this).closest("form").find("#img-badge").first().attr('src',"{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png");
+                    $(this).closest("form").find("#img-badge").first().attr('alt',"CC-BY-ND");
+                }
+                else if (text == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA."){
+                    $(this).closest("form").find("#img-badge").first().attr('src',"{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png");
+                    $(this).closest("form").find("#img-badge").first().attr('alt',"CC-BY-NC-SA");
+                }
+                else if (text == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC."){
+                    $(this).closest("form").find("#img-badge").first().attr('src',"{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png");
+                    $(this).closest("form").find("#img-badge").first().attr('alt',"CC-BY-NC");
+                }
+                else if (text == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND."){
+                    $(this).closest("form").find("#img-badge").first().attr('src',"{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png");
+                    $(this).closest("form").find("#img-badge").first().attr('alt',"CC-BY-NC-ND");
+                }
             }
-
         });
 
         // set the selected license in the select license dropdown
@@ -1996,10 +2024,11 @@
         if (value_exists == false) {
             // set the selected license type to 'other'
             $("#select_license").val('other');
-            console.log($("#select_license").attr('readonly'));
+{#            console.log($("#select_license").attr('readonly'));#}
             if ($("#select_license").attr('readonly') == undefined) {
                 $("#select_license").closest("form").find("#id_statement").first().attr('readonly', false);
                 $("#select_license").closest("form").find("#id_url").first().attr('readonly', false);
+                $("#img-badge").first().hide();
             }
             else {
                 $("#select_license").attr('style', "background-color:white;");
