@@ -8,19 +8,18 @@ RUN apt-get install -y sqlite3 sqlite3-pcre libspatialite-dev libspatialite5 spa
 RUN apt-get install -y ssh git libfreetype6 libfreetype6-dev libxml2-dev libxslt-dev libprotobuf-dev
 RUN apt-get install -y python2.7-gdal gdal-bin libgdal-dev gdal-contrib python-pillow protobuf-compiler libtokyocabinet-dev tokyocabinet-bin libreadline-dev ncurses-dev
 RUN apt-get install -y docker.io
+RUN apt-get install -y curl
 
 ADD . /home/docker
 
 WORKDIR /home/docker/pysqlite-2.6.3/
 RUN python setup.py install
-RUN pip install cython
-RUN pip install numexpr
+RUN pip install numexpr==2.4
 
 WORKDIR /home/docker
 RUN pip install -r requirements.txt
 
 WORKDIR  /home/docker
-RUN apt-get install -y curl
 RUN curl -O http://www.hdfgroup.org/ftp/HDF5/prev-releases/hdf5-1.8.13/src/hdf5-1.8.13.tar.gz
 RUN curl -O ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.2.tar.gz
 RUN curl -O https://pypi.python.org/packages/source/n/netCDF4/netCDF4-1.1.1.tar.gz
@@ -40,6 +39,12 @@ RUN sudo make install
 
 WORKDIR /home/docker/netCDF4-1.1.1
 RUN python setup.py install
+
+# Cleanup NetCDF install files
+WORKDIR /home/docker
+RUN rm hdf5-1.8.13.tar.gz
+RUN rm netcdf-4.3.2.tar.gz
+RUN rm netCDF4-1.1.1.tar.gz
 
 RUN useradd -m docker -g docker
 RUN echo docker:docker | chpasswd

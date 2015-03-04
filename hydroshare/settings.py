@@ -289,7 +289,7 @@ INSTALLED_APPS = (
     "hs_modelinstance",
     "hs_app_timeseries",
     "widget_tweaks",
-    "hs_app_netCDF"
+    "hs_app_netCDF",
 )
 
 # List of processors used by RequestContext to populate the context.
