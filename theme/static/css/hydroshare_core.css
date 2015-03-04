@@ -1002,12 +1002,22 @@ html, body{
 
 #btn-public.active{
     color:#FFF;
-    background:#5cb85c;
+    background: #5cb85c;
+    border-color: #20833F;
 }
 
 #btn-private.active{
     color:#FFF;
-    background:#d9534f
+    background:#d9534f;
+    border-color: #8C3C3A;
+}
+
+.btn-success {
+    border-color: #20833F;
+}
+
+.btn-danger{
+    border-color: #8C3C3A;
 }
 
 #id_user-wrapper{
