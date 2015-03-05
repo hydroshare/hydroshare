@@ -28,8 +28,8 @@ class ModelOutputForm(ModelForm):
         self.helper = ModelOutputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelOutput')
         self.fields['includes_output'].widget.attrs['style'] = "width:auto;margin-top:-5px"
 
-        if len(self.initial) == 0:
-            self.initial['includes_output'] = False
+        #if len(self.initial) == 0:
+            #self.initial['includes_output'] = False
 
     class Meta:
         model = ModelOutput
