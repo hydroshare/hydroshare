@@ -75,14 +75,14 @@ class MpMetadata(AbstractMetaDataElement):
 
 
 
-    # @classmethod
-    # def remove(cls, element_id):
-    #     metadata = MpMetadata.objects.get(id=element_id)
-    #     metadata.delete()
+    @classmethod
+    def remove(cls, element_id):
+        metadata = MpMetadata.objects.get(id=element_id)
+        metadata.delete()
 
 
 class ModelProgramResource(Page, AbstractResource):
-
+    term = 'ModelProgramInformation'
     @property
     def metadata(self):
         md = ModelProgramMetaData()
@@ -125,4 +125,72 @@ class ModelProgramMetaData(CoreMetaData):
     def resource(self):
         return self._mp_resource.all().first()
 
+    def get_xml(self):
+        from lxml import etree
+
+        # get the xml string for Model Program
+        xml_string = super(ModelProgramMetaData, self).get_xml(pretty_print=False)
+
+        # create  etree element
+        RDF_ROOT = etree.fromstring(xml_string)
+
+        # get the root 'Description' element, which contains all other elements
+        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
+
+        # inject raster resource specific metadata elements into container element
+        if self.resource:
+            fields = [  'software_version',
+                        'software_language',
+                        'operating_sys',
+                        'date_released',
+                        'program_website',
+                        'software_repo',
+                        'release_notes',
+                        'user_manual',
+                        'theoretical_manual',
+                        'source_code']
+            model_program_object = self.mpmetadata.all().first()
+            self.add_metadata_element_to_xml(container, model_program_object, fields)
+
+        xml_string = etree.tostring(RDF_ROOT, pretty_print=True)
+
+        return xml_string
+
 import recievers
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
