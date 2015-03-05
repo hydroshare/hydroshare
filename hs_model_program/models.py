@@ -13,34 +13,34 @@ from django.dispatch import receiver
 class MpMetadata(AbstractMetaDataElement):
 
     # version
-    software_version = models.CharField(verbose_name='Software Version ',null=True,blank=True,default='1.0',max_length=255,help_text='The software version of the model program')
+    software_version = models.CharField(verbose_name='Version ',null=True,blank=True,default='1.0',max_length=255,help_text='The software version of the model')
 
     # program language
-    software_language = models.CharField(verbose_name="Software Language", null=True,default='',max_length=100,help_text="The programming language that the model program was written in")
+    software_language = models.CharField(verbose_name="Language", null=True,blank=True,default='',max_length=100,help_text="The programming language(s) that the model was written in")
 
     # operating system
-    operating_sys = models.CharField(verbose_name='Operating System',null=True,blank=True,default='unknown',max_length=255, help_text='Identify the operating system used by the model program')
+    operating_sys = models.CharField(verbose_name='Operating System',null=True,blank=True,default='unknown',max_length=255, help_text='Compatible operating systems')
 
     # release date
-    date_released = models.DateTimeField(verbose_name='Date of Software Release',null=True, default=dt.datetime.now(), help_text='The date of the software release (mm/dd/yyyy hh:mm)')
+    date_released = models.DateTimeField(verbose_name='Release Date',null=True,blank=True, default=dt.datetime.now(), help_text='The date of the software release (m/d/Y H:M)')
 
     # web page
-    program_website = models.CharField(verbose_name='Model Website', null=True, default= None, max_length=255,help_text='A URL providing addition information about the software')
+    program_website = models.CharField(verbose_name='Website', null=True, blank=True,default= None, max_length=255,help_text='A URL providing addition information about the software')
 
     # repository
-    software_repo = models.CharField(verbose_name='Software Repository', null=True, default= None, max_length=255,help_text='A URL for the source code repository')
+    software_repo = models.CharField(verbose_name='Software Repository', null=True,blank=True, default= None, max_length=255,help_text='A URL for the source code repository (e.g. git, mecurial, svn)')
 
    # release notes
-    release_notes = models.CharField(verbose_name="Release Notes", null=True,default="",max_length=400, help_text="Notes about the software release (e.g. bug fixes, new functionality)", choices=(('-','    '),))
+    release_notes = models.CharField(verbose_name="Release Notes", null=True,blank=True,default="",max_length=400, help_text="Notes about the software release (e.g. bug fixes, new functionality)", choices=(('-','    '),))
 
     # user manual
-    user_manual = models.CharField(verbose_name='User Manual',name='user_manual', null=True, default=None,max_length=400, help_text='User manual for the model program (e.g. .doc, .md, .rtf, .pdf', choices=(('-','    '),))
+    user_manual = models.CharField(verbose_name='User Manual',name='user_manual', null=True,blank=True, default=None,max_length=400, help_text='User manual for the model program (e.g. .doc, .md, .rtf, .pdf', choices=(('-','    '),))
 
     # theoretical manual
-    theoretical_manual = models.CharField(verbose_name='Theoretical Manual',name='theoretical_manual', null=True, default=None, max_length=400, help_text='Theoretical manual for the model program (e.g. .doc, .md, .rtf, .pdf', choices=(('-','    '),))
+    theoretical_manual = models.CharField(verbose_name='Theoretical Manual',name='theoretical_manual', null=True, blank=True,default=None, max_length=400, help_text='Theoretical manual for the model program (e.g. .doc, .md, .rtf, .pdf', choices=(('-','    '),))
 
     # source code
-    source_code = models.CharField(verbose_name='Model Source Code',name='source_code', default=None, null=True,max_length=400, help_text='Upload Model Source Code as *.ZIP', choices=(('-','    '),))
+    source_code = models.CharField(verbose_name='Source Code',name='source_code', default=None, null=True,blank=True,max_length=400, help_text='Archive of the  source code for the model (e.g. .zip, .tar)', choices=(('-','    '),))
 
 
     @classmethod

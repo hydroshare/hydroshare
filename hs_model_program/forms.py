@@ -69,7 +69,7 @@ class mp_form_helper(BaseFormHelper):
 class mp_form(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(mp_form, self).__init__(*args, **kwargs)
-        self.helper = mp_form_helper(allow_edit, res_short_id, element_id, element_name='MpMetadata')
+        self.helper = mp_form_helper(allow_edit, res_short_id, element_id, element_name='')
 
         # Set the choice lists as the file names in the content model
         filenames = ['       '] + [f.resource_file.name.split('/')[-1] for f in self.files.all()]
