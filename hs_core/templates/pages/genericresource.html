@@ -7,7 +7,11 @@
 {% with page.get_content_model as cm %}
 {% keywords_for page as kws %}
 {% set_page_permissions page %}
-
+{#    <input type="hidden" id="supported-file-types" value={{ cm.get_supported_upload_file_types }}>#}
+    <input type="hidden" id="supported-file-types" value="{{ supported_file_types }}">
+    <input type="hidden" id="allow-multiple-file-upload" value={{ cm.can_have_multiple_files }}>
+    {{ supported_file_types }}
+    <div>Allow multiple file upload: {{allow_multiple_file_upload }}</div>
     <h2>Resource Details</h2>
 
 <div class="btn-toolbar" style="padding-bottom: 0.5em;">
@@ -764,10 +768,11 @@
           <div class="modal-body">
                   {% csrf_token %}
                   <div class="form-group">
-                      <label for="add-citation-input">Select files:</label>
+                      <label for="add-file-input">Select files:</label>
                       <input type="file" name="files" id="add-file-input" multiple/>
                   </div>
-
+                  <div id="file-types">Any file type can be uploaded.</div>
+                  <div id="file-multiple">Multiple file upload is allowed.</div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -907,6 +912,55 @@
     }
 
     $(document).ready(function () {
+        // set if multiple file can be uploaded
+        var allow_multiple_file_upload = $("#allow-multiple-file-upload").attr('value');
+        console.log(allow_multiple_file_upload);
+        if(allow_multiple_file_upload === "True"){
+            $("#file-multiple").text("Multiple file upload is allowed.");
+            $("#add-file-input").attr('multiple', 'multiple')
+        }
+        else{
+            $("#file-multiple").text("Only one file can be uploaded.");
+            $("#add-file-input").removeAttr('multiple');
+        }
+        // file upload validation
+        $('#add-file-input').on('change', function() {
+            var file_types = $("#supported-file-types").attr('value');
+            console.log(file_types)
+            file_types = file_types.substring(1,file_types.length - 1).split(",");
+            console.log('data:' + file_types);
+            //file_types = file_types.toString().replace('(','').replace(')','').replace(' ', '').replace('"', '').split(',');
+            console.log(file_types)
+            console.log(file_types.length)
+
+            //selected_file = this;
+            if (file_types.length == 1) {
+                if (file_types[0] === '.*') {
+                    return
+                }
+            }
+            var fileList = this.files || []
+            var ext = ".*";
+            for (var i = 0; i < fileList.length; i++) {
+                console.log('found file ' + i + ' = ' + fileList[i].name);
+                ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
+                ext = "." + ext;
+                var ext_found = false;
+                var index;
+                for (index = 0; index < file_types.length; index++) {
+                    console.log('ext:' + file_types[index].trim());
+                    if (ext == file_types[index].trim()) {
+                        ext_found = true;
+                        break;
+                    }
+                }
+                if (!ext_found) {
+                    this.value = '';
+                    alert('Invalid file type:' + ext)
+                }
+            }
+        })
+
         if($("#id_type_1").is(':checked')){ //box type coverage
              $("#div_id_north").hide();
              $("#div_id_east").hide();

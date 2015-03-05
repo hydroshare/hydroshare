@@ -117,6 +117,25 @@ def _get_resource_sender(element_name, resource):
     return sender_resource
 
 
+def get_supported_file_types_for_resource_type(request, resource_type, *args, **kwargs):
+    resource_cls = hydroshare.check_resource_type(resource_type)
+    if request.is_ajax:
+        # TODO: use try catch
+        ajax_response_data = {'file_types': json.dumps(resource_cls.get_supported_upload_file_types())}
+        return HttpResponse(json.dumps(ajax_response_data))
+    else:
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **kwargs):
+    resource_cls = hydroshare.check_resource_type(resource_type)
+    if request.is_ajax:
+        # TODO: use try catch
+        ajax_response_data = {'allow_multiple_file': resource_cls.can_have_multiple_files()}
+        return HttpResponse(json.dumps(ajax_response_data))
+    else:
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
@@ -156,7 +175,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
         else:
             ajax_response_data = {'status': 'error'}
-            return HttpResponse (json.dumps(ajax_response_data))
+            return HttpResponse(json.dumps(ajax_response_data))
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
@@ -407,10 +426,12 @@ def my_resources(request, page):
 #        return HttpResponseRedirect('/accounts/login/')
 
     # TODO: remove the following 4 lines of debugging code prior to pull request
-    #import sys
-    #sys.path.append("/home/docker/pycharm-debug")
-    #import pydevd
-    #pydevd.settrace('144.39.193.200', port=21000, suspend=False)
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    # IP Address for Ubuntu VM must be: 172.17.42.1
+    # IP Address for boot2docker: varies
+    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     # from hs_core.hydroshare import users
     # users.create_account(email="hong.yi.hello@gmail.com", username="test1", first_name="Hong", last_name="Yi", password="test123")

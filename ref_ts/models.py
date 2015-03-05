@@ -37,6 +37,20 @@ class RefTimeSeries(Page, AbstractResource):
         def can_view(self, request):
                 return AbstractResource.can_view(self, request)
 
+        @classmethod
+        def get_supported_upload_file_types(cls):
+            # no file types are supported
+            return ()
+
+        @classmethod
+        def can_have_multiple_files(cls):
+            return False
+
+        @classmethod
+        def can_have_files(cls):
+            return False
+
+
 processor_for(RefTimeSeries)(resource_processor)
 
 class Method(AbstractMetaDataElement):

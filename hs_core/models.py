@@ -1471,6 +1471,19 @@ class AbstractResource(ResourcePermissionsMixin):
     def can_be_public(self):
         return True
 
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        raise NotImplementedError("Please implement this method.")
+
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        raise NotImplementedError("Please implement this method.")
+
+    @classmethod
+    def can_have_files(cls):
+        raise NotImplementedError("Please implement this method.")
+
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
@@ -1521,6 +1534,19 @@ class GenericResource(Page, AbstractResource):
             return True
 
         return False
+
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # all file types are supported
+        return ('.*')
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        return True
+
+    @classmethod
+    def can_have_files(cls):
+        return True
 
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
