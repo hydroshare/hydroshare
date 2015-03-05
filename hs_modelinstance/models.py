@@ -13,7 +13,7 @@ from hs_core.models import AbstractResource, resource_processor, CoreMetaData, A
 # extended metadata elements for Model Instance resource type
 class ModelOutput(AbstractMetaDataElement):
     term = 'ModelOutput'
-    includes_output = models.BooleanField()
+    includes_output = models.BooleanField(default=False)
 
     @classmethod
     def create(cls, **kwargs):
