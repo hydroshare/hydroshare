@@ -37,8 +37,9 @@ class ModelOutput(AbstractMetaDataElement):
 
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
-    name = models.CharField(max_length=500)
-    url = models.URLField()
+    name = models.CharField(max_length=500, choices=(('-','    '),))
+    #url = models.URLField()
+
 
     def __unicode__(self):
         self.name
@@ -120,7 +121,6 @@ class ModelInstanceMetaData(CoreMetaData):
         if not self.executed_by:
             missing_required_elements.append('ExecutedBy')
         return missing_required_elements
-
 
     def get_xml(self, pretty_print=True):
         from lxml import etree
