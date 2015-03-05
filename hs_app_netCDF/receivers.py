@@ -127,11 +127,9 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
             nc_res.metadata.variables.all().delete()
 
 
-
-
 # receiver used after user clicks on "add file" for existing resource netcdf file
 @receiver(pre_add_files_to_resource, sender=NetcdfResource)
-def netcdf_pre_add_files_from_resource(sender, **kwargs):
+def netcdf_pre_add_files_to_resource(sender, **kwargs):
     if sender is NetcdfResource:
         nc_res = kwargs['resource']
         files = kwargs['files']
