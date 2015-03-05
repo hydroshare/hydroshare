@@ -78,7 +78,7 @@ def get_nc_dump_string(nc_file_name):
         nc_dataset = get_nc_dataset(nc_file_name)
         nc_file_basename = '.'.join(basename(nc_file_name).split('.')[:-1])
         nc_dump_dict = get_nc_dump_dict(nc_dataset)
-        nc_dump_string = 'netcdf {0} \n'.format(nc_file_basename)
+        nc_dump_string = 'netcdf {0} \n'.format('')#nc_file_basename
         nc_dump_string += json.dumps(nc_dump_dict, indent=4)
     except:
         nc_dump_string = ''

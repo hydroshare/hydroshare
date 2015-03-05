@@ -5,6 +5,8 @@ from hs_app_netCDF.forms import *
 from hs_core import hydroshare
 from hs_core.hydroshare.resource import ResourceFile
 import os
+from hs_core.hydroshare import utils
+
 
 # receiver used to extract metadata after user click on "create resource"
 @receiver(pre_create_resource, sender=NetcdfResource)
@@ -83,6 +85,11 @@ def netcdf_create_ncdump_file(sender, **kwargs):
                 dump_file.seek(0)
                 hydroshare.add_resource_files(nc_res.short_id, dump_file)
 
+                # add file format for text file
+                file_format_type = utils.get_file_mime_type(dump_file_name)
+                if file_format_type not in [mime.value for mime in nc_res.metadata.formats.all()]:
+                    nc_res.metadata.create_element('format', value=file_format_type)
+
 # receiver used after user clicks on "delete file" for existing netcdf file
 @receiver(pre_delete_file_from_resource, sender=NetcdfResource)
 def netcdf_pre_delete_file_from_resource(sender, **kwargs):
@@ -102,14 +109,23 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
             cov_box = nc_res.metadata.coverages.all().filter(type='box').first()
             cov_period = nc_res.metadata.coverages.all().filter(type='period').first()
             if cov_box:
-                nc_res.metadata.delete_element('coverage', cov_box.id)
+                    # TODO: delete old box info, currently it just updates the values
+                    from collections import OrderedDict
+                    box_info = OrderedDict([
+                            ('units', "Decimal degrees"),
+                            ('projection', 'WGS 84 EPSG:4326'),
+                            ('northlimit', 0.0),
+                            ('southlimit', 0.0),
+                            ('eastlimit', 0.0),
+                            ('westlimit', 0.0)
+                        ])
+                    nc_res.metadata.update_element('coverage', cov_box.id, type='box', value=box_info)
             if cov_period:
-                nc_res.metadata.delete_element('coverage', cov_period.id)
+                pass # TODO: delete the old period info, currently it just keeps the old period info
 
             # delete all the extended meta info
-            # c = nc_res.metadata.variables.all()
-            # for variable in nc_res.metadata.variables.all():
-            #     variable.delete()
+            nc_res.metadata.variables.all().delete()
+
 
 
 
@@ -137,28 +153,48 @@ def netcdf_pre_add_files_from_resource(sender, **kwargs):
                     res_dublin_core_meta = {}
                     res_type_specific_meta = {}
 
-                # # update box info
-                # cov_box = nc_res.metadata.coverages.all().filter(type='box').first()
-                # if cov_box:
-                #     nc_res.metadata.delete_element('coverage', cov_box.id)
-                # if res_dublin_core_meta.get('box'):
-                #     nc_res.metadata.create_element('coverage', type='box', value=res_dublin_core_meta['box'])
-                #
-                # # update period info
-                # cov_period = nc_res.metadata.coverages.all().filter(type='period').first()
-                # if cov_period:
-                #     nc_res.metadata.delete_element('coverage', cov_period.id)
-                # if res_dublin_core_meta.get('period'):
-                #     nc_res.metadata.create_element('coverage', type='period', value=res_dublin_core_meta['period'])
-                #
-                # # update variable info
-                # for variable in nc_res.metadta.variable:
-                #     variable.delete()
-                # for var_info in res_type_specific_meta.values():
-                #     nc_res.metadta.create_element('variable', var_info)
+                # update box info
+                cov_box = nc_res.metadata.coverages.all().filter(type='box').first()
+                if cov_box:
+                    # TODO: delete old box info, currently it just updates the values
+                    from collections import OrderedDict
+                    box_info = OrderedDict([
+                            ('units', "Decimal degrees"),
+                            ('projection', 'WGS 84 EPSG:4326'),
+                            ('northlimit', 0.0),
+                            ('southlimit', 0.0),
+                            ('eastlimit', 0.0),
+                            ('westlimit', 0.0)
+                        ])
+                    nc_res.metadata.update_element('coverage', cov_box.id, type='box', value=box_info)
+                if res_dublin_core_meta.get('box'):
+                    if cov_box:
+                        nc_res.metadata.update_element('coverage', cov_box.id, type='box', value=res_dublin_core_meta['box'])
+                    else:
+                        nc_res.metadata.create_element('coverage', type='box', value=res_dublin_core_meta['box'])
 
-                # add the new file
-                hydroshare.add_resource_files(nc_res.short_id,infile)
+                # update period info
+                cov_period = nc_res.metadata.coverages.all().filter(type='period').first()
+                if cov_period:
+                    # TODO delete the old period info, currently it just keeps the old period info
+                    pass
+                if res_dublin_core_meta.get('period'):
+                    if cov_period:
+                        nc_res.metadata.update_element('coverage', cov_period.id, type='period', value=res_dublin_core_meta['period'])
+                    else:
+                        nc_res.metadata.create_element('coverage', type='period', value=res_dublin_core_meta['period'])
+
+                # update variable info
+                nc_res.metadata.variables.all().delete()
+                for var_info in res_type_specific_meta.values():
+                    nc_res.metadata.create_element('variable',
+                                                   name=var_info['name'],
+                                                   unit=var_info['unit'],
+                                                   type=var_info['type'],
+                                                   shape=var_info['shape'],
+                                                   missing_value=var_info['missing_value'],
+                                                   descriptive_name=var_info['descriptive_name'])
+
                 # create a header text file and add to resource
                 nc_file_name = infile.file.name
                 # create InMemoryUploadedFile text file to store the dump info and add it to resource
@@ -176,6 +212,10 @@ def netcdf_pre_add_files_from_resource(sender, **kwargs):
                     dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
                     dump_file.seek(0)
                     hydroshare.add_resource_files(nc_res.short_id, dump_file)
+                    # add file format for text file
+                    file_format_type = utils.get_file_mime_type(dump_file_name)
+                    if file_format_type not in [mime.value for mime in nc_res.metadata.formats.all()]:
+                        nc_res.metadata.create_element('format', value=file_format_type)
 
 
 @receiver(pre_metadata_element_create, sender=NetcdfResource)
