@@ -43,10 +43,7 @@ class ModelOutput(AbstractMetaDataElement):
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
     name = models.CharField(max_length=500, choices=(('-','    '),))
-    #url = models.URLField(blank=True,default='')
     model_program_fk = models.ForeignKey('hs_core.GenericResource', null=True, blank=True)
-    #, default=None)
-    #choices=(('-','    '),))
 
 
 
