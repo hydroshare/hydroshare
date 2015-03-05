@@ -5,6 +5,7 @@ from crispy_forms.layout import *
 from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
+from hs_core.hydroshare import users
 
 #ModelOutput element forms
 class ModelOutputFormHelper(BaseFormHelper):
@@ -52,7 +53,7 @@ class ExecutedByFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('name', css_class=field_width),
+                        Field('model_program', css_class=field_width),
                  )
 
         kwargs['element_name_label'] = 'Model Program used for execution'
@@ -61,14 +62,29 @@ class ExecutedByFormHelper(BaseFormHelper):
 
 class ExecutedByForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+
+        # pop owner from kwargs so that it isn't passed into parent classes (below)
+        owner = kwargs.pop('owner')
+
         super(ExecutedByForm, self).__init__(*args, **kwargs)
         self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy')
+
+
+        # todo: Change with ModelProgramResource once mp is pulled into develop
+        mp_resource = users.get_resource_list(user=owner,types=['GenericResource'])
+
+        CHOICES = tuple([('Unknown','Unknown')] + [(r.get_absolute_url(),r.title) for r in mp_resource.values()[0]])
+
+        # Set the choice lists as the file names in the content model
+        self.fields['name'].choices = CHOICES
+
+
 
     class Meta:
         model = ExecutedBy
         fields = ['name']
         exclude = ['content_object']
-        widgets = {'name': forms.TextInput()}
+        # widgets = {'name': forms.TextInput()}
 
 class ExecutedByValidationForm(forms.Form):
     name = forms.CharField(max_length=200)

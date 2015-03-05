@@ -16,13 +16,11 @@ hydroshare:
     POSTGIS_USER: postgres
     PGPASSWORD: postgres
   volumes:
-    # Use when NOT sharing the entire host hydroshare directory
-    #- "media:/home/docker/hydroshare/hydroshare/static/media"
-    # for VM
     # Specific to hydro user on the hydrodev Xubuntu VM
-    - "/home/hydro/hydroshare:/home/docker/hydroshare"
+    - "/Users/tonycastronova/Documents/projects/hydroshare/hydroshare:/home/docker/hydroshare"
+
     # Specific to hydro user for pycharm debugging on hydrodev Xubuntu VM
-    #- "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
+    - "/Users/tonycastronova/Documents/projects/hydroshare/pycharm-debug:/home/docker/pycharm-debug"
   ports:
     - "1338:22"
     - "8000:8000"
