@@ -53,7 +53,7 @@ class ExecutedByFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('name', css_class=field_width),
+                        Field('model_program', css_class=field_width),
                  )
 
         kwargs['element_name_label'] = 'Model Program used for execution'
