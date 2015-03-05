@@ -45,8 +45,6 @@ class ExecutedBy(AbstractMetaDataElement):
     name = models.CharField(max_length=500, choices=(('-','    '),))
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True)
     model_program_fk = models.ForeignKey('hs_core.GenericResource', null=True, blank=True)
-    #, default=None)
-    #choices=(('-','    '),))
 
 
 
