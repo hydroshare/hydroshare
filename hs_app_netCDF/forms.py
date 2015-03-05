@@ -92,7 +92,7 @@ class VariableForm(ModelForm):
         # change the fields same here
         fields = ['name', 'unit', 'type', 'shape', 'descriptive_name', 'method', 'missing_value']
         exclude = ['content_object']
-        widgets = { 'names': forms.TextInput(attrs={'readonly': 'readonly'}),
+        widgets = { 'name': forms.TextInput(attrs={'readonly': 'readonly'}),
                     'unit': forms.TextInput(),
                     'type': forms.TextInput(),
                     'shape': forms.TextInput(attrs={'readonly': 'readonly'}),
