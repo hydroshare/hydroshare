@@ -917,9 +917,8 @@ span.remove{
 }
 
 #comments{
-    border: 1px solid #ddd;
-    padding: 0 15px;
     padding-bottom: 15px;
+    margin: 40px 0;
 }
 
 .info-group table td{
@@ -1459,9 +1458,7 @@ span.name-label{
 }
 
 .tab-elements{
-    max-height:441px;
     overflow-x:auto;
-    overflow-y:hidden;
 }
 
 .tab-elements .table:not(.table-striped) {

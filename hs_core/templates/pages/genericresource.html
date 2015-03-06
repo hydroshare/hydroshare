@@ -52,8 +52,8 @@
                     </td></tr>
                     <tr><th>Owner:</th><td>{{ cm.user|contact|safe }}</td></tr>
                     <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
-                    <tr><th>Created:</th><td>{{ cm.created|date }}</td></tr>
-                    <tr><th>Last updated:</th><td> {{ cm.updated|date }} by {%  if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
+                    <tr><th>Created:</th><td>{{ cm.created }}</td></tr>
+                    <tr><th>Last updated:</th><td> {{ cm.updated }} by {%  if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
                 </table>
             </div>
 
@@ -192,7 +192,7 @@
                                         {% csrf_token %}
                                         <div class="form-group">
                                             <button type="submit"
-                                                    class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
+                                                    class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
                                                     class="button-label">&nbspAdd user</span></button>
                                             {{ add_owner_user_form.user }}
                                             <input name="t" value="add_owner" type="hidden"/>
@@ -230,7 +230,7 @@
                                         {% csrf_token %}
                                         <div class="form-group">
                                             <button type="submit"
-                                                    class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
+                                                    class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
                                                     class="button-label">&nbspAdd user</span></button>
                                             {{ add_edit_user_form.user }}
                                             <input name="t" value="add_edit_user" type="hidden"/>
@@ -307,7 +307,7 @@
                                             {% csrf_token %}
                                             <div class="form-group">
                                                 <button type="submit"
-                                                        class="btn btn-add-access btn-default pull-left glyphicon glyphicon-plus"><span
+                                                        class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
                                                         class="button-label">&nbspAdd user</span></button>
                                                 {{ add_view_user_form.user }}
                                                 <input name="t" value="add_view_user" type="hidden"/>
@@ -364,7 +364,6 @@
                 </div>
             </div>
 
-
             {% if keywords %}
                 <div class="content-block">
                     <h3>Keywords</h3>
@@ -377,7 +376,6 @@
                     </div>
                 </div>
             {% endif %}
-
 
             <div>
                 <h3>Content</h3>
@@ -448,7 +446,7 @@
                     {% endif %}
                     <!-- Buttons -->
                     {% for b in cm.bags.all %}
-                        <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag.bag.url }}">
+                        <a id="btn-download-all" type="button" class="btn btn-default" href="{{ cm.bags.first.bag.url }}">
                             <span class="glyphicon glyphicon-download-alt">
                                 <span class="button-label">Download All ({{ b.bag.size|filesizeformat }})</span>
                             </span>
@@ -470,14 +468,14 @@
             <div class="tab-elements">
             <div class="panel-tabs">
                 <ul class="nav nav-tabs">
-                    <li class="active col-md-3 col-sm-3 col-xs-12">
+                    <li class="active col-md-2 col-sm-2 col-xs-12">
                         <a href="#contactTab" data-toggle="tab">
                             <span class="glyphicon glyphicon-user"> </span>
                             &nbspContact
                         </a>
                     </li>
                     {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
-                        <li class="col-md-3 col-sm-3 col-xs-12">
+                        <li class="col-md-2 col-sm-2 col-xs-12">
                             <a href="#coverageTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-globe"></span>
                                 &nbspCoverage
@@ -492,7 +490,7 @@
                             </a>
                         </li>
                     {% endif %}
-                    {% if site or extended_metadata_exists or res_add_metadata %}
+                    {% if extended_metadata_exists %}
                         <li class="col-md-3 col-sm-3 col-xs-12">
                             <a href="#resourceSpecificTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-folder-close"></span>
@@ -505,9 +503,8 @@
             <div class="tabs-body">
             <!-- Tab panes -->
             <div class="tab-content">
-            <!-- ========= CONTACT TAB ========= -->
-            <div class="tab-pane active" id="contactTab">
-                <div>
+                <!-- ========= CONTACT TAB ========= -->
+                <div class="tab-pane active" id="contactTab">
                     <table class="table table-striped">
                         <tbody>
                         <tr>
@@ -549,11 +546,9 @@
                         {% endif %}
                         </tbody>
                     </table>
-
-                </div>
             </div>
-            <!-- ========= COVERAGE TAB ========= -->
-            {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
+                <!-- ========= COVERAGE TAB ========= -->
+                {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
                 <div class="tab-pane" id="coverageTab">
                     <h4><strong>Spatial:</strong></h4>
                     <hr style="margin-top: 0px;margin-bottom: 2px">
@@ -658,8 +653,9 @@
                     {% endif %}
                 </div>
             {% endif %}
-            <!-- ========= RELATED RESOURCES TAB ========= -->
-            {% if sources or relations %}
+
+                <!-- ========= RELATED RESOURCES TAB ========= -->
+                {% if sources or relations %}
                 <div class="tab-pane" id="relatedResourcesTab">
                 {% if sources %}
                     <h4><strong>Sources:</strong></h4>
@@ -684,333 +680,18 @@
                 {% endif %}
                 </div>
             {% endif %}
-
-
-            <!-- ========= RESOURCE SPECIFIC TAB ========= -->
-            {% if site or extended_metadata_exists or res_add_metadata %}
+                <!-- ========= RESOURCE SPECIFIC TAB ========= -->
+{#            {% if site or extended_metadata_exists or res_add_metadata %}#}
                 <div class="tab-pane" id="resourceSpecificTab">
-                {% if extended_metadata_exists %}
-                    <div>
-                        {% if model_output %}
-                            <h4><strong>Model Output:</strong></h4>
-                            <hr style="margin-top: 0px;margin-bottom: 2px">
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Includes output files?</strong></div>
-                                {% if model_output.includes_output == True %}
-                                    <div class="col-sm-8">Yes</div>
-                                {% else %}
-                                    <div class="col-sm-8">No</div>
-                                {% endif %}
+                    {% block extended_metadata %}
 
-                            </div>
-                            <hr style="border: 0;">
-                        {% endif %}
-                    </div>
-                    <div>
-                    {% if executed_by.name %}
-                        <h4><strong>Executed By:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Model Program used for execution:</strong></div>
-                            <div class="col-sm-8">{{ executed_by.name }}</div>
-                        </div>
-                        <hr style="border: 0;">
-                    {% endif %}
-                    <div>
-                    {% if site %}
-                        <h4><strong>Site:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Code:</strong></div>
-                            <div class="col-sm-8">{{ site.code }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Name:</strong></div>
-                            <div class="col-sm-8">{{ site.name }}</div>
-                        </div>
-                        <hr style="border: 0;">
-                    {%  endif %}
-                    </div>
-                    <div>
-                    {% if variable %}
-                        <h4><strong>Variable:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Code:</strong></div>
-                            <div class="col-sm-8">{{ variable.code }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Name:</strong></div>
-                            <div class="col-sm-8">{{ variable.name }}</div>
-                        </div>
-                        <hr style="border: 0;">
-                        {% endif %}
-                    </div>
-                    <div>
-                    {% if method %}
-                        <h4><strong>Method:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Code:</strong></div>
-                            <div class="col-sm-8">{{ method.value }}</div>
-                        </div>
-                        <hr style="border: 0;">
-                    {% endif %}
-                    </div>
-                    <div>
-                        {% if quality_level %}
-                            <h4><strong>Quality Control Level:</strong></h4>
-                            <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                            {% if quality_level.value %}
-                                <div class="row">
-                                    <div class="col-sm-4"><strong>Definition:</strong></div>
-                                    <div class="col-sm-8">{{ quality_level.value }}</div>
-                                </div>
-                            {% endif %}
-                            <hr style="border: 0;">
-                        {% endif %}
-                    </div>
-                {% endif %}
-                <div>
-                    {% if cellInformation %}
-                        <h4><strong>Cell Information:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Rows:</strong></div>
-                            <div class="col-sm-8">{{ cellInformation.rows }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Columns:</strong></div>
-                            <div class="col-sm-8">{{ cellInformation.columns }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>CellSizeXValue:</strong></div>
-                            <div class="col-sm-8">{{ cellInformation.cellSizeXValue }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>CellSizeYValue:</strong></div>
-                            <div class="col-sm-8">{{ cellInformation.cellSizeYValue }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>CellSizeUnit:</strong></div>
-                            <div class="col-sm-8">{{ cellInformation.cellSizeUnit }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>CellDataType:</strong></div>
-                            <div class="col-sm-8">{{ cellInformation.cellDataType }}</div>
-                        </div>
-                        {% if cellInformation.noDataValue %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>NoDataValue:</strong></div>
-                                <div class="col-sm-8">{{ cellInformation.noDataValue }}</div>
-                            </div>
-                        {% endif %}
-                        <hr style="border: 0;">
-                    {% endif %}
+                    {%  endblock %}
                 </div>
-
-                <div>
-                    {% if bandInformation %}
-                        <h4><strong>Band Information:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        {% for band in bandInformation %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>BandName:</strong></div>
-                                <div class="col-sm-8">{{ band.name }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>VariableName:</strong></div>
-                                <div class="col-sm-8">{{ band.variableName }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>VariableUnit:</strong></div>
-                                <div class="col-sm-8">{{ band.variableUnit }}</div>
-                            </div>
-                            {% if band.method %}
-                                <div class="row">
-                                    <div class="col-sm-4"><strong>Method:</strong></div>
-                                    <div class="col-sm-8">{{ band.method }}</div>
-                                </div>
-                            {% endif %}
-                            {% if band.comment %}
-                                <div class="row">
-                                    <div class="col-sm-4"><strong>Comment:</strong></div>
-                                    <div class="col-sm-8">{{ band.comment }}</div>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                        <hr style="border: 0;">
-                    {% endif %}
-                </div>
-
-                <div>
-                    {% if site %}
-                        <h4><strong>Site:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Code:</strong></div>
-                            <div class="col-sm-8">{{ site.site_code }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Name:</strong></div>
-                            <div class="col-sm-8">{{ site.site_name }}</div>
-                        </div>
-                        {% if site.elevation_m %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Elevation M:</strong></div>
-                                <div class="col-sm-8">{{ site.elevation_m }}</div>
-                            </div>
-                        {% endif %}
-                        {% if site.elevation_datum %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Elevation Datum:</strong></div>
-                                <div class="col-sm-8">{{ site.elevation_datum }}</div>
-                            </div>
-                        {% endif %}
-                        {% if site.site_type %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Site Type:</strong></div>
-                                <div class="col-sm-8">{{ site.site_type }}</div>
-                            </div>
-                        {% endif %}
-                        <hr style="border: 0;">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if variable %}
-                        <h4><strong>Variable:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Code:</strong></div>
-                            <div class="col-sm-8">{{ variable.variable_code }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Name:</strong></div>
-                            <div class="col-sm-8">{{ variable.variable_name }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Type:</strong></div>
-                            <div class="col-sm-8">{{ variable.variable_type }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>No Data Value:</strong></div>
-                            <div class="col-sm-8">{{ variable.no_data_value }}</div>
-                        </div>
-                        {% if variable.variable_definition %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Definition:</strong></div>
-                                <div class="col-sm-8">{{ variable.variable_definition }}</div>
-                            </div>
-                        {% endif %}
-                        {% if variable.speciation %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Speciation:</strong></div>
-                                <div class="col-sm-8">{{ variable.speciation }}</div>
-                            </div>
-                        {% endif %}
-                        <hr style="border: 0;">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if method %}
-                        <h4><strong>Method:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Code:</strong></div>
-                            <div class="col-sm-8">{{ method.method_code }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Name:</strong></div>
-                            <div class="col-sm-8">{{ method.method_name }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Type:</strong></div>
-                            <div class="col-sm-8">{{ method.method_type }}</div>
-                        </div>
-                        {% if method.method_description %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Description:</strong></div>
-                                <div class="col-sm-8">{{ method.method_description }}</div>
-                            </div>
-                        {% endif %}
-                        {% if method.method_link %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Link:</strong></div>
-                                <div class="col-sm-8">{{ method.method_link }}</div>
-                            </div>
-                        {% endif %}
-                        <hr style="border: 0;">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if processing_level %}
-                        <h4><strong>Processing Level:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Code:</strong></div>
-                            <div class="col-sm-8">{{ processing_level.processing_level_code }}</div>
-                        </div>
-                        {% if processing_level.definition %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Definition:</strong></div>
-                                <div class="col-sm-8">{{ processing_level.definition }}</div>
-                            </div>
-                        {% endif %}
-                        {% if processing_level.explanation %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Explanation:</strong></div>
-                                <div class="col-sm-8">{{ processing_level.explanation }}</div>
-                            </div>
-                        {% endif %}
-                        <hr style="border: 0;">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if timeseries_result %}
-                        <h4><strong>Time Series Result:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Units Type:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.units_type }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Units Name:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.units_name }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Units Abbreviation:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.units_abbreviation }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Status:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.status }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Sample Medium:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.sample_medium }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Value Count:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.value_count }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Aggregation Statistics:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.aggregation_statistics }}</div>
-                        </div>
-                        <hr style="border: 0;">
-                    {% endif %}
-                </div>
-
-                </div>
-                </div>
-            {% endif %}
+            </div>
+{#            {% endif %}#}
             </div>
             </div>
-            </div>
-        {% endif %}
-        <!-- ==== Tabs end ==== -->
-
-        {% if not metadata_form %}
+            <!-- ==== Tabs end ==== -->
             {% comments_for cm %}
         {% endif %}
 
