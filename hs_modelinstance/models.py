@@ -11,6 +11,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import get_current_site
 
 from hs_model_program.models import ModelProgramResource
+from hs_core.models import GenericResource
+from hs_app_timeseries.models import TimeSeriesResource
 
 
 # extended metadata elements for Model Instance resource type
@@ -42,6 +44,10 @@ class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
     name = models.CharField(max_length=500, choices=(('-','    '),))
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True)
+    model_program = models.ForeignKey('hs_core.GenericResource', null=True, blank=True)
+    #, default=None)
+    #choices=(('-','    '),))
+
 
 
     def __unicode__(self):
