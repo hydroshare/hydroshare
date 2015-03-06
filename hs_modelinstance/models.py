@@ -11,6 +11,10 @@ from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import get_current_site
 
 from hs_model_program.models import ModelProgramResource
+# todo: replace with ModelProgramResource
+from hs_core.models import GenericResource
+from hs_app_timeseries.models import TimeSeriesResource
+
 from hs_core.models import GenericResource
 from hs_app_timeseries.models import TimeSeriesResource
 
@@ -48,6 +52,7 @@ class ExecutedBy(AbstractMetaDataElement):
 
 
 
+
     def __unicode__(self):
         self.name
 
@@ -55,21 +60,23 @@ class ExecutedBy(AbstractMetaDataElement):
     def create(cls, **kwargs):
         shortid = kwargs['name']
         obj = get_object_or_404(ModelProgramResource,short_id=shortid)
+
         kwargs['model_program_fk'] = obj
         metadata_obj = kwargs['content_object']
         title = obj.title
         mp_fk = ExecutedBy.objects.create(model_program_fk=obj,
                                           name=title,
                                           content_object=metadata_obj)
-        # mp_fk.save()
         return mp_fk
-        # return ExecutedBy.objects.create(**kwargs)
+
+
 
     @classmethod
     def update(cls, element_id, **kwargs):
         shortid = kwargs['name']
         obj = get_object_or_404(ModelProgramResource,short_id=shortid)
         kwargs['model_program_fk'] = obj
+
 
         executed_by = ExecutedBy.objects.get(id=element_id)
         if executed_by:

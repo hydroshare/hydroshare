@@ -6,13 +6,9 @@ from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
 from hs_core.hydroshare import users
-<<<<<<< HEAD
 from django.shortcuts import get_object_or_404
-
 from hs_core.models import GenericResource
 
-=======
->>>>>>> implemented basic linkage between model program and instance
 
 
 class ModelOutputFormHelper(BaseFormHelper):
@@ -60,7 +56,7 @@ class ExecutedByFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('model_program', css_class=field_width),
+                        Field('name', css_class=field_width),
                  )
 
         kwargs['element_name_label'] = 'Model Program used for execution'
@@ -88,6 +84,7 @@ class ExecutedByForm(ModelForm):
 
         # Set the choice lists as the file names in the content model
         self.fields['name'].choices = CHOICES
+        # self.fields['model_program'].choices = CHOICES
 
 
 
@@ -99,3 +96,4 @@ class ExecutedByForm(ModelForm):
 class ExecutedByValidationForm(forms.Form):
     name = forms.CharField(max_length=200)
     model_program_fk = forms
+

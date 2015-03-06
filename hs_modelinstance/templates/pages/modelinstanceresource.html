@@ -33,6 +33,8 @@
                         <div class="col-sm-4"><strong>Name</strong></div>
                         <div class="col-sm-8">{{ executed_by.model_program_fk.title }}</div>
 
+
+
                         <div class="col-sm-4"><strong>Version</strong></div>
                         <div class="col-sm-8">
                             {% if executed_by.model_program_fk.metadata.mpmetadata.first.software_version.strip %}
@@ -44,6 +46,8 @@
                         <div class="col-sm-4"><strong>Resource URL</strong></div>
                        <div class="col-sm-8"> <a id="permalink" href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/">http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a></div>
                         <div class="col-sm-4"><strong>Program URL</strong></div>
+
+>>>>>>> Added foreign key relationship
                        <div class="col-sm-8"> <a id="permalink" href="http://{{ request.get_host }}/resource/{{ executed_by.model_program.short_id }}/">http://{{ request.get_host }}/resource/{{ executed_by.model_program.short_id }}/</a></div>
 
                         </div>
