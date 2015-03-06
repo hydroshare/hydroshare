@@ -7,7 +7,12 @@ from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
+from django.shortcuts import get_object_or_404
 
+
+# todo: replace with ModelProgramResource
+from hs_core.models import GenericResource
+from hs_app_timeseries.models import TimeSeriesResource
 
 
 # extended metadata elements for Model Instance resource type
@@ -38,7 +43,11 @@ class ModelOutput(AbstractMetaDataElement):
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
     name = models.CharField(max_length=500, choices=(('-','    '),))
-    #url = models.URLField()
+    #url = models.URLField(blank=True,default='')
+    model_program = models.ForeignKey('hs_core.GenericResource', null=True, blank=True)
+    #, default=None)
+    #choices=(('-','    '),))
+
 
 
     def __unicode__(self):
@@ -46,15 +55,23 @@ class ExecutedBy(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
+        shortid = kwargs['name']
+        obj = get_object_or_404(GenericResource,short_id=shortid)
+        kwargs['model_program'] = obj
         return ExecutedBy.objects.create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        shortid = kwargs['name']
+        obj = get_object_or_404(GenericResource,short_id=shortid)
+        kwargs['model_program'] = obj
+
         executed_by = ExecutedBy.objects.get(id=element_id)
         if executed_by:
             for key, value in kwargs.iteritems():
                 setattr(executed_by, key, value)
 
+            # todo: save foreign key fails here!
             executed_by.save()
         else:
             raise ObjectDoesNotExist("No ExecutedBy element was found for the provided id:%s" % kwargs['id'])
