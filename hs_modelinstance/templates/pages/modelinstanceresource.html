@@ -31,7 +31,21 @@
                         <div class="row">
                             <div class="col-sm-4"><strong>Model Program used for execution:</strong></div>
                             <div class="col-sm-8">{{ executed_by.name }}</div>
+
+                        <div class="col-sm-4"><strong>Program Title</strong></div>
+                        <div class="col-sm-8">{{ executed_by.model_program.title }}</div>
+
+                        <div class="col-sm-4"><strong>Program ID</strong></div>
+                        <div class="col-sm-8">{{ executed_by.model_program.short_id }}</div>
+
+                        <div class="col-sm-4"><strong>Program URL</strong></div>
+
+
+                       <div class="col-sm-8"> <a id="permalink" href="http://{{ request.get_host }}/resource/{{ executed_by.model_program.short_id }}/">http://{{ request.get_host }}/resource/{{ executed_by.model_program.short_id }}/</a></div>
+
                         </div>
+
+                    <hr>
                     {% endif %}
                 </div>
             </div>
