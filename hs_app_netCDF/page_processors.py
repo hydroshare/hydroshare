@@ -24,7 +24,7 @@ def landing_page(request, page):
         context['extended_metadata_exists'] = extended_metadata_exists
         context['variables'] = content_model.metadata.variables.all() # the variables is the field name from NetCDFMetaData model
     else:
-        VariableFormSetEdit = formset_factory(wraps(VariableForm)(partial(VariableForm, allow_edit=edit_resource)), formset=BaseVariableFormSet, extra=0)
+        VariableFormSetEdit = formset_factory(wraps(VariableForm)(partial(VariableForm, allow_edit=edit_resource)), formset=BaseFormSet, extra=0)
         variable_formset = VariableFormSetEdit(initial=content_model.metadata.variables.all().values(), prefix='variable')
         add_variable_modal_form = VariableForm(allow_edit=edit_resource, res_short_id=content_model.short_id)
         ext_md_layout = Layout(

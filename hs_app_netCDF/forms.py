@@ -4,49 +4,14 @@ from crispy_forms.layout import *
 from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import *
 from hs_app_netCDF.models import *
+from hs_core.forms import BaseFormHelper
 from django.forms.models import formset_factory
 from functools import partial, wraps
 
 
-# Keep this one unchanged
-class BaseFormHelper(FormHelper):
-    def __init__(self, res_short_id=None, element_id=None, element_name=None, element_layout=None,  *args, **kwargs):
-        super(BaseFormHelper, self).__init__(*args, **kwargs)
-
-        if res_short_id:
-            self.form_method = 'post'
-            if element_id:
-                self.form_tag = True
-                self.form_action = "/hsapi/_internal/%s/%s/%s/update-metadata/" % (res_short_id,element_name, element_id)
-            else:
-                self.form_action = "/hsapi/_internal/%s/%s/add-metadata/" % (res_short_id, element_name)
-                self.form_tag = False
-        else:
-            self.form_tag = False
-
-        # change the first character to uppercase of the element name
-        element_name = element_name.title()
-
-        if res_short_id and element_id:
-            self.layout = Layout(
-                            Fieldset(element_name,
-                                     element_layout,
-                                     HTML('<div style="margin-top:10px">'),
-                                     HTML('<button type="submit" class="btn btn-primary">Save changes</button>'),
-                                     HTML('</div>')
-                            ),
-                         )
-        else:
-            self.layout = Layout(
-                            Fieldset(element_name,
-                                     element_layout,
-                            ),
-                          )
-
-
 # The following 3 classes need to have the "field" same as the fields defined in "Variable" table in models.py
 class VariableFormHelper(BaseFormHelper):
-    def __init__(self, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
         field_width = 'form-control input-sm'
         # change the fields name here
         layout = Layout(
@@ -59,13 +24,13 @@ class VariableFormHelper(BaseFormHelper):
                      Field('missing_value', css_class=field_width)
                 )
 
-        super(VariableFormHelper, self).__init__(res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(VariableFormHelper, self).__init__(allow_edit, res_short_id,  element_id, element_name, layout,  *args, **kwargs)
 
 
 class VariableForm(ModelForm):
-    def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(VariableForm, self).__init__(*args, **kwargs)
-        self.helper = VariableFormHelper(res_short_id, element_id, element_name='Variable')
+        self.helper = VariableFormHelper(allow_edit, res_short_id, element_id, element_name='Variable')
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit
@@ -97,7 +62,7 @@ class VariableForm(ModelForm):
                     'type': forms.TextInput(),
                     'shape': forms.TextInput(attrs={'readonly': 'readonly'}),
                     'descriptive_name': forms.TextInput(),
-                    'method': forms.TextInput(),
+                    'method': forms.Textarea(),#TODO row number abstract example
                     'missing_value': forms.TextInput()}
 
 
@@ -109,23 +74,6 @@ class VariableValidationForm(forms.Form):
     descriptive_name = forms.CharField(max_length=100, required=False)
     method = forms.CharField(max_length=300, required=False)
     missing_value = forms.CharField(max_length=50, required=False)
-
-
-class BaseVariableFormSet(BaseFormSet):
-    def add_fields(self, form, index):
-        super(BaseVariableFormSet, self).add_fields(form, index)
-
-
-    def get_metadata_dict(self):
-        variables_data = []
-        for form in self.forms:
-            variable_data = {k: v for k, v in form.cleaned_data.iteritems()}
-
-            variables_data.append({'variable': variable_data})
-
-        return variables_data
-
-VariableFormSet = formset_factory(VariableForm, formset=BaseVariableFormSet, extra=0)
 
 
 ModalDialogLayoutAddVariable = Layout(
@@ -157,16 +105,6 @@ ModalDialogLayoutAddVariable = Layout(
                             )
                         )
 
-# change here for meta extraction frontend
-VariableLayoutView = Layout(
-                            HTML('{% load crispy_forms_tags %} '
-                                 '{% for form in variable_formset.forms %} '
-                                     '<div class="item"> '
-                                     '{% crispy form %} '
-                                     '</div> '
-                                 '{% endfor %}'
-                                ),
-                        )
 
 VariableLayoutEdit = Layout(
                             HTML('{% load crispy_forms_tags %} '
