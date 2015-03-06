@@ -44,17 +44,16 @@
             <h2 class="page-title">{{ title }}</h2>
             <div class="info-group">
                 <table>
-                    <tr><th>Authors:</th><td>
-                        <span id="authors">
-                            {% for cr in creators %}
-                                {{ cr.name }},&nbsp
-                            {% endfor %}
-                        </span>
+                    <tr><th>Authors:</th><td id="authors">
+                        {% for cr in creators %}
+                            {% if cr.description %}<a href="{{ cr.description }}">{{ cr.name }}</a><span class="comma">,&nbsp</span>
+                            {% else %}<span>{{ cr.name }}</span><span class="comma">,&nbsp</span>{% endif %}
+                        {% endfor %}
                     </td></tr>
                     <tr><th>Owner:</th><td>{{ cm.user|contact|safe }}</td></tr>
                     <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
                     <tr><th>Created:</th><td>{{ cm.created|date }}</td></tr>
-                    <tr><th>Last updated:</th><td> {{ cm.updated|date }}</td></tr>
+                    <tr><th>Last updated:</th><td> {{ cm.updated|date }} by {%  if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
                 </table>
             </div>
 

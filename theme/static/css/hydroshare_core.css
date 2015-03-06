@@ -404,6 +404,10 @@ img.img-about {
   height: 64px;
   width: 64px;
 }
+
+img.media-object{
+    margin-right:10px;
+}
 .media-heading a{
   color: #333;
 }
@@ -916,7 +920,6 @@ span.remove{
     border: 1px solid #ddd;
     padding: 0 15px;
     padding-bottom: 15px;
-    background: #F9F9F9;
 }
 
 .info-group table td{
@@ -1020,6 +1023,10 @@ html, body{
     border-color: #8C3C3A;
 }
 
+.btn{
+    box-shadow: 0 1px 0 rgba(255,255,255,0.3) inset;
+    /*0 1px 1px rgba(100,100,100,0.3);*/
+}
 #id_user-wrapper{
     width: calc(100% - 97px);
     padding: 1px;
@@ -1204,6 +1211,7 @@ body > .container{
 .cc-image{
     width:88px;
     height:31px;
+    margin-top: 10px;
 }
 
 #permission-panel{
@@ -1346,10 +1354,12 @@ div#sharing-status {
 }
 
 .tag-list {
-    margin: 0;
+    min-height:46px !important;
+    margin-top:10px;
     list-style: none;
     padding: 10px 10px 5px 10px !important;
 }
+
 
 .tag {
     display: inline-block;
@@ -1357,7 +1367,7 @@ div#sharing-status {
     color: #111111;
     background-color: #f6f6f6;
     padding: 1px 10px;
-    border: 1px solid #dddddd;
+    border: 1px solid #B0B0B0;
     -webkit-border-radius: 15px;
     -moz-border-radius: 15px;
     border-radius: 15px;
