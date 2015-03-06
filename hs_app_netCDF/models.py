@@ -130,16 +130,6 @@ class NetcdfResource(Page, AbstractResource):
 
 processor_for(NetcdfResource)(resource_processor)
 
-# @processor_for(NetcdfResource)
-# def main_page(request, page):
-#     if request.method == 'POST':
-#         pass
-#     else:
-#         variable_formsets = Variable_Formsets()
-#         #variable_formsets = VariableForm()
-#
-#     return {'variable_formsets': variable_formsets, 'test': 'test'}
-
 
 class NetcdfMetaData(CoreMetaData):
     variables = generic.GenericRelation(Variable)
@@ -199,6 +189,4 @@ class NetcdfMetaData(CoreMetaData):
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
-
-import receivers
-
+import receivers  # never delete this otherwise non of the receiver function will work
