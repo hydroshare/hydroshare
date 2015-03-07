@@ -20,7 +20,7 @@ def resource_pre_create_handler(sender, **kwargs):
     if len(files) > 1:
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = 'Only one file can be uploaded.'
-    else:
+    elif len(files) == 1:
         # check file extension matches with the supported file types
         uploaded_file = files[0]
         file_ext = os.path.splitext(uploaded_file.name)[1]
