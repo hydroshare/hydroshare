@@ -52,6 +52,7 @@
         </table>
 
         <h2 style="color:red">{{ file_size_error }}</h2>
+        <h2 style="color:red">{{ file_validation_error }}</h2>
     </div>
 
     <div class="form-group">
@@ -73,6 +74,7 @@
         var selected_file = undefined;
         $('#resource-type').on('change', function(){
             $('#select-file').value ='';
+            $('#select-file').attr('value','');
             if(selected_file != undefined){
                 selected_file.value = '';
             }
@@ -128,12 +130,10 @@
 
         $('#select-file').on('change', function(){
             var file_types = JSON.parse(json_response_file_types.file_types);
-            selected_file = this;
-            if(file_types.length == 1){
-                if(file_types[0] === '.*'){
-                    return
-                }
+            if(file_types == ".*"){
+                return;
             }
+
             var fileList = this.files || []
             var ext = ".*";
             for (var i = 0; i < fileList.length; i++) {

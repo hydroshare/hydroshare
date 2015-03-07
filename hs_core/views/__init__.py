@@ -234,7 +234,6 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    res_cls = res.__class__
     fl = res.files.filter(pk=int(f)).first()
     file_name = fl.resource_file.name
     pre_delete_file_from_resource.send(sender=res_cls, file=fl, resource=res, **kwargs)
@@ -426,12 +425,12 @@ def my_resources(request, page):
 #        return HttpResponseRedirect('/accounts/login/')
 
     # TODO: remove the following 4 lines of debugging code prior to pull request
-    import sys
-    sys.path.append("/home/docker/pycharm-debug")
-    import pydevd
+    # import sys
+    # sys.path.append("/home/docker/pycharm-debug")
+    # import pydevd
     # IP Address for Ubuntu VM must be: 172.17.42.1
     # IP Address for boot2docker: varies
-    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    #pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     # from hs_core.hydroshare import users
     # users.create_account(email="hong.yi.hello@gmail.com", username="test1", first_name="Hong", last_name="Yi", password="test123")
@@ -637,10 +636,26 @@ def create_resource_new_workflow(request, *args, **kwargs):
     metadata = []
     page_url_dict = {}
     url_key = "page_redirect_url"
+
+    # receivers need to change the values of this dict if file validation fails
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+
     # Send pre-create resource signal - let any other app populate the empty metadata list object
     # also pass title to other apps, and give other apps a chance to populate page_redirect_url if they want
     # to redirect to their own page for resource creation rather than use core resource creation code
-    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, title=res_title, url_key=url_key, page_url_dict=page_url_dict, **kwargs)
+    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata,
+                                               files=resource_files, title=res_title, url_key=url_key,
+                                               page_url_dict=page_url_dict, validate_files=file_validation_dict, **kwargs)
+
+    if 'are_files_valid' in file_validation_dict:
+        if not file_validation_dict['are_files_valid']:
+            error_message = file_validation_dict.get('message', None)
+            if not error_message:
+                error_message = "Uploaded file(s) failed validation."
+            context = {
+                'file_validation_error': error_message
+            }
+            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     # generic resource core metadata and resource creation
     add_title = True

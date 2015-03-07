@@ -44,10 +44,7 @@ class RefTimeSeries(Page, AbstractResource):
 
         @classmethod
         def can_have_multiple_files(cls):
-            return False
-
-        @classmethod
-        def can_have_files(cls):
+            # resource can't have any files
             return False
 
 

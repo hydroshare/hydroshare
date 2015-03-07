@@ -7,11 +7,10 @@
 {% with page.get_content_model as cm %}
 {% keywords_for page as kws %}
 {% set_page_permissions page %}
-{#    <input type="hidden" id="supported-file-types" value={{ cm.get_supported_upload_file_types }}>#}
-    <input type="hidden" id="supported-file-types" value="{{ supported_file_types }}">
+    <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
     <input type="hidden" id="allow-multiple-file-upload" value={{ cm.can_have_multiple_files }}>
-    {{ supported_file_types }}
-    <div>Allow multiple file upload: {{allow_multiple_file_upload }}</div>
+    <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
+
     <h2>Resource Details</h2>
 
 <div class="btn-toolbar" style="padding-bottom: 0.5em;">
@@ -425,7 +424,7 @@
 
                         {% if page.perms.change %}
                             {% if cm|resource_type != "Geographic Raster Resource" or not cm.files.all %}
-                                <td><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
+                                <td id="add-file-button"><button class="btn btn-success btn-block"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>
                             {% endif %}
                         {% endif %}
                     </tr>
@@ -912,6 +911,19 @@
     }
 
     $(document).ready(function () {
+        // hide add file button if necessary
+        var file_count = $("#file-count").attr('value');
+        //set allowed file types
+        var file_types = $("#supported-file-types").attr('value');
+        console.log(file_types)
+        if(file_types!= ".*"){
+            $("#file-types").text("Only the listed file types can be uploaded " + file_types + ".");
+        }
+        else
+        {
+           $("#file-types").text("Any file type can be uploaded.");
+        }
+
         // set if multiple file can be uploaded
         var allow_multiple_file_upload = $("#allow-multiple-file-upload").attr('value');
         console.log(allow_multiple_file_upload);
@@ -922,39 +934,44 @@
         else{
             $("#file-multiple").text("Only one file can be uploaded.");
             $("#add-file-input").removeAttr('multiple');
+            if(file_count > 0){
+                $("#add-file-button").hide();
+            }
         }
-        // file upload validation
+
+        // hide add file button if file upload is not allowed for the resource type
+        if(file_types == "()"){
+            $("#add-file-button").hide();
+        }
+        // file upload validation when file is selected for upload
         $('#add-file-input').on('change', function() {
             var file_types = $("#supported-file-types").attr('value');
             console.log(file_types)
-            file_types = file_types.substring(1,file_types.length - 1).split(",");
-            console.log('data:' + file_types);
-            //file_types = file_types.toString().replace('(','').replace(')','').replace(' ', '').replace('"', '').split(',');
-            console.log(file_types)
-            console.log(file_types.length)
-
-            //selected_file = this;
-            if (file_types.length == 1) {
-                if (file_types[0] === '.*') {
-                    return
-                }
+            if(file_types!= ".*"){
+                file_types = file_types.substring(1,file_types.length - 1).split(",");
             }
+            else
+            {
+               $("#file-types").text("Any file type can be uploaded.");
+                return;
+            }
+
             var fileList = this.files || []
             var ext = ".*";
             for (var i = 0; i < fileList.length; i++) {
-                console.log('found file ' + i + ' = ' + fileList[i].name);
                 ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
-                ext = "." + ext;
+                ext = "'." + ext +"'";
                 var ext_found = false;
                 var index;
                 for (index = 0; index < file_types.length; index++) {
-                    console.log('ext:' + file_types[index].trim());
+                    //console.log('ext:' + file_types[index].trim());
                     if (ext == file_types[index].trim()) {
                         ext_found = true;
                         break;
                     }
                 }
                 if (!ext_found) {
+                    //remove user selected files
                     this.value = '';
                     alert('Invalid file type:' + ext)
                 }
