@@ -147,15 +147,15 @@
 
 
     {% block all_content %}
-{#    <div class="section-header">#}
-{#        <div class="container">#}
-{#            <div class="row">#}
-{#                <div class="col-md-12">#}
-{#                    <h1><span>{% block title %}{% endblock %}</span></h1>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
-{#    </div>#}
+    <div class="section-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h1><span>{% block title %}{% endblock %}</span></h1>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="container">
         <div class="row">
             <div class="{% block main_cols %}col-md-12{% endblock %}">
@@ -250,21 +250,20 @@
                 </div>
             </div>
         </div>
-        <!-- Legal
-        ============= -->
-        <div class="legal">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-12">
-                        {% editable siteconf.copyright %}
-                        <p>{{ siteconf.render_copyright }} | <a href="/terms-of-use">Terms Of Use</a> | <a href="/privacy">Statement of Privacy</a></p>
-                        {% endeditable %}
-                    </div>
+    </footer>
+    <!-- Legal 
+    ============= -->
+    <div class="legal">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    {% editable siteconf.copyright %}
+                    <p>{{ siteconf.render_copyright }} | <a href="/terms-of-use">Terms Of Use</a> | <a href="/privacy">Statement of Privacy</a></p>
+                    {% endeditable %}
                 </div>
             </div>
         </div>
-    </footer>
-
+    </div>
 
     {% include "includes/footer_scripts.html" %}
 </body>
