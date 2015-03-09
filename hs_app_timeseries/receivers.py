@@ -28,6 +28,11 @@ def resource_pre_create_handler(sender, **kwargs):
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Invalid file type.'
 
+# check the file to be added is valid
+@receiver(pre_add_files_to_resource, sender=TimeSeriesResource)
+def pre_add_files_to_resource_handler(sender, **kwargs):
+    # TODO: implement
+    pass
 
 @receiver(pre_metadata_element_create, sender=TimeSeriesResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
