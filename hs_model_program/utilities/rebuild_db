@@ -1,2 +1,0 @@
-dropdb -U postgres -h postgis postgres && createdb -U postgres -h postgis postgres &&
-psql -U postgres -h postgis -f pg.hs_init_db.sql && python manage.py makemigrations && python manage.py migrate
