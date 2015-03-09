@@ -76,8 +76,9 @@ def add_file_to_resource(request, *args, **kwargs):
         raise TypeError('shortkey must be specified...')
 
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-
+    res_cls = res.__class__
     res_files = request.FILES.getlist('files')
+    pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, **kwargs)
     for f in res_files:
         res.files.add(ResourceFile(content_object=res, resource_file=f))
 
@@ -85,7 +86,6 @@ def add_file_to_resource(request, *args, **kwargs):
         file_format_type = utils.get_file_mime_type(f.name)
         if file_format_type not in [mime.value for mime in res.metadata.formats.all()]:
             res.metadata.create_element('format', value=file_format_type)
-    pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, **kwargs)
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -215,6 +215,7 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res_cls = res.__class__
     fl = res.files.filter(pk=int(f)).first()
     file_name = fl.resource_file.name
     pre_delete_file_from_resource.send(sender=res_cls, file=fl, resource=res, **kwargs)
