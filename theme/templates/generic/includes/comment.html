@@ -1,4 +1,4 @@
-{% load i18n mezzanine_tags comment_tags rating_tags %}
+{% load i18n comment_tags mezzanine_tags rating_tags hydroshare_tags %}
 
 {% for comment in comments_for_thread %}
 
@@ -12,11 +12,11 @@
         <img class="pull-left media-object" src="{% gravatar_url comment.email %}">
     </a>
     <div class="media-body">
-        <h4 class="media-heading"><a href="{{ comment.url }}">{{ comment.user_name }}</a>
+        <h4 class="media-heading"><a href="{{ comment.url }}">{{ comment.user|contact|safe}}</a>
     {% else %}
     <img class="pull-left media-object" src="{% gravatar_url comment.email %}">
     <div class="media-body">
-        <h4 class="media-heading">{{ comment.user_name }}
+        <h4 class="media-heading">{{ comment.user|contact|safe }}
     {% endif %}
             <small class="timespan">
                 {% blocktrans with sometime=comment.submit_date|timesince %}{{ sometime }} ago{% endblocktrans %}
