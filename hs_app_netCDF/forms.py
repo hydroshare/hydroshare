@@ -57,13 +57,13 @@ class VariableForm(ModelForm):
         # change the fields same here
         fields = ['name', 'unit', 'type', 'shape', 'descriptive_name', 'method', 'missing_value']
         exclude = ['content_object']
-        widgets = { 'name': forms.TextInput(attrs={'readonly': 'readonly'}),
-                    'unit': forms.TextInput(),
-                    'type': forms.TextInput(),
-                    'shape': forms.TextInput(attrs={'readonly': 'readonly'}),
-                    'descriptive_name': forms.TextInput(),
-                    'method': forms.Textarea(),#TODO row number abstract example
-                    'missing_value': forms.TextInput()}
+        # widgets = { 'name': forms.TextInput(attrs={'readonly': 'readonly'}),
+        #             'unit': forms.TextInput(),
+        #             'type': forms.TextInput(),
+        #             'shape': forms.TextInput(attrs={'readonly': 'readonly'}),
+        #             'descriptive_name': forms.TextInput(),
+        #             'method': forms.Textarea(),#TODO row number abstract example
+        #             'missing_value': forms.TextInput()}
 
 
 class VariableValidationForm(forms.Form):
