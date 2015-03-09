@@ -10,7 +10,7 @@ from hs_core.hydroshare import utils
 
 # receiver used to extract metadata after user click on "create resource"
 @receiver(pre_create_resource, sender=NetcdfResource)
-def netcdf_create_resource_trigger(sender, **kwargs):
+def netcdf_pre_create_resource(sender, **kwargs):
     if sender is NetcdfResource:
         files = kwargs['files']
         metadata = kwargs['metadata']
@@ -61,7 +61,8 @@ def netcdf_create_resource_trigger(sender, **kwargs):
 
 # receiver used to create netcdf header text after user click on "create resource"
 @receiver(post_create_resource,sender=NetcdfResource)
-def netcdf_create_ncdump_file(sender, **kwargs):
+def netcdf_post_create_resource(sender, **kwargs):
+    # Add ncdump text file to resource
     if sender is NetcdfResource:
         nc_res = kwargs['resource']
         nc_files = nc_res.files.all()
@@ -84,7 +85,6 @@ def netcdf_create_ncdump_file(sender, **kwargs):
                 dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
                 dump_file.seek(0)
                 hydroshare.add_resource_files(nc_res.short_id, dump_file)
-
                 # add file format for text file
                 file_format_type = utils.get_file_mime_type(dump_file_name)
                 if file_format_type not in [mime.value for mime in nc_res.metadata.formats.all()]:
@@ -193,27 +193,35 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                                                    missing_value=var_info['missing_value'],
                                                    descriptive_name=var_info['descriptive_name'])
 
-                # create a header text file and add to resource
-                nc_file_name = infile.file.name
-                # create InMemoryUploadedFile text file to store the dump info and add it to resource
-                import nc_functions.nc_dump as nc_dump
-                if nc_dump.get_nc_dump_string_by_ncdump(nc_file_name):
-                    dump_str = nc_dump.get_nc_dump_string_by_ncdump(nc_file_name)
-                else:
-                    dump_str = nc_dump.get_nc_dump_string(nc_file_name)
-                if dump_str:
-                    from django.core.files.uploadedfile import InMemoryUploadedFile
-                    import StringIO,os
-                    io = StringIO.StringIO()
-                    io.write(dump_str)
-                    dump_file_name = infile.name[:-3] +'_header_info.txt'
-                    dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
-                    dump_file.seek(0)
-                    hydroshare.add_resource_files(nc_res.short_id, dump_file)
-                    # add file format for text file
-                    file_format_type = utils.get_file_mime_type(dump_file_name)
-                    if file_format_type not in [mime.value for mime in nc_res.metadata.formats.all()]:
-                        nc_res.metadata.create_element('format', value=file_format_type)
+@receiver(post_add_files_to_resource, sender=NetcdfResource)
+def netcdf_post_add_files_to_resource(sender, **kwargs):
+    # Add ncdump text file to resource
+    if sender is NetcdfResource:
+        nc_res = kwargs['resource']
+        nc_files = nc_res.files.all()
+        if nc_files:
+            nc_file = nc_res.files.all()[0]
+            nc_file_name = nc_file.resource_file.path
+
+            # create InMemoryUploadedFile text file to store the dump info and add it to resource
+            import nc_functions.nc_dump as nc_dump
+            if nc_dump.get_nc_dump_string_by_ncdump(nc_file_name):
+                dump_str = nc_dump.get_nc_dump_string_by_ncdump(nc_file_name)
+            else:
+                dump_str = nc_dump.get_nc_dump_string(nc_file_name)
+            if dump_str:
+                from django.core.files.uploadedfile import InMemoryUploadedFile
+                import StringIO, os
+                io = StringIO.StringIO()
+                io.write(dump_str)
+                dump_file_name = '.'.join(os.path.basename(nc_file_name).split('.')[:-1])+'_header_info.txt'
+                dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
+                dump_file.seek(0)
+                hydroshare.add_resource_files(nc_res.short_id, dump_file)
+                # add file format for text file
+                file_format_type = utils.get_file_mime_type(dump_file_name)
+                if file_format_type not in [mime.value for mime in nc_res.metadata.formats.all()]:
+                    nc_res.metadata.create_element('format', value=file_format_type)
 
 
 @receiver(pre_metadata_element_create, sender=NetcdfResource)
