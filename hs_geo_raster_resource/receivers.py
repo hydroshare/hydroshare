@@ -22,8 +22,12 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
             import raster_meta_extract
             res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
 
-            # add core metadata coverage - box
-            box = {'coverage': {'type': 'box', 'value': res_md_dict['spatial_coverage_info']['wgs84_coverage_info'] }}
+            wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
+            if wgs_cov_info is not None:
+                # add core metadata coverage - box
+                box = {'coverage': {'type': 'box', 'value': wgs_cov_info }}
+            else:
+                box = {'coverage': {'type': 'box', 'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }}
             metadata.append(box)
 
             # Save extended meta to metadata variable
