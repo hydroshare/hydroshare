@@ -10,7 +10,7 @@ from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
 from uuid import uuid4
 from mezzanine.core.models import Ownable
-from mezzanine.generic.fields import CommentsField
+from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.conf import settings as s
 from mezzanine.generic.models import Keyword, AssignedKeyword
 import os.path
@@ -1370,6 +1370,7 @@ class AbstractResource(ResourcePermissionsMixin):
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
+    rating = RatingField()
 
     # this is to establish a relationship between a resource and
     # any metadata container object (e.g., CoreMetaData object)
