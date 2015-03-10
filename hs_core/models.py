@@ -1634,6 +1634,22 @@ class CoreMetaData(models.Model):
         return True
 
     # this method needs to be overriden by any subclass of this class
+    # if they implement additional metadata elements that are required
+    def get_required_missing_elements(self):
+        missing_required_elements = []
+
+        if not self.title:
+            missing_required_elements.append('Title')
+        if not self.description:
+            missing_required_elements.append('Abstract')
+        if not self.rights:
+            missing_required_elements.append('Rights')
+        if self.subjects.count() == 0:
+            missing_required_elements.append('Keywords')
+
+        return missing_required_elements
+
+    # this method needs to be overriden by any subclass of this class
     def delete_all_elements(self):
         if self.title: self.title.delete()
         if self.description: self.description.delete()
@@ -1803,6 +1819,22 @@ class CoreMetaData(models.Model):
                 dc_subject.text = sub.value
 
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+
+    def add_metadata_element_to_xml(self, root, md_element, md_fields):
+        from lxml import etree
+
+        hsterms_newElem = etree.SubElement(root,
+                                           "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'], new_element=md_element.term))
+        hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
+                                                    "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
+        for md_field in md_fields:
+            if hasattr(md_element, md_field):
+                attr = getattr(md_element, md_field)
+                if attr:
+                    field = etree.SubElement(hsterms_newElem_rdf_Desc,
+                                             "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
+                                                                  field=md_field))
+                    field.text = str(attr)
 
     def _create_person_element(self, etree, parent_element, person):
         if isinstance(person, Creator):

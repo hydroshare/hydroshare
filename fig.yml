@@ -1,10 +1,9 @@
 postgis:
   image: mjstealey/postgresql
-  #image: jamesbrink/postgresql
 redis:
-  image: dockerfile/redis
+  image: redis:2.8.19
 rabbitmq: 
-  image: dockerfile/rabbitmq
+  image: rabbitmq:3.4.4
 hydroshare:
   build: .
   environment:
@@ -19,6 +18,7 @@ hydroshare:
   volumes:
     # Use when NOT sharing the entire host hydroshare directory
     #- "media:/home/docker/hydroshare/hydroshare/static/media"
+    # for VM
     # Specific to hydro user on the hydrodev Xubuntu VM
     - "/home/hydro/hydroshare:/home/docker/hydroshare"
     # Specific to hydro user for pycharm debugging on hydrodev Xubuntu VM

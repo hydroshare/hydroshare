@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import get_object_or_404, render_to_response
+from django.shortcuts import get_object_or_404, render_to_response, render
 from django.template import RequestContext
 from django.utils.timezone import now
 import json
@@ -76,18 +76,18 @@ def add_file_to_resource(request, *args, **kwargs):
         raise TypeError('shortkey must be specified...')
 
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-
-    for f in request.FILES.getlist('files'):
+    res_cls = res.__class__
+    res_files = request.FILES.getlist('files')
+    pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, **kwargs)
+    for f in res_files:
         res.files.add(ResourceFile(content_object=res, resource_file=f))
 
         # add format metadata element if necessary
         file_format_type = utils.get_file_mime_type(f.name)
         if file_format_type not in [mime.value for mime in res.metadata.formats.all()]:
             res.metadata.create_element('format', value=file_format_type)
-
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
 
 def add_citation(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
@@ -215,8 +215,10 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res_cls = res.__class__
     fl = res.files.filter(pk=int(f)).first()
     file_name = fl.resource_file.name
+    pre_delete_file_from_resource.send(sender=res_cls, file=fl, resource=res, **kwargs)
     fl.resource_file.delete()
     fl.delete()
 
@@ -405,10 +407,13 @@ def my_resources(request, page):
 #        return HttpResponseRedirect('/accounts/login/')
 
     # TODO: remove the following 4 lines of debugging code prior to pull request
-    # import sys
-    # sys.path.append("/home/docker/pycharm-debug")
-    # import pydevd
-    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    #import sys
+    #sys.path.append("/home/docker/pycharm-debug")
+    #import pydevd
+    #pydevd.settrace('144.39.193.200', port=21000, suspend=False)
+
+    # from hs_core.hydroshare import users
+    # users.create_account(email="hong.yi.hello@gmail.com", username="test1", first_name="Hong", last_name="Yi", password="test123")
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
@@ -616,11 +621,6 @@ def create_resource_new_workflow(request, *args, **kwargs):
     # to redirect to their own page for resource creation rather than use core resource creation code
     pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, title=res_title, url_key=url_key, page_url_dict=page_url_dict, **kwargs)
 
-    # redirect to a specific resource creation page if other apps choose so
-
-    if url_key in page_url_dict:
-        return HttpResponseRedirect(page_url_dict[url_key])
-
     # generic resource core metadata and resource creation
     add_title = True
     for element in metadata:
@@ -665,6 +665,12 @@ def create_resource_new_workflow(request, *args, **kwargs):
             files=request.FILES.getlist('files'),
             content=res_title
     )
+
+    # Send post-create resource signal
+    post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, **kwargs)
+
+    if url_key in page_url_dict:
+        return render(request, page_url_dict[url_key], {'resource': resource})
 
     if resource is not None:
         # go to resource landing page

@@ -163,8 +163,16 @@ def create_account(
     from tastypie.models import ApiKey
     from django.contrib.auth.models import User, Group
     from django.contrib.sites.models import Site
+    from django.conf import settings
 
     username = username if username else email
+
+    # useirods = getattr(settings,'USE_IRODS', False)
+    # if useirods:
+    #    from django_irods import account
+    #    iaccount = account.IrodsAccount()
+    #    iaccount.create(username)
+    #    iaccount.setPassward(username, password)
 
     groups = groups if groups else []
     groups = Group.objects.in_bulk(*groups) if groups and isinstance(groups[0], int) else groups
@@ -208,6 +216,8 @@ go to http://{domain}/verify/{token}/ and verify your account.
         pass # FIXME should log this instead of ignoring it.
 
     u.groups = groups
+
+
     return u
 
 
@@ -550,7 +560,7 @@ def get_resource_list(
         full_text_search=None,
         published=False,
         edit_permission=False,
-        public=False
+        public=False, types=None
 ):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
@@ -588,6 +598,7 @@ def get_resource_list(
         start = int
         count = int
         keywords = list of keywords
+        types = list of resource type names, used for filtering
         dc = list of lookups which are dicts following the following specifications:
             { term : dublin core term short name
               qualifier : dublin core term qualifier
@@ -601,7 +612,12 @@ def get_resource_list(
         raise NotImplemented("Returning the full resource list is not supported.")
 
     resource_types = get_resource_types()
-    queries = dict((el, []) for el in resource_types)
+
+    # filtering based on resource type.
+    if types is not None:
+        queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in types)
+    else:
+        queries = dict((el, []) for el in resource_types)
 
     for t, q in queries.items():
         if published:
