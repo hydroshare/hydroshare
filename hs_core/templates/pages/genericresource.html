@@ -1,6 +1,6 @@
 {% extends 'pages/page.html' %}
 
-{% load geoanalytics_tags pages_tags mezzanine_tags comments_tags keyword_tags hydroshare_tags crispy_forms_tags inplace_edit %}
+{% load geoanalytics_tags ratings_tags pages_tags mezzanine_tags comments_tags keyword_tags hydroshare_tags crispy_forms_tags inplace_edit %}
 
 {% block main %}
 
@@ -653,7 +653,8 @@
 
     </div>
     </div>
-    <h3>There are {{ cm.comments_count }} comment{{ cm.comments_count|pluralize }}</h3>
+    <!--<h3>There are {{ cm.comments_count }} comment{{ cm.comments_count|pluralize }}</h3>-->
+    {% rating_for cm %}
     {% comments_for cm %}
 
     {#                #}

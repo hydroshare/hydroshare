@@ -1,7 +1,7 @@
 from mezzanine.conf import settings
 from django import forms
 from mezzanine.core.forms import Html5Mixin
-from mezzanine.generic.models import ThreadedComment
+from mezzanine.generic.models import ThreadedComment, Rating
 from django.utils.translation import ugettext, ugettext_lazy as _
 from mezzanine.utils.views import ip_for_request
 from django.contrib.comments.signals import comment_was_posted
@@ -14,6 +14,7 @@ from django.utils.encoding import force_text
 from django.utils import timezone
 from django.utils.text import get_text_list
 from django.utils.translation import ungettext
+from django.utils.safestring import mark_safe
 
 COMMENT_MAX_LENGTH = getattr(settings,'COMMENT_MAX_LENGTH', 3000)
 
@@ -171,8 +172,7 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         obj = comment.content_object
         if request.user.is_authenticated():
             comment.user = request.user
-            comment.user.first_name = request.user.get_short_name()
-            comment.user.last_name = request.user.get_full_name()
+            comment.email = request.user.email
         comment.by_author = request.user == getattr(obj, "user", None)
         comment.ip_address = ip_for_request(request)
         comment.replied_to_id = self.data.get("replied_to")
@@ -192,3 +192,61 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
                                settings.DEFAULT_FROM_EMAIL, notify_emails,
                                context)
         return comment
+
+class HorizontalRadioRenderer(forms.RadioSelect.renderer):
+    def render(self):
+        return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
+
+class RatingForm(CommentSecurityForm):
+    """
+    Form for a rating. Subclasses ``CommentSecurityForm`` to make use
+    of its easy setup for generic relations.
+    """
+    value = forms.ChoiceField(label="", widget=forms.RadioSelect(renderer=HorizontalRadioRenderer),
+                              choices=list(zip(*(settings.RATINGS_RANGE,) * 2)))
+
+    def __init__(self, request, *args, **kwargs):
+        self.request = request
+        super(RatingForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        """
+        Check unauthenticated user's cookie as a light check to
+        prevent duplicate votes.
+        """
+        bits = (self.data["content_type"], self.data["object_pk"])
+        self.current = "%s.%s" % bits
+        request = self.request
+        self.previous = request.COOKIES.get("mezzanine-rating", "").split(",")
+        already_rated = self.current in self.previous
+        if already_rated and not self.request.user.is_authenticated():
+            raise forms.ValidationError(ugettext("Already rated."))
+        return self.cleaned_data
+
+    def save(self):
+        """
+        Saves a new rating - authenticated users can update the
+        value if they've previously rated.
+        """
+        user = self.request.user
+        rating_value = self.cleaned_data["value"]
+        rating_name = self.target_object.get_ratingfield_name()
+        rating_manager = getattr(self.target_object, rating_name)
+        if user.is_authenticated():
+            try:
+                rating_instance = rating_manager.get(user=user)
+            except Rating.DoesNotExist:
+                rating_instance = Rating(user=user, value=rating_value)
+                rating_manager.add(rating_instance)
+            else:
+                if rating_instance.value != int(rating_value):
+                    rating_instance.value = rating_value
+                    rating_instance.save()
+                else:
+                    # User submitted the same rating as previously,
+                    # which we treat as undoing the rating (like a toggle).
+                    rating_instance.delete()
+        else:
+            rating_instance = Rating(value=rating_value)
+            rating_manager.add(rating_instance)
+        return rating_instance
