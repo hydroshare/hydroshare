@@ -147,20 +147,22 @@ def get_wgs84_coverage_info(raster_dataset):
 
     # create transform object
     transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
+    if transform.this is not None:
+        # transform original bounding box to wgs84 bounding box
+        wgs84_westlimit,wgs84_northlimit = transform.TransformPoint(original_westlimit, original_northlimit)[:2]
+        wgs84_eastlimit,wgs84_southlimit = transform.TransformPoint(original_eastlimit, original_southlimit)[:2]
 
-    # transform original bounding box to wgs84 bounding box
-    wgs84_westlimit,wgs84_northlimit = transform.TransformPoint(original_westlimit, original_northlimit)[:2]
-    wgs84_eastlimit,wgs84_southlimit = transform.TransformPoint(original_eastlimit, original_southlimit)[:2]
-
-    wgs84_coverage_info = OrderedDict([
-        ('northlimit', wgs84_northlimit),
-        ('southlimit', wgs84_southlimit),
-        ('eastlimit', wgs84_eastlimit),
-        ('westlimit', wgs84_westlimit),
-        ('units','Decimal degrees'),
-        ('projection', 'WGS 84 EPSG:4326')
-    ])
-    return wgs84_coverage_info
+        wgs84_coverage_info = OrderedDict([
+            ('northlimit', wgs84_northlimit),
+            ('southlimit', wgs84_southlimit),
+            ('eastlimit', wgs84_eastlimit),
+            ('westlimit', wgs84_westlimit),
+            ('units','Decimal degrees'),
+            ('projection', 'WGS 84 EPSG:4326')
+        ])
+        return wgs84_coverage_info
+    else:
+        return None
 
 def get_cell_and_band_info(raster_dataset):
     """
