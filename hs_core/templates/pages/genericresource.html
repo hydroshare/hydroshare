@@ -5,6 +5,7 @@
 {% block main %}
 
 {% with page.get_content_model as cm %}
+
 {% keywords_for page as kws %}
 {% set_page_permissions page %}
 
@@ -909,11 +910,33 @@
         </div>
 
         {#           ------- ABSTRACT -------  #}
-        <h3>Abstract</h3>
-        <div class="form-group">
-        <textarea id="txt-abstract" type="email" class="form-control" id="email"
-                  placeholder="Enter abstract"></textarea>
-    </div>
+    <h3>Abstract</h3>
+{#    <form action="/hsapi/_internal/{{ cm.short_id }}/description/{{ cm.metadata.description.id }}/update-metadata/" id="id_abstract" method="post">#}
+{#        {% csrf_token %}#}
+{##}
+{#        <div id="abstract" class="form-group">#}
+{#            <textarea id="abstract" class="form-control" placeholder="Enter abstract">{{ cm.metadata.description }}</textarea>#}
+{#        </div>#}
+{#        <button type="submit" class="btn btn-default">Save</button>#}
+{#    </form>#}
+
+        <form action="/hsapi/_internal/{{ cm.short_id }}/description/{{ cm.metadata.description.id }}/update-metadata/"
+              id="id-description" method="post">
+            {% csrf_token %}
+            <fieldset>
+                <div id="div_id_abstract" class="control-group">
+                    <div class="controls"><textarea class="form-control input-sm textarea" cols="40" id="id_abstract"
+                          name="abstract" rows="10">{{ cm.metadata.description }}</textarea></div>
+                </div>
+                <div style="margin-top:10px">
+                    <button type="button" class="btn btn-primary pull-right"
+                            onclick="metadata_update_ajax_submit('id-description'); return false;"
+                            style="display: none;">Save changes
+                    </button>
+                </div>
+            </fieldset>
+        </form>
+
 
         {#           ------- CITATION -------  #}
     <div class="content-block">
@@ -1759,7 +1782,7 @@
                 <div class="modal-body">
                     {% csrf_token %}
                     <div class="form-group">
-                        <input type="hidden" name="csrfmiddlewaretoken" value="ZTT8CIFDUILy4NGDMkvdLFm43erAypMt">
+{#                        <input type="hidden" name="csrfmiddlewaretoken" value="ZTT8CIFDUILy4NGDMkvdLFm43erAypMt">#}
                         <fieldset>
                             <legend>Relation</legend>
                             <div id="div_id_type" class="control-group">
@@ -1822,6 +1845,7 @@
 
         $form = $('#' + form_id);
         var datastring = $form.serialize();
+
         $.ajax({
             type: "POST",
             url: $form.attr('action'),
