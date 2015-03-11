@@ -657,7 +657,10 @@
     </div>
     </div>
     <!--<h3>There are {{ cm.comments_count }} comment{{ cm.comments_count|pluralize }}</h3>-->
-    {% rating_for cm %}
+    <div class="rating">
+        {% rating_for cm %}
+    </div>
+
     {% comments_for cm %}
 
     {#                #}

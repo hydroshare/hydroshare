@@ -5,6 +5,7 @@ from django.dispatch import receiver
 from hs_core.signals import *
 from hs_geo_raster_resource.models import RasterResource, RasterMetaData, BandInformation
 from forms import *
+import os
 
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
 # to populate create-resource.html template page
@@ -13,12 +14,23 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
     if(sender is RasterResource):
         files = kwargs['files']
         title = kwargs['title']
+        validate_files_dict = kwargs['validate_files']
 
         metadata = kwargs['metadata']
         from collections import OrderedDict
         if(files):
-            # Assume only one file in files, and that that file is a zipfile
             infile = files[0]
+            # check to make sure only one file is uploaded with supported tif file type
+            if len(files) > 1:
+                validate_files_dict['are_files_valid'] = False
+                validate_files_dict['message'] = 'Only one file is allowed.'
+            elif len(files) == 1:
+                # check file extension matches with the supported tif file type
+                file_ext = os.path.splitext(infile.name)[1]
+                if file_ext not in RasterResource.get_supported_upload_file_types():
+                    validate_files_dict['are_files_valid'] = False
+                    validate_files_dict['message'] = 'Invalid file type.'
+
             import raster_meta_extract
             res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
 
