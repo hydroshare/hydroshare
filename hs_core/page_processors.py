@@ -91,7 +91,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
                    'metadata_status': metadata_status,
-                   'missing_metadata_elements': content_model.metadata.get_required_missing_elements()
+                   'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
+                   'supported_file_types': content_model.get_supported_upload_file_types(),
+                   'allow_multiple_file_upload': content_model.can_have_multiple_files()
 
         }
         return context
