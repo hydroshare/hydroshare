@@ -1,11 +1,7 @@
 {% load mezzanine_tags rating_tags i18n future %}
 <h3>{% trans "Ratings" %}</h3>
 <span id="rating-{{ rating_object.id }}">
-    {% if rating_average %}
-    {% trans "Current rating" %}: {{ rating_average|floatformat }}
-    {% else %}
-    {% trans "Currently unrated" %}
-    {% endif %}
+     Liked by {{ rating_sum }}
 </span>
 
 {% if not rated or request.user.is_authenticated %}
@@ -13,8 +9,13 @@
     {% nevercache %}
     {% csrf_token %}
     {% endnevercache %}
-    <ul class="radio radio-inline">{{ rating_form }}</ul>
-    <input type="submit" class="hl-btn hl-btn-dark hl-btn-sm" value="{% trans "Rate" %}"
-        onclick="return $(this.form).find('input:checked').length == 1;">
+    <!--<ul>{{ rating_form }}</ul>-->
+    {{ rating_form.content_type }}
+    {{ rating_form.object_pk }}
+    {{ rating_form.timestamp }}
+    {{ rating_form.security_hash }}
+    <input value="1" name="value" type="hidden"/>
+    <!--<input type="submit" class="hl-btn hl-btn-dark hl-btn-sm" value="{% trans "Rate" %}">-->
+    <input type="submit" class="btn btn-default btn-sm" value="+1"/>
 </form>
 {% endif %}
