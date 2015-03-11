@@ -8,7 +8,6 @@ from django.template.defaultfilters import linebreaksbr, urlize
 
 from mezzanine import template
 from mezzanine.conf import settings
-#from mezzanine.generic.forms import ThreadedCommentForm
 from theme.forms import ThreadedCommentForm
 from mezzanine.generic.models import ThreadedComment
 from mezzanine.utils.importing import import_dotted_path

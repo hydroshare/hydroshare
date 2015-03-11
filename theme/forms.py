@@ -14,7 +14,6 @@ from django.utils.encoding import force_text
 from django.utils import timezone
 from django.utils.text import get_text_list
 from django.utils.translation import ungettext
-from django.utils.safestring import mark_safe
 
 COMMENT_MAX_LENGTH = getattr(settings,'COMMENT_MAX_LENGTH', 3000)
 
@@ -172,7 +171,7 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         obj = comment.content_object
         if request.user.is_authenticated():
             comment.user = request.user
-            comment.email = request.user.email
+
         comment.by_author = request.user == getattr(obj, "user", None)
         comment.ip_address = ip_for_request(request)
         comment.replied_to_id = self.data.get("replied_to")
@@ -180,6 +179,7 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         comment_was_posted.send(sender=comment.__class__, comment=comment,
                                 request=request)
         notify_emails = split_addresses(settings.COMMENTS_NOTIFICATION_EMAILS)
+        notify_emails.append(request.user.email)
         if notify_emails:
             subject = ugettext("New comment for: ") + str(obj)
             context = {
@@ -193,17 +193,13 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
                                context)
         return comment
 
-class HorizontalRadioRenderer(forms.RadioSelect.renderer):
-    def render(self):
-        return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
 
 class RatingForm(CommentSecurityForm):
     """
     Form for a rating. Subclasses ``CommentSecurityForm`` to make use
     of its easy setup for generic relations.
     """
-    value = forms.ChoiceField(label="", widget=forms.RadioSelect(renderer=HorizontalRadioRenderer),
-                              choices=list(zip(*(settings.RATINGS_RANGE,) * 2)))
+    value = 1
 
     def __init__(self, request, *args, **kwargs):
         self.request = request
@@ -221,7 +217,7 @@ class RatingForm(CommentSecurityForm):
         already_rated = self.current in self.previous
         if already_rated and not self.request.user.is_authenticated():
             raise forms.ValidationError(ugettext("Already rated."))
-        return self.cleaned_data
+        return 1
 
     def save(self):
         """
@@ -229,7 +225,7 @@ class RatingForm(CommentSecurityForm):
         value if they've previously rated.
         """
         user = self.request.user
-        rating_value = self.cleaned_data["value"]
+        rating_value = 1
         rating_name = self.target_object.get_ratingfield_name()
         rating_manager = getattr(self.target_object, rating_name)
         if user.is_authenticated():

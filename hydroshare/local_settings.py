@@ -19,7 +19,6 @@ ALLOWED_HOSTS = "*"
 # for Django/Mezzanine comments and ratings to require user login
 COMMENTS_ACCOUNT_REQUIRED = True
 RATINGS_ACCOUNT_REQUIRED = True
-RATINGS_RANGE = range(1, 11)
 COMMENTS_USE_RATINGS = True
 
 #RABBITMQ_HOST = 'rabbitmq'
