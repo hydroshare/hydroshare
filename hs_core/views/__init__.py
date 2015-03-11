@@ -407,10 +407,10 @@ def my_resources(request, page):
 #        return HttpResponseRedirect('/accounts/login/')
 
     # TODO: remove the following 4 lines of debugging code prior to pull request
-    import sys
-    sys.path.append("/home/docker/pycharm-debug")
-    import pydevd
-    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    # import sys
+    # sys.path.append("/home/docker/pycharm-debug")
+    # import pydevd
+    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
