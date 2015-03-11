@@ -29,16 +29,11 @@ class CellInfoForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(CellInfoForm, self).__init__(*args, **kwargs)
         self.helper = CellInfoFormHelper(allow_edit, res_short_id, element_id, element_name='CellInformation')
-        # if not allow_edit:
-        #     for field in self.fields.values():
-        #         field.widget.attrs['readonly'] = True
-        # else: # only cellNoDataValue allows to be edited
-        #     for key, value in self.fields.iteritems():
-        #         if key != 'noDataValue':
-        #             value.widget.attrs['readonly'] = True
-        #         else:
-        #             value.widget.attrs['readonly'] = False
-        #             value.widget.attrs['style'] = "background-color:white;"
+
+        # only noDataValue field needs to be set up read-only or not depending on whether the value is extracted from file or not
+        if not allow_edit:
+            self.fields['noDataValue'].widget.attrs['readonly'] = "readonly"
+
     class Meta:
         model = CellInformation
         fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellSizeUnit', 'cellDataType', 'noDataValue']
