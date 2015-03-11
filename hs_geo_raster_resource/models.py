@@ -234,54 +234,13 @@ class RasterMetaData(CoreMetaData):
 
         # inject raster resource specific metadata elements to container element
         if self.cellInformation:
-            hsterms_cellInfo = etree.SubElement(container, '{%s}cellInformation' % self.NAMESPACES['hsterms'])
-            hsterms_cellInfo_rdf_Description = etree.SubElement(hsterms_cellInfo, '{%s}Description' % self.NAMESPACES['rdf'])
-
-            hsterms_name = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}name' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = self.cellInformation.name
-
-            hsterms_rows = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}rows' % self.NAMESPACES['hsterms'])
-            hsterms_rows.text = str(self.cellInformation.rows)
-
-            hsterms_columns = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}columns' % self.NAMESPACES['hsterms'])
-            hsterms_columns.text = str(self.cellInformation.columns)
-
-            hsterms_cellSizeXValue = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellSizeXValue' % self.NAMESPACES['hsterms'])
-            hsterms_cellSizeXValue.text = str(self.cellInformation.cellSizeXValue)
-
-            hsterms_cellSizeYValue = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellSizeYValue' % self.NAMESPACES['hsterms'])
-            hsterms_cellSizeYValue.text = str(self.cellInformation.cellSizeYValue)
-
-            hsterms_cellSizeUnit = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellSizeUnit' % self.NAMESPACES['hsterms'])
-            hsterms_cellSizeUnit.text = self.cellInformation.cellSizeUnit
-
-            hsterms_cellDataType = etree.SubElement(hsterms_cellInfo_rdf_Description, '{%s}cellDataType' % self.NAMESPACES['hsterms'])
-            hsterms_cellDataType.text = self.cellInformation.cellDataType
-
-        if self.cellInformation.noDataValue:
-            hsterms_noDataValue = etree.SubElement(hsterms_cellInfo_rdf_Description,'{%s}noDataValue' % self.NAMESPACES['hsterms'])
-            hsterms_noDataValue.text = str(self.cellInformation.noDataValue)
+            cellinfo_fields = ['name', 'rows', 'columns', 'cellSizeXValue', 'cellSizeYValue',
+                           'cellSizeUnit', 'cellDataType', 'noDataValue']
+            self.add_metadata_element_to_xml(container, self.cellInformation, cellinfo_fields)
 
         for band_info in self.bandInformation:
-            hsterms_bandInfo = etree.SubElement(container, '{%s}BandInformation' % self.NAMESPACES['hsterms'])
-            hsterms_bandInfo_rdf_Description = etree.SubElement(hsterms_bandInfo, '{%s}Description' % self.NAMESPACES['rdf'])
-
-            hsterms_name = etree.SubElement(hsterms_bandInfo_rdf_Description, '{%s}name' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = band_info.name
-
-            hsterms_variableName = etree.SubElement(hsterms_bandInfo_rdf_Description, '{%s}variableName' % self.NAMESPACES['hsterms'])
-            hsterms_variableName.text = band_info.variableName
-
-            hsterms_variableUnit = etree.SubElement(hsterms_bandInfo_rdf_Description, '{%s}variableUnit' % self.NAMESPACES['hsterms'])
-            hsterms_variableUnit.text = band_info.variableUnit
-
-            if band_info.method:
-                hsterms_method = etree.SubElement(hsterms_bandInfo_rdf_Description,'{%s}method' % self.NAMESPACES['hsterms'])
-                hsterms_method.text = band_info.method
-
-            if band_info.comment:
-                hsterms_comment = etree.SubElement(hsterms_bandInfo_rdf_Description, '{%s}comment' % self.NAMESPACES['hsterms'])
-                hsterms_comment.text = band_info.comment
+            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'method', 'comment']
+            self.add_metadata_element_to_xml(container, band_info, bandinfo_fields)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 

@@ -48,6 +48,18 @@ ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource DROP CONSTRAINT h
 ALTER TABLE ONLY public.hs_modelinstance_executedby DROP CONSTRAINT hs_m_content_type_id_5e722b4c4e52db18_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_modelinstance_modeloutput DROP CONSTRAINT hs_m_content_type_id_495bac403aded459_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource DROP CONSTRAINT hs_m_content_type_id_1190707b38a2054d_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_view_users DROP CONSTRAINT hs_geo_raster_resource_user_id_73dd33dfe08d9864_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_edit_users DROP CONSTRAINT hs_geo_raster_resource_user_id_328285e9b060692f_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource DROP CONSTRAINT hs_geo_raster_resource_user_id_1cda37c820898020_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_owners DROP CONSTRAINT hs_geo_raster_resource__user_id_a8a4e6c6669d0d2_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_view_groups DROP CONSTRAINT hs_geo_raster_resour_group_id_47a1ac9867c458aa_fk_auth_group_id;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_edit_groups DROP CONSTRAINT hs_geo_raster_resour_group_id_35ff2b5e869221dd_fk_auth_group_id;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource DROP CONSTRAINT hs_geo_raster_resou_creator_id_5e306fe573c91562_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource DROP CONSTRAINT hs_geo_raster_res_page_ptr_id_77aab605fb893e0f_fk_pages_page_id;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource DROP CONSTRAINT hs_geo_rast_last_changed_by_id_5b5a0cd14136f4e5_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_geo_raster_resource_bandinformation DROP CONSTRAINT hs_g_content_type_id_63f5acc301191318_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_geo_raster_resource_cellinformation DROP CONSTRAINT hs_g_content_type_id_2f01db94cd029b0f_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource DROP CONSTRAINT hs_g_content_type_id_107cd1877b7e0803_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_core_groupownership DROP CONSTRAINT hs_core_groupownershi_owner_id_1c73b09f1651e342_fk_auth_user_id;
 ALTER TABLE ONLY public.hs_core_groupownership DROP CONSTRAINT hs_core_groupownersh_group_id_73ab445f0d3ce28a_fk_auth_group_id;
 ALTER TABLE ONLY public.hs_core_genericresource_owners DROP CONSTRAINT hs_core_genericresourc_user_id_6c25b6b72db15d59_fk_auth_user_id;
@@ -87,9 +99,20 @@ ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresource_edit_groups DROP CO
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresource DROP CONSTRAINT hs_app_timeseries_t_creator_id_5496a44b2eed0dac_fk_auth_user_id;
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresource DROP CONSTRAINT hs_app_timeseries_page_ptr_id_6215131abf4c4eff_fk_pages_page_id;
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresource DROP CONSTRAINT hs_app_time_last_changed_by_id_1ccbbd4918dafbc3_fk_auth_user_id;
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource" DROP CONSTRAINT "hs_app_netC_last_changed_by_id_7ca672a601530a85_fk_auth_user_id";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource" DROP CONSTRAINT "hs_app_netCDF_netcdfreso_user_id_803b56259d098a_fk_auth_user_id";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_owners" DROP CONSTRAINT "hs_app_netCDF_netcdfre_user_id_72f724017f7ae97c_fk_auth_user_id";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_edit_users" DROP CONSTRAINT "hs_app_netCDF_netcdfre_user_id_4602f391a8b22ad7_fk_auth_user_id";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_view_users" DROP CONSTRAINT "hs_app_netCDF_netcdfre_user_id_1853270fb2d71cda_fk_auth_user_id";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_edit_groups" DROP CONSTRAINT "hs_app_netCDF_netcdf_group_id_402b5748af7160df_fk_auth_group_id";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_view_groups" DROP CONSTRAINT "hs_app_netCDF_netcdf_group_id_1a77f71bab410cbc_fk_auth_group_id";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource" DROP CONSTRAINT "hs_app_netCDF_netcd_creator_id_6f5fb6407e22464c_fk_auth_user_id";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource" DROP CONSTRAINT "hs_app_netCDF_netc_page_ptr_id_d450360267d4cc7_fk_pages_page_id";
+ALTER TABLE ONLY public."hs_app_netCDF_variable" DROP CONSTRAINT hs_ap_content_type_id_321744f4b1f2b5d_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_app_timeseries_site DROP CONSTRAINT hs_a_content_type_id_6c3a0d31ca8f2ee2_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_app_timeseries_variable DROP CONSTRAINT hs_a_content_type_id_6bea7582e11ffdc9_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresource DROP CONSTRAINT hs_a_content_type_id_65732f395d2694db_fk_django_content_type_id;
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource" DROP CONSTRAINT hs_a_content_type_id_5ae6a8cc795b9fd3_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresult DROP CONSTRAINT hs_a_content_type_id_5883e361b4531c3c_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_app_timeseries_processinglevel DROP CONSTRAINT hs_a_content_type_id_451721750e25a0b3_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_app_timeseries_method DROP CONSTRAINT hs_a_content_type_id_20e32c2b2e7f28d2_fk_django_content_type_id;
@@ -113,7 +136,10 @@ ALTER TABLE ONLY public.blog_blogpost_related_posts DROP CONSTRAINT from_blogpos
 ALTER TABLE ONLY public.forms_formentry DROP CONSTRAINT forms_formentry_form_id_fkey;
 ALTER TABLE ONLY public.forms_fieldentry DROP CONSTRAINT forms_fieldentry_entry_id_fkey;
 ALTER TABLE ONLY public.forms_field DROP CONSTRAINT forms_field_form_id_fkey;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_view_users DROP CONSTRAINT ff9ec6be7ca288d3eedfb09b6c876de0;
 ALTER TABLE ONLY public.ref_ts_reftimeseries_owners DROP CONSTRAINT fa327efca486d37ace6755f756870d29;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rastermetadata DROP CONSTRAINT fa281325d2f3328932b8c7c7f4606aee;
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_owners" DROP CONSTRAINT fa08f7bd27bec050f53da63241f1d683;
 ALTER TABLE ONLY public.dublincore_qualifieddublincoreelement DROP CONSTRAINT dubl_content_type_id_52ddecae36d99ac8_fk_django_content_type_id;
 ALTER TABLE ONLY public.dublincore_qualifieddublincoreelementhistory DROP CONSTRAINT dubl_content_type_id_13cc4c46ad32c14f_fk_django_content_type_id;
 ALTER TABLE ONLY public.djcelery_taskstate DROP CONSTRAINT djcelery_taskstate_worker_id_fkey;
@@ -127,6 +153,7 @@ ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_edit_groups DROP 
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresource_edit_users DROP CONSTRAINT d38b94f364f30f84d138a88d5f4bb4b0;
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresource_edit_groups DROP CONSTRAINT d3104302ca65336e33b70896ecac53fb;
 ALTER TABLE ONLY public.generic_threadedcomment DROP CONSTRAINT comment_ptr_id_refs_id_d4c241e5;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_edit_users DROP CONSTRAINT c8e1f01a1cab8a162de750d9baa31569;
 ALTER TABLE ONLY public.blog_blogpost_categories DROP CONSTRAINT blogpost_id_refs_id_6a2ad936;
 ALTER TABLE ONLY public.blog_blogpost_categories DROP CONSTRAINT blogcategory_id_refs_id_91693b1c;
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_view_users DROP CONSTRAINT bafc49e92d54b16c56013d3c37c5a1e8;
@@ -139,12 +166,16 @@ ALTER TABLE ONLY public.auth_group_permissions DROP CONSTRAINT auth_group_permis
 ALTER TABLE ONLY public.auth_group_permissions DROP CONSTRAINT auth_group_permissio_group_id_689710a9a73b7457_fk_auth_group_id;
 ALTER TABLE ONLY public.auth_permission DROP CONSTRAINT auth_content_type_id_508cf46651277a81_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_modelinstance_modelinstancemetadata DROP CONSTRAINT ad492224ba8c27b74282fb2c6035021e;
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_edit_users" DROP CONSTRAINT ad224c48bd495b7c7b92f66b7d505c99;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_owners DROP CONSTRAINT a6d705a048cb4b645896c5efbd55047f;
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_view_groups DROP CONSTRAINT "D9c0ea64c2091390a715bc4ca5a8daaf";
 ALTER TABLE ONLY public.hs_core_genericresource_view_groups DROP CONSTRAINT "D998a5f26f0216c5d716c912e17e6d9c";
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_edit_users DROP CONSTRAINT "D94ad2eee09cf95c835e11784b05604c";
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_view_groups DROP CONSTRAINT "D8af6eacf0d3b6b88d3fb8b872eb8b60";
 ALTER TABLE ONLY public.ref_ts_reftimeseries_edit_users DROP CONSTRAINT "D883ab5648522d94a7a0cc229713c0aa";
 ALTER TABLE ONLY public.ga_resources_renderedlayer DROP CONSTRAINT "D7e7cede746315ab9e08ce902995fd0e";
 ALTER TABLE ONLY public.hs_core_genericresource_edit_groups DROP CONSTRAINT "D7bb03cbea814be3c514f85cc61b8e71";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_view_users" DROP CONSTRAINT "D7435cc982a210fd85edef8a32809b3f";
 ALTER TABLE ONLY public.dublincore_qualifieddublincoreelementhistory DROP CONSTRAINT "D730d695eb52770e7a901b39648d8d65";
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresource_view_groups DROP CONSTRAINT "D70b3caf67224febfa4f8f2d54d6d586";
 ALTER TABLE ONLY public.hs_core_genericresource_view_users DROP CONSTRAINT "D700dc05a1d35a62fa475a58dce990e7";
@@ -156,13 +187,17 @@ ALTER TABLE ONLY public.hs_app_timeseries_timeseriesmetadata DROP CONSTRAINT "D5
 ALTER TABLE ONLY public.hs_core_genericresource_owners DROP CONSTRAINT "D576cf3e741d5680b209a96010a246d7";
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresource_owners DROP CONSTRAINT "D5196fb35483f94ccf08ec88e9bdef55";
 ALTER TABLE ONLY public.ga_resources_renderedlayer DROP CONSTRAINT "D4494202da9df682a8acda71be9628f3";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_edit_groups" DROP CONSTRAINT "D4095825f56f24be085c0c38b070e76a";
 ALTER TABLE ONLY public.ga_resources_relatedresource DROP CONSTRAINT "D3ddf29327dcf888bd232c7b0fc88c25";
 ALTER TABLE ONLY public.ga_resources_orderedresource DROP CONSTRAINT "D3774497fc72c82be6a35a3e9797e2da";
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_owners DROP CONSTRAINT "D364bc0d191d86dca9dac16f6a764ebe";
 ALTER TABLE ONLY public.ref_ts_reftimeseries_view_groups DROP CONSTRAINT "D2c0bf6ddb1076a68924eac1bbbbb32f";
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_edit_groups DROP CONSTRAINT "D1f17760fc8ce883abe48928f2366835";
 ALTER TABLE ONLY public.hs_core_genericresource_edit_users DROP CONSTRAINT "D167e0d092afa7f61f3186226e495eb5";
 ALTER TABLE ONLY public.ref_ts_reftsmetadata DROP CONSTRAINT "D122fb62e9df31f5bd8fb766773e4bd8";
 ALTER TABLE ONLY public.ga_resources_orderedresource DROP CONSTRAINT "D0d41531a62e8a1740c2e8b57a4309ae";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfmetadata" DROP CONSTRAINT "D09565e6cc06d29a0ce80066a7186d73";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_view_groups" DROP CONSTRAINT "D0600a8d2bcd9f4af6d804f44eeed789";
 DROP INDEX public.theme_siteconfiguration_9365d6e7;
 DROP INDEX public.theme_iconbox_a6c7fe0b;
 DROP INDEX public.tastypie_apikey_3c6e0b8a;
@@ -206,6 +241,24 @@ DROP INDEX public.hs_modelinstance_modelinstanceresource_44cc026e;
 DROP INDEX public.hs_modelinstance_modelinstanceresource_417f1b1c;
 DROP INDEX public.hs_modelinstance_modelinstanceresource_3700153c;
 DROP INDEX public.hs_modelinstance_executedby_417f1b1c;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_view_users_ec8607c8;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_view_users_e8701ad4;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_view_groups_ec8607c8;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_view_groups_0e939a4f;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_owners_ec8607c8;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_owners_e8701ad4;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_edit_users_ec8607c8;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_edit_users_e8701ad4;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_edit_groups_ec8607c8;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_edit_groups_0e939a4f;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_e8701ad4;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_7258c37c;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_6e3c2cc2;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_44cc026e;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_417f1b1c;
+DROP INDEX public.hs_geo_raster_resource_rasterresource_3700153c;
+DROP INDEX public.hs_geo_raster_resource_cellinformation_417f1b1c;
+DROP INDEX public.hs_geo_raster_resource_bandinformation_417f1b1c;
 DROP INDEX public.hs_core_type_417f1b1c;
 DROP INDEX public.hs_core_title_417f1b1c;
 DROP INDEX public.hs_core_subject_417f1b1c;
@@ -264,6 +317,23 @@ DROP INDEX public.hs_app_timeseries_timeseriesresource_3700153c;
 DROP INDEX public.hs_app_timeseries_site_417f1b1c;
 DROP INDEX public.hs_app_timeseries_processinglevel_417f1b1c;
 DROP INDEX public.hs_app_timeseries_method_417f1b1c;
+DROP INDEX public.hs_app_netcdf_variable_417f1b1c;
+DROP INDEX public.hs_app_netcdf_netcdfresource_view_users_e8701ad4;
+DROP INDEX public.hs_app_netcdf_netcdfresource_view_users_b7915593;
+DROP INDEX public.hs_app_netcdf_netcdfresource_view_groups_b7915593;
+DROP INDEX public.hs_app_netcdf_netcdfresource_view_groups_0e939a4f;
+DROP INDEX public.hs_app_netcdf_netcdfresource_owners_e8701ad4;
+DROP INDEX public.hs_app_netcdf_netcdfresource_owners_b7915593;
+DROP INDEX public.hs_app_netcdf_netcdfresource_edit_users_e8701ad4;
+DROP INDEX public.hs_app_netcdf_netcdfresource_edit_users_b7915593;
+DROP INDEX public.hs_app_netcdf_netcdfresource_edit_groups_b7915593;
+DROP INDEX public.hs_app_netcdf_netcdfresource_edit_groups_0e939a4f;
+DROP INDEX public.hs_app_netcdf_netcdfresource_e8701ad4;
+DROP INDEX public.hs_app_netcdf_netcdfresource_7258c37c;
+DROP INDEX public.hs_app_netcdf_netcdfresource_6e3c2cc2;
+DROP INDEX public.hs_app_netcdf_netcdfresource_44cc026e;
+DROP INDEX public.hs_app_netcdf_netcdfresource_417f1b1c;
+DROP INDEX public.hs_app_netcdf_netcdfresource_3700153c;
 DROP INDEX public.generic_threadedcomment_replied_to_id;
 DROP INDEX public.generic_rating_user_id;
 DROP INDEX public.generic_rating_content_type_id;
@@ -386,6 +456,21 @@ ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_owners DROP CONST
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_edit_groups DROP CONSTRAINT hs_modelinstance_modelinstanc_modelinstanceresource_id_grou_key;
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_view_groups DROP CONSTRAINT hs_modelinstance_modelinstanc_modelinstanceresource_id_gro_key1;
 ALTER TABLE ONLY public.hs_modelinstance_executedby DROP CONSTRAINT hs_modelinstance_executedby_pkey;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_view_users DROP CONSTRAINT hs_geo_raster_resource_rasterresource_view_users_pkey;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_view_groups DROP CONSTRAINT hs_geo_raster_resource_rasterresource_view_groups_pkey;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource DROP CONSTRAINT hs_geo_raster_resource_rasterresource_pkey;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_owners DROP CONSTRAINT hs_geo_raster_resource_rasterresource_owners_pkey;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_edit_users DROP CONSTRAINT hs_geo_raster_resource_rasterresource_edit_users_pkey;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_edit_groups DROP CONSTRAINT hs_geo_raster_resource_rasterresource_edit_groups_pkey;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_edit_users DROP CONSTRAINT hs_geo_raster_resource_rasterreso_rasterresource_id_user_id_key;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_view_users DROP CONSTRAINT hs_geo_raster_resource_rasterres_rasterresource_id_user_id_key2;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_owners DROP CONSTRAINT hs_geo_raster_resource_rasterres_rasterresource_id_user_id_key1;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_edit_groups DROP CONSTRAINT hs_geo_raster_resource_rasterres_rasterresource_id_group_id_key;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_view_groups DROP CONSTRAINT hs_geo_raster_resource_rasterre_rasterresource_id_group_id_key1;
+ALTER TABLE ONLY public.hs_geo_raster_resource_rastermetadata DROP CONSTRAINT hs_geo_raster_resource_rastermetadata_pkey;
+ALTER TABLE ONLY public.hs_geo_raster_resource_cellinformation DROP CONSTRAINT hs_geo_raster_resource_cellinformation_pkey;
+ALTER TABLE ONLY public.hs_geo_raster_resource_cellinformation DROP CONSTRAINT hs_geo_raster_resource_ce_content_type_id_2a5663531ffdbfc0_uniq;
+ALTER TABLE ONLY public.hs_geo_raster_resource_bandinformation DROP CONSTRAINT hs_geo_raster_resource_bandinformation_pkey;
 ALTER TABLE ONLY public.hs_core_type DROP CONSTRAINT hs_core_type_pkey;
 ALTER TABLE ONLY public.hs_core_type DROP CONSTRAINT hs_core_type_content_type_id_18ed89604613f1ed_uniq;
 ALTER TABLE ONLY public.hs_core_title DROP CONSTRAINT hs_core_title_pkey;
@@ -446,6 +531,19 @@ ALTER TABLE ONLY public.hs_app_timeseries_processinglevel DROP CONSTRAINT hs_app
 ALTER TABLE ONLY public.hs_app_timeseries_processinglevel DROP CONSTRAINT hs_app_timeseries_process_content_type_id_3c1d2beec6c23844_uniq;
 ALTER TABLE ONLY public.hs_app_timeseries_method DROP CONSTRAINT hs_app_timeseries_method_pkey;
 ALTER TABLE ONLY public.hs_app_timeseries_method DROP CONSTRAINT hs_app_timeseries_method_content_type_id_670e39a35e5a9c71_uniq;
+ALTER TABLE ONLY public."hs_app_netCDF_variable" DROP CONSTRAINT "hs_app_netCDF_variable_pkey";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_view_users" DROP CONSTRAINT "hs_app_netCDF_netcdfresource_view_users_pkey";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_view_users" DROP CONSTRAINT "hs_app_netCDF_netcdfresource_view_netcdfresource_id_user_id_key";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_view_groups" DROP CONSTRAINT "hs_app_netCDF_netcdfresource_view_groups_pkey";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_view_groups" DROP CONSTRAINT "hs_app_netCDF_netcdfresource_vie_netcdfresource_id_group_id_key";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource" DROP CONSTRAINT "hs_app_netCDF_netcdfresource_pkey";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_owners" DROP CONSTRAINT "hs_app_netCDF_netcdfresource_owners_pkey";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_owners" DROP CONSTRAINT "hs_app_netCDF_netcdfresource_owne_netcdfresource_id_user_id_key";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_edit_users" DROP CONSTRAINT "hs_app_netCDF_netcdfresource_edit_users_pkey";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_edit_users" DROP CONSTRAINT "hs_app_netCDF_netcdfresource_edit_netcdfresource_id_user_id_key";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_edit_groups" DROP CONSTRAINT "hs_app_netCDF_netcdfresource_edit_groups_pkey";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_edit_groups" DROP CONSTRAINT "hs_app_netCDF_netcdfresource_edi_netcdfresource_id_group_id_key";
+ALTER TABLE ONLY public."hs_app_netCDF_netcdfmetadata" DROP CONSTRAINT "hs_app_netCDF_netcdfmetadata_pkey";
 ALTER TABLE ONLY public.generic_threadedcomment DROP CONSTRAINT generic_threadedcomment_pkey;
 ALTER TABLE ONLY public.generic_rating DROP CONSTRAINT generic_rating_pkey;
 ALTER TABLE ONLY public.generic_keyword DROP CONSTRAINT generic_keyword_pkey;
@@ -539,6 +637,13 @@ ALTER TABLE public.hs_modelinstance_modelinstanceresource_owners ALTER COLUMN id
 ALTER TABLE public.hs_modelinstance_modelinstanceresource_edit_users ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_modelinstance_modelinstanceresource_edit_groups ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_modelinstance_executedby ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_view_users ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_view_groups ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_owners ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_edit_users ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_edit_groups ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_geo_raster_resource_cellinformation ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_geo_raster_resource_bandinformation ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_core_type ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_core_title ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_core_subject ALTER COLUMN id DROP DEFAULT;
@@ -574,6 +679,12 @@ ALTER TABLE public.hs_app_timeseries_timeseriesresource_edit_groups ALTER COLUMN
 ALTER TABLE public.hs_app_timeseries_site ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_app_timeseries_processinglevel ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_app_timeseries_method ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public."hs_app_netCDF_variable" ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public."hs_app_netCDF_netcdfresource_view_users" ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public."hs_app_netCDF_netcdfresource_view_groups" ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public."hs_app_netCDF_netcdfresource_owners" ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public."hs_app_netCDF_netcdfresource_edit_users" ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public."hs_app_netCDF_netcdfresource_edit_groups" ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.generic_rating ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.generic_keyword ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.generic_assignedkeyword ALTER COLUMN id DROP DEFAULT;
@@ -666,6 +777,22 @@ DROP TABLE public.hs_modelinstance_modelinstanceresource;
 DROP TABLE public.hs_modelinstance_modelinstancemetadata;
 DROP SEQUENCE public.hs_modelinstance_executedby_id_seq;
 DROP TABLE public.hs_modelinstance_executedby;
+DROP SEQUENCE public.hs_geo_raster_resource_rasterresource_view_users_id_seq;
+DROP TABLE public.hs_geo_raster_resource_rasterresource_view_users;
+DROP SEQUENCE public.hs_geo_raster_resource_rasterresource_view_groups_id_seq;
+DROP TABLE public.hs_geo_raster_resource_rasterresource_view_groups;
+DROP SEQUENCE public.hs_geo_raster_resource_rasterresource_owners_id_seq;
+DROP TABLE public.hs_geo_raster_resource_rasterresource_owners;
+DROP SEQUENCE public.hs_geo_raster_resource_rasterresource_edit_users_id_seq;
+DROP TABLE public.hs_geo_raster_resource_rasterresource_edit_users;
+DROP SEQUENCE public.hs_geo_raster_resource_rasterresource_edit_groups_id_seq;
+DROP TABLE public.hs_geo_raster_resource_rasterresource_edit_groups;
+DROP TABLE public.hs_geo_raster_resource_rasterresource;
+DROP TABLE public.hs_geo_raster_resource_rastermetadata;
+DROP SEQUENCE public.hs_geo_raster_resource_cellinformation_id_seq;
+DROP TABLE public.hs_geo_raster_resource_cellinformation;
+DROP SEQUENCE public.hs_geo_raster_resource_bandinformation_id_seq;
+DROP TABLE public.hs_geo_raster_resource_bandinformation;
 DROP SEQUENCE public.hs_core_type_id_seq;
 DROP TABLE public.hs_core_type;
 DROP SEQUENCE public.hs_core_title_id_seq;
@@ -739,6 +866,20 @@ DROP SEQUENCE public.hs_app_timeseries_processinglevel_id_seq;
 DROP TABLE public.hs_app_timeseries_processinglevel;
 DROP SEQUENCE public.hs_app_timeseries_method_id_seq;
 DROP TABLE public.hs_app_timeseries_method;
+DROP SEQUENCE public."hs_app_netCDF_variable_id_seq";
+DROP TABLE public."hs_app_netCDF_variable";
+DROP SEQUENCE public."hs_app_netCDF_netcdfresource_view_users_id_seq";
+DROP TABLE public."hs_app_netCDF_netcdfresource_view_users";
+DROP SEQUENCE public."hs_app_netCDF_netcdfresource_view_groups_id_seq";
+DROP TABLE public."hs_app_netCDF_netcdfresource_view_groups";
+DROP SEQUENCE public."hs_app_netCDF_netcdfresource_owners_id_seq";
+DROP TABLE public."hs_app_netCDF_netcdfresource_owners";
+DROP SEQUENCE public."hs_app_netCDF_netcdfresource_edit_users_id_seq";
+DROP TABLE public."hs_app_netCDF_netcdfresource_edit_users";
+DROP SEQUENCE public."hs_app_netCDF_netcdfresource_edit_groups_id_seq";
+DROP TABLE public."hs_app_netCDF_netcdfresource_edit_groups";
+DROP TABLE public."hs_app_netCDF_netcdfresource";
+DROP TABLE public."hs_app_netCDF_netcdfmetadata";
 DROP TABLE public.generic_threadedcomment;
 DROP SEQUENCE public.generic_rating_id_seq;
 DROP TABLE public.generic_rating;
@@ -2585,6 +2726,255 @@ CREATE TABLE generic_threadedcomment (
 ALTER TABLE public.generic_threadedcomment OWNER TO postgres;
 
 --
+-- Name: hs_app_netCDF_netcdfmetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "hs_app_netCDF_netcdfmetadata" (
+    coremetadata_ptr_id integer NOT NULL
+);
+
+
+ALTER TABLE public."hs_app_netCDF_netcdfmetadata" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_netcdfresource; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "hs_app_netCDF_netcdfresource" (
+    page_ptr_id integer NOT NULL,
+    comments_count integer NOT NULL,
+    public boolean NOT NULL,
+    frozen boolean NOT NULL,
+    do_not_distribute boolean NOT NULL,
+    discoverable boolean NOT NULL,
+    published_and_frozen boolean NOT NULL,
+    content text NOT NULL,
+    short_id character varying(32) NOT NULL,
+    doi character varying(1024),
+    object_id integer,
+    content_type_id integer,
+    creator_id integer NOT NULL,
+    last_changed_by_id integer,
+    user_id integer NOT NULL,
+    CONSTRAINT "hs_app_netCDF_netcdfresource_object_id_check" CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public."hs_app_netCDF_netcdfresource" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_netcdfresource_edit_groups; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "hs_app_netCDF_netcdfresource_edit_groups" (
+    id integer NOT NULL,
+    netcdfresource_id integer NOT NULL,
+    group_id integer NOT NULL
+);
+
+
+ALTER TABLE public."hs_app_netCDF_netcdfresource_edit_groups" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_netcdfresource_edit_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE "hs_app_netCDF_netcdfresource_edit_groups_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."hs_app_netCDF_netcdfresource_edit_groups_id_seq" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_netcdfresource_edit_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE "hs_app_netCDF_netcdfresource_edit_groups_id_seq" OWNED BY "hs_app_netCDF_netcdfresource_edit_groups".id;
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_edit_users; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "hs_app_netCDF_netcdfresource_edit_users" (
+    id integer NOT NULL,
+    netcdfresource_id integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public."hs_app_netCDF_netcdfresource_edit_users" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_netcdfresource_edit_users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE "hs_app_netCDF_netcdfresource_edit_users_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."hs_app_netCDF_netcdfresource_edit_users_id_seq" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_netcdfresource_edit_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE "hs_app_netCDF_netcdfresource_edit_users_id_seq" OWNED BY "hs_app_netCDF_netcdfresource_edit_users".id;
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_owners; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "hs_app_netCDF_netcdfresource_owners" (
+    id integer NOT NULL,
+    netcdfresource_id integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public."hs_app_netCDF_netcdfresource_owners" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_netcdfresource_owners_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE "hs_app_netCDF_netcdfresource_owners_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."hs_app_netCDF_netcdfresource_owners_id_seq" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_netcdfresource_owners_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE "hs_app_netCDF_netcdfresource_owners_id_seq" OWNED BY "hs_app_netCDF_netcdfresource_owners".id;
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_view_groups; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "hs_app_netCDF_netcdfresource_view_groups" (
+    id integer NOT NULL,
+    netcdfresource_id integer NOT NULL,
+    group_id integer NOT NULL
+);
+
+
+ALTER TABLE public."hs_app_netCDF_netcdfresource_view_groups" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_netcdfresource_view_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE "hs_app_netCDF_netcdfresource_view_groups_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."hs_app_netCDF_netcdfresource_view_groups_id_seq" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_netcdfresource_view_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE "hs_app_netCDF_netcdfresource_view_groups_id_seq" OWNED BY "hs_app_netCDF_netcdfresource_view_groups".id;
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_view_users; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "hs_app_netCDF_netcdfresource_view_users" (
+    id integer NOT NULL,
+    netcdfresource_id integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public."hs_app_netCDF_netcdfresource_view_users" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_netcdfresource_view_users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE "hs_app_netCDF_netcdfresource_view_users_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."hs_app_netCDF_netcdfresource_view_users_id_seq" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_netcdfresource_view_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE "hs_app_netCDF_netcdfresource_view_users_id_seq" OWNED BY "hs_app_netCDF_netcdfresource_view_users".id;
+
+
+--
+-- Name: hs_app_netCDF_variable; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "hs_app_netCDF_variable" (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    name character varying(100) NOT NULL,
+    unit character varying(100) NOT NULL,
+    type character varying(100) NOT NULL,
+    shape character varying(100) NOT NULL,
+    descriptive_name character varying(100),
+    method text,
+    missing_value character varying(100),
+    content_type_id integer NOT NULL,
+    CONSTRAINT "hs_app_netCDF_variable_object_id_check" CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public."hs_app_netCDF_variable" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_variable_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE "hs_app_netCDF_variable_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."hs_app_netCDF_variable_id_seq" OWNER TO postgres;
+
+--
+-- Name: hs_app_netCDF_variable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE "hs_app_netCDF_variable_id_seq" OWNED BY "hs_app_netCDF_variable".id;
+
+
+--
 -- Name: hs_app_timeseries_method; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -3926,6 +4316,296 @@ ALTER SEQUENCE hs_core_type_id_seq OWNED BY hs_core_type.id;
 
 
 --
+-- Name: hs_geo_raster_resource_bandinformation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geo_raster_resource_bandinformation (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    name character varying(50),
+    "variableName" text,
+    "variableUnit" character varying(50),
+    method text,
+    comment text,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_geo_raster_resource_bandinformation_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.hs_geo_raster_resource_bandinformation OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_bandinformation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_geo_raster_resource_bandinformation_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_geo_raster_resource_bandinformation_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_bandinformation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_geo_raster_resource_bandinformation_id_seq OWNED BY hs_geo_raster_resource_bandinformation.id;
+
+
+--
+-- Name: hs_geo_raster_resource_cellinformation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geo_raster_resource_cellinformation (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    name character varying(50),
+    rows integer,
+    columns integer,
+    "cellSizeXValue" double precision,
+    "cellSizeYValue" double precision,
+    "cellSizeUnit" character varying(50),
+    "cellDataType" character varying(50),
+    "noDataValue" double precision,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_geo_raster_resource_cellinformation_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.hs_geo_raster_resource_cellinformation OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_cellinformation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_geo_raster_resource_cellinformation_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_geo_raster_resource_cellinformation_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_cellinformation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_geo_raster_resource_cellinformation_id_seq OWNED BY hs_geo_raster_resource_cellinformation.id;
+
+
+--
+-- Name: hs_geo_raster_resource_rastermetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geo_raster_resource_rastermetadata (
+    coremetadata_ptr_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_geo_raster_resource_rastermetadata OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_rasterresource; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geo_raster_resource_rasterresource (
+    page_ptr_id integer NOT NULL,
+    comments_count integer NOT NULL,
+    public boolean NOT NULL,
+    frozen boolean NOT NULL,
+    do_not_distribute boolean NOT NULL,
+    discoverable boolean NOT NULL,
+    published_and_frozen boolean NOT NULL,
+    content text NOT NULL,
+    short_id character varying(32) NOT NULL,
+    doi character varying(1024),
+    object_id integer,
+    content_type_id integer,
+    creator_id integer NOT NULL,
+    last_changed_by_id integer,
+    user_id integer NOT NULL,
+    CONSTRAINT hs_geo_raster_resource_rasterresource_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.hs_geo_raster_resource_rasterresource OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_groups; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geo_raster_resource_rasterresource_edit_groups (
+    id integer NOT NULL,
+    rasterresource_id integer NOT NULL,
+    group_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_edit_groups OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_geo_raster_resource_rasterresource_edit_groups_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_edit_groups_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_geo_raster_resource_rasterresource_edit_groups_id_seq OWNED BY hs_geo_raster_resource_rasterresource_edit_groups.id;
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_users; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geo_raster_resource_rasterresource_edit_users (
+    id integer NOT NULL,
+    rasterresource_id integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_edit_users OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_geo_raster_resource_rasterresource_edit_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_edit_users_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_geo_raster_resource_rasterresource_edit_users_id_seq OWNED BY hs_geo_raster_resource_rasterresource_edit_users.id;
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_owners; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geo_raster_resource_rasterresource_owners (
+    id integer NOT NULL,
+    rasterresource_id integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_owners OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_owners_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_geo_raster_resource_rasterresource_owners_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_owners_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_owners_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_geo_raster_resource_rasterresource_owners_id_seq OWNED BY hs_geo_raster_resource_rasterresource_owners.id;
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_groups; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geo_raster_resource_rasterresource_view_groups (
+    id integer NOT NULL,
+    rasterresource_id integer NOT NULL,
+    group_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_view_groups OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_geo_raster_resource_rasterresource_view_groups_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_view_groups_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_geo_raster_resource_rasterresource_view_groups_id_seq OWNED BY hs_geo_raster_resource_rasterresource_view_groups.id;
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_users; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geo_raster_resource_rasterresource_view_users (
+    id integer NOT NULL,
+    rasterresource_id integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_view_users OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_geo_raster_resource_rasterresource_view_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_geo_raster_resource_rasterresource_view_users_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_geo_raster_resource_rasterresource_view_users_id_seq OWNED BY hs_geo_raster_resource_rasterresource_view_users.id;
+
+
+--
 -- Name: hs_modelinstance_executedby; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -5160,6 +5840,48 @@ ALTER TABLE ONLY generic_rating ALTER COLUMN id SET DEFAULT nextval('generic_rat
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_edit_groups" ALTER COLUMN id SET DEFAULT nextval('"hs_app_netCDF_netcdfresource_edit_groups_id_seq"'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_edit_users" ALTER COLUMN id SET DEFAULT nextval('"hs_app_netCDF_netcdfresource_edit_users_id_seq"'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_owners" ALTER COLUMN id SET DEFAULT nextval('"hs_app_netCDF_netcdfresource_owners_id_seq"'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_view_groups" ALTER COLUMN id SET DEFAULT nextval('"hs_app_netCDF_netcdfresource_view_groups_id_seq"'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_view_users" ALTER COLUMN id SET DEFAULT nextval('"hs_app_netCDF_netcdfresource_view_users_id_seq"'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_variable" ALTER COLUMN id SET DEFAULT nextval('"hs_app_netCDF_variable_id_seq"'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY hs_app_timeseries_method ALTER COLUMN id SET DEFAULT nextval('hs_app_timeseries_method_id_seq'::regclass);
 
 
@@ -5405,6 +6127,55 @@ ALTER TABLE ONLY hs_core_type ALTER COLUMN id SET DEFAULT nextval('hs_core_type_
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY hs_geo_raster_resource_bandinformation ALTER COLUMN id SET DEFAULT nextval('hs_geo_raster_resource_bandinformation_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_cellinformation ALTER COLUMN id SET DEFAULT nextval('hs_geo_raster_resource_cellinformation_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_edit_groups ALTER COLUMN id SET DEFAULT nextval('hs_geo_raster_resource_rasterresource_edit_groups_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_edit_users ALTER COLUMN id SET DEFAULT nextval('hs_geo_raster_resource_rasterresource_edit_users_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_owners ALTER COLUMN id SET DEFAULT nextval('hs_geo_raster_resource_rasterresource_owners_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_view_groups ALTER COLUMN id SET DEFAULT nextval('hs_geo_raster_resource_rasterresource_view_groups_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_view_users ALTER COLUMN id SET DEFAULT nextval('hs_geo_raster_resource_rasterresource_view_users_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY hs_modelinstance_executedby ALTER COLUMN id SET DEFAULT nextval('hs_modelinstance_executedby_id_seq'::regclass);
 
 
@@ -5576,132 +6347,153 @@ SELECT pg_catalog.setval('auth_group_id_seq', 1, true);
 --
 
 COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
-1	1	46
-2	1	47
-3	1	48
-4	1	49
-5	1	50
-6	1	51
-7	1	52
-8	1	53
-9	1	54
-10	1	55
-11	1	56
-12	1	57
-13	1	133
-14	1	134
-15	1	135
-16	1	136
-17	1	137
-18	1	138
-19	1	139
-20	1	140
-21	1	141
-22	1	142
-23	1	143
-24	1	144
-25	1	145
-26	1	146
-27	1	147
-28	1	148
-29	1	149
-30	1	150
-31	1	151
-32	1	152
-33	1	153
-34	1	154
-35	1	155
-36	1	156
-37	1	157
-38	1	158
-39	1	159
-40	1	160
-41	1	161
-42	1	162
-43	1	163
-44	1	164
-45	1	165
-46	1	166
-47	1	167
-48	1	168
-49	1	169
-50	1	170
-51	1	171
-52	1	172
-53	1	173
-54	1	174
-55	1	175
-56	1	176
-57	1	177
-58	1	178
-59	1	179
-60	1	180
-61	1	181
-62	1	182
-63	1	183
-64	1	184
-65	1	185
-66	1	186
-67	1	187
-68	1	188
-69	1	189
-70	1	190
-71	1	191
-72	1	192
-73	1	193
-74	1	194
-75	1	195
-76	1	220
-77	1	221
-78	1	222
-79	1	223
-80	1	224
-81	1	225
-82	1	226
-83	1	227
-84	1	228
-85	1	229
-86	1	230
-87	1	231
-88	1	232
-89	1	233
-90	1	234
-91	1	235
-92	1	236
-93	1	237
-94	1	238
-95	1	239
-96	1	240
-97	1	241
-98	1	242
-99	1	243
-100	1	244
-101	1	245
-102	1	246
-103	1	247
-104	1	248
-105	1	249
-106	1	250
-107	1	251
-108	1	252
-109	1	253
-110	1	254
-111	1	255
-112	1	256
-113	1	257
-114	1	258
-115	1	259
-116	1	260
-117	1	261
-118	1	262
-119	1	263
-120	1	264
-121	1	265
-122	1	266
-123	1	267
-124	1	268
-125	1	269
-126	1	270
+274	1	46
+275	1	47
+276	1	48
+277	1	49
+278	1	50
+279	1	51
+280	1	52
+281	1	53
+282	1	54
+283	1	55
+284	1	56
+285	1	57
+286	1	133
+287	1	134
+288	1	135
+289	1	136
+290	1	137
+291	1	138
+292	1	139
+293	1	140
+294	1	141
+295	1	142
+296	1	143
+297	1	144
+298	1	145
+299	1	146
+300	1	147
+301	1	148
+302	1	149
+303	1	150
+304	1	151
+305	1	152
+306	1	153
+307	1	154
+308	1	155
+309	1	156
+310	1	157
+311	1	158
+312	1	159
+313	1	160
+314	1	161
+315	1	162
+316	1	163
+317	1	164
+318	1	165
+319	1	166
+320	1	167
+321	1	168
+322	1	169
+323	1	170
+324	1	171
+325	1	172
+326	1	173
+327	1	174
+328	1	175
+329	1	176
+330	1	177
+331	1	178
+332	1	179
+333	1	180
+334	1	181
+335	1	182
+336	1	183
+337	1	184
+338	1	185
+339	1	186
+340	1	187
+341	1	188
+342	1	189
+343	1	190
+344	1	191
+345	1	192
+346	1	193
+347	1	194
+348	1	195
+349	1	220
+350	1	221
+351	1	222
+352	1	223
+353	1	224
+354	1	225
+355	1	226
+356	1	227
+357	1	228
+358	1	229
+359	1	230
+360	1	231
+361	1	232
+362	1	233
+363	1	234
+364	1	235
+365	1	236
+366	1	237
+367	1	238
+368	1	239
+369	1	240
+370	1	241
+371	1	242
+372	1	243
+373	1	244
+374	1	245
+375	1	246
+376	1	247
+377	1	248
+378	1	249
+379	1	250
+380	1	251
+381	1	252
+382	1	253
+383	1	254
+384	1	255
+385	1	256
+386	1	257
+387	1	258
+388	1	259
+389	1	260
+390	1	261
+391	1	262
+392	1	263
+393	1	264
+394	1	265
+395	1	266
+396	1	267
+397	1	268
+398	1	269
+399	1	270
+400	1	281
+401	1	282
+402	1	283
+403	1	284
+404	1	285
+405	1	286
+406	1	287
+407	1	288
+408	1	289
+409	1	290
+410	1	291
+411	1	292
+412	1	293
+413	1	294
+414	1	295
+415	1	296
+416	1	297
+417	1	298
+418	1	299
+419	1	300
+420	1	301
 \.
 
 
@@ -5709,7 +6501,7 @@ COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_group_permissions_id_seq', 126, true);
+SELECT pg_catalog.setval('auth_group_permissions_id_seq', 420, true);
 
 
 --
@@ -5997,6 +6789,27 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 278	Can add comment flag	93	add_commentflag
 279	Can change comment flag	93	change_commentflag
 280	Can delete comment flag	93	delete_commentflag
+281	Can add band information	94	add_bandinformation
+282	Can change band information	94	change_bandinformation
+283	Can delete band information	94	delete_bandinformation
+284	Can add cell information	95	add_cellinformation
+285	Can change cell information	95	change_cellinformation
+286	Can delete cell information	95	delete_cellinformation
+287	Can add Geographic Raster Resource	96	add_rasterresource
+288	Can change Geographic Raster Resource	96	change_rasterresource
+289	Can delete Geographic Raster Resource	96	delete_rasterresource
+290	Can add raster meta data	97	add_rastermetadata
+291	Can change raster meta data	97	change_rastermetadata
+292	Can delete raster meta data	97	delete_rastermetadata
+293	Can add variable	98	add_variable
+294	Can change variable	98	change_variable
+295	Can delete variable	98	delete_variable
+296	Can add NetCDF Resource	99	add_netcdfresource
+297	Can change NetCDF Resource	99	change_netcdfresource
+298	Can delete NetCDF Resource	99	delete_netcdfresource
+299	Can add netcdf meta data	100	add_netcdfmetadata
+300	Can change netcdf meta data	100	change_netcdfmetadata
+301	Can delete netcdf meta data	100	delete_netcdfmetadata
 \.
 
 
@@ -6004,7 +6817,7 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_permission_id_seq', 280, true);
+SELECT pg_catalog.setval('auth_permission_id_seq', 301, true);
 
 
 --
@@ -6012,7 +6825,7 @@ SELECT pg_catalog.setval('auth_permission_id_seq', 280, true);
 --
 
 COPY auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-1	pbkdf2_sha256$12000$F4ezWSZtocyC$DvXSzCkSiqVRV8fyLyWMRSo8qN5x1Braaycywf0N7Ew=	2015-02-20 20:56:31.600618+00	t	admin			admin@example.com	t	t	2015-02-20 17:57:34.138827+00
+1	pbkdf2_sha256$12000$F4ezWSZtocyC$DvXSzCkSiqVRV8fyLyWMRSo8qN5x1Braaycywf0N7Ew=	2015-02-27 21:48:11.695803+00	t	admin			admin@example.com	t	t	2015-02-20 17:57:34.138827+00
 \.
 
 
@@ -6208,6 +7021,8 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 13	2015-02-20 19:47:05.583342+00	8	Create Resource	1		27	1
 14	2015-02-20 19:50:01.526894+00	1	localhost:8000	2	Changed domain.	7	1
 15	2015-02-20 20:58:50.091029+00	1	Hydroshare Author	1		2	1
+16	2015-02-27 21:48:45.479271+00	1	Hydroshare Author	2	Changed permissions.	2	1
+17	2015-02-27 21:49:06.377543+00	1	Hydroshare Author	2	No fields changed.	2	1
 \.
 
 
@@ -6215,7 +7030,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_admin_log_id_seq', 15, true);
+SELECT pg_catalog.setval('django_admin_log_id_seq', 17, true);
 
 
 --
@@ -6346,6 +7161,13 @@ COPY django_content_type (id, name, app_label, model) FROM stdin;
 91	log entry	admin	logentry
 92	comment	comments	comment
 93	comment flag	comments	commentflag
+94	band information	hs_geo_raster_resource	bandinformation
+95	cell information	hs_geo_raster_resource	cellinformation
+96	Geographic Raster Resource	hs_geo_raster_resource	rasterresource
+97	raster meta data	hs_geo_raster_resource	rastermetadata
+98	variable	hs_app_netCDF	variable
+99	NetCDF Resource	hs_app_netCDF	netcdfresource
+100	netcdf meta data	hs_app_netCDF	netcdfmetadata
 \.
 
 
@@ -6353,7 +7175,7 @@ COPY django_content_type (id, name, app_label, model) FROM stdin;
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_content_type_id_seq', 93, true);
+SELECT pg_catalog.setval('django_content_type_id_seq', 100, true);
 
 
 --
@@ -6376,6 +7198,8 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 13	sessions	0001_initial	2015-02-20 17:54:14.695416+00
 14	tastypie	0001_initial	2015-02-20 17:54:14.84284+00
 15	theme	0001_initial	2015-02-20 17:54:15.118255+00
+16	hs_app_netCDF	0001_initial	2015-02-27 21:47:16.099306+00
+17	hs_geo_raster_resource	0001_initial	2015-02-27 21:47:16.786+00
 \.
 
 
@@ -6383,7 +7207,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 15, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 17, true);
 
 
 --
@@ -6408,6 +7232,7 @@ SELECT pg_catalog.setval('django_redirect_id_seq', 1, false);
 COPY django_session (session_key, session_data, expire_date) FROM stdin;
 4wnn0du59bazqan8g84u3f9rqdxlyuw1	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-03-06 19:50:14.538231+00
 w8yc9sfoywubbrfpuxzrjql8a6zbtaj6	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-03-06 20:59:02.345296+00
+8i7s6mgvqgldrazt1hlxmtuninh69iob	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-03-13 21:49:14.28858+00
 \.
 
 
@@ -6791,6 +7616,112 @@ SELECT pg_catalog.setval('generic_rating_id_seq', 1, false);
 
 COPY generic_threadedcomment (comment_ptr_id, rating_count, rating_sum, rating_average, by_author, replied_to_id) FROM stdin;
 \.
+
+
+--
+-- Data for Name: hs_app_netCDF_netcdfmetadata; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY "hs_app_netCDF_netcdfmetadata" (coremetadata_ptr_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_app_netCDF_netcdfresource; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY "hs_app_netCDF_netcdfresource" (page_ptr_id, comments_count, public, frozen, do_not_distribute, discoverable, published_and_frozen, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_app_netCDF_netcdfresource_edit_groups; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY "hs_app_netCDF_netcdfresource_edit_groups" (id, netcdfresource_id, group_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_edit_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"hs_app_netCDF_netcdfresource_edit_groups_id_seq"', 1, false);
+
+
+--
+-- Data for Name: hs_app_netCDF_netcdfresource_edit_users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY "hs_app_netCDF_netcdfresource_edit_users" (id, netcdfresource_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_edit_users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"hs_app_netCDF_netcdfresource_edit_users_id_seq"', 1, false);
+
+
+--
+-- Data for Name: hs_app_netCDF_netcdfresource_owners; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY "hs_app_netCDF_netcdfresource_owners" (id, netcdfresource_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_owners_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"hs_app_netCDF_netcdfresource_owners_id_seq"', 1, false);
+
+
+--
+-- Data for Name: hs_app_netCDF_netcdfresource_view_groups; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY "hs_app_netCDF_netcdfresource_view_groups" (id, netcdfresource_id, group_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_view_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"hs_app_netCDF_netcdfresource_view_groups_id_seq"', 1, false);
+
+
+--
+-- Data for Name: hs_app_netCDF_netcdfresource_view_users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY "hs_app_netCDF_netcdfresource_view_users" (id, netcdfresource_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_view_users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"hs_app_netCDF_netcdfresource_view_users_id_seq"', 1, false);
+
+
+--
+-- Data for Name: hs_app_netCDF_variable; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY "hs_app_netCDF_variable" (id, object_id, name, unit, type, shape, descriptive_name, method, missing_value, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_app_netCDF_variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('"hs_app_netCDF_variable_id_seq"', 1, false);
 
 
 --
@@ -7340,6 +8271,127 @@ COPY hs_core_type (id, object_id, url, content_type_id) FROM stdin;
 --
 
 SELECT pg_catalog.setval('hs_core_type_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_geo_raster_resource_bandinformation; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geo_raster_resource_bandinformation (id, object_id, name, "variableName", "variableUnit", method, comment, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_geo_raster_resource_bandinformation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_geo_raster_resource_bandinformation_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_geo_raster_resource_cellinformation; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geo_raster_resource_cellinformation (id, object_id, name, rows, columns, "cellSizeXValue", "cellSizeYValue", "cellSizeUnit", "cellDataType", "noDataValue", content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_geo_raster_resource_cellinformation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_geo_raster_resource_cellinformation_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_geo_raster_resource_rastermetadata; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geo_raster_resource_rastermetadata (coremetadata_ptr_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_geo_raster_resource_rasterresource; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geo_raster_resource_rasterresource (page_ptr_id, comments_count, public, frozen, do_not_distribute, discoverable, published_and_frozen, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_geo_raster_resource_rasterresource_edit_groups; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geo_raster_resource_rasterresource_edit_groups (id, rasterresource_id, group_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_geo_raster_resource_rasterresource_edit_groups_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_geo_raster_resource_rasterresource_edit_users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geo_raster_resource_rasterresource_edit_users (id, rasterresource_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_geo_raster_resource_rasterresource_edit_users_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_geo_raster_resource_rasterresource_owners; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geo_raster_resource_rasterresource_owners (id, rasterresource_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_owners_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_geo_raster_resource_rasterresource_owners_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_geo_raster_resource_rasterresource_view_groups; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geo_raster_resource_rasterresource_view_groups (id, rasterresource_id, group_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_geo_raster_resource_rasterresource_view_groups_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_geo_raster_resource_rasterresource_view_users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geo_raster_resource_rasterresource_view_users (id, rasterresource_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_geo_raster_resource_rasterresource_view_users_id_seq', 1, false);
 
 
 --
@@ -8322,6 +9374,110 @@ ALTER TABLE ONLY generic_threadedcomment
 
 
 --
+-- Name: hs_app_netCDF_netcdfmetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfmetadata"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfmetadata_pkey" PRIMARY KEY (coremetadata_ptr_id);
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_edi_netcdfresource_id_group_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_edit_groups"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfresource_edi_netcdfresource_id_group_id_key" UNIQUE (netcdfresource_id, group_id);
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_edit_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_edit_groups"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfresource_edit_groups_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_edit_netcdfresource_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_edit_users"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfresource_edit_netcdfresource_id_user_id_key" UNIQUE (netcdfresource_id, user_id);
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_edit_users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_edit_users"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfresource_edit_users_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_owne_netcdfresource_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_owners"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfresource_owne_netcdfresource_id_user_id_key" UNIQUE (netcdfresource_id, user_id);
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_owners_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_owners"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfresource_owners_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfresource_pkey" PRIMARY KEY (page_ptr_id);
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_vie_netcdfresource_id_group_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_view_groups"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfresource_vie_netcdfresource_id_group_id_key" UNIQUE (netcdfresource_id, group_id);
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_view_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_view_groups"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfresource_view_groups_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_view_netcdfresource_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_view_users"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfresource_view_netcdfresource_id_user_id_key" UNIQUE (netcdfresource_id, user_id);
+
+
+--
+-- Name: hs_app_netCDF_netcdfresource_view_users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_view_users"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfresource_view_users_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: hs_app_netCDF_variable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_variable"
+    ADD CONSTRAINT "hs_app_netCDF_variable_pkey" PRIMARY KEY (id);
+
+
+--
 -- Name: hs_app_timeseries_method_content_type_id_670e39a35e5a9c71_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -8799,6 +9955,126 @@ ALTER TABLE ONLY hs_core_type
 
 ALTER TABLE ONLY hs_core_type
     ADD CONSTRAINT hs_core_type_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_geo_raster_resource_bandinformation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_bandinformation
+    ADD CONSTRAINT hs_geo_raster_resource_bandinformation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_geo_raster_resource_ce_content_type_id_2a5663531ffdbfc0_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_cellinformation
+    ADD CONSTRAINT hs_geo_raster_resource_ce_content_type_id_2a5663531ffdbfc0_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_geo_raster_resource_cellinformation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_cellinformation
+    ADD CONSTRAINT hs_geo_raster_resource_cellinformation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_geo_raster_resource_rastermetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rastermetadata
+    ADD CONSTRAINT hs_geo_raster_resource_rastermetadata_pkey PRIMARY KEY (coremetadata_ptr_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterre_rasterresource_id_group_id_key1; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_view_groups
+    ADD CONSTRAINT hs_geo_raster_resource_rasterre_rasterresource_id_group_id_key1 UNIQUE (rasterresource_id, group_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterres_rasterresource_id_group_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_edit_groups
+    ADD CONSTRAINT hs_geo_raster_resource_rasterres_rasterresource_id_group_id_key UNIQUE (rasterresource_id, group_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterres_rasterresource_id_user_id_key1; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_owners
+    ADD CONSTRAINT hs_geo_raster_resource_rasterres_rasterresource_id_user_id_key1 UNIQUE (rasterresource_id, user_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterres_rasterresource_id_user_id_key2; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_view_users
+    ADD CONSTRAINT hs_geo_raster_resource_rasterres_rasterresource_id_user_id_key2 UNIQUE (rasterresource_id, user_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterreso_rasterresource_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_edit_users
+    ADD CONSTRAINT hs_geo_raster_resource_rasterreso_rasterresource_id_user_id_key UNIQUE (rasterresource_id, user_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_edit_groups
+    ADD CONSTRAINT hs_geo_raster_resource_rasterresource_edit_groups_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_edit_users
+    ADD CONSTRAINT hs_geo_raster_resource_rasterresource_edit_users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_owners_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_owners
+    ADD CONSTRAINT hs_geo_raster_resource_rasterresource_owners_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource
+    ADD CONSTRAINT hs_geo_raster_resource_rasterresource_pkey PRIMARY KEY (page_ptr_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_view_groups
+    ADD CONSTRAINT hs_geo_raster_resource_rasterresource_view_groups_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_view_users
+    ADD CONSTRAINT hs_geo_raster_resource_rasterresource_view_users_pkey PRIMARY KEY (id);
 
 
 --
@@ -9697,6 +10973,125 @@ CREATE INDEX generic_threadedcomment_replied_to_id ON generic_threadedcomment US
 
 
 --
+-- Name: hs_app_netcdf_netcdfresource_3700153c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_3700153c ON "hs_app_netCDF_netcdfresource" USING btree (creator_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_417f1b1c ON "hs_app_netCDF_netcdfresource" USING btree (content_type_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_44cc026e; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_44cc026e ON "hs_app_netCDF_netcdfresource" USING btree (doi);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_6e3c2cc2; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_6e3c2cc2 ON "hs_app_netCDF_netcdfresource" USING btree (last_changed_by_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_7258c37c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_7258c37c ON "hs_app_netCDF_netcdfresource" USING btree (short_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_e8701ad4 ON "hs_app_netCDF_netcdfresource" USING btree (user_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_edit_groups_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_edit_groups_0e939a4f ON "hs_app_netCDF_netcdfresource_edit_groups" USING btree (group_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_edit_groups_b7915593; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_edit_groups_b7915593 ON "hs_app_netCDF_netcdfresource_edit_groups" USING btree (netcdfresource_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_edit_users_b7915593; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_edit_users_b7915593 ON "hs_app_netCDF_netcdfresource_edit_users" USING btree (netcdfresource_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_edit_users_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_edit_users_e8701ad4 ON "hs_app_netCDF_netcdfresource_edit_users" USING btree (user_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_owners_b7915593; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_owners_b7915593 ON "hs_app_netCDF_netcdfresource_owners" USING btree (netcdfresource_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_owners_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_owners_e8701ad4 ON "hs_app_netCDF_netcdfresource_owners" USING btree (user_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_view_groups_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_view_groups_0e939a4f ON "hs_app_netCDF_netcdfresource_view_groups" USING btree (group_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_view_groups_b7915593; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_view_groups_b7915593 ON "hs_app_netCDF_netcdfresource_view_groups" USING btree (netcdfresource_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_view_users_b7915593; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_view_users_b7915593 ON "hs_app_netCDF_netcdfresource_view_users" USING btree (netcdfresource_id);
+
+
+--
+-- Name: hs_app_netcdf_netcdfresource_view_users_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_netcdfresource_view_users_e8701ad4 ON "hs_app_netCDF_netcdfresource_view_users" USING btree (user_id);
+
+
+--
+-- Name: hs_app_netcdf_variable_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_app_netcdf_variable_417f1b1c ON "hs_app_netCDF_variable" USING btree (content_type_id);
+
+
+--
 -- Name: hs_app_timeseries_method_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10103,6 +11498,132 @@ CREATE INDEX hs_core_type_417f1b1c ON hs_core_type USING btree (content_type_id)
 
 
 --
+-- Name: hs_geo_raster_resource_bandinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_bandinformation_417f1b1c ON hs_geo_raster_resource_bandinformation USING btree (content_type_id);
+
+
+--
+-- Name: hs_geo_raster_resource_cellinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_cellinformation_417f1b1c ON hs_geo_raster_resource_cellinformation USING btree (content_type_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_3700153c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_3700153c ON hs_geo_raster_resource_rasterresource USING btree (creator_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_417f1b1c ON hs_geo_raster_resource_rasterresource USING btree (content_type_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_44cc026e; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_44cc026e ON hs_geo_raster_resource_rasterresource USING btree (doi);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_6e3c2cc2; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_6e3c2cc2 ON hs_geo_raster_resource_rasterresource USING btree (last_changed_by_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_7258c37c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_7258c37c ON hs_geo_raster_resource_rasterresource USING btree (short_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_e8701ad4 ON hs_geo_raster_resource_rasterresource USING btree (user_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_groups_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_edit_groups_0e939a4f ON hs_geo_raster_resource_rasterresource_edit_groups USING btree (group_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_groups_ec8607c8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_edit_groups_ec8607c8 ON hs_geo_raster_resource_rasterresource_edit_groups USING btree (rasterresource_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_users_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_edit_users_e8701ad4 ON hs_geo_raster_resource_rasterresource_edit_users USING btree (user_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_edit_users_ec8607c8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_edit_users_ec8607c8 ON hs_geo_raster_resource_rasterresource_edit_users USING btree (rasterresource_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_owners_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_owners_e8701ad4 ON hs_geo_raster_resource_rasterresource_owners USING btree (user_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_owners_ec8607c8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_owners_ec8607c8 ON hs_geo_raster_resource_rasterresource_owners USING btree (rasterresource_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_groups_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_view_groups_0e939a4f ON hs_geo_raster_resource_rasterresource_view_groups USING btree (group_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_groups_ec8607c8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_view_groups_ec8607c8 ON hs_geo_raster_resource_rasterresource_view_groups USING btree (rasterresource_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_users_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_view_users_e8701ad4 ON hs_geo_raster_resource_rasterresource_view_users USING btree (user_id);
+
+
+--
+-- Name: hs_geo_raster_resource_rasterresource_view_users_ec8607c8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geo_raster_resource_rasterresource_view_users_ec8607c8 ON hs_geo_raster_resource_rasterresource_view_users USING btree (rasterresource_id);
+
+
+--
 -- Name: hs_modelinstance_executedby_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10404,6 +11925,22 @@ CREATE INDEX theme_siteconfiguration_9365d6e7 ON theme_siteconfiguration USING b
 
 
 --
+-- Name: D0600a8d2bcd9f4af6d804f44eeed789; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_view_groups"
+    ADD CONSTRAINT "D0600a8d2bcd9f4af6d804f44eeed789" FOREIGN KEY (netcdfresource_id) REFERENCES "hs_app_netCDF_netcdfresource"(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D09565e6cc06d29a0ce80066a7186d73; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfmetadata"
+    ADD CONSTRAINT "D09565e6cc06d29a0ce80066a7186d73" FOREIGN KEY (coremetadata_ptr_id) REFERENCES hs_core_coremetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D0d41531a62e8a1740c2e8b57a4309ae; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -10425,6 +11962,14 @@ ALTER TABLE ONLY ref_ts_reftsmetadata
 
 ALTER TABLE ONLY hs_core_genericresource_edit_users
     ADD CONSTRAINT "D167e0d092afa7f61f3186226e495eb5" FOREIGN KEY (genericresource_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D1f17760fc8ce883abe48928f2366835; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_edit_groups
+    ADD CONSTRAINT "D1f17760fc8ce883abe48928f2366835" FOREIGN KEY (rasterresource_id) REFERENCES hs_geo_raster_resource_rasterresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -10457,6 +12002,14 @@ ALTER TABLE ONLY ga_resources_orderedresource
 
 ALTER TABLE ONLY ga_resources_relatedresource
     ADD CONSTRAINT "D3ddf29327dcf888bd232c7b0fc88c25" FOREIGN KEY (foreign_resource_id) REFERENCES ga_resources_dataresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D4095825f56f24be085c0c38b070e76a; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_edit_groups"
+    ADD CONSTRAINT "D4095825f56f24be085c0c38b070e76a" FOREIGN KEY (netcdfresource_id) REFERENCES "hs_app_netCDF_netcdfresource"(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -10548,6 +12101,14 @@ ALTER TABLE ONLY dublincore_qualifieddublincoreelementhistory
 
 
 --
+-- Name: D7435cc982a210fd85edef8a32809b3f; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_view_users"
+    ADD CONSTRAINT "D7435cc982a210fd85edef8a32809b3f" FOREIGN KEY (netcdfresource_id) REFERENCES "hs_app_netCDF_netcdfresource"(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D7bb03cbea814be3c514f85cc61b8e71; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -10572,6 +12133,14 @@ ALTER TABLE ONLY ref_ts_reftimeseries_edit_users
 
 
 --
+-- Name: D8af6eacf0d3b6b88d3fb8b872eb8b60; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_view_groups
+    ADD CONSTRAINT "D8af6eacf0d3b6b88d3fb8b872eb8b60" FOREIGN KEY (rasterresource_id) REFERENCES hs_geo_raster_resource_rasterresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D94ad2eee09cf95c835e11784b05604c; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -10593,6 +12162,22 @@ ALTER TABLE ONLY hs_core_genericresource_view_groups
 
 ALTER TABLE ONLY hs_modelinstance_modelinstanceresource_view_groups
     ADD CONSTRAINT "D9c0ea64c2091390a715bc4ca5a8daaf" FOREIGN KEY (modelinstanceresource_id) REFERENCES hs_modelinstance_modelinstanceresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: a6d705a048cb4b645896c5efbd55047f; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_owners
+    ADD CONSTRAINT a6d705a048cb4b645896c5efbd55047f FOREIGN KEY (rasterresource_id) REFERENCES hs_geo_raster_resource_rasterresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: ad224c48bd495b7c7b92f66b7d505c99; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_edit_users"
+    ADD CONSTRAINT ad224c48bd495b7c7b92f66b7d505c99 FOREIGN KEY (netcdfresource_id) REFERENCES "hs_app_netCDF_netcdfresource"(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -10689,6 +12274,14 @@ ALTER TABLE ONLY blog_blogpost_categories
 
 ALTER TABLE ONLY blog_blogpost_categories
     ADD CONSTRAINT blogpost_id_refs_id_6a2ad936 FOREIGN KEY (blogpost_id) REFERENCES blog_blogpost(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: c8e1f01a1cab8a162de750d9baa31569; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_edit_users
+    ADD CONSTRAINT c8e1f01a1cab8a162de750d9baa31569 FOREIGN KEY (rasterresource_id) REFERENCES hs_geo_raster_resource_rasterresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -10796,11 +12389,35 @@ ALTER TABLE ONLY dublincore_qualifieddublincoreelement
 
 
 --
+-- Name: fa08f7bd27bec050f53da63241f1d683; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_owners"
+    ADD CONSTRAINT fa08f7bd27bec050f53da63241f1d683 FOREIGN KEY (netcdfresource_id) REFERENCES "hs_app_netCDF_netcdfresource"(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: fa281325d2f3328932b8c7c7f4606aee; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rastermetadata
+    ADD CONSTRAINT fa281325d2f3328932b8c7c7f4606aee FOREIGN KEY (coremetadata_ptr_id) REFERENCES hs_core_coremetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: fa327efca486d37ace6755f756870d29; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY ref_ts_reftimeseries_owners
     ADD CONSTRAINT fa327efca486d37ace6755f756870d29 FOREIGN KEY (reftimeseries_id) REFERENCES ref_ts_reftimeseries(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: ff9ec6be7ca288d3eedfb09b6c876de0; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_view_users
+    ADD CONSTRAINT ff9ec6be7ca288d3eedfb09b6c876de0 FOREIGN KEY (rasterresource_id) REFERENCES hs_geo_raster_resource_rasterresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -10988,6 +12605,14 @@ ALTER TABLE ONLY hs_app_timeseries_timeseriesresult
 
 
 --
+-- Name: hs_a_content_type_id_5ae6a8cc795b9fd3_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource"
+    ADD CONSTRAINT hs_a_content_type_id_5ae6a8cc795b9fd3_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_a_content_type_id_65732f395d2694db_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -11009,6 +12634,86 @@ ALTER TABLE ONLY hs_app_timeseries_variable
 
 ALTER TABLE ONLY hs_app_timeseries_site
     ADD CONSTRAINT hs_a_content_type_id_6c3a0d31ca8f2ee2_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_ap_content_type_id_321744f4b1f2b5d_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_variable"
+    ADD CONSTRAINT hs_ap_content_type_id_321744f4b1f2b5d_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_app_netCDF_netc_page_ptr_id_d450360267d4cc7_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource"
+    ADD CONSTRAINT "hs_app_netCDF_netc_page_ptr_id_d450360267d4cc7_fk_pages_page_id" FOREIGN KEY (page_ptr_id) REFERENCES pages_page(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_app_netCDF_netcd_creator_id_6f5fb6407e22464c_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource"
+    ADD CONSTRAINT "hs_app_netCDF_netcd_creator_id_6f5fb6407e22464c_fk_auth_user_id" FOREIGN KEY (creator_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_app_netCDF_netcdf_group_id_1a77f71bab410cbc_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_view_groups"
+    ADD CONSTRAINT "hs_app_netCDF_netcdf_group_id_1a77f71bab410cbc_fk_auth_group_id" FOREIGN KEY (group_id) REFERENCES auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_app_netCDF_netcdf_group_id_402b5748af7160df_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_edit_groups"
+    ADD CONSTRAINT "hs_app_netCDF_netcdf_group_id_402b5748af7160df_fk_auth_group_id" FOREIGN KEY (group_id) REFERENCES auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_app_netCDF_netcdfre_user_id_1853270fb2d71cda_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_view_users"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfre_user_id_1853270fb2d71cda_fk_auth_user_id" FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_app_netCDF_netcdfre_user_id_4602f391a8b22ad7_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_edit_users"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfre_user_id_4602f391a8b22ad7_fk_auth_user_id" FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_app_netCDF_netcdfre_user_id_72f724017f7ae97c_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource_owners"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfre_user_id_72f724017f7ae97c_fk_auth_user_id" FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_app_netCDF_netcdfreso_user_id_803b56259d098a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource"
+    ADD CONSTRAINT "hs_app_netCDF_netcdfreso_user_id_803b56259d098a_fk_auth_user_id" FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_app_netC_last_changed_by_id_7ca672a601530a85_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "hs_app_netCDF_netcdfresource"
+    ADD CONSTRAINT "hs_app_netC_last_changed_by_id_7ca672a601530a85_fk_auth_user_id" FOREIGN KEY (last_changed_by_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -11321,6 +13026,102 @@ ALTER TABLE ONLY hs_core_groupownership
 
 ALTER TABLE ONLY hs_core_groupownership
     ADD CONSTRAINT hs_core_groupownershi_owner_id_1c73b09f1651e342_fk_auth_user_id FOREIGN KEY (owner_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_g_content_type_id_107cd1877b7e0803_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource
+    ADD CONSTRAINT hs_g_content_type_id_107cd1877b7e0803_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_g_content_type_id_2f01db94cd029b0f_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_cellinformation
+    ADD CONSTRAINT hs_g_content_type_id_2f01db94cd029b0f_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_g_content_type_id_63f5acc301191318_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_bandinformation
+    ADD CONSTRAINT hs_g_content_type_id_63f5acc301191318_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_geo_rast_last_changed_by_id_5b5a0cd14136f4e5_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource
+    ADD CONSTRAINT hs_geo_rast_last_changed_by_id_5b5a0cd14136f4e5_fk_auth_user_id FOREIGN KEY (last_changed_by_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_geo_raster_res_page_ptr_id_77aab605fb893e0f_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource
+    ADD CONSTRAINT hs_geo_raster_res_page_ptr_id_77aab605fb893e0f_fk_pages_page_id FOREIGN KEY (page_ptr_id) REFERENCES pages_page(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_geo_raster_resou_creator_id_5e306fe573c91562_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource
+    ADD CONSTRAINT hs_geo_raster_resou_creator_id_5e306fe573c91562_fk_auth_user_id FOREIGN KEY (creator_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_geo_raster_resour_group_id_35ff2b5e869221dd_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_edit_groups
+    ADD CONSTRAINT hs_geo_raster_resour_group_id_35ff2b5e869221dd_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_geo_raster_resour_group_id_47a1ac9867c458aa_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_view_groups
+    ADD CONSTRAINT hs_geo_raster_resour_group_id_47a1ac9867c458aa_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_geo_raster_resource__user_id_a8a4e6c6669d0d2_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_owners
+    ADD CONSTRAINT hs_geo_raster_resource__user_id_a8a4e6c6669d0d2_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_geo_raster_resource_user_id_1cda37c820898020_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource
+    ADD CONSTRAINT hs_geo_raster_resource_user_id_1cda37c820898020_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_geo_raster_resource_user_id_328285e9b060692f_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_edit_users
+    ADD CONSTRAINT hs_geo_raster_resource_user_id_328285e9b060692f_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_geo_raster_resource_user_id_73dd33dfe08d9864_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_view_users
+    ADD CONSTRAINT hs_geo_raster_resource_user_id_73dd33dfe08d9864_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

@@ -5,9 +5,34 @@ __author__ = 'pabitra'
 ## se the end of the models.py for the import of this module
 
 from django.dispatch import receiver
-from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update
+from hs_core.signals import *
 from hs_app_timeseries.models import TimeSeriesResource
 from forms import *
+import os
+
+# check if the uploaded files are valid"
+@receiver(pre_create_resource, sender=TimeSeriesResource)
+def resource_pre_create_handler(sender, **kwargs):
+    files = kwargs['files']
+    validate_files_dict = kwargs['validate_files']
+
+    # check if more than one file uploaded - only one file is allowed
+    if len(files) > 1:
+        validate_files_dict['are_files_valid'] = False
+        validate_files_dict['message'] = 'Only one file can be uploaded.'
+    elif len(files) == 1:
+        # check file extension matches with the supported file types
+        uploaded_file = files[0]
+        file_ext = os.path.splitext(uploaded_file.name)[1]
+        if file_ext not in TimeSeriesResource.get_supported_upload_file_types():
+            validate_files_dict['are_files_valid'] = False
+            validate_files_dict['message'] = 'Invalid file type.'
+
+# check the file to be added is valid
+@receiver(pre_add_files_to_resource, sender=TimeSeriesResource)
+def pre_add_files_to_resource_handler(sender, **kwargs):
+    # TODO: implement
+    pass
 
 @receiver(pre_metadata_element_create, sender=TimeSeriesResource)
 def metadata_element_pre_create_handler(sender, **kwargs):

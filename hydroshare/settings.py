@@ -258,7 +258,7 @@ INSTALLED_APPS = (
     "django.contrib.gis",
     "inplaceeditform",
     "django_nose",
-    #"django_irods",
+    "django_irods",
     "theme",
     "theme.blog_mods",
     "mezzanine.boot",
@@ -289,6 +289,8 @@ INSTALLED_APPS = (
     "hs_modelinstance",
     "hs_app_timeseries",
     "widget_tweaks",
+    "hs_app_netCDF",
+    "hs_model_program",
 )
 
 # List of processors used by RequestContext to populate the context.

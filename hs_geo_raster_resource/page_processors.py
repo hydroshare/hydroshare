@@ -24,6 +24,7 @@ def landing_page(request, page):
         context['bandInformation'] = content_model.metadata.bandInformation
     else:
         cellinfo_form = CellInfoForm(instance=content_model.metadata.cellInformation, res_short_id=content_model.short_id,
+                                     allow_edit = True if content_model.metadata.cellInformation.noDataValue is None else False,
                                     element_id=content_model.metadata.cellInformation.id if content_model.metadata.cellInformation else None)
 
         BandInfoFormSetEdit = formset_factory(wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=edit_resource)), formset=BaseBandInfoFormSet, extra=0)
