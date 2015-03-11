@@ -30,6 +30,7 @@
                 <option value="RefTimeSeries">HIS Referenced Time Series</option>
                 <option value="ModelInstanceResource">Model Instance Resource</option>
                 <option value="NetcdfResource">Multidimensional Space and Time Data Resource</option>
+                <option value="ModelProgramResource">Model Program Resource</option>
             </select>
         </div>
     </div>
@@ -39,16 +40,21 @@
           <input type="text" class="form-control" name="title" id="title" placeholder="Untitled resource">
         </div>
     </div>
-    <h3>Add your files here:</h3>
-    <table class="table" id="file-list">
-    <tbody id="files">
-        <tr>
-            <td><input type="file" name="files" id="" multiple/></td>
-        </tr>
-    </tbody>
-    </table>
+    <div id="upload-file">
+        <h3>Add your files here:</h3>
+        <table class="table" id="file-list">
+        <tbody id="files">
+            <tr>
+                <td><input type="file" name="files" id="select-file" multiple/></td>
+            </tr>
+        </tbody>
+        <div id="file-types">Any file type can be uploaded.</div>
+        <div id="file-multiple">Multiple file upload is allowed.</div>
+        </table>
 
-    <h2 style="color:red">{{ file_size_error }}</h2>
+        <h2 style="color:red">{{ file_size_error }}</h2>
+        <h2 style="color:red">{{ file_validation_error }}</h2>
+    </div>
 
     <div class="form-group">
         <div class="col-sm-offset-2 col-sm-10">
@@ -57,4 +63,100 @@
     </div>
 </form>
 
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript">
+    $(function() {
+    });
+    $(document).ready(function(){
+        var json_response_file_types = {};
+        var json_response_multiple_file = {};
+        var selected_file = undefined;
+        $('#resource-type').on('change', function(){
+            $('#select-file').value ='';
+            $('#select-file').attr('value','');
+            if(selected_file != undefined){
+                selected_file.value = '';
+            }
+            $.ajax({
+                type: "GET",
+                url: "/hsapi/_internal/" + this.value + "/supported-file-types",
+                success: function(result) {
+                    console.log(result);
+                    json_response_file_types = JSON.parse(result);
+                    console.log(json_response_file_types.file_types);
+                    var supported_file_types = "Any file type can be uploaded."
+                    if(JSON.parse(json_response_file_types.file_types).length == 0){
+                        $("#upload-file").hide();
+                    }
+                    else{
+                        if(JSON.parse(json_response_file_types.file_types)[0] != ".*"){
+                            supported_file_types = "Only the listed file types can be uploaded: " + json_response_file_types.file_types + ".";
+                        }
+                        $("#upload-file").show();
+                        $("#file-types").text(supported_file_types);
+                    }
+
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown)
+                {
+                    $("#file-types").text('Error in determining supported file types');
+                }
+            })
+
+            $.ajax({
+                type: "GET",
+                url: "/hsapi/_internal/" + this.value + "/allow-multiple-file",
+                success: function(result) {
+                    console.log(result);
+                    json_response_multiple_file = JSON.parse(result);
+                    console.log(json_response_multiple_file);
+                    if(json_response_multiple_file.allow_multiple_file == true){
+                        $("#file-multiple").text("Multiple file upload is allowed.");
+                        $("#select-file").attr('multiple', 'multiple')
+                    }
+                    else{
+                        $("#file-multiple").text("Only one file can be uploaded.");
+                        $("#select-file").removeAttr('multiple');
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown)
+                {
+                    $("#file-multiple").text('Error in determining if multiple file upload is allowed for this resource type');
+                }
+            })
+
+        })
+
+        $('#select-file').on('change', function(){
+            var file_types = JSON.parse(json_response_file_types.file_types);
+            if(file_types == ".*"){
+                return;
+            }
+
+            var fileList = this.files || []
+            var ext = ".*";
+            for (var i = 0; i < fileList.length; i++) {
+                console.log('found file ' + i + ' = ' + fileList[i].name);
+                ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
+                ext = "." + ext;
+                var ext_found = false;
+                var index;
+                for(index=0; index< file_types.length; index++){
+                    if (ext === file_types[index]){
+                        ext_found = true;
+                        break;
+                    }
+                }
+                if(!ext_found){
+                    this.value ='';
+                    alert('Invalid file type:' + ext)
+                }
+            }
+
+        })
+
+    })
+    </script>
 {% endblock %}
