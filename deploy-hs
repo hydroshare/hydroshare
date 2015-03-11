@@ -13,11 +13,13 @@ git submodule init && git submodule update
 IID=$(docker images | grep hs_base | tr -s ' ' | cut -d ' ' -f 3)
 if [ -z $IID ];
     then
-        echo "### build hs_base ###"
-        pushd $CWD
-        cd hs_docker_base
-        docker build -t hs_base .
-        popd;
+        echo "### pull hs_base image from docker hub ###"
+        docker pull mjstealey/hs_base;
+        #echo "### build hs_base ###"
+        #pushd $CWD
+        #cd hs_docker_base
+        #docker build -t hs_base .
+        #popd;
     else
         echo "### hs_base already exists ###";
 fi
