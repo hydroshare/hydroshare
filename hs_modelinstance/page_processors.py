@@ -4,6 +4,7 @@ from hs_modelinstance.models import ModelInstanceResource
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
 from forms import *
 from hs_core import page_processors
+from hs_core.views import *
 
 @processor_for(ModelInstanceResource)
 def landing_page(request, page):
@@ -51,5 +52,6 @@ def landing_page(request, page):
         context['resource_type'] = 'Model Instance Resource'
         context['model_output_form'] = model_output_form
         context['executed_by_form'] = executed_by_form
-
+    hs_core_dublin_context = add_dublin_core(request, page)
+    context.update(hs_core_dublin_context)
     return context

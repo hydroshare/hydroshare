@@ -4,7 +4,7 @@ from models import TimeSeriesResource
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
 from forms import *
 from hs_core import page_processors
-
+from hs_core.views import *
 
 @processor_for(TimeSeriesResource)
 def landing_page(request, page):
@@ -95,4 +95,7 @@ def landing_page(request, page):
         context['processing_level_form'] = processing_level_form
         context['timeseries_result_form'] = timeseries_result_form
 
+
+    hs_core_dublin_context = add_dublin_core(request, page)
+    context.update(hs_core_dublin_context)
     return context

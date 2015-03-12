@@ -1359,7 +1359,6 @@ div#sharing-status {
     padding: 10px 10px 5px 10px !important;
 }
 
-
 .tag {
     display: inline-block;
     margin-bottom: 4px;
@@ -1462,6 +1461,11 @@ span.name-label{
     overflow-x:auto;
     overflow-y:hidden;
 }
+
+.tab-elements .panel-tabs, .tab-elements .tabs-body{
+    /*min-width:403px;*/
+}
+
 
 .tab-elements .table:not(.table-striped) {
     width:auto;

@@ -5,6 +5,7 @@ from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
 from forms import *
 from hs_core import page_processors
 from django.forms.models import formset_factory
+from hs_core.views import *
 
 # page processor to populate raster resource specific metadata into my-resources template page
 @processor_for(RasterResource)
@@ -24,6 +25,7 @@ def landing_page(request, page):
         context['bandInformation'] = content_model.metadata.bandInformation
     else:
         cellinfo_form = CellInfoForm(instance=content_model.metadata.cellInformation, res_short_id=content_model.short_id,
+                                     allow_edit = True if content_model.metadata.cellInformation.noDataValue is None else False,
                                     element_id=content_model.metadata.cellInformation.id if content_model.metadata.cellInformation else None)
 
         BandInfoFormSetEdit = formset_factory(wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=edit_resource)), formset=BaseBandInfoFormSet, extra=0)
@@ -47,4 +49,6 @@ def landing_page(request, page):
         context['cellinfo_form']=cellinfo_form
         context['bandinfo_formset']=bandinfo_formset
 
+    hs_core_dublin_context = add_dublin_core(request, page)
+    context.update(hs_core_dublin_context)
     return context

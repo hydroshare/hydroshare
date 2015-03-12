@@ -104,6 +104,5 @@ $(document).ready(function() {
     // Remove last comma from authors list
 	//===================
     var authors = $("#authors");
-    var str = authors.text();
-    authors.text(str.substr(0, str.lastIndexOf(",")));
+    $(authors).find(".comma").last().remove();
 });
