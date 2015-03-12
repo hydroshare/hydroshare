@@ -8,7 +8,7 @@
             <h2>Hydroshare Support</h2>
             Hello scientists, engineers, and researchers of all sorts.  This page tells you about some of the features of HydroShare.  Browse the topics below and click on a question to drop down to the answer.
         </div>
-
+    
   <div class="container">
     <div class="row">
         <div class="col-md-8">
@@ -33,7 +33,7 @@
                             </div>
                             <div id="faq-cat-1-sub-1" class="panel-collapse collapse">
                                 <div class="panel-body">
-                                    The Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI) is an organization representing more than 100 universities and is sponsored by the National Science Foundation to provide infrastructure and services to advance the development of hydrologic science and education in the United States. The CUAHSI HydroShare is being developed as an online, collaborative environment for the sharing of hydrologic data and models. It will enable people to easily share, discover and access data and models, retrieve them to their desktop or perform analysis seamlessly in a high performance computing environment, thereby enhancing research, education and application of hydrologic knowledge.
+                                    The Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI) is an organization representing more than 130 U.S. universities and international water-science-related organizations and is sponsored by the National Science Foundation to provide infrastructure and services to advance the development of hydrologic science and education in the United States. The CUAHSI HydroShare is being developed as an online, collaborative environment for the sharing of hydrologic data and models. It will enable people to easily share, discover and access data and models, retrieve them to their desktop or perform analysis seamlessly in a high performance computing environment, thereby enhancing research, education and application of hydrologic knowledge.
                                 </div>
                             </div>
                         </div>
@@ -48,10 +48,10 @@
                             </div>
                             <div id="faq-cat-1-sub-2" class="panel-collapse collapse">
                                 <div class="panel-body">
-                                    <p><strong>Save your data online safely and share them to get feedback from other people.</strong> HydroShare will provide convenient data uploading function and save them safely online. It will also have access control ability to provide user with multiple ways of sharing their data and the corresponding metadata. Besides, the system will provide the function of commenting on the shared data and models, so as to help user get constructive feedback from other people.</p>
+                                    <p><strong>Save your data online safely and share them to get feedback from other people.</strong> HydroShare provides convenient data uploading function and save data safely online. It also has access control ability to provide user with multiple ways of sharing their data and the corresponding metadata. Besides, the system will provide the function of commenting on the shared data and models, so as to help user get constructive feedback from other people.</p>
                                     <p><strong>Get credits of your data and models when cited by others.</strong> Each data or model uploaded in the HydroShare system will be assigned with citation information. What’s more, in the future the system may provide the DOI for the data or models which are approved and published in the HydroShare system.</p>
-                                    <p><strong>Easy access to hydrologic data and models shared by other users or third part organizations.</strong> HydroShare will provide powerful searching functions to help user find out the data and models they are looking for.  These data and models will be from the other users or the third party organization such as USGS,   CUAHSI HydroServer, Earth Exchange, etc.</p>
-                                    <p><strong>Collaborate with other people for hydrological research.</strong> HydroShare will provide the social media functionality to enhance collaboration for hydrologic research. User will be able to create or join the groups they have interests in. And the group will provide functions for collaborations among group members to share data and models, participate in discussions, and add group blogs.</p>
+                                    <p><strong>Easy access to hydrologic data and models shared by other users or third part organizations.</strong> In the future, HydroShare will provide powerful searching functions to help user find out the data and models they are looking for.  These data and models will be from the other users or the third party organization such as USGS,   CUAHSI HydroServer, Earth Exchange, etc.</p>
+                                    <p><strong>Collaborate with other people for hydrological research.</strong> HydroShare provides the social media functionality to enhance collaboration for hydrologic research. User will be able to create or join the groups they have interests in. And the group will provide functions for collaborations among group members to share data and models, participate in discussions, and add group blogs.</p>
                                 </div>
                             </div>
                         </div>
@@ -66,7 +66,7 @@
                             </div>
                             <div id="faq-cat-1-sub-3" class="panel-collapse collapse">
                                 <div class="panel-body">
-                                    Hydroshare is currently in Phase 1 of development.
+                                    Hydroshare is currently in Beta Release 1.4 of development.
                                 </div>
                             </div>
                         </div>
@@ -85,7 +85,7 @@
                             </div>
                             <div id="faq-cat-2-sub-1" class="panel-collapse collapse">
                                 <div class="panel-body">
-                                    In HydroShare, we define a resource as digital content which includes the science data files or model files and their corresponding metadata information. HydroShare will include multiple resource types such as time series, geographic feature class, geographic raster, multidimensional space time array data (NetCDF), model, document, etc. Currently, HydroShare beta system supports resource types of time series and geographic feature class (or Geoanalytics).
+                                    In HydroShare, we define a resource as digital content which includes the science data files or model files and their corresponding metadata information. HydroShare will include multiple resource types such as generic, time series, geographic feature class, geographic raster, multidimensional space time array data (NetCDF), model, etc. Currently, HydroShare beta system supports resource types of generic, reference time series, and raster.
                                 </div>
                             </div>
                         </div>
@@ -101,12 +101,13 @@
                             <div id="faq-cat-2-sub-2" class="panel-collapse collapse">
                                 <div class="panel-body">
                                     <ol>
-                                        <li><a href="sign in page">Sign in</a> to HydroShare.</li>
-                                        <li>Click on "Create Resource" in the navigation bar at the top of the page.</li>
-                                        <li>Choose data files stored on your local computer to add to your resource. Add or delete rows as necessary using the "Add a Row" or "Delete" buttons.</li>
+                                        <li><a href="{% url 'login' %}">Sign in</a> to HydroShare.</li>
+                                        <li>Click on "+Create Resource" in the navigation bar at the top of the page.</li>
                                         <li>Select your resource type from the dropdown menu.</li>
-                                        <li>Enter the remaining metadata for your resource (optional).</li>
+                                        <li>Enter a Title.</li>
+                                        <li>Optionally Add your data files stored on your local computer to add to your resource. </li>
                                         <li>Click the "Create Resource" button.</li>
+                                        <li>A new page will appear where you can add or edit Metadata, Content, Sharing, Comments, and Add files. </li>
                                     </ol>
                                 </div>
                             </div>
@@ -115,7 +116,7 @@
                             <div class="panel-heading">
                                 <a data-toggle="collapse" data-parent="#accordion-cat-2" href="#faq-cat-2-sub-3">
                                     <h4 class="panel-title">
-                                        How do I view, export, edit, or delete a resource?
+                                        How do I view, download, edit, or delete a resource?
                                         <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
                                     </h4>
                                 </a>
@@ -123,18 +124,12 @@
                             <div id="faq-cat-2-sub-3" class="panel-collapse collapse">
                                 <div class="panel-body">
                                     <ol>
-                                        <li><a href="sign in page">Sign in</a> to HydroShare.</li>
-                                        <li>Click on "My Resources" in the navigation bar at the top of the page.</li>
-                                        <li>Use the search bar to find the resource that you would like to modify.</li>
-                                        <li>Select "Editable by me" to filter the search results to only show resources that you have permission to edit.</li>
+                                        <li><a href="{% url 'login' %}">Sign in</a> to HydroShare.</li>
+                                        <li>Click on "Resources" in the navigation bar at the top of the page.</li>
+                                        <li>Click on "Owned by me" or "Editable by me" on the left of the page.</li>
+                                        <li>Click on resource Title to take you to that resource page.</li>
+                                        <li>A new page will appear where you can Share, Delete, and Download a resource as well as perform various options on it. </li>
                                     </ol>
-                                    <p>From here, you can do any of the following:</p>
-                                    <ul>
-                                        <li><strong>View the resource</strong> by clicking on its name.</li>
-                                        <li><strong>Edit the resource</strong>  by viewing the resources and then clicking the blue "Edit" button at the top of the page. </li>
-                                        <li><strong>Export the resource</strong>  by viewing the resources, scrolling down, and clicking the blue "Export All" button.. </li>
-                                        <li><strong>Delete the resource</strong> by viewing the resource and then clicking the blue "Delete" button at the top of the page.</li>
-                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -150,108 +145,11 @@
                             <div id="faq-cat-2-sub-4" class="panel-collapse collapse">
                                 <div class="panel-body">
                                     <ol>
-                                        <li><a href="sign in page">Sign in</a> to HydroShare.</li>
-                                        <li>Click on "My Resources" in the navigation bar at the top of the page.</li>
-                                        <li>Use the search bar to find the resource that you would like to rate or comment on.</li>
-
-
-                                        <li><strong>Comment on a resource</strong> by scrolling to the bottom of the page, entering your name and email address, typing your comment, and clicking the black "Comment" button.</li>
+                                        <li><a href="{% url 'login' %}">Sign in</a> to HydroShare.</li>
+                                        <li>Click on "Resources" in the navigation bar at the top of the page.</li>
+                                        <li>Select the Title of the resource you would like to rate or comment on.</li>
+                                        <li>A new page will appear where you can Comment on a resource as well as perform various options on it. </li>
                                         <li><strong>Currently HydroShare does not support rating resources.</strong> You may, however, rate a comment by clicking the "+1" next to the comment.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="panel panel-default panel-faq">
-                            <div class="panel-heading">
-                                <a data-toggle="collapse" data-parent="#accordion-cat-2" href="#faq-cat-2-sub-5">
-                                    <h4 class="panel-title">
-                                        What is a "group" in HydroShare?
-                                        <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
-                                    </h4>
-                                </a>
-                            </div>
-                            <div id="faq-cat-2-sub-5" class="panel-collapse collapse">
-                                <div class="panel-body">
-                                    <p>In HydroShare, we define a group as a collection of HydroShare users who have the similar area of interests to support collaboration among them. HydroShare will enable users to share their data and models in the group, participate in discussions, and add group blogs, etc.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="panel panel-default panel-faq">
-                            <div class="panel-heading">
-                                <a data-toggle="collapse" data-parent="#accordion-cat-2" href="#faq-cat-2-sub-6">
-                                    <h4 class="panel-title">
-                                        How do I create a group?
-                                        <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
-                                    </h4>
-                                </a>
-                            </div>
-                            <div id="faq-cat-2-sub-6" class="panel-collapse collapse">
-                                <div class="panel-body">
-                                    <ol>
-                                        <li><a href="sign in page">Sign in</a> to HydroShare.</li>
-                                        <li>Click on "Collaborate" in the navigation bar at the top of the page.</li>
-                                        <li><strong>Create a group</strong> by clicking the green button labeled "+ Create a group" on the top left side of the page.</li>
-
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="panel panel-default panel-faq">
-                            <div class="panel-heading">
-                                <a data-toggle="collapse" data-parent="#accordion-cat-2" href="#faq-cat-2-sub-7">
-                                    <h4 class="panel-title">
-                                        How do I filter or search for a group?
-                                        <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
-                                    </h4>
-                                </a>
-                            </div>
-                            <div id="faq-cat-2-sub-7" class="panel-collapse collapse">
-                                <div class="panel-body">
-                                    <ol>
-                                        <li><a href="sign in page">Sign in</a> to HydroShare.</li>
-                                        <li>Click on "Collaborate" in the navigation bar at the top of the page.</li>
-                                        <li><strong>Filter or search</strong> for a group by typing in keywords in the text box labeled "search keywords" and click the blue "Search groups" button.</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="panel panel-default panel-faq">
-                            <div class="panel-heading">
-                                <a data-toggle="collapse" data-parent="#accordion-cat-2" href="#faq-cat-2-sub-8">
-                                    <h4 class="panel-title">
-                                        How do I join or comment on a group?
-                                        <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
-                                    </h4>
-                                </a>
-                            </div>
-                            <div id="faq-cat-2-sub-8" class="panel-collapse collapse">
-                                <div class="panel-body">
-                                    <ol>
-                                        <li><a href="sign in page">Sign in</a> to HydroShare.</li>
-                                        <li>Click on "Collaborate" in the navigation bar at the top of the page.</li>
-                                        <li>Find the group you would like to join and/or comment on using the search method outlined above.</li>
-                                        <li><strong>Join or comment on a group</strong> by selecting a group from your search results.</li>
-
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="panel panel-default panel-faq">
-                            <div class="panel-heading">
-                                <a data-toggle="collapse" data-parent="#accordion-cat-2" href="#faq-cat-2-sub-9">
-                                    <h4 class="panel-title">
-                                        How do I edit or delete a group?
-                                        <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
-                                    </h4>
-                                </a>
-                            </div>
-                            <div id="faq-cat-2-sub-9" class="panel-collapse collapse">
-                                <div class="panel-body">
-                                     <ol>
-                                        <li><a href="sign in page">Sign in</a> to HydroShare.</li>
-                                        <li>Click on "Collaborate" in the navigation bar at the top of the page.</li>
-                                        <li>Select "Groups I own" under the "Show" menu on the left. Search may used to filter further if necessary.</li>
-                                        <li><strong>Edit or delete a group</strong> by selecting one of your groups from these search results.</li>
                                     </ol>
                                 </div>
                             </div>

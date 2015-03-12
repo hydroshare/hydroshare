@@ -6,7 +6,7 @@ from django import forms
 from django.http import HttpResponseRedirect
 from mezzanine.pages.page_processors import processor_for
 from ga_resources.utils import json_or_jsonp
-from hs_core import hydroshare
+from hs_core import hydroshare, page_processors
 from hs_core.hydroshare.hs_bagit import create_bag
 from hs_core.models import ResourceFile
 from . import ts_utils
@@ -62,7 +62,12 @@ def time_series_from_service(request):
             ts = ts_utils.time_series_from_service(url, ref_type)
         else:
             ts = ts_utils.time_series_from_service(url, ref_type, site_name_or_code=site, variable_code=variable)
-        return json_or_jsonp(request, ts)
+        for_graph = ts['for_graph']
+        units = ts['units']
+        variable_name = ts['variable_name']
+        vis_file = ts_utils.create_vis("theme/static/img/", variable, site, for_graph, 'Date', variable_name, units)
+        vis_file_name = os.path.basename(vis_file.name)
+        return json_or_jsonp(request, {'vis_file_name': vis_file_name})
 
 
 class VerifyRestUrlForm(forms.Form):
@@ -86,33 +91,20 @@ def verify_rest_url(request):
             return json_or_jsonp(request, 400)
 
 class CreateRefTimeSeriesForm(forms.Form):
-    title = forms.CharField(required=True)
-    creators = forms.CharField(required=False, min_length=0)
-    contributors = forms.CharField(required=False, min_length=0)
-    abstract = forms.CharField(required=False, min_length=0)
-    keywords = forms.CharField(required=False, min_length=0)
     rest_url = forms.URLField(required=False)
     wsdl_url = forms.URLField(required=False)
     reference_type = forms.CharField(required=False, min_length=0)
     site = forms.CharField(required=False, min_length=0)
     variable = forms.CharField(required=False, min_length=0)
-    start_date = forms.CharField(required=True, min_length=0)
+    short_id = forms.CharField(required=False, min_length=0)
+
+
 
 @login_required
 def create_ref_time_series(request, *args, **kwargs):
     frm = CreateRefTimeSeriesForm(request.POST)
+
     if frm.is_valid():
-        dcterms = [
-            { 'term': 'T', 'content': frm.cleaned_data['title']},
-            { 'term': 'AB', 'content': frm.cleaned_data['abstract'] or frm.cleaned_data['title']},
-            { 'term': 'DTS', 'content': now().isoformat()}
-        ]
-        for cn in frm.cleaned_data['contributors'].split(','):
-            cn = cn.strip()
-            dcterms.append({'term' : 'CN', 'content' : cn})
-        for cr in frm.cleaned_data['creators'].split(','):
-            cr = cr.strip()
-            dcterms.append({'term' : 'CR', 'content' : cr})
 
         if frm.cleaned_data['wsdl_url']:
             url = frm.cleaned_data['wsdl_url']
@@ -121,10 +113,9 @@ def create_ref_time_series(request, *args, **kwargs):
         else:
             url = ''
 
-        start_date_str = frm.cleaned_data["start_date"]
-        start_date_int = ts_utils.time_to_int(start_date_str)
-        start_date = datetime.datetime.fromtimestamp(start_date_int)
-        site_name, site_code, variable_name, variable_code = None, None, None, None
+        # start_date_str = frm.cleaned_data["start_date"]
+        # start_date_int = ts_utils.time_to_int(start_date_str)
+        site_name, site_code, variable_name, variable_code, short_id = None, None, None, None, None
 
         if frm.cleaned_data.get('site'):
             full_site = frm.cleaned_data['site'].replace(' ', '')
@@ -138,77 +129,61 @@ def create_ref_time_series(request, *args, **kwargs):
             variable_name = full_variable[:n]
             variable_code = full_variable[n+1:]
         reference_type = frm.cleaned_data['reference_type']
-        title = frm.cleaned_data['title']
 
-        res = hydroshare.create_resource(
-            resource_type='RefTimeSeries',
-            owner=request.user,
-            title=title,
-            keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None,
-            dublin_metadata=dcterms,
-            content=frm.cleaned_data['abstract'] or frm.cleaned_data['title'],
-            reference_type=reference_type,
-            url=url,
-            data_site_name=site_name,
-            data_site_code=site_code,
-            variable_name=variable_name,
-            variable_code=variable_code,
-            start_date=start_date,
-            end_date=now(),
+        res = hydroshare.get_resource_by_shortkey(frm.cleaned_data['short_id'])
+        res.url = url
+        res.reference_type = reference_type
+        res.save()
+
+
+        if reference_type == 'rest':
+            ts = ts_utils.time_series_from_service(url, reference_type)
+            site_code = ts['site_code']
+            site_name = ts['site_name']
+            variable_code = ts['variable_code']
+            variable_name = ts['variable_name']
+
+        hydroshare.resource.create_metadata_element(
+            res.short_id,
+            'Site',
+            name=site_name,
+            code=site_code
+        )
+
+        hydroshare.resource.create_metadata_element(
+            res.short_id,
+            'Variable',
+            name=variable_name,
+            code=variable_code
         )
         ts_utils.generate_files(res.short_id)
+        for file_name in os.listdir("theme/static/img"):
+            if 'visualization' in file_name:
+                # open(file_name, 'w')
+                os.remove("theme/static/img/"+file_name)
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeries)
 def add_dublin_core(request, page):
-    from dublincore import models as dc
+    content_model = page.get_content_model()
+    edit_resource = page_processors.check_resource_mode(request)
+    context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None)
+    extended_metadata_exists = False
+    if content_model.metadata.sites.all().first() or \
+            content_model.metadata.variables.all().first() or \
+            content_model.metadata.methods.all().first() or \
+            content_model.metadata.quality_levels.all().first():
+        extended_metadata_exists = True
 
-    class DCTerm(forms.ModelForm):
-        class Meta:
-            model = dc.QualifiedDublinCoreElement
-            fields = ['term', 'content']
-
-    cm = page.get_content_model()
-    resfiles = []
-    visfile = ''
-    for f in cm.files.all():
+    context['extended_metadata_exists'] = extended_metadata_exists
+    context['site'] = content_model.metadata.sites.all().first()
+    context['variable'] = content_model.metadata.variables.all().first()
+    context['method'] = content_model.metadata.methods.all().first()
+    context['quality_level'] = content_model.metadata.quality_levels.all().first
+    for f in content_model.files.all():
         if 'visual' in str(f.resource_file.name):
-            visfile = f
-        elif f.resource_file:
-            resfiles.append(f)
-        else:
-            f.delete()
-
-    try:
-        abstract = cm.dublin_metadata.filter(term='AB').first().content
-    except:
-        abstract = None
-
-    return {
-        'dublin_core': [t for t in cm.dublin_metadata.all().exclude(term='AB').exclude(term='DM').exclude(term='DC').exclude(term='DTS').exclude(term='T')],
-        'abstract' : abstract,
-        'short_id' : cm.short_id,
-        'resource_type': cm._meta.verbose_name,
-        'reference_type': cm.reference_type,
-        'url': cm.url,
-        'site_name': cm.data_site_name if cm.data_site_name else '',
-        'site_code' : cm.data_site_code if cm.data_site_code else '',
-        'variable_name': cm.variable_name if cm.variable_name else '',
-        'variable_code': cm.variable_code if cm.variable_code else '',
-        'visfile':visfile,
-        'resfiles': resfiles,
-        'files': cm.files.all(),
-        'dcterm_frm': DCTerm(),
-        'bag': cm.bags.first(),
-        'first_4_bags': cm.bags.all()[:4],
-        'users': User.objects.all(),
-        'groups': Group.objects.all(),
-        'owners': set(cm.owners.all()),
-        'view_users': set(cm.view_users.all()),
-        'view_groups': set(cm.view_groups.all()),
-        'edit_users': set(cm.edit_users.all()),
-        'edit_groups': set(cm.edit_groups.all()),
-    }
+            context['visfile'] = f
+    return context
 
 
 

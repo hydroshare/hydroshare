@@ -1,21 +1,21 @@
 {% load mezzanine_tags rating_tags i18n future %}
-
+<h3>{% trans "Ratings" %}</h3>
 <span id="rating-{{ rating_object.id }}">
-
-    Liked by {{ rating_sum }}
-
+     Liked by {{ rating_sum }}
 </span>
 
 {% if not rated or request.user.is_authenticated %}
-<form class="form-inline" role="form" method="post" action="{% url "rating" %}?next={{ request.path }}">
+<form class="form-inline" role="form" method="post" action="/rating/" %}">
     {% nevercache %}
     {% csrf_token %}
     {% endnevercache %}
+    <!--<ul>{{ rating_form }}</ul>-->
     {{ rating_form.content_type }}
     {{ rating_form.object_pk }}
     {{ rating_form.timestamp }}
     {{ rating_form.security_hash }}
     <input value="1" name="value" type="hidden"/>
+    <!--<input type="submit" class="hl-btn hl-btn-dark hl-btn-sm" value="{% trans "Rate" %}">-->
     <input type="submit" class="btn btn-default btn-sm" value="+1"/>
 </form>
 {% endif %}

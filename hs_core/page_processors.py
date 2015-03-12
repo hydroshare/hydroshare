@@ -90,7 +90,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'rights': content_model.metadata.rights,
                    'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
-                   'metadata_status': metadata_status
+                   'metadata_status': metadata_status,
+                   'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
+                   'supported_file_types': content_model.get_supported_upload_file_types(),
+                   'allow_multiple_file_upload': content_model.can_have_multiple_files()
 
         }
         return context
@@ -147,7 +150,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         contributor_form.number = contributor_form.initial['id']
         index += 1
 
-    RelationFormSetEdit = formset_factory(wraps(RelationForm)(partial(RelationForm, allow_edit=edit_mode)), formset=BaseRelationFormSet, extra=0)
+    RelationFormSetEdit = formset_factory(wraps(RelationForm)(partial(RelationForm, allow_edit=edit_mode)), formset=BaseFormSet, extra=0)
     relation_formset = RelationFormSetEdit(initial=content_model.metadata.relations.all().values(), prefix='relation')
 
     for relation_form in relation_formset.forms:
@@ -155,13 +158,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         relation_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'relation', relation_form.initial['id'])
         relation_form.number = relation_form.initial['id']
 
-    SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm, allow_edit=edit_mode)), formset=BaseSourceFormSet, extra=0)
+    SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm, allow_edit=edit_mode)), formset=BaseFormSet, extra=0)
     source_formset = SourceFormSetEdit(initial=content_model.metadata.sources.all().values(), prefix='source')
 
-    # IdentifierFormSetEdit = formset_factory(IdentifierForm, formset=BaseIdentifierFormSet, extra=0)
+    # IdentifierFormSetEdit = formset_factory(IdentifierForm, formset=BaseFormSet, extra=0)
     # identifier_formset = IdentifierFormSetEdit(initial=content_model.metadata.identifiers.all().values(), prefix='identifier')
     #
-    # FormatFormSetEdit = formset_factory(FormatForm, formset=BaseFormatFormSet, extra=0)
+    # FormatFormSetEdit = formset_factory(FormatForm, formset=BaseFormSet, extra=0)
     # format_formset = FormatFormSetEdit(initial=content_model.metadata.formats.all().values(), prefix='format')
 
     for source_form in source_formset.forms:
@@ -264,6 +267,19 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     return context
 
+
+def check_resource_mode(request):
+    if request.method == "GET":
+        resource_mode = request.session.get('resource-mode', None)
+        if resource_mode == 'edit':
+            edit_resource = True
+            del request.session['resource-mode']
+        else:
+            edit_resource = False
+    else:
+        edit_resource = True
+
+    return edit_resource
 
 def _get_metadata_status(resource):
     if resource.metadata.has_all_required_elements():
