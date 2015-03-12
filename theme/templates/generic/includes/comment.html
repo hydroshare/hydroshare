@@ -1,6 +1,6 @@
 {% load i18n comments_tags mezzanine_tags ratings_tags hydroshare_tags %}
 {% for comment in comments_for_thread %}
-    <div id="comment-{{ comment.id }}" class="comment media{% if comment.by_author %} comment-author{% endif %}">
+    <div id="comment-{{ comment.id }}" class="comment-author">
         {% editable comment.is_public comment.is_removed %}
             {% if not comment.is_removed and comment.is_public or request.user.is_staff %}
                 <div class="media-body">
