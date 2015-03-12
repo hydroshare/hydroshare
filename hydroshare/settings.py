@@ -258,7 +258,7 @@ INSTALLED_APPS = (
     "django.contrib.gis",
     "inplaceeditform",
     "django_nose",
-    "django_irods",
+    #"django_irods",
     "theme",
     "theme.blog_mods",
     "mezzanine.boot",
