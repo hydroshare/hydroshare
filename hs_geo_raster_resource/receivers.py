@@ -19,19 +19,8 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         metadata = kwargs['metadata']
         from collections import OrderedDict
         if(files):
-            infile = files[0]
-            # check to make sure only one file is uploaded with supported tif file type
-            if len(files) > 1:
-                validate_files_dict['are_files_valid'] = False
-                validate_files_dict['message'] = 'Only one file is allowed.'
-            elif len(files) == 1:
-                # check file extension matches with the supported tif file type
-                file_ext = os.path.splitext(infile.name)[1]
-                if file_ext not in RasterResource.get_supported_upload_file_types():
-                    validate_files_dict['are_files_valid'] = False
-                    validate_files_dict['message'] = 'Invalid file type.'
-
             import raster_meta_extract
+            infile = files[0]
             res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
 
             wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
