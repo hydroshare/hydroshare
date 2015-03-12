@@ -14,12 +14,9 @@
                   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                   <strong>Data for the following required elements are missing:</strong>
                     <ul>
-                    {% if not abstract %}
-                       <li>Abstract</li>
-                    {% endif %}
-                    {% if not keywords %}
-                       <li>Keywords</li>
-                    {% endif %}
+                    {% for element in missing_metadata_elements %}
+                        <li>{{ element }}</li>
+                    {% endfor %}
                     {% if title|stringformat:"s" == "Untitled resource" %}
                        <li>Title: needs to be changed</li>
                     {% endif %}
