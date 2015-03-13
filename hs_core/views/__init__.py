@@ -538,7 +538,7 @@ def add_dublin_core(request, page):
 
     return {
         'dublin_core' : [t for t in cm.dublin_metadata.all().exclude(term='AB')],
-        'abstract' : abstract,
+        # 'abstract' : abstract,
         'resource_type' : cm._meta.verbose_name,
         'dcterm_frm' : DCTerm(),
         'bag' : cm.bags.first(),
