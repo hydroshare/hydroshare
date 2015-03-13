@@ -3,9 +3,7 @@ __author__ = 'Hong Yi'
 ## at the end of the models.py for the import of this module
 from django.dispatch import receiver
 from hs_core.signals import *
-from hs_geo_raster_resource.models import RasterResource, RasterMetaData, BandInformation
 from forms import *
-import os
 
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
 # to populate create-resource.html template page
@@ -14,7 +12,6 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
     if(sender is RasterResource):
         files = kwargs['files']
         title = kwargs['title']
-        validate_files_dict = kwargs['validate_files']
 
         metadata = kwargs['metadata']
         from collections import OrderedDict
@@ -30,6 +27,10 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
             else:
                 box = {'coverage': {'type': 'box', 'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }}
             metadata.append(box)
+
+            # Save extended meta to metadata variable
+            ori_cov = {'OriginalCoverage': {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }}
+            metadata.append(ori_cov)
 
             # Save extended meta to metadata variable
             cellInfo = OrderedDict([
@@ -69,6 +70,8 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
             metadata.append(box)
 
             # Save extended meta to metadata variable
+            ori_cov = {'OriginalCoverage': {'value': spatial_coverage_info }}
+            metadata.append(ori_cov)
             metadata.append({'CellInformation': cell_info})
             bcount = 1
 
@@ -87,7 +90,6 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
         files = kwargs['files']
         res = kwargs['resource']
         if(files):
-            # Assume only one file in files, and that that file is a zipfile
             infile = files[0]
             import raster_meta_extract
             res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
@@ -96,9 +98,13 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
             cov_box = res.metadata.coverages.all().filter(type='box').first()
             res.metadata.update_element('coverage', cov_box.id, type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
 
+            # update extended original box coverage
+            ori_cov_box = res.metadata.originalCoverage
+            res.metadata.update_element('OriginalCoverage', ori_cov_box.id, type='box', value=res_md_dict['spatial_coverage_info']['original_coverage_info'])
+
             # update extended metadata CellInformation
             res.metadata.cellInformation.delete()
-            res.metadata.create_element('cellinformation', name=infile.name, rows=res_md_dict['cell_and_band_info']['rows'],
+            res.metadata.create_element('CellInformation', name=infile.name, rows=res_md_dict['cell_and_band_info']['rows'],
                                         columns = res_md_dict['cell_and_band_info']['columns'],
                                         cellSizeXValue = res_md_dict['cell_and_band_info']['cellSizeXValue'],
                                         cellSizeYValue = res_md_dict['cell_and_band_info']['cellSizeYValue'],
@@ -112,7 +118,7 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
             for band in res.metadata.bandInformation:
                 band.delete()
             for i in range(bcount):
-                res.metadata.create_element('bandinformation', name='Band_' + str(i+1), variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
+                res.metadata.create_element('BandInformation', name='Band_' + str(i+1), variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
 
 @receiver(pre_delete_file_from_resource, sender=RasterResource)
 def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
@@ -132,9 +138,13 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
             ])
         res.metadata.update_element('coverage', cov_box.id, type='box', value=spatial_coverage_info)
 
+        #reset extended OriginalCoverage now that the only file is deleted
+        ori_cov_box = res.metadata.originalCoverage
+        res.metadata.update_element('OriginalCoverage', ori_cov_box.id, value=spatial_coverage_info)
+
         # reset extended metadata CellInformation now that the only file is deleted
         res.metadata.cellInformation.delete()
-        res.metadata.create_element('cellinformation', name=res.title, rows=0, columns = 0,
+        res.metadata.create_element('CellInformation', name=res.title, rows=0, columns = 0,
                                         cellSizeXValue = 0, cellSizeYValue = 0,
                                         cellSizeUnit = "Unnamed",
                                         cellDataType = "Unnamed",
@@ -143,7 +153,7 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
         # reset extended metadata BandInformation now that the only file is deleted
         for band in res.metadata.bandInformation:
             band.delete()
-        res.metadata.create_element('bandinformation', name='Band_1', variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
+        res.metadata.create_element('BandInformation', name='Band_1', variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
 
 @receiver(pre_metadata_element_create, sender=RasterResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
@@ -153,6 +163,8 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         element_form = CellInfoValidationForm(request.POST)
     elif element_name == 'bandinformation':
         element_form = BandInfoValidationForm(request.POST)
+    elif element_name == 'originalcoverage':
+        element_form = OriginalCoverageSpatialForm(request.POST)
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
@@ -170,8 +182,10 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         for field_name in BandInfoValidationForm().fields:
             matching_key = [key for key in request.POST if '-'+field_name in key][0]
             form_data[field_name] = request.POST[matching_key]
-
         element_form = BandInfoValidationForm(form_data)
+    elif element_name == 'originalcoverage':
+        element_form = OriginalCoverageSpatialForm(request.POST)
+
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
