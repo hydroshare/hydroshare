@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='mpmetadata',
             name='date_released',
-            field=models.DateTimeField(default=datetime.datetime(2015, 3, 12, 17, 25, 44, 978193), help_text=b'The date of the software release (m/d/Y H:M)', null=True, verbose_name=b'Release Date', blank=True),
+            field=models.DateTimeField(default=datetime.datetime(2015, 3, 13, 16, 56, 42, 763326), help_text=b'The date of the software release (m/d/Y H:M)', null=True, verbose_name=b'Release Date', blank=True),
             preserve_default=True,
         ),
     ]

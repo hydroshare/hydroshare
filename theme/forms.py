@@ -179,7 +179,10 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         comment_was_posted.send(sender=comment.__class__, comment=comment,
                                 request=request)
         notify_emails = split_addresses(settings.COMMENTS_NOTIFICATION_EMAILS)
-        notify_emails.append(request.user.email)
+        notify_emails.append(obj.user.email)
+        reply_to_comment = comment.replied_to;
+        if reply_to_comment is not None:
+            notify_emails.append(reply_to_comment.user.email)
         if notify_emails:
             subject = ugettext("New comment for: ") + str(obj)
             context = {

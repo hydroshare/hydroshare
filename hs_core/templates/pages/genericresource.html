@@ -1,6 +1,6 @@
 {% extends 'pages/page.html' %}
 
-{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags %}
+{% load geoanalytics_tags ratings_tags pages_tags mezzanine_tags comments_tags keyword_tags hydroshare_tags crispy_forms_tags inplace_edit %}
 
 {% block main %}
 
@@ -719,6 +719,10 @@
                 </div>
             </div>
         </div>
+    <div class="rating">
+        {% rating_for cm %}
+    </div>
+
 
         {#                #}
         {# dialogs follow #}
@@ -981,7 +985,7 @@
         var file_types = $("#supported-file-types").attr('value');
         console.log(file_types)
         if(file_types!= ".*"){
-            $("#file-types").text("Only the listed file types can be uploaded " + file_types + ".");
+            $("#file-types").text("Only the listed file types can be uploaded: " + file_types + ".");
         }
         else
         {
@@ -1008,9 +1012,8 @@
         // file upload validation when file is selected for upload
         $('#add-file-input').on('change', function() {
             var file_types = $("#supported-file-types").attr('value');
-            console.log(file_types)
             if(file_types!= ".*"){
-                file_types = file_types.substring(1,file_types.length - 1).split(",");
+                file_types = file_types.split(",");
             }
             else
             {
@@ -1021,14 +1024,18 @@
             var ext = ".*";
             for (var i = 0; i < fileList.length; i++) {
                 ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
-                ext = "'." + ext +"'";
+                ext = "." + ext;
                 var ext_found = false;
-                var index;
-                for (index = 0; index < file_types.length; index++) {
-                    //console.log('ext:' + file_types[index].trim());
-                    if (ext == file_types[index].trim()) {
-                        ext_found = true;
-                        break;
+                if (ext === file_types) {
+                    ext_found = true;
+                }
+                else {
+                    var index;
+                    for (index = 0; index < file_types.length; index++) {
+                        if (ext === file_types[index].trim()) {
+                            ext_found = true;
+                            break;
+                        }
                     }
                 }
                 if (!ext_found) {

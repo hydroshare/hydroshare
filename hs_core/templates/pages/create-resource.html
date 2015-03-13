@@ -142,11 +142,16 @@
                 ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
                 ext = "." + ext;
                 var ext_found = false;
-                var index;
-                for(index=0; index< file_types.length; index++){
-                    if (ext === file_types[index]){
-                        ext_found = true;
-                        break;
+                if (ext === file_types) {
+                    ext_found = true;
+                }
+                else {
+                    var index;
+                    for (index = 0; index < file_types.length; index++) {
+                        if (ext === file_types[index].trim()) {
+                            ext_found = true;
+                            break;
+                        }
                     }
                 }
                 if(!ext_found){
