@@ -87,7 +87,29 @@ def add_file_to_resource(request, *args, **kwargs):
         if file_format_type not in [mime.value for mime in res.metadata.formats.all()]:
             res.metadata.create_element('format', value=file_format_type)
 
-    post_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, **kwargs)
+    # receivers need to change the values of this dict if file validation fails
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+    extract_metadata = request.REQUEST.get('extract-metadata', 'No')
+    if extract_metadata == 'Yes':
+        extract_metadata = True
+    else:
+        extract_metadata = False
+
+    post_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, validate_files=file_validation_dict,
+                                    extract_metadata=extract_metadata, **kwargs)
+    if 'are_files_valid' in file_validation_dict:
+        if not file_validation_dict['are_files_valid']:
+            error_message = file_validation_dict.get('message', None)
+            if not error_message:
+                error_message = "Uploaded file(s) failed validation."
+            # context = {
+            #     'file_validation_error': error_message
+            #}
+            #return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+            request.session['file_validation_error'] = error_message
+            last_url = request.META['HTTP_REFERER']
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -177,7 +199,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
         else:
             ajax_response_data = {'status': 'error'}
-            return HttpResponse(json.dumps(ajax_response_data))
+            return HttpResponse (json.dumps(ajax_response_data))
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
@@ -249,8 +271,8 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     resource_file_extensions = [os.path.splitext(f.resource_file.name)[1] for f in res.files.all()]
     if delete_file_extension not in resource_file_extensions:
         format_element = res.metadata.formats.filter(value=delete_file_mime_type).first()
-
-        res.metadata.delete_element(format_element.term, format_element.id)
+        if format_element:
+            res.metadata.delete_element(format_element.term, format_element.id)
 
     if res.public:
         if not res.can_be_public:
@@ -700,8 +722,19 @@ def create_resource_new_workflow(request, *args, **kwargs):
             content=res_title
     )
 
+    # receivers need to change the values of this dict if file validation fails
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     # Send post-create resource signal
-    post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, **kwargs)
+    post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata,
+                              validate_files=file_validation_dict, **kwargs)
+
+    if 'are_files_valid' in file_validation_dict:
+        if not file_validation_dict['are_files_valid']:
+            error_message = file_validation_dict.get('message', None)
+            if not error_message:
+                error_message = "Uploaded file(s) failed validation."
+
+            request.session['file_validation_error'] = error_message
 
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'resource': resource})

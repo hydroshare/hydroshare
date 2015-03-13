@@ -4,17 +4,15 @@ from models import TimeSeriesResource
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
 from forms import *
 from hs_core import page_processors
-from hs_core.views import add_dublin_core
 
 
 @processor_for(TimeSeriesResource)
 def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
-
     if not edit_resource:
         # get the context from hs_core
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None, request=request)
         extended_metadata_exists = False
         if content_model.metadata.site or \
                 content_model.metadata.variable or \
@@ -96,11 +94,4 @@ def landing_page(request, page):
         context['processing_level_form'] = processing_level_form
         context['timeseries_result_form'] = timeseries_result_form
 
-    dublin_core_context = add_dublin_core(request, page)
-    context.update(dublin_core_context)
-
     return context
-
-# @processor_for(TimeSeriesResource)
-# def ts_add_dublin_core(request, page):
-#     return add_dublin_core(request, page)
