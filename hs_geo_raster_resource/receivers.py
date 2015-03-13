@@ -5,6 +5,7 @@ from django.dispatch import receiver
 from hs_core.signals import *
 from hs_geo_raster_resource.models import RasterResource, RasterMetaData, BandInformation
 from forms import *
+import os
 
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
 # to populate create-resource.html template page
@@ -13,13 +14,13 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
     if(sender is RasterResource):
         files = kwargs['files']
         title = kwargs['title']
+        validate_files_dict = kwargs['validate_files']
 
         metadata = kwargs['metadata']
         from collections import OrderedDict
         if(files):
-            # Assume only one file in files, and that that file is a zipfile
-            infile = files[0]
             import raster_meta_extract
+            infile = files[0]
             res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
 
             wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']

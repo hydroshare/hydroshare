@@ -8,11 +8,10 @@
     {% if extended_metadata_exists %}
         <div class="row">
             <div class="col-md-12">
-                <h2>Extended Metadata</h2>
                 <div>
                     {% if site %}
                         <h4><strong>Site:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Code:</strong></div>
                             <div class="col-sm-8">{{ site.site_code }}</div>
@@ -39,13 +38,13 @@
                                 <div class="col-sm-8">{{ site.site_type }}</div>
                             </div>
                         {% endif %}
-                    <hr>
+                    <hr style="border:0">
                     {%  endif %}
                 </div>
                 <div>
                     {% if variable %}
                         <h4><strong>Variable:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Code:</strong></div>
                             <div class="col-sm-8">{{ variable.variable_code }}</div>
@@ -74,13 +73,13 @@
                                 <div class="col-sm-8">{{ variable.speciation }}</div>
                             </div>
                         {% endif %}
-                    <hr>
+                    <hr style="border:0">
                     {% endif %}
                 </div>
                 <div>
                     {% if method %}
                         <h4><strong>Method:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Code:</strong></div>
                             <div class="col-sm-8">{{ method.method_code }}</div>
@@ -105,13 +104,13 @@
                                 <div class="col-sm-8">{{ method.method_link }}</div>
                             </div>
                         {% endif %}
-                    <hr>
+                    <hr style="border:0">
                     {% endif %}
                 </div>
                 <div>
                     {% if processing_level %}
                         <h4><strong>Processing Level:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Code:</strong></div>
                             <div class="col-sm-8">{{ processing_level.processing_level_code }}</div>
@@ -128,13 +127,13 @@
                                 <div class="col-sm-8">{{ processing_level.explanation }}</div>
                             </div>
                         {% endif %}
-                    <hr>
+                    <hr style="border:0">
                     {% endif %}
                 </div>
                 <div>
                     {% if timeseries_result %}
                         <h4><strong>Time Series Result:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Units Type:</strong></div>
                             <div class="col-sm-8">{{ timeseries_result.units_type }}</div>
@@ -163,10 +162,11 @@
                             <div class="col-sm-4"><strong>Aggregation Statistics:</strong></div>
                             <div class="col-sm-8">{{ timeseries_result.aggregation_statistics }}</div>
                         </div>
-                    <hr>
+
                     {% endif %}
                 </div>
             </div>
+        </div>
     {%  endif %}
 {%  endblock %}
 {%  block modal_add_file %}

@@ -7,11 +7,10 @@
     {% if extended_metadata_exists %}
         <div class="row">
             <div class="col-md-12">
-                <h2>Extended Metadata</h2>
                 <div>
                     {% if cellInformation %}
                         <h4><strong>Cell Information:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Rows:</strong></div>
                             <div class="col-sm-8">{{ cellInformation.rows }}</div>
@@ -42,14 +41,14 @@
                                 <div class="col-sm-8">{{ cellInformation.noDataValue }}</div>
                             </div>
                         {% endif %}
-                    <hr>
+                    <hr style="border:0">
                     {% endif %}
                 </div>
 
                 <div>
                     {% if bandInformation %}
                         <h4><strong>Band Information:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         {% for band in bandInformation %}
                             <div class="row">
                                 <div class="col-sm-4"><strong>BandName:</strong></div>
@@ -76,7 +75,6 @@
                                 </div>
                             {% endif %}
                         {% endfor %}
-                    <hr>
                     {% endif %}
                 </div>
             </div>
