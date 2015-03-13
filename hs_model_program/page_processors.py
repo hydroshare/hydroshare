@@ -4,6 +4,7 @@ from models import *
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
 from forms import *
 from hs_core import page_processors
+from hs_core.views import *
 
 @processor_for(ModelProgramResource)
 # when the resource is created this page will be shown
@@ -42,7 +43,8 @@ def landing_page(request, page):
 
         context['resource_type'] = 'Model Program Resource'
         context['output_form'] = output_form
-
+    hs_core_dublin_context = add_dublin_core(request, page)
+    context.update(hs_core_dublin_context)
 
 
     return context
