@@ -205,9 +205,9 @@ class TimeSeriesResource(Page, AbstractResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # final phase of this resource type implementation will support 3 file types
-        return (".csv", ".xml", ".sqlite")
+        #return (".csv", ".xml", ".sqlite")
         # phase-1 of implementation supports only sqlite file
-        #return (".sqlite")
+        return (".sqlite",)
 
 
     @classmethod
