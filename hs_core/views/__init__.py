@@ -95,19 +95,16 @@ def add_file_to_resource(request, *args, **kwargs):
     else:
         extract_metadata = False
 
-    post_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, validate_files=file_validation_dict,
+    post_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, user=request.user,
+                                    validate_files=file_validation_dict,
                                     extract_metadata=extract_metadata, **kwargs)
     if 'are_files_valid' in file_validation_dict:
         if not file_validation_dict['are_files_valid']:
             error_message = file_validation_dict.get('message', None)
             if not error_message:
                 error_message = "Uploaded file(s) failed validation."
-            # context = {
-            #     'file_validation_error': error_message
-            #}
-            #return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
             request.session['file_validation_error'] = error_message
-            last_url = request.META['HTTP_REFERER']
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     resource_modified(res, request.user)
@@ -726,7 +723,7 @@ def create_resource_new_workflow(request, *args, **kwargs):
     # receivers need to change the values of this dict if file validation fails
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     # Send post-create resource signal
-    post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata,
+    post_create_resource.send(sender=res_cls, resource=resource, user=request.user ,  metadata=metadata,
                               validate_files=file_validation_dict, **kwargs)
 
     if 'are_files_valid' in file_validation_dict:

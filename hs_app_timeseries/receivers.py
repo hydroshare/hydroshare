@@ -1,4 +1,3 @@
-
 __author__ = 'pabitra'
 
 ## Note: this module has been imported in the models.py in order to receive signals
@@ -6,10 +5,10 @@ __author__ = 'pabitra'
 
 from django.dispatch import receiver
 from hs_core.signals import *
+from hs_core.hydroshare.utils import *
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_app_timeseries.models import TimeSeriesResource
 from forms import *
-import os
 import sqlite3
 import os
 
@@ -58,6 +57,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
     validate_files_dict = kwargs['validate_files']
     extract_metadata = kwargs['extract_metadata']
+    user = kwargs['user']
     # then extract metadata from the just uploaded file
     res_file = resource.files.all()[0] if resource.files.all() else None
     if res_file:
@@ -70,8 +70,10 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                     # first delete relevant metadata elements
                     _delete_extracted_metadata(resource)
                     _extract_metadata(resource, res_file.resource_file.file)
+                    resource_modified(resource, user)
             else:
-                file_name = os.path.basename(res_file.resource_file.name)
+                # delete the invalid file just uploaded
+                #file_name = os.path.basename(res_file.resource_file.name)
                 #delete_resource_file(resource.short_id, file_name)
                 validate_files_dict['are_files_valid'] = False
                 validate_files_dict['message'] = err_message
@@ -81,6 +83,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
 def post_create_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
     validate_files_dict = kwargs['validate_files']
+    user = kwargs['user']
 
     res_file = resource.files.all()[0] if resource.files.all() else None
     if res_file:
@@ -90,6 +93,7 @@ def post_create_resource_handler(sender, **kwargs):
             err_message = _validate_odm2_db_file(res_file.resource_file.file)
             if not err_message:
                 _extract_metadata(resource, res_file.resource_file.file)
+                resource_modified(resource, user)
             else:
                 validate_files_dict['are_files_valid'] = False
                 validate_files_dict['message'] = err_message + " (Metadata was not extracted)"
