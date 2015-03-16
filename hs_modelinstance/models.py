@@ -174,8 +174,6 @@ class ModelInstanceMetaData(CoreMetaData):
             hsterms_executed_by_url.text = 'http://%s%s'%(get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
             hsterms_executed_by_url.text = 'http://%s%s'%(get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
 
-            # {{ request.get_host }}/resource/{{ executed_by.model_program.short_id }}
-
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
 import receivers
