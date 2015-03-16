@@ -6,7 +6,15 @@ from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
 from django.forms.models import formset_factory
-from functools import partial, wraps
+
+class OriginalCoverageSpatialForm(forms.Form):
+    name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
+    projection = forms.CharField(max_length=100, required=False, label='Coordinate System/Geographic Projection')
+    units = forms.CharField(max_length=50, label='Coordinate Units')
+    northLimit = forms.DecimalField(label='North Longitude', widget=forms.TextInput())
+    eastLimit = forms.DecimalField(label='East Latitude', widget=forms.TextInput())
+    southLimit = forms.DecimalField(label='South Longitude', widget=forms.TextInput())
+    westLimit = forms.DecimalField(label='West Latitude', widget=forms.TextInput())
 
 class CellInfoFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
@@ -108,7 +116,7 @@ class BandInfoFormHelper(BandBaseFormHelper):
 class BandInfoForm(ModelForm):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
         super(BandInfoForm, self).__init__(*args, **kwargs)
-        self.helper = BandInfoFormHelper(res_short_id, element_id, element_name='bandinformation')
+        self.helper = BandInfoFormHelper(res_short_id, element_id, element_name='BandInformation')
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit
@@ -155,7 +163,7 @@ class BaseBandInfoFormSet(BaseFormSet):
         bands_data = []
         for form in self.forms:
             band_data = {k: v for k, v in form.cleaned_data.iteritems()}
-            bands_data.append({'bandinformation': band_data})
+            bands_data.append({'BandInformation': band_data})
         return bands_data
 
 BandInfoFormSet = formset_factory(BandInfoForm, formset=BaseBandInfoFormSet, extra=0)
