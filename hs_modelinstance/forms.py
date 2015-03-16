@@ -96,9 +96,9 @@ class ExecutedByForm(ModelForm):
     class Meta:
         model = ExecutedBy
         # fields = ['name','model_program']
-        exclude = ['content_object','model_program']
+        exclude = ['content_object','model_program_fk']
         #widgets = {'name': forms.TextInput()}
 
 class ExecutedByValidationForm(forms.Form):
     name = forms.CharField(max_length=200)
-    model_program = forms
+    model_program_fk = forms
