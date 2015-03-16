@@ -459,6 +459,7 @@ def my_resources(request, page):
     # IP Address for boot2docker: varies
     # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
+
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
         res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
