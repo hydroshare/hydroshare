@@ -22,15 +22,16 @@ def landing_page(request, page):
     context['extended_metadata_exists'] = extended_metadata_exists
     if not edit_resource:
         # get the context from content_model
-        ori_coverage_data_dict = {}
-        ori_coverage_data_dict['name'] = content_model.metadata.originalCoverage.value.get('name', None)
-        ori_coverage_data_dict['units'] = content_model.metadata.originalCoverage.value['units']
-        ori_coverage_data_dict['projection'] = content_model.metadata.originalCoverage.value.get('projection', None)
-        ori_coverage_data_dict['northlimit'] = content_model.metadata.originalCoverage.value['northlimit']
-        ori_coverage_data_dict['eastlimit'] = content_model.metadata.originalCoverage.value['eastlimit']
-        ori_coverage_data_dict['southlimit'] = content_model.metadata.originalCoverage.value['southlimit']
-        ori_coverage_data_dict['westlimit'] = content_model.metadata.originalCoverage.value['westlimit']
-        context['originalCoverage'] = ori_coverage_data_dict
+        if content_model.metadata.originalCoverage:
+            ori_coverage_data_dict = {}
+            ori_coverage_data_dict['name'] = content_model.metadata.originalCoverage.value.get('name', None)
+            ori_coverage_data_dict['units'] = content_model.metadata.originalCoverage.value['units']
+            ori_coverage_data_dict['projection'] = content_model.metadata.originalCoverage.value.get('projection', None)
+            ori_coverage_data_dict['northlimit'] = content_model.metadata.originalCoverage.value['northlimit']
+            ori_coverage_data_dict['eastlimit'] = content_model.metadata.originalCoverage.value['eastlimit']
+            ori_coverage_data_dict['southlimit'] = content_model.metadata.originalCoverage.value['southlimit']
+            ori_coverage_data_dict['westlimit'] = content_model.metadata.originalCoverage.value['westlimit']
+            context['originalCoverage'] = ori_coverage_data_dict
         context['cellInformation'] = content_model.metadata.cellInformation
         context['bandInformation'] = content_model.metadata.bandInformation
     else:
