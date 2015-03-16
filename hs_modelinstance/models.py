@@ -9,7 +9,10 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
 from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import get_current_site
+<<<<<<< HEAD
 
+=======
+>>>>>>> Bagit file creation was failing due to error in model.get_xml() [#191]
 
 # todo: replace with ModelProgramResource
 from hs_core.models import GenericResource
@@ -70,13 +73,11 @@ class ExecutedBy(AbstractMetaDataElement):
         return mp_fk
 
 
-
     @classmethod
     def update(cls, element_id, **kwargs):
         shortid = kwargs['name']
         obj = get_object_or_404(GenericResource,short_id=shortid)
         kwargs['model_program_fk'] = obj
-
 
         executed_by = ExecutedBy.objects.get(id=element_id)
         if executed_by:
@@ -177,6 +178,7 @@ class ModelInstanceMetaData(CoreMetaData):
             hsterms_executed_by_name.text = self.executed_by.name
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_url.text = 'http://%s%s'%(get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
+
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
