@@ -44,7 +44,7 @@ class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
     name = models.CharField(max_length=500, choices=(('-','    '),))
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True)
-    model_program = models.ForeignKey('hs_core.GenericResource', null=True, blank=True)
+    model_program_fk = models.ForeignKey('hs_core.GenericResource', null=True, blank=True)
     #, default=None)
     #choices=(('-','    '),))
 
@@ -173,6 +173,8 @@ class ModelInstanceMetaData(CoreMetaData):
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_url.text = 'http://%s%s'%(get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
             hsterms_executed_by_url.text = 'http://%s%s'%(get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
+
+            # {{ request.get_host }}/resource/{{ executed_by.model_program.short_id }}
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
