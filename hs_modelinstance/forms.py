@@ -6,11 +6,7 @@ from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
 from hs_core.hydroshare import users
-from django.shortcuts import get_object_or_404
-from hs_core.models import GenericResource
 
-
-#ModelOutput element forms
 class ModelOutputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
@@ -73,14 +69,12 @@ class ExecutedByForm(ModelForm):
         self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy')
 
 
-        # todo: Change with ModelProgramResource once mp is pulled into develop
-        mp_resource = users.get_resource_list(user=owner,types=['GenericResource'])
+        mp_resource = users.get_resource_list(user=owner,types=['ModelProgramResource'])
 
         CHOICES = tuple([('Unknown','Unknown')] + [(r.short_id,r.title) for r in mp_resource.values()[0]])
 
         # Set the choice lists as the file names in the content model
         self.fields['name'].choices = CHOICES
-        # self.fields['model_program'].choices = CHOICES
 
 
 

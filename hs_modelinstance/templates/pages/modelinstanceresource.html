@@ -30,16 +30,22 @@
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
 
-                            <div class="col-sm-4"><strong>Model Program used for execution:</strong></div>
-                            <div class="col-sm-8">{{ executed_by.name }}</div>
 
+                        <div class="col-sm-4"><strong>Name</strong></div>
+                        <div class="col-sm-8">{{ executed_by.model_program_fk.title }}</div>
 
-                            <div class="col-sm-4"><strong>Program Title</strong></div>
-                            <div class="col-sm-8">{{ executed_by.model_program.title }}</div>
+                        <div class="col-sm-4"><strong>Version</strong></div>
+                        <div class="col-sm-8">
+                            {% if executed_by.model_program_fk.version.strip %}
+                                {{ executed_by.model_program_fk.version }}
+                            {% else %}
+                                Not Provided
+                            {% endif %}
+                        </div>
 
-                            <div class="col-sm-4"><strong>Program URL</strong></div>
+                        <div class="col-sm-4"><strong>Resource URL</strong></div>
+                       <div class="col-sm-8"> <a id="permalink" href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/">http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a></div>
 
-                           <div class="col-sm-8"> <a id="permalink" href="http://{{ request.get_host }}/resource/{{ executed_by.model_program.short_id }}/">http://{{ request.get_host }}/resource/{{ executed_by.model_program.short_id }}/</a></div>
 
                         </div>
 
