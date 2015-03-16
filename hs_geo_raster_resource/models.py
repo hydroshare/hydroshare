@@ -163,6 +163,16 @@ class RasterResource(Page, AbstractResource):
         md = RasterMetaData()
         return self._get_metadata(md)
 
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # only tif file type is supported
+        return (".tif")
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        # can have only 1 file
+        return False
+
     def can_add(self, request):
         return AbstractResource.can_add(self, request)
 

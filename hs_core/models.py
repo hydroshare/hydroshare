@@ -10,7 +10,7 @@ from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
 from uuid import uuid4
 from mezzanine.core.models import Ownable
-from mezzanine.generic.fields import CommentsField
+from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.conf import settings as s
 from mezzanine.generic.models import Keyword, AssignedKeyword
 import os.path
@@ -1370,6 +1370,7 @@ class AbstractResource(ResourcePermissionsMixin):
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
+    rating = RatingField()
 
     # this is to establish a relationship between a resource and
     # any metadata container object (e.g., CoreMetaData object)
@@ -1471,6 +1472,25 @@ class AbstractResource(ResourcePermissionsMixin):
     def can_be_public(self):
         return True
 
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        # to allow only specific file types return a tuple of those file extensions (ex: return (".csv", ".txt"))
+        # to not allow any file upload, return a empty tuple ( return ())
+
+        # by default all file types are supported
+        return (".*")
+
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        # to allow resource to have only 1 file or no file, return False
+
+        # resource by default can have multiple files
+        return True
+
+
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
@@ -1521,6 +1541,19 @@ class GenericResource(Page, AbstractResource):
             return True
 
         return False
+
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # all file types are supported
+        return ('.*')
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        return True
+
+    @classmethod
+    def can_have_files(cls):
+        return True
 
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):

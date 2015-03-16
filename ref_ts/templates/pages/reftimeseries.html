@@ -6,11 +6,10 @@
     {% if extended_metadata_exists %}
         <div class="row">
             <div class="col-md-12">
-                <h2>Extended Metadata</h2>
                 <div>
                     {% if site %}
                         <h4><strong>Site:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Code:</strong></div>
                             <div class="col-sm-8">{{ site.code }}</div>
@@ -19,13 +18,13 @@
                             <div class="col-sm-4"><strong>Name:</strong></div>
                             <div class="col-sm-8">{{ site.name }}</div>
                         </div>
-                    <hr>
+                    <hr style="border:0">
                     {%  endif %}
                 </div>
                 <div>
                     {% if variable %}
                         <h4><strong>Variable:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Code:</strong></div>
                             <div class="col-sm-8">{{ variable.code }}</div>
@@ -35,30 +34,29 @@
                             <div class="col-sm-8">{{ variable.name }}</div>
                         </div>
                         {% endif %}
-                    <hr>
+                    <hr style="border:0">
                 </div>
                 <div>
                     {% if method %}
                         <h4><strong>Method:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Code:</strong></div>
                             <div class="col-sm-8">{{ method.value }}</div>
                         </div>
-                    <hr>
+                    <hr style="border:0">
                     {% endif %}
                 </div>
                 <div>
                     {% if quality_level %}
                         <h4><strong>Quality Control Level:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         {% if quality_level.value %}
                             <div class="row">
                                 <div class="col-sm-4"><strong>Definition:</strong></div>
                                 <div class="col-sm-8">{{ quality_level.value }}</div>
                             </div>
                         {% endif %}
-                    <hr>
                     {% endif %}
                 </div>
     {%  endif %}

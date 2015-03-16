@@ -7,6 +7,7 @@ from forms import *
 from hs_core import page_processors
 from hs_core.forms import MetaDataElementDeleteForm
 from django.forms.models import formset_factory
+from hs_core.views import *
 
 @processor_for(NetcdfResource)
 # when the resource is created this page will be shown
@@ -42,5 +43,6 @@ def landing_page(request, page):
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
         context['variable_formset'] = variable_formset
         context['add_variable_modal_form'] = add_variable_modal_form
-
+    hs_core_dublin_context = add_dublin_core(request, page)
+    context.update(hs_core_dublin_context)
     return context

@@ -275,7 +275,7 @@ INSTALLED_APPS = (
     "autocomplete_light",
     "jquery_ui",
     "tastypie",
-    #"tastypie_swagger",
+    # "tastypie_swagger",
     "ga_ows",
     "ga_resources",
     "dublincore",
@@ -290,6 +290,7 @@ INSTALLED_APPS = (
     "hs_app_timeseries",
     "widget_tweaks",
     "hs_app_netCDF",
+    "hs_model_program",
 )
 
 # List of processors used by RequestContext to populate the context.

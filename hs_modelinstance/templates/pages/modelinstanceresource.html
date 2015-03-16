@@ -8,11 +8,10 @@
     {% if extended_metadata_exists %}
         <div class="row">
             <div class="col-md-12">
-                <h2>Model Instance Metadata</h2>
                 <div>
                     {% if model_output %}
                         <h4><strong>Model Output:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Includes output files?</strong></div>
                             {% if model_output.includes_output == True %}
@@ -22,18 +21,17 @@
                             {% endif %}
 
                         </div>
-                    <hr>
+                    <hr style="border:0">
                     {%  endif %}
                 </div>
                 <div>
                     {% if executed_by.name %}
                         <h4><strong>Executed By:</strong></h4>
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Model Program used for execution:</strong></div>
                             <div class="col-sm-8">{{ executed_by.name }}</div>
                         </div>
-                    <hr>
                     {% endif %}
                 </div>
             </div>
