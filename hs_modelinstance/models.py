@@ -9,8 +9,8 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
 from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import get_current_site
-
 from hs_model_program.models import ModelProgramResource
+
 
 
 # extended metadata elements for Model Instance resource type
@@ -44,6 +44,7 @@ class ExecutedBy(AbstractMetaDataElement):
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True)
 
 
+
     def __unicode__(self):
         self.name
 
@@ -66,7 +67,6 @@ class ExecutedBy(AbstractMetaDataElement):
         shortid = kwargs['name']
         obj = get_object_or_404(ModelProgramResource,short_id=shortid)
         kwargs['model_program_fk'] = obj
-
         executed_by = ExecutedBy.objects.get(id=element_id)
         if executed_by:
             for key, value in kwargs.iteritems():

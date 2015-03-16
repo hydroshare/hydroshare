@@ -70,8 +70,8 @@ class ExecutedByForm(ModelForm):
         self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy')
 
 
-        # todo: Change with ModelProgramResource once mp is pulled into develop
         mp_resource = users.get_resource_list(user=owner,types=['ModelProgramResource'])
+
 
         CHOICES = tuple([('Unknown','Unknown')] + [(r.short_id,r.title) for r in mp_resource.values()[0]])
 
