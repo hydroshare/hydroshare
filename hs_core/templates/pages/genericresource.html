@@ -450,13 +450,14 @@
                         </a>
                     {% endfor %}
 
-                    {#                      {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
                     {% if page.perms.change %}
                         {#                        <td><button class="btn btn-success"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>#}
-                        <td><a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
-                               multiple="multiple">
-                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
-                        </a></td>
+                        {% if cm|resource_type != "Geographic Raster Resource" or not cm.files.all %}
+                            <td><a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
+                                   multiple="multiple">
+                                <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
+                            </a></td>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>

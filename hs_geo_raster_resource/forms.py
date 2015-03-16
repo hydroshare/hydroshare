@@ -11,8 +11,8 @@ class OriginalCoverageSpatialForm(forms.Form):
     name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
     projection = forms.CharField(max_length=100, required=False, label='Coordinate System/Geographic Projection')
     units = forms.CharField(max_length=50, label='Coordinate Units')
-    northLimit = forms.DecimalField(label='North Latitude', widget=forms.TextInput())
-    eastLimit = forms.DecimalField(label='East Longitude', widget=forms.TextInput())
+    northLimit = forms.DecimalField(label='North Longitude', widget=forms.TextInput())
+    eastLimit = forms.DecimalField(label='East Latitude', widget=forms.TextInput())
     southLimit = forms.DecimalField(label='South Longitude', widget=forms.TextInput())
     westLimit = forms.DecimalField(label='West Latitude', widget=forms.TextInput())
 
