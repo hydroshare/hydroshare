@@ -409,7 +409,7 @@ def my_resources(request, page):
     import sys
     sys.path.append("/home/docker/pycharm-debug")
     import pydevd
-    pydevd.settrace('144.39.162.159', port=21000, suspend=False)
+    pydevd.settrace('129.123.51.152', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():

@@ -8,7 +8,7 @@ from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
 from django.shortcuts import get_object_or_404
-
+from django.contrib.sites.models import get_current_site
 
 # todo: replace with ModelProgramResource
 from hs_core.models import GenericResource
@@ -44,7 +44,7 @@ class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
     name = models.CharField(max_length=500, choices=(('-','    '),))
     #url = models.URLField(blank=True,default='')
-    model_program = models.ForeignKey('hs_core.GenericResource', null=True, blank=True)
+    model_program_fk = models.ForeignKey('hs_core.GenericResource', null=True, blank=True)
     #, default=None)
     #choices=(('-','    '),))
 
@@ -57,14 +57,21 @@ class ExecutedBy(AbstractMetaDataElement):
     def create(cls, **kwargs):
         shortid = kwargs['name']
         obj = get_object_or_404(GenericResource,short_id=shortid)
-        kwargs['model_program'] = obj
-        return ExecutedBy.objects.create(**kwargs)
+        kwargs['model_program_fk'] = obj
+        metadata_obj = kwargs['content_object']
+        title = obj.title
+        mp_fk = ExecutedBy.objects.create(model_program_fk=obj,
+                                          name=title,
+                                          content_object=metadata_obj)
+        # mp_fk.save()
+        return mp_fk
+        # return ExecutedBy.objects.create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         shortid = kwargs['name']
         obj = get_object_or_404(GenericResource,short_id=shortid)
-        kwargs['model_program'] = obj
+        kwargs['model_program_fk'] = obj
 
         executed_by = ExecutedBy.objects.get(id=element_id)
         if executed_by:
@@ -164,7 +171,10 @@ class ModelInstanceMetaData(CoreMetaData):
             hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramName' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_name.text = self.executed_by.name
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_url.text = self.executed_by.url
+            # hsterms_executed_by_url.text = self.executed_by.url
+            hsterms_executed_by_url.text = 'http://%s%s'%(get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
+
+            # {{ request.get_host }}/resource/{{ executed_by.model_program.short_id }}
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
