@@ -10,9 +10,7 @@ from hs_core.models import AbstractResource, resource_processor, CoreMetaData, A
 from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import get_current_site
 
-# todo: replace with ModelProgramResource
-from hs_core.models import GenericResource
-from hs_app_timeseries.models import TimeSeriesResource
+from hs_model_program.models import ModelProgramResource
 
 
 # extended metadata elements for Model Instance resource type
@@ -43,11 +41,7 @@ class ModelOutput(AbstractMetaDataElement):
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
     name = models.CharField(max_length=500, choices=(('-','    '),))
-    #url = models.URLField(blank=True,default='')
-    model_program_fk = models.ForeignKey('hs_core.GenericResource', null=True, blank=True)
-    #, default=None)
-    #choices=(('-','    '),))
-
+    model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True)
 
 
     def __unicode__(self):
@@ -56,7 +50,7 @@ class ExecutedBy(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         shortid = kwargs['name']
-        obj = get_object_or_404(GenericResource,short_id=shortid)
+        obj = get_object_or_404(ModelProgramResource,short_id=shortid)
         kwargs['model_program_fk'] = obj
         metadata_obj = kwargs['content_object']
         title = obj.title
@@ -70,7 +64,7 @@ class ExecutedBy(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         shortid = kwargs['name']
-        obj = get_object_or_404(GenericResource,short_id=shortid)
+        obj = get_object_or_404(ModelProgramResource,short_id=shortid)
         kwargs['model_program_fk'] = obj
 
         executed_by = ExecutedBy.objects.get(id=element_id)
@@ -169,7 +163,7 @@ class ModelInstanceMetaData(CoreMetaData):
             hsterms_executed_by = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramName' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_name.text = self.executed_by.name
+            hsterms_executed_by_name.text = self.executed_by.model_program_fk.title
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_url.text = 'http://%s%s'%(get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
 

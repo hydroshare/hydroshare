@@ -433,6 +433,10 @@ def my_resources(request, page):
     # IP Address for boot2docker: varies
     # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('129.123.51.152', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
