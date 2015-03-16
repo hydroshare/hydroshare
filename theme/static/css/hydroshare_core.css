@@ -839,12 +839,7 @@ li.account p{
     background-color: transparent;
     border: 0;
 }
-#txt-title{
-    width: calc(100% - 100px);
-    font-size: 30px;
-    margin-bottom: 30px;
-    height: auto;
-}
+
 #contact-table .icon-button{
     float:left;
     background-color: transparent;
@@ -930,9 +925,9 @@ span.remove{
     overflow-x:hidden;
 }
 #txt-title{
-    width: calc(100% - 100px);
-    font-size: 30px;
-    margin-bottom: 30px;
+    width: calc(100% - 10px);
+    font-size: 27px;
+    /*margin-bottom: 30px;*/
     height: auto;
 }
 
@@ -1031,7 +1026,7 @@ html, body{
     width: calc(100% - 97px);
     padding: 1px;
     border: 1px solid #CCC;
-    height: 30px;
+    height: 60px;
     margin-top: 1px;
     margin-left: -1px;
     -webkit-border-radius: 3px;
@@ -1349,7 +1344,7 @@ div#sharing-status {
 }
 
 .info-group {
-    margin-top: -20px;
+
 }
 
 .tag-list {
