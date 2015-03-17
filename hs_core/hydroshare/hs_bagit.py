@@ -69,20 +69,11 @@ def create_bag(resource):
             for chunk in f.resource_file.chunks():
                 out.write(chunk)
 
-
-    #tastypie_module = resource._meta.app_label + '.api'        # the module name should follow this convention
-    #tastypie_name = resource._meta.object_name + 'Resource'    # the classname of the Resource seralizer
-    #tastypie_api = importlib.import_module(tastypie_module)    # import the module
-    #serializer = getattr(tastypie_api, tastypie_name)()        # make an instance of the tastypie resource       
-
     with open(bagit_path + '/resourcemetadata.xml', 'w') as out:
         out.write(resource.metadata.get_xml())
 
-        #import utils as hs_utils
-        #out.write(hs_utils.serialize_science_metadata_xml(resource))
+
     current_site_url = hs_core_utils.current_site_url()
-    #hs_res_url = os.path.join('http://hydroshare.org/resources', resource.title)
-    #hs_res_url = os.path.join('{hs_url}/resources'.format(hs_url=current_site_url), resource.title)
     hs_res_url = '{hs_url}/resources/{res_id}/{time_stamp}/data'.format(hs_url=current_site_url,
                                                                         res_id=resource.short_id,
                                                                         time_stamp=arrow.get(resource.updated).format(DATE_FORMAT))
@@ -90,8 +81,7 @@ def create_bag(resource):
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
 
     ##make the resource map:
-    #utils.namespaces['hsterms'] = Namespace('http://hydroshare.org/hydroshare/terms/')
-    utils.namespaces['hsterms'] = Namespace('{hs_url}/hydroshare/terms/'.format(hs_url=current_site_url))
+    utils.namespaces['hsterms'] = Namespace('{hs_url}/hsterms/'.format(hs_url=current_site_url))
     utils.namespaceSearchOrder.append('hsterms')
     utils.namespaces['citoterms'] = Namespace('http://purl.org/spar/cito/')
     utils.namespaceSearchOrder.append('citoterms')
@@ -110,8 +100,8 @@ def create_bag(resource):
     resMetaFile = AggregatedResource(metadata_url)
     resMetaFile._dc.title = "Dublin Core science metadata document describing the HydroShare resource"
     resMetaFile._citoterms.documents = ag_url
-    resMetaFile._dcterms.isAggregatedBy = ag_url
-    resMetaFile._dcterms.format = "application/rdf+xml"
+    resMetaFile._ore.isAggregatedBy = ag_url
+    resMetaFile._dc.format = "application/rdf+xml"
 
 
     #Create a description of the content file and add it to the aggregation
@@ -119,14 +109,12 @@ def create_bag(resource):
     resFiles = []
     for n, f in enumerate(files):
         filename = os.path.basename(f.resource_file.name)
-        #resFiles.append(AggregatedResource(os.path.join(contents_path, filename)))
         resFiles.append(AggregatedResource(os.path.join('{hs_url}/resources/{res_id}/{update_date}/data/contents'.format(
             hs_url=current_site_url, res_id=resource.short_id,
             update_date=arrow.get(resource.updated).format(DATE_FORMAT)), filename)))
 
-        resFiles[n]._dcterms.isAggregatedBy = ag_url
-        #resFiles[n]._dcterms.format = "text/csv"   # change eventually utils.get_file_mime_type(file.name)
-        resFiles[n]._dcterms.format = hs_core_utils.get_file_mime_type(filename)
+        resFiles[n]._ore.isAggregatedBy = ag_url
+        resFiles[n]._dc.format = hs_core_utils.get_file_mime_type(filename)
 
     #Add the resource files to the aggregation
     a.add_resource(resMetaFile)
@@ -136,13 +124,13 @@ def create_bag(resource):
     #Register a serializer with the aggregation.  The registration creates a new ResourceMap, which needs a URI
     serializer = RdfLibSerializer('xml')
     resMap = a.register_serialization(serializer, res_map_url)
-    resMap._dcterms.identifier = resource.short_id  #"resource_identifier"
+    resMap._dc.identifier = resource.short_id  #"resource_identifier"
 
     #Fetch the serialization
     remdoc = a.get_serialization()
 
     with open(bagit_path + '/resourcemap.xml', 'w') as out:
-         out.write(remdoc.data)
+        out.write(remdoc.data)
 
     bagit.make_bag(bagit_path, checksum=['md5'], bag_info={
         'title': resource.title,
