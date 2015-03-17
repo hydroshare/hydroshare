@@ -4,6 +4,7 @@ from django.core.files import File
 import os
 import shutil
 from hs_core.models import Bags, ResourceFile
+
 from mezzanine.conf import settings
 import importlib
 import zipfile
@@ -40,6 +41,8 @@ def create_bag(resource):
 
     :return: the hs_core.models.Bags instance associated with the new bag.
     """
+    from . import utils as hs_core_utils
+    DATE_FORMAT = "YYYY-MM-DDThh:mm:ssTZD"
 
     dest_prefix = getattr(settings, 'BAGIT_TEMP_LOCATION', '/tmp/hydroshare/')
     bagit_path = os.path.join(dest_prefix, resource.short_id, arrow.get(resource.updated).format("YYYY.MM.DD.HH.mm.ss"))
@@ -77,12 +80,18 @@ def create_bag(resource):
 
         #import utils as hs_utils
         #out.write(hs_utils.serialize_science_metadata_xml(resource))
-    hs_res_url = os.path.join('http://hydroshare.org/resources', resource.title)
-    metadata_url = os.path.join(hs_res_url, 'resourcemetadata.json')
+    current_site_url = hs_core_utils.current_site_url()
+    #hs_res_url = os.path.join('http://hydroshare.org/resources', resource.title)
+    #hs_res_url = os.path.join('{hs_url}/resources'.format(hs_url=current_site_url), resource.title)
+    hs_res_url = '{hs_url}/resources/{res_id}/{time_stamp}/data'.format(hs_url=current_site_url,
+                                                                        res_id=resource.short_id,
+                                                                        time_stamp=arrow.get(resource.updated).format(DATE_FORMAT))
+    metadata_url = os.path.join(hs_res_url, 'resourcemetadata.xml')
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
 
     ##make the resource map:
-    utils.namespaces['hsterms'] = Namespace('http://hydroshare.org/hydroshare/terms/')
+    #utils.namespaces['hsterms'] = Namespace('http://hydroshare.org/hydroshare/terms/')
+    utils.namespaces['hsterms'] = Namespace('{hs_url}/hydroshare/terms/'.format(hs_url=current_site_url))
     utils.namespaceSearchOrder.append('hsterms')
     utils.namespaces['citoterms'] = Namespace('http://purl.org/spar/cito/')
     utils.namespaceSearchOrder.append('citoterms')
@@ -92,7 +101,7 @@ def create_bag(resource):
 
     #Set properties of the aggregation
     a._dc.title = resource.title
-    a._dcterms.created = arrow.get(resource.updated).format("YYYY.MM.DD.HH.mm.ss")
+    a._dcterms.created = arrow.get(resource.updated).format(DATE_FORMAT)
     a._hsterms.hydroshareResourceType = resource._meta.object_name
     a._ore.isDocumentedBy = metadata_url
     a._ore.isDescribedBy = res_map_url
@@ -110,9 +119,14 @@ def create_bag(resource):
     resFiles = []
     for n, f in enumerate(files):
         filename = os.path.basename(f.resource_file.name)
-        resFiles.append(AggregatedResource(os.path.join(contents_path, filename)))
+        #resFiles.append(AggregatedResource(os.path.join(contents_path, filename)))
+        resFiles.append(AggregatedResource(os.path.join('{hs_url}/resources/{res_id}/{update_date}/data/contents'.format(
+            hs_url=current_site_url, res_id=resource.short_id,
+            update_date=arrow.get(resource.updated).format(DATE_FORMAT)), filename)))
+
         resFiles[n]._dcterms.isAggregatedBy = ag_url
-        resFiles[n]._dcterms.format = "text/csv"   # change eventually
+        #resFiles[n]._dcterms.format = "text/csv"   # change eventually utils.get_file_mime_type(file.name)
+        resFiles[n]._dcterms.format = hs_core_utils.get_file_mime_type(filename)
 
     #Add the resource files to the aggregation
     a.add_resource(resMetaFile)
@@ -122,7 +136,7 @@ def create_bag(resource):
     #Register a serializer with the aggregation.  The registration creates a new ResourceMap, which needs a URI
     serializer = RdfLibSerializer('xml')
     resMap = a.register_serialization(serializer, res_map_url)
-    resMap._dcterms.identifier = "resource_identifier"
+    resMap._dcterms.identifier = resource.short_id  #"resource_identifier"
 
     #Fetch the serialization
     remdoc = a.get_serialization()
