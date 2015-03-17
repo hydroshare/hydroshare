@@ -27,7 +27,7 @@
                 var pwconfirm = $("#pwconfirm").val();
 
                 function onSuccess() {
-                    document.location.href = '/verify-account/';
+                    document.location.href = '/hsapi/_internal/verify-account/?username='+username+"&email="+email;
                 }
                 function onFailure(data, stuff) {
                     console.log(data);

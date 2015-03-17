@@ -193,14 +193,6 @@ def create_account(
             password=password,
         )
 
-    u.is_staff = False
-    if not active:
-        u.is_active=False
-    u.save()
-
-    u.groups = groups
-    ApiKey.objects.get_or_create(user=u)
-
     try:
         token = signing.dumps('verify_user_email:{0}:{1}'.format(u.pk, u.email))
         u.email_user(
@@ -215,8 +207,15 @@ go to http://{domain}/verify/{token}/ and verify your account.
     except:
         pass # FIXME should log this instead of ignoring it.
 
-    u.groups = groups
+    u.is_staff = False
+    if not active:
+        u.is_active=False
+    u.save()
 
+    u.groups = groups
+    ApiKey.objects.get_or_create(user=u)
+
+    u.groups = groups
 
     return u
 
