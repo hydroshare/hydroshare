@@ -30,9 +30,12 @@
                     document.location.href = '/hsapi/_internal/verify-account/?username='+username+"&email="+email;
                 }
                 function onFailure(data, stuff) {
-                    console.log(data);
-                    console.log(stuff);
-                    alert('cannot create account');
+                    //console.log(data.responseText);
+                    //console.log(stuff);
+                    restxt = data.responseText
+                    idx1 = restxt.indexOf("DETAIL:")
+                    idx2 = restxt.indexOf("\n", idx1)
+                    alert('Cannot create account.\n' + restxt.substring(idx1+7, idx2).trim());
                 }
                 if(password===pwconfirm) {
                     $.ajax({
