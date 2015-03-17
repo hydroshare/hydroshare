@@ -1,9 +1,13 @@
 """
 Module extracts metadata from NetCDF file to complete the required HydroShare NetCDF Science Metadata
 
-Reference code
+References
 reprojection
-http://gis.stackexchange.com/questions/78838/how-to-convert-projected-coordinates-to-lat-lon-using-python
+    http://gis.stackexchange.com/questions/78838/how-to-convert-projected-coordinates-to-lat-lon-using-python
+datatype
+    http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
+    http://docs.scipy.org/doc/numpy/user/basics.types.html
+    http://www.unidata.ucar.edu/software/netcdf/docs/enhanced_model.html
 
 """
 __author__ = 'Tian Gan'
@@ -319,25 +323,34 @@ def extract_nc_data_variables_meta(nc_data_variables):
             'name': var_name,
             'unit': var_obj.units if (hasattr(var_obj, 'units') and var_obj.units) else 'Unknown',
             'shape': ','.join(var_obj.dimensions),
-            'type': str(var_obj.dtype),
             'descriptive_name': var_obj.long_name if hasattr(var_obj, 'long_name') else '',
             'missing_value': str(var_obj.missing_value if hasattr(var_obj, 'missing_value') else ''),
         }
 
-        # check type element info:
-        nc_type_dict = {
-            'S1': 'Char',
+        # check and add variable 'type' info:
+        nc_data_type_dict = {
             'int8': 'Byte',
             'int16': 'Short',
             'int32': 'Int',
+            'int64': 'Int64',
             'float32': 'Float',
-            'float64': 'Double'
+            'float64': 'Double',
+            'uint8': 'Unsigned Byte',
+            'uint16': 'Unsigned Short',
+            'uint32': 'Unsigned Int',
+            'uint64': 'Unsigned Int64',
         }
 
-        nc_type_original_name = nc_data_variables_meta[var_name]['type']
-        if nc_type_original_name in nc_type_dict.keys():
-            nc_data_variables_meta[var_name]['type'] = nc_type_dict[nc_type_original_name]
-        else:
+        try:
+            if isinstance(var_obj.datatype, netCDF4.CompoundType) or isinstance(var_obj.datatype, netCDF4.VLType):
+                nc_data_variables_meta[var_name]['type'] = 'User Defined Type'
+            elif var_obj.datatype.name in nc_data_type_dict.keys():
+                nc_data_variables_meta[var_name]['type'] = nc_data_type_dict[var_obj.datatype.name]
+            elif ('string' in var_obj.datatype.name) or ('unicode' in var_obj.datatype.name):
+                nc_data_variables_meta[var_name]['type'] = 'Char' if '8' in var_obj.datatype.name else 'String'
+            else:
+                nc_data_variables_meta[var_name]['type'] = 'Unknown'
+        except:
             nc_data_variables_meta[var_name]['type'] = 'Unknown'
 
     return nc_data_variables_meta

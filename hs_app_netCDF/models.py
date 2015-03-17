@@ -12,12 +12,19 @@ class Variable(AbstractMetaDataElement):
     # variable types are defined in OGC enhanced_data_model_extension_standard
     # left is the given value stored in database right is the value for the drop down list
     VARIABLE_TYPES = (
-        ('Char', 'Char'), # 8-bit byte that contains uninterpreted character data
-        ('Byte', 'Byte'), # integer(8bit)
+        ('Char', 'Char'),  # 8-bit byte that contains uninterpreted character data
+        ('Byte', 'Byte'),  # integer(8bit)
         ('Short', 'Short'),  # signed integer (16bit)
         ('Int', 'Int'),  # signed integer (32bit)
         ('Float', 'Float'),  # floating point (32bit)
         ('Double', 'Double'),  # floating point(64bit)
+        ('Int64', 'Int64'),  # integer(64bit)
+        ('Unsigned Byte', 'Unsigned Byte'),
+        ('Unsigned Short', 'Unsigned Short'),
+        ('Unsigned Int', 'Unsigned Int'),
+        ('Unsigned Int64', 'Unsigned Int64'),
+        ('String', 'String'),  # variable length character string
+        ('User Defined Type', 'User Defined Type'),  # compound, vlen, opaque, enum
         ('Unknown', 'Unknown')
     )
     term = 'Variable'
