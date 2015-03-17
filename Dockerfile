@@ -1,4 +1,4 @@
-FROM hs_base
+FROM mjstealey/hs_base
 
 ADD . /home/docker/hydroshare
 WORKDIR /home/docker
