@@ -136,23 +136,29 @@ def time_to_int(t):
         ret = int(datetime.strptime(unicode(t), '%Y-%m-%dT%H:%M:%S.%f').strftime('%s'))
     except ValueError:
         try:
-            # if time format looks like '2014-07-22T10:45:00.000-05:00'
-            offset_hrs = int(t[-6:-3])
-            offset_min = int(t[-6]+t[-2:])
-            t = t[:-6]
-            epoch_secs = int(datetime.strptime(unicode(t), '%Y-%m-%dT%H:%M:%S.%f').strftime('%s'))
-            ret = epoch_secs + offset_hrs*3600 + offset_min*60
+            ret = int(datetime.strptime(unicode(t), '%Y-%m-%d').strftime('%s'))
         except ValueError:
             try:
                 # if time format looks like '2014-07-22T10:45:00'
+
                 ret = int(datetime.strptime(unicode(t), '%Y-%m-%dT%H:%M:%S').strftime('%s'))
             except ValueError:
-                #if the time format looks like '2014-07-22 10:45:00'
-                ret = int(datetime.strptime(unicode(t), '%Y-%m-%d %H:%M:%S').strftime('%s'))
+                try:
+                    #if the time format looks like '2014-07-22 10:45:00'
+                    ret = int(datetime.strptime(unicode(t), '%Y-%m-%d %H:%M:%S').strftime('%s'))
+                except:
+                # if time format looks like '2014-07-22T10:45:00.000-05:00'
+                    offset_hrs = int(t[-6:-3])
+                    offset_min = int(t[-6]+t[-2:])
+                    t = t[:-6]
+                    epoch_secs = int(datetime.strptime(unicode(t), '%Y-%m-%dT%H:%M:%S').strftime('%s'))
+                    ret = epoch_secs + offset_hrs*3600 + offset_min*60
+
+
     return ret
 
 def parse_1_0_and_1_1(root):
-    try:
+    # try:
         time_series_response_present = False
         if 'timeSeriesResponse' in root.tag:
             time_series_response_present = True
@@ -254,8 +260,8 @@ def parse_1_0_and_1_1(root):
                     'method': method}
         else:
             return "Parsing error: The waterml document doesn't appear to be a WaterML 1.0/1.1 time series"
-    except:
-        return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
+    # except:
+    #     return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
 
 def parse_2_0(root):
     #try:

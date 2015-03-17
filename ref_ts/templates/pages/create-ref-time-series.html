@@ -172,6 +172,7 @@
                     $('#fail-notice').show();
                     console.log(data);
                     console.log(stuff);
+                    $('#preview-div').hide();
                 }
             })
         }
@@ -236,6 +237,7 @@
                     btn.button('reset');
                     console.log(data);
                     console.log(stuff);
+
                 }
             }).always(function () {btn.button('reset')});
         });
@@ -272,6 +274,7 @@
             b.html('Verify');
             b.removeClass('btn-danger');
             b.removeClass('btn-success');
+            $('#preview-div').hide();
             $('#fail-notice').hide();
         });
 
