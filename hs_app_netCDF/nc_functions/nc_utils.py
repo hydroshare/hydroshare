@@ -22,8 +22,10 @@ def get_nc_dataset(nc_file_name):
 
     Return: the netCDF dataset
     """
-
-    nc_dataset = netCDF4.Dataset(nc_file_name, 'r')
+    try:
+        nc_dataset = netCDF4.Dataset(nc_file_name, 'r')
+    except:
+        nc_dataset = None
 
     return nc_dataset
 

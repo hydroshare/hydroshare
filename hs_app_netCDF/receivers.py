@@ -14,53 +14,67 @@ def netcdf_pre_create_resource(sender, **kwargs):
     if sender is NetcdfResource:
         files = kwargs['files']
         metadata = kwargs['metadata']
+        validate_files_dict = kwargs['validate_files']
+
         if files:
-            # Extract the metadata from netcdf file
             infile = files[0]
-            import nc_functions.nc_meta as nc_meta
-            try:
-                res_md_dict = nc_meta.get_nc_meta_dict(infile.file.name)
-                res_dublin_core_meta = res_md_dict['dublin_core_meta']
-                res_type_specific_meta = res_md_dict['type_specific_meta']
-            except:
-                res_dublin_core_meta = {}
-                res_type_specific_meta = {}
 
-            # add title
-            if res_dublin_core_meta.get('title'):
-                title = {'title': {'value': res_dublin_core_meta['title']}}
-                metadata.append(title)
-            # add description
-            if res_dublin_core_meta.get('description'):
-                description = {'description': {'abstract': res_dublin_core_meta['description']}}
-                metadata.append(description)
-            # add source
-            if res_dublin_core_meta.get('source'):
-                source = {'source': {'derived_from': res_dublin_core_meta['source']}}
-                metadata.append(source)
-            # add relation
-            if res_dublin_core_meta.get('references'):
-                relation = {'relation': {'type': 'cites', 'value': res_dublin_core_meta['references']}}
-                metadata.append(relation)
-            # add coverage - period
-            if res_dublin_core_meta.get('period'):
-                period = {'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
-                metadata.append(period)
-            # add coverage - box
-            if res_dublin_core_meta.get('box'):
-                box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
-                metadata.append(box)
+            # file validation and metadata extraction
+            import nc_functions.nc_utils as nc_utils
+            import netCDF4
+            nc_dataset = nc_utils.get_nc_dataset(infile.file.name)
 
-            # Save extended meta to metadata variable
-            for var_name, var_meta in res_type_specific_meta.items():
-                meta_info = {}
-                for element, value in var_meta.items():
-                    if value != '':
-                        meta_info[element] = value
-                metadata.append({'variable': meta_info})
+            if isinstance(nc_dataset, netCDF4.Dataset):
+                # Extract the metadata from netcdf file
+                import nc_functions.nc_meta as nc_meta
+                try:
+                    res_md_dict = nc_meta.get_nc_meta_dict(infile.file.name)
+                    res_dublin_core_meta = res_md_dict['dublin_core_meta']
+                    res_type_specific_meta = res_md_dict['type_specific_meta']
+                except:
+                    res_dublin_core_meta = {}
+                    res_type_specific_meta = {}
+
+                # add title
+                if res_dublin_core_meta.get('title'):
+                    title = {'title': {'value': res_dublin_core_meta['title']}}
+                    metadata.append(title)
+                # add description
+                if res_dublin_core_meta.get('description'):
+                    description = {'description': {'abstract': res_dublin_core_meta['description']}}
+                    metadata.append(description)
+                # add source
+                if res_dublin_core_meta.get('source'):
+                    source = {'source': {'derived_from': res_dublin_core_meta['source']}}
+                    metadata.append(source)
+                # add relation
+                if res_dublin_core_meta.get('references'):
+                    relation = {'relation': {'type': 'cites', 'value': res_dublin_core_meta['references']}}
+                    metadata.append(relation)
+                # add coverage - period
+                if res_dublin_core_meta.get('period'):
+                    period = {'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
+                    metadata.append(period)
+                # add coverage - box
+                if res_dublin_core_meta.get('box'):
+                    box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
+                    metadata.append(box)
+
+                # Save extended meta to metadata variable
+                for var_name, var_meta in res_type_specific_meta.items():
+                    meta_info = {}
+                    for element, value in var_meta.items():
+                        if value != '':
+                            meta_info[element] = value
+                    metadata.append({'variable': meta_info})
+            else:
+                validate_files_dict['are_files_valid'] = False
+                validate_files_dict['message'] = 'Please check if the uploaded file is in valid NetCDF format.'
+
+
 
 # receiver used to create netcdf header text after user click on "create resource"
-@receiver(post_create_resource,sender=NetcdfResource)
+@receiver(post_create_resource, sender=NetcdfResource)
 def netcdf_post_create_resource(sender, **kwargs):
     # Add ncdump text file to resource
     if sender is NetcdfResource:
@@ -97,6 +111,11 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
         nc_res = kwargs['resource']
         del_file = kwargs['file']
         del_file_ext = os.path.splitext(del_file.resource_file.name)[-1]
+
+        # TODO: update resource modification info
+        # user = kwargs['user']
+        # resource_modified(resource, user)
+
         if del_file_ext == '.nc':
             # delete the netcdf header text file
             for f in ResourceFile.objects.filter(object_id=nc_res.id):
@@ -133,13 +152,28 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
     if sender is NetcdfResource:
         nc_res = kwargs['resource']
         files = kwargs['files']
-        if files:
+        validate_files_dict = kwargs['validate_files']
+
+
+        if len(files) >1:
+            # file number validation
+            validate_files_dict['are_files_valid'] = False
+            validate_files_dict['message'] = 'Only one file can be uploaded.'
+        elif len(files) == 1:
+            # file type validation and existing metadata update
             infile = files[0]
-            if infile.name[-3:] == '.nc':
+            import nc_functions.nc_utils as nc_utils
+            import netCDF4
+            nc_dataset = nc_utils.get_nc_dataset(infile.file.name)
+            if isinstance(nc_dataset, netCDF4.Dataset):
                 # delete all existing resource files and metadata related
                 for f in ResourceFile.objects.filter(object_id=nc_res.id):
                         f.resource_file.delete()
                         f.delete()
+
+                # TODO: update resource modification info
+                # user = kwargs['user']
+                # resource_modified(resource, user)
 
                 # extract metadata
                 import nc_functions.nc_meta as nc_meta
@@ -192,6 +226,9 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                                                    shape=var_info['shape'],
                                                    missing_value=var_info['missing_value'],
                                                    descriptive_name=var_info['descriptive_name'])
+            else:
+                validate_files_dict['are_files_valid'] = False
+                validate_files_dict['message'] = 'Please check if the uploaded file is in valid NetCDF format.'
 
 @receiver(post_add_files_to_resource, sender=NetcdfResource)
 def netcdf_post_add_files_to_resource(sender, **kwargs):

@@ -113,6 +113,16 @@ class NetcdfResource(Page, AbstractResource):
         md = NetcdfMetaData()
         return self._get_metadata(md)
 
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # 3 file types are supported
+        return (".nc")
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        # can have only 1 file
+        return False
+
     def can_add(self, request):
         return AbstractResource.can_add(self, request)
 
