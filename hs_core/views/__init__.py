@@ -78,7 +78,19 @@ def add_file_to_resource(request, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     res_cls = res.__class__
     res_files = request.FILES.getlist('files')
-    pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, **kwargs)
+
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+    pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, user=request.user,
+                                   validate_files=file_validation_dict, **kwargs)
+    if 'are_files_valid' in file_validation_dict:
+        if not file_validation_dict['are_files_valid']:
+            error_message = file_validation_dict.get('message', None)
+            if not error_message:
+                error_message = "Uploaded file(s) failed validation."
+
+            request.session['file_validation_error'] = error_message
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
     for f in res_files:
         res.files.add(ResourceFile(content_object=res, resource_file=f))
 
