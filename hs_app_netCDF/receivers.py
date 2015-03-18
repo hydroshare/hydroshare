@@ -125,22 +125,23 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
                     f.delete()
                     break
             # delete all the coverage info
-            cov_box = nc_res.metadata.coverages.all().filter(type='box').first()
-            cov_period = nc_res.metadata.coverages.all().filter(type='period').first()
-            if cov_box:
-                    # TODO: delete old box info, currently it just updates the values
-                    from collections import OrderedDict
-                    box_info = OrderedDict([
-                            ('units', "Decimal degrees"),
-                            ('projection', 'WGS 84 EPSG:4326'),
-                            ('northlimit', 0.0),
-                            ('southlimit', 0.0),
-                            ('eastlimit', 0.0),
-                            ('westlimit', 0.0)
-                        ])
-                    nc_res.metadata.update_element('coverage', cov_box.id, type='box', value=box_info)
-            if cov_period:
-                pass # TODO: delete the old period info, currently it just keeps the old period info
+            nc_res.metadata.coverages.all().delete()
+            # cov_box = nc_res.metadata.coverages.all().filter(type='box').first()
+            # cov_period = nc_res.metadata.coverages.all().filter(type='period').first()
+            # if cov_box:
+            #
+            #         from collections import OrderedDict
+            #         box_info = OrderedDict([
+            #                 ('units', "Decimal degrees"),
+            #                 ('projection', 'WGS 84 EPSG:4326'),
+            #                 ('northlimit', 0.0),
+            #                 ('southlimit', 0.0),
+            #                 ('eastlimit', 0.0),
+            #                 ('westlimit', 0.0)
+            #             ])
+            #         nc_res.metadata.update_element('coverage', cov_box.id, type='box', value=box_info)
+            # if cov_period:
+            #     pass
 
             # delete all the extended meta info
             nc_res.metadata.variables.all().delete()
@@ -186,35 +187,41 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                     res_type_specific_meta = {}
 
                 # update box info
-                cov_box = nc_res.metadata.coverages.all().filter(type='box').first()
-                if cov_box:
-                    # TODO: delete old box info, currently it just updates the values
-                    from collections import OrderedDict
-                    box_info = OrderedDict([
-                            ('units', "Decimal degrees"),
-                            ('projection', 'WGS 84 EPSG:4326'),
-                            ('northlimit', 0.0),
-                            ('southlimit', 0.0),
-                            ('eastlimit', 0.0),
-                            ('westlimit', 0.0)
-                        ])
-                    nc_res.metadata.update_element('coverage', cov_box.id, type='box', value=box_info)
+                nc_res.metadata.coverages.all().delete()
                 if res_dublin_core_meta.get('box'):
-                    if cov_box:
-                        nc_res.metadata.update_element('coverage', cov_box.id, type='box', value=res_dublin_core_meta['box'])
-                    else:
-                        nc_res.metadata.create_element('coverage', type='box', value=res_dublin_core_meta['box'])
+                    nc_res.metadata.create_element('coverage', type='box', value=res_dublin_core_meta['box'])
+                #cov_box = nc_res.metadata.coverages.all().filter(type='box').first()
+                # if cov_box:
+                #
+                #
+                #     from collections import OrderedDict
+                #     box_info = OrderedDict([
+                #             ('units', "Decimal degrees"),
+                #             ('projection', 'WGS 84 EPSG:4326'),
+                #             ('northlimit', 0.0),
+                #             ('southlimit', 0.0),
+                #             ('eastlimit', 0.0),
+                #             ('westlimit', 0.0)
+                #         ])
+                #     nc_res.metadata.update_element('coverage', cov_box.id, type='box', value=box_info)
+                # if res_dublin_core_meta.get('box'):
+                #     if cov_box:
+                #         nc_res.metadata.update_element('coverage', cov_box.id, type='box', value=res_dublin_core_meta['box'])
+                #     else:
+                #         nc_res.metadata.create_element('coverage', type='box', value=res_dublin_core_meta['box'])
 
                 # update period info
-                cov_period = nc_res.metadata.coverages.all().filter(type='period').first()
-                if cov_period:
-                    # TODO delete the old period info, currently it just keeps the old period info
-                    pass
                 if res_dublin_core_meta.get('period'):
-                    if cov_period:
-                        nc_res.metadata.update_element('coverage', cov_period.id, type='period', value=res_dublin_core_meta['period'])
-                    else:
-                        nc_res.metadata.create_element('coverage', type='period', value=res_dublin_core_meta['period'])
+                    nc_res.metadata.create_element('coverage', type='period', value=res_dublin_core_meta['period'])
+                # cov_period = nc_res.metadata.coverages.all().filter(type='period').first()
+                # if cov_period:
+                #     pass
+                # if res_dublin_core_meta.get('period'):
+                #     if cov_period:
+                #         nc_res.metadata.update_element('coverage', cov_period.id, type='period', value=res_dublin_core_meta['period'])
+                #     else:
+                #         nc_res.metadata.create_element('coverage', type='period', value=res_dublin_core_meta['period'])
+
 
                 # update variable info
                 nc_res.metadata.variables.all().delete()
