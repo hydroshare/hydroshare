@@ -129,8 +129,10 @@ def create_bag(resource):
     #Fetch the serialization
     remdoc = a.get_serialization()
 
+    # change the namespace for the 'creator' element from 'dcterms' to 'dc'
+    xml_string = remdoc.data.replace('dcterms:creator', 'dc:creator')
     with open(bagit_path + '/resourcemap.xml', 'w') as out:
-        out.write(remdoc.data)
+        out.write(xml_string)
 
     bagit.make_bag(bagit_path, checksum=['md5'], bag_info={
         'title': resource.title,
