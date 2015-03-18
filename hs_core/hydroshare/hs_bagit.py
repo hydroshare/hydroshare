@@ -74,15 +74,13 @@ def create_bag(resource):
 
 
     current_site_url = hs_core_utils.current_site_url()
-    hs_res_url = '{hs_url}/resources/{res_id}/{time_stamp}/data'.format(hs_url=current_site_url,
-                                                                        res_id=resource.short_id,
-                                                                        time_stamp=arrow.get(resource.updated).format(DATE_FORMAT))
+    hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url, res_id=resource.short_id)
     metadata_url = os.path.join(hs_res_url, 'resourcemetadata.xml')
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
 
     ##make the resource map:
-    utils.namespaces['hsterms'] = Namespace('{hs_url}/hsterms/'.format(hs_url=current_site_url))
-    utils.namespaceSearchOrder.append('hsterms')
+    # utils.namespaces['hsterms'] = Namespace('{hs_url}/hsterms/'.format(hs_url=current_site_url))
+    # utils.namespaceSearchOrder.append('hsterms')
     utils.namespaces['citoterms'] = Namespace('http://purl.org/spar/cito/')
     utils.namespaceSearchOrder.append('citoterms')
 
@@ -92,8 +90,8 @@ def create_bag(resource):
     #Set properties of the aggregation
     a._dc.title = resource.title
     a._dcterms.created = arrow.get(resource.updated).format(DATE_FORMAT)
-    a._hsterms.hydroshareResourceType = resource._meta.object_name
-    a._ore.isDocumentedBy = metadata_url
+    a._dcterms.type = resource._meta.object_name
+    a._citoterms.isDocumentedBy = metadata_url
     a._ore.isDescribedBy = res_map_url
 
     #Create a description of the metadata document that describes the whole resource and add it to the aggregation
@@ -109,9 +107,8 @@ def create_bag(resource):
     resFiles = []
     for n, f in enumerate(files):
         filename = os.path.basename(f.resource_file.name)
-        resFiles.append(AggregatedResource(os.path.join('{hs_url}/resources/{res_id}/{update_date}/data/contents'.format(
-            hs_url=current_site_url, res_id=resource.short_id,
-            update_date=arrow.get(resource.updated).format(DATE_FORMAT)), filename)))
+        resFiles.append(AggregatedResource(os.path.join('{hs_url}/resource/{res_id}/data/contents'.format(
+            hs_url=current_site_url, res_id=resource.short_id))))
 
         resFiles[n]._ore.isAggregatedBy = ag_url
         resFiles[n]._dc.format = hs_core_utils.get_file_mime_type(filename)
