@@ -35,10 +35,11 @@
 
                         <div class="col-sm-4"><strong>Version</strong></div>
                         <div class="col-sm-8">
-                            {% if executed_by.model_program_fk.version.strip %}
-                                {{ executed_by.model_program_fk.version }}
+                            {% if executed_by.model_program_fk.metadata.mpmetadata.first.software_version.strip %}
+                                {{executed_by.model_program_fk.metadata.mpmetadata.first.software_version}}
                             {% else %}
                                 Not Provided
+
                             {% endif %}
                         </div>
 
@@ -53,7 +54,7 @@
                     <hr>
 
                     {% endif %}
-                </div>
+                    </div>
             </div>
     {%  endif %}
 {%  endblock %}
