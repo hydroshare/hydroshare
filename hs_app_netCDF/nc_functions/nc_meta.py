@@ -8,6 +8,8 @@ datatype
     http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
     http://docs.scipy.org/doc/numpy/user/basics.types.html
     http://www.unidata.ucar.edu/software/netcdf/docs/enhanced_model.html
+coverage info by acdd:
+    http://wiki.esipfed.org/index.php/Attribute_Convention_for_Data_Discovery
 
 """
 __author__ = 'Tian Gan'
@@ -107,14 +109,21 @@ def extract_nc_coverage_meta(nc_dataset):
     Return netCDF time start and end info
     """
     period_info = get_period_info(nc_dataset)
+
     original_box_info = get_original_box_info(nc_dataset)
+    for name in original_box_info.keys():
+        original_box_info[name] = str(original_box_info[name])
+
     box_info = get_box_info(nc_dataset)
+    for name in box_info.keys():
+        box_info[name] = str(box_info[name])
 
     nc_coverage_meta = {
         'period': period_info,
         'box': box_info,
         'original-box': original_box_info,
     }
+
     return nc_coverage_meta
 
 
@@ -123,6 +132,37 @@ def get_period_info(nc_dataset):
     (object)-> dict
 
     Return: the netCDF original coverage period info
+    """
+
+    if get_period_info_by_acdd_convention(nc_dataset):
+        period_info = get_period_info_by_acdd_convention(nc_dataset)
+    else:
+        period_info = get_period_info_by_data(nc_dataset)
+
+    return period_info
+
+
+def get_period_info_by_acdd_convention(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF original coverage period info by looking for the ACDD convention terms
+    """
+
+    period_info = {}
+
+    if nc_dataset.__dict__.get('time_coverage_start', '') and nc_dataset.__dict__.get('time_coverage_end', ''):
+        period_info['start'] = str(nc_dataset.__dict__['time_coverage_start'])
+        period_info['end'] = str(nc_dataset.__dict__['time_coverage_end'])
+
+    return period_info
+
+
+def get_period_info_by_data(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF original coverage period info by looking into the data
     """
 
     period_info = {}
@@ -153,6 +193,12 @@ def get_box_info(nc_dataset):
     if original_box_info:
         if original_box_info.get('units', '') == 'degree':  # geographic coor x, y
             box_info = original_box_info
+            # check if the westlimit and eastlimit are in -180-180
+            westlimit = float(box_info['westlimit'])
+            eastlimit = float(box_info['eastlimit'])
+            box_info['westlimit'] = check_lon_limit(westlimit, eastlimit)[0]
+            box_info['eastlimit'] = check_lon_limit(westlimit, eastlimit)[1]
+
         elif original_box_info.get('projection', ''):  # projection coor x, y
             projection_import_string = get_nc_grid_mapping_projection_import_string(nc_dataset)
             if projection_import_string:
@@ -169,6 +215,7 @@ def get_box_info(nc_dataset):
                     pass
 
     if box_info:
+        # change the value as string
         for name in box_info.keys():
             box_info[name] = str(box_info[name])
         box_info['units'] = 'Decimal degrees'
@@ -177,11 +224,74 @@ def get_box_info(nc_dataset):
     return box_info
 
 
+def check_lon_limit(westlimit, eastlimit):
+    """
+    (num, num)-> [num,num]
+
+    Return: given the original westlimit and eastlimit values in degree units, convert them in -180-180 range and
+            make sure eastlimit > westlimit
+    """
+
+    # chech if limit is in range of -180-180
+    if westlimit > 180:
+        westlimit -=360
+    if eastlimit > 180:
+        eastlimit -=360
+
+    # check if westlimit < eastlimit
+    if westlimit == eastlimit:
+        westlimit = -180
+        eastlimit = 180
+    elif westlimit > eastlimit:
+        if (180 - westlimit) >= (eastlimit+180):
+            eastlimit = 180
+        else:
+            westlimit = -180
+
+    return [westlimit, eastlimit]
+
+
 def get_original_box_info(nc_dataset):
     """
     (object)-> dict
 
     Return: the netCDF original coverage box info
+    """
+    original_box_info = {}
+
+    if get_original_box_info_by_acdd_convention(nc_dataset):
+        original_box_info = get_original_box_info_by_acdd_convention(nc_dataset)
+    else:
+        original_box_info = get_original_box_info_by_data(nc_dataset)
+
+    return original_box_info
+
+
+def get_original_box_info_by_acdd_convention(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF original coverage box info by looking for acdd convention terms
+    """
+
+    original_box_info = {}
+    if nc_dataset.__dict__.get('geospatial_lat_min', '') and nc_dataset.__dict__.get('geospatial_lat_max', '')\
+            and nc_dataset.__dict__.get('geospatial_lon_min', '') and nc_dataset.__dict__.get('geospatial_lon_max', ''):
+        original_box_info['southlimit'] = str(nc_dataset.__dict__['geospatial_lat_min'])
+        original_box_info['northlimit'] = str(nc_dataset.__dict__['geospatial_lat_max'])
+        original_box_info['westlimit'] = str(nc_dataset.__dict__['geospatial_lon_min'])
+        original_box_info['eastlimit'] = str(nc_dataset.__dict__['geospatial_lon_max'])
+        original_box_info['units'] = 'degree'
+    # TODO: check the geospatial_bounds and geospatial_bounds_crs attributes
+
+    return original_box_info
+
+
+def get_original_box_info_by_data(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF original coverage box info by looking into the data
     """
 
     original_box_info = {}
@@ -215,27 +325,6 @@ def get_limits_info(nc_dataset, info_source):
         else:
             limits_info = {}
             break
-
-    # refine X value when longitude is larger than 180
-    if limits_info.get('units', '') == 'degree':
-        westlimit = limits_info['westlimit']
-        eastlimit = limits_info['eastlimit']
-        if westlimit > 180 or eastlimit > 180:
-            if eastlimit - westlimit == 360:
-                westlimit = -180
-                eastlimit = 180
-            else:
-                if westlimit >= 180:
-                    westlimit -= 360
-                    eastlimit -= 360
-                else:
-                    if (180 - westlimit) >= (eastlimit-180):
-                        eastlimit = 180
-                    else:
-                        westlimit = -180
-                        eastlimit -= 360
-        limits_info['westlimit'] = westlimit
-        limits_info['eastlimit'] = eastlimit
 
     return limits_info
 
