@@ -35,19 +35,20 @@
 
                         <div class="col-sm-4"><strong>Version</strong></div>
                         <div class="col-sm-8">
-                            {% if executed_by.model_program_fk.version.strip %}
-                                {{ executed_by.model_program_fk.version }}
+                            {% if executed_by.model_program_fk.metadata.mpmetadata.first.software_version.strip %}
+                                {{executed_by.model_program_fk.metadata.mpmetadata.first.software_version}}
                             {% else %}
                                 Not Provided
+
                             {% endif %}
                         </div>
 
                         <div class="col-sm-4"><strong>Resource URL</strong></div>
-                       <div class="col-sm-8"> <a id="permalink" href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/">http://{{ request.get_host }}/
+                       <div class="col-sm-8"> <a id="permalink" href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/">http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</div>
                     <hr>
 
                     {% endif %}
-                </div>
+                    </div>
             </div>
     {%  endif %}
 {%  endblock %}
