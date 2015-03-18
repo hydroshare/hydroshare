@@ -659,6 +659,9 @@ def create_resource_new_workflow(request, *args, **kwargs):
                                                files=resource_files, title=res_title, url_key=url_key,
                                                page_url_dict=page_url_dict, validate_files=file_validation_dict, **kwargs)
 
+    if url_key in page_url_dict:
+        return render(request, page_url_dict[url_key], {'title': res_title})
+
     if 'are_files_valid' in file_validation_dict:
         if not file_validation_dict['are_files_valid']:
             error_message = file_validation_dict.get('message', None)
@@ -716,9 +719,6 @@ def create_resource_new_workflow(request, *args, **kwargs):
 
     # Send post-create resource signal
     post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, **kwargs)
-
-    if url_key in page_url_dict:
-        return render(request, page_url_dict[url_key], {'resource': resource})
 
     if resource is not None:
         # go to resource landing page
