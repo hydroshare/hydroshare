@@ -32,7 +32,7 @@ def get_version(root):
             break
     return wml_version
 
-def sites_from_soap(wsdl_url, locations=[':']):
+def sites_from_soap(wsdl_url, locations='[:]'):
     """
     Note: locations (a list) is given by CUAHSI WOF standard
 
@@ -58,10 +58,10 @@ def sites_from_soap(wsdl_url, locations=[':']):
         raise Http404("Method 'GetSites' not found")
     except WebFault:
         raise Http404('This service does not support an all sites search. \
-Please provide a list of locations')  # ought to be a 400, but no page implemented for that
+        Please provide a list of locations')  # ought to be a 400, but no page implemented for that
     except:
-        raise Http404("Sorry, but we've encountered an unexpected error. This is most likely \
-due to incorrect formatting in the web service response.")
+        raise Http404("Sorry, but we've encountered an unexpected error. This is most likely\
+         due to incorrect formatting in the web service response.")
     try:
         site_names = []
         site_codes = []
@@ -104,6 +104,7 @@ def site_info_from_soap(wsdl_url, **kwargs):
 
     try:
         response = client.service.GetSiteInfo(site)
+        response = response.encode('utf-8')
         root = etree.XML(response)
         wml_version = get_version(root)
         variable_names = []
@@ -152,12 +153,18 @@ def time_to_int(t):
 
 def parse_1_0_and_1_1(root):
     try:
+        time_series_response_present = False
         if 'timeSeriesResponse' in root.tag:
+            time_series_response_present = True
+        elif 'timeSeriesResponse' in root.text[:19]:
+            root = etree.fromstring(root.text)
+            time_series_response_present = True
+        if time_series_response_present:
             time_series = root[1]
             ts = etree.tostring(time_series)
             values = {}
             for_graph = []
-            units, site_name, variable_name, latitude, longitude, methodCode, method, QCcode, QClevel = None, None, None, None, None, None, None, None, None
+            noDataValue, units, site_name, site_code, variable_name, variable_code, latitude, longitude, methodCode, method, QCcode, QClevel = None, None, None, None, None, None, None, None, None, None, None, None
             unit_is_set = False
             methodCode_set = False
             QCcode_set = False
@@ -182,12 +189,19 @@ def parse_1_0_and_1_1(root):
                                 QCcode_set = True
                 if 'siteName' == tag:
                     site_name = element.text
+                if 'siteCode' == tag:
+                    site_code = element.text
                 if 'variableName' == tag:
                     variable_name = element.text
+                if 'variableCode' == tag:
+                    variable_code = element.text
                 if 'latitude' == tag:
                     latitude = element.text
                 if 'longitude' == tag:
                     longitude = element.text
+                if 'noDataValue' == tag:
+                    noDataValue = element.text
+
             if methodCode == 1:
                 method = 'No method specified'
             else:
@@ -195,13 +209,23 @@ def parse_1_0_and_1_1(root):
 
             if QCcode == 0:
                 QClevel = "Raw Data"
+            elif QCcode == "0":
+                QClevel = "Raw Data"
             elif QCcode == 1:
+                QClevel = "Quality Controlled Data"
+            elif QCcode == "1":
                 QClevel = "Quality Controlled Data"
             elif QCcode == 2:
                 QClevel = "Derived Products"
+            elif QCcode == "2":
+                QClevel = "Derived Products"
             elif QCcode == 3:
                 QClevel = "Interpreted Products"
+            elif QCcode == "3":
+                QClevel = "Interpreted Products"
             elif QCcode == 4:
+                QClevel = "Knowledge Products"
+            elif QCcode == "4":
                 QClevel = "Knowledge Products"
             else:
                 QClevel = 'Unknown'
@@ -215,14 +239,17 @@ def parse_1_0_and_1_1(root):
                     smallest_time = t
             return {'time_series': ts,
                     'site_name': site_name,
+                    'site_code': site_code,
                     'start_date': smallest_time,
                     'variable_name': variable_name,
+                    'variable_code': variable_code,
                     'units': units,
                     'values': values,
                     'for_graph': for_graph,
                     'wml_version': '1',
                     'latitude': latitude,
                     'longitude': longitude,
+                    'noDataValue': noDataValue,
                     'QClevel': QClevel,
                     'method': method}
         else:
@@ -386,7 +413,6 @@ due to incorrect formatting in the web service format.")
             response = r.text.encode('utf-8')
     else:
         raise Http404()
-
     root = etree.XML(response)
     wml_version = get_version(root)
     if wml_version == '1':
@@ -397,7 +423,7 @@ due to incorrect formatting in the web service format.")
         raise Http404()
 
 #creates vis and returns open file
-def create_vis(path, varcode, site_code, data, xlab, variable_name, units):
+def create_vis(path, varcode, site_code, data, xlab, variable_name, units, noDataValue):
     loc = AutoDateLocator()
     fmt = AutoDateFormatter(loc)
     fmt.scaled[365.0] = '%y'
@@ -409,8 +435,9 @@ def create_vis(path, varcode, site_code, data, xlab, variable_name, units):
     x1 =[]
     y1 =[]
     for d in data:
-        x1.append(d['x'])
-        y1.append(d['y'])
+        if str(int(d['y'])) != str(noDataValue):
+            x1.append(d['x'])
+            y1.append(d['y'])
     vals_dict = dict(zip(x1, y1))
     sorted_vals = sorted(vals_dict.items(), key=operator.itemgetter(0))
     for d in sorted_vals:
@@ -484,7 +511,8 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
     for_graph = ts['for_graph']
     units = ts['units']
     variable_name = ts['variable_name']
-    vis_file = create_vis("", variable_code, data_site_code, for_graph, 'Date', variable_name, units)
+    noDataValue = ts.get('noDataValue', None)
+    vis_file = create_vis("", variable_code, data_site_code, for_graph, 'Date', variable_name, units, noDataValue)
     version = ts['wml_version']
     d = datetime.today()
     date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
