@@ -65,7 +65,8 @@ def time_series_from_service(request):
         for_graph = ts['for_graph']
         units = ts['units']
         variable_name = ts['variable_name']
-        vis_file = ts_utils.create_vis("theme/static/img/", variable, site, for_graph, 'Date', variable_name, units)
+        noDataValue = ts.get('noDataValue', None)
+        vis_file = ts_utils.create_vis("theme/static/img/", variable, site, for_graph, 'Date', variable_name, units, noDataValue)
         vis_file_name = os.path.basename(vis_file.name)
         return json_or_jsonp(request, {'vis_file_name': vis_file_name})
 
