@@ -10,7 +10,7 @@ from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
 from uuid import uuid4
 from mezzanine.core.models import Ownable
-from mezzanine.generic.fields import CommentsField
+from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.conf import settings as s
 from mezzanine.generic.models import Keyword, AssignedKeyword
 import os.path
@@ -32,16 +32,14 @@ class GroupOwnership(models.Model):
 def get_user(request):
     """authorize user based on API key if it was passed, otherwise just use the request's user.
 
+    NOTE: The API key portion has been removed with TastyPie and will be restored when the
+    new API is built.
+
     :param request:
     :return: django.contrib.auth.User
     """
 
-    from tastypie.models import ApiKey
-
-    if 'api_key' in request.REQUEST:
-        api_key = ApiKey.objects.get(key=request.REQUEST['api_key'])
-        return api_key.user
-    elif request.user.is_authenticated():
+    if request.user.is_authenticated():
         return User.objects.get(pk=request.user.pk)
     else:
         return request.user
@@ -1370,6 +1368,7 @@ class AbstractResource(ResourcePermissionsMixin):
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
+    rating = RatingField()
 
     # this is to establish a relationship between a resource and
     # any metadata container object (e.g., CoreMetaData object)
@@ -1471,6 +1470,25 @@ class AbstractResource(ResourcePermissionsMixin):
     def can_be_public(self):
         return True
 
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        # to allow only specific file types return a tuple of those file extensions (ex: return (".csv", ".txt"))
+        # to not allow any file upload, return a empty tuple ( return ())
+
+        # by default all file types are supported
+        return (".*")
+
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        # to allow resource to have only 1 file or no file, return False
+
+        # resource by default can have multiple files
+        return True
+
+
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
@@ -1521,6 +1539,19 @@ class GenericResource(Page, AbstractResource):
             return True
 
         return False
+
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # all file types are supported
+        return ('.*')
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        return True
+
+    @classmethod
+    def can_have_files(cls):
+        return True
 
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
@@ -1632,6 +1663,22 @@ class CoreMetaData(models.Model):
             return False
 
         return True
+
+    # this method needs to be overriden by any subclass of this class
+    # if they implement additional metadata elements that are required
+    def get_required_missing_elements(self):
+        missing_required_elements = []
+
+        if not self.title:
+            missing_required_elements.append('Title')
+        if not self.description:
+            missing_required_elements.append('Abstract')
+        if not self.rights:
+            missing_required_elements.append('Rights')
+        if self.subjects.count() == 0:
+            missing_required_elements.append('Keywords')
+
+        return missing_required_elements
 
     # this method needs to be overriden by any subclass of this class
     def delete_all_elements(self):
@@ -1803,6 +1850,22 @@ class CoreMetaData(models.Model):
                 dc_subject.text = sub.value
 
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+
+    def add_metadata_element_to_xml(self, root, md_element, md_fields):
+        from lxml import etree
+
+        hsterms_newElem = etree.SubElement(root,
+                                           "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'], new_element=md_element.term))
+        hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
+                                                    "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
+        for md_field in md_fields:
+            if hasattr(md_element, md_field):
+                attr = getattr(md_element, md_field)
+                if attr:
+                    field = etree.SubElement(hsterms_newElem_rdf_Desc,
+                                             "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
+                                                                  field=md_field))
+                    field.text = str(attr)
 
     def _create_person_element(self, etree, parent_element, person):
         if isinstance(person, Creator):

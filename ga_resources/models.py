@@ -1,38 +1,28 @@
 import datetime
 from logging import getLogger
 import json
+import sh
+import os
+import importlib
 
 from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save
 from django.contrib.gis.db import models
 from django.utils.timezone import utc
+
 from mezzanine.pages.models import Page
 from mezzanine.core.models import RichText
 from mezzanine.conf import settings as s
 from mezzanine.pages.page_processors import processor_for
 from timedelta.fields import TimedeltaField
-import sh
-import os
+
 from osgeo import osr
-import importlib
+
+from hs_core.models import get_user
 
 
 _log = getLogger('ga_resources')
 
-def get_user(request):
-    from tastypie.models import ApiKey
-    """authorize user based on API key if it was passed, otherwise just use the request's user.
-
-    :param request:
-    :return: django.contrib.auth.User
-    """
-    if 'api_key' in request.REQUEST:
-        api_key = ApiKey.objects.get(key=request.REQUEST['api_key'])
-        return api_key.user
-    elif request.user.is_authenticated():
-        return User.objects.get(pk=request.user.pk)
-    else:
-        return request.user
 
 class PagePermissionsMixin(object):
     def storage_key(self, kfor):
@@ -177,7 +167,7 @@ class PagePermissionsMixin(object):
                 child.public = self.public
                 child.owner = self.owner
                 child.save()
-                    
+
                 if recurse:
                     child.copy_permissions_to_children(clear_existing=clear_existing, recurse=recurse)
 
@@ -360,7 +350,7 @@ class DataResource(Page, RichText, PagePermissionsMixin):
     def modified(self):
         self.last_refresh = datetime.datetime.utcnow().replace(tzinfo=utc)
         self.driver_instance.clear_cache()
-        
+
     @property
     def cache_path(self):
         p = os.path.join(s.MEDIA_ROOT, ".cache", "resources", *os.path.split(self.slug))
@@ -373,7 +363,7 @@ class DataResource(Page, RichText, PagePermissionsMixin):
         return json.loads(self.resource_config) if self.resource_config else {}
 
 
-        
+
 
 class OrderedResource(models.Model):
     resource_group = models.ForeignKey("ResourceGroup")

@@ -258,7 +258,7 @@ INSTALLED_APPS = (
     "django.contrib.gis",
     "inplaceeditform",
     "django_nose",
-    "django_irods",
+    #"django_irods",
     "theme",
     "theme.blog_mods",
     "mezzanine.boot",
@@ -274,19 +274,21 @@ INSTALLED_APPS = (
     "mezzanine.mobile",
     "autocomplete_light",
     "jquery_ui",
-    "tastypie",
-    #"tastypie_swagger",
     "ga_ows",
     "ga_resources",
     "dublincore",
     "hs_core",
     "hs_metrics",
     #"hs_rhessys_inst_resource",
-    "django_docker_processes",
-    #"hs_geo_raster_resource",
+    #"django_docker_processes",
+    "hs_geo_raster_resource",
     "djcelery",
-    #"ref_ts",
+    "ref_ts",
+    "hs_modelinstance",
+    "hs_app_timeseries",
     "widget_tweaks",
+    "hs_app_netCDF",
+    "hs_model_program",
 )
 
 # List of processors used by RequestContext to populate the context.
@@ -403,9 +405,6 @@ except ImportError:
     pass
 else:
     set_dynamic_settings(globals())
-
-
-TASTYPIE_SWAGGER_API_MODULE = 'hydroshare.urls.v1_api'
 
 #
 AUTH_PROFILE_MODULE = "theme.UserProfile"

@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import get_object_or_404, render_to_response
+from django.shortcuts import get_object_or_404, render_to_response, render
 from django.template import RequestContext
 from django.utils.timezone import now
 import json
@@ -34,7 +34,6 @@ from inplaceeditform.views import _get_http_response, _get_adaptor
 
 from . import users_api
 from . import discovery_api
-from . import resource_api
 from . import social_api
 from hs_core.hydroshare import utils
 from hs_core.hydroshare import file_size_limit_for_display
@@ -76,8 +75,22 @@ def add_file_to_resource(request, *args, **kwargs):
         raise TypeError('shortkey must be specified...')
 
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res_cls = res.__class__
+    res_files = request.FILES.getlist('files')
 
-    for f in request.FILES.getlist('files'):
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+    pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, user=request.user,
+                                   validate_files=file_validation_dict, **kwargs)
+    if 'are_files_valid' in file_validation_dict:
+        if not file_validation_dict['are_files_valid']:
+            error_message = file_validation_dict.get('message', None)
+            if not error_message:
+                error_message = "Uploaded file(s) failed validation."
+
+            request.session['file_validation_error'] = error_message
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    for f in res_files:
         res.files.add(ResourceFile(content_object=res, resource_file=f))
 
         # add format metadata element if necessary
@@ -85,9 +98,9 @@ def add_file_to_resource(request, *args, **kwargs):
         if file_format_type not in [mime.value for mime in res.metadata.formats.all()]:
             res.metadata.create_element('format', value=file_format_type)
 
+    post_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, **kwargs)
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
 
 def add_citation(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
@@ -116,6 +129,25 @@ def _get_resource_sender(element_name, resource):
 
     return sender_resource
 
+
+def get_supported_file_types_for_resource_type(request, resource_type, *args, **kwargs):
+    resource_cls = hydroshare.check_resource_type(resource_type)
+    if request.is_ajax:
+        # TODO: use try catch
+        ajax_response_data = {'file_types': json.dumps(resource_cls.get_supported_upload_file_types())}
+        return HttpResponse(json.dumps(ajax_response_data))
+    else:
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **kwargs):
+    resource_cls = hydroshare.check_resource_type(resource_type)
+    if request.is_ajax:
+        # TODO: use try catch
+        ajax_response_data = {'allow_multiple_file': resource_cls.can_have_multiple_files()}
+        return HttpResponse(json.dumps(ajax_response_data))
+    else:
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
@@ -156,7 +188,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
         else:
             ajax_response_data = {'status': 'error'}
-            return HttpResponse (json.dumps(ajax_response_data))
+            return HttpResponse(json.dumps(ajax_response_data))
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
@@ -217,6 +249,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     fl = res.files.filter(pk=int(f)).first()
     file_name = fl.resource_file.name
+    pre_delete_file_from_resource.send(sender=res_cls, file=fl, resource=res, **kwargs)
     fl.resource_file.delete()
     fl.delete()
 
@@ -404,10 +437,11 @@ def my_resources(request, page):
 #    if not request.user.is_authenticated():
 #        return HttpResponseRedirect('/accounts/login/')
 
-    # TODO: remove the following 4 lines of debugging code prior to pull request
     # import sys
     # sys.path.append("/home/docker/pycharm-debug")
     # import pydevd
+    # IP Address for Ubuntu VM must be: 172.17.42.1
+    # IP Address for boot2docker: varies
     # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
@@ -515,7 +549,7 @@ def add_dublin_core(request, page):
 
     return {
         'dublin_core' : [t for t in cm.dublin_metadata.all().exclude(term='AB')],
-        'abstract' : abstract,
+        # 'abstract' : abstract,
         'resource_type' : cm._meta.verbose_name,
         'dcterm_frm' : DCTerm(),
         'bag' : cm.bags.first(),
@@ -611,15 +645,26 @@ def create_resource_new_workflow(request, *args, **kwargs):
     metadata = []
     page_url_dict = {}
     url_key = "page_redirect_url"
+
+    # receivers need to change the values of this dict if file validation fails
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+
     # Send pre-create resource signal - let any other app populate the empty metadata list object
     # also pass title to other apps, and give other apps a chance to populate page_redirect_url if they want
     # to redirect to their own page for resource creation rather than use core resource creation code
-    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata, files=resource_files, title=res_title, url_key=url_key, page_url_dict=page_url_dict, **kwargs)
+    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata,
+                                               files=resource_files, title=res_title, url_key=url_key,
+                                               page_url_dict=page_url_dict, validate_files=file_validation_dict, **kwargs)
 
-    # redirect to a specific resource creation page if other apps choose so
-
-    if url_key in page_url_dict:
-        return HttpResponseRedirect(page_url_dict[url_key])
+    if 'are_files_valid' in file_validation_dict:
+        if not file_validation_dict['are_files_valid']:
+            error_message = file_validation_dict.get('message', None)
+            if not error_message:
+                error_message = "Uploaded file(s) failed validation."
+            context = {
+                'file_validation_error': error_message
+            }
+            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     # generic resource core metadata and resource creation
     add_title = True
@@ -665,6 +710,12 @@ def create_resource_new_workflow(request, *args, **kwargs):
             files=request.FILES.getlist('files'),
             content=res_title
     )
+
+    # Send post-create resource signal
+    post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, **kwargs)
+
+    if url_key in page_url_dict:
+        return render(request, page_url_dict[url_key], {'resource': resource})
 
     if resource is not None:
         # go to resource landing page
