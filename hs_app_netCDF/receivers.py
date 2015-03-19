@@ -67,42 +67,69 @@ def netcdf_pre_create_resource(sender, **kwargs):
                         if value != '':
                             meta_info[element] = value
                     metadata.append({'variable': meta_info})
+
+
+                # create the ncdump text file
+                import nc_functions.nc_dump as nc_dump
+                if nc_dump.get_nc_dump_string_by_ncdump(infile.file.name):
+                    dump_str = nc_dump.get_nc_dump_string_by_ncdump(infile.file.name)
+                else:
+                    dump_str = nc_dump.get_nc_dump_string(infile.file.name)
+
+                if dump_str:
+                    from django.core.files.uploadedfile import InMemoryUploadedFile
+                    import StringIO, os
+                    # refine dump_str first line
+                    nc_file_name = '.'.join(os.path.basename(infile.name).split('.')[:-1])
+                    first_line = list('netcdf {0} '.format(nc_file_name))
+                    first_line_index = dump_str.index('{')
+                    dump_str_list = first_line + list(dump_str)[first_line_index:]
+                    dump_str = "".join(dump_str_list)
+
+                    # write dump_str to temporary file
+                    io = StringIO.StringIO()
+                    io.write(dump_str)
+                    dump_file_name = nc_file_name + '_header_info.txt'
+                    dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
+                    files.append(dump_file)
+
             else:
                 validate_files_dict['are_files_valid'] = False
                 validate_files_dict['message'] = 'Please check if the uploaded file is in valid NetCDF format.'
 
 
 
-# receiver used to create netcdf header text after user click on "create resource"
-@receiver(post_create_resource, sender=NetcdfResource)
-def netcdf_post_create_resource(sender, **kwargs):
-    # Add ncdump text file to resource
-    if sender is NetcdfResource:
-        nc_res = kwargs['resource']
-        nc_files = nc_res.files.all()
-        if nc_files:
-            nc_file = nc_res.files.all()[0]
-            nc_file_name = nc_file.resource_file.path
-            # create InMemoryUploadedFile text file to store the dump info and add it to resource
-            import nc_functions.nc_dump as nc_dump
-            if nc_dump.get_nc_dump_string_by_ncdump(nc_file_name):
-                dump_str = nc_dump.get_nc_dump_string_by_ncdump(nc_file_name)
-            else:
-                dump_str = nc_dump.get_nc_dump_string(nc_file_name)
-
-            if dump_str:
-                from django.core.files.uploadedfile import InMemoryUploadedFile
-                import StringIO, os
-                io = StringIO.StringIO()
-                io.write(dump_str)
-                dump_file_name = '.'.join(os.path.basename(nc_file_name).split('.')[:-1])+'_header_info.txt'
-                dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
-                dump_file.seek(0)
-                hydroshare.add_resource_files(nc_res.short_id, dump_file)
-                # add file format for text file
-                file_format_type = utils.get_file_mime_type(dump_file_name)
-                if file_format_type not in [mime.value for mime in nc_res.metadata.formats.all()]:
-                    nc_res.metadata.create_element('format', value=file_format_type)
+# # receiver used to create netcdf header text after user click on "create resource"
+# not working need to wait for the irods api finished
+# @receiver(post_create_resource, sender=NetcdfResource)
+# def netcdf_post_create_resource(sender, **kwargs):
+#     # Add ncdump text file to resource
+#     if sender is NetcdfResource:
+#         nc_res = kwargs['resource']
+#         nc_files = nc_res.files.all()
+#         if nc_files:
+#             nc_file = nc_res.files.all()[0]
+#             nc_file_name = nc_file.resource_file.path
+#             # create InMemoryUploadedFile text file to store the dump info and add it to resource
+#             import nc_functions.nc_dump as nc_dump
+#             if nc_dump.get_nc_dump_string_by_ncdump(nc_file_name):
+#                 dump_str = nc_dump.get_nc_dump_string_by_ncdump(nc_file_name)
+#             else:
+#                 dump_str = nc_dump.get_nc_dump_string(nc_file_name)
+#
+#             if dump_str:
+#                 from django.core.files.uploadedfile import InMemoryUploadedFile
+#                 import StringIO, os
+#                 io = StringIO.StringIO()
+#                 io.write(dump_str)
+#                 dump_file_name = '.'.join(os.path.basename(nc_file_name).split('.')[:-1])+'_header_info.txt'
+#                 dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
+#                 dump_file.seek(0)
+#                 hydroshare.add_resource_files(nc_res.short_id, dump_file)
+#                 # add file format for text file
+#                 file_format_type = utils.get_file_mime_type(dump_file_name)
+#                 if file_format_type not in [mime.value for mime in nc_res.metadata.formats.all()]:
+#                     nc_res.metadata.create_element('format', value=file_format_type)
 
 # receiver used after user clicks on "delete file" for existing netcdf file
 @receiver(pre_delete_file_from_resource, sender=NetcdfResource)
@@ -161,7 +188,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Only one file can be uploaded.'
         elif len(files) == 1:
-            # file type validation and existing metadata update
+            # file type validation and existing metadata update and create new ncdump text file
             infile = files[0]
             import nc_functions.nc_utils as nc_utils
             import netCDF4
@@ -233,6 +260,31 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                                                    shape=var_info['shape'],
                                                    missing_value=var_info['missing_value'],
                                                    descriptive_name=var_info['descriptive_name'])
+
+                # create the ncdump text file
+                import nc_functions.nc_dump as nc_dump
+                if nc_dump.get_nc_dump_string_by_ncdump(infile.file.name):
+                    dump_str = nc_dump.get_nc_dump_string_by_ncdump(infile.file.name)
+                else:
+                    dump_str = nc_dump.get_nc_dump_string(infile.file.name)
+
+                if dump_str:
+                    from django.core.files.uploadedfile import InMemoryUploadedFile
+                    import StringIO, os
+                    # refine dump_str first line
+                    nc_file_name = '.'.join(os.path.basename(infile.name).split('.')[:-1])
+                    first_line = list('netcdf {0} '.format(nc_file_name))
+                    first_line_index = dump_str.index('{')
+                    dump_str_list = first_line + list(dump_str)[first_line_index:]
+                    dump_str = "".join(dump_str_list)
+
+                    # write dump_str to temporary file
+                    io = StringIO.StringIO()
+                    io.write(dump_str)
+                    dump_file_name = nc_file_name + '_header_info.txt'
+                    dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
+                    files.append(dump_file)
+
             else:
                 validate_files_dict['are_files_valid'] = False
                 validate_files_dict['message'] = 'Please check if the uploaded file is in valid NetCDF format.'
