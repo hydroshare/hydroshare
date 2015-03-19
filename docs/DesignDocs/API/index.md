@@ -71,7 +71,7 @@ Table 1. Summary of HydroShare Resource Management API methods.
 | 4           | GET /resolveDOI/{doi}                   | HydroShare.resolveDOI()            | (doi) --\> pid                  |
 
 
-***HydroShare.getResource**(*pid*)* --\> OctetStream
+### HydroShare.getResource**(*pid*)* --\> OctetStream
 
 Retrieve a resource identified by the pid from HydroShare. The response must contain the bytes of the indicated resource, and the checksum of the bytes retrieved should match the checksum recorded in the system metadata for that resource. The bytes of the resource will be encoded as a zipped BagIt archive; this archive will contain resource contents as well as science metadata. If the resource does not exist in HydroShare, then Exceptions.NotFound must be raised. Resources can be any unit of content within HydroShare that has been assigned a pid.
 
@@ -92,7 +92,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Notes**: All resources and resource versions will have a unique internal HydroShare identifier (pid). A DOI will be assigned to all formally published versions of a resource. For this method, passing in a pid (which is a HydroShare internal identifer) would return a specific resource version corresponding to the pid. A DOI would have to be resolved using HydroShare.resolveDOI() to get the pid for the resource, which could then be used with this method. The obsoletion chain will be contained within the system metadata for resources and so it can be traversed by calling HydroShare.getSystemMetadata().
 
 
-***HydroShare.getScienceMetadata**(*pid*)* --\> ScienceMetadata
+### HydroShare.getScienceMetadata**(*pid*)* --\> ScienceMetadata
 
 Describes the resource identified by the pid by returning the associated science metadata object. If the resource does not exist, Exceptions.NotFound must be raised.
 
@@ -111,7 +111,7 @@ Exceptions.NotFound – The resource identified by pid does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.getSystemMetadata**(*pid*)* --\> SystemMetadata
+### HydroShare.getSystemMetadata**(*pid*)* --\> SystemMetadata
 
 Describes the resource identified by the pid by returning the associated system metadata object. If the resource does not exist, Exceptions.NotFound must be raised.
 
@@ -130,7 +130,7 @@ Exceptions.NotFound – The resource identified by pid does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.getResourceMap**(*pid*)* --\> ResourceMap
+### HydroShare.getResourceMap**(*pid*)* --\> ResourceMap
 
 Describes the resource identified by the pid by returning the associated resource map document. If the resource does not exist, Exceptions.NotFound must be raised.
 
@@ -149,7 +149,7 @@ Exceptions.NotFound – The resource identified by pid does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.getResourceFile**(*pid*, *filename*)* --\> file
+### HydroShare.getResourceFile**(*pid*, *filename*)* --\> file
 
 Called by clients to get an individual file within a HydroShare resource.
 
@@ -170,7 +170,7 @@ Exceptions.NotFound – The resource identified by pid does not exist or the fil
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.getRevisions**(*pid*)* --\> List of pids
+### HydroShare.getRevisions**(*pid*)* --\> List of pids
 
 Returns a list of pids for resources that are revisions of the resource identified by the specified pid.
 
@@ -189,7 +189,7 @@ Exceptions.NotFound – The Resource identified by pid does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.getRelated**(*pid*)* --\> List of pids
+### HydroShare.getRelated**(*pid*)* --\> List of pids
 
 Returns a list of pids for resources that are related to the resource identified by the specified pid.
 
@@ -208,7 +208,7 @@ Exceptions.NotFound – The resource identified by pid does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.getChecksum**(*pid*)* --\> Checksum
+### HydroShare.getChecksum**(*pid*)* --\> Checksum
 
 Returns a checksum for the specified resource using the MD5 algorithm. The result is used to determine if two instances referenced by a pid are identical.
 
@@ -227,7 +227,7 @@ Exceptions.NotFound – The resource specified by pid does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.createResource**(*resource*)* --\> pid
+### HydroShare.createResource**(*resource*)* --\> pid
 
 Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method returns the newly-assigned pid.
 
@@ -248,7 +248,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: The calling user will automatically be set as the owner of the created resource.
 
 
-***HydroShare.updateResource**(*pid*, *resource*)* --\> pid
+### HydroShare.updateResource**(*pid*, *resource*)* --\> pid
 
 Called by clients to update a resource in HydroShare.
 
@@ -273,7 +273,7 @@ Exception.ServiceFailure – The service is unable to process the request
 For immutable resources (formally published resources), this method creates a new resource that is a new version of the formally published resource. HydroShare will record the update by storing the SystemMetadata.obsoletes and SystemMetadata.obsoletedBy fields for the respective resources in their system metadata. HydroShare MUST check or set the values of SystemMetadata.obsoletes and SystemMetadata.obsoletedBy so that they accurately represent the relationship between the new and old objects. HydroShare MUST also set SystemMetadata.dateSysMetadataModified. The modified system metadata entries must then be available in HydroShare.listObjects() to ensure that any cataloging systems pick up the changes when filtering on SystmeMetadata.dateSysMetadataModified. A formally published resource can only be obsoleted by one newer version. Once a resource is obsoleted, no other resources can obsolete it.
 
 
-***HydroShare.addResourceFile**(*pid*, *file*)* --\> pid
+### HydroShare.addResourceFile**(*pid*, *file*)* --\> pid
 
 Called by clients to update a resource in HydroShare by adding a single file.
 
@@ -296,7 +296,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Notes**: For mutable resources (resources that have not been formally published), the update adds the file that is passed to this method to the resource. For immutable resources (formally published resources), this method creates a new resource that is a new version of the formally published resource. HydroShare will record the update by storing the SystemMetadata.obsoletes and SystemMetadata.obsoletedBy fields for the respective resources in their system metadata. HydroShare MUST check or set the values of SystemMetadata.obsoletes and SystemMetadata.obsoletedBy so that they accurately represent the relationship between the new and old objects. HydroShare MUST also set SystemMetadata.dateSysMetadataModified. The modified system metadata entries must then be available in HydroShare.listObjects() to ensure that any cataloging systems pick up the changes when filtering on SystmeMetadata.dateSysMetadataModified. A formally published resource can only be obsoleted by one newer version. Once a resource is obsoleted, no other resources can obsolete it.
 
 
-***HydroShare.updateScienceMetadata**(*pid, ScienceMetadata*)* --\> pid
+### HydroShare.updateScienceMetadata**(*pid, ScienceMetadata*)* --\> pid
 
 Called by clients to update the science metadata for a resource in HydroShare.
 
@@ -319,7 +319,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Notes**: For mutable resources (resources that have not been formally published), the update overwrites existing Science Metadata using the ScienceMetadata that is passed to this method. For immutable resources (formally published resources), this method creates a new resource that is a new version of the formally published resource. HydroShare will record the update by storing the SystemMetadata.obsoletes and SystemMetadata.obsoletedBy fields for the respective resources in their system metadata. HydroShare MUST check or set the values of SystemMetadata.obsoletes and SystemMetadata.obsoletedBy so that they accurately represent the relationship between the new and old objects. HydroShare MUST also set SystemMetadata.dateSysMetadataModified. The modified system metadata entries must then be available in HydroShare.listObjects() to ensure that any cataloging systems pick up the changes when filtering on SystmeMetadata.dateSysMetadataModified. A formally published resource can only be obsoleted by one newer version. Once a resource is obsoleted, no other resources can obsolete it.
 
 
-***HydroShare.deleteResource**(*pid*)* --\> pid
+### HydroShare.deleteResource**(*pid*)* --\> pid
 
 Deletes a resource managed by HydroShare. The caller must be an owner of the resource or an administrator to perform this function. The operation removes the resource from further interaction with HydroShare services and interfaces. The implementation may delete the resource bytes, and should do so since a delete operation may be in response to a problem with the resource (e.g., it contains malicious content, is inappropriate, or is subject to a legal request). If the resource does not exist, the Exceptions.NotFound exception is raised.
 
@@ -340,7 +340,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: Only HydroShare administrators will be able to delete formally published resources.
 
 
-***HydroShare.deleteResourceFile**(*pid, filename*)* --\> pid
+### HydroShare.deleteResourceFile**(*pid, filename*)* --\> pid
 
 Deletes an individual file from a HydroShare resource. If the file does not exist, the Exceptions.NotFound exception is raised.
 
@@ -363,7 +363,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: For mutable resources (resources that have not been formally published), this method modifies the resource by deleting the file. For immutable resources (formally published resources), this method creates a new resource that is a new version of the formally published resource. HydroShare will record the update by storing the SystemMetadata.obsoletes and SystemMetadata.obsoletedBy fields for the respective resources in their system metadata. HydroShare MUST check or set the values of SystemMetadata.obsoletes and SystemMetadata.obsoletedBy so that they accurately represent the relationship between the new and old objects. HydroShare MUST also set SystemMetadata.dateSysMetadataModified. The modified system metadata entries must then be available in HydroShare.listObjects() to ensure that any cataloging systems pick up the changes when filtering on SystemMetadata.dateSysMetadataModified. A formally published resource can only be obsoleted by one newer version. Once a resource is obsoleted, no other resources can obsolete it.
 
 
-***HydroShare.publishResource**(*pid*)* --\> pid
+### HydroShare.publishResource**(*pid*)* --\> pid
 
 Formally publishes a resource in HydroShare. Triggers the creation of a DOI for the resource, and triggers the exposure of the resource to the HydroShare DataONE Member Node. The user must be an owner of a resource or an adminstrator to perform this action.
 
@@ -384,7 +384,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: This is different than just giving public access to a resource via access control rules.
 
 
-***HydroShare.resolveDOI**(*doi*)* --\> pid
+### HydroShare.resolveDOI**(*doi*)* --\> pid
 
 Takes as input a DOI and returns the internal HydroShare identifier (pid) for a resource. This method will be used to get the HydroShare pid for a resource identified by a doi for further operations using the web service API.
 
@@ -432,7 +432,7 @@ Table 2. HydroShare user management and authorization API URLs and methods.
 | 1           | GET /resourceList?creationDate\_\_range={fromDate},{toDate}                                                                        | HydroShare.getResourceList()  | (queryType, fromDate, toDate) --\> resourceList           |
 
 
-***HydroShare.setResourceOwner**(*pid, userID*)* --\> pid
+### HydroShare.setResourceOwner**(*pid, userID*)* --\> pid
 
 Changes ownership of the specified resource to the user specified by a userID.
 
@@ -455,7 +455,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: This can only be done by the resource owner or a HydroShare administrator.
 
 
-***HydroShare.setAccessRules**(*pid, principalType, principalID, access, allow*)* --\> pid
+### HydroShare.setAccessRules**(*pid, principalType, principalID, access, allow*)* --\> pid
 
 Set the access permissions for an object identified by pid. Triggers a change in the system metadata. Successful completion of this operation in indicated by a HTTP response of 200. Unsuccessful completion of this operation must be indicated by returning an appropriate exception such as NotAuthorized.
 
@@ -486,7 +486,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: “Do not distribute” is an attribute of the resource that is set by a user with “Full” permissions and only applies to users with “Edit” and “View” privileges. There is no “share” privilege in HydroShare. Share permission is implicit unless prohibited by the “Do not distribute” attribute. The only permissions in HydroShare are “View”, “Edit” and “Full”.
 
 
-***HydroShare.createAccount**(*user*)* --\> userID
+### HydroShare.createAccount**(*user*)* --\> userID
 
 Create a new user within the HydroShare system.
 
@@ -507,7 +507,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: This would be done via a JSON object (user) that is in the POST request. Should set a random password, and then send an email to make them verify the account. Unverified accounts can't login and are automatically deleted after a specified time (according to policy).
 
 
-***HydroShare.updateAccount**(*userID, user*)* --\> userID
+### HydroShare.updateAccount**(*userID, user*)* --\> userID
 
 Update an existing user within the HydroShare system. The user calling this method must have write access to the account details.
 
@@ -532,7 +532,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: This would be done via a JSON object (user) that is in the PUT request.
 
 
-***HydroShare.getUserInfo**(*userID*)* --\> user
+### HydroShare.getUserInfo**(*userID*)* --\> user
 
 Get the information about a user identified by userID. This would be their profile information, groups they belong to, etc.
 
@@ -551,7 +551,7 @@ Exceptions.NotFound – The user identified by userID does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.listUsers**(*query, status, start, count*)* --\> userList
+### HydroShare.listUsers**(*query, status, start, count*)* --\> userList
 
 List the users that match search criteria.
 
@@ -574,7 +574,7 @@ count=100 – (optional) the maximum number of results that should be returned i
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.getGroupInfo**(*groupID*)* --\> group
+### HydroShare.getGroupInfo**(*groupID*)* --\> group
 
 Get the information about a group identified by groupID. For a group this would be its description and membership list.
 
@@ -593,7 +593,7 @@ Exceptions.NotFound – The group identified by groupID does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.listGroups**(*query, status, start, count*)* --\> groupList
+### HydroShare.listGroups**(*query, status, start, count*)* --\> groupList
 
 List the groups that match search criteria.
 
@@ -616,7 +616,7 @@ count=100 – (optional) the maximum number of results that should be returned i
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.createGroup**(*group*)* --\> groupID
+### HydroShare.createGroup**(*group*)* --\> groupID
 
 Create a group within HydroShare. Groups are lists of users that allow all members of the group to be referenced by listing solely the name of the group. Group names must be unique within HydroShare. Groups can only be modified by users listed as group owners.
 
@@ -639,7 +639,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: This would be done via a JSON object (group) that is in the POST request. May want to add an email verification step to avoid automated creation of fake groups. The creating user would automatically be set as the owner of the created group.
 
 
-***HydroShare.updateGroup**(*groupID, group*)* --\> groupID
+### HydroShare.updateGroup**(*groupID, group*)* --\> groupID
 
 Modify details of group identified by groupID or add or remove members to/from the group. Group members can be modified only by an owner of the group, otherwise a NotAuthorized exception is thrown. Group members are provided as a list of users that replace the group membership.
 
@@ -664,7 +664,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: This would be done via a JSON object (group) that is in the PUT request.
 
 
-***HydroShare.setGroupOwner**(*groupID, userID*)* --\> groupID
+### HydroShare.setGroupOwner**(*groupID, userID*)* --\> groupID
 
 Adds ownership of the group identified by groupID to the user specified by userID. This can only be done by a group owner or HydroShare administrator.
 
@@ -687,7 +687,7 @@ Exceptions.NotFound – The user identified by userID does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.deleteGroupOwner**(*groupID, userID*)* --\> groupID
+### HydroShare.deleteGroupOwner**(*groupID, userID*)* --\> groupID
 
 Removes a group owner identified by a userID from a group specified by groupID. This can only be done by a group owner or HydroShare administrator.
 
@@ -714,7 +714,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: A group must have at least one owner.
 
 
-***HydroShare.getResourceList**(*queryType, groupID*)* --\> resourceList
+### HydroShare.getResourceList**(*queryType, groupID*)* --\> resourceList
 
 Return a list of pids for Resources that have been shared with a group identified by groupID.
 
@@ -737,7 +737,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: See http://django-tastypie.readthedocs.org/en/latest/resources.html\#basic-filtering for implementation details and example. We may want to modify this method to return more than just the pids for resources so that some metadata for the list of resources returned could be displayed without having to call HydroShare.getScienceMetadata() and HydroShare.GetSystemMetadata() for every resource in the returned list.
 
 
-***HydroShare.getResourceList**(*queryType, userID*)* --\> resourceList
+### HydroShare.getResourceList**(*queryType, userID*)* --\> resourceList
 
 Return a list of pids for Resources that a user identified by userID has created.
 
@@ -760,7 +760,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: See http://django-tastypie.readthedocs.org/en/latest/resources.html\#basic-filtering for implementation details and example. We may want to modify this method to return more than just the pids for resources so that some metadata for the list of resources returned could be displayed without having to call HydroShare.getScienceMetadata() and HydroShare.GetSystemMetadata() for every resource in the returned list.
 
 
-***HydroShare.getResourceList**(*queryType, userID*)* --\> resourceList
+### HydroShare.getResourceList**(*queryType, userID*)* --\> resourceList
 
 Return a list of pids for Resources that have been shared with a user identified by userID.
 
@@ -783,7 +783,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: See http://django-tastypie.readthedocs.org/en/latest/resources.html\#basic-filtering for implementation details and example. We may want to modify this method to return more than just the pids for resources so that some metadata for the list of resources returned could be displayed without having to call HydroShare.getScienceMetadata() and HydroShare.GetSystemMetadata() for every resource in the returned list.
 
 
-***HydroShare.getResourceList**(*queryType, fromDate, toDate*)* --\> resourceList
+### HydroShare.getResourceList**(*queryType, fromDate, toDate*)* --\> resourceList
 
 Return a list of pids for Resources whose creation date lies within the specified range.
 
@@ -824,7 +824,7 @@ Table 3. HydroShare resource discovery API URLs and methods.
 | 2           | GET /search                                                                                                        | HydroShare.listSearchEngines() | () --\> searchEngineList                                         |
 
 
-***HydroShare.listResources**(*fromDate, toDate, resourceType, start, count*)* --\> resourceList
+### HydroShare.listResources**(*fromDate, toDate, resourceType, start, count*)* --\> resourceList
 
 Return a list of pids for Resources whose creation date lies within the specified range, and optionally are of a particular resource type. This method is required to support cataloging of resources contained within HydroShare.
 
@@ -851,7 +851,7 @@ Exception.ServiceFailure – The service is unable to process the request
 **Note**: This method is primarily to support outside services that would want to harvest the HydroShare metadata catalog.
 
 
-***HydroShare.listResourceTypes**()* --\> resourceTypeList
+### HydroShare.listResourceTypes**()* --\> resourceTypeList
 
 Returns a list of all resource types registered in the HydroShare resource type vocabulary
 
@@ -866,7 +866,7 @@ Returns a list of all resource types registered in the HydroShare resource type 
 **Raises**: Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.listFormats**()* --\> resourceFormatList
+### HydroShare.listFormats**()* --\> resourceFormatList
 
 Returns a list of all resource formats registered in the HydroShare resource format vocabulary
 
@@ -881,7 +881,7 @@ Returns a list of all resource formats registered in the HydroShare resource for
 **Raises**: Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.search**(**queryType, query**)* --\> resourceList
+### HydroShare.search**(**queryType, query**)* --\> resourceList
 
 Search the HydroShare metadata catalog and return a list of pids for resources that match the search criteria. Search may be implemented using more than one type of search engine. The queryType parameter indicates which search engine should be targeted. The value and form of query is determined by the search engine.
 
@@ -925,7 +925,7 @@ Table 4. HydroShare social API URLs and methods.
 | 1           | POST /resource/annotation/endorse/{annotationID}/{userID} | HydroShare.endorseAnnotation()    | (annotationID, userID) --\> annotationID    |
 
 
-***HydroShare.endorseResource**(*pid, userID*)* --\> pid
+### HydroShare.endorseResource**(*pid, userID*)* --\> pid
 
 Create an endorsement or (+1) for a resource in HydroShare identified by pid for the user identified by userID
 
@@ -948,7 +948,7 @@ Exceptions.NotFound – The user identified by userID does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.followUser**(*userID, followerID*)* --\> userID
+### HydroShare.followUser**(*userID, followerID*)* --\> userID
 
 Start following a HydroShare user identified by userID.
 
@@ -971,7 +971,7 @@ Exceptions.NotFound – The user identified by followerID does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.deleteFollowUser**(*userID, followerID*)* --\> userID
+### HydroShare.deleteFollowUser**(*userID, followerID*)* --\> userID
 
 Stop following a HydroShare user identified by userID.
 
@@ -994,7 +994,7 @@ Exceptions.NotFound – The user identified by followerID does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.followResource**(*pid, followerID*)* --\> pid
+### HydroShare.followResource**(*pid, followerID*)* --\> pid
 
 Start following a HydroShare resource identified by pid.
 
@@ -1017,7 +1017,7 @@ Exceptions.NotFound – The user identified by followerID does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.deleteFollowResource**(*pid, followerID*)* --\> pid
+### HydroShare.deleteFollowResource**(*pid, followerID*)* --\> pid
 
 Stop following a HydroShare resource identified by pid.
 
@@ -1040,7 +1040,7 @@ Exceptions.NotFound – The user identified by followerID does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.followGroup**(*groupID, followerID*)* --\> groupID
+### HydroShare.followGroup**(*groupID, followerID*)* --\> groupID
 
 Start following a HydroShare group identified by groupID.
 
@@ -1063,7 +1063,7 @@ Exceptions.NotFound – The user identified by followerID does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.deleteFollowGroup**(*groupID, followerID*)* --\> groupID
+### HydroShare.deleteFollowGroup**(*groupID, followerID*)* --\> groupID
 
 Stop following a HydroShare group identified by groupID.
 
@@ -1086,7 +1086,7 @@ Exceptions.NotFound – The user identified by followerID does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.annotateResource**(*pid, annotation, userID, previousAnnotationID*)* --\> annotationID
+### HydroShare.annotateResource**(*pid, annotation, userID, previousAnnotationID*)* --\> annotationID
 
 Create a comment about a resource in HydroShare identified by pid.
 
@@ -1114,7 +1114,7 @@ Exception.ServiceFailure – The service is unable to process the request
 Exceptions.NotFound - The previousAnnotationID is not an annotation of the resource identified by pid
 
 
-***HydroShare.getAnnotations**(*pid*)* --\> annotationList
+### HydroShare.getAnnotations**(*pid*)* --\> annotationList
 
 Get the list of annotations for a resource identified by pid.
 
@@ -1133,7 +1133,7 @@ Exceptions.NotFound – The resource identified by pid does not exist
 Exception.ServiceFailure – The service is unable to process the request
 
 
-***HydroShare.endorseAnnotation**(*annotationID, userID*)* --\> annotationID
+### HydroShare.endorseAnnotation**(*annotationID, userID*)* --\> annotationID
 
 Create an endorsement or (+1) by a user identified by userID for an annotation identified by annotationID.
 
