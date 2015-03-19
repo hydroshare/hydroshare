@@ -10,7 +10,7 @@ from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
 from uuid import uuid4
 from mezzanine.core.models import Ownable
-from mezzanine.generic.fields import CommentsField
+from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.conf import settings as s
 from mezzanine.generic.models import Keyword, AssignedKeyword
 import os.path
@@ -260,6 +260,9 @@ class Party(AbstractMetaDataElement):
                 creator_order = 1
                 if party:
                     creator_order = party.order + 1
+                if len(kwargs['name'].strip()) == 0:
+                    raise ValidationError("Invalid name for the %s." % element_name.lower())
+
                 party = Creator.objects.create(name=kwargs['name'], order=creator_order, content_object=metadata_obj)
             else:
                 party = Contributor.objects.create(name=kwargs['name'], content_object=metadata_obj)
@@ -471,12 +474,15 @@ class Description(AbstractMetaDataElement):
         description = Description.objects.get(id=element_id)
         if description:
             if 'abstract' in kwargs:
-                description.abstract = kwargs['abstract']
-                description.save()
+                if len(kwargs['abstract'].strip()) > 0:
+                    description.abstract = kwargs['abstract']
+                    description.save()
+                else:
+                    raise ValidationError('A value for the description/abstract element is missing.')
             else:
-                raise ValidationError('Abstract for description element is missing.')
+                raise ValidationError('A value for description/abstract element is missing.')
         else:
-            raise ObjectDoesNotExist("No description element was found for the provided id:%s" % element_id)
+            raise ObjectDoesNotExist("No description/abstract element was found for the provided id:%s" % element_id)
 
     @classmethod
     def remove(cls, element_id):
@@ -645,6 +651,9 @@ class Date(AbstractMetaDataElement):
                 else:
                     dt.start_date = start_dt
                     dt.save()
+            elif dt.type == 'modified':
+                dt.start_date = metadata_obj.resource.updated
+                dt.save()
             else:
                 raise ValidationError("Date value is missing.")
         else:
@@ -754,22 +763,28 @@ class Identifier(AbstractMetaDataElement):
             if 'name' in kwargs:
                 if idf.name.lower() != kwargs['name'].lower():
                     if idf.name.lower() == 'hydroshareidentifier':
-                        raise  ValidationError("Identifier name 'hydroshareIdentifier' can't be changed.")
+                        if not 'migration' in kwargs:
+                            raise ValidationError("Identifier name 'hydroshareIdentifier' can't be changed.")
 
                     if idf.name.lower() == 'doi':
-                        raise  ValidationError("Identifier name 'DOI' can't be changed.")
+                        raise ValidationError("Identifier name 'DOI' can't be changed.")
 
                     # check this new identifier name not already exists
                     if Identifier.objects.filter(name__iexact=kwargs['name'], object_id=idf.object_id,
                                               content_type__pk=idf.content_type.id).count()> 0:
-                        raise ValidationError('Identifier name:%s already exists.' % kwargs['name'])
+                        if not 'migration' in kwargs:
+                            raise ValidationError('Identifier name:%s already exists.' % kwargs['name'])
 
                     idf.name = kwargs['name']
 
             if 'url' in kwargs:
                 if idf.url.lower() != kwargs['url'].lower():
-                    if idf.url.lower().find('http://hydroshare.org/resource') == 0:
-                        raise  ValidationError("Hydroshare identifier url value can't be changed.")
+                    if idf.name.lower() == 'hydroshareidentifier':
+                        if not 'migration' in kwargs:
+                            raise  ValidationError("Hydroshare identifier url value can't be changed.")
+
+                    # if idf.url.lower().find('http://hydroshare.org/resource') == 0:
+                    #     raise  ValidationError("Hydroshare identifier url value can't be changed.")
                     # check this new identifier name not already exists
                     if Identifier.objects.filter(url__iexact=kwargs['url'], object_id=idf.object_id,
                                                  content_type__pk=idf.content_type.id).count()> 0:
@@ -1131,7 +1146,7 @@ class Coverage(AbstractMetaDataElement):
 
 class Format(AbstractMetaDataElement):
     term = 'Format'
-    value = models.CharField(max_length=50)
+    value = models.CharField(max_length=150)
 
     def __unicode__(self):
         return self.value
@@ -1353,6 +1368,7 @@ class AbstractResource(ResourcePermissionsMixin):
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
+    rating = RatingField()
 
     # this is to establish a relationship between a resource and
     # any metadata container object (e.g., CoreMetaData object)
@@ -1390,8 +1406,15 @@ class AbstractResource(ResourcePermissionsMixin):
     def get_citation(self):
         citation = ''
 
+        CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
+        CITATION_ERROR = "Failed to generate citation."
+
         first_author = self.metadata.creators.all().filter(order=1)[0]
-        name_parts = first_author.name.split(" ")
+        name_parts = first_author.name.split()
+        if len(name_parts) == 0:
+            citation = CREATOR_NAME_ERROR
+            return citation
+
         if len(name_parts) > 2:
             citation = "{last_name}, {first_initial}.{middle_initial}.".format(last_name=name_parts[-1],
                                                                               first_initial=name_parts[0][0],
@@ -1402,7 +1425,11 @@ class AbstractResource(ResourcePermissionsMixin):
 
         other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
-            name_parts = author.name.split(" ")
+            name_parts = author.name.split()
+            if len(name_parts) == 0:
+                citation = CREATOR_NAME_ERROR
+                return citation
+
             if len(name_parts) > 2:
                 citation += "{first_initial}.{middle_initial}.{last_name}".format(first_initial=name_parts[0][0],
                                                                                   middle_initial=name_parts[1][0],
@@ -1411,11 +1438,18 @@ class AbstractResource(ResourcePermissionsMixin):
                 citation += "{first_initial}.{last_name}".format(first_initial=name_parts[0][0],
                                                                  last_name=name_parts[-1]) + ", "
 
-        citation = citation[:-2]
+        #  remove the last added comma and the space
+        if len(citation) > 2:
+            citation = citation[:-2]
+        else:
+            return CITATION_ERROR
+
         if self.metadata.dates.all().filter(type='published'):
             citation_date = self.metadata.dates.all().filter(type='published')[0]
-        else:
+        elif self.metadata.dates.all().filter(type='modified'):
             citation_date = self.metadata.dates.all().filter(type='modified')[0]
+        else:
+            return CITATION_ERROR
 
         citation += " ({year}). ".format(year=citation_date.start_date.year)
         citation += self.title
@@ -1423,8 +1457,10 @@ class AbstractResource(ResourcePermissionsMixin):
 
         if self.metadata.identifiers.all().filter(name="doi"):
             hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
-        else:
+        elif self.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
             hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+        else:
+            return CITATION_ERROR
 
         citation += "{url}".format(url=hs_identifier.url)
 
@@ -1433,6 +1469,25 @@ class AbstractResource(ResourcePermissionsMixin):
     @property
     def can_be_public(self):
         return True
+
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        # to allow only specific file types return a tuple of those file extensions (ex: return (".csv", ".txt"))
+        # to not allow any file upload, return a empty tuple ( return ())
+
+        # by default all file types are supported
+        return (".*")
+
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        # to allow resource to have only 1 file or no file, return False
+
+        # resource by default can have multiple files
+        return True
+
 
     class Meta:
         abstract = True
@@ -1484,6 +1539,19 @@ class GenericResource(Page, AbstractResource):
             return True
 
         return False
+
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # all file types are supported
+        return ('.*')
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        return True
+
+    @classmethod
+    def can_have_files(cls):
+        return True
 
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
@@ -1595,6 +1663,22 @@ class CoreMetaData(models.Model):
             return False
 
         return True
+
+    # this method needs to be overriden by any subclass of this class
+    # if they implement additional metadata elements that are required
+    def get_required_missing_elements(self):
+        missing_required_elements = []
+
+        if not self.title:
+            missing_required_elements.append('Title')
+        if not self.description:
+            missing_required_elements.append('Abstract')
+        if not self.rights:
+            missing_required_elements.append('Rights')
+        if self.subjects.count() == 0:
+            missing_required_elements.append('Keywords')
+
+        return missing_required_elements
 
     # this method needs to be overriden by any subclass of this class
     def delete_all_elements(self):
@@ -1766,6 +1850,22 @@ class CoreMetaData(models.Model):
                 dc_subject.text = sub.value
 
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+
+    def add_metadata_element_to_xml(self, root, md_element, md_fields):
+        from lxml import etree
+
+        hsterms_newElem = etree.SubElement(root,
+                                           "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'], new_element=md_element.term))
+        hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
+                                                    "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
+        for md_field in md_fields:
+            if hasattr(md_element, md_field):
+                attr = getattr(md_element, md_field)
+                if attr:
+                    field = etree.SubElement(hsterms_newElem_rdf_Desc,
+                                             "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
+                                                                  field=md_field))
+                    field.text = str(attr)
 
     def _create_person_element(self, etree, parent_element, person):
         if isinstance(person, Creator):

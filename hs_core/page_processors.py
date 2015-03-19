@@ -1,4 +1,7 @@
 from mezzanine.pages.page_processors import processor_for
+from dublincore.models import QualifiedDublinCoreElement
+from hs_core.hydroshare import current_site_url
+from hs_core.hydroshare.utils import get_file_mime_type, resource_modified
 from hs_core.models import GenericResource
 from hs_core import languages_iso
 from forms import *
@@ -28,12 +31,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                     #user in content_model.edit_users.all():
         edit_mode = True
 
-    if content_model.metadata.has_all_required_elements():
-        metadata_status = "Sufficient to make public"
-    else:
-        metadata_status = "Insufficient to make public"
+    metadata_status = _get_metadata_status(content_model)
 
     if not resource_edit:
+        if not content_model.metadata.language:
+            _do_metadata_migration(content_model, user)
+            metadata_status = _get_metadata_status(content_model)
+
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
         if len(temporal_coverages) > 0:
             temporal_coverage_data_dict = {}
@@ -70,21 +74,26 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
         keywords = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
         languages_dict = dict(languages_iso.languages)
-
+        language = languages_dict[content_model.metadata.language.code] if content_model.metadata.language else None
+        title = content_model.metadata.title.value if content_model.metadata.title else None
+        abstract = content_model.metadata.description.abstract if content_model.metadata.description else None
         context = {'metadata_form': None,
                    'citation': content_model.get_citation(),
-                   'title': content_model.metadata.title,
-                   'abstract': content_model.metadata.description,
+                   'title': title,
+                   'abstract': abstract,
                    'creators': content_model.metadata.creators.all(),
                    'contributors': content_model.metadata.contributors.all(),
                    'temporal_coverage': temporal_coverage_data_dict,
                    'spatial_coverage': spatial_coverage_data_dict,
-                   'language': languages_dict[content_model.metadata.language.code],
+                   'language': language,
                    'keywords': keywords,
                    'rights': content_model.metadata.rights,
                    'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
-                   'metadata_status': metadata_status
+                   'metadata_status': metadata_status,
+                   'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
+                   'supported_file_types': content_model.get_supported_upload_file_types(),
+                   'allow_multiple_file_upload': content_model.can_have_multiple_files()
 
         }
         return context
@@ -141,7 +150,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         contributor_form.number = contributor_form.initial['id']
         index += 1
 
-    RelationFormSetEdit = formset_factory(wraps(RelationForm)(partial(RelationForm, allow_edit=edit_mode)), formset=BaseRelationFormSet, extra=0)
+    RelationFormSetEdit = formset_factory(wraps(RelationForm)(partial(RelationForm, allow_edit=edit_mode)), formset=BaseFormSet, extra=0)
     relation_formset = RelationFormSetEdit(initial=content_model.metadata.relations.all().values(), prefix='relation')
 
     for relation_form in relation_formset.forms:
@@ -149,13 +158,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         relation_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'relation', relation_form.initial['id'])
         relation_form.number = relation_form.initial['id']
 
-    SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm, allow_edit=edit_mode)), formset=BaseSourceFormSet, extra=0)
+    SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm, allow_edit=edit_mode)), formset=BaseFormSet, extra=0)
     source_formset = SourceFormSetEdit(initial=content_model.metadata.sources.all().values(), prefix='source')
 
-    # IdentifierFormSetEdit = formset_factory(IdentifierForm, formset=BaseIdentifierFormSet, extra=0)
+    # IdentifierFormSetEdit = formset_factory(IdentifierForm, formset=BaseFormSet, extra=0)
     # identifier_formset = IdentifierFormSetEdit(initial=content_model.metadata.identifiers.all().values(), prefix='identifier')
     #
-    # FormatFormSetEdit = formset_factory(FormatForm, formset=BaseFormatFormSet, extra=0)
+    # FormatFormSetEdit = formset_factory(FormatForm, formset=BaseFormSet, extra=0)
     # format_formset = FormatFormSetEdit(initial=content_model.metadata.formats.all().values(), prefix='format')
 
     for source_form in source_formset.forms:
@@ -257,3 +266,171 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'extended_metadata_layout': extended_metadata_layout}
 
     return context
+
+
+def check_resource_mode(request):
+    if request.method == "GET":
+        resource_mode = request.session.get('resource-mode', None)
+        if resource_mode == 'edit':
+            edit_resource = True
+            del request.session['resource-mode']
+        else:
+            edit_resource = False
+    else:
+        edit_resource = True
+
+    return edit_resource
+
+def _get_metadata_status(resource):
+    if resource.metadata.has_all_required_elements():
+        metadata_status = "Sufficient to make public"
+    else:
+        metadata_status = "Insufficient to make public"
+
+    return metadata_status
+
+def _do_metadata_migration(resource, user):
+    if user.username != 'admin':
+        MIGRATION_ACCESS_ERROR = "We are sorry, this resource is not accessible due to not having been migrated to " \
+                                 "the latest version. Contact stealey@renci.org to report this problem and we will work to fix this."
+        raise ValidationError(MIGRATION_ACCESS_ERROR)
+
+    # create title element
+    if not resource.metadata.title:
+        resource.metadata.create_element('title', value=resource.title)
+
+    # create abstract element
+    if not resource.metadata.description:
+        abs_elements = QualifiedDublinCoreElement.objects.filter(term='AB', object_id=resource.pk)
+        if len(abs_elements) > 0:
+            abs_element = abs_elements[0]
+            if len(abs_element.content.strip()) > 0:
+                resource.metadata.create_element('description', abstract=abs_element.content)
+        else:
+            resource.metadata.create_element('description', abstract='Unknown')
+
+    if resource.metadata.description:
+        if len(resource.metadata.description.abstract.strip()) == 0:
+            resource.metadata.update_element('description', resource.metadata.description.id, abstract='Unknown')
+
+    # create language element
+    if not resource.metadata.language:
+        language_elements = QualifiedDublinCoreElement.objects.filter(term='LG', object_id=resource.pk)
+        if len(language_elements) > 0:
+            language_element = language_elements[0]
+            code = _get_language_code(language_element.content)
+            if code:
+                resource.metadata.create_element('language', code=code)
+            else:
+                resource.metadata.create_element('language', code='eng')
+        else:
+            resource.metadata.create_element('language', code='eng')
+
+    # create the rights element
+    if not resource.metadata.rights:
+        rights_elements = QualifiedDublinCoreElement.objects.filter(term='RT', object_id=resource.pk)
+        if len(rights_elements) > 0:
+            rights_element = rights_elements[0]
+            if len(rights_element.content.strip()) > 0:
+                resource.metadata.create_element('rights', statement=rights_element.content)
+            else:
+                resource.metadata.create_element('rights',
+                                                statement='This resource is shared under the Creative Commons Attribution CC BY.',
+                                                url='http://creativecommons.org/licenses/by/4.0/'
+                                            )
+        else:
+            resource.metadata.create_element('rights',
+                                                statement='This resource is shared under the Creative Commons Attribution CC BY.',
+                                                url='http://creativecommons.org/licenses/by/4.0/'
+                                            )
+
+    # create date created and date modified
+    if resource.metadata.dates.all().count() == 0:
+        resource.metadata.create_element('date', type='created', start_date=resource.created)
+        resource.metadata.create_element('date', type='modified', start_date=resource.updated)
+    else:
+        if not resource.metadata.dates.all().filter(type='created'):
+            resource.metadata.create_element('date', type='created', start_date=resource.created)
+        if not resource.metadata.dates.all().filter(type='modified'):
+            resource.metadata.create_element('date', type='modified', start_date=resource.updated)
+
+    # create creator elements
+    if resource.metadata.creators.all().count() == 0:
+        if resource.creator.first_name and resource.creator.last_name:
+            creator_name = resource.creator.first_name + " " + resource.creator.last_name
+        else:
+            creator_name = resource.creator.username
+
+        resource.metadata.create_element('creator', name=creator_name, order=1)
+        creator_elements = QualifiedDublinCoreElement.objects.filter(term='CR', object_id=resource.pk)
+        order = 2
+        for cr in creator_elements:
+            if len(cr.content.strip()) > 0:
+                # get the first 100 characters
+                cr_name = cr.content[:100]
+                resource.metadata.create_element('creator', name=cr_name, order=order)
+                order += 1
+    elif resource.metadata.creators.count() == 1:
+        creator_elements = QualifiedDublinCoreElement.objects.filter(term='CR', object_id=resource.pk)
+        order = 2
+        for cr in creator_elements:
+            if not resource.metadata.creators.all().filter(name=cr.content):
+                if len(cr.content.strip()) > 0:
+                    # get the first 100 characters
+                    cr_name = cr.content[:100]
+                    resource.metadata.create_element('creator', name=cr_name, order=order)
+                    order += 1
+
+    # create contributor  elements
+    if resource.metadata.contributors.all().count() == 0:
+        contributor_elements = QualifiedDublinCoreElement.objects.filter(term='CN', object_id=resource.pk)
+        for ct in contributor_elements:
+            if len(ct.content.strip()) > 0:
+                # get the first 100 characters
+                ct_name = ct.content[:100]
+                resource.metadata.create_element('contributor', name=ct_name)
+
+    # create keyword/subject elements
+    if resource.metadata.subjects.all().count() == 0:
+        kw_elements = AssignedKeyword.objects.filter(object_pk=resource.pk)
+        for kw in kw_elements:
+            if len(kw.keyword.title.strip()) > 0:
+                # get the first 100 characters
+                keyword = kw.keyword.title[:100]
+                if not resource.metadata.subjects.all().filter(value=keyword):
+                    resource.metadata.create_element('subject', value=keyword)
+
+    if resource.metadata.subjects.all().count() == 0:
+        resource.metadata.create_element('subject', value='Unknown')
+
+    # create hydroshare internal identifier
+    if resource.metadata.identifiers.all().count() == 0:
+        resource.metadata.create_element('identifier', name='hydroShareIdentifier',
+                                     url='{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id))
+    else:
+        hydroshare_identifier = resource.metadata.identifiers.all().filter(name='hydroShareIdentifier')[0]
+        resource.metadata.update_element('identifier', hydroshare_identifier.id,  name='hydroShareIdentifier',
+                                     url='{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id), migration=True)
+    # create format elements
+    if resource.metadata.formats.all().count() == 0:
+        for f in resource.files.all():
+            file_format_type = get_file_mime_type(f.resource_file.name)
+            if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
+                resource.metadata.create_element('format', value=file_format_type)
+
+    # recreate the resource slug
+    resource.set_slug('resource{0}{1}'.format('/', resource.short_id))
+
+    # create bag
+    resource_modified(resource, user)
+
+
+def _get_language_code(language):
+    code = None
+    code = [t[1] for t in iso_languages if t[1].lower() == language.lower()]
+    if len(code) > 0:
+        code = code[0]
+    else:
+        code = None
+
+    return code

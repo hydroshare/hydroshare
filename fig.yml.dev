@@ -1,9 +1,9 @@
 postgis:
   image: mjstealey/postgresql
 redis:
-  image: dockerfile/redis
-rabbitmq: 
-  image: dockerfile/rabbitmq
+  image: redis:2.8.19
+rabbitmq:
+  image: rabbitmq:3.4.4
 hydroshare:
   build: .
   environment:
@@ -29,7 +29,7 @@ hydroshare:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
-  command: python manage.py runserver 0.0.0.0:8000
+  command: /bin/bash init
 defaultworker:
   build: .
   environment:
