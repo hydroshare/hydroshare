@@ -64,19 +64,22 @@ def post_add_files_to_resource_handler(sender, **kwargs):
         # check if it a sqlite file
         fl_ext = os.path.splitext(res_file.resource_file.name)[1]
         if fl_ext == '.sqlite':
-            err_message = _validate_odm2_db_file(res_file.resource_file.file)
-            if not err_message:
+            validate_err_message = _validate_odm2_db_file(res_file.resource_file.file)
+            if not validate_err_message:
                 if extract_metadata:
                     # first delete relevant metadata elements
                     _delete_extracted_metadata(resource)
-                    _extract_metadata(resource, res_file.resource_file.file)
+                    extract_err_message = _extract_metadata(resource, res_file.resource_file.file)
                     resource_modified(resource, user)
+                    if extract_err_message:
+                        validate_files_dict['are_files_valid'] = False
+                        validate_files_dict['message'] = extract_err_message + " (Failed to extract all metadata)"
             else:
                 # delete the invalid file just uploaded
                 #file_name = os.path.basename(res_file.resource_file.name)
                 #delete_resource_file(resource.short_id, file_name)
                 validate_files_dict['are_files_valid'] = False
-                validate_files_dict['message'] = err_message
+                validate_files_dict['message'] = validate_err_message
 
 # listen to resource post create signal to extract metadata
 @receiver(post_create_resource, sender=TimeSeriesResource)
@@ -90,13 +93,16 @@ def post_create_resource_handler(sender, **kwargs):
         # check if it a sqlite file
         fl_ext = os.path.splitext(res_file.resource_file.name)[1]
         if fl_ext == '.sqlite':
-            err_message = _validate_odm2_db_file(res_file.resource_file.file)
-            if not err_message:
-                _extract_metadata(resource, res_file.resource_file.file)
+            validate_err_message = _validate_odm2_db_file(res_file.resource_file.file)
+            if not validate_err_message:
+                extract_err_message = _extract_metadata(resource, res_file.resource_file.file)
                 resource_modified(resource, user)
+                if extract_err_message:
+                    validate_files_dict['are_files_valid'] = False
+                    validate_files_dict['message'] = extract_err_message + " (Failed to extract all metadata)"
             else:
                 validate_files_dict['are_files_valid'] = False
-                validate_files_dict['message'] = err_message + " (Metadata was not extracted)"
+                validate_files_dict['message'] = validate_err_message + " (Metadata was not extracted)"
 
 @receiver(pre_metadata_element_create, sender=TimeSeriesResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
@@ -147,6 +153,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 """
 
 def _extract_metadata(resource, sqlite_file):
+    err_message = "Not a valid ODM2 SQLite file"
     try:
         con = sqlite3.connect(sqlite_file.name)
 
@@ -388,9 +395,13 @@ def _extract_metadata(resource, sqlite_file):
 
             # create the TimeSeriesResult element
             resource.metadata.create_element('timeseriesresult', **data_dict)
+            return None
 
     except sqlite3.Error, e:
-        raise Exception("Error %s:" % e.args[0])
+        sqlite_err_msg = str(e.args[0])
+        return sqlite_err_msg
+    except:
+        return err_message
 
 
 def _delete_extracted_metadata(resource):
@@ -444,6 +455,8 @@ def _validate_odm2_db_file(uploaded_file_sqlite_file):
         con = sqlite3.connect(uploaded_file_sqlite_file.name)
 
         with con:
+
+            # TODO: check that each of the core tables has the necessary columns
 
             # check that the uploaded file has all the tables from ODM2Core
             cur = con.cursor()

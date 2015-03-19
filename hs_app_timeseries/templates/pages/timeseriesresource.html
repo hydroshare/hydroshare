@@ -177,7 +177,7 @@
 
                   <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="myModalLabel">Add file to Timeseries resource</h4>
+                    <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>
                   </div>
                   <div class="modal-body">
                           {% csrf_token %}
@@ -190,7 +190,7 @@
                           <hr>
                           <div>
                               <strong><input type="checkbox" name="extract-metadata" value="No" onclick="setCheckboxValue(this)"> Check to extract metadata from this uploaded file</strong>
-                              <h3 style="color:red">If metadata is extracted existing metadata will be replaced with the extracted ones.</h3>
+                              <h3 style="color:red">If metadata is extracted, existing metadata will be replaced with the extracted ones.</h3>
                           </div>
                   </div>
                   <div class="modal-footer">
