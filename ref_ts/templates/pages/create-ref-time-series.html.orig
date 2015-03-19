@@ -47,7 +47,7 @@
   <div class="form-group cuahsi-his cuahsi-his-2">
     <label for="" class="col-sm-2 control-label">Site from Server</label>
     <div class="col-sm-10">
-        <select class="form-control" name="site" id="site"></select>
+        <select class="form-control" name="site" id=""></select>
         <button class="btn btn-block btn-primary" type="button" id="search-vars-button" data-loading-text="Retrieving Variables...">Update Variables</button>
     </div>
   </div>
@@ -175,7 +175,10 @@
                     console.log(data);
                     console.log(stuff);
                     $('#preview-div').hide();
+<<<<<<< Updated upstream
+=======
 
+>>>>>>> Stashed changes
                 }
             })
         }
@@ -279,6 +282,7 @@
             b.removeClass('btn-success');
             $('#preview-div').hide();
             $('#fail-notice').hide();
+            $('#preview-div').hide();
             var b = $('#submit');
             b.addClass('disabled');
         });
@@ -300,20 +304,17 @@
 
         $('#variable').change(function(){
             $('#fail-notice').hide();
+            getVals('soap');
             var b = $('#submit');
             b.addClass('disabled');
-            $('#preview-div').hide();
+
         });
 
         $('#site').change(function(){
-            $('#preview-div').hide();
             $('#fail-notice').hide();
-            var select = document.getElementsByName('variable')[0];
-            removeOptions(select);
-            var b = $('#preview-button-soap');
-            b.addClass('disabled');
             var b = $('#submit');
             b.addClass('disabled');
+
         });
 
         $('#preview-button-soap').click(function(){
