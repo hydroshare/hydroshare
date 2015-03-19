@@ -11,6 +11,59 @@
 
                 {# Add the view mode html code below #}
                 <div>
+                    {% if originalCoverage %}
+                        <h4><strong>Original Spatial Coverage:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Coverage Type:</strong></div>
+                            <div class="col-sm-8">box</div>
+                        </div>
+                        {% if originalCoverage.name %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.name}}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.projection %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Coordinate System/Geographic Projection:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.projection}}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.northlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>North Latitude:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.northlimit }}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.eastlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>East Longitude:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.eastlimit }}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.southlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>South Latitude:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.southlimit }}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.westlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>West Longitude:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.westlimit}}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.units %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.units}}</div>
+                            </div>
+                        {%  endif %}
+                    <hr>
+                    {% endif %}
+                </div>    
+
                     {% if variables %}
                         {% for variable in variables %}
                             <h4><strong>Variable:</strong></h4>

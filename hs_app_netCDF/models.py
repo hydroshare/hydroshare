@@ -6,8 +6,83 @@ from hs_core.models import AbstractResource
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+import json
 
-# Define netCDF metadata
+# Define original spatial coverage metadata info
+class OriginalCoverage(AbstractMetaDataElement):
+    term = 'OriginalCoverage'
+
+    """
+    _value field stores a json string as shown below for box coverage type.
+     _value = "{'northlimit':northenmost coordinate value,
+                'eastlimit':easternmost coordinate value,
+                'southlimit':southernmost coordinate value,
+                'westlimit':westernmost coordinate value,
+                'units:units applying to 4 limits (north, east, south & east),
+                'name':coverage name value here ,
+                'projection': name of the projection }"
+    """
+    _value = models.CharField(max_length=1024, null=True)
+
+    class Meta:
+        # OriginalCoverage element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+    @property
+    def value(self):
+        print self._value
+        return json.loads(self._value)
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'value' in kwargs:
+            if isinstance(kwargs['value'], dict):
+                # check that all the required sub-elements exist
+                for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
+                    if not value_item in kwargs['value']:
+                        raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or 'units' is missing.")
+
+                value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                              if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'name', 'projection')}
+
+                value_json = json.dumps(value_dict)
+                metadata_obj = kwargs['content_object']
+                cov = OriginalCoverage.objects.create(_value=value_json, content_object=metadata_obj)
+                return cov
+            else:
+                raise ValidationError('Invalid coverage value format.')
+        else:
+            raise ValidationError('Coverage value is missing.')
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        cov = OriginalCoverage.objects.get(id=element_id)
+        if cov:
+            if 'value' in kwargs:
+                if not isinstance(kwargs['value'], dict):
+                    raise ValidationError('Invalid coverage value format.')
+
+                value_dict = cov.value
+
+                if 'name' in kwargs['value']:
+                    value_dict['name'] = kwargs['value']['name']
+
+                for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
+                    if item_name in kwargs['value']:
+                        value_dict[item_name] = kwargs['value'][item_name]
+
+                value_json = json.dumps(value_dict)
+                cov._value = value_json
+                cov.save()
+        else:
+            raise ObjectDoesNotExist("No coverage element was found for the provided id:%s" % element_id)
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("Coverage element can't be deleted.")
+
+
+# Define netCDF variable metadata
 class Variable(AbstractMetaDataElement):
     # variable types are defined in OGC enhanced_data_model_extension_standard
     # left is the given value stored in database right is the value for the drop down list
@@ -149,9 +224,10 @@ class NetcdfResource(Page, AbstractResource):
 
 processor_for(NetcdfResource)(resource_processor)
 
-
+# define the netcdf metadata
 class NetcdfMetaData(CoreMetaData):
     variables = generic.GenericRelation(Variable)
+    ori_coverage = generic.GenericRelation(OriginalCoverage)
     _netcdf_resource = generic.GenericRelation(NetcdfResource)
 
     @classmethod
@@ -160,11 +236,16 @@ class NetcdfMetaData(CoreMetaData):
         elements = super(NetcdfMetaData, cls).get_supported_element_names()
         # add the name of any additional element to the list
         elements.append('Variable')
+        elements.append('OriginalCoverage')
         return elements
 
     @property
     def resource(self):
         return self._netcdf_resource.all().first()
+
+    @property
+    def originalCoverage(self):
+        return self._ori_coverage.all().first()
 
     def get_xml(self):
         from lxml import etree
@@ -205,6 +286,20 @@ class NetcdfMetaData(CoreMetaData):
             if variable.missing_value:
                 hsterms_missing_value = etree.SubElement(hsterms_variable_rdf_Description, '{%s}missingValue' % self.NAMESPACES['hsterms'])
                 hsterms_missing_value.text = variable.missing_value
+
+        if self.originalCoverage:
+            ori_coverage = self.originalCoverage;
+            cov = etree.SubElement(container, '{%s}originalCoverage' % self.NAMESPACES['hsterms'])
+            cov_term = '{%s}' + 'box'
+            coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
+            rdf_coverage_value = etree.SubElement(coverage_terms, '{%s}value' % self.NAMESPACES['rdf'])
+            #netcdf original coverage is of box type
+            cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                        %(ori_coverage.value['northlimit'], ori_coverage.value['eastlimit'],
+                          ori_coverage.value['southlimit'], ori_coverage.value['westlimit'], ori_coverage.value['units'])
+
+            if 'projection' in ori_coverage.value:
+                cov_value = cov_value + '; projection=%s' % ori_coverage.value['projection']
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
