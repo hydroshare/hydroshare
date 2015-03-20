@@ -27,7 +27,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                     'name':coverage name value here (optional),
                     'projection': name of the projection (optional)}"
     """
-    _value = models.CharField(max_length=1024)
+    _value = models.CharField(max_length=1024, null=True)
     projection_string_type = models.CharField(max_length=20, choices=PRO_STR_TYPES, null=True)
     projection_string_text = models.TextField(null=True, blank=True)
 
@@ -307,19 +307,28 @@ class NetcdfMetaData(CoreMetaData):
                 hsterms_missing_value = etree.SubElement(hsterms_variable_rdf_Description, '{%s}missingValue' % self.NAMESPACES['hsterms'])
                 hsterms_missing_value.text = variable.missing_value
 
-        if self.originalCoverage:
-            ori_coverage = self.originalCoverage;
-            cov = etree.SubElement(container, '{%s}originalCoverage' % self.NAMESPACES['hsterms'])
-            cov_term = '{%s}' + 'box'
-            coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
-            rdf_coverage_value = etree.SubElement(coverage_terms, '{%s}value' % self.NAMESPACES['rdf'])
-            #netcdf original coverage is of box type
-            cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                        %(ori_coverage.value['northlimit'], ori_coverage.value['eastlimit'],
-                          ori_coverage.value['southlimit'], ori_coverage.value['westlimit'], ori_coverage.value['units'])
+        if self.ori_coverage.all().first():
+            hsterms_ori_cov = etree.SubElement(container, '{%s}originalCoverageInfo' % self.NAMESPACES['hsterms'])
+            hsterms_ori_cov_rdf_Description = etree.SubElement(hsterms_ori_cov, '{%s}Description' % self.NAMESPACES['rdf'])
+            ori_cov_obj = self.ori_coverage.all().first()
 
-            if 'projection' in ori_coverage.value:
-                cov_value = cov_value + '; projection=%s' % ori_coverage.value['projection']
+            if ori_cov_obj.value:
+                cov_box = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                        %(ori_cov_obj.value['northlimit'], ori_cov_obj.value['eastlimit'],
+                          ori_cov_obj.value['southlimit'], ori_cov_obj.value['westlimit'],ori_cov_obj.value['units'])
+                if 'projection' in ori_cov_obj.value:
+                    cov_box= cov_box + '; projection=%s' % ori_cov_obj.value['projection']
+
+                hsterms_ori_cov_box = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}boundingBox' % self.NAMESPACES['hsterms'])
+                hsterms_ori_cov_box.text = cov_box
+
+            # write projection string type and text info
+            if ori_cov_obj.projection_string_type and ori_cov_obj.projection_string_text:
+                hsterms_ori_cov_projection_type = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}projectionStringType' % self.NAMESPACES['hsterms'])
+                hsterms_ori_cov_projection_type.text = ori_cov_obj.projection_string_type
+                hsterms_ori_cov_projection_text = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}projectionStringText' % self.NAMESPACES['hsterms'])
+                hsterms_ori_cov_projection_text.text = ori_cov_obj.projection_string_text
+
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
