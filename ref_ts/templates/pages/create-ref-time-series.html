@@ -78,11 +78,17 @@
     </div>
   </div>
 
-{#  <div class="form-group" id="short-id">#}
-{#    <div class="col-sm-offset-2 col-sm-10">#}
-{#      <input type="text" class="btn btn-primary btn-lg btn-block" name='short_id' value='{{ resource.short_id }}'>#}
-{#    </div>#}
-{#  </div>#}
+  <div class="form-group" id="metadata" style="display: none;">
+    <div class="col-sm-offset-2 col-sm-10">
+      <input type="text" class="btn btn-primary btn-lg btn-block" name='metadata' value='{{ metadata }}'>
+    </div>
+  </div>
+
+  <div class="form-group" id="title" style="display: none;">
+    <div class="col-sm-offset-2 col-sm-10">
+      <input type="text" class="btn btn-primary btn-lg btn-block" name='title' value='{{ title }}'>
+    </div>
+  </div>
 
 
 
@@ -120,8 +126,6 @@
             $('.cuahsi-his').hide();
             $('#preview-div').hide();
             $('#fail-notice').hide();
-            $('#short-id').hide();
-            
         });
 
         function removeOptions(selectbox){

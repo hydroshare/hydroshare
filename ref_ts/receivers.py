@@ -5,7 +5,6 @@ from django.dispatch import receiver
 from hs_core.signals import *
 from ref_ts.models import RefTimeSeries
 
-title = "fake title"
 @receiver(pre_create_resource, sender=RefTimeSeries)
 def ref_time_series_describe_resource_trigger(sender, **kwargs):
     if(sender is RefTimeSeries):
@@ -15,11 +14,5 @@ def ref_time_series_describe_resource_trigger(sender, **kwargs):
         global title
         title = kwargs['title']
 
-@receiver(post_create_resource, sender=RefTimeSeries)
-def refts_post_trigger(sender, **kwargs):
-    if sender is RefTimeSeries:
-        resource = kwargs['resource']
-        resource.title = title
-        resource.save()
 
 

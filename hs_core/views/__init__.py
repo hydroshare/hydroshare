@@ -659,9 +659,6 @@ def create_resource_new_workflow(request, *args, **kwargs):
                                                files=resource_files, title=res_title, url_key=url_key,
                                                page_url_dict=page_url_dict, validate_files=file_validation_dict, **kwargs)
 
-    if url_key in page_url_dict:
-        return render(request, page_url_dict[url_key], {'title': res_title})
-
     if 'are_files_valid' in file_validation_dict:
         if not file_validation_dict['are_files_valid']:
             error_message = file_validation_dict.get('message', None)
@@ -705,6 +702,9 @@ def create_resource_new_workflow(request, *args, **kwargs):
                           'url': 'http://creativecommons.org/licenses/by/4.0/'
                          }
                     })
+
+    if url_key in page_url_dict:
+        return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
 
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
