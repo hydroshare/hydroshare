@@ -47,7 +47,7 @@ class OriginalCoverageForm(forms.Form):
     westlimit = forms.DecimalField(label='West Longitude', widget=forms.TextInput())
     units = forms.CharField(max_length=50, label='Coordinate Units')
     projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, label='Projection String Type', required=False)
-    projection_string_text = forms.CharField(max_length=1000, label='Projection String Text', required=False)
+    projection_string_text = forms.CharField(max_length=1000, label='Projection String Text', required=False, widget=forms.Textarea())
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(OriginalCoverageForm, self).__init__(*args, **kwargs)
