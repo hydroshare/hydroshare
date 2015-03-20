@@ -15,7 +15,8 @@ def netcdf_pre_create_resource(sender, **kwargs):
         files = kwargs['files']
         metadata = kwargs['metadata']
         validate_files_dict = kwargs['validate_files']
-
+        res_title = kwargs['title']
+        
         if files:
             infile = files[0]
 
@@ -37,8 +38,9 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
                 # add title
                 if res_dublin_core_meta.get('title'):
-                    title = {'title': {'value': res_dublin_core_meta['title']}}
-                    metadata.append(title)
+                    if res_title == 'Untitled resource':
+                        title = {'title': {'value': res_dublin_core_meta['title']}}
+                        metadata.append(title)
                 # add description
                 if res_dublin_core_meta.get('description'):
                     description = {'description': {'abstract': res_dublin_core_meta['description']}}
@@ -337,7 +339,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     if element_name == "variable":
         element_form = VariableForm(data=request.POST)
     elif element_name == 'originalcoverage':
-        element_form = OriginalCoverageSpatialForm(data=request.POST)
+        element_form = OriginalCoverageForm(data=request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
@@ -357,8 +359,9 @@ def metadata_element_pre_update_handler(sender, **kwargs):
             form_data[field_name] = request.POST[matching_key]
 
         element_form = VariableValidationForm(form_data)
+
     elif element_name == 'originalcoverage':
-        element_form = OriginalCoverageSpatialForm(request.POST)
+        element_form = OriginalCoverageForm(data=request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}

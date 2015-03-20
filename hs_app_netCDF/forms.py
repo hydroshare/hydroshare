@@ -24,8 +24,8 @@ class OriginalCoverageFormHelper(BaseFormHelper):
                         Field('southlimit', css_class=field_width),
                         Field('westlimit', css_class=field_width),
                         Field('units', css_class=field_width),
-                        Field('projection string type', css_class=field_width),
-                        Field('projection string text', css_class=field_width)
+                        Field('projection_string_type', css_class=field_width),
+                        Field('projection_string_text', css_class=field_width)
                  )
 
         super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -45,17 +45,12 @@ class OriginalCoverageForm(forms.Form):
     southlimit = forms.DecimalField(label='South Latitude', widget=forms.TextInput())
     westlimit = forms.DecimalField(label='West Longitude', widget=forms.TextInput())
     units = forms.CharField(max_length=50, label='Coordinate Units')
-    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, label='Projection String Type')
-    projection_string_text = forms.CharField(max_length=1000, label='Projection String Text')
+    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, label='Projection String Type', required=False)
+    projection_string_text = forms.CharField(max_length=1000, label='Projection String Text', required=False)
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(OriginalCoverageForm, self).__init__(*args, **kwargs)
         self.helper = OriginalCoverageFormHelper(allow_edit, res_short_id, element_id, element_name='originalcoverage')
-
-        if not allow_edit:
-            for field in self.fields.values():
-                field.widget.attrs['readonly'] = True
-                field.widget.attrs['style'] = "background-color:white;"
 
     def clean(self):
         super(OriginalCoverageForm, self).clean()

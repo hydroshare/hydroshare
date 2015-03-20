@@ -92,9 +92,9 @@ class OriginalCoverage(AbstractMetaDataElement):
 
             # update projection string info
             for key, value in kwargs.iteritems():
-                if key in ('pro_str_type', 'pro_str_text'):
+                if key in ('projection_string_type', 'projection_string_text'):
                     setattr(ori_cov, key, value)
-                ori_cov.save()
+                    ori_cov.save()
         else:
             raise ObjectDoesNotExist("No coverage element was found for the provided id:%s" % element_id)
 

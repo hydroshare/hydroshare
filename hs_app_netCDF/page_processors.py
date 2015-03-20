@@ -44,8 +44,6 @@ def landing_page(request, page):
         else:
             context['original_coverage'] = None
 
-
-
     else: # editing mode
 
         # Original Coverage in editing mode
@@ -73,10 +71,7 @@ def landing_page(request, page):
         VariableFormSetEdit = formset_factory(wraps(VariableForm)(partial(VariableForm, allow_edit=edit_resource)), formset=BaseFormSet, extra=0)
         variable_formset = VariableFormSetEdit(initial=content_model.metadata.variables.all().values(), prefix='variable')
         add_variable_modal_form = VariableForm(allow_edit=edit_resource, res_short_id=content_model.short_id)
-        ext_md_layout = Layout(
-                                VariableLayoutEdit,
-                                ModalDialogLayoutAddVariable
-                            )
+
         for form in variable_formset.forms:
             if len(form.initial) > 0:
                 form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'variable', form.initial['id'])
@@ -86,6 +81,17 @@ def landing_page(request, page):
                 form.action = "/hsapi/_internal/%s/variable/add-metadata/" % content_model.short_id
 
         # get the context from hs_core
+        ext_md_layout = Layout(
+                                AccordionGroup('Original Coverage',
+                                     HTML('<div class="form-group" id="originalcoverage"> '
+                                        '{% load crispy_forms_tags %} '
+                                        '{% crispy original_coverage_form %} '
+                                     '</div> '),
+                                ),
+                                AccordionGroup('Variable', VariableLayoutEdit),
+                                ModalDialogLayoutAddVariable,
+                            )
+
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
         context['variable_formset'] = variable_formset
         context['add_variable_modal_form'] = add_variable_modal_form
@@ -93,4 +99,5 @@ def landing_page(request, page):
 
     hs_core_dublin_context = add_dublin_core(request, page)
     context.update(hs_core_dublin_context)
+
     return context
