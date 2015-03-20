@@ -11,6 +11,7 @@ import json
 # Define original spatial coverage metadata info
 class OriginalCoverage(AbstractMetaDataElement):
     PRO_STR_TYPES = (
+        ('', '---------'),
         ('EPSG Code', 'EPSG Code'),
         ('OGC WKT Projection', 'OGC WKT Projection'),
         ('Proj4 String', 'Proj4 String')
@@ -308,7 +309,7 @@ class NetcdfMetaData(CoreMetaData):
                 hsterms_missing_value.text = variable.missing_value
 
         if self.ori_coverage.all().first():
-            hsterms_ori_cov = etree.SubElement(container, '{%s}originalCoverageInfo' % self.NAMESPACES['hsterms'])
+            hsterms_ori_cov = etree.SubElement(container, '{%s}originalCoverage' % self.NAMESPACES['hsterms'])
             hsterms_ori_cov_rdf_Description = etree.SubElement(hsterms_ori_cov, '{%s}Description' % self.NAMESPACES['rdf'])
             ori_cov_obj = self.ori_coverage.all().first()
 
@@ -323,9 +324,10 @@ class NetcdfMetaData(CoreMetaData):
                 hsterms_ori_cov_box.text = cov_box
 
             # write projection string type and text info
-            if ori_cov_obj.projection_string_type and ori_cov_obj.projection_string_text:
-                hsterms_ori_cov_projection_type = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}projectionStringType' % self.NAMESPACES['hsterms'])
-                hsterms_ori_cov_projection_type.text = ori_cov_obj.projection_string_type
+            if ori_cov_obj.projection_string_text:
+                if ori_cov_obj.projection_string_type:
+                    hsterms_ori_cov_projection_type = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}projectionStringType' % self.NAMESPACES['hsterms'])
+                    hsterms_ori_cov_projection_type.text = ori_cov_obj.projection_string_type
                 hsterms_ori_cov_projection_text = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}projectionStringText' % self.NAMESPACES['hsterms'])
                 hsterms_ori_cov_projection_text.text = ori_cov_obj.projection_string_text
 

@@ -33,6 +33,7 @@ class OriginalCoverageFormHelper(BaseFormHelper):
 
 class OriginalCoverageForm(forms.Form):
     PRO_STR_TYPES = (
+        ('', '---------'),
         ('EPSG Code', 'EPSG Code'),
         ('OGC WKT Projection', 'OGC WKT Projection'),
         ('Proj4 String', 'Proj4 String')
@@ -68,7 +69,7 @@ class OriginalCoverageForm(forms.Form):
         if is_form_errors:
             return self.cleaned_data
 
-        # if required elements info is provided then write the bounding box info as 'value' string
+        # if required elements info is provided then write the bounding box info as 'value' dict and assign to self.clean_data
         temp_cleaned_data['northlimit'] = str(temp_cleaned_data['northlimit'])
         temp_cleaned_data['eastlimit'] = str(temp_cleaned_data['eastlimit'])
         temp_cleaned_data['southlimit'] = str(temp_cleaned_data['southlimit'])
@@ -82,6 +83,12 @@ class OriginalCoverageForm(forms.Form):
         if 'name' in temp_cleaned_data:
             if len(temp_cleaned_data['name']) == 0:
                 del temp_cleaned_data['name']
+
+        if 'projection_string_type' in temp_cleaned_data:
+            del temp_cleaned_data['projection_string_type']
+
+        if 'projection_string_text' in temp_cleaned_data:
+            del temp_cleaned_data['projection_string_text']
 
         self.cleaned_data['value'] = copy.deepcopy(temp_cleaned_data)
 

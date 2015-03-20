@@ -16,7 +16,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
         metadata = kwargs['metadata']
         validate_files_dict = kwargs['validate_files']
         res_title = kwargs['title']
-        
+
         if files:
             infile = files[0]
 
