@@ -135,7 +135,7 @@ def create_ref_time_series(request, *args, **kwargs):
         res = hydroshare.create_resource(
             resource_type='RefTimeSeries',
             owner=request.user,
-            title=' ',
+            title='fake title',
             reference_type=reference_type,
             url=url,
         )
