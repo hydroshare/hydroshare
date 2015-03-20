@@ -239,14 +239,9 @@ def parse_1_0_and_1_1(root):
             for k, v in values.items():
                 t = time_to_int(k)
                 for_graph.append({'x': t, 'y': float(v)})
-            smallest_time = list(values.keys())[0]
-            for t in list(values.keys()):
-                if t < smallest_time:
-                    smallest_time = t
             return {'time_series': ts,
                     'site_name': site_name,
                     'site_code': site_code,
-                    'start_date': smallest_time,
                     'variable_name': variable_name,
                     'variable_code': variable_code,
                     'units': units,

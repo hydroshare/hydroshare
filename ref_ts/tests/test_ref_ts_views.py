@@ -9,6 +9,63 @@ import urllib
 import logging
 from ref_ts.models import RefTimeSeries
 
+
+class RefTSSnotel(ResourceTestCase):
+
+    def setUp(self):
+        self.serializer = Serializer()
+        self.logger = logging.getLogger(__name__)
+
+        self.api_client = TestApiClient()
+
+        self.client = Client()
+
+        self.username = 'creator'
+        self.password = 'mybadpassword'
+
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+
+        # create a user to be used for creating the resource
+        self.user_creator = hydroshare.create_account(
+            'creator@hydroshare.org',
+            username=self.username,
+            first_name='Creator_FirstName',
+            last_name='Creator_LastName',
+            superuser=False,
+            password=self.password,
+            groups=[self.group]
+        )
+
+        self.wsdl_url = "http://worldwater.byu.edu/interactive/snotel/services/index.php/cuahsi_1_1.asmx?WSDL"
+        self.rest_url = "http://worldwater.byu.edu/interactive/snotel/services/index.php/cuahsi_1_1.asmx/GetValuesObject?location=SNOTEL:1039&variable=SNOTEL:WTEQ&startDate=2014-10-01&endDate=2015-03-19"
+        self.time_series_base_rest = "/hsapi/_internal/time-series-from-service/?ref_type=rest&service_url="
+        self.time_series_base_soap = "/hsapi/_internal/time-series-from-service/?ref_type=soap&service_url="
+        self.site_code_swe = "wq2371"
+        self.site_code_wwo = "S-PRHD"
+
+        self.post_data = {
+            'title': 'My REST API-created resource',
+            'resource_type': 'GenericResource'
+        }
+
+    def tearDown(self):
+        User.objects.all().delete()
+        GenericResource.objects.all().delete()
+
+    def test_time_series_from_service_rest(self):
+        url = urllib.quote(self.rest_url)
+        resp = self.api_client.get(self.time_series_base_rest+url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('visualization' in resp.content)
+
+    def test_time_series_from_service_soap(self):
+        url = urllib.quote(self.wsdl_url)
+        resp = self.api_client.get(self.time_series_base_soap+url+"&site=823&variable=WTEQ")
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('visualization' in resp.content)
+
+
+
 class RefTSGetDataViews(ResourceTestCase):
 
     def setUp(self):
