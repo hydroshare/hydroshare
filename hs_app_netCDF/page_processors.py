@@ -16,7 +16,7 @@ def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
 
-    if not edit_resource:
+    if not edit_resource: # not editing mode
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None)
         extended_metadata_exists = False
@@ -28,34 +28,46 @@ def landing_page(request, page):
         context['variables'] = content_model.metadata.variables.all() # the variables is the field name from NetCDFMetaData model
 
         # add the original coverage context
-        if content_model.metadata.originalCoverage:
-            ori_coverage_data_dict = {}
-            ori_coverage_data_dict['name'] = content_model.metadata.originalCoverage.value.get('name', None)
-            ori_coverage_data_dict['units'] = content_model.metadata.originalCoverage.value['units']
-            ori_coverage_data_dict['projection'] = content_model.metadata.originalCoverage.value.get('projection', None)
-            ori_coverage_data_dict['northlimit'] = content_model.metadata.originalCoverage.value['northlimit']
-            ori_coverage_data_dict['eastlimit'] = content_model.metadata.originalCoverage.value['eastlimit']
-            ori_coverage_data_dict['southlimit'] = content_model.metadata.originalCoverage.value['southlimit']
-            ori_coverage_data_dict['westlimit'] = content_model.metadata.originalCoverage.value['westlimit']
-            context['originalCoverage'] = ori_coverage_data_dict
-
-    else:
-        # Original Coverage in editing mode # get the context from content_model
-        ori_coverage_data_dict = {}
-        if content_model.metadata.originalCoverage:
-            ori_coverage_data_dict['name'] = content_model.metadata.originalCoverage.value.get('name', None)
-            ori_coverage_data_dict['units'] = content_model.metadata.originalCoverage.value['units']
-            ori_coverage_data_dict['projection'] = content_model.metadata.originalCoverage.value.get('projection', None)
-            ori_coverage_data_dict['northlimit'] = content_model.metadata.originalCoverage.value['northlimit']
-            ori_coverage_data_dict['eastlimit'] = content_model.metadata.originalCoverage.value['eastlimit']
-            ori_coverage_data_dict['southlimit'] = content_model.metadata.originalCoverage.value['southlimit']
-            ori_coverage_data_dict['westlimit'] = content_model.metadata.originalCoverage.value['westlimit']
+        ori_cov_dict = {}
+        ori_cov_obj = content_model.metadata.ori_coverage.all().first()
+        if ori_cov_obj:
+            ori_cov_dict['name'] = ori_cov_obj.value.get('name', None)
+            ori_cov_dict['units'] = ori_cov_obj.value['units']
+            ori_cov_dict['projection'] = ori_cov_obj.value.get('projection', None)
+            ori_cov_dict['northlimit'] = ori_cov_obj.value['northlimit']
+            ori_cov_dict['eastlimit'] = ori_cov_obj.value['eastlimit']
+            ori_cov_dict['southlimit'] = ori_cov_obj.value['southlimit']
+            ori_cov_dict['westlimit'] = ori_cov_obj.value['westlimit']
+            ori_cov_dict['projection_string_type'] = ori_cov_obj.projection_string_type
+            ori_cov_dict['projection_string_text'] = ori_cov_obj.projection_string_text
+            context['original_coverage'] = ori_cov_dict
         else:
-            ori_coverage_data_dict = None
+            context['original_coverage'] = None
 
-        original_coverage_spatial_form = OriginalCoverageSpatialForm(initial = ori_coverage_data_dict, instance=content_model.metadata.originalCoverage, res_short_id=content_model.short_id,
-                                     allow_edit = edit_resource, element_id=content_model.metadata.originalCoverage.id if content_model.metadata.originalCoverage else None)
 
+
+    else: # editing mode
+
+        # Original Coverage in editing mode
+        ori_cov_obj = content_model.metadata.ori_coverage.all().first()
+        ori_cov_dict = {}
+        if ori_cov_obj:
+            ori_cov_dict['name'] = ori_cov_obj.value.get('name', None)
+            ori_cov_dict['units'] = ori_cov_obj.value['units']
+            ori_cov_dict['projection'] = ori_cov_obj.value.get('projection', None)
+            ori_cov_dict['northlimit'] = ori_cov_obj.value['northlimit']
+            ori_cov_dict['eastlimit'] = ori_cov_obj.value['eastlimit']
+            ori_cov_dict['southlimit'] = ori_cov_obj.value['southlimit']
+            ori_cov_dict['westlimit'] = ori_cov_obj.value['westlimit']
+            ori_cov_dict['projection_string_type'] = ori_cov_obj.projection_string_type
+            ori_cov_dict['projection_string_text'] = ori_cov_obj.projection_string_text
+        else:
+            ori_cov_obj = None
+
+        ori_cov_form = OriginalCoverageForm(initial=ori_cov_dict,
+                                            allow_edit=edit_resource,
+                                            res_short_id=content_model.short_id,
+                                            element_id=ori_cov_obj.id if ori_cov_obj else None)
 
         # Variable Forms in editing mode
         VariableFormSetEdit = formset_factory(wraps(VariableForm)(partial(VariableForm, allow_edit=edit_resource)), formset=BaseFormSet, extra=0)
@@ -77,7 +89,7 @@ def landing_page(request, page):
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
         context['variable_formset'] = variable_formset
         context['add_variable_modal_form'] = add_variable_modal_form
-        context['original_coverage_spatial_form'] = original_coverage_spatial_form
+        context['original_coverage_form'] = ori_cov_form
 
     hs_core_dublin_context = add_dublin_core(request, page)
     context.update(hs_core_dublin_context)

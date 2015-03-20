@@ -8,62 +8,73 @@
         <div class="row">
             <div class="col-md-12">
                 <h2>Extended Metadata</h2>
+            {# Add the view mode html code below #}
 
-                {# Add the view mode html code below #}
+                {# Add Original Coverage info #}
                 <div>
-                    {% if originalCoverage %}
-                        <h4><strong>Original Spatial Coverage:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Coverage Type:</strong></div>
-                            <div class="col-sm-8">box</div>
-                        </div>
-                        {% if originalCoverage.name %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.name}}</div>
-                            </div>
+                    {% if original_coverage %}
+                            <h4><strong>Original Spatial Coverage:</strong></h4>
+                            <hr style="margin-top: 0px;margin-bottom: 2px">
+                            {% if original_coverage.name %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
+                                    <div class="col-sm-8">{{ original_coverage.name}}</div>
+                                </div>
+                            {% endif %}
+                            {% if original_coverage.projection %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Coordinate System:</strong></div>
+                                    <div class="col-sm-8">{{ original_coverage.projection}}</div>
+                                </div>
+                            {% endif %}
+                            {% if original_coverage.northlimit %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>North Latitude:</strong></div>
+                                    <div class="col-sm-8">{{ original_coverage.northlimit }}</div>
+                                </div>
+                            {% endif %}
+                            {% if original_coverage.eastlimit %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>East Longitude:</strong></div>
+                                    <div class="col-sm-8">{{ original_coverage.eastlimit }}</div>
+                                </div>
+                            {% endif %}
+                            {% if original_coverage.southlimit %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>South Latitude:</strong></div>
+                                    <div class="col-sm-8">{{ original_coverage.southlimit }}</div>
+                                </div>
+                            {% endif %}
+                            {% if original_coverage.westlimit %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>West Longitude:</strong></div>
+                                    <div class="col-sm-8">{{ original_coverage.westlimit}}</div>
+                                </div>
+                            {% endif %}
+                            {% if original_coverage.units %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                    <div class="col-sm-8">{{ original_coverage.units}}</div>
+                                </div>
+                            {%  endif %}
+                            {% if original_coverage.projection_string_type %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Projection String Type:</strong></div>
+                                    <div class="col-sm-8">{{ original_coverage.projection_string_type}}</div>
+                                </div>
+                            {%  endif %}
+                            {% if original_coverage.projection_string_text %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Projection String Text:</strong></div>
+                                    <div class="col-sm-8">{{ original_coverage.projection_string_text}}</div>
+                                </div>
+                            {%  endif %}
+                        <hr>
                         {% endif %}
-                        {% if originalCoverage.projection %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate System/Geographic Projection:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.projection}}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.northlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>North Latitude:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.northlimit }}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.eastlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>East Longitude:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.eastlimit }}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.southlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>South Latitude:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.southlimit }}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.westlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>West Longitude:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.westlimit}}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.units %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.units}}</div>
-                            </div>
-                        {%  endif %}
-                    <hr>
-                    {% endif %}
-                </div>    
+                </div>
 
+                {# Add Variable info #}
+                <div>
                     {% if variables %}
                         {% for variable in variables %}
                             <h4><strong>Variable:</strong></h4>
@@ -109,30 +120,32 @@
                         {% endfor %}
                     <hr>
                     {% endif %}
+                <div>
+
+                {# Add ncdump info #}
+                <div>
+                    {% for f in cm.files.all %}
+                        {% if f.resource_file.name|slice:"-3:" == 'txt'%}
+                            <h2>netCDF Header Information</h2>
+                            <p>{{ f.resource_file.name|slice:"33:" }}</p>
+                            {% if f.resource_file.size <= 5000000 %}
+                                <textarea readonly rows="20" cols="100">{{ f.resource_file.read}}</textarea>
+                            {% else %}
+                                <textarea readonly rows="2" cols="100">The size of the netCDF header information text file is too large for loading on the page.</textarea>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
                 </div>
-                {# Add the view mode html code above #}
+
+
+            {# Add the view mode html code above #}
 
 
                 </div>
             </div>
     {%  endif %}
-
-{# block to show the ncdump info #}
-{% block ncdump %}
-    {% for f in cm.files.all %}
-        {% if f.resource_file.name|slice:"-3:" == 'txt'%}
-            <h2>netCDF Header Information</h2>
-            <p>{{ f.resource_file.name|slice:"33:" }}</p>
-            {% if f.resource_file.size <= 5000000 %}
-                <textarea readonly rows="20" cols="100">{{ f.resource_file.read}}</textarea>
-            {% else %}
-                <textarea readonly rows="2" cols="100">The size of the netCDF header information text file is too large for loading on the page.</textarea>
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-{% endblock %}
-
 {%  endblock %}
+
 
 {% block extra_js %}
     {{ block.super }}
@@ -140,7 +153,3 @@
     {# resource specific js can go here #}
 
 {%  endblock %}
-
-
-
-

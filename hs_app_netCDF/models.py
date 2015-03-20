@@ -10,19 +10,26 @@ import json
 
 # Define original spatial coverage metadata info
 class OriginalCoverage(AbstractMetaDataElement):
-    term = 'OriginalCoverage'
+    PRO_STR_TYPES = (
+        ('EPSG Code', 'EPSG Code'),
+        ('OGC WKT Projection', 'OGC WKT Projection'),
+        ('Proj4 String', 'Proj4 String')
+    )
 
+    term = 'OriginalCoverage'
     """
-    _value field stores a json string as shown below for box coverage type.
-     _value = "{'northlimit':northenmost coordinate value,
-                'eastlimit':easternmost coordinate value,
-                'southlimit':southernmost coordinate value,
-                'westlimit':westernmost coordinate value,
-                'units:units applying to 4 limits (north, east, south & east),
-                'name':coverage name value here ,
-                'projection': name of the projection }"
+    _value field stores a json string. The content of the json as box coverage info
+         _value = "{'northlimit':northenmost coordinate value,
+                    'eastlimit':easternmost coordinate value,
+                    'southlimit':southernmost coordinate value,
+                    'westlimit':westernmost coordinate value,
+                    'units:units applying to 4 limits (north, east, south & east),
+                    'name':coverage name value here (optional),
+                    'projection': name of the projection (optional)}"
     """
-    _value = models.CharField(max_length=1024, null=True)
+    _value = models.CharField(max_length=1024)
+    projection_string_type = models.CharField(max_length=20, choices=PRO_STR_TYPES, null=True)
+    projection_string_text = models.TextField(null=True, blank=True)
 
     class Meta:
         # OriginalCoverage element is not repeatable
@@ -37,18 +44,25 @@ class OriginalCoverage(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if 'value' in kwargs:
             if isinstance(kwargs['value'], dict):
-                # check that all the required sub-elements exist
+                # check that all the required sub-elements exist and create new original coverage meta
                 for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
                     if not value_item in kwargs['value']:
-                        raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or 'units' is missing.")
+                        raise ValidationError("For original coverage meta, one or more bounding box limits or 'units' is missing.")
 
                 value_dict = {k: v for k, v in kwargs['value'].iteritems()
                               if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'name', 'projection')}
 
                 value_json = json.dumps(value_dict)
                 metadata_obj = kwargs['content_object']
-                cov = OriginalCoverage.objects.create(_value=value_json, content_object=metadata_obj)
-                return cov
+                ori_cov = OriginalCoverage.objects.create(_value=value_json, content_object=metadata_obj,)
+
+                # check for optional fields and save them to original coverage meta
+                for key, value in kwargs.iteritems():
+                    if key in ('pro_str_type', 'pro_str_text'):
+                        setattr(ori_cov, key, value)
+                    ori_cov.save()
+
+                return ori_cov
             else:
                 raise ValidationError('Invalid coverage value format.')
         else:
@@ -56,13 +70,14 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        cov = OriginalCoverage.objects.get(id=element_id)
-        if cov:
+        ori_cov = OriginalCoverage.objects.get(id=element_id)
+        if ori_cov:
+            # update bounding box info
             if 'value' in kwargs:
                 if not isinstance(kwargs['value'], dict):
                     raise ValidationError('Invalid coverage value format.')
 
-                value_dict = cov.value
+                value_dict = ori_cov.value
 
                 if 'name' in kwargs['value']:
                     value_dict['name'] = kwargs['value']['name']
@@ -72,15 +87,20 @@ class OriginalCoverage(AbstractMetaDataElement):
                         value_dict[item_name] = kwargs['value'][item_name]
 
                 value_json = json.dumps(value_dict)
-                cov._value = value_json
-                cov.save()
+                ori_cov._value = value_json
+                ori_cov.save()
+
+            # update projection string info
+            for key, value in kwargs.iteritems():
+                if key in ('pro_str_type', 'pro_str_text'):
+                    setattr(ori_cov, key, value)
+                ori_cov.save()
         else:
             raise ObjectDoesNotExist("No coverage element was found for the provided id:%s" % element_id)
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("Coverage element can't be deleted.")
-
+        raise ValidationError("Original Coverage element can't be deleted.")
 
 # Define netCDF variable metadata
 class Variable(AbstractMetaDataElement):
@@ -242,10 +262,10 @@ class NetcdfMetaData(CoreMetaData):
     @property
     def resource(self):
         return self._netcdf_resource.all().first()
-
-    @property
-    def originalCoverage(self):
-        return self._ori_coverage.all().first()
+    #
+    # @property
+    # def originalCoverage(self):
+    #     return self.ori_coverage.all().first()
 
     def get_xml(self):
         from lxml import etree
