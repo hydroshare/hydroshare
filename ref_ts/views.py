@@ -17,6 +17,7 @@ import datetime
 from django.utils.timezone import now
 import os
 from hs_core.signals import post_create_resource
+import ast
 
 class ReferencedSitesForm(forms.Form):
     wsdl_url = forms.URLField()
@@ -98,7 +99,8 @@ class CreateRefTimeSeriesForm(forms.Form):
     reference_type = forms.CharField(required=False, min_length=0)
     site = forms.CharField(required=False, min_length=0)
     variable = forms.CharField(required=False, min_length=0)
-    # short_id = forms.CharField(required=False, min_length=0)
+    metadata = forms.CharField(required=False, min_length=0)
+    title = forms.CharField(required=False, min_length=0)
 
 
 
@@ -132,12 +134,15 @@ def create_ref_time_series(request, *args, **kwargs):
             variable_code = full_variable[n+1:]
         reference_type = frm.cleaned_data['reference_type']
 
+        metadata = frm.cleaned_data.get('metadata')
+        metadata = ast.literal_eval(metadata)
         res = hydroshare.create_resource(
             resource_type='RefTimeSeries',
             owner=request.user,
-            title='fake title',
+            title=frm.cleaned_data.get('title'),
             reference_type=reference_type,
             url=url,
+            metadata=metadata
         )
 
         post_create_resource.send(sender=RefTimeSeries, resource=res)
