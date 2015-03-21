@@ -219,11 +219,13 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                 # extract metadata
                 import nc_functions.nc_meta as nc_meta
                 try:
-                    res_md_dict = nc_meta.get_nc_meta_dict(infile.file.name)
-                    res_dublin_core_meta = res_md_dict['dublin_core_meta']
-                    res_type_specific_meta = res_md_dict['type_specific_meta']
+                    res_dublin_core_meta = nc_meta.get_dublin_core_meta(nc_dataset)
                 except:
                     res_dublin_core_meta = {}
+
+                try:
+                    res_type_specific_meta = nc_meta.get_type_specific_meta(nc_dataset)
+                except:
                     res_type_specific_meta = {}
 
                 # update box info
@@ -276,11 +278,15 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
 
 
                 # update the original spatial coverage meta
-                nc_res.metadata.ori_coverage.delete()
+                nc_res.metadata.ori_coverage.all().delete()
                 if res_dublin_core_meta.get('original-box'):
-                    nc_res.metadata.create_element('originalcoverage', value=res_dublin_core_meta['original-box'],
-                                                    projection_text_type=res_dublin_core_meta['projection_info']['type'],
-                                                    projection_text_text=res_dublin_core_meta['projection_info']['text'])
+                    if res_dublin_core_meta.get('projection-info'):
+                        nc_res.metadata.create_element('originalcoverage',
+                                                        value=res_dublin_core_meta['original-box'],
+                                                        projection_string_type=res_dublin_core_meta['projection-info']['type'],
+                                                        projection_string_text=res_dublin_core_meta['projection-info']['text'])
+                    else:
+                        nc_res.metadata.create_element('originalcoverage', value=res_dublin_core_meta['original-box'])
 
                 # create the ncdump text file
                 import nc_functions.nc_dump as nc_dump

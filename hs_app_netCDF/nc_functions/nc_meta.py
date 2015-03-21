@@ -61,7 +61,12 @@ def get_dublin_core_meta(nc_dataset):
     """
 
     nc_global_meta = extract_nc_global_meta(nc_dataset)
-    nc_coverage_meta = extract_nc_coverage_meta(nc_dataset)
+
+    try:
+        nc_coverage_meta = extract_nc_coverage_meta(nc_dataset)
+    except:
+        nc_coverage_meta = {}
+
     dublin_core_meta = dict(nc_global_meta.items() + nc_coverage_meta.items())
 
     return dublin_core_meta
@@ -108,6 +113,7 @@ def extract_nc_coverage_meta(nc_dataset):
 
     Return netCDF time start and end info
     """
+
     projection_info = get_projection_info(nc_dataset)
 
     period_info = get_period_info(nc_dataset)
