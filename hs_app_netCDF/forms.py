@@ -14,16 +14,16 @@ import copy
 class OriginalCoverageFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        # The layout below orders how each filed from the Form will be displayed in the frontend
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('name', css_class=field_width),
-                        Field('projection', css_class=field_width),
                         Field('northlimit', css_class=field_width),
                         Field('eastlimit', css_class=field_width),
                         Field('southlimit', css_class=field_width),
                         Field('westlimit', css_class=field_width),
                         Field('units', css_class=field_width),
+                        Field('projection', css_class=field_width),
                         Field('projection_string_type', css_class=field_width),
                         Field('projection_string_text', css_class=field_width)
                  )
@@ -40,14 +40,14 @@ class OriginalCoverageForm(forms.Form):
     )
 
     name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
-    projection = forms.CharField(max_length=100, required=False, label='Coordinate System')
-    northlimit = forms.DecimalField(label='North Latitude', widget=forms.TextInput())
-    eastlimit = forms.DecimalField(label='East Longitude', widget=forms.TextInput())
-    southlimit = forms.DecimalField(label='South Latitude', widget=forms.TextInput())
-    westlimit = forms.DecimalField(label='West Longitude', widget=forms.TextInput())
-    units = forms.CharField(max_length=50, label='Coordinate Units')
-    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, label='Projection String Type', required=False)
-    projection_string_text = forms.CharField(max_length=1000, label='Projection String Text', required=False, widget=forms.Textarea())
+    projection = forms.CharField(max_length=100, required=False, label='Coordinate System Defined in Dataset ')
+    northlimit = forms.DecimalField(label='North Limit of Spatial Extent', widget=forms.TextInput())
+    eastlimit = forms.DecimalField(label='East Limit of Spatial Extent', widget=forms.TextInput())
+    southlimit = forms.DecimalField(label='South Limit of Spatial Extent', widget=forms.TextInput())
+    westlimit = forms.DecimalField(label='West Limit of Spatial Extent', widget=forms.TextInput())
+    units = forms.CharField(max_length=50, label='Units of Spatial Extent')
+    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, label='Coordinate System Text Representation Type', required=False)
+    projection_string_text = forms.CharField(max_length=1000, label='Coordinate System Text Representation Text', required=False, widget=forms.Textarea())
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(OriginalCoverageForm, self).__init__(*args, **kwargs)
@@ -59,7 +59,7 @@ class OriginalCoverageForm(forms.Form):
         is_form_errors = False
 
         # check required element info
-        for key in ('northlimit','eastlimit', 'southlimit', 'westlimit','units'):
+        for key in ('northlimit','eastlimit', 'southlimit', 'westlimit', 'units'):
             value = temp_cleaned_data.get(key, None)
             if not value:
                 self._errors[key] = ["Info for $s is missing" % key]

@@ -13,7 +13,7 @@
                 {# Add the view mode html code below #}
                     {# Add the original coverage meta #}
                     {% if original_coverage %}
-                        <h4><strong>Original Spatial Coverage:</strong></h4>
+                        <h4><strong>Original Coverage:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         {% if original_coverage.name %}
                             <div class="row">
@@ -21,54 +21,63 @@
                                 <div class="col-sm-8">{{ original_coverage.name}}</div>
                             </div>
                         {% endif %}
-                        {% if original_coverage.projection %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate System:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.projection}}</div>
-                            </div>
-                        {% endif %}
+
                         {% if original_coverage.northlimit %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>North Latitude:</strong></div>
+                                <div class="col-sm-4"><strong>North Limit of Spatial Extent:</strong></div>
                                 <div class="col-sm-8">{{ original_coverage.northlimit }}</div>
                             </div>
                         {% endif %}
+
                         {% if original_coverage.eastlimit %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>East Longitude:</strong></div>
+                                <div class="col-sm-4"><strong>East Limit of Spatial Extent:</strong></div>
                                 <div class="col-sm-8">{{ original_coverage.eastlimit }}</div>
                             </div>
                         {% endif %}
+
                         {% if original_coverage.southlimit %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>South Latitude:</strong></div>
+                                <div class="col-sm-4"><strong>South Limit of Spatial Extent:</strong></div>
                                 <div class="col-sm-8">{{ original_coverage.southlimit }}</div>
                             </div>
                         {% endif %}
+
                         {% if original_coverage.westlimit %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>West Longitude:</strong></div>
+                                <div class="col-sm-4"><strong>West Limit of Spatial Extent:</strong></div>
                                 <div class="col-sm-8">{{ original_coverage.westlimit}}</div>
                             </div>
                         {% endif %}
+
                         {% if original_coverage.units %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                <div class="col-sm-4"><strong>Units of Spatial Extent:</strong></div>
                                 <div class="col-sm-8">{{ original_coverage.units}}</div>
                             </div>
                         {%  endif %}
+
+                        {% if original_coverage.projection %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Coordinate System Defined in Dataset :</strong></div>
+                                <div class="col-sm-8">{{ original_coverage.projection}}</div>
+                            </div>
+                        {% endif %}
+
                         {% if original_coverage.projection_string_type %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>Projection String Type:</strong></div>
+                                <div class="col-sm-4"><strong>Coordinate System Text Representation Type :</strong></div>
                                 <div class="col-sm-8">{{ original_coverage.projection_string_type}}</div>
                             </div>
                         {%  endif %}
+
                         {% if original_coverage.projection_string_text %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>Projection String Text:</strong></div>
+                                <div class="col-sm-4"><strong>Coordinate System Text Representation Text:</strong></div>
                                 <div class="col-sm-8">{{ original_coverage.projection_string_text}}</div>
                             </div>
                         {%  endif %}
+
                         <hr>
                     {% endif %}
 

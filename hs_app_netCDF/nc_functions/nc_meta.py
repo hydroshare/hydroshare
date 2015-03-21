@@ -108,6 +108,8 @@ def extract_nc_coverage_meta(nc_dataset):
 
     Return netCDF time start and end info
     """
+    projection_info = get_projection_info(nc_dataset)
+
     period_info = get_period_info(nc_dataset)
 
     original_box_info = get_original_box_info(nc_dataset)
@@ -118,13 +120,30 @@ def extract_nc_coverage_meta(nc_dataset):
     for name in box_info.keys():
         box_info[name] = str(box_info[name])
 
+
     nc_coverage_meta = {
+        'projection-info': projection_info,
         'period': period_info,
         'box': box_info,
         'original-box': original_box_info,
     }
 
     return nc_coverage_meta
+
+
+def get_projection_info(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF original projection proj4 string
+    """
+    projection_info = {}
+    projection_text = get_nc_grid_mapping_projection_import_string(nc_dataset)
+    if projection_text:
+        projection_info['type'] = 'Proj4 String'
+        projection_info['text'] = projection_text
+
+    return projection_info
 
 
 def get_period_info(nc_dataset):

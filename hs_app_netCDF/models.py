@@ -59,7 +59,7 @@ class OriginalCoverage(AbstractMetaDataElement):
 
                 # check for optional fields and save them to original coverage meta
                 for key, value in kwargs.iteritems():
-                    if key in ('pro_str_type', 'pro_str_text'):
+                    if key in ('projection_string_type', 'projection_string_text'):
                         setattr(ori_cov, key, value)
                     ori_cov.save()
 
