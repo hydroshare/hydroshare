@@ -4,20 +4,17 @@
 
 {% block title %}
 
-    Create a Referenced HIS Time Series
+    Add HIS Reference Metadata for <i>{{ title }}</i> resource
 
 {% endblock %}
 
 {% block main %}
 
-    <h2>Create a Referenced HIS Time Series</h2>
+    <h2>Add HIS Reference Metadata for the <i>{{ title }}</i> resource</h2>
 
 <form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-ref-time-series/">
     {% csrf_token %}
 
-    <p>Use this form to create metadata for your Resource. Be as descriptive as you can since all of this information
-        will show up when your Resource is displayed. You can edit this information later.
-    </p>
 
     <h3>Select the type of Reference:</h3>
   <div class="form-group">
@@ -50,7 +47,7 @@
   <div class="form-group cuahsi-his cuahsi-his-2">
     <label for="" class="col-sm-2 control-label">Site from Server</label>
     <div class="col-sm-10">
-        <select class="form-control" name="site" id=""></select>
+        <select class="form-control" name="site" id="site"></select>
         <button class="btn btn-block btn-primary" type="button" id="search-vars-button" data-loading-text="Retrieving Variables...">Update Variables</button>
     </div>
   </div>
@@ -77,13 +74,19 @@
 
   <div class="form-group">
     <div class="col-sm-offset-2 col-sm-10">
-      <button type="submit" class="btn btn-primary btn-lg btn-block">Create Resource</button>
+      <button type="submit" id="submit" class="btn btn-primary btn-lg btn-block disabled">Add HIS Time Series</button>
     </div>
   </div>
 
-  <div class="form-group" id="short-id">
+  <div class="form-group" id="metadata" style="display: none;">
     <div class="col-sm-offset-2 col-sm-10">
-      <input type="text" class="btn btn-primary btn-lg btn-block" name='short_id' value='{{ resource.short_id }}'>
+      <input type="text" class="btn btn-primary btn-lg btn-block" name='metadata' value='{{ metadata }}'>
+    </div>
+  </div>
+
+  <div class="form-group" id="title" style="display: none;">
+    <div class="col-sm-offset-2 col-sm-10">
+      <input type="text" class="btn btn-primary btn-lg btn-block" name='title' value='{{ title }}'>
     </div>
   </div>
 
@@ -103,6 +106,9 @@
 
         $( "#reference_type" )
             .change(function () {
+                var b = $('#submit');
+                b.addClass('disabled');
+
                 if ($("[name='reference_type'] option:selected").text() == "CUAHSI HIS SOAP Service") {
                     $('.cuahsi-his-1').show();
                     $('#preview-div').html( '<div class="col-sm-offset-2" id="preview"></div>');
@@ -120,8 +126,6 @@
             $('.cuahsi-his').hide();
             $('#preview-div').hide();
             $('#fail-notice').hide();
-            $('#short-id').hide();
-            
         });
 
         function removeOptions(selectbox){
@@ -167,11 +171,15 @@
                     var vis_file_name = data['vis_file_name'];
                     $('#preview-div').html('<img src="{{ STATIC_URL }}img/'+vis_file_name+'" id="preview-graph" class="col-sm-offset-2"/>');
                     $('#preview-div').show();
+                    var b = $('#submit');
+                    b.removeClass('disabled');
                 },
                 error: function(data, stuff){
                     $('#fail-notice').show();
                     console.log(data);
                     console.log(stuff);
+                    $('#preview-div').hide();
+
                 }
             })
         }
@@ -236,6 +244,7 @@
                     btn.button('reset');
                     console.log(data);
                     console.log(stuff);
+
                 }
             }).always(function () {btn.button('reset')});
         });
@@ -272,7 +281,10 @@
             b.html('Verify');
             b.removeClass('btn-danger');
             b.removeClass('btn-success');
+            $('#preview-div').hide();
             $('#fail-notice').hide();
+            var b = $('#submit');
+            b.addClass('disabled');
         });
 
         $('#wsdl_url').on('input', function(){
@@ -285,15 +297,27 @@
             $("#search-sites-button").removeClass('btn-danger');
             $('.cuahsi-his-2').hide();
             $('.cuahsi-his-3').hide();
+            var b = $('#submit');
+            b.addClass('disabled');
+
         });
 
         $('#variable').change(function(){
             $('#fail-notice').hide();
-            getVals('soap');
+            var b = $('#submit');
+            b.addClass('disabled');
+            $('#preview-div').hide();
         });
 
         $('#site').change(function(){
+            $('#preview-div').hide();
             $('#fail-notice').hide();
+            var select = document.getElementsByName('variable')[0];
+            removeOptions(select);
+            var b = $('#preview-button-soap');
+            b.addClass('disabled');
+            var b = $('#submit');
+            b.addClass('disabled');
         });
 
         $('#preview-button-soap').click(function(){

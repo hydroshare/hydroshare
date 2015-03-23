@@ -1475,11 +1475,11 @@ class AbstractResource(ResourcePermissionsMixin):
     @classmethod
     def get_supported_upload_file_types(cls):
         # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
-        # to allow only specific file types return a tuple of those file extensions (ex: return (".csv", ".txt"))
+        # to allow only specific file types return a tuple of those file extensions (ex: return (".csv", ".txt",))
         # to not allow any file upload, return a empty tuple ( return ())
 
         # by default all file types are supported
-        return (".*")
+        return (".*",)
 
 
     @classmethod
