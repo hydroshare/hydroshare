@@ -1,13 +1,11 @@
 {% load mezzanine_tags rating_tags i18n future %}
-
+<h3>{% trans "Ratings" %}</h3>
 <span id="rating-{{ rating_object.id }}">
-
-    Liked by {{ rating_sum }}
-
+     Liked by {{ rating_sum }}
 </span>
 
 {% if not rated or request.user.is_authenticated %}
-<form class="form-inline" role="form" method="post" action="{% url "rating" %}?next={{ request.path }}">
+<form class="form-inline" role="form" method="post" action="/rating/" %}">
     {% nevercache %}
     {% csrf_token %}
     {% endnevercache %}

@@ -2,131 +2,211 @@ __author__ = 'Hong Yi'
 ## Note: this module has been imported in the models.py in order to receive signals
 ## at the end of the models.py for the import of this module
 from django.dispatch import receiver
-#from hs_core.hydroshare import pre_create_resource, post_create_resource
 from hs_core.signals import *
-from hs_core.signals import *
-from hs_geo_raster_resource.models import RasterResource
-from hs_geo_raster_resource.models import BandInformation
+from forms import *
 
-res_md_dict = {}
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
 # to populate create-resource.html template page
-@receiver(pre_describe_resource, sender=RasterResource)
-def raster_describe_resource_trigger(sender, **kwargs):
+@receiver(pre_create_resource, sender=RasterResource)
+def raster_pre_create_resource_trigger(sender, **kwargs):
     if(sender is RasterResource):
         files = kwargs['files']
-        if(files):
-            # Assume only one file in files, and that that file is a zipfile
-            infile = files[0]
-            import raster_meta_extract
-            global res_md_dict
+        title = kwargs['title']
 
+        metadata = kwargs['metadata']
+        from collections import OrderedDict
+        if(files):
+            import raster_meta_extract
+            infile = files[0]
             res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
+
+            wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
+            if wgs_cov_info is not None:
+                # add core metadata coverage - box
+                box = {'coverage': {'type': 'box', 'value': wgs_cov_info }}
+            else:
+                box = {'coverage': {'type': 'box', 'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }}
+            metadata.append(box)
+
+            # Save extended meta to metadata variable
+            ori_cov = {'OriginalCoverage': {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }}
+            metadata.append(ori_cov)
+
+            # Save extended meta to metadata variable
+            cellInfo = OrderedDict([
+                ('name', infile.name),
+                ('rows', res_md_dict['cell_and_band_info']['rows']),
+                ('columns', res_md_dict['cell_and_band_info']['columns']),
+                ('cellSizeXValue', res_md_dict['cell_and_band_info']['cellSizeXValue']),
+                ('cellSizeYValue', res_md_dict['cell_and_band_info']['cellSizeYValue']),
+                ('cellSizeUnit', res_md_dict['cell_and_band_info']['cellSizeUnit']),
+                ('cellDataType', res_md_dict['cell_and_band_info']['cellDataType']),
+                ('noDataValue', res_md_dict['cell_and_band_info']['noDataValue'])
+                ])
+            metadata.append({'CellInformation': cellInfo})
             bcount = res_md_dict['cell_and_band_info']['bandCount']
         else:
-            # initialize required raster metadata to be place holders to be entered later by users
-            from collections import OrderedDict
-            spatial_coverage_info = OrderedDict([
-                ('projection', "Unnamed"),
-                ('units', "Unnamed"),
-                ('northlimit', 0),
-                ('southlimit', 0),
-                ('eastlimit', 0),
-                ('westlimit', 0)
-            ])
-            cell_and_band_info = OrderedDict([
+            # initialize required raster metadata to be place holders to be edited later by users
+            cell_info = OrderedDict([
+                ('name', title),
                 ('rows', 0),
                 ('columns', 0),
                 ('cellSizeXValue', 0),
                 ('cellSizeYValue', 0),
                 ('cellSizeUnit', "Unnamed"),
                 ('cellDataType', "Unnamed"),
-                ('noDataValue', 0),
-                ('bandCount', 1)
+                ('noDataValue', 0)
             ])
-            res_md_dict = {
-                'spatial_coverage_info': spatial_coverage_info,
-                'cell_and_band_info': cell_and_band_info,
-            }
+            metadata.append({'CellInformation': cell_info})
             bcount = 1
+            # spatial_coverage_info = OrderedDict([
+            #     ('units', "Unnamed"),
+            #     ('projection', 'Unnamed'),
+            #     ('northlimit', 0),
+            #     ('southlimit', 0),
+            #     ('eastlimit', 0),
+            #     ('westlimit', 0)
+            # ])
+            # add core metadata coverage - box
+            # box = {'coverage': {'type': 'box', 'value': spatial_coverage_info}}
+            # metadata.append(box)
+            #
+            # # Save extended meta to metadata variable
+            # ori_cov = {'OriginalCoverage': {'value': spatial_coverage_info }}
+            # metadata.append(ori_cov)
+
         for i in range(bcount):
-            res_md_dict['cell_and_band_info']['name (band '+str(i+1)+')'] = 'Band_' + str(i+1)
-            res_md_dict['cell_and_band_info']['variable (band '+str(i+1)+')'] = 'Unnamed'
-            res_md_dict['cell_and_band_info']['units (band '+str(i+1)+')'] = 'Unnamed'
-            res_md_dict['cell_and_band_info']['method (band '+str(i+1)+')'] = ''
-            res_md_dict['cell_and_band_info']['comment (band '+str(i+1)+')'] = ''
+            band_dict = OrderedDict()
+            band_dict['name'] = 'Band_' + str(i+1)
+            band_dict['variableName'] = 'Unnamed'
+            band_dict['variableUnit'] = 'Unnamed'
+            band_dict['method'] = ''
+            band_dict['comment'] = ''
+            metadata.append({'BandInformation': band_dict})
 
-        # have to set a name for spatial coverage since name is a required field in core metadata models.py
-        res_md_dict['spatial_coverage_info']['place/area name']= "Unnamed"
-        res_sci_md = {'Coverage': res_md_dict['spatial_coverage_info'],}
-        res_ext_md = {'Cell and band info': res_md_dict['cell_and_band_info'],}
-        return {"res_sci_metadata": res_sci_md,
-                "res_add_metadata": res_ext_md}
-
-# signal handler to validate resource metadata, and if valid, retrieve raster resource type specific metadata
-# values from create-resource.html page and return a dictionary of metadata_terms to be passed on to
-# hydroshare.create_resource() call to use when creating the resource; band_terms is a global dict variable
-# that holds all band-related variables for use by post_create_resource() signal handler to create band(s)
-# metadata as part of the created resource
-band_terms = {}
-@receiver(pre_call_create_resource, sender=RasterResource)
-def raster_pre_call_resource_trigger(sender, **kwargs):
+@receiver(pre_add_files_to_resource, sender=RasterResource)
+def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
     if(sender is RasterResource):
-        from hs_geo_raster_resource.forms import ValidateMetadataForm
-        from django.core.exceptions import ValidationError
-        qrylst = kwargs['request_post']
-        metadata = kwargs['metadata']
-        # add the corresponding names for form validation
-        for k, v in qrylst.items():
-            if k.startswith('name (band'):
-                qrylst['bandName_' + k[-2:-1]] = v
-            elif k.startswith('variable (band'):
-                qrylst['variableName_' + k[-2:-1]] = v
-            elif k.startswith('units (band'):
-                qrylst['variableUnit_' + k[-2:-1]] = v
-            elif k.startswith('method (band'):
-                qrylst['method_' + k[-2:-1]] = v
-            elif k.startswith('comment (band'):
-                qrylst['comment_' + k[-2:-1]] = v
-        if res_md_dict:
-            res_md_dict['spatial_coverage_info']['name'] = qrylst['place/area name']
-            res_md_dict['spatial_coverage_info'].pop('place/area name', None)
+        files = kwargs['files']
+        res = kwargs['resource']
+        if(files):
+            infile = files[0]
+            import raster_meta_extract
+            res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
 
-        box = {'coverage': {'type': 'box', 'value': res_md_dict['spatial_coverage_info']}}
-        metadata.append(box)
+            # update core metadata coverage - box
+            #cov_box = res.metadata.coverages.all().filter(type='box').first()
+            #res.metadata.update_element('coverage', cov_box.id, type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
 
-        resource = kwargs['resource']
-        #create form and do metadata validation
-        frm = ValidateMetadataForm(qrylst)
-        if frm.is_valid():
-            global band_terms
-            for k, v in qrylst.items():
-                if k=='rows':
-                    resource.rows = v
-                elif k=='columns':
-                    resource.columns = v
-                elif k=='cellSizeXValue':
-                    resource.cellSizeXValue = v
-                elif k=='cellSizeYValue':
-                    resource.cellSizeYValue = v
-                elif k=='cellSizeUnit':
-                    resource.cellSizeUnit = v
-                elif k=='cellDataType':
-                    resource.cellDataType = v
-                elif k=='noDataValue':
-                    resource.noDataValue = v
-                elif k=='bandCount':
-                    resource.bandCount = v
-                elif k.startswith('bandName') or k.startswith('variableName') or k.startswith('variableUnit')\
-                        or k.startswith('method') or k.startswith('comment'):
-                    band_terms[k] = v
-            for i in range(int(resource.bandCount)):
-                meta_info = {}
-                meta_info['name'] = band_terms['bandName_'+str(i+1)]
-                meta_info['variableName'] = band_terms['variableName_'+str(i+1)]
-                meta_info['variableUnit'] = band_terms['variableUnit_'+str(i+1)]
-                meta_info['method'] = band_terms['method_'+str(i+1)]
-                meta_info['comment'] = band_terms['comment_'+str(i+1)]
-                metadata.append({'bandInformation': meta_info})
-        else:
-            raise ValidationError(frm.errors)
+            wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
+            if wgs_cov_info is not None:
+                # add core metadata coverage - box
+                res.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
+            else:
+                res.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info']['original_coverage_info'])
+
+            # update extended original box coverage
+            #ori_cov_box = res.metadata.originalCoverage
+            #res.metadata.update_element('OriginalCoverage', ori_cov_box.id, type='box', value=res_md_dict['spatial_coverage_info']['original_coverage_info'])
+            if res.metadata.originalCoverage is None:
+                v = {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }
+                res.metadata.create_element('OriginalCoverage', **v)
+
+            # update extended metadata CellInformation
+            res.metadata.cellInformation.delete()
+            res.metadata.create_element('CellInformation', name=infile.name, rows=res_md_dict['cell_and_band_info']['rows'],
+                                        columns = res_md_dict['cell_and_band_info']['columns'],
+                                        cellSizeXValue = res_md_dict['cell_and_band_info']['cellSizeXValue'],
+                                        cellSizeYValue = res_md_dict['cell_and_band_info']['cellSizeYValue'],
+                                        cellSizeUnit = res_md_dict['cell_and_band_info']['cellSizeUnit'],
+                                        cellDataType = res_md_dict['cell_and_band_info']['cellDataType'],
+                                        noDataValue = res_md_dict['cell_and_band_info']['noDataValue'])
+
+            bcount = res_md_dict['cell_and_band_info']['bandCount']
+
+            # update extended metadata BandInformation
+            for band in res.metadata.bandInformation:
+                band.delete()
+            for i in range(bcount):
+                res.metadata.create_element('BandInformation', name='Band_' + str(i+1), variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
+
+@receiver(pre_delete_file_from_resource, sender=RasterResource)
+def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
+    if(sender is RasterResource):
+        res = kwargs['resource']
+
+        #cov_box = res.metadata.coverages.all().filter(type='box').first()
+        # from collections import OrderedDict
+        # spatial_coverage_info = OrderedDict([
+        #         ('units', "Unnamed"),
+        #         ('projection', 'Unnamed'),
+        #         ('northlimit', 0),
+        #         ('southlimit', 0),
+        #         ('eastlimit', 0),
+        #         ('westlimit', 0)
+        #     ])
+        # reset core metadata coverage - box to be null now that the only file is deleted
+        #res.metadata.update_element('coverage', cov_box.id, type='box', value=spatial_coverage_info)
+
+        #ori_cov_box = res.metadata.originalCoverage
+        #reset extended OriginalCoverage now that the only file is deleted
+        #res.metadata.update_element('OriginalCoverage', ori_cov_box.id, value=spatial_coverage_info)
+
+        #delete core metadata coverage now that the only file is deleted
+        res.metadata.coverages.all().delete()
+
+        #delete extended OriginalCoverage now that the only file is deleted
+        res.metadata.originalCoverage.delete()
+
+        # reset extended metadata CellInformation now that the only file is deleted
+        res.metadata.cellInformation.delete()
+        res.metadata.create_element('CellInformation', name=res.title, rows=0, columns = 0,
+                                        cellSizeXValue = 0, cellSizeYValue = 0,
+                                        cellSizeUnit = "Unnamed",
+                                        cellDataType = "Unnamed",
+                                        noDataValue = 0)
+
+        # reset extended metadata BandInformation now that the only file is deleted
+        for band in res.metadata.bandInformation:
+            band.delete()
+        res.metadata.create_element('BandInformation', name='Band_1', variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
+
+@receiver(pre_metadata_element_create, sender=RasterResource)
+def metadata_element_pre_create_handler(sender, **kwargs):
+    element_name = kwargs['element_name'].lower()
+    request = kwargs['request']
+    if element_name == "cellinformation":
+        element_form = CellInfoValidationForm(request.POST)
+    elif element_name == 'bandinformation':
+        element_form = BandInfoValidationForm(request.POST)
+    elif element_name == 'originalcoverage':
+        element_form = OriginalCoverageSpatialForm(request.POST)
+    if element_form.is_valid():
+        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+    else:
+        return {'is_valid': False, 'element_data_dict': None}
+
+@receiver(pre_metadata_element_update, sender=RasterResource)
+def metadata_element_pre_update_handler(sender, **kwargs):
+    element_name = kwargs['element_name'].lower()
+    element_id = kwargs['element_id']
+    request = kwargs['request']
+    if element_name == "cellinformation":
+        element_form = CellInfoValidationForm(request.POST)
+    elif element_name == 'bandinformation':
+        form_data = {}
+        for field_name in BandInfoValidationForm().fields:
+            matching_key = [key for key in request.POST if '-'+field_name in key][0]
+            form_data[field_name] = request.POST[matching_key]
+        element_form = BandInfoValidationForm(form_data)
+    elif element_name == 'originalcoverage':
+        element_form = OriginalCoverageSpatialForm(request.POST)
+
+    if element_form.is_valid():
+        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+    else:
+        return {'is_valid': False, 'element_data_dict': None}
+"""
+Since each of the Raster metadata element is required no need to listen to any delete signal
+The Raster landing page should not have delete UI functionality for the resource specific metadata elements
+"""

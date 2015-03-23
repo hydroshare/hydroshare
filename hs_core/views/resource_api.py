@@ -501,13 +501,13 @@ class ResourceFileCRUD(View):
             f = hydroshare.get_resource_file(pk, filename)
         except ObjectDoesNotExist:
             raise Http404
-        return HttpResponseRedirect(f.resource_file.url, content_type='text/plain')
+        return HttpResponseRedirect(f.url, content_type='text/plain')
 
     def update_resource_file(self, pk, filename):
         authorize(self.request, pk, edit=True)
 
         f = hydroshare.update_resource_file(pk, filename, self.request.FILES.values()[0])
-        return HttpResponse(f.resource_file.url, content_type='text/plain')
+        return HttpResponse(f.url, content_type='text/plain')
 
     def add_resource_file(self, pk, filename=None):
         authorize(self.request, pk, edit=True)
@@ -516,10 +516,10 @@ class ResourceFileCRUD(View):
             rf = self.request.FILES.values()[0]
             rf.name = filename
             f = hydroshare.add_resource_files(pk, rf)
-            return HttpResponse(f.resource_file.url, content_type='text/plain')
+            return HttpResponse(f.url, content_type='text/plain')
         else:
             fs = hydroshare.add_resource_files(pk, self.request.FILES.values())
-            return json_or_jsonp(self.request, { f.name: f.resource_file.url for f in fs})
+            return json_or_jsonp(self.request, { f.name: f.url for f in fs})
 
     def delete_resource_file(self, pk, filename):
         authorize(self.request, pk, edit=True)

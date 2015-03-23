@@ -67,7 +67,7 @@ fieldset[disabled].form-group input {
           MEZZANINE GENERIC
 ==========================================*/
 
-#comments, .rating {
+.rating {
   margin:20px 0;
 }
 .rating span, .rating form {
@@ -187,7 +187,7 @@ fieldset[disabled].form-group input {
 .form-group > textarea {
   height: auto;
   max-width: 100%;
-  max-height: 100px;
+  /*max-height: 100px;*/
 }
 
 .has-error > input[type="text"],

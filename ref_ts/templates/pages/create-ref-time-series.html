@@ -4,20 +4,17 @@
 
 {% block title %}
 
-    Create a Referenced HIS Time Series
+    Add HIS Reference Metadata for <i>{{ title }}</i> resource
 
 {% endblock %}
 
 {% block main %}
 
-    <h2>Create a Referenced HIS Time Series</h2>
+    <h2>Add HIS Reference Metadata for the <i>{{ title }}</i> resource</h2>
 
 <form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-ref-time-series/">
     {% csrf_token %}
 
-    <p>Use this form to create metadata for your Resource. Be as descriptive as you can since all of this information
-        will show up when your Resource is displayed. You can edit this information later.
-    </p>
 
     <h3>Select the type of Reference:</h3>
   <div class="form-group">
@@ -43,15 +40,14 @@
     <label for="" class="col-sm-2 control-label">Rest Url</label>
     <div class="col-sm-10">
       <input type="text" class="form-control" name="rest_url" id="verify-input" placeholder="http://example.gov/?format=waterml,1.1&sites=01646500">
-      <button class="btn btn-primary" type="button" id="verify-rest-button" data-loading-text="Verifying URL...">Verify</button>
-      <button class="btn disabled" type="button" id="preview-button-rest">Preview Data</button>
+      <button class="btn btn-primary" type="button" id="verify-rest-button" data-loading-text="Verifying URL...">Verify and Preview</button>
     </div>
   </div>
 
   <div class="form-group cuahsi-his cuahsi-his-2">
     <label for="" class="col-sm-2 control-label">Site from Server</label>
     <div class="col-sm-10">
-        <select class="form-control" name="site" id=""></select>
+        <select class="form-control" name="site" id="site"></select>
         <button class="btn btn-block btn-primary" type="button" id="search-vars-button" data-loading-text="Retrieving Variables...">Update Variables</button>
     </div>
   </div>
@@ -64,8 +60,8 @@
     </div>
   </div>
 
-  <div class ="form-group" id ="preview-div">
-      <div class="col-sm-offset-2 col-sm-10" id="preview"></div>
+  <div class ="form-group" id ="preview-div" class="col-sm-offset-2 col-sm-10">
+
   </div>
 
   <div class="form-group" id="fail-notice">
@@ -75,49 +71,26 @@
       </div>
   </div>
 
- <h3>Add your metadata here:</h3>
-  <div class="form-group">
-    <label for="" class="col-sm-2 control-label">Title*</label>
-    <div class="col-sm-10">
-      <input type="text" class="form-control" name="title" id="" placeholder="Title">
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="" class="col-sm-2 control-label">Creators*</label>
-    <div class="col-sm-10">
-      <input type="text" class="form-control" name="creators" id="" placeholder="Creators" value="{{ user|best_name }}">
-    </div>
-  </div>
-
-   <div class="form-group">
-    <label for="" class="col-sm-2 control-label">Contributors*</label>
-    <div class="col-sm-10">
-      <input type="text" class="form-control" name="contributors" id="" placeholder="Contributors" value="{{ user|best_name }}">
-    </div>
-   </div>
-
-  <div class="form-group">
-    <label for="" class="col-sm-2 control-label">Abstract</label>
-    <div class="col-sm-10">
-        <textarea class="form-control" name="abstract" id="" cols="30" rows="10" placeholder="Abstract"></textarea>
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="" class="col-sm-2 control-label">Subject Keywords</label>
-    <div class="col-sm-10">
-      <input type="text" class="form-control" id="" name='keywords' placeholder="Keywords">
-    </div>
-  </div>
-
-<input type="hidden" class="form-control" name="start_date" id="start_date">
 
   <div class="form-group">
     <div class="col-sm-offset-2 col-sm-10">
-      <button type="submit" class="btn btn-primary btn-lg btn-block">Create Resource</button>
+      <button type="submit" id="submit" class="btn btn-primary btn-lg btn-block disabled">Add HIS Time Series</button>
     </div>
   </div>
+
+  <div class="form-group" id="metadata" style="display: none;">
+    <div class="col-sm-offset-2 col-sm-10">
+      <input type="text" class="btn btn-primary btn-lg btn-block" name='metadata' value='{{ metadata }}'>
+    </div>
+  </div>
+
+  <div class="form-group" id="title" style="display: none;">
+    <div class="col-sm-offset-2 col-sm-10">
+      <input type="text" class="btn btn-primary btn-lg btn-block" name='title' value='{{ title }}'>
+    </div>
+  </div>
+
+
 
 </form>
 
@@ -130,8 +103,12 @@
     <script src=" {% static "ref_ts/rickshaw/rickshaw.min.js" %}"></script>
     <script type="text/javascript">
     $(function() {
+
         $( "#reference_type" )
             .change(function () {
+                var b = $('#submit');
+                b.addClass('disabled');
+
                 if ($("[name='reference_type'] option:selected").text() == "CUAHSI HIS SOAP Service") {
                     $('.cuahsi-his-1').show();
                     $('#preview-div').html( '<div class="col-sm-offset-2" id="preview"></div>');
@@ -144,27 +121,7 @@
                 }
                 $('#preview-div').hide();
             });
-        function graphVals(graph_data, units){
-            $('#preview-div').html( '<div class="col-sm-offset-2" id="preview"></div>');
-            $('#preview-div').show();
-            var graph = new Rickshaw.Graph( {
-                element: document.querySelector("#preview"),
-                height: 250,
-                renderer: 'line',
-                series: [{
-                    color: 'steelblue',
-                    data: graph_data,
-                    name: units,
-                    padding: {top: 0.02, left: 0.02, right: 0.02, bottom: 0.02}
-                }]
-            });
 
-            var x_axis = new Rickshaw.Graph.Axis.Time( { graph: graph } );
-            var y_axis = new Rickshaw.Graph.Axis.Y( { graph: graph } );
-            graph.render();
-           // var hoverDetail = new Rickshaw.Graph.HoverDetail( {graph: graph} );
-
-        }
         $(document).ready(function(){
             $('.cuahsi-his').hide();
             $('#preview-div').hide();
@@ -187,8 +144,6 @@
             return 0;
         }
 
-        var dat, {# data from getVals for graphVals #}
-            u;  {# units from getVals for graphVals #}
 
         function getVals(ref_type) {
             if (ref_type == 'rest') {
@@ -213,20 +168,20 @@
                     site: site,
                     variable: variable},
                 success: function(data, xhr, status){
-                    var units = data['units'],
-                            d = data['for_graph'];
-                    document.getElementById('start_date').value = data['start_date'];
-                    if (units==undefined){units='Data'}
-                    d.sort(compare);
-                    dat = d;
-                    u = units;
+                    var vis_file_name = data['vis_file_name'];
+                    $('#preview-div').html('<img src="{{ STATIC_URL }}img/'+vis_file_name+'" id="preview-graph" class="col-sm-offset-2"/>');
+                    $('#preview-div').show();
+                    var b = $('#submit');
+                    b.removeClass('disabled');
                 },
                 error: function(data, stuff){
                     $('#fail-notice').show();
                     console.log(data);
                     console.log(stuff);
+                    $('#preview-div').hide();
+
                 }
-            });
+            })
         }
 
         $("#search-sites-button").click(function() {
@@ -289,11 +244,14 @@
                     btn.button('reset');
                     console.log(data);
                     console.log(stuff);
+
                 }
             }).always(function () {btn.button('reset')});
         });
 
         $("#verify-rest-button").click(function(){
+            $('#preview-div').html('<h2 class="col-sm-offset-2 col-sm-10">Retrieving Data . . .</h2>');
+            $('#preview-div').show();
             var btn = $(this);
             btn.button('loading');
             $.ajax({
@@ -305,9 +263,6 @@
                     if (data == 200 ){
                         b.html('This is a valid HIS REST Url!');
                         b.addClass('btn-success');
-                        var b2 = $('#preview-button-rest');
-                        b2.addClass('btn-primary');
-                        b2.removeClass('disabled');
                     }
                     else if (data == 400 || data == 404){
                         b.html('This is NOT a valid HIS REST Url!');
@@ -320,15 +275,16 @@
 
             }).always(function () {btn.button('active')});
         });
+
         $('#verify-input').on('input', function(){
-            var b = $('#verify-rest-button'),
-            b2 = $('#preview-button-rest');
+            var b = $('#verify-rest-button');
             b.html('Verify');
             b.removeClass('btn-danger');
             b.removeClass('btn-success');
-            b2.removeClass('btn-primary');
-            b2.addClass('disabled');
+            $('#preview-div').hide();
             $('#fail-notice').hide();
+            var b = $('#submit');
+            b.addClass('disabled');
         });
 
         $('#wsdl_url').on('input', function(){
@@ -341,23 +297,33 @@
             $("#search-sites-button").removeClass('btn-danger');
             $('.cuahsi-his-2').hide();
             $('.cuahsi-his-3').hide();
+            var b = $('#submit');
+            b.addClass('disabled');
+
         });
 
         $('#variable').change(function(){
             $('#fail-notice').hide();
-            getVals('soap');
+            var b = $('#submit');
+            b.addClass('disabled');
+            $('#preview-div').hide();
         });
 
         $('#site').change(function(){
+            $('#preview-div').hide();
             $('#fail-notice').hide();
+            var select = document.getElementsByName('variable')[0];
+            removeOptions(select);
+            var b = $('#preview-button-soap');
+            b.addClass('disabled');
+            var b = $('#submit');
+            b.addClass('disabled');
         });
 
         $('#preview-button-soap').click(function(){
+            $('#preview-div').html('<h2 class="col-sm-offset-2 col-sm-10">Retrieving Data . . .</h2>');
+            $('#preview-div').show();
             getVals('soap');
-            $(document).ajaxComplete(function(){graphVals(dat, u)});
-        });
-        $('#preview-button-rest').click(function(){
-            graphVals(dat, u);
         });
     });
     </script>

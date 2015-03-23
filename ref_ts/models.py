@@ -25,22 +25,6 @@ class RefTimeSeries(Page, AbstractResource):
         url = models.URLField(null=False, blank=True, default='',
                               verbose_name='Web Services Url')
 
-        data_site_name = models.CharField(max_length=100, null=True, blank=True, default='',
-                                verbose_name='Time Series Site value')
-
-        data_site_code = models.CharField(max_length=100, null=True, blank=True, default='',
-                                verbose_name='Time Series Site Code')
-
-        variable_name = models.CharField(max_length=100, null=True, blank=True, default='',
-                                    verbose_name='Data Variable Name')
-
-        variable_code = models.CharField(max_length=100, null=True, blank=True, default='',
-                                    verbose_name='Data Variable Code')
-
-        start_date = models.DateTimeField(null=True)
-
-        end_date = models.DateTimeField(null=True)
-
         def can_add(self, request):
                 return AbstractResource.can_add(self, request)
 
@@ -53,6 +37,17 @@ class RefTimeSeries(Page, AbstractResource):
         def can_view(self, request):
                 return AbstractResource.can_view(self, request)
 
+        @classmethod
+        def get_supported_upload_file_types(cls):
+            # no file types are supported
+            return ()
+
+        @classmethod
+        def can_have_multiple_files(cls):
+            # resource can't have any files
+            return False
+
+
 processor_for(RefTimeSeries)(resource_processor)
 
 class Method(AbstractMetaDataElement):
@@ -62,12 +57,12 @@ class Method(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'value' in kwargs:
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
+            if 'content_object' in kwargs:
+                metadata_obj = kwargs['content_object']
                 metadata_type = ContentType.objects.get_for_model(metadata_obj)
                 method = Method.objects.filter(value__iexact=kwargs['value'], object_id=metadata_obj.id, content_type=metadata_type).first()
                 if method:
-                    raise ValidationError('Variable name:%s already exists' % kwargs['name'])
+                    raise ValidationError('Method:%s already exists' % kwargs['value'])
                 method = Method.objects.create(value=kwargs['value'], content_object=metadata_obj)
                 return method
             else:
@@ -104,8 +99,8 @@ class QualityControlLevel(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'value' in kwargs:
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
+            if 'content_object' in kwargs:
+                metadata_obj = kwargs['content_object']
                 metadata_type = ContentType.objects.get_for_model(metadata_obj)
                 quality_level = QualityControlLevel.objects.filter(value__iexact=kwargs['value'], object_id=metadata_obj.id, content_type=metadata_type).first()
                 if quality_level:
@@ -139,7 +134,6 @@ class QualityControlLevel(AbstractMetaDataElement):
     def remove(cls, element_id):
         quality_level = QualityControlLevel.objects.get(id=element_id)
         if quality_level:
-            metadata_id = quality_level.meta_data.id
             # make sure we are not deleting all coverages of a resource
             if QualityControlLevel.objects.filter(object_id=quality_level.object_id, content_type__pk=quality_level.content_type.id).count()== 1:
                 raise ValidationError("The only QualityControlLevel of the resource can't be deleted.")
@@ -158,9 +152,9 @@ class Variable(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'name' in kwargs:
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
-                metadata_type = ContentType.objects.get_for_model(metadata_obj, related_name='+')
+            if 'content_object' in kwargs:
+                metadata_obj = kwargs['content_object']
+                metadata_type = ContentType.objects.get_for_model(metadata_obj)
                 variable = Variable.objects.filter(name__iexact=kwargs['name'], object_id=metadata_obj.id, content_type=metadata_type).first()
                 if variable:
                     raise ValidationError('Variable for resource already exists')
@@ -177,7 +171,7 @@ class Variable(AbstractMetaDataElement):
         variable = Variable.objects.get(id=element_id)
         if variable:
             if 'name' in kwargs:
-                variable.value = kwargs['name']
+                variable.name = kwargs['name']
             if 'code' in kwargs:
                 variable.code = kwargs['code']
             if 'data_type' in kwargs:
@@ -210,8 +204,8 @@ class Site(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'name' in kwargs:
-            if 'metadata_obj' in kwargs:
-                metadata_obj = kwargs['metadata_obj']
+            if 'content_object' in kwargs:
+                metadata_obj = kwargs['content_object']
                 metadata_type = ContentType.objects.get_for_model(metadata_obj)
                 site = Site.objects.filter(name__iexact=kwargs['name'], object_id=metadata_obj.id, content_type=metadata_type).first()
                 if site:
@@ -232,12 +226,12 @@ class Site(AbstractMetaDataElement):
         site = Site.objects.get(id=element_id)
         if site:
             if 'name' in kwargs:
-                site.value = kwargs['name']
+                site.name = kwargs['name']
             if 'code' in kwargs:
                 site.code = kwargs['code']
-            if 'longitude' in kwargs:
+            if 'latitude' in kwargs:
                 site.latitude = kwargs['latitude']
-            if 'sample_medium' in kwargs:
+            if 'longitude' in kwargs:
                 site.longitude = kwargs['longitude']
             site.save()
         else:
@@ -305,11 +299,11 @@ class Site(AbstractMetaDataElement):
 
 
 class RefTSMetadata(CoreMetaData):
-    methods = models.ManyToManyField(Method)
-    quality_levels = models.ManyToManyField(QualityControlLevel)
-    variables = models.ManyToManyField(Variable)
-    sites = models.ManyToManyField(Site)
-    _refts_resource = models.ManyToManyField(RefTimeSeries)
+    methods = generic.GenericRelation(Method)
+    quality_levels = generic.GenericRelation(QualityControlLevel)
+    variables = generic.GenericRelation(Variable)
+    sites = generic.GenericRelation(Site)
+    _refts_resource = generic.GenericRelation(RefTimeSeries)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -329,7 +323,7 @@ class RefTSMetadata(CoreMetaData):
     def get_xml(self):
         from lxml import etree
         # get the xml string representation of the core metadata elements
-        xml_string = super(RefTSMetadata, self).get_xml()
+        xml_string = super(RefTSMetadata, self).get_xml(pretty_print=True)
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
 
@@ -358,11 +352,11 @@ class RefTSMetadata(CoreMetaData):
             hsterms_name = etree.SubElement(hsterms_variable_rdf_Description, '{%s}name' % self.NAMESPACES['hsterms'])
             hsterms_name.text = variable.name
             hsterms_code = etree.SubElement(hsterms_variable_rdf_Description, '{%s}code' % self.NAMESPACES['hsterms'])
-            hsterms_code.text = method.code
+            hsterms_code.text = variable.code
             hsterms_data_type = etree.SubElement(hsterms_variable_rdf_Description, '{%s}dataType' % self.NAMESPACES['hsterms'])
-            hsterms_data_type.text = method.data_type
+            hsterms_data_type.text = variable.data_type
             hsterms_sample_medium = etree.SubElement(hsterms_variable_rdf_Description, '{%s}sampleMedium' % self.NAMESPACES['hsterms'])
-            hsterms_sample_medium.text = method.sample_medium
+            hsterms_sample_medium.text = variable.sample_medium
 
         for site in self.sites.all():
             hsterms_site = etree.SubElement(container, '{%s}site' % self.NAMESPACES['hsterms'])
@@ -371,21 +365,23 @@ class RefTSMetadata(CoreMetaData):
             hsterms_name = etree.SubElement(hsterms_site_rdf_Description, '{%s}name' % self.NAMESPACES['hsterms'])
             hsterms_name.text = site.name
             hsterms_code = etree.SubElement(hsterms_site_rdf_Description, '{%s}code' % self.NAMESPACES['hsterms'])
-            hsterms_code.text = method.code
+            hsterms_code.text = site.code
             hsterms_latitude = etree.SubElement(hsterms_site_rdf_Description, '{%s}latitude' % self.NAMESPACES['hsterms'])
-            hsterms_latitude.text = method.latitude or ''
+            hsterms_latitude.text = unicode(site.latitude) or ''
             hsterms_longitude = etree.SubElement(hsterms_site_rdf_Description, '{%s}longitude' % self.NAMESPACES['hsterms'])
-            hsterms_longitude.text = method.longitude or ''
+            hsterms_longitude.text = unicode(site.longitude) or ''
 
-        for src in self.sources.all():
-            hsterms_src = etree.SubElement(container, '{%s}src' % self.NAMESPACES['hsterms'])
-            hsterms_src_rdf_Description = etree.SubElement(hsterms_src, '{%s}Description' % self.NAMESPACES['rdf'])
-
-            hsterms_name = etree.SubElement(hsterms_src_rdf_Description, '{%s}derivedFrom' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = src.derivedfrom
-            hsterms_code = etree.SubElement(hsterms_src_rdf_Description, '{%s}organization' % self.NAMESPACES['hsterms'])
-            hsterms_code.text = method.organization or ''
-            hsterms_latitude = etree.SubElement(hsterms_src_rdf_Description, '{%s}sourceDescription' % self.NAMESPACES['hsterms'])
-            hsterms_latitude.text = method.source_description or ''
+        # for src in self.sources.all():
+        #     hsterms_src = etree.SubElement(container, '{%s}src' % self.NAMESPACES['hsterms'])
+        #     hsterms_src_rdf_Description = etree.SubElement(hsterms_src, '{%s}Description' % self.NAMESPACES['rdf'])
+        #
+        #     hsterms_name = etree.SubElement(hsterms_src_rdf_Description, '{%s}derivedFrom' % self.NAMESPACES['hsterms'])
+        #     hsterms_name.text = src.derivedfrom
+        #     hsterms_code = etree.SubElement(hsterms_src_rdf_Description, '{%s}organization' % self.NAMESPACES['hsterms'])
+        #     hsterms_code.text = src.organization or ''
+        #     hsterms_latitude = etree.SubElement(hsterms_src_rdf_Description, '{%s}sourceDescription' % self.NAMESPACES['hsterms'])
+        #     hsterms_latitude.text = src.source_description or ''
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
+
+import receivers
