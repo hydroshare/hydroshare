@@ -76,6 +76,10 @@ class ExecutedByForm(ModelForm):
         # change above line to this once issue #262 is merged into develop
         #mp_resource = users.get_resource_list(types=['ModelProgramResource'])
 
+        # change above line to this once issue #262 is merged into develop
+        #mp_resource = users.get_resource_list(types=['ModelProgramResource'])
+
+
         CHOICES = tuple([('Unknown','Unknown')] + [(r.short_id,r.title) for r in mp_resource.values()[0]])
         CHOICES = tuple([('Unknown','Unknown')] + [(r.short_id,r.title) for r in mp_resource.values()[0]])
 
