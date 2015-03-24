@@ -7,7 +7,6 @@ from models import *
 from hs_core.forms import BaseFormHelper
 from hs_core.hydroshare import users
 
-
 class ModelOutputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
