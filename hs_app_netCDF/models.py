@@ -221,7 +221,7 @@ class NetcdfResource(Page, AbstractResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # 3 file types are supported
-        return (".nc")
+        return (".nc",)
 
     @classmethod
     def can_have_multiple_files(cls):
