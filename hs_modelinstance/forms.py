@@ -6,6 +6,10 @@ from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
 from hs_core.hydroshare import users
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8a3fafc21198e877d07397215d94f813f240e593
 
 class ModelOutputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
@@ -79,7 +83,6 @@ class ExecutedByForm(ModelForm):
 
         # Set the choice lists as the file names in the content model
         self.fields['name'].choices = CHOICES
-
 
 
 
