@@ -26,7 +26,7 @@
                 <option value="GenericResource">Generic Resource</option>
                 <option value="RasterResource">Geographic Raster Resource</option>
                 <option value="TimeSeriesResource">Time Series Resource</option>
-                {# <option value="InstResource">RHESSys Instance Resource</option> #}
+{#                <option value="InstResource">RHESSys Instance Resource</option> #}
                 <option value="RefTimeSeries">HIS Referenced Time Series</option>
                 <option value="ModelInstanceResource">Model Instance Resource</option>
                 <option value="NetcdfResource">Multidimensional Space and Time Data Resource</option>
@@ -53,7 +53,7 @@
         </table>
 
         <h2 style="color:red">{{ file_size_error }}</h2>
-        <h2 style="color:red">{{ file_validation_error }}</h2>
+        <h2 id="file-type-error" style="color:red">{{ file_validation_error }}</h2>
     </div>
 
     <div class="form-group">
@@ -138,7 +138,6 @@
             var fileList = this.files || []
             var ext = ".*";
             for (var i = 0; i < fileList.length; i++) {
-                console.log('found file ' + i + ' = ' + fileList[i].name);
                 ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
                 ext = "." + ext;
                 var ext_found = false;
@@ -156,7 +155,11 @@
                 }
                 if(!ext_found){
                     this.value ='';
-                    alert('Invalid file type:' + ext)
+                    var err_msg = "Invalid file type: '" + ext +"'";
+                    $('#file-type-error').text(err_msg);
+                }
+                else{
+                    $('#file-type-error').text('');
                 }
             }
 

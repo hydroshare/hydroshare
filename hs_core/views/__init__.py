@@ -407,19 +407,32 @@ def verify_captcha(request):
         else:
             return HttpResponse('true', content_type='text/plain')
 
+def verify_account(request, *args, **kwargs):
+    context = {
+            'username' : request.GET['username'],
+            'email' : request.GET['email']
+        }
+    return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+
 @processor_for('resend-verification-email')
-def resend_verification_email(request, page):
-    u = get_object_or_404(User, username=request.GET['user'])
+def resend_verification_email(request):
+    u = get_object_or_404(User, username=request.GET['username'], email=request.GET['email'])
     try:
+        token = signing.dumps('verify_user_email:{0}:{1}'.format(u.pk, u.email))
         u.email_user(
             'Please verify your new Hydroshare account.',
             """
 This is an automated email from Hydroshare.org. If you requested a Hydroshare account, please
-go to http://{domain}/verify/{uid}/ and verify your account.
+go to http://{domain}/verify/{token}/ and verify your account.
 """.format(
             domain=Site.objects.get_current().domain,
-            uid=u.pk
+            token=token
         ))
+
+        context = {
+            'is_email_sent' : True
+        }
+        return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
     except:
         pass # FIXME should log this instead of ignoring it.
 
@@ -704,6 +717,9 @@ def create_resource_new_workflow(request, *args, **kwargs):
                          }
                     })
 
+    if url_key in page_url_dict:
+        return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
+
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
             owner=request.user,
@@ -717,9 +733,6 @@ def create_resource_new_workflow(request, *args, **kwargs):
 
     # Send post-create resource signal
     post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, **kwargs)
-
-    if url_key in page_url_dict:
-        return render(request, page_url_dict[url_key], {'resource': resource})
 
     if resource is not None:
         # go to resource landing page

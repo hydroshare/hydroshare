@@ -16,6 +16,8 @@ from lxml import etree
 import datetime
 from django.utils.timezone import now
 import os
+from hs_core.signals import post_create_resource
+import ast
 
 class ReferencedSitesForm(forms.Form):
     wsdl_url = forms.URLField()
@@ -97,7 +99,8 @@ class CreateRefTimeSeriesForm(forms.Form):
     reference_type = forms.CharField(required=False, min_length=0)
     site = forms.CharField(required=False, min_length=0)
     variable = forms.CharField(required=False, min_length=0)
-    short_id = forms.CharField(required=False, min_length=0)
+    metadata = forms.CharField(required=False, min_length=0)
+    title = forms.CharField(required=False, min_length=0)
 
 
 
@@ -116,7 +119,7 @@ def create_ref_time_series(request, *args, **kwargs):
 
         # start_date_str = frm.cleaned_data["start_date"]
         # start_date_int = ts_utils.time_to_int(start_date_str)
-        site_name, site_code, variable_name, variable_code, short_id = None, None, None, None, None
+        site_name, site_code, variable_name, variable_code = None, None, None, None
 
         if frm.cleaned_data.get('site'):
             full_site = frm.cleaned_data['site'].replace(' ', '')
@@ -131,11 +134,18 @@ def create_ref_time_series(request, *args, **kwargs):
             variable_code = full_variable[n+1:]
         reference_type = frm.cleaned_data['reference_type']
 
-        res = hydroshare.get_resource_by_shortkey(frm.cleaned_data['short_id'])
-        res.url = url
-        res.reference_type = reference_type
-        res.save()
+        metadata = frm.cleaned_data.get('metadata')
+        metadata = ast.literal_eval(metadata)
+        res = hydroshare.create_resource(
+            resource_type='RefTimeSeries',
+            owner=request.user,
+            title=frm.cleaned_data.get('title'),
+            reference_type=reference_type,
+            url=url,
+            metadata=metadata
+        )
 
+        post_create_resource.send(sender=RefTimeSeries, resource=res)
 
         if reference_type == 'rest':
             ts = ts_utils.time_series_from_service(url, reference_type)
