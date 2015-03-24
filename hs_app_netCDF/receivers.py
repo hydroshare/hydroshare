@@ -185,6 +185,7 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
 
             # delete all the extended meta info
             nc_res.metadata.variables.all().delete()
+            nc_res.metadata.ori_coverage.all().delete()
 
 
 # receiver used after user clicks on "add file" for existing resource netcdf file
