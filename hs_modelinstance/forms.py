@@ -71,6 +71,10 @@ class ExecutedByForm(ModelForm):
 
         mp_resource = users.get_resource_list(user=owner,types=['ModelProgramResource'])
 
+        # change above line to this once issue #262 is merged into develop
+        #mp_resource = users.get_resource_list(types=['ModelProgramResource'])
+
+
         CHOICES = tuple([('Unknown','Unknown')] + [(r.short_id,r.title) for r in mp_resource.values()[0]])
 
         # Set the choice lists as the file names in the content model
