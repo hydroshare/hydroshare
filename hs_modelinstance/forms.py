@@ -73,6 +73,9 @@ class ExecutedByForm(ModelForm):
         # todo: Change with ModelProgramResource once mp is pulled into develop
         mp_resource = users.get_resource_list(user=owner,types=['ModelProgramResource'])
 
+        # change above line to this once issue #262 is merged into develop
+        #mp_resource = users.get_resource_list(types=['ModelProgramResource'])
+
         CHOICES = tuple([('Unknown','Unknown')] + [(r.short_id,r.title) for r in mp_resource.values()[0]])
 
         # Set the choice lists as the file names in the content model
@@ -82,9 +85,7 @@ class ExecutedByForm(ModelForm):
 
     class Meta:
         model = ExecutedBy
-        # fields = ['name','model_program']
         exclude = ['content_object','model_program_fk']
-        #widgets = {'name': forms.TextInput()}
 
 class ExecutedByValidationForm(forms.Form):
     name = forms.CharField(max_length=200)
