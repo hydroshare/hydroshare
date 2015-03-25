@@ -194,8 +194,8 @@
                 success: function(data, xhr, status){
                     var select = document.getElementsByName('site')[0];
                     removeOptions(select);
-                    for(var index in data) {
-                        var ln = ( index + " : " + data[index]);
+                    for(var site in data) {
+                        var ln = (data[site]);
                         var opt = document.createElement('option');
                         opt.value = ln;
                         opt.innerHTML = ln;
@@ -229,7 +229,7 @@
                     var select = document.getElementsByName('variable')[0];
                     removeOptions(select);
                     for(var index in data) {
-                        var ln = ( index + " : " + data[index]);
+                        var ln = ( data[index]);
                         var opt = document.createElement('option');
                         opt.value = ln;
                         opt.innerHTML = ln;
