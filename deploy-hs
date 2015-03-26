@@ -29,11 +29,20 @@ if [ -z $IID ];
         echo "### hs_base already exists ###";
 fi
 
-# build docker contaiers defined by fig and bring them up
-echo "### build docker containers as defined in fig.yml ###"
-fig build
-echo "### bring up all docker containers as defined in fig.yml ###"
-fig up -d
+# build docker contaiers defined by fig or docker-compose and bring them up
+DC_OR_FIG=$(which docker-compose | grep "no docker-compose")
+if [ ${#DC_OR_FIG} -gt 0 ];
+then
+    echo "### build docker containers as defined in fig.yml ###"
+    fig build
+    echo "### bring up all docker containers as defined in fig.yml ###"
+    fig up -d;
+else
+    echo "### build docker containers as defined in docker-compose.yml ###"
+    docker-compose build
+    echo "### bring up all docker containers as defined in docker-compose.yml ###"
+    docker-compose up -d;
+fi
 
 # load pg.development.sql into postgis database
 echo "### load clean pg.development.sql database from the running hydroshare container ###"
@@ -42,9 +51,9 @@ docker exec $CID dropdb -U postgres -h postgis postgres
 docker exec $CID createdb -U postgres -h postgis postgres
 docker exec $CID psql -U postgres -h postgis -w -c 'create extension postgis;'
 docker exec $CID psql -U postgres -h postgis -f pg.development.sql
-docker exec $CID python manage.py collectstatic -v0 --noinput
-docker exec $CID python manage.py syncdb --noinput
 docker exec $CID python manage.py makemigrations
 docker exec $CID python manage.py migrate
+docker exec $CID python manage.py collectstatic -v0 --noinput
+docker exec $CID python manage.py syncdb --noinput
 
 echo "### complete ###"
