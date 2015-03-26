@@ -4,7 +4,7 @@ from crispy_forms.layout import *
 from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import *
 from hs_app_netCDF.models import *
-from hs_core.forms import BaseFormHelper
+from hs_core.forms import BaseFormHelper, MetaDataElementDeleteForm
 from django.forms.models import formset_factory
 from functools import partial, wraps
 import copy
@@ -25,7 +25,8 @@ class OriginalCoverageFormHelper(BaseFormHelper):
                         Field('units', css_class=field_width),
                         Field('projection', css_class=field_width),
                         Field('projection_string_type', css_class=field_width),
-                        Field('projection_string_text', css_class=field_width)
+                        Field('projection_string_text', css_class=field_width),
+
                  )
 
         super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -52,6 +53,19 @@ class OriginalCoverageForm(forms.Form):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(OriginalCoverageForm, self).__init__(*args, **kwargs)
         self.helper = OriginalCoverageFormHelper(allow_edit, res_short_id, element_id, element_name='originalcoverage')
+        self.delete_modal_form = None
+        self.number = 0
+        self.allow_edit = allow_edit
+
+    @property
+    def form_id(self):
+        form_id = 'id_original_coverage_%s'% self.number
+        return form_id
+
+    @property
+    def form_if_button(self):
+        form_id = 'id_original_coverage_%s'% self.number
+        return "'" + form_id + "'"
 
     def clean(self):
         super(OriginalCoverageForm, self).clean()
@@ -108,6 +122,12 @@ class OriginalCoverageForm(forms.Form):
             del self.cleaned_data['projection']
 
         return self.cleaned_data
+
+
+class OriginalCoverageMetaDelete(MetaDataElementDeleteForm):
+    def __init__(self, res_short_id, element_name, element_id, *args, **kwargs):
+        super(OriginalCoverageMetaDelete, self).__init__(res_short_id, element_name, element_id, *args, **kwargs)
+        self.helper.layout[0] = HTML('<div class="modal fade" id="delete-original-coverage-element-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">')
 
 
 # The following 3 classes need to have the "field" same as the fields defined in "Variable" table in models.py

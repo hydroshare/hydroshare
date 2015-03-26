@@ -101,7 +101,11 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("Original Coverage element can't be deleted.")
+        ori_cov = OriginalCoverage.objects.get(id=element_id)
+        if ori_cov:
+            ori_cov.delete()
+        else:
+            raise ObjectDoesNotExist("No original coverage element exists for id:%d."%element_id)
 
 # Define netCDF variable metadata
 class Variable(AbstractMetaDataElement):

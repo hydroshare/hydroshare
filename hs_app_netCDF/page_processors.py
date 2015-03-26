@@ -74,6 +74,8 @@ def landing_page(request, page):
                                             allow_edit=edit_resource,
                                             res_short_id=content_model.short_id,
                                             element_id=ori_cov_obj.id if ori_cov_obj else None)
+        if ori_cov_obj:
+            ori_cov_form.delete_modal_form = OriginalCoverageMetaDelete(content_model.short_id, 'originalcoverage', ori_cov_obj.id)
 
         # Variable Forms in editing mode
         VariableFormSetEdit = formset_factory(wraps(VariableForm)(partial(VariableForm, allow_edit=edit_resource)), formset=BaseFormSet, extra=0)
@@ -92,9 +94,17 @@ def landing_page(request, page):
         ext_md_layout = Layout(
                                 AccordionGroup('Original Coverage',
                                      HTML('<div class="form-group" id="originalcoverage"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy original_coverage_form %} '
-                                     '</div> '),
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy original_coverage_form %} '
+                                          '</div> '
+
+                                          '<div class="row" style="margin-top:10px">'
+                                            '<div class="col-md-10">'
+                                                '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-original-coverage-element-dialog" value="Delete Original Coverage">'
+                                            '</div>'
+                                          '</div>'
+                                          '{% crispy original_coverage_form.delete_modal_form %} '
+                                     ),
                                 ),
                                 AccordionGroup('Variable', VariableLayoutEdit),
                                 ModalDialogLayoutAddVariable,
