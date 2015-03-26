@@ -5,6 +5,81 @@ from hs_core.models import AbstractResource, resource_processor, CoreMetaData, A
 from mezzanine.pages.page_processors import processor_for
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+import json
+
+# extended metadata for raster resource type to store the original box type coverage since the core metadata coverage
+# stores the converted WGS84 geographic coordinate system projection coverage, see issue #210 on github for details
+class OriginalCoverage(AbstractMetaDataElement):
+    term = 'OriginalCoverage'
+
+    """
+    _value field stores a json string as shown below for box coverage type
+     _value = "{'northlimit':northenmost coordinate value,
+                'eastlimit':easternmost coordinate value,
+                'southlimit':southernmost coordinate value,
+                'westlimit':westernmost coordinate value,
+                'units:units applying to 4 limits (north, east, south & east),
+                'name':coverage name value here (optional),
+                'projection': name of the projection (optional)}"
+    """
+    _value = models.CharField(max_length=1024, null=True)
+
+    class Meta:
+        # OriginalCoverage element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+    @property
+    def value(self):
+        print self._value
+        return json.loads(self._value)
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'value' in kwargs:
+            if isinstance(kwargs['value'], dict):
+                # check that all the required sub-elements exist
+                for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
+                    if not value_item in kwargs['value']:
+                        raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or 'units' is missing.")
+
+                value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                              if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'name', 'projection')}
+
+                value_json = json.dumps(value_dict)
+                metadata_obj = kwargs['content_object']
+                cov = OriginalCoverage.objects.create(_value=value_json, content_object=metadata_obj)
+                return cov
+            else:
+                raise ValidationError('Invalid coverage value format.')
+        else:
+            raise ValidationError('Coverage value is missing.')
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        cov = OriginalCoverage.objects.get(id=element_id)
+        if cov:
+            if 'value' in kwargs:
+                if not isinstance(kwargs['value'], dict):
+                    raise ValidationError('Invalid coverage value format.')
+
+                value_dict = cov.value
+
+                if 'name' in kwargs['value']:
+                    value_dict['name'] = kwargs['value']['name']
+
+                for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
+                    if item_name in kwargs['value']:
+                        value_dict[item_name] = kwargs['value'][item_name]
+
+                value_json = json.dumps(value_dict)
+                cov._value = value_json
+                cov.save()
+        else:
+            raise ObjectDoesNotExist("No coverage element was found for the provided id:%s" % element_id)
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("Coverage element can't be deleted.")
 
 class BandInformation(AbstractMetaDataElement):
     term = 'BandInformation'
@@ -192,6 +267,7 @@ class RasterMetaData(CoreMetaData):
     # required non-repeatable cell information metadata elements
     _cell_information = generic.GenericRelation(CellInformation)
     _band_information = generic.GenericRelation(BandInformation)
+    _ori_coverage = generic.GenericRelation(OriginalCoverage)
     _raster_resource = generic.GenericRelation(RasterResource)
 
     @property
@@ -205,6 +281,10 @@ class RasterMetaData(CoreMetaData):
     def bandInformation(self):
         return self._band_information.all()
 
+    @property
+    def originalCoverage(self):
+        return self._ori_coverage.all().first()
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -212,6 +292,7 @@ class RasterMetaData(CoreMetaData):
         # add the name of any additional element to the list
         elements.append('CellInformation')
         elements.append('BandInformation')
+        elements.append('OriginalCoverage')
         return elements
 
     def has_all_required_elements(self):
@@ -221,6 +302,8 @@ class RasterMetaData(CoreMetaData):
             return False
         if not self.bandInformation:
             return False
+        if not self.originalCoverage:
+            return False
         return True
 
     def get_required_missing_elements(self):
@@ -229,6 +312,8 @@ class RasterMetaData(CoreMetaData):
             missing_required_elements.append('CellInformation')
         if not self.bandInformation:
             missing_required_elements.append('BandInformation')
+        if not self.originalCoverage:
+            missing_required_elements.append('OriginalCoverage')
         return missing_required_elements
 
     def get_xml(self):
@@ -251,6 +336,22 @@ class RasterMetaData(CoreMetaData):
         for band_info in self.bandInformation:
             bandinfo_fields = ['name', 'variableName', 'variableUnit', 'method', 'comment']
             self.add_metadata_element_to_xml(container, band_info, bandinfo_fields)
+
+        if self.originalCoverage:
+            ori_coverage = self.originalCoverage;
+            cov = etree.SubElement(container, '{%s}originalCoverage' % self.NAMESPACES['hsterms'])
+            cov_term = '{%s}' + 'box'
+            coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
+            rdf_coverage_value = etree.SubElement(coverage_terms, '{%s}value' % self.NAMESPACES['rdf'])
+            #raster original coverage is of box type
+            cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                        %(ori_coverage.value['northlimit'], ori_coverage.value['eastlimit'],
+                          ori_coverage.value['southlimit'], ori_coverage.value['westlimit'], ori_coverage.value['units'])
+
+            if 'projection' in ori_coverage.value:
+                cov_value = cov_value + '; projection=%s' % ori_coverage.value['projection']
+
+            rdf_coverage_value.text = cov_value
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 

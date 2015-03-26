@@ -1,9 +1,19 @@
 #!/bin/sh
 
-# initiates a full build of hydroshare inlcuding hs_base if it does not already exist.
+# initiates a full build of hydroshare
 
-# set current working directory as CWD
-CWD=$(pwd)
+# check version of Docker for use of exec command
+DOCKER_VER=$(docker version | grep 'Client version' | cut -d ' ' -f 3)
+
+if [[ $DOCKER_VER < '1.3.0' ]];
+    then
+        echo "### Please update your installation of Docker to version >= 1.3.0 ###"
+        docker version
+        exit;
+    else
+        echo "### Docker version is compliant ###"
+        docker version;
+fi
 
 # get submodules
 echo "### get git submodules ###"
@@ -15,20 +25,24 @@ if [ -z $IID ];
     then
         echo "### pull hs_base image from docker hub ###"
         docker pull mjstealey/hs_base;
-        #echo "### build hs_base ###"
-        #pushd $CWD
-        #cd hs_docker_base
-        #docker build -t hs_base .
-        #popd;
     else
         echo "### hs_base already exists ###";
 fi
 
-# build docker contaiers defined by fig and bring them up
-echo "### build docker containers as defined in fig.yml ###"
-fig build
-echo "### bring up all docker containers as defined in fig.yml ###"
-fig up -d
+# build docker contaiers defined by fig or docker-compose and bring them up
+DC_OR_FIG=$(which docker-compose | grep "no docker-compose")
+if [ ${#DC_OR_FIG} -gt 0 ];
+then
+    echo "### build docker containers as defined in fig.yml ###"
+    fig build
+    echo "### bring up all docker containers as defined in fig.yml ###"
+    fig up -d;
+else
+    echo "### build docker containers as defined in docker-compose.yml ###"
+    docker-compose build
+    echo "### bring up all docker containers as defined in docker-compose.yml ###"
+    docker-compose up -d;
+fi
 
 # load pg.development.sql into postgis database
 echo "### load clean pg.development.sql database from the running hydroshare container ###"
@@ -39,5 +53,7 @@ docker exec $CID psql -U postgres -h postgis -w -c 'create extension postgis;'
 docker exec $CID psql -U postgres -h postgis -f pg.development.sql
 docker exec $CID python manage.py makemigrations
 docker exec $CID python manage.py migrate
+docker exec $CID python manage.py collectstatic -v0 --noinput
+docker exec $CID python manage.py syncdb --noinput
 
 echo "### complete ###"
