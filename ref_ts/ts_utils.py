@@ -552,7 +552,7 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
 #this fxn creates the calls the make files fxn and adds the files as resource files
 def generate_files(shortkey):
     res = hydroshare.get_resource_by_shortkey(shortkey)
-    files = make_files(res.short_id, res.reference_type, res.url, res.metadata.sites.all()[0].code, res.metadata.variables.all()[0].code, res.title)
+    files = make_files(res.short_id, res.metadata.referenceURLs.all()[0].type, res.metadata.referenceURLs.all()[0].value, res.metadata.sites.all()[0].code, res.metadata.variables.all()[0].code, res.title)
     for f in files:
         hydroshare.add_resource_files(res.short_id, f)
         os.remove(f.name)

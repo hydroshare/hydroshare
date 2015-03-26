@@ -140,8 +140,6 @@ def create_ref_time_series(request, *args, **kwargs):
             resource_type='RefTimeSeries',
             owner=request.user,
             title=frm.cleaned_data.get('title'),
-            reference_type=reference_type,
-            url=url,
             metadata=metadata
         )
 
@@ -156,6 +154,13 @@ def create_ref_time_series(request, *args, **kwargs):
 
         hydroshare.resource.create_metadata_element(
             res.short_id,
+            'ReferenceURL',
+            value=url,
+            type=reference_type
+        )
+
+        hydroshare.resource.create_metadata_element(
+            res.short_id,
             'Site',
             name=site_name,
             code=site_code
@@ -167,11 +172,14 @@ def create_ref_time_series(request, *args, **kwargs):
             name=variable_name,
             code=variable_code
         )
+
         ts_utils.generate_files(res.short_id)
+
         for file_name in os.listdir("theme/static/img"):
             if 'visualization' in file_name:
                 # open(file_name, 'w')
                 os.remove("theme/static/img/"+file_name)
+
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeries)
@@ -191,6 +199,7 @@ def add_dublin_core(request, page):
     context['variable'] = content_model.metadata.variables.all().first()
     context['method'] = content_model.metadata.methods.all().first()
     context['quality_level'] = content_model.metadata.quality_levels.all().first
+    context['referenceURL'] = content_model.metadata.referenceURLs.all().first
     for f in content_model.files.all():
         if 'visual' in str(f.resource_file.name):
             context['visfile'] = f

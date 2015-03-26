@@ -7,6 +7,21 @@
         <div class="row">
             <div class="col-md-12">
                 <div>
+                    {% if referenceURL %}
+                        <h4><strong>Reference URL:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>URL:</strong></div>
+                            <div class="col-sm-8">{{ referenceURL.value }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Type:</strong></div>
+                            <div class="col-sm-8">{{ referenceURL.type }}</div>
+                        </div>
+                    <hr style="border:0">
+                    {%  endif %}
+                </div>
+                <div>
                     {% if site %}
                         <h4><strong>Site:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
