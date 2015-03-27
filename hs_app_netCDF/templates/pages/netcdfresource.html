@@ -158,15 +158,8 @@
 
 {{ block.super }}
 
+{# put resource specific js below #}
 <script type="text/javascript">
-{#    $(document).ready(function(){#}
-{#        alert('hi');#}
-{#        var test= $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").attr('href');#}
-{#        alert('hi');#}
-{#        alert(test);#}
-{#    })#}
-
-
     function check_ori_meta_status(){
         var form_action = $("form[id='id-originalcoverage']").attr('action');
         if (form_action.indexOf('update-metadata') > -1) {
@@ -182,20 +175,6 @@
             $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").hide()
         }
     }
-
-{#    $(document).ready(function () {#}
-{#        var form_action = $("form[id='id-originalcoverage']").attr('action');#}
-{#        if (form_action.indexOf('update-metadata') > -1) {#}
-{#            var new_action = form_action.replace('update-metadata', 'delete-metadata');#}
-{#            $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").attr('href',new_action);#}
-{#        }#}
-{#        else {#}
-{#            var modal_body_text = 'There is no original metadata for this resource to delete.'#}
-{#            $("#delete-original-coverage-element-dialog").find(".modal-body").text(modal_body_text);#}
-{#        }#}
-{#    }#}
-{#    )#}
-
 </script>
 
 {% endblock %}
