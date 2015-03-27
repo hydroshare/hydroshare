@@ -155,10 +155,49 @@
 
 
 {% block extra_js %}
-    {{ block.super }}
 
-    {# resource specific js can go here #}
+{{ block.super }}
 
-{%  endblock %}
+<script type="text/javascript">
+{#    $(document).ready(function(){#}
+{#        alert('hi');#}
+{#        var test= $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").attr('href');#}
+{#        alert('hi');#}
+{#        alert(test);#}
+{#    })#}
+
+
+    function check_ori_meta_status(){
+        var form_action = $("form[id='id-originalcoverage']").attr('action');
+        if (form_action.indexOf('update-metadata') > -1) {
+            var new_action = form_action.replace('update-metadata', 'delete-metadata');
+            var modal_body_text = '<strong>Are you sure you want to delete this metadata element?</strong>'
+            $("#delete-original-coverage-element-dialog").find(".modal-body").html(modal_body_text);
+            $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").attr('href',new_action);
+            $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").show()
+        }
+        else {
+            var modal_body_text = '<strong>There is no original coverage metadata for this resource to delete.</strong>'
+            $("#delete-original-coverage-element-dialog").find(".modal-body").html(modal_body_text);
+            $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").hide()
+        }
+    }
+
+{#    $(document).ready(function () {#}
+{#        var form_action = $("form[id='id-originalcoverage']").attr('action');#}
+{#        if (form_action.indexOf('update-metadata') > -1) {#}
+{#            var new_action = form_action.replace('update-metadata', 'delete-metadata');#}
+{#            $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").attr('href',new_action);#}
+{#        }#}
+{#        else {#}
+{#            var modal_body_text = 'There is no original metadata for this resource to delete.'#}
+{#            $("#delete-original-coverage-element-dialog").find(".modal-body").text(modal_body_text);#}
+{#        }#}
+{#    }#}
+{#    )#}
+
+</script>
+
+{% endblock %}
 
 
