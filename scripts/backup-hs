@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# backup-hs
+
+# set local variables
+#HS_PATH=/home/${USER}/hydroshare        # hydrodev VM
+HS_PATH=/Users/${USER}/hydroshare       # OS X
+
+# set variables for use in script
+FIG_VER=$(fig --version)
+DC_VER=$(docker-compose --version)
+CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
+
+# backup database
+# database in postgis container
+docker exec $CID /usr/bin/pg_dump -c -d postgres -U postgres -h postgis > "${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql"
+
+# backup media files
+# hydroshare/static/media
+
+# backup deployment files
+# Dockerfile, fig.yml (docker-compose.yml), settings.py, local_settings.py
