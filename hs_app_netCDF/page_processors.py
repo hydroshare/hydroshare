@@ -9,6 +9,7 @@ from hs_core.forms import MetaDataElementDeleteForm
 from django.forms.models import formset_factory
 from hs_core.views import *
 from functools import partial, wraps
+from hs_app_netCDF.forms import ModalDialogLayoutAddVariable
 
 @processor_for(NetcdfResource)
 # when the resource is created this page will be shown

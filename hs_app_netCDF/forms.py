@@ -131,11 +131,17 @@ class OriginalCoverageMetaDelete(MetaDataElementDeleteForm):
 
 
 # The following 3 classes need to have the "field" same as the fields defined in "Variable" table in models.py
-class VariableFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
+class VariableFormHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(VariableFormHelper, self).__init__(*args, **kwargs)
         field_width = 'form-control input-sm'
+        self.form_tag = False
+        self.form_show_errors = True
+        self.error_text_inline = True
+        self.html5_required = False
         # change the fields name here
-        layout = Layout(
+        self.layout = Layout(
+            Fieldset('Variable',
                      Field('name', css_class=field_width),
                      Field('unit', css_class=field_width),
                      Field('type', css_class=field_width),
@@ -143,15 +149,16 @@ class VariableFormHelper(BaseFormHelper):
                      Field('descriptive_name', css_class=field_width),
                      Field('method', css_class=field_width),
                      Field('missing_value', css_class=field_width)
-                )
+                ),
+            )
 
-        super(VariableFormHelper, self).__init__(allow_edit, res_short_id,  element_id, element_name, layout,  *args, **kwargs)
+       # super(VariableFormHelper, self).__init__(allow_edit, res_short_id,  element_id, element_name, layout,  *args, **kwargs)
 
 
 class VariableForm(ModelForm):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None,  *args, **kwargs):
         super(VariableForm, self).__init__(*args, **kwargs)
-        self.helper = VariableFormHelper(allow_edit, res_short_id, element_id, element_name='Variable')
+        self.helper = VariableFormHelper()
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit
@@ -159,10 +166,10 @@ class VariableForm(ModelForm):
             self.action = "/hsapi/_internal/%s/variable/add-metadata/" % res_short_id
         else:
             self.action = ""
-        if not allow_edit:
-            for field in self.fields.values():
-                field.widget.attrs['readonly'] = True
-                field.widget.attrs['style'] = "background-color:white;"
+        # if not allow_edit:
+        #     for field in self.fields.values():
+        #         field.widget.attrs['readonly'] = True
+        #         field.widget.attrs['style'] = "background-color:white;"
     @property
     def form_id(self):
         form_id = 'id_variable_%s' % self.number
@@ -196,35 +203,37 @@ class VariableValidationForm(forms.Form):
     method = forms.CharField(max_length=300, required=False)
     missing_value = forms.CharField(max_length=50, required=False)
 
+from hs_core.forms import Helper
+ModalDialogLayoutAddVariable = Helper.get_element_add_modal_form('Variable', 'add_variable_modal_form')
 
-ModalDialogLayoutAddVariable = Layout(
-                            HTML('<div class="modal fade" id="add-variable-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
-                                    '<div class="modal-dialog">'
-                                        '<div class="modal-content">'
-                                            '<form action="{{ add_variable_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
-                                            '{% csrf_token %} '
-                                            '<input name="resource-mode" type="hidden" value="edit"/>'
-                                            '<div class="modal-header">'
-                                                '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
-                                                '<h4 class="modal-title" id="myModalLabel">Add Variable</h4>'
-                                            '</div>'
-                                            '<div class="modal-body">'
-                                                '{% csrf_token %}'
-                                                '<div class="form-group">'
-                                                    '{% load crispy_forms_tags %} '
-                                                    '{% crispy add_variable_modal_form %} '
-                                                '</div>'
-                                            '</div>'
-                                            '<div class="modal-footer">'
-                                                '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
-                                                '<button type="submit" class="btn btn-primary">Save changes</button>'
-                                            '</div>'
-                                            '</form>'
-                                        '</div>'
-                                    '</div>'
-                                '</div>'
-                            )
-                        )
+# ModalDialogLayoutAddVariable = Layout(
+#                             HTML('<div class="modal fade" id="add-variable-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
+#                                     '<div class="modal-dialog">'
+#                                         '<div class="modal-content">'
+#                                             '<form action="{{ add_variable_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
+#                                             '{% csrf_token %} '
+#                                             '<input name="resource-mode" type="hidden" value="edit"/>'
+#                                             '<div class="modal-header">'
+#                                                 '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
+#                                                 '<h4 class="modal-title" id="myModalLabel">Add Variable</h4>'
+#                                             '</div>'
+#                                             '<div class="modal-body">'
+#                                                 '{% csrf_token %}'
+#                                                 '<div class="form-group">'
+#                                                     '{% load crispy_forms_tags %} '
+#                                                     '{% crispy add_variable_modal_form %} '
+#                                                 '</div>'
+#                                             '</div>'
+#                                             '<div class="modal-footer">'
+#                                                 '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
+#                                                 '<button type="submit" class="btn btn-primary">Save changes</button>'
+#                                             '</div>'
+#                                             '</form>'
+#                                         '</div>'
+#                                     '</div>'
+#                                 '</div>'
+#                             )
+#                         )
 
 
 VariableLayoutEdit = Layout(
