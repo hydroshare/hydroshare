@@ -74,11 +74,13 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                     if extract_err_message:
                         validate_files_dict['are_files_valid'] = False
                         validate_files_dict['message'] = extract_err_message + " (Failed to extract all metadata)"
-            else:
+            else:   # file validation failed
                 # delete the invalid file just uploaded
                 #file_name = os.path.basename(res_file.resource_file.name)
                 #delete_resource_file(resource.short_id, file_name)
                 validate_files_dict['are_files_valid'] = False
+                if extract_metadata:
+                    validate_err_message += " (Metadata was not extracted)"
                 validate_files_dict['message'] = validate_err_message
 
 # listen to resource post create signal to extract metadata
