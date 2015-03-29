@@ -47,7 +47,7 @@ if [ ! -d "$HS_PATH/hydroshare/static" ]; then
     echo "*** creating directory ${HS_PATH}/hydroshare/static ***"
     mkdir $HS_PATH/hydroshare/static;
 fi
-yes | cp -rf $MEDIA_FILES/media $HS_PATH/hydroshare/static
+yes | cp -r $MEDIA_FILES/media $HS_PATH/hydroshare/static
 
 # restore fig.yml or docker-compose.yml
 if [ ${#FIG_VER} -gt 0 ];
