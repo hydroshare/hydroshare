@@ -32,7 +32,8 @@ fi
 # rsync hydroshare/script/media with media_files
 docker exec $CID rsync -avh --dry-run /home/docker/hydroshare/hydroshare/static/media /home/docker/hydroshare/media_files
 docker exec $CID rsync -avh /home/docker/hydroshare/hydroshare/static/media /home/docker/hydroshare/media_files
-tar -czvf "${HS_PATH}/media-hydroshare-`date +"%m-%d-%y"`.tar.gz" ${MEDIA_FILES}
+cd $HS_PATH
+tar -czvf "media-hydroshare-`date +"%m-%d-%y"`.tar.gz" media_files
 
 
 # backup deployment files
