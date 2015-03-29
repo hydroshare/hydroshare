@@ -3,20 +3,68 @@
 # backup-hs
 
 # set local variables
-#HS_PATH=/home/${USER}/hydroshare        # hydrodev VM
-HS_PATH=/Users/${USER}/hydroshare       # OS X
+### hydrodev VM
+HS_PATH=/home/${USER}/hydroshare
+BACKUP_PATH=/home/${USER}/backup
+### custom settings (Linux, OS X, etc.)
+#HS_PATH=/Users/${USER}/Github/hydroshare
+#BACKUP_PATH=/Users/${USER}/Github/backup
 
 # set variables for use in script
 FIG_VER=$(fig --version)
 DC_VER=$(docker-compose --version)
 CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
+MEDIA_FILES=${HS_PATH}/media_files
 
 # backup database
 # database in postgis container
+echo "*** backing up database as ${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql ***"
 docker exec $CID /usr/bin/pg_dump -c -d postgres -U postgres -h postgis > "${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql"
 
 # backup media files
 # hydroshare/static/media
+# check for existance of media_files directory
+if [ ! -d "$MEDIA_FILES" ]; then
+    # media_files directory not found, create it
+    echo "*** creating directory ${MEDIA_FILES} ***"
+    mkdir $MEDIA_FILES;
+fi
+# rsync hydroshare/script/media with media_files
+docker exec $CID rsync -avh --dry-run /home/docker/hydroshare/hydroshare/static/media /home/docker/hydroshare/media_files
+docker exec $CID rsync -avh /home/docker/hydroshare/hydroshare/static/media /home/docker/hydroshare/media_files
+tar -czvf "${HS_PATH}/media-hydroshare-`date +"%m-%d-%y"`.tar.gz" ${MEDIA_FILES}
+
 
 # backup deployment files
 # Dockerfile, fig.yml (docker-compose.yml), settings.py, local_settings.py
+# check for existance of backup directory
+if [ ! -d "$BACKUP_PATH" ]; then
+    # backup directory not found, create it
+    echo "*** creating directory ${BACKUP_PATH} ***"
+    mkdir $BACKUP_PATH;
+fi
+
+# copy deployment files to backup directory
+echo "*** backup ${BACKUP_PATH}/settings.py ***"
+yes | cp -rf ${HS_PATH}/hydroshare/settings.py $BACKUP_PATH/settings.py
+echo "*** backup ${BACKUP_PATH}/local_settings.py ***"
+yes | cp -rf ${HS_PATH}/hydroshare/local_settings.py $BACKUP_PATH/local_settings.py
+echo "*** backup ${BACKUP_PATH}/Dockerfile ***"
+yes | cp -rf ${HS_PATH}/Dockerfile $BACKUP_PATH/Dockerfile
+echo "*** backup ${BACKUP_PATH}/pg.deploy.sql ***"
+yes | cp -rf ${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql $BACKUP_PATH/pg.deploy.sql
+echo "*** backup ${BACKUP_PATH}/media.deploy.tar.gz ***"
+yes | cp -rf ${HS_PATH}/media-hydroshare-`date +"%m-%d-%y"`.tar.gz $BACKUP_PATH/media.deploy.tar.gz
+if [ ${#FIG_VER} -gt 0 ];
+then
+    echo "*** found ${FIG_VER} installed ***"
+    echo "*** backup ${BACKUP_PATH}/fig.yml ***"
+    yes | cp -rf $HS_PATH/fig.yml $BACKUP_PATH/fig.yml;
+else
+    echo "*** found ${DC_VER} installed ***"
+    echo "*** backup ${BACKUP_PATH}/docker-compose.yml ***"
+    yes | cp -rf $HS_PATH/docker-compose.yml $BACKUP_PATH/docker-compose.yml;
+fi
+
+echo "*** FINISHED SCRIPT backup-hs ***"
+exit;

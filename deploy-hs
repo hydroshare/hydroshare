@@ -2,6 +2,21 @@
 
 # initiates a full build of hydroshare
 
+# if database parameter passed in, check to make sure it exists
+if [ $1 ];
+    then
+        echo "*** checking for existance of ${1} ***"
+        if [ -e $1 ];
+            then
+                echo "*** using database ${1} ***";
+            else
+                echo "*** ${1} not found ***"
+                exit;
+        fi
+    else
+        echo "*** using database pg.development.sql ***";
+fi
+
 # check version of Docker for use of exec command
 DOCKER_VER=$(docker version | grep 'Client version' | cut -d ' ' -f 3)
 
@@ -50,13 +65,28 @@ fi
 # load pg.development.sql into postgis database
 echo "*** load clean pg.development.sql database from the running hydroshare container ***"
 CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
+echo "*** drop existing database ***"
 docker exec $CID dropdb -U postgres -h postgis postgres
+echo "*** create new database ***"
 docker exec $CID createdb -U postgres -h postgis postgres
+echo "*** create POSTGIS extension ***"
 docker exec $CID psql -U postgres -h postgis -w -c 'create extension postgis;'
-docker exec $CID psql -U postgres -h postgis -f pg.development.sql
+if [ $1 ];
+    then
+        echo "*** load database with contents of ${1} ***"
+        docker exec $CID psql -U postgres -h postgis -f ${1};
+    else
+        echo "*** load database with contents of pg.development.sql ***"
+        docker exec $CID psql -U postgres -h postgis -f pg.development.sql;
+fi
+echo "*** manage.py makemigrations ***"
 docker exec $CID python manage.py makemigrations
+echo "*** manage.py migrate ***"
 docker exec $CID python manage.py migrate
+echo "*** mangae.py collectstatic ***"
 docker exec $CID python manage.py collectstatic -v0 --noinput
+echo "*** manage.py syncdb ***"
 docker exec $CID python manage.py syncdb --noinput
 
-echo "*** END deploy-hs ***"
+echo "*** FINISHED SCRIPT deploy-hs ***"
+exit;

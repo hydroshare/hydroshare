@@ -57,4 +57,6 @@ echo "*** remove docker images (via docker)"
 docker rmi -f $(docker images -q)
 echo "*** list docker images (via docker)"
 docker images
-echo "*** END dockerPurge.sh ***"
+
+echo "*** FINISHED SCRIPT dockerPurge.sh ***"
+exit;
