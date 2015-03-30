@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# pre-remove-hs
+
+# set local variables
+### hydrodev VM
+HS_PATH=/home/${USER}/hydroshare
+BACKUP_PATH=/home/${USER}/backup
+### custom settings (Linux, OS X, etc.)
+#HS_PATH=/Users/${USER}/Github/hydroshare
+#BACKUP_PATH=/Users/${USER}/Github/backup
+
+# set variables for use in script
+FIG_VER=$(fig --version)
+DC_VER=$(docker-compose --version)
+CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
+
+# remove static and media_files directory from hydroshare container
+docker exec $CID rm -rf /home/docker/hydroshare/media_files/
+docker exec $CID rm -rf /home/docker/hydroshare/hydroshare/static/
+
+echo "*** FINISHED SCRIPT pre-remove-hs ***"
+exit;

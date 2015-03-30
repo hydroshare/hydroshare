@@ -607,7 +607,7 @@ def get_resource_list(
     """
     from django.db.models import Q
 
-    if not any((group, user, owner, from_date, to_date, start, count, keywords, dc, full_text_search, public)):
+    if not any((group, user, owner, from_date, to_date, start, count, keywords, dc, full_text_search, public, types)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
     resource_types = get_resource_types()
