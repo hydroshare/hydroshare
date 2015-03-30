@@ -22,7 +22,7 @@ hydroshare:
 #    - "/Users/tonycastronova/Documents/projects/hydroshare/pycharm-debug:/home/docker/pycharm-debug"
 
     # Specific to hydro user on the hydrodev Xubuntu VM
-    - "/Users/stealey/hydroshare:/home/docker/hydroshare"
+    - "/home/hydro/hydroshare:/home/docker/hydroshare"
     # Specific to hydro user for pycharm debugging on hydrodev Xubuntu VM
 #    - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
 
