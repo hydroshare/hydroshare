@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# initiates a full build of hydroshare
+# deploy-hs
 
 # if database parameter passed in, check to make sure it exists
 if [ $1 ];
