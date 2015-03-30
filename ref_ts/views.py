@@ -18,7 +18,7 @@ from django.utils.timezone import now
 import os
 from hs_core.signals import post_create_resource
 import ast
-
+timeseries = {}
 class ReferencedSitesForm(forms.Form):
     wsdl_url = forms.URLField()
 
@@ -70,6 +70,8 @@ def time_series_from_service(request):
         noDataValue = ts.get('noDataValue', None)
         vis_file = ts_utils.create_vis("theme/static/img/", variable, site, for_graph, 'Date', variable_name, units, noDataValue)
         vis_file_name = os.path.basename(vis_file.name)
+        global timeseries
+        timeseries = ts
         return json_or_jsonp(request, {'vis_file_name': vis_file_name})
 
 
@@ -140,19 +142,22 @@ def create_ref_time_series(request, *args, **kwargs):
             resource_type='RefTimeSeries',
             owner=request.user,
             title=frm.cleaned_data.get('title'),
-            reference_type=reference_type,
-            url=url,
             metadata=metadata
         )
 
-        post_create_resource.send(sender=RefTimeSeries, resource=res)
-
         if reference_type == 'rest':
-            ts = ts_utils.time_series_from_service(url, reference_type)
+            ts = timeseries
             site_code = ts['site_code']
             site_name = ts['site_name']
             variable_code = ts['variable_code']
             variable_name = ts['variable_name']
+
+        hydroshare.resource.create_metadata_element(
+            res.short_id,
+            'ReferenceURL',
+            value=url,
+            type=reference_type
+        )
 
         hydroshare.resource.create_metadata_element(
             res.short_id,
@@ -167,11 +172,14 @@ def create_ref_time_series(request, *args, **kwargs):
             name=variable_name,
             code=variable_code
         )
+
         ts_utils.generate_files(res.short_id)
+
         for file_name in os.listdir("theme/static/img"):
             if 'visualization' in file_name:
                 # open(file_name, 'w')
                 os.remove("theme/static/img/"+file_name)
+
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeries)
@@ -191,6 +199,7 @@ def add_dublin_core(request, page):
     context['variable'] = content_model.metadata.variables.all().first()
     context['method'] = content_model.metadata.methods.all().first()
     context['quality_level'] = content_model.metadata.quality_levels.all().first
+    context['referenceURL'] = content_model.metadata.referenceURLs.all().first
     for f in content_model.files.all():
         if 'visual' in str(f.resource_file.name):
             context['visfile'] = f
