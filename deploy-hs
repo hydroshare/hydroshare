@@ -86,5 +86,9 @@ docker exec $CID python manage.py makemigrations
 echo "*** manage.py migrate ***"
 docker exec $CID python manage.py migrate
 
+docker exec $CID python manage.py migrate hs_core zero
+
+docker exec $CID python manage.py migrate
+
 echo "*** FINISHED SCRIPT deploy-hs ***"
 exit;
