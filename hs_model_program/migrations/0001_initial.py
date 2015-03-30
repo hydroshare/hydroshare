@@ -13,8 +13,8 @@ class Migration(migrations.Migration):
         ('auth', '0001_initial'),
         ('pages', '__first__'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('hs_core', '0002_auto_20150310_1927'),
         ('contenttypes', '0001_initial'),
-        ('hs_core', '0001_initial'),
     ]
 
     operations = [
@@ -32,6 +32,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('page_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='pages.Page')),
                 ('comments_count', models.IntegerField(default=0, editable=False)),
+                ('rating_count', models.IntegerField(default=0, editable=False)),
+                ('rating_sum', models.IntegerField(default=0, editable=False)),
+                ('rating_average', models.FloatField(default=0, editable=False)),
                 ('public', models.BooleanField(default=True, help_text=b'If this is true, the resource is viewable and downloadable by anyone')),
                 ('frozen', models.BooleanField(default=False, help_text=b'If this is true, the resource should not be modified')),
                 ('do_not_distribute', models.BooleanField(default=False, help_text=b'If this is true, the resource owner has to designate viewers')),
@@ -65,7 +68,7 @@ class Migration(migrations.Migration):
                 ('software_version', models.CharField(default=b'1.0', max_length=255, blank=True, help_text=b'The software version of the model', null=True, verbose_name=b'Version ')),
                 ('software_language', models.CharField(default=b'', max_length=100, blank=True, help_text=b'The programming language(s) that the model was written in', null=True, verbose_name=b'Language')),
                 ('operating_sys', models.CharField(default=b'unknown', max_length=255, blank=True, help_text=b'Compatible operating systems', null=True, verbose_name=b'Operating System')),
-                ('date_released', models.DateTimeField(default=datetime.datetime(2015, 3, 5, 20, 29, 4, 68151), help_text=b'The date of the software release (m/d/Y H:M)', null=True, verbose_name=b'Release Date', blank=True)),
+                ('date_released', models.DateTimeField(default=datetime.datetime(2015, 3, 30, 20, 52, 11, 220609), help_text=b'The date of the software release (m/d/Y H:M)', null=True, verbose_name=b'Release Date', blank=True)),
                 ('program_website', models.CharField(default=None, max_length=255, blank=True, help_text=b'A URL providing addition information about the software', null=True, verbose_name=b'Website')),
                 ('software_repo', models.CharField(default=None, max_length=255, blank=True, help_text=b'A URL for the source code repository (e.g. git, mecurial, svn)', null=True, verbose_name=b'Software Repository')),
                 ('release_notes', models.CharField(default=b'', choices=[(b'-', b'    ')], max_length=400, blank=True, help_text=b'Notes about the software release (e.g. bug fixes, new functionality)', null=True, verbose_name=b'Release Notes')),
