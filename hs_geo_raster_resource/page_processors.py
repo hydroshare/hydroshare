@@ -35,6 +35,10 @@ def landing_page(request, page):
         context['cellInformation'] = content_model.metadata.cellInformation
         context['bandInformation'] = content_model.metadata.bandInformation
     else:
+        ori_coverage_form = OriginalCoverageSpatialForm(instance=content_model.metadata.originalCoverage, res_short_id=content_model.short_id,
+                                     allow_edit = True if content_model.metadata.originalCoverage.value['projection']=='Unnamed' else False,
+                                    element_id=content_model.metadata.originalCoverage.id if content_model.metadata.originalCoverage else None)
+
         cellinfo_form = CellInfoForm(instance=content_model.metadata.cellInformation, res_short_id=content_model.short_id,
                                      allow_edit = True if content_model.metadata.cellInformation.noDataValue is None else False,
                                     element_id=content_model.metadata.cellInformation.id if content_model.metadata.cellInformation else None)
@@ -42,6 +46,12 @@ def landing_page(request, page):
         BandInfoFormSetEdit = formset_factory(wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=edit_resource)), formset=BaseBandInfoFormSet, extra=0)
         bandinfo_formset = BandInfoFormSetEdit(initial=content_model.metadata.bandInformation.values(), prefix='BandInformation')
         ext_md_layout = Layout(
+                            AccordionGroup('OriginalCoverage (required)',
+                                HTML("<div class='form-group' id='OriginalCoverage'> "
+                                '{% load crispy_forms_tags %} '
+                                '{% crispy originalcoverage_form %} '
+                                '</div>'),
+                                ),
                             AccordionGroup('CellInformation (required)',
                                 HTML("<div class='form-group' id='CellInformation'> "
                                 '{% load crispy_forms_tags %} '
@@ -57,8 +67,9 @@ def landing_page(request, page):
 
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
-        context['cellinfo_form']=cellinfo_form
-        context['bandinfo_formset']=bandinfo_formset
+        context['originalcoverage_form'] = ori_coverage_form
+        context['cellinfo_form'] = cellinfo_form
+        context['bandinfo_formset'] = bandinfo_formset
 
     hs_core_dublin_context = add_dublin_core(request, page)
     context.update(hs_core_dublin_context)
