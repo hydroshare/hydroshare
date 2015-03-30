@@ -12,7 +12,7 @@ from tastypie.resources import ModelResource
 from tastypie.constants import ALL
 
 from hs_core.authorization import HydroshareAuthorization
-from dublincore.models import QualifiedDublinCoreElement
+#from dublincore.models import QualifiedDublinCoreElement
 from hs_core.models import GenericResource, ResourceFile
 
 v1_api = Api(api_name='v1')
@@ -55,7 +55,7 @@ class GenericResourceResource(ModelResource):
     edit_groups = fields.OneToManyField(GroupResource, 'edit_users', related_name='can_edit', blank=True)
     view_groups = fields.OneToManyField(GroupResource, 'edit_users', related_name='can_edit', blank=True)
     owners = fields.OneToManyField(UserResource, 'owners', related_name='owner_of', blank=True)
-    dublin_metadata = fields.ManyToManyField("hs_core.api.DublinCoreResource", 'dublin_metadata', related_name='content_object', full=True)
+    #dublin_metadata = fields.ManyToManyField("hs_core.api.DublinCoreResource", 'dublin_metadata', related_name='content_object', full=True)
     files = fields.ManyToManyField('hs_core.api.ResourceFileResource', 'files', related_name='content_object', full=True)
 
     def prepend_urls(self):
@@ -75,22 +75,22 @@ class GenericResourceResource(ModelResource):
         authorization = Authorization()
 v1_api.register(GenericResourceResource())
 
-class DublinCoreResource(ModelResource):
-    content_object = GenericForeignKeyField({
-        GenericResource: GenericResourceResource
-    }, 'content_object')
-
-    class Meta:
-        always_return_data = True
-        queryset = QualifiedDublinCoreElement.objects.all()
-        resource_name = 'dublincore'
-        filtering = {
-            'id': 'exact',
-        }
-        authentication = MultiAuthentication(BasicAuthentication(), ApiKeyAuthentication(), SessionAuthentication())
-        #authorization = HydroshareAuthorization()
-        authorization = Authorization()
-v1_api.register(DublinCoreResource())
+# class DublinCoreResource(ModelResource):
+#     content_object = GenericForeignKeyField({
+#         GenericResource: GenericResourceResource
+#     }, 'content_object')
+#
+#     class Meta:
+#         always_return_data = True
+#         queryset = QualifiedDublinCoreElement.objects.all()
+#         resource_name = 'dublincore'
+#         filtering = {
+#             'id': 'exact',
+#         }
+#         authentication = MultiAuthentication(BasicAuthentication(), ApiKeyAuthentication(), SessionAuthentication())
+#         #authorization = HydroshareAuthorization()
+#         authorization = Authorization()
+# v1_api.register(DublinCoreResource())
 
 class ResourceFileResource(ModelResource):
     content_object = GenericForeignKeyField({

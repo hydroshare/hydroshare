@@ -103,22 +103,6 @@ def add_file_to_resource(request, *args, **kwargs):
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-def add_citation(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    res.dublin_metadata.create(term='REF', content=request.REQUEST['content'])
-    resource_modified(res, request.user)
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-
-def add_metadata_term(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    res.dublin_metadata.create(
-        term=request.REQUEST['term'],
-        content=request.REQUEST['content']
-    )
-    resource_modified(res, request.user)
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
 
 def _get_resource_sender(element_name, resource):
     core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
@@ -457,7 +441,7 @@ def my_resources(request, page):
     # import pydevd
     # IP Address for Ubuntu VM must be: 172.17.42.1
     # IP Address for boot2docker: varies
-    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    #pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
@@ -549,24 +533,10 @@ def add_dublin_core(request, page):
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
-    from dublincore import models as dc
-
-    class DCTerm(forms.ModelForm):
-        class Meta:
-            model=dc.QualifiedDublinCoreElement
-            fields = ['term', 'content']
-
     cm = page.get_content_model()
-    try:
-        abstract = cm.dublin_metadata.filter(term='AB').first().content
-    except:
-        abstract = None
 
     return {
-        'dublin_core' : [t for t in cm.dublin_metadata.all().exclude(term='AB')],
-        # 'abstract' : abstract,
         'resource_type' : cm._meta.verbose_name,
-        'dcterm_frm' : DCTerm(),
         'bag' : cm.bags.first(),
         'users' : User.objects.all(),
         'groups' : Group.objects.all(),
@@ -723,7 +693,6 @@ def create_resource_new_workflow(request, *args, **kwargs):
             owner=request.user,
             title=res_title,
             keywords=None,
-            dublin_metadata=None,
             metadata=metadata,
             files=request.FILES.getlist('files'),
             content=res_title
@@ -778,7 +747,6 @@ def create_resource(request, *args, **kwargs):
             owner=request.user,
             title=frm.cleaned_data['title'],
             keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None,
-            dublin_metadata=dcterms,
             content=frm.cleaned_data['abstract'] or frm.cleaned_data['title'],
             res_type_cls = res_cls,
             resource=resource,

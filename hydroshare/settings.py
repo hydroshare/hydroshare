@@ -278,7 +278,7 @@ INSTALLED_APPS = (
     # "tastypie_swagger",
     "ga_ows",
     "ga_resources",
-    "dublincore",
+    #"dublincore",
     "hs_core",
     "hs_metrics",
     #"hs_rhessys_inst_resource",
