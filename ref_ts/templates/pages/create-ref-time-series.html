@@ -184,7 +184,6 @@
                             opt.innerHTML = ln;
                             select.appendChild(opt);
                             $('.cuahsi-his-2').show();
-                            $('.cuahsi-his-3').show();
                             $('#loading-1').hide();
                         }
                     },
@@ -207,6 +206,7 @@
                     data: {url: url,
                         site: site_code},
                     success: function(data, xhr, status){
+                        $('.cuahsi-his-3').show();
                         var select = document.getElementsByName('variable')[0];
                         removeOptions(select);
                         for(var index in data) {
@@ -282,6 +282,7 @@
             });
 
             $('#site').change(function(){
+                $('.cuahsi-his-3').hide();
                 var site = $('#site').val();
                 get_variables(site);
                 $('#preview-div').hide();
