@@ -40,7 +40,7 @@ def landing_page(request, page):
                                     element_id=content_model.metadata.cellInformation.id if content_model.metadata.cellInformation else None)
 
         BandInfoFormSetEdit = formset_factory(wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=edit_resource)), formset=BaseBandInfoFormSet, extra=0)
-        bandinfo_formset = BandInfoFormSetEdit(initial=content_model.metadata.bandInformation.values(), prefix='Band Information')
+        bandinfo_formset = BandInfoFormSetEdit(initial=content_model.metadata.bandInformation.values(), prefix='BandInformation')
 
         ori_coverage_form = None
         if content_model.metadata.originalCoverage:
@@ -64,7 +64,7 @@ def landing_page(request, page):
                                                     )
             ext_md_layout = Layout(
                             ori_coverage_layout,
-                            AccordionGroup('CellInformation (required)',
+                            AccordionGroup('Cell Information (required)',
                                 HTML("<div class='form-group' id='CellInformation'> "
                                 '{% load crispy_forms_tags %} '
                                 '{% crispy cellinfo_form %} '
@@ -74,7 +74,7 @@ def landing_page(request, page):
                         )
         else:
             ext_md_layout = Layout(
-                            AccordionGroup('CellInformation (required)',
+                            AccordionGroup('Cell Information (required)',
                                 HTML("<div class='form-group' id='CellInformation'> "
                                 '{% load crispy_forms_tags %} '
                                 '{% crispy cellinfo_form %} '
