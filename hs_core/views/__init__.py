@@ -498,34 +498,10 @@ def my_resources(request, page):
             'first': start,
             'last': start+len(res),
             'ct': total_res_cnt,
-            'dcterms' : (
-                ('AB', 'Abstract'),
-                ('BX', 'Box'),
-                ('CN', 'Contributor'),
-                ('CVR', 'Coverage'),
-                ('CR', 'Creator'),
-                ('DT', 'Date'),
-                ('DTS', 'DateSubmitted'),
-                ('DC', 'DateCreated'),
-                ('DM', 'DateModified'),
-                ('DSC', 'Description'),
-                ('FMT', 'Format'),
-                ('ID', 'Identifier'),
-                ('LG', 'Language'),
-                ('PD', 'Period'),
-                ('PT', 'Point'),
-                ('PBL', 'Publisher'),
-                ('REL', 'Relation'),
-                ('RT', 'Rights'),
-                ('SRC', 'Source'),
-                ('SUB', 'Subject'),
-                ('T', 'Title'),
-                ('TYP', 'Type'),
-    )
         }
 
 @processor_for(GenericResource)
-def add_dublin_core(request, page):
+def add_generic_context(request, page):
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
@@ -536,20 +512,20 @@ def add_dublin_core(request, page):
     cm = page.get_content_model()
 
     return {
-        'resource_type' : cm._meta.verbose_name,
-        'bag' : cm.bags.first(),
-        'users' : User.objects.all(),
-        'groups' : Group.objects.all(),
-        'owners' : set(cm.owners.all()),
-        'view_users' : set(cm.view_users.all()),
-        'view_groups' : set(cm.view_groups.all()),
-        'edit_users' : set(cm.edit_users.all()),
-        'edit_groups' : set(cm.edit_groups.all()),
-        'add_owner_user_form' : AddUserForm(),
-        'add_view_user_form' : AddUserForm(),
-        'add_edit_user_form' : AddUserForm(),
-        'add_view_group_form' : AddGroupForm(),
-        'add_edit_group_form' : AddGroupForm(),
+        'resource_type': cm._meta.verbose_name,
+        'bag': cm.bags.first(),
+        'users': User.objects.all(),
+        'groups': Group.objects.all(),
+        'owners': set(cm.owners.all()),
+        'view_users': set(cm.view_users.all()),
+        'view_groups': set(cm.view_groups.all()),
+        'edit_users': set(cm.edit_users.all()),
+        'edit_groups': set(cm.edit_groups.all()),
+        'add_owner_user_form': AddUserForm(),
+        'add_view_user_form': AddUserForm(),
+        'add_edit_user_form': AddUserForm(),
+        'add_view_group_form': AddGroupForm(),
+        'add_edit_group_form': AddGroupForm(),
     }
 
 res_cls = ""
@@ -637,9 +613,9 @@ def create_resource_new_workflow(request, *args, **kwargs):
     # Send pre-create resource signal - let any other app populate the empty metadata list object
     # also pass title to other apps, and give other apps a chance to populate page_redirect_url if they want
     # to redirect to their own page for resource creation rather than use core resource creation code
-    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata,
-                                               files=resource_files, title=res_title, url_key=url_key,
-                                               page_url_dict=page_url_dict, validate_files=file_validation_dict, **kwargs)
+    pre_create_resource.send(sender=res_cls, metadata=metadata, files=resource_files, title=res_title, url_key=url_key,
+                                               page_url_dict=page_url_dict, validate_files=file_validation_dict,
+                                               **kwargs)
 
     if 'are_files_valid' in file_validation_dict:
         if not file_validation_dict['are_files_valid']:

@@ -43,6 +43,7 @@ def landing_page(request, page):
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
         context['variable_formset'] = variable_formset
         context['add_variable_modal_form'] = add_variable_modal_form
-    hs_core_dublin_context = add_dublin_core(request, page)
-    context.update(hs_core_dublin_context)
+
+    hs_core_context = add_generic_context(request, page)
+    context.update(hs_core_context)
     return context
