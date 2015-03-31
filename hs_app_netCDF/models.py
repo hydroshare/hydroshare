@@ -267,10 +267,23 @@ class NetcdfMetaData(CoreMetaData):
     @property
     def resource(self):
         return self._netcdf_resource.all().first()
-    #
-    # @property
-    # def originalCoverage(self):
-    #     return self.ori_coverage.all().first()
+
+    def has_all_required_elements(self):
+        if not super(NetcdfMetaData, self).has_all_required_elements():
+            return False
+        if not self.variables.all():
+            return False
+        if not self.ori_coverage.all().first():
+            return False
+        return True
+
+    def get_required_missing_elements(self):
+        missing_required_elements = super(NetcdfMetaData, self).get_required_missing_elements()
+        if not self.ori_coverage.all().first():
+            missing_required_elements.append('Original Coverage')
+        if not self.variables.all().first():
+            missing_required_elements.append('Variable')
+        return missing_required_elements
 
     def get_xml(self):
         from lxml import etree

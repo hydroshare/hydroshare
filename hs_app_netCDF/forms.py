@@ -138,7 +138,7 @@ class VariableFormHelper(FormHelper):
         self.form_tag = False
         self.form_show_errors = True
         self.error_text_inline = True
-        self.html5_required = False
+        self.html5_required = True
         # change the fields name here
         self.layout = Layout(
             Fieldset('Variable',
