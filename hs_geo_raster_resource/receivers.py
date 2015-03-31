@@ -180,7 +180,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     elif element_name == 'bandinformation':
         element_form = BandInfoValidationForm(request.POST)
     elif element_name == 'originalcoverage':
-        element_form = OriginalCoverageSpatialValidationForm(request.POST)
+        element_form = OriginalCoverageSpatialForm(data=request.POST)
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
@@ -200,7 +200,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
             form_data[field_name] = request.POST[matching_key]
         element_form = BandInfoValidationForm(form_data)
     elif element_name == 'originalcoverage':
-        element_form = OriginalCoverageSpatialValidationForm(request.POST)
+        element_form = OriginalCoverageSpatialForm(data=request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}

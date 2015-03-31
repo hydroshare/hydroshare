@@ -7,54 +7,47 @@ from models import *
 from hs_core.forms import BaseFormHelper
 from django.forms.models import formset_factory
 
-class OriginalCoverageSpatialFormHelper(BaseFormHelper):
+class OriginalCoverageFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('Place/Area Name', css_class=field_width),
-                        Field('Coordinate System/Geographic Projection', css_class=field_width),
-                        Field('Coordinate Units', css_class=field_width),
-                        Field('North Longitude', css_class=field_width),
-                        Field('East Latitude', css_class=field_width),
-                        Field('South Longitude', css_class=field_width),
-                        Field('West Latitude', css_class=field_width),
+                        Field('name', css_class=field_width),
+                        Field('projection', css_class=field_width),
+                        Field('northlimit', css_class=field_width),
+                        Field('eastlimit', css_class=field_width),
+                        Field('southlimit', css_class=field_width),
+                        Field('westlimit', css_class=field_width),
+                        Field('units', css_class=field_width),
                  )
 
-        super(OriginalCoverageSpatialFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 class OriginalCoverageSpatialForm(forms.Form):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        super(OriginalCoverageSpatialForm, self).__init__(*args, **kwargs)
-        self.helper = OriginalCoverageSpatialFormHelper(allow_edit, res_short_id, element_id, element_name='OriginalCoverage')
-
-        # only noDataValue field needs to be set up read-only or not depending on whether the value is extracted from file or not
-        if not allow_edit:
-            self.fields['name'].widget.attrs['readonly'] = "readonly"
-            self.fields['projection'].widget.attrs['readonly'] = "readonly"
-            self.fields['units'].widget.attrs['readonly'] = "readonly"
-
-    class Meta:
-        model = OriginalCoverage
-        fields = ['name', 'projection', 'units', 'northLimit', 'eastLimit', 'southLimit', 'westLimit']
-        exclude = ['content_object']
-        widgets = { 'name': forms.TextInput(),
-                    'projection': forms.TextInput(),
-                    'units': forms.TextInput(),
-                    'northLimit': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'eastLimit': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'southLimit': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'westLimit': forms.TextInput(attrs={'readonly':'readonly'})}
-
-class OriginalCoverageSpatialValidationForm(forms.Form):
     name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
     projection = forms.CharField(max_length=100, required=False, label='Coordinate System/Geographic Projection')
+    northlimit = forms.DecimalField(label='North Latitude', widget=forms.TextInput())
+    eastlimit = forms.DecimalField(label='East Longitude', widget=forms.TextInput())
+    southlimit = forms.DecimalField(label='South Latitude', widget=forms.TextInput())
+    westlimit = forms.DecimalField(label='West Longitude', widget=forms.TextInput())
     units = forms.CharField(max_length=50, label='Coordinate Units')
-    northLimit = forms.DecimalField(label='North Longitude', widget=forms.TextInput())
-    eastLimit = forms.DecimalField(label='East Latitude', widget=forms.TextInput())
-    southLimit = forms.DecimalField(label='South Longitude', widget=forms.TextInput())
-    westLimit = forms.DecimalField(label='West Latitude', widget=forms.TextInput())
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(OriginalCoverageSpatialForm, self).__init__(*args, **kwargs)
+        self.helper = OriginalCoverageFormHelper(allow_edit, res_short_id, element_id, element_name='OriginalCoverage')
+        self.number = 0
+        self.delete_modal_form = None
+        self.errors.clear()
+
+        if not allow_edit:
+            for field in self.fields.values():
+                field.widget.attrs['readonly'] = True
+                field.widget.attrs['style'] = "background-color:white;"
+        else:
+            self.fields['projection'].widget.attrs['readonly'] = True
+            self.fields['projection'].widget.attrs['style'] = "background-color:white;"
+            self.fields['units'].widget.attrs['readonly'] = True
+            self.fields['units'].widget.attrs['style'] = "background-color:white;"
 
 class CellInfoFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
