@@ -915,6 +915,7 @@ span.remove{
     border: 1px solid #ddd;
     padding: 0 15px;
     padding-bottom: 15px;
+    margin-top: 20px;
 }
 
 .info-group table td{
@@ -1213,7 +1214,7 @@ body > .container{
 }
 
 #permission-panel .custom-well{
-    height: 235px;
+    height: 265px;
     background: #F7F7F7;
 }
 
@@ -1255,6 +1256,7 @@ body > .container{
     border-radius: 0px;
     border-top-left-radius: 3px;
     border-bottom-left-radius: 3px;
+    height:60px;
 }
 
 .access-panel-title{
