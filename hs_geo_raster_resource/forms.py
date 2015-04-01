@@ -6,6 +6,7 @@ from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
 from django.forms.models import formset_factory
+import copy
 
 class OriginalCoverageFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
@@ -48,6 +49,53 @@ class OriginalCoverageSpatialForm(forms.Form):
             self.fields['projection'].widget.attrs['style'] = "background-color:white;"
             self.fields['units'].widget.attrs['readonly'] = True
             self.fields['units'].widget.attrs['style'] = "background-color:white;"
+
+    def clean(self):
+        # modify the form's cleaned_data dictionary
+        super(OriginalCoverageSpatialForm, self).clean()
+        temp_cleaned_data = copy.deepcopy(self.cleaned_data)
+        is_form_errors = False
+        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+            limit_data = temp_cleaned_data.get(limit, None)
+            if not limit_data:
+                self._errors[limit] = ["Data for %s is missing" % limit]
+                is_form_errors = True
+                del self.cleaned_data[limit]
+
+        if is_form_errors:
+            return self.cleaned_data
+
+        temp_cleaned_data['northlimit'] = str(temp_cleaned_data['northlimit'])
+        temp_cleaned_data['eastlimit'] = str(temp_cleaned_data['eastlimit'])
+        temp_cleaned_data['southlimit'] = str(temp_cleaned_data['southlimit'])
+        temp_cleaned_data['westlimit'] = str(temp_cleaned_data['westlimit'])
+
+        if 'projection' in temp_cleaned_data:
+            if len(temp_cleaned_data['projection']) == 0:
+                del temp_cleaned_data['projection']
+
+        if 'name' in temp_cleaned_data:
+            if len(temp_cleaned_data['name']) == 0:
+                del temp_cleaned_data['name']
+
+        self.cleaned_data['value'] = copy.deepcopy(temp_cleaned_data)
+
+        if 'northlimit' in self.cleaned_data:
+                del self.cleaned_data['northlimit']
+        if 'eastlimit' in self.cleaned_data:
+                del self.cleaned_data['eastlimit']
+        if 'southlimit' in self.cleaned_data:
+            del self.cleaned_data['southlimit']
+        if 'westlimit' in self.cleaned_data:
+            del self.cleaned_data['westlimit']
+        if 'name' in self.cleaned_data:
+            del self.cleaned_data['name']
+        if 'units' in self.cleaned_data:
+            del self.cleaned_data['units']
+        if 'projection' in self.cleaned_data:
+            del self.cleaned_data['projection']
+
+        return self.cleaned_data
 
 class CellInfoFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
