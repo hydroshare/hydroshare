@@ -476,7 +476,6 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
                                       reference_type,
                                       site_name_or_code=data_site_code,
                                       variable_code=variable_code)
-
     #update/create metadata elements
     res = hydroshare.get_resource_by_shortkey(shortkey)
     s = res.metadata.sites.all()[0]
@@ -565,7 +564,7 @@ def transform_file(reference_type, url, data_site_code, variable_code, title):
         response = client.service.GetValues(':'+data_site_code, ':'+variable_code, '', '', '')
     elif reference_type == 'rest':
         r = requests.get(url)
-        response = str(r.text)
+        response = r.content
     waterml_1 = etree.XML(response)
     wml_string = etree.tostring(waterml_1)
     s = StringIO(wml_string)
