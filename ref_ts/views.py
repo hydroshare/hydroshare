@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.utils.timezone import now
 from django import forms
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseNotFound
 from mezzanine.pages.page_processors import processor_for
 from ga_resources.utils import json_or_jsonp
 from hs_core import hydroshare, page_processors
@@ -18,28 +18,27 @@ from django.utils.timezone import now
 import os
 from hs_core.signals import post_create_resource
 import ast
-timeseries = {}
 class ReferencedSitesForm(forms.Form):
-    wsdl_url = forms.URLField()
+    url = forms.URLField()
 
 def search_sites(request):
     f = ReferencedSitesForm(request.GET)
     if f.is_valid():
         params = f.cleaned_data
-        url = params['wsdl_url']
+        url = params['url']
         sites = ts_utils.sites_from_soap(url)
 
         return json_or_jsonp(request, sites)
 
 class ReferencedVariablesForm(forms.Form):
-    wsdl_url = forms.URLField()
+    url = forms.URLField()
     site = forms.CharField(min_length=0)
 
 def search_variables(request):
     f = ReferencedVariablesForm(request.GET)
     if f.is_valid():
         params = f.cleaned_data
-        url = params['wsdl_url']
+        url = params['url']
         site = params['site']
         variables = ts_utils.site_info_from_soap(url, site=site)
 
@@ -64,25 +63,25 @@ def time_series_from_service(request):
             ts = ts_utils.time_series_from_service(url, ref_type)
         else:
             ts = ts_utils.time_series_from_service(url, ref_type, site_name_or_code=site, variable_code=variable)
+        site = ts.get('site_code')
+        variable = ts.get('variable_code')
         for_graph = ts['for_graph']
         units = ts['units']
         variable_name = ts['variable_name']
         noDataValue = ts.get('noDataValue', None)
         vis_file = ts_utils.create_vis("theme/static/img/", variable, site, for_graph, 'Date', variable_name, units, noDataValue)
         vis_file_name = os.path.basename(vis_file.name)
-        global timeseries
-        timeseries = ts
         return json_or_jsonp(request, {'vis_file_name': vis_file_name})
 
 
 class VerifyRestUrlForm(forms.Form):
-    rest_url = forms.URLField()
+    url = forms.URLField()
 
 def verify_rest_url(request):
     f = VerifyRestUrlForm(request.GET)
     if f.is_valid():
         params = f.cleaned_data
-        url = params['rest_url']
+        url = params['url']
         try:
             ts = requests.get(url)
             ts_xml = etree.XML(ts.text.encode('utf-8'))
@@ -96,28 +95,27 @@ def verify_rest_url(request):
             return json_or_jsonp(request, 400)
 
 class CreateRefTimeSeriesForm(forms.Form):
-    rest_url = forms.URLField(required=False)
-    wsdl_url = forms.URLField(required=False)
-    reference_type = forms.CharField(required=False, min_length=0)
+    url = forms.URLField(required=False)
     site = forms.CharField(required=False, min_length=0)
     variable = forms.CharField(required=False, min_length=0)
     metadata = forms.CharField(required=False, min_length=0)
     title = forms.CharField(required=False, min_length=0)
 
-
-
 @login_required
 def create_ref_time_series(request, *args, **kwargs):
     frm = CreateRefTimeSeriesForm(request.POST)
-
     if frm.is_valid():
 
-        if frm.cleaned_data['wsdl_url']:
-            url = frm.cleaned_data['wsdl_url']
-        elif frm.cleaned_data['rest_url']:
-            url = frm.cleaned_data['rest_url']
+        if frm.cleaned_data['url']:
+            url = frm.cleaned_data['url']
         else:
             url = ''
+
+        if url.endswith('WSDL') or url.endswith('wsdl'):
+            reference_type = 'soap'
+        else:
+            reference_type = 'rest'
+        reference_type = unicode(reference_type)
 
         # start_date_str = frm.cleaned_data["start_date"]
         # start_date_int = ts_utils.time_to_int(start_date_str)
@@ -134,8 +132,6 @@ def create_ref_time_series(request, *args, **kwargs):
             n = full_variable.index(':')
             variable_name = full_variable[:n]
             variable_code = full_variable[n+1:]
-        reference_type = frm.cleaned_data['reference_type']
-
         metadata = frm.cleaned_data.get('metadata')
         metadata = ast.literal_eval(metadata)
         res = hydroshare.create_resource(
@@ -146,7 +142,7 @@ def create_ref_time_series(request, *args, **kwargs):
         )
 
         if reference_type == 'rest':
-            ts = timeseries
+            ts = ts_utils.time_series_from_service(url, 'rest')
             site_code = ts['site_code']
             site_name = ts['site_name']
             variable_code = ts['variable_code']

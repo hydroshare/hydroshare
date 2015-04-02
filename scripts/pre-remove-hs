@@ -11,12 +11,18 @@ BACKUP_PATH=/home/${USER}/backup
 #BACKUP_PATH=/Users/${USER}/Github/backup
 
 # set variables for use in script
-FIG_VER=$(fig --version)
-DC_VER=$(docker-compose --version)
+#FIG_VER=$(fig --version)
+#DC_VER=$(docker-compose --version)
 CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
 
 # remove static and media_files directory from hydroshare container
+sleep 1
 docker exec $CID rm -rf /home/docker/hydroshare/media_files/
+sleep 1
+docker exec $CID rm -rf /home/docker/hydroshare/hydroshare/static/
+sleep 1
+docker exec $CID rm -rf /home/docker/hydroshare/media_files/
+sleep 1
 docker exec $CID rm -rf /home/docker/hydroshare/hydroshare/static/
 
 echo "*** FINISHED SCRIPT pre-remove-hs ***"
