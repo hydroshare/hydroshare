@@ -23,6 +23,8 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from languages_iso import languages as iso_languages
 from dateutil import parser
 import json
+from hs_core import HSAlib
+from django.db import DatabaseError
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -104,60 +106,6 @@ class ResourcePermissionsMixin(Ownable):
     @property
     def permissions_store(self):
         return s.PERMISSIONS_DB
-
-    def can_add(self, request):
-        return self.can_change(request)
-
-    def can_delete(self, request):
-        return self.can_change(request)
-
-    def can_change(self, request):
-        user = get_user(request)
-
-        if user.is_authenticated():
-            if user.is_superuser:
-                ret = True
-            elif self.creator and user.pk == self.creator.pk:
-                ret = True
-            elif user.pk in { o.pk for o in self.owners.all() }:
-                ret = True
-            elif self.edit_users.filter(pk=user.pk).exists():
-                ret = True
-            elif self.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                ret = True
-            else:
-                ret = False
-        else:
-            ret = False
-
-        return ret
-
-
-    def can_view(self, request):
-        user = get_user(request)
-
-        if self.public:
-            return True
-        if user.is_authenticated():
-            if user.is_superuser:
-                ret = True
-            elif self.creator and user.pk == self.creator.pk:
-                ret = True
-            elif user.pk in { o.pk for o in self.owners.all() }:
-                ret = True
-            elif self.view_users.filter(pk=user.pk).exists():
-                ret = True
-            elif self.view_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                ret = True
-            else:
-                ret = False
-        else:
-            ret = False
-
-        return ret
-
-
-
 
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
@@ -1354,6 +1302,77 @@ class AbstractResource(ResourcePermissionsMixin):
         class MyResourceContentType(pages.Page, hs_core.AbstractResource):
             ...
     """
+    # For each request for a resource page view, the Page will run can_view(), can_change(),
+    # can_delete() in succession to check for permissions, so for performance improvement,
+    # there might be merit to make ha_obj a class member variable with a persistent connection
+    # for the request, rather than a separate connection within each method call
+    def can_add(self, request):
+        return self.can_change(request)
+
+    def can_delete(self, request):
+        user = get_user(request)
+        if user.is_authenticated():
+            if user.is_superuser:
+                ret = True
+            elif self.creator and user.pk == self.creator.pk:
+                ret = True
+            else:
+                try:
+                    ha_obj = HSAlib.HSAccess(user.username, 'unused', settings.HS_ACCESS_DB, settings.HS_ACCESS_USERNAME,
+                                             settings.HS_ACCESS_PASSWORD, settings.HS_ACCESS_HOST, settings.HS_ACCESS_PORT)
+                    ret = ha_obj.resource_is_owned(self.short_id)
+                    del ha_obj
+                except:
+                    # unable to connect to the database
+                    ret = False
+        else:
+            ret = False
+        return ret
+
+    def can_change(self, request):
+        user = get_user(request)
+        if user.is_authenticated():
+            if user.is_superuser:
+                ret = True
+            elif self.creator and user.pk == self.creator.pk:
+                ret = True
+            else:
+                try:
+                    ha_obj = HSAlib.HSAccess(user.username, 'unused', settings.HS_ACCESS_DB, settings.HS_ACCESS_USERNAME,
+                                             settings.HS_ACCESS_PASSWORD, settings.HS_ACCESS_HOST, settings.HS_ACCESS_PORT)
+                    ret = ha_obj.resource_is_readwrite(self.short_id)
+                    del ha_obj
+                except:
+                    # unable to connect to the database
+                    ret = False
+        else:
+            ret = False
+        return ret
+
+
+    def can_view(self, request):
+        user = get_user(request)
+
+        if self.public:
+            return True
+        if user.is_authenticated():
+            if user.is_superuser:
+                ret = True
+            elif self.creator and user.pk == self.creator.pk:
+                ret = True
+            else:
+                try:
+                    ha_obj = HSAlib.HSAccess(user.username, 'unused', settings.HS_ACCESS_DB, settings.HS_ACCESS_USERNAME,
+                                             settings.HS_ACCESS_PASSWORD, settings.HS_ACCESS_HOST, settings.HS_ACCESS_PORT)
+                    ret = ha_obj.resource_is_readable(self.short_id)
+                    del ha_obj
+                except:
+                    # unable to connect to the database
+                    ret = False
+        else:
+            ret = False
+        return ret
+
     content = models.TextField() # the field added for use by Django inplace editing
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',

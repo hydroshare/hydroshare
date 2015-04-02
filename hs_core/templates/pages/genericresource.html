@@ -37,10 +37,12 @@
                 <div class="custom-btn-toolbar">
                     <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
                         {% csrf_token %}
-                        <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
-                        <span data-toggle="tooltip" data-placement="auto" title="Delete"
-                              class="glyphicon glyphicon-trash icon-button btn-remove"></span>
-                        </a>
+                        {% if page.perms.delete %}
+                            <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
+                            <span data-toggle="tooltip" data-placement="auto" title="Delete"
+                                  class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                            </a>
+                        {% endif %}
                         <input name="resource-mode" type="hidden" value="edit"/>
                         <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
                                 title="Edit" class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
