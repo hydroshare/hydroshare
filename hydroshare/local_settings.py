@@ -130,3 +130,10 @@ EMAIL_HOST = 'gator3038.hostgator.com'
 EMAIL_PORT = '26'
 EMAIL_USE_TLS= True
 DEFAULT_FROM_EMAIL= 'hydroshare@hydroshare.org'
+
+# HSAccess database connection configuration
+HS_ACCESS_DB = os.environ.get('HS_ACCESS_DB')
+HS_ACCESS_USERNAME = os.environ.get('HS_ACCESS_USERNAME')
+HS_ACCESS_PASSWORD = os.environ.get('HS_ACCESS_PASSWORD')
+HS_ACCESS_HOST = os.environ.get('HS_ACCESS_HOST', 'localhost')
+HS_ACCESS_PORT = '5432'

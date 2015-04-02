@@ -28,6 +28,7 @@ from django.core import signing
 from django.template import Context
 import django.dispatch
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings as django_settings
 from django.forms import ValidationError
 from inplaceeditform.commons import get_dict_from_obj, apply_filters, get_adaptor_class
 from inplaceeditform.views import _get_http_response, _get_adaptor
@@ -39,6 +40,8 @@ from . import social_api
 from hs_core.hydroshare import utils
 from hs_core.hydroshare import file_size_limit_for_display
 from hs_core.signals import *
+from hs_core import HSAlib
+from django.db import DatabaseError, OperationalError
 import autocomplete_light
 
 def short_url(request, *args, **kwargs):
@@ -58,6 +61,24 @@ def verify(request, *args, **kwargs):
             u.is_active=True
             u.save()
             u.groups.add(Group.objects.get(name="Hydroshare Author"))
+
+        # register the user in HSAccess db accordingly
+        try:
+            ha_obj = HSAlib.HSAccess('admin', 'unused', django_settings.HS_ACCESS_DB, django_settings.HS_ACCESS_USERNAME,
+                                     django_settings.HS_ACCESS_PASSWORD, django_settings.HS_ACCESS_HOST, django_settings.HS_ACCESS_PORT)
+        except:
+            # unable to connect to the database
+            raise DatabaseError("unable to connect to the database HSAccess.")
+
+        try:
+            ha_obj.assert_user(u.username, 'HydroShare User')
+        except:
+            # unable to connect to the database
+            raise OperationalError("login %s cannot be inserted into HSAccess database." % u.username)
+        finally:
+            # close the connection
+            del ha_obj
+
         from django.contrib.auth import login
         u.backend = settings.AUTHENTICATION_BACKENDS[0]
         login(request, u)
@@ -315,6 +336,7 @@ def change_permissions(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     t = request.POST['t']
     values = [int(k) for k in request.POST.getlist('designees', [])]
+
     if t == 'owners':
         res.owners = User.objects.in_bulk(values)
     elif t == 'edit_users':
@@ -325,14 +347,6 @@ def change_permissions(request, shortkey, *args, **kwargs):
         res.view_users = User.objects.in_bulk(values)
     elif t == 'view_groups':
         res.view_groups = Group.objects.in_bulk(values)
-    elif t == 'add_view_user':
-        frm = AddUserForm(data=request.POST)
-        if frm.is_valid():
-            res.view_users.add(frm.cleaned_data['user'])
-    elif t == 'add_edit_user':
-        frm = AddUserForm(data=request.POST)
-        if frm.is_valid():
-            res.edit_users.add(frm.cleaned_data['user'])
     elif t == 'add_view_group':
         frm = AddGroupForm(data=request.POST)
         if frm.is_valid():
@@ -341,18 +355,53 @@ def change_permissions(request, shortkey, *args, **kwargs):
         frm = AddGroupForm(data=request.POST)
         if frm.is_valid():
             res.edit_groups.add(frm.cleaned_data['group'])
-    elif t == 'add_owner':
-        frm = AddUserForm(data=request.POST)
-        if frm.is_valid():
-            res.owners.add(frm.cleaned_data['user'])
-    elif t == 'make_public':
-        #if res.metadata.has_all_required_elements():
-        if res.can_be_public:
-            res.public = True
-            res.save()
-    elif t == 'make_private':
-        res.public = False
-        res.save()
+    else:
+        # change permissions in HSAccess Database for hydroshare access control
+        try:
+            ha_obj = HSAlib.HSAccess(request.user.username, 'unused', django_settings.HS_ACCESS_DB, django_settings.HS_ACCESS_USERNAME,
+                                     django_settings.HS_ACCESS_PASSWORD, django_settings.HS_ACCESS_HOST, django_settings.HS_ACCESS_PORT)
+        except:
+            # unable to connect to the database
+            raise DatabaseError("unable to connect to the database HSAccess.")
+
+        try:
+            if t == 'add_view_user':
+                frm = AddUserForm(data=request.POST)
+                if frm.is_valid():
+                    res.view_users.add(frm.cleaned_data['user'])
+                    new_user = frm.cleaned_data['user']
+                    new_uuid = ha_obj.get_user_uuid_from_login(new_user.username)
+                    ha_obj.share_resource_with_user(res.short_id, new_uuid, 'ro')
+            elif t == 'add_edit_user':
+                frm = AddUserForm(data=request.POST)
+                if frm.is_valid():
+                    res.edit_users.add(frm.cleaned_data['user'])
+                    new_user = frm.cleaned_data['user']
+                    new_uuid = ha_obj.get_user_uuid_from_login(new_user.username)
+                    ha_obj.share_resource_with_user(res.short_id, new_uuid, 'rw')
+            elif t == 'add_owner':
+                frm = AddUserForm(data=request.POST)
+                if frm.is_valid():
+                    res.owners.add(frm.cleaned_data['user'])
+                    new_user = frm.cleaned_data['user']
+                    new_uuid = ha_obj.get_user_uuid_from_login(new_user.username)
+                    ha_obj.share_resource_with_user(res.short_id, new_uuid, 'own')
+            elif t == 'make_public':
+                #if res.metadata.has_all_required_elements():
+                if res.can_be_public:
+                    res.public = True
+                    ha_obj.make_resource_public(res.short_id)
+                    res.save()
+            elif t == 'make_private':
+                res.public = False
+                ha_obj.make_resource_not_public(res.short_id)
+                res.save()
+        except:
+            # cannot share the resource
+            raise OperationalError("the resource %s cannot be shared." % res.short_id)
+        finally:
+            # close the connection
+            del ha_obj
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -728,7 +777,23 @@ def create_resource_new_workflow(request, *args, **kwargs):
             files=request.FILES.getlist('files'),
             content=res_title
     )
+    # register new resource and set up privileges in HSAccess Database for hydroshare access control
+    try:
+        ha_obj = HSAlib.HSAccess(request.user.username, 'unused', django_settings.HS_ACCESS_DB, django_settings.HS_ACCESS_USERNAME,
+                                 django_settings.HS_ACCESS_PASSWORD, django_settings.HS_ACCESS_HOST, django_settings.HS_ACCESS_PORT)
+    except:
+        # unable to connect to the database
+        raise DatabaseError("unable to connect to the database HSAccess.")
 
+    try:
+        homedir = django_settings.IRODS_CWD+"/"+resource.short_id
+        ha_obj.assert_resource(resource_path=homedir, resource_title=res_title, resource_uuid = resource.short_id)
+    except:
+        # unable to connect to the database
+        raise OperationalError("the resource %s cannot be inserted into HSAccess database." % resource.short_id)
+    finally:
+        # close the connection
+        del ha_obj
     # Send post-create resource signal
     post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, **kwargs)
 
