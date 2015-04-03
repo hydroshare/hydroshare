@@ -96,23 +96,29 @@ def get_original_coverage_info(raster_dataset):
 
     # get the bounding box
     gt = raster_dataset.GetGeoTransform()
-    cols = raster_dataset.RasterXSize
-    rows = raster_dataset.RasterYSize
-    xarr = [0, cols]
-    yarr = [0, rows]
-    x_coor = []
-    y_coor = []
-    for px in xarr:
-        for py in yarr:
-            x = gt[0]+(px*gt[1])+(py*gt[2])
-            y = gt[3]+(px*gt[4])+(py*gt[5])
-            x_coor.append(x)
-            y_coor.append(y)
-        yarr.reverse()
-    northlimit = max(y_coor)  # max y
-    southlimit = min(y_coor)
-    westlimit = min(x_coor)  # min x
-    eastlimit = max(x_coor)
+    if gt:
+        cols = raster_dataset.RasterXSize
+        rows = raster_dataset.RasterYSize
+        xarr = [0, cols]
+        yarr = [0, rows]
+        x_coor = []
+        y_coor = []
+        for px in xarr:
+            for py in yarr:
+                x = gt[0]+(px*gt[1])+(py*gt[2])
+                y = gt[3]+(px*gt[4])+(py*gt[5])
+                x_coor.append(x)
+                y_coor.append(y)
+            yarr.reverse()
+        northlimit = max(y_coor)  # max y
+        southlimit = min(y_coor)
+        westlimit = min(x_coor)  # min x
+        eastlimit = max(x_coor)
+    else:
+        northlimit = 0
+        southlimit = 0
+        westlimit = 0
+        eastlimit = 0
 
     spatial_coverage_info = OrderedDict([
         ('northlimit', northlimit),

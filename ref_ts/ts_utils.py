@@ -63,15 +63,13 @@ def sites_from_soap(wsdl_url, locations='[:]'):
         raise Http404("Sorry, but we've encountered an unexpected error. This is most likely\
          due to incorrect formatting in the web service response.")
     try:
-        site_names = []
-        site_codes = []
+        sites = []
         root = etree.XML(response)
         wml_version = get_version(root)
         if wml_version == '1':
             for element in root:
                 if 'site' in element.tag:
-                    site_names.append(element[0][0].text)
-                    site_codes.append(element[0][1].text)
+                    sites.append(element[0][0].text + " : " + element[0][1].text)
         elif wml_version == '2.0':
             pass   # FIXME I need to change this, obviously
         else:
@@ -79,8 +77,9 @@ def sites_from_soap(wsdl_url, locations='[:]'):
     except:
         return "Parsing error: The Data in the WSDL Url '{0}' was not correctly formatted \
 according to the WaterOneFlow standard given at 'http://his.cuahsi.org/wofws.html#waterml'.".format(wsdl_url)
-    ret = dict(zip(site_names, site_codes))
-    return ret
+    # ret = dict(zip(site_names, site_codes))
+    sites = sorted(sites)
+    return sites
 
 def site_info_from_soap(wsdl_url, **kwargs):
     site = ':' + kwargs['site']
@@ -107,24 +106,23 @@ def site_info_from_soap(wsdl_url, **kwargs):
         response = response.encode('utf-8')
         root = etree.XML(response)
         wml_version = get_version(root)
-        variable_names = []
-        variable_codes = []
+        variable_name = ''
+        variable_code = ''
+        variables = []
         if wml_version =='1':
             for element in root.iter():
                 brack_lock = element.tag.index('}')  #The namespace in the tag is enclosed in {}.
                 tag = element.tag[brack_lock+1:]     #Takes only actual tag, no namespace
-                if 'variableName' in tag:
-                    variable_names.append(element.text)
-            for element in root.iter():
-                brack_lock = element.tag.index('}')  #The namespace in the tag is enclosed in {}.
-                tag = element.tag[brack_lock+1:]     #Takes only actual tag, no namespace
                 if 'variableCode' in tag:
-                    variable_codes.append(element.text)
+                    variable_code = element.text
+                if 'variableName' in tag:
+                    variable_name = element.text
+                    variables.append(variable_name + ' : ' + variable_code)
         elif wml_version == '2.0':
             pass  # FIXME add what to do here
         else:
             raise Http404()
-        variables = dict(zip(variable_names, variable_codes))
+        variables = sorted(variables)
         return variables
     except:
         return "Parsing error: The Data in the WSDL Url '{0}' was not correctly formatted \
@@ -478,7 +476,6 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
                                       reference_type,
                                       site_name_or_code=data_site_code,
                                       variable_code=variable_code)
-
     #update/create metadata elements
     res = hydroshare.get_resource_by_shortkey(shortkey)
     s = res.metadata.sites.all()[0]
@@ -554,7 +551,7 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
 #this fxn creates the calls the make files fxn and adds the files as resource files
 def generate_files(shortkey):
     res = hydroshare.get_resource_by_shortkey(shortkey)
-    files = make_files(res.short_id, res.reference_type, res.url, res.metadata.sites.all()[0].code, res.metadata.variables.all()[0].code, res.title)
+    files = make_files(res.short_id, res.metadata.referenceURLs.all()[0].type, res.metadata.referenceURLs.all()[0].value, res.metadata.sites.all()[0].code, res.metadata.variables.all()[0].code, res.title)
     for f in files:
         hydroshare.add_resource_files(res.short_id, f)
         os.remove(f.name)
@@ -567,7 +564,7 @@ def transform_file(reference_type, url, data_site_code, variable_code, title):
         response = client.service.GetValues(':'+data_site_code, ':'+variable_code, '', '', '')
     elif reference_type == 'rest':
         r = requests.get(url)
-        response = str(r.text)
+        response = r.content
     waterml_1 = etree.XML(response)
     wml_string = etree.tostring(waterml_1)
     s = StringIO(wml_string)

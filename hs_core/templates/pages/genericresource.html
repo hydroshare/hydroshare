@@ -461,7 +461,6 @@
                     {% endfor %}
 
                     {% if page.perms.change %}
-                        {#                        <td><button class="btn btn-success"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>#}
                         <td><a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
                                multiple="multiple">
                             <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
@@ -601,7 +600,7 @@
                     {% else %}
                         {% if spatial_coverage.name %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>CPlace/Area Name:</strong></div>
+                                <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
                                 <div class="col-sm-8">{{ spatial_coverage.name }}</div>
                             </div>
                         {% endif %}
@@ -965,10 +964,12 @@
         if(allow_multiple_file_upload === "True"){
             $("#file-multiple").text("Multiple file upload is allowed.");
             $("#btn-add-file").attr('multiple', 'multiple');
+            $("#add-file-input").attr('multiple', 'multiple');
         }
         else{
             $("#file-multiple").text("Only one file can be uploaded.");
             $("#btn-add-file").removeAttr('multiple');
+            $("#add-file-input").removeAttr('multiple');
             if(file_count > 0){
                 $("#btn-add-file").hide();
             }
