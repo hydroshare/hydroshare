@@ -124,7 +124,7 @@ CREATE TABLE users (
    user_name VARCHAR(200), 			-- user full name 
    user_active BOOL NOT NULL, 			-- whether user can act 
    user_admin BOOL NOT NULL, 			-- whether user has admin 
-   assertion_user_id INTEGER REFERENCES users(user_id), 
+   assertion_user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT, 
    assertion_time TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP)
 );
 
@@ -151,7 +151,7 @@ CREATE TABLE groups (
 					-- by non-owners
    group_discoverable BOOL NOT NULL, 	-- whether group is discoverable
    group_public BOOL NOT NULL, 		-- whether group members are listable
-   assertion_user_id INTEGER REFERENCES users(user_id) NOT NULL, 
+   assertion_user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
    assertion_time time NOT NULL DEFAULT(CURRENT_TIMESTAMP)
 );
 
@@ -177,7 +177,7 @@ CREATE TABLE resources (
 	-- whether resource has been published, which implies immutable. 
    resource_shareable BOOL NOT NULL, 
 	-- whether the resource can be shared with others by non-owners. 
-   assertion_user_id integer REFERENCES users(user_id) NOT NULL, 
+   assertion_user_id integer REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
    assertion_time TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP)
 );
 
@@ -190,7 +190,7 @@ CREATE TABLE resources (
 CREATE TABLE user_tags (
    user_tag_id SERIAL PRIMARY KEY,
    user_tag_name VARCHAR(200) UNIQUE NOT NULL,
-   assertion_user_id INTEGER REFERENCES users(user_id) NOT NULL, 
+   assertion_user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
    assertion_time TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP),
    CONSTRAINT user_tags_unique UNIQUE (user_tag_name, assertion_user_id) 
 );
@@ -205,7 +205,7 @@ CREATE TABLE user_tags (
 CREATE TABLE user_folders (
    user_folder_id SERIAL PRIMARY KEY,
    user_folder_name VARCHAR(200) NOT NULL,
-   assertion_user_id INTEGER REFERENCES users(user_id) NOT NULL, 
+   assertion_user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
    assertion_time TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP), 
    CONSTRAINT user_folders_unique 
 	UNIQUE (user_folder_name, assertion_user_id) 
@@ -228,10 +228,10 @@ CREATE TABLE user_folders (
 
 CREATE TABLE user_access_to_resource ( 
    id SERIAL PRIMARY KEY, 
-   user_id INTEGER REFERENCES users(user_id) NOT NULL, 
-   resource_id INTEGER REFERENCES resources(resource_id) NOT NULL, 
-   privilege_id INTEGER REFERENCES privileges(privilege_id) NOT NULL, 
-   assertion_user_id INTEGER REFERENCES users(user_id) NOT NULL, 
+   user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
+   resource_id INTEGER REFERENCES resources(resource_id) ON DELETE CASCADE NOT NULL, 
+   privilege_id INTEGER REFERENCES privileges(privilege_id) ON DELETE RESTRICT NOT NULL, 
+   assertion_user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
    assertion_time TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP), 
    -- one user can grant another user access exactly once.
    -- new assertions with the same user pair override older ones. 
@@ -263,10 +263,10 @@ CREATE VIEW user_privilege_over_resource AS
 -------------------------------------------------
 create table user_invitations_to_resource ( 
    id SERIAL PRIMARY KEY, 
-   user_id INTEGER REFERENCES users(user_id) NOT NULL, 
-   resource_id INTEGER REFERENCES resources(resource_id) NOT NULL, 
-   privilege_id INTEGER REFERENCES privileges(privilege_id) NOT NULL, 
-   assertion_user_id INTEGER REFERENCES users(user_id) NOT NULL, 
+   user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
+   resource_id INTEGER REFERENCES resources(resource_id) ON DELETE CASCADE NOT NULL, 
+   privilege_id INTEGER REFERENCES privileges(privilege_id) ON DELETE RESTRICT NOT NULL, 
+   assertion_user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
    assertion_time TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP),
    -- one user can make at most one access control invitation for another user. 
    CONSTRAINT user_resource_invitation_unique 
@@ -292,10 +292,10 @@ create table user_invitations_to_resource (
 
 create table user_access_to_group ( 
    id SERIAL PRIMARY KEY, 
-   user_id INTEGER REFERENCES users(user_id) NOT NULL, 
-   group_id INTEGER REFERENCES groups(group_id) NOT NULL, 
-   privilege_id INTEGER REFERENCES privileges(privilege_id) NOT NULL, 
-   assertion_user_id INTEGER REFERENCES users(user_id) NOT NULL, 
+   user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
+   group_id INTEGER REFERENCES groups(group_id) ON DELETE CASCADE NOT NULL, 
+   privilege_id INTEGER REFERENCES privileges(privilege_id) ON DELETE RESTRICT NOT NULL, 
+   assertion_user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
    assertion_time TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP),
    -- one user can impose at most one access control grant for another user. 
    -- access control is cumulative over all grants. 
@@ -325,10 +325,10 @@ CREATE VIEW user_group_privilege AS
 -------------------------------------------------
 create table user_invitations_to_group ( 
    id SERIAL PRIMARY KEY, 
-   user_id INTEGER REFERENCES users(user_id) NOT NULL, 
-   group_id INTEGER REFERENCES groups(group_id) NOT NULL, 
-   privilege_id INTEGER REFERENCES privileges(privilege_id) NOT NULL, 
-   assertion_user_id INTEGER REFERENCES users(user_id) NOT NULL, 
+   user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
+   group_id INTEGER REFERENCES groups(group_id) ON DELETE CASCADE NOT NULL, 
+   privilege_id INTEGER REFERENCES privileges(privilege_id) ON DELETE RESTRICT NOT NULL, 
+   assertion_user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
    assertion_time TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP),
    -- one user can make at most one access control invitation for another user. 
    CONSTRAINT user_group_invitation_unique 
@@ -387,10 +387,10 @@ FROM user_group_privilege p
 -- OLD 
 -- OLD CREATE TABLE user_membership_in_group ( 
 -- OLD    id SERIAL PRIMARY KEY, 
--- OLD    user_id INTEGER REFERENCES users(user_id) NOT NULL, 
--- OLD    group_id INTEGER REFERENCES groups(group_id) NOT NULL, 
+-- OLD    user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
+-- OLD    group_id INTEGER REFERENCES groups(group_id) ON DELETE CASCADE NOT NULL, 
 -- OLD    -- who put user into group, and when? 
--- OLD    assertion_user_id INTEGER REFERENCES users(user_id) NOT NULL,
+-- OLD    assertion_user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL,
 -- OLD    assertion_time TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP), 
 -- OLD    -- there can be at most one assertion that a user is in a group. 
 -- OLD    -- this is a performance issue, not a security issue. 
@@ -422,10 +422,10 @@ WHERE u.user_active=TRUE AND g.group_active=TRUE;
 
 CREATE TABLE group_access_to_resource (
    id SERIAL PRIMARY KEY, 
-   group_id INTEGER REFERENCES groups(group_id) NOT NULL, 
-   resource_id INTEGER REFERENCES resources(resource_id) NOT NULL, 
-   privilege_id INTEGER REFERENCES privileges(privilege_id) NOT NULL,
-   assertion_user_id INTEGER REFERENCES users(user_id) NOT NULL,
+   group_id INTEGER REFERENCES groups(group_id) ON DELETE CASCADE NOT NULL, 
+   resource_id INTEGER REFERENCES resources(resource_id) ON DELETE CASCADE NOT NULL, 
+   privilege_id INTEGER REFERENCES privileges(privilege_id) ON DELETE RESTRICT NOT NULL,
+   assertion_user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL,
    assertion_time TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP), 
    -- there can be at most one assertion per user that a group can 
    -- access a resource. 
@@ -468,9 +468,10 @@ CREATE VIEW user_group_privilege_over_resource AS
 
 CREATE TABLE user_folder_of_resource (
    id INTEGER PRIMARY KEY, 
-   user_id INTEGER REFERENCES users(user_id) NOT NULL, 
-   user_folder_id INTEGER REFERENCES user_folders(user_folder_id) NOT NULL, 
-   resource_id INTEGER REFERENCES resources(resource_id) NOT NULL, 
+   user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
+   user_folder_id INTEGER REFERENCES user_folders(user_folder_id) 
+        ON DELETE CASCADE NOT NULL, 
+   resource_id INTEGER REFERENCES resources(resource_id) ON DELETE CASCADE NOT NULL, 
    assertion_time TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP),  
    -- there can be at most one assertion of a specific folder by a user. 
    CONSTRAINT user_folder_of_resource_unique 
@@ -490,9 +491,9 @@ CREATE TABLE user_folder_of_resource (
 
 CREATE TABLE user_tags_of_resource ( 
    id SERIAL PRIMARY KEY, 
-   user_id INTEGER REFERENCES users(user_id) NOT NULL, 
-   user_tag_id INTEGER REFERENCES user_tags(user_tag_id) NOT NULL, 
-   resource_id INTEGER REFERENCES resources(resource_id) NOT NULL, 
+   user_id INTEGER REFERENCES users(user_id) ON DELETE RESTRICT NOT NULL, 
+   user_tag_id INTEGER REFERENCES user_tags(user_tag_id) ON DELETE CASCADE NOT NULL, 
+   resource_id INTEGER REFERENCES resources(resource_id) ON DELETE CASCADE NOT NULL, 
    assertion_time TIMESTAMP NOT NULL DEFAULT(CURRENT_TIMESTAMP), 
    -- each resource can be tagged with each tag exactly once. 
    -- this is a performance issue. 

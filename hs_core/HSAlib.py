@@ -40,7 +40,11 @@ import uuid
 
 class HSAException(Exception):
     """
-    Exception class for HSAccess class: documents prohibited actions according to HSAccess engine logic
+    Generic Base Exception class for HSAccess class.
+
+    *This exception is a generic base class and is never directly raised.*
+    See subclasses HSAccessException, HSUsageException, and HSIntegrityException
+    for details.
     """
     def __init__(self, value):
         """
@@ -54,7 +58,10 @@ class HSAException(Exception):
 
 class HSAccessException(HSAException):
     """
-    Exception class for access-level problems
+    Exception class for access control.
+
+    This exception is raised when the access control system denies a user request.
+    It can safely be caught to probe whether an operation is permitted.
     """
     def __str__(self):
         return repr("HS Access Exception: " + self.value)
@@ -65,6 +72,14 @@ class HSAccessException(HSAException):
 class HSAUsageException(HSAException):
     """
     Exception class for parameter usage problems.
+
+    This exception is raised when a routine is called with invalid parameters.
+    This includes references to non-existent resources, groups, and users.
+
+    This is typically a programming error and should be entered into
+    issue tracker and resolved.
+
+    *Catching this exception is not recommended.*
     """
     def __str__(self):
         return repr("HS Usage Exception: " + self.value)
@@ -75,6 +90,15 @@ class HSAUsageException(HSAException):
 class HSAIntegrityException(HSAException):
     """
     Exception class for database failures.
+    This is an "anti-bugging" exception that should *never* be raised unless something
+    is very seriously wrong with database configuration. This exception is only raised
+    if the database fails to meet integrity constraints.
+
+    *This cannot be a programming error.* In fact, it can only happen if the schema
+    for the database itself becomes corrupt. The only way to address this is to
+    repair the schema.
+
+    *Catching this exception is not recommended.*
     """
 
     def __str__(self):
@@ -90,11 +114,13 @@ class HSAccessCore(object):
     Unlike HSAccess, it does not contain helper functions;
     only the functions necessary to the core logic.
     """
-    __PRIVILEGE_NONE = 4          # code that no privilege is asserted
+
     __PRIVILEGE_OWN = 1             # owner of thing
     __PRIVILEGE_RW = 2              # can read and write thing
     __PRIVILEGE_RO = 3              # can read thing
+    __PRIVILEGE_NONE = 4            # code that no privilege is asserted
     __PRIVILEGE_CODES = ['own', 'rw', 'ro', 'none']
+
     def __init__(self, irods_user, irods_password,
                  db_database, db_user, db_password, db_host, db_port):
         try:
@@ -109,7 +135,7 @@ class HSAccessCore(object):
         except:
             raise HSAIntegrityException("unable to connect to the database")
         self.__user_id = self.__get_user_id_from_login(irods_user)
-        self.__user_uuid = self.__get_user_uuid_from_login(irods_user)
+        self.__user_uuid = self.get_user_uuid_from_login(irods_user)
 
     def __del__(self):
         if self.__conn is not None:
@@ -149,6 +175,14 @@ class HSAccessCore(object):
 
         :todo: check logic for what a user can change.
         """
+        # anti-bug main arguments
+        if type(user_name) is not str:
+            raise HSAUsageException("user_name is not a string")
+        if type(user_active) is not bool:
+            raise HSAUsageException("user_active is not boolean")
+        if type(user_admin) is not bool:
+            raise HSAUsageException("user_admin is not boolean")
+
         if not self.user_exists(self.__user_uuid):
             raise HSAUsageException("User uuid does not exist")
         if not (self.user_is_active(self.__user_uuid)):
@@ -159,7 +193,7 @@ class HSAccessCore(object):
         if user_uuid is None:
             # try the other keys to see if it is defined
             try:
-                user_uuid = self.__get_user_uuid_from_login(user_login)
+                user_uuid = self.get_user_uuid_from_login(user_login)
             except HSAException:
                 user_uuid = uuid.uuid4().hex
         # print "resource uuid is", resource_uuid
@@ -297,9 +331,6 @@ class HSAccessCore(object):
         meta = self.get_user_metadata(user_uuid)
         return meta['active']
 
-    def get_user_uuid_from_login(self, login):
-        return self.__get_user_uuid_from_login(login)
-
     ###########################################################
     # user system metadata
     ###########################################################
@@ -371,7 +402,7 @@ class HSAccessCore(object):
             raise HSAUsageException("User uuid does not exist")
 
     # get a specific login uuid for use in requesting actions
-    def __get_user_uuid_from_login(self, login):
+    def get_user_uuid_from_login(self, login):
         """
         PRIVATE: get user database id from login name
 
@@ -729,6 +760,18 @@ class HSAccessCore(object):
 
         :todo: ensure that regular users cannot change too much!
         """
+        # anti-bug main arguments
+        if type(group_name) is not str:
+            raise HSAUsageException("group_name is not a string")
+        if type(group_active) is not bool:
+            raise HSAUsageException("group_active is not boolean")
+        if type(group_shareable) is not bool:
+            raise HSAUsageException("group_shareable is not boolean")
+        if type(group_discoverable) is not bool:
+            raise HSAUsageException("group_discoverable is not boolean")
+        if type(group_public) is not bool:
+            raise HSAUsageException("group_public is not boolean")
+
         if user_uuid is None:
             user_uuid = self.get_uuid()
         if not (self.user_exists(user_uuid)):
@@ -850,8 +893,6 @@ class HSAccessCore(object):
 
         1. Only the owner of the group or an administrator can do this.
 
-        :todo: fix cascade logic in database so that this always works correctly. Currently
-               there is a band-aid fix that does the cascade in the application.
         """
         # only an owner or administrator can retract a group
         if not self.user_is_admin(self.get_uuid()) \
@@ -1124,6 +1165,20 @@ class HSAccessCore(object):
         as an administrator. If admin privileges are not present in this case,
         an exception is raised.
         """
+        # anti-bug usage by requireing argument types
+        if not(type(resource_path) is str or type(resource_path) is unicode):
+            raise HSAUsageException("resource_path is not a string or unicode")
+        if type(resource_shareable) is not bool:
+            raise HSAUsageException("resource_shareable is not boolean")
+        if type(resource_discoverable) is not bool:
+            raise HSAUsageException("resource_discoverable is not boolean")
+        if type(resource_public) is not bool:
+            raise HSAUsageException("resource_public is not boolean")
+        if type(resource_published) is not bool:
+            raise HSAUsageException("resource_published is not boolean")
+        if type(resource_immutable) is not bool:
+            raise HSAUsageException("resource_immutable is not boolean")
+
         if user_uuid is None:
             user_uuid = self.get_uuid()
         if not (self.user_exists(user_uuid)):
@@ -1141,6 +1196,7 @@ class HSAccessCore(object):
                 resource_uuid = self.__get_resource_uuid_from_path(resource_path)
             except HSAException:
                 resource_uuid = uuid.uuid4().hex
+
         # print "resource uuid is", resource_uuid
         if self.resource_exists(resource_uuid):
             meta = self.get_resource_metadata(resource_uuid)
@@ -1277,6 +1333,35 @@ class HSAccessCore(object):
                             requesting_user_id, resource_uuid))
         self.__conn.commit()
 
+    # CLI: hs delete resource
+    # unsure whether this should be a possibility;
+    # consider deactivate_group instead.
+
+    def retract_resource(self, resource_uuid):
+        """
+        Delete a resource and all privilege information
+
+        :type resource_uuid: str
+        :param resource_uuid: uuid of resource to delete
+
+        Retractions are handled via database cascade logic (ON DELETE CASCADE).
+        This deletes all information about the resource, including all privilege
+        over it.
+
+        Restrictions:
+
+        1. Only the owner of the group or an administrator can do this.
+
+        """
+        # only an owner or administrator can retract a group
+        if not self.user_is_admin(self.get_uuid()) \
+                and not self.resource_is_owned(resource_uuid, self.get_uuid()):
+            raise HSAccessException("Regular user must own resource")
+        resource_id = self.__get_resource_id_from_uuid(resource_uuid)
+        # no longer needed: cascade logic enables this
+        # self.__cur.execute("""delete from user_access_to_resource where group_id=%s""", (group_id,))
+        self.__cur.execute("""delete from resources where resource_id=%s""", (resource_id,))
+
     ###########################################################
     # resource state
     ###########################################################
@@ -1318,7 +1403,6 @@ class HSAccessCore(object):
         The spirit of the immutable flag is that the affected resource's landing page can then safely be
         issued a data citation.
         """
-        # print "checking that " + login + " exists"
         meta = self.get_resource_metadata(resource_uuid)
         return meta['immutable']
 
@@ -1443,7 +1527,6 @@ class HSAccessCore(object):
         """
         Get privilege code for user over a resource
 
-        :param resource_uuid:
         :type resource_uuid: str
         :param resource_uuid: uuid of resource
         :return: one of 'own', 'rw', 'ro', 'none' 
@@ -1477,7 +1560,6 @@ class HSAccessCore(object):
         """
         Summarize privileges of a user over a resource, without incorporating resource flags
 
-        :type resource_uuid: str
         :type user_uuid: str
         :param resource_uuid: uuid of resource
         :param user_uuid: uuid of user; omit to report on current user
@@ -1493,9 +1575,6 @@ class HSAccessCore(object):
 
         Note: this routine is not subject to access control.
         """
-        if user_uuid is None:
-            user_uuid = self.get_uuid()
-
         user_id = self.__get_user_id_from_uuid(user_uuid)
         resource_id = self.__get_resource_id_from_uuid(resource_uuid)
         return self.__get_user_privilege_over_resource_by_id(resource_id, user_id)
@@ -1516,15 +1595,16 @@ class HSAccessCore(object):
         else:
             # print "no privilege"
             return self.__PRIVILEGE_NONE  # no privilege
+
     ###########################################################
     # cumulative resource privilege interface includes resource-local
     # flags that override user flags for data access.
     ###########################################################
+
     def get_cumulative_user_privilege_over_resource(self, resource_uuid, user_uuid=None):
         """
         Get privilege code for user over a resource
 
-        :param resource_uuid:
         :type resource_uuid: str
         :param resource_uuid: uuid of resource
         :param user_uuid: uuid of user; omit to report on current user
@@ -1550,6 +1630,9 @@ class HSAccessCore(object):
 
                 No privilege over resource
         """
+        if user_uuid is None:
+            user_uuid = self.get_uuid()
+
         pnum = self.__get_cumulative_user_privilege_over_resource(resource_uuid, user_uuid)
         if pnum >= self.__PRIVILEGE_OWN and pnum <= self.__PRIVILEGE_NONE:
             return self.__PRIVILEGE_CODES[pnum-1]
@@ -1585,8 +1668,6 @@ class HSAccessCore(object):
 
         Note: this routine is not subject to access control. Anyone can read anyone else's privileges.
         """
-        if user_uuid is None:
-            user_uuid = self.get_uuid()
         user_id = self.__get_user_id_from_uuid(user_uuid)
         resource_id = self.__get_resource_id_from_uuid(resource_uuid)
 
@@ -1714,6 +1795,7 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
+
         return self.__resource_accessible(user_uuid, resource_uuid, 'own')
 
     def resource_is_readwrite(self, resource_uuid, user_uuid=None):
@@ -1731,6 +1813,7 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
+
         return self.__resource_cumulatively_accessible(user_uuid, resource_uuid, 'rw')
 
     def resource_is_readable(self, resource_uuid, user_uuid=None):
@@ -1748,6 +1831,7 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
+
         return self.__resource_cumulatively_accessible(user_uuid, resource_uuid, 'ro')
 
     ###########################################################
@@ -1766,9 +1850,12 @@ class HSAccessCore(object):
         """
         Share a specific resource with a specific user
 
-        :param resource_uuid: str: uuid of resource to affect (key to resource table)
-        :param user_uuid: str: login name of user to gain access (key to users table)
-        :param privilege_code: str: privilege to grant (key to privileges table)
+        :type resource_uuid: str
+        :type user_uuid: str
+        :type privilege_code: str
+        :param resource_uuid: uuid of resource to affect (key to resource table)
+        :param user_uuid: login name of user to gain access (key to users table)
+        :param privilege_code: privilege to grant (key to privileges table)
 
         This shares a resource with a user other than self. The current user is implicitly
         the initiator of the sharing.
@@ -1798,19 +1885,27 @@ class HSAccessCore(object):
             # use join to access privilege records
             user_priv = self.__get_user_privilege_over_resource(resource_uuid)
             if user_priv > self.__PRIVILEGE_RO:
-                raise HSAccessException("User has no access to resource")
+                raise HSAccessException("User has no privilege over resource")
             if user_priv > privilege_id:
-                raise HSAccessException("User has less privilege to resource than required")
+                raise HSAccessException("User has insufficient privilege over resource")
+            if user_uuid == self.get_uuid():
+                if self.resource_is_owned(resource_uuid):
+                    if self.get_number_of_resource_owners(resource_uuid) == 1:
+                        raise HSAccessException("Cannot remove last owner of resource")
         self.__share_resource_with_user(requesting_id, user_id, resource_id, privilege_id)
 
     def __share_resource_with_user(self, requesting_id, user_id, resource_id, privilege_id):
         """
         Share a resource with a user at a given privilege level.
 
-        :param requesting_id int: id of requesting user
-        :param user_id int: user id of user to which to grant privilege
-        :param resource_id int: resource id to which to grant privilege
-        :param privilege_id int: privilege to grant
+        :type requesting_id: int
+        :type user_id: int
+        :type resource_id: int
+        :type privilege_id: int
+        :param requesting_id: id of requesting user
+        :param user_id: user id of user to which to grant privilege
+        :param resource_id: resource id to which to grant privilege
+        :param privilege_id: privilege to grant
 
         """
         #  sufficient privileges present to share this resource
@@ -1919,6 +2014,7 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
+
         # assert_id = self.__get_user_id_from_uuid(self.get_uuid())
         resource_id = self.__get_resource_id_from_uuid(resource_uuid)
         user_id = self.__get_user_id_from_uuid(user_uuid)
@@ -2140,6 +2236,8 @@ class HSAccessCore(object):
     #     """
     #     if user_uuid is None:
     #         user_uuid = self.get_uuid()
+    #     if type(user_uuid) is not str:
+    #         raise HSAUsageException("user_uuid is not a string")
     #     user_id = self.__get_user_id_from_uuid(user_uuid)
     #     group_id = self.__get_group_id_from_uuid(group_uuid)
     #     self.__cur.execute("""select id from user_membership_in_group where user_id=%s and group_id=%s""",
@@ -2163,6 +2261,8 @@ class HSAccessCore(object):
     #     """
     #     if user_uuid is None:
     #         user_uuid = self.get_uuid()
+    #     if type(user_uuid) is not str:
+    #         raise HSAUsageException("user_uuid is not a string")
     #     # if not self.user_is_active(self.get_uuid()):
     #     #     raise HSAUsageException("User login '"+self.__get_user_login_from_uuid(self.get_uuid())
     #     #     +"' is not active")
@@ -2185,6 +2285,8 @@ class HSAccessCore(object):
     #     """
     #     if user_uuid is None:
     #         user_uuid = self.get_uuid()
+    #     if type(user_uuid) is not str:
+    #         raise HSAUsageException("user_uuid is not a string")
     #     requesting_id = self.__get_user_id_from_uuid(self.get_uuid())
     #     user_id = self.__get_user_id_from_uuid(user_uuid)
     #     group_id = self.__get_group_id_from_uuid(group_uuid)
@@ -2255,6 +2357,9 @@ class HSAccessCore(object):
 
                 No privilege over resource
         """
+        if user_uuid is None:
+            user_uuid = self.get_uuid()
+
         pnum = self.__get_cumulative_user_privilege_over_group(group_uuid, user_uuid)
         if pnum >= self.__PRIVILEGE_OWN and pnum <= self.__PRIVILEGE_NONE:
             return self.__PRIVILEGE_CODES[pnum-1]
@@ -2291,6 +2396,8 @@ class HSAccessCore(object):
 
                 No privilege over resource
         """
+        if user_uuid is None:
+            user_uuid = self.get_uuid()
         pnum = self.__get_user_privilege_over_group(group_uuid, user_uuid)
         if pnum >= self.__PRIVILEGE_OWN and pnum <= self.__PRIVILEGE_NONE:
             return self.__PRIVILEGE_CODES[pnum-1]
@@ -2312,8 +2419,6 @@ class HSAccessCore(object):
         user is not a member. This is a union of privileges from membership and the group public flag.
         Note that there is no ownership conflict in this case because a group cannot be made immutable.
         """
-        if user_uuid is None:
-            user_uuid = self.get_uuid()
         user_id = self.__get_user_id_from_uuid(user_uuid)
         group_id = self.__get_group_id_from_uuid(group_uuid)
         # THIS IS THE QUERY THAT DETERMINES GROUP ACCESS
@@ -2346,8 +2451,6 @@ class HSAccessCore(object):
         user is not a member. This is a union of privileges from membership and the group public flag.
         Note that there is no ownership conflict in this case because a group cannot be made immutable.
         """
-        if user_uuid is None:
-            user_uuid = self.get_uuid()
         user_id = self.__get_user_id_from_uuid(user_uuid)
         group_id = self.__get_group_id_from_uuid(group_uuid)
         # THIS IS THE QUERY THAT DETERMINES GROUP ACCESS
@@ -2456,9 +2559,10 @@ class HSAccessCore(object):
             user_priv = self.__get_cumulative_user_privilege_over_group(group_uuid)
             if user_priv >= self.__PRIVILEGE_RO:  # read-only or no-sharing
                 raise HSAccessException("User does not have permission to invite members")
-            else:
-                if user_priv > privilege_id:
-                    raise HSAccessException("User has insufficient privilege over group")
+            if user_priv > privilege_id:
+                raise HSAccessException("User has insufficient privilege over group")
+            if user_uuid == self.get_uuid():
+                raise HSAccessException("Cannot invite self to group")
         # sufficient privileges present to share this resource
         if self.__user_invite_to_group_exists(requesting_id, group_id, user_id):
             self.__invite_group_user_update(requesting_id, user_id, group_id, privilege_id)
@@ -2569,7 +2673,7 @@ class HSAccessCore(object):
     def __uninvite_user_to_group(self, requesting_id, group_id, user_id):
         if self.__user_invite_to_group_exists(requesting_id, group_id, user_id):
             self.__cur.execute("""delete from user_invitations_to_group where user_id=%s
-                              and group_id=%s and assertion_user_id=%s""",
+                               and group_id=%s and assertion_user_id=%s""",
                                (user_id, group_id, requesting_id))
             self.__conn.commit()
 
@@ -2740,9 +2844,10 @@ class HSAccessCore(object):
             user_priv = self.__get_cumulative_user_privilege_over_resource(resource_uuid)
             if user_priv >= self.__PRIVILEGE_RO:  # read-only or no-sharing
                 raise HSAccessException("User does not have permission to invite members")
-            else:
-                if user_priv > privilege_id:
-                    raise HSAccessException("User has insufficient privilege over resource")
+            if user_priv > privilege_id:
+                raise HSAccessException("User has insufficient privilege over resource")
+            if self.get_uuid() == user_uuid:
+                raise HSAccessException("Cannot invite self to resource")
         # sufficient privileges present to share this resource
         if self.__user_invite_to_resource_exists(requesting_id, resource_id, user_id):
             self.__invite_resource_user_update(requesting_id, user_id, resource_id, privilege_id)
@@ -2992,7 +3097,6 @@ class HSAccessCore(object):
         else:
             raise HSAccessException("No resource invitation for user")
 
-
     #  for now, couple group membership with group privilege
     # self.assert_user_in_group(group_uuid, user_uuid)
     def share_group_with_user(self, group_uuid, user_uuid, privilege_code='ro'):
@@ -3038,11 +3142,15 @@ class HSAccessCore(object):
         if not (self.user_is_admin(self.get_uuid())):
             # use join to access privilege records
             user_priv = self.__get_cumulative_user_privilege_over_group(group_uuid)
-            if user_priv >= self.__PRIVILEGE_RO:  # read-only or no-sharing
-                raise HSAccessException("User lacks read/write privilege for group")
-            else:
-                if user_priv > privilege_id:
-                    raise HSAccessException("User has insufficient privilege for group")
+            if user_priv > self.__PRIVILEGE_RO:  # read-only or no-sharing
+                raise HSAccessException("User has no privilege for group")
+            if user_priv > privilege_id:
+                raise HSAccessException("User has insufficient privilege for group")
+        if user_uuid == self.get_uuid():
+            if self.group_is_owned(group_uuid):
+                if self.get_number_of_group_owners(group_uuid) == 1:
+                    raise HSAccessException("Cannot remove last owner of group")
+
         self.__share_group_with_user(requesting_id, user_id, group_id, privilege_id)
         # for now, couple group membership with group privilege; the following is obsolete
         # self.assert_user_in_group(group_uuid, user_uuid)
@@ -3152,7 +3260,6 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-
         # these serve as argument checks
         user_id = self.__get_user_id_from_uuid(user_uuid)
         group_id = self.__get_group_id_from_uuid(group_uuid)
@@ -3216,8 +3323,8 @@ class HSAccessCore(object):
         """
         Make a list of resources held by user, sorted by title
 
-        :type user_uuid: str
-        :param user_uuid: uuid of user; omit for current user.
+        :type resource_uuid: str
+        :param resource_uuid: uuid of user; omit for current user.
         :return: List of resources containing dict items
         :rtype: List<Dict> 
 
