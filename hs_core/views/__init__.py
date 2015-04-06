@@ -313,6 +313,16 @@ def delete_resource(request, shortkey, *args, **kwargs):
     # deleting the metadata container object deletes the resource
     # so no need to delete the resource separately
     #res.delete()
+
+    # delete resource from HSAccess database
+    try:
+        ha_obj = HSAlib.HSAccess(request.user.username, 'unused', django_settings.HS_ACCESS_DB, django_settings.HS_ACCESS_USERNAME,
+                                 django_settings.HS_ACCESS_PASSWORD, django_settings.HS_ACCESS_HOST, django_settings.HS_ACCESS_PORT)
+        ha_obj.retract_resource(shortkey)
+    except:
+        # unable to connect to the database
+        raise DatabaseError("unable to connect to the database HSAccess.")
+
     return HttpResponseRedirect('/my-resources/')
 
 
