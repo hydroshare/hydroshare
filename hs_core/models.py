@@ -58,10 +58,10 @@ class ResourcePermissionsMixin(Ownable):
         help_text='If this is true, the resource is viewable and downloadable by anyone',
         default=True
     )
-    # DO WE STILL NEED owners?
+
     owners = models.ManyToManyField(User,
                                     related_name='owns_%(app_label)s_%(class)s',
-                                    help_text='The person who uploaded the resource'
+                                    help_text='The person who has total ownership of the resource'
     )
     frozen = models.BooleanField(
         help_text='If this is true, the resource should not be modified',
