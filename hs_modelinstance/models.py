@@ -10,6 +10,7 @@ from hs_core.models import AbstractResource, resource_processor, CoreMetaData, A
 from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import get_current_site
 from hs_model_program.models import ModelProgramResource
+from hs_core.signals import *
 
 
 # extended metadata elements for Model Instance resource type
@@ -92,6 +93,18 @@ class ModelInstanceResource(Page, AbstractResource):
     def metadata(self):
         md = ModelInstanceMetaData()
         return self._get_metadata(md)
+
+    def can_add(self, request):
+        return AbstractResource.can_add(self, request)
+
+    def can_change(self, request):
+        return AbstractResource.can_change(self, request)
+
+    def can_delete(self, request):
+        return AbstractResource.can_delete(self, request)
+
+    def can_view(self, request):
+        return AbstractResource.can_view(self, request)
 
 processor_for(ModelInstanceResource)(resource_processor)
 
