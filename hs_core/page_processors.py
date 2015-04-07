@@ -27,8 +27,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     edit_mode = False
     if user.username == 'admin' or \
                     content_model.creator == user or \
-                    user in content_model.owners.all(): # or \
-                    #user in content_model.edit_users.all():
+                    user in content_model.owners.all() or \
+                    user in content_model.edit_users.all():
         edit_mode = True
 
     metadata_status = _get_metadata_status(content_model)
