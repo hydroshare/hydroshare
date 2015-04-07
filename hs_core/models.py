@@ -1318,7 +1318,7 @@ class AbstractResource(ResourcePermissionsMixin):
                 ret = True
             else:
                 try:
-                    ha_obj = HSAlib.HSAccess(user.username, 'unused', settings.HS_ACCESS_DB, settings.HS_ACCESS_USERNAME,
+                    ha_obj = HSAlib.HSAccess(str(user.username), 'unused', settings.HS_ACCESS_DB, settings.HS_ACCESS_USERNAME,
                                              settings.HS_ACCESS_PASSWORD, settings.HS_ACCESS_HOST, settings.HS_ACCESS_PORT)
                     ret = ha_obj.resource_is_owned(self.short_id)
                     del ha_obj
@@ -1338,7 +1338,7 @@ class AbstractResource(ResourcePermissionsMixin):
                 ret = True
             else:
                 try:
-                    ha_obj = HSAlib.HSAccess(user.username, 'unused', settings.HS_ACCESS_DB, settings.HS_ACCESS_USERNAME,
+                    ha_obj = HSAlib.HSAccess(str(user.username), 'unused', settings.HS_ACCESS_DB, settings.HS_ACCESS_USERNAME,
                                              settings.HS_ACCESS_PASSWORD, settings.HS_ACCESS_HOST, settings.HS_ACCESS_PORT)
                     ret = ha_obj.resource_is_readwrite(self.short_id)
                     del ha_obj
@@ -1362,7 +1362,7 @@ class AbstractResource(ResourcePermissionsMixin):
                 ret = True
             else:
                 try:
-                    ha_obj = HSAlib.HSAccess(user.username, 'unused', settings.HS_ACCESS_DB, settings.HS_ACCESS_USERNAME,
+                    ha_obj = HSAlib.HSAccess(str(user.username), 'unused', settings.HS_ACCESS_DB, settings.HS_ACCESS_USERNAME,
                                              settings.HS_ACCESS_PASSWORD, settings.HS_ACCESS_HOST, settings.HS_ACCESS_PORT)
                     ret = ha_obj.resource_is_readable(self.short_id)
                     del ha_obj

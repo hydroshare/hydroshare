@@ -71,7 +71,7 @@ def verify(request, *args, **kwargs):
             raise DatabaseError("unable to connect to the database HSAccess.")
 
         try:
-            ha_obj.assert_user(u.username, 'HydroShare User')
+            ha_obj.assert_user(str(u.username), 'HydroShare User')
         except:
             # unable to connect to the database
             raise OperationalError("login %s cannot be inserted into HSAccess database." % u.username)
@@ -316,7 +316,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
     # delete resource from HSAccess database
     try:
-        ha_obj = HSAlib.HSAccess(request.user.username, 'unused', django_settings.HS_ACCESS_DB, django_settings.HS_ACCESS_USERNAME,
+        ha_obj = HSAlib.HSAccess(str(request.user.username), 'unused', django_settings.HS_ACCESS_DB, django_settings.HS_ACCESS_USERNAME,
                                  django_settings.HS_ACCESS_PASSWORD, django_settings.HS_ACCESS_HOST, django_settings.HS_ACCESS_PORT)
         ha_obj.retract_resource(shortkey)
     except:
@@ -371,7 +371,7 @@ def change_permissions(request, shortkey, *args, **kwargs):
     else:
         # change permissions in HSAccess Database for hydroshare access control
         try:
-            ha_obj = HSAlib.HSAccess(request.user.username, 'unused', django_settings.HS_ACCESS_DB, django_settings.HS_ACCESS_USERNAME,
+            ha_obj = HSAlib.HSAccess(str(request.user.username), 'unused', django_settings.HS_ACCESS_DB, django_settings.HS_ACCESS_USERNAME,
                                      django_settings.HS_ACCESS_PASSWORD, django_settings.HS_ACCESS_HOST, django_settings.HS_ACCESS_PORT)
         except:
             # unable to connect to the database
@@ -383,21 +383,21 @@ def change_permissions(request, shortkey, *args, **kwargs):
                 if frm.is_valid():
                     res.view_users.add(frm.cleaned_data['user'])
                     new_user = frm.cleaned_data['user']
-                    new_uuid = ha_obj.get_user_uuid_from_login(new_user.username)
+                    new_uuid = ha_obj.get_user_uuid_from_login(str(new_user.username))
                     ha_obj.share_resource_with_user(res.short_id, new_uuid, 'ro')
             elif t == 'add_edit_user':
                 frm = AddUserForm(data=request.POST)
                 if frm.is_valid():
                     res.edit_users.add(frm.cleaned_data['user'])
                     new_user = frm.cleaned_data['user']
-                    new_uuid = ha_obj.get_user_uuid_from_login(new_user.username)
+                    new_uuid = ha_obj.get_user_uuid_from_login(str(new_user.username))
                     ha_obj.share_resource_with_user(res.short_id, new_uuid, 'rw')
             elif t == 'add_owner':
                 frm = AddUserForm(data=request.POST)
                 if frm.is_valid():
                     res.owners.add(frm.cleaned_data['user'])
                     new_user = frm.cleaned_data['user']
-                    new_uuid = ha_obj.get_user_uuid_from_login(new_user.username)
+                    new_uuid = ha_obj.get_user_uuid_from_login(str(new_user.username))
                     ha_obj.share_resource_with_user(res.short_id, new_uuid, 'own')
             elif t == 'make_public':
                 #if res.metadata.has_all_required_elements():
@@ -754,7 +754,7 @@ def create_resource_new_workflow(request, *args, **kwargs):
     )
     # register new resource and set up privileges in HSAccess Database for hydroshare access control
     try:
-        ha_obj = HSAlib.HSAccess(request.user.username, 'unused', django_settings.HS_ACCESS_DB, django_settings.HS_ACCESS_USERNAME,
+        ha_obj = HSAlib.HSAccess(str(request.user.username), 'unused', django_settings.HS_ACCESS_DB, django_settings.HS_ACCESS_USERNAME,
                                  django_settings.HS_ACCESS_PASSWORD, django_settings.HS_ACCESS_HOST, django_settings.HS_ACCESS_PORT)
     except:
         # unable to connect to the database
