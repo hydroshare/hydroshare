@@ -10,7 +10,7 @@ from hs_core.models import AbstractResource, resource_processor, CoreMetaData, A
 from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import get_current_site
 from hs_model_program.models import ModelProgramResource
-from hs_model_program.models import ModelProgramResource
+from hs_core.signals import *
 
 
 # extended metadata elements for Model Instance resource type
@@ -50,7 +50,6 @@ class ExecutedBy(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         shortid = kwargs['name']
-        obj = get_object_or_404(ModelProgramResource,short_id=shortid)
 
         obj = get_object_or_404(ModelProgramResource,short_id=shortid)
         kwargs['model_program_fk'] = obj
@@ -59,6 +58,7 @@ class ExecutedBy(AbstractMetaDataElement):
         mp_fk = ExecutedBy.objects.create(model_program_fk=obj,
                                           name=title,
                                           content_object=metadata_obj)
+
         return mp_fk
 
 
@@ -178,7 +178,6 @@ class ModelInstanceMetaData(CoreMetaData):
             hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramName' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_name.text = self.executed_by.model_program_fk.title
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_url.text = 'http://%s%s'%(get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
             hsterms_executed_by_url.text = 'http://%s%s'%(get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
