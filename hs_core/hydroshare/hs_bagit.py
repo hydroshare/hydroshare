@@ -131,16 +131,27 @@ def create_bag(resource):
     with open(bagit_path + '/resourcemap.xml', 'w') as out:
         out.write(xml_string)
 
-    bagit.make_bag(bagit_path, checksum=['md5'], bag_info={
-        'title': resource.title,
-        'author': resource.owners.all()[0].username,
-        'author_email': resource.owners.all()[0].email,
-        'version': arrow.get(resource.updated).format("YYYY.MM.DD.HH.mm.ss"),
-        'resource_type': '.'.join((resource._meta.app_label, resource._meta.object_name)),
-        'hydroshare_version': getattr(settings, 'HYDROSHARE_VERSION', "R1 development"),
-        'shortkey': resource.short_id,
-        'slug': resource.slug
-    })
+    from collections import OrderedDict
+    bag_info_dict = OrderedDict()
+    bag_info_dict['title'] = resource.title
+    authors = ""
+    emails = ""
+    for u in resource.owners.all():
+        if not authors:
+            authors = u.username
+            emails = u.email
+        else:
+            authors = authors + ", " + u.username
+            emails = emails + ", " + u.email
+    bag_info_dict['authors'] = authors
+    bag_info_dict['author_emails'] = emails
+    bag_info_dict['version'] = arrow.get(resource.updated).format("YYYY.MM.DD.HH.mm.ss")
+    bag_info_dict['resource_type'] = '.'.join((resource._meta.app_label, resource._meta.object_name))
+    bag_info_dict['hydroshare_version'] = getattr(settings, 'HYDROSHARE_VERSION', "R1 development")
+    bag_info_dict['shortkey'] = resource.short_id
+    bag_info_dict['slug'] = resource.slug
+
+    bagit.make_bag(bagit_path, checksum=['md5'], bag_info=bag_info_dict)
 
     zf = os.path.join(dest_prefix, resource.short_id) + ".zip"
     make_zipfile(output_filename=zf, source_dir=bagit_path)
