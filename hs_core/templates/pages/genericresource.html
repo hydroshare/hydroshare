@@ -59,7 +59,13 @@
                             {% else %}<span>{{ cr.name }}</span><span class="comma">,&nbsp</span>{% endif %}
                         {% endfor %}
                     </td></tr>
-                    <tr><th>Owner:</th><td>{{ cm.user|contact|safe }}</td></tr>
+
+                    <tr><th>Owners:</th><td>
+                        {% for u in owners %}
+                            <span>{{ u|contact|safe }}</span><span class="comma">&nbsp&nbsp</span>
+                        {% endfor %}
+                    </td></tr>
+
                     <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
                     <tr><th>Created:</th><td>{{ cm.created }}</td></tr>
                     <tr><th>Last updated:</th><td> {{ cm.updated }} by {%  if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
