@@ -986,6 +986,7 @@ class HSAccessCore(object):
         # user_membership_in_group is now a view
         # self.__cur.execute("""delete from user_membership_in_group where group_id=%s""", (group_id,))
         self.__cur.execute("""delete from groups where group_id=%s""", (group_id,))
+        self.__conn.commit()
 
     ###########################################################
     # group state
@@ -1469,8 +1470,8 @@ class HSAccessCore(object):
         # no longer needed: cascade logic enables this
         # self.__cur.execute("""delete from user_access_to_resource where group_id=%s""", (group_id,))
 
-        qrystr = "delete from resources where resource_id=%d" % resource_id
-        self.__cur.execute(qrystr)
+        self.__cur.execute("""delete from resources where resource_id=%s""", (resource_id,))
+        self.__conn.commit()
 
     ###########################################################
     # resource state
@@ -1989,7 +1990,7 @@ class HSAccessCore(object):
     # The sharing privileges for a user are a logical OR of all granted sharing privileges from all sources
     ###########################################################
 
-    def share_resource_with_user(self, resource_uuid, user_uuid, privilege_code='ns'):
+    def share_resource_with_user(self, resource_uuid, user_uuid, privilege_code='ro'):
         """
         Share a specific resource with a specific user
 
@@ -2197,7 +2198,7 @@ class HSAccessCore(object):
     # - you are an administrator
     # ##########################################################
 
-    def share_resource_with_group(self, resource_uuid, group_uuid, privilege_code='ns'):
+    def share_resource_with_group(self, resource_uuid, group_uuid, privilege_code='ro'):
         """
         Share a resource with a group of users
 
