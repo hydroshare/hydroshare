@@ -18,6 +18,20 @@ from django.utils.timezone import now
 import os
 from hs_core.signals import post_create_resource
 import ast
+
+def get_his_urls(request):
+    service_url = 'http://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'
+    r = requests.get(service_url)
+    if r.status_code == 200:
+        response = r.text.encode('utf-8')
+        root = etree.XML(response)
+    url_list = []
+    for element in root.iter():
+        if "servURL" in element.tag:
+            url_list.append(element.text)
+    return json_or_jsonp(request, url_list)
+
+
 class ReferencedSitesForm(forms.Form):
     url = forms.URLField()
 
@@ -61,10 +75,10 @@ def time_series_from_service(request):
         variable = params.get('variable')
         if ref_type == 'rest':
             ts = ts_utils.time_series_from_service(url, ref_type)
+            site = ts.get('site_code')
+            variable = ts.get('variable_code')
         else:
             ts = ts_utils.time_series_from_service(url, ref_type, site_name_or_code=site, variable_code=variable)
-        site = ts.get('site_code')
-        variable = ts.get('variable_code')
         for_graph = ts['for_graph']
         units = ts['units']
         variable_name = ts['variable_name']
@@ -93,6 +107,7 @@ def verify_rest_url(request):
                 return json_or_jsonp(request, 400)
         except:
             return json_or_jsonp(request, 400)
+
 
 class CreateRefTimeSeriesForm(forms.Form):
     url = forms.URLField(required=False)
