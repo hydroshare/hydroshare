@@ -117,7 +117,8 @@ def site_info_from_soap(wsdl_url, **kwargs):
                     variable_code = element.text
                 if 'variableName' in tag:
                     variable_name = element.text
-                    variables.append(variable_name + ' : ' + variable_code)
+                    if variable_name + ' : ' + variable_code not in variables:
+                        variables.append(variable_name + ' : ' + variable_code)
         elif wml_version == '2.0':
             pass  # FIXME add what to do here
         else:
