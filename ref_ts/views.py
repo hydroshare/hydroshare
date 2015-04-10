@@ -162,6 +162,22 @@ def create_ref_time_series(request, *args, **kwargs):
             site_name = ts['site_name']
             variable_code = ts['variable_code']
             variable_name = ts['variable_name']
+        else:
+            ts = ts_utils.time_series_from_service(url, 'soap',
+                                                   site_name_or_code=site_code,
+                                                   variable_code=variable_code)
+
+        hydroshare.resource.create_metadata_element(
+            res.short_id,
+            'QualityControlLevel',
+            value=ts['QClevel'],
+            )
+
+        hydroshare.resource.create_metadata_element(
+            res.short_id,
+            'Method',
+            value=ts['method'],
+            )
 
         hydroshare.resource.create_metadata_element(
             res.short_id,
@@ -174,14 +190,17 @@ def create_ref_time_series(request, *args, **kwargs):
             res.short_id,
             'Site',
             name=site_name,
-            code=site_code
+            code=site_code,
+            latitude=ts['latitude'],
+            longitude=ts['longitude']
         )
 
         hydroshare.resource.create_metadata_element(
             res.short_id,
             'Variable',
             name=variable_name,
-            code=variable_code
+            code=variable_code,
+            sample_medium=ts.get('sample_medium', 'unknown')
         )
 
         ts_utils.generate_files(res.short_id)
@@ -211,6 +230,7 @@ def add_dublin_core(request, page):
     context['method'] = content_model.metadata.methods.all().first()
     context['quality_level'] = content_model.metadata.quality_levels.all().first
     context['referenceURL'] = content_model.metadata.referenceURLs.all().first
+    context['short_id'] = content_model.short_id
     for f in content_model.files.all():
         if 'visual' in str(f.resource_file.name):
             context['visfile'] = f
@@ -220,73 +240,57 @@ def add_dublin_core(request, page):
 
 def update_files(request, shortkey, *args, **kwargs):
 
-    res = hydroshare.get_resource_by_shortkey(shortkey)
+    ts_utils.generate_files(shortkey)
+    # if files:
+    #     if len(res.files.all())>0:
+    #         for f in res.files.all():
+    #             f.resource_file.delete()
+    #     res_files = []
+    #     for f in files:
+    #         res_file = hydroshare.add_resource_files(res.short_id, f)[0]
+    #         res_files.append(res_file)
+    #         os.remove(f.name)
+    #     for fl in res.files.all():
+    #         if fl.resource_file:
+    #             pass
+    #         else:
+    #             fl.delete()
 
-    files = ts_utils.make_files(res.reference_type, res.url, res.data_site_code, res.variable_code, res.title)
-    if files:
-        if len(res.files.all())>0:
-            for f in res.files.all():
-                f.resource_file.delete()
-        res_files = []
-        for f in files:
-            res_file = hydroshare.add_resource_files(res.short_id, f)[0]
-            res_files.append(res_file)
-            os.remove(f.name)
-        for fl in res.files.all():
-            if fl.resource_file:
-                pass
-            else:
-                fl.delete()
+        # # cap 3 bags per day, 5 overall
+        # bag = ''
+        # bag = create_bag(res)
+        # if len(res.bags.all()) > 5:
+        #     for b in res.bags.all()[5:]:
+        #         b.delete()
+        # for f in res_files:
+        #     if str(f.resource_file).endswith('.csv'):
+        #         csv_name = str(f.resource_file)
+        #         sl_loc = csv_name.rfind('/')
+        #         csv_name = csv_name[sl_loc+1:]
+        #         csv_link = f.resource_file.url
+        #         csv_size = f.resource_file.size
+        #     if str(f.resource_file).endswith('.wml') and 'wml_2' in str(f.resource_file):
+        #         wml2_name = str(f.resource_file)
+        #         sl_loc = wml2_name.rfind('/')
+        #         wml2_name = wml2_name[sl_loc+1:]
+        #         wml2_link = f.resource_file.url
+        #         wml2_size = f.resource_file.size
+        #     if str(f.resource_file).endswith('.wml') and 'wml_1' in str(f.resource_file):
+        #         wml1_name = str(f.resource_file)
+        #         sl_loc = wml1_name.rfind('/')
+        #         wml1_name = wml1_name[sl_loc+1:]
+        #         wml1_link = f.resource_file.url
+        #         wml1_size = f.resource_file.size
+        #     if 'visual' in str(f.resource_file):
+        #         vis_link = f.resource_file.url
 
-        # cap 3 bags per day, 5 overall
-        bag = ''
-        bag = create_bag(res)
-        if len(res.bags.all()) > 5:
-            for b in res.bags.all()[5:]:
-                b.delete()
-        for f in res_files:
-            if str(f.resource_file).endswith('.csv'):
-                csv_name = str(f.resource_file)
-                sl_loc = csv_name.rfind('/')
-                csv_name = csv_name[sl_loc+1:]
-                csv_link = f.resource_file.url
-                csv_size = f.resource_file.size
-            if str(f.resource_file).endswith('.wml') and 'wml_2' in str(f.resource_file):
-                wml2_name = str(f.resource_file)
-                sl_loc = wml2_name.rfind('/')
-                wml2_name = wml2_name[sl_loc+1:]
-                wml2_link = f.resource_file.url
-                wml2_size = f.resource_file.size
-            if str(f.resource_file).endswith('.wml') and 'wml_1' in str(f.resource_file):
-                wml1_name = str(f.resource_file)
-                sl_loc = wml1_name.rfind('/')
-                wml1_name = wml1_name[sl_loc+1:]
-                wml1_link = f.resource_file.url
-                wml1_size = f.resource_file.size
-            if 'visual' in str(f.resource_file):
-                vis_link = f.resource_file.url
+    status_code = 200
 
-        status_code = 200
+        # #changing date to match Django formatting
+        # time = bag.timestamp.date().strftime('%b. %d, %Y, %I:%M %P')
+        # if time.endswith('am'):
+        #     time = time[:-2]+'a.m.'
+        # elif time.endswith('pm'):
+        #     time = time[:-2]+'p.m.'
 
-        #changing date to match Django formatting
-        time = bag.timestamp.date().strftime('%b. %d, %Y, %I:%M %P')
-        if time.endswith('am'):
-            time = time[:-2]+'a.m.'
-        elif time.endswith('pm'):
-            time = time[:-2]+'p.m.'
-
-        data = {'status_code': status_code,
-                'csv_name': csv_name,
-                'csv_link': csv_link,
-                'csv_size': csv_size,
-                'wml1_name': wml1_name,
-                'wml1_link': wml1_link,
-                'wml1_size': wml1_size,
-                'wml2_name': wml2_name,
-                'wml2_link': wml2_link,
-                'wml2_size': wml2_size,
-                'vis_link': vis_link,
-                'bag_url': bag.bag.url,
-                'bag_time': time
-        }
-        return json_or_jsonp(request, data)  # successfully generated new files
+    return json_or_jsonp(request, status_code)  # successfully generated new files

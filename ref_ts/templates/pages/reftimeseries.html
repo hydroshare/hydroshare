@@ -76,11 +76,25 @@
                 </div>
             </div>
         </div>
+        <script>
+            $( document ).ready(function() {
+                console.log('test');
+                $.ajax({
+                    type: "GET",
+                    url: '/hsapi/_internal/{{ short_id }}/update-files/',
+                    success: function (data, xhr, status) {
+                    },
+                    error: function(){
+                    }
+                });
+
+           });
+        </script>
     {%  endif %}
 {%  endblock %}
 
-{% block extra_content %}
-    <img id="vis" src={{visfile.resource_file.url}}>
+{% block extra_javascript %}
+
 {% endblock %}
 
 
