@@ -456,9 +456,9 @@ def my_resources(request, page):
 #        return HttpResponseRedirect('/accounts/login/')
 
 
-    import sys
-    sys.path.append("/home/docker/pycharm-debug")
-    import pydevd
+    #import sys
+    #sys.path.append("/home/docker/pycharm-debug")
+    #import pydevd
     # IP Address for Ubuntu VM must be: 172.17.42.1
     # IP Address for boot2docker: varies
     #pydevd.settrace('172.17.42.1', port=21000, suspend=False)
