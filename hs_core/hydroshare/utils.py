@@ -7,7 +7,7 @@ from django.utils.timezone import now
 import mimetypes
 import os
 from hs_core.models import AbstractResource, Bags
-from dublincore.models import QualifiedDublinCoreElement
+#from dublincore.models import QualifiedDublinCoreElement
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
 from django.core.serializers import get_serializer
@@ -107,7 +107,8 @@ def serialize_science_metadata(res):
     resd['user'] = json.loads(js.serialize([res.user]))[0]['fields']
     resd['resource_uri'] = resd['short_id']
     resd['user']['resource_uri'] = '/u/' + resd['user']['username']
-    resd['dublin_metadata'] = [dc['fields'] for dc in json.loads(js.serialize(res.dublin_metadata.all()))]
+    # TODO: serialize metadata from the res.metadata object
+    #resd['dublin_metadata'] = [dc['fields'] for dc in json.loads(js.serialize(res.dublin_metadata.all()))]
     resd['bags'] = [dc['fields'] for dc in json.loads(js.serialize(res.bags.all()))]
     resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
     return json.dumps(resd)
@@ -121,7 +122,8 @@ def serialize_system_metadata(res):
     resd['user'] = json.loads(js.serialize([res.user]))[0]['fields']
     resd['resource_uri'] = resd['short_id']
     resd['user']['resource_uri'] = '/u/' + resd['user']['username']
-    resd['dublin_metadata'] = [dc['fields'] for dc in json.loads(js.serialize(res.dublin_metadata.all()))]
+    # TODO: serialize metadata from the res.metadata object
+    #resd['dublin_metadata'] = [dc['fields'] for dc in json.loads(js.serialize(res.dublin_metadata.all()))]
     resd['bags'] = [dc['fields'] for dc in json.loads(js.serialize(res.bags.all()))]
     resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
     return json.dumps(resd)
@@ -129,12 +131,6 @@ def serialize_system_metadata(res):
 
 def resource_modified(resource, by_user=None, overwrite_bag=True):
     resource.last_changed_by = by_user
-    QualifiedDublinCoreElement.objects.filter(term='DM', object_id=resource.pk).delete()
-    QualifiedDublinCoreElement.objects.create(
-        term='DM',
-        content=now().isoformat(),
-        content_object=resource
-            )
 
     resource.updated = now().isoformat()
     resource.save()
@@ -156,8 +152,6 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
 
     hs_bagit.create_bag(resource)
 
-def _get_dc_term_objects(resource_dc_elements, term):
-    return [cr_dict for cr_dict in resource_dc_elements if cr_dict['term'] == term]
 
 def _get_user_info(user):
     from hs_core.api import UserResource
@@ -185,7 +179,7 @@ def current_site_url():
     from django.contrib.sites.models import Site
     current_site = Site.objects.get_current()
     protocol = getattr(settings, 'MY_SITE_PROTOCOL', 'http')
-    port     = getattr(settings, 'MY_SITE_PORT', '')
+    port = getattr(settings, 'MY_SITE_PORT', '')
     url = '%s://%s' % (protocol, current_site.domain)
     if port:
         url += ':%s' % port
@@ -198,6 +192,6 @@ def get_file_mime_type(file_name):
     file_format_type = mimetypes.guess_type(file_name)[0]
     if not file_format_type:
         # TODO: this is probably not the right way to get the mime type
-        file_format_type ='application/%s' % os.path.splitext(file_name)[1][1:]
+        file_format_type = 'application/%s' % os.path.splitext(file_name)[1][1:]
 
     return file_format_type

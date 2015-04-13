@@ -95,4 +95,6 @@ def landing_page(request, page):
         context['cellinfo_form'] = cellinfo_form
         context['bandinfo_formset'] = bandinfo_formset
 
+    hs_core_context = add_generic_context(request, page)
+    context.update(hs_core_context)
     return context
