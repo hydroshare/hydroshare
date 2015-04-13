@@ -1,9 +1,15 @@
 """
 Module extracts metadata from NetCDF file to complete the required HydroShare NetCDF Science Metadata
 
-Reference code
+References
 reprojection
-http://gis.stackexchange.com/questions/78838/how-to-convert-projected-coordinates-to-lat-lon-using-python
+    http://gis.stackexchange.com/questions/78838/how-to-convert-projected-coordinates-to-lat-lon-using-python
+datatype
+    http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
+    http://docs.scipy.org/doc/numpy/user/basics.types.html
+    http://www.unidata.ucar.edu/software/netcdf/docs/enhanced_model.html
+coverage info by acdd:
+    http://wiki.esipfed.org/index.php/Attribute_Convention_for_Data_Discovery
 
 """
 __author__ = 'Tian Gan'
@@ -55,7 +61,12 @@ def get_dublin_core_meta(nc_dataset):
     """
 
     nc_global_meta = extract_nc_global_meta(nc_dataset)
-    nc_coverage_meta = extract_nc_coverage_meta(nc_dataset)
+
+    try:
+        nc_coverage_meta = extract_nc_coverage_meta(nc_dataset)
+    except:
+        nc_coverage_meta = {}
+
     dublin_core_meta = dict(nc_global_meta.items() + nc_coverage_meta.items())
 
     return dublin_core_meta
@@ -102,16 +113,43 @@ def extract_nc_coverage_meta(nc_dataset):
 
     Return netCDF time start and end info
     """
+
+    projection_info = get_projection_info(nc_dataset)
+
     period_info = get_period_info(nc_dataset)
+
     original_box_info = get_original_box_info(nc_dataset)
+    for name in original_box_info.keys():
+        original_box_info[name] = str(original_box_info[name])
+
     box_info = get_box_info(nc_dataset)
+    for name in box_info.keys():
+        box_info[name] = str(box_info[name])
+
 
     nc_coverage_meta = {
+        'projection-info': projection_info,
         'period': period_info,
         'box': box_info,
         'original-box': original_box_info,
     }
+
     return nc_coverage_meta
+
+
+def get_projection_info(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF original projection proj4 string
+    """
+    projection_info = {}
+    projection_text = get_nc_grid_mapping_projection_import_string(nc_dataset)
+    if projection_text:
+        projection_info['type'] = 'Proj4 String'
+        projection_info['text'] = projection_text
+
+    return projection_info
 
 
 def get_period_info(nc_dataset):
@@ -119,6 +157,37 @@ def get_period_info(nc_dataset):
     (object)-> dict
 
     Return: the netCDF original coverage period info
+    """
+
+    if get_period_info_by_acdd_convention(nc_dataset):
+        period_info = get_period_info_by_acdd_convention(nc_dataset)
+    else:
+        period_info = get_period_info_by_data(nc_dataset)
+
+    return period_info
+
+
+def get_period_info_by_acdd_convention(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF original coverage period info by looking for the ACDD convention terms
+    """
+
+    period_info = {}
+
+    if nc_dataset.__dict__.get('time_coverage_start', '') and nc_dataset.__dict__.get('time_coverage_end', ''):
+        period_info['start'] = str(nc_dataset.__dict__['time_coverage_start'])
+        period_info['end'] = str(nc_dataset.__dict__['time_coverage_end'])
+
+    return period_info
+
+
+def get_period_info_by_data(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF original coverage period info by looking into the data
     """
 
     period_info = {}
@@ -149,6 +218,12 @@ def get_box_info(nc_dataset):
     if original_box_info:
         if original_box_info.get('units', '') == 'degree':  # geographic coor x, y
             box_info = original_box_info
+            # check if the westlimit and eastlimit are in -180-180
+            westlimit = float(box_info['westlimit'])
+            eastlimit = float(box_info['eastlimit'])
+            box_info['westlimit'] = check_lon_limit(westlimit, eastlimit)[0]
+            box_info['eastlimit'] = check_lon_limit(westlimit, eastlimit)[1]
+
         elif original_box_info.get('projection', ''):  # projection coor x, y
             projection_import_string = get_nc_grid_mapping_projection_import_string(nc_dataset)
             if projection_import_string:
@@ -165,6 +240,7 @@ def get_box_info(nc_dataset):
                     pass
 
     if box_info:
+        # change the value as string
         for name in box_info.keys():
             box_info[name] = str(box_info[name])
         box_info['units'] = 'Decimal degrees'
@@ -173,11 +249,74 @@ def get_box_info(nc_dataset):
     return box_info
 
 
+def check_lon_limit(westlimit, eastlimit):
+    """
+    (num, num)-> [num,num]
+
+    Return: given the original westlimit and eastlimit values in degree units, convert them in -180-180 range and
+            make sure eastlimit > westlimit
+    """
+
+    # chech if limit is in range of -180-180
+    if westlimit > 180:
+        westlimit -=360
+    if eastlimit > 180:
+        eastlimit -=360
+
+    # check if westlimit < eastlimit
+    if westlimit == eastlimit:
+        westlimit = -180
+        eastlimit = 180
+    elif westlimit > eastlimit:
+        if (180 - westlimit) >= (eastlimit+180):
+            eastlimit = 180
+        else:
+            westlimit = -180
+
+    return [westlimit, eastlimit]
+
+
 def get_original_box_info(nc_dataset):
     """
     (object)-> dict
 
     Return: the netCDF original coverage box info
+    """
+    original_box_info = {}
+
+    if get_original_box_info_by_acdd_convention(nc_dataset):
+        original_box_info = get_original_box_info_by_acdd_convention(nc_dataset)
+    else:
+        original_box_info = get_original_box_info_by_data(nc_dataset)
+
+    return original_box_info
+
+
+def get_original_box_info_by_acdd_convention(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF original coverage box info by looking for acdd convention terms
+    """
+
+    original_box_info = {}
+    if nc_dataset.__dict__.get('geospatial_lat_min', '') and nc_dataset.__dict__.get('geospatial_lat_max', '')\
+            and nc_dataset.__dict__.get('geospatial_lon_min', '') and nc_dataset.__dict__.get('geospatial_lon_max', ''):
+        original_box_info['southlimit'] = str(nc_dataset.__dict__['geospatial_lat_min'])
+        original_box_info['northlimit'] = str(nc_dataset.__dict__['geospatial_lat_max'])
+        original_box_info['westlimit'] = str(nc_dataset.__dict__['geospatial_lon_min'])
+        original_box_info['eastlimit'] = str(nc_dataset.__dict__['geospatial_lon_max'])
+        original_box_info['units'] = 'degree'
+    # TODO: check the geospatial_bounds and geospatial_bounds_crs attributes
+
+    return original_box_info
+
+
+def get_original_box_info_by_data(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF original coverage box info by looking into the data
     """
 
     original_box_info = {}
@@ -211,27 +350,6 @@ def get_limits_info(nc_dataset, info_source):
         else:
             limits_info = {}
             break
-
-    # refine X value when longitude is larger than 180
-    if limits_info.get('units', '') == 'degree':
-        westlimit = limits_info['westlimit']
-        eastlimit = limits_info['eastlimit']
-        if westlimit > 180 or eastlimit > 180:
-            if eastlimit - westlimit == 360:
-                westlimit = -180
-                eastlimit = 180
-            else:
-                if westlimit >= 180:
-                    westlimit -= 360
-                    eastlimit -= 360
-                else:
-                    if (180 - westlimit) >= (eastlimit-180):
-                        eastlimit = 180
-                    else:
-                        westlimit = -180
-                        eastlimit -= 360
-        limits_info['westlimit'] = westlimit
-        limits_info['eastlimit'] = eastlimit
 
     return limits_info
 
@@ -319,25 +437,34 @@ def extract_nc_data_variables_meta(nc_data_variables):
             'name': var_name,
             'unit': var_obj.units if (hasattr(var_obj, 'units') and var_obj.units) else 'Unknown',
             'shape': ','.join(var_obj.dimensions),
-            'type': str(var_obj.dtype),
             'descriptive_name': var_obj.long_name if hasattr(var_obj, 'long_name') else '',
             'missing_value': str(var_obj.missing_value if hasattr(var_obj, 'missing_value') else ''),
         }
 
-        # check type element info:
-        nc_type_dict = {
-            'S1': 'Char',
+        # check and add variable 'type' info:
+        nc_data_type_dict = {
             'int8': 'Byte',
             'int16': 'Short',
             'int32': 'Int',
+            'int64': 'Int64',
             'float32': 'Float',
-            'float64': 'Double'
+            'float64': 'Double',
+            'uint8': 'Unsigned Byte',
+            'uint16': 'Unsigned Short',
+            'uint32': 'Unsigned Int',
+            'uint64': 'Unsigned Int64',
         }
 
-        nc_type_original_name = nc_data_variables_meta[var_name]['type']
-        if nc_type_original_name in nc_type_dict.keys():
-            nc_data_variables_meta[var_name]['type'] = nc_type_dict[nc_type_original_name]
-        else:
+        try:
+            if isinstance(var_obj.datatype, netCDF4.CompoundType) or isinstance(var_obj.datatype, netCDF4.VLType):
+                nc_data_variables_meta[var_name]['type'] = 'User Defined Type'
+            elif var_obj.datatype.name in nc_data_type_dict.keys():
+                nc_data_variables_meta[var_name]['type'] = nc_data_type_dict[var_obj.datatype.name]
+            elif ('string' in var_obj.datatype.name) or ('unicode' in var_obj.datatype.name):
+                nc_data_variables_meta[var_name]['type'] = 'Char' if '8' in var_obj.datatype.name else 'String'
+            else:
+                nc_data_variables_meta[var_name]['type'] = 'Unknown'
+        except:
             nc_data_variables_meta[var_name]['type'] = 'Unknown'
 
     return nc_data_variables_meta

@@ -10,6 +10,10 @@ RUN apt-get install -y python2.7-gdal gdal-bin libgdal-dev gdal-contrib python-p
 RUN apt-get install -y docker.io
 RUN apt-get install -y curl
 
+# install nco, ncdump, ncgen
+RUN apt-get install -y nco
+RUN apt-get install -y netcdf-bin
+
 ADD . /home/docker
 
 WORKDIR /home/docker/pysqlite-2.6.3/
@@ -19,31 +23,14 @@ RUN pip install numexpr==2.4
 WORKDIR /home/docker
 RUN pip install -r requirements.txt
 
+# install netcdf4 python
 WORKDIR  /home/docker
-RUN curl -O http://www.hdfgroup.org/ftp/HDF5/prev-releases/hdf5-1.8.13/src/hdf5-1.8.13.tar.gz
-RUN curl -O ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.2.tar.gz
 RUN curl -O https://pypi.python.org/packages/source/n/netCDF4/netCDF4-1.1.1.tar.gz
-RUN tar -xvzf hdf5-1.8.13.tar.gz
-RUN tar -xvzf netcdf-4.3.2.tar.gz
 RUN tar -xvzf netCDF4-1.1.1.tar.gz
-
-WORKDIR /home/docker/hdf5-1.8.13
-RUN ./configure --prefix=/usr/local --enable-shared --enable-hl
-RUN make
-RUN sudo make install
-
-WORKDIR /home/docker/netcdf-4.3.2
-RUN LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include ./configure --enable-netcdf-4 --enable-dap --enable-shared --prefix=/usr/local
-RUN make
-RUN sudo make install
-
 WORKDIR /home/docker/netCDF4-1.1.1
 RUN python setup.py install
-
 # Cleanup NetCDF install files
 WORKDIR /home/docker
-RUN rm hdf5-1.8.13.tar.gz
-RUN rm netcdf-4.3.2.tar.gz
 RUN rm netCDF4-1.1.1.tar.gz
 
 RUN useradd -m docker -g docker
