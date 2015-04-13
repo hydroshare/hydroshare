@@ -131,7 +131,7 @@ class ResourceCRUD(View):
     class UpdateResourceForm(forms.Form):
         title = forms.CharField(required=False)
         keywords = forms.ModelMultipleChoiceField(Keyword.objects.all(), required=False)
-        dublin_metadata = forms.CharField(validators=[validate_json], required=False)
+        metadata = forms.CharField(validators=[validate_json], required=False)
         edit_users = forms.ModelMultipleChoiceField(User.objects.all(), required=False)
         edit_groups = forms.ModelMultipleChoiceField(Group.objects.all(), required=False)
         view_users = forms.ModelMultipleChoiceField(User.objects.all(), required=False)
@@ -192,7 +192,7 @@ class ResourceCRUD(View):
                 edit_groups=r['edit_groups'],
                 view_groups=r['view_groups'],
                 keywords=r['keywords'],
-                dublin_metadata=json.loads(r['dublin_metadata']) if r['dublin_metadata'] else {},
+                metadata=json.loads(r['dublin_metadata']) if r['dublin_metadata'] else {},
                 **{k: v for k, v in self.request.REQUEST.items() if k not in r}
             )
             return HttpResponse(res.short_id, content_type='text/plain', status='204')
@@ -222,7 +222,7 @@ class ResourceCRUD(View):
                 edit_groups=r['edit_groups'],
                 view_groups=r['view_groups'],
                 keywords=r['keywords'],
-                dublin_metadata=json.loads(r['dublin_metadata']) if r['dublin_metadata'] else {},
+                metadata=json.loads(r['dublin_metadata']) if r['dublin_metadata'] else {},
                 files=self.request.FILES.values(),
                 **{k: v for k, v in self.request.REQUEST.items() if k not in r}
             )
@@ -305,7 +305,7 @@ class GetUpdateScienceMetadata(View):
                 edit_groups=r['edit_groups'],
                 view_groups=r['view_groups'],
                 keywords=r['keywords'],
-                dublin_metadata=json.loads(r['dublin_metadata']) if r['dublin_metadata'] else {},
+                metadata=json.loads(r['dublin_metadata']) if r['dublin_metadata'] else {},
                 files=self.request.FILES.values(),
                 **{k: v for k, v in self.request.REQUEST.items() if k not in r}
             )
@@ -369,7 +369,7 @@ class GetUpdateSystemMetadata(View):
                 edit_groups = r['edit_groups'],
                 view_groups = r['view_groups'],
                 keywords = r['keywords'],
-                dublin_metadata=json.loads(r['dublin_metadata']) if r['dublin_metadata'] else {},
+                metadata=json.loads(r['dublin_metadata']) if r['dublin_metadata'] else {},
                 files=self.request.FILES.values(),
                 **{k: v for k, v in self.request.REQUEST.items() if k not in r}
             )

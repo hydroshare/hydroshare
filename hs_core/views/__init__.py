@@ -122,22 +122,6 @@ def add_file_to_resource(request, *args, **kwargs):
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-def add_citation(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    res.dublin_metadata.create(term='REF', content=request.REQUEST['content'])
-    resource_modified(res, request.user)
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-
-def add_metadata_term(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    res.dublin_metadata.create(
-        term=request.REQUEST['term'],
-        content=request.REQUEST['content']
-    )
-    resource_modified(res, request.user)
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
 
 def _get_resource_sender(element_name, resource):
     core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
@@ -476,7 +460,7 @@ def my_resources(request, page):
     # import pydevd
     # IP Address for Ubuntu VM must be: 172.17.42.1
     # IP Address for boot2docker: varies
-    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    #pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
@@ -533,34 +517,10 @@ def my_resources(request, page):
             'first': start,
             'last': start+len(res),
             'ct': total_res_cnt,
-            'dcterms' : (
-                ('AB', 'Abstract'),
-                ('BX', 'Box'),
-                ('CN', 'Contributor'),
-                ('CVR', 'Coverage'),
-                ('CR', 'Creator'),
-                ('DT', 'Date'),
-                ('DTS', 'DateSubmitted'),
-                ('DC', 'DateCreated'),
-                ('DM', 'DateModified'),
-                ('DSC', 'Description'),
-                ('FMT', 'Format'),
-                ('ID', 'Identifier'),
-                ('LG', 'Language'),
-                ('PD', 'Period'),
-                ('PT', 'Point'),
-                ('PBL', 'Publisher'),
-                ('REL', 'Relation'),
-                ('RT', 'Rights'),
-                ('SRC', 'Source'),
-                ('SUB', 'Subject'),
-                ('T', 'Title'),
-                ('TYP', 'Type'),
-    )
         }
 
 @processor_for(GenericResource)
-def add_dublin_core(request, page):
+def add_generic_context(request, page):
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
@@ -568,37 +528,23 @@ def add_dublin_core(request, page):
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
-    from dublincore import models as dc
-
-    class DCTerm(forms.ModelForm):
-        class Meta:
-            model=dc.QualifiedDublinCoreElement
-            fields = ['term', 'content']
-
     cm = page.get_content_model()
-    try:
-        abstract = cm.dublin_metadata.filter(term='AB').first().content
-    except:
-        abstract = None
 
     return {
-        'dublin_core' : [t for t in cm.dublin_metadata.all().exclude(term='AB')],
-        # 'abstract' : abstract,
-        'resource_type' : cm._meta.verbose_name,
-        'dcterm_frm' : DCTerm(),
-        'bag' : cm.bags.first(),
-        'users' : User.objects.all(),
-        'groups' : Group.objects.all(),
-        'owners' : set(cm.owners.all()),
-        'view_users' : set(cm.view_users.all()),
-        'view_groups' : set(cm.view_groups.all()),
-        'edit_users' : set(cm.edit_users.all()),
-        'edit_groups' : set(cm.edit_groups.all()),
-        'add_owner_user_form' : AddUserForm(),
-        'add_view_user_form' : AddUserForm(),
-        'add_edit_user_form' : AddUserForm(),
-        'add_view_group_form' : AddGroupForm(),
-        'add_edit_group_form' : AddGroupForm(),
+        'resource_type': cm._meta.verbose_name,
+        'bag': cm.bags.first(),
+        'users': User.objects.all(),
+        'groups': Group.objects.all(),
+        'owners': set(cm.owners.all()),
+        'view_users': set(cm.view_users.all()),
+        'view_groups': set(cm.view_groups.all()),
+        'edit_users': set(cm.edit_users.all()),
+        'edit_groups': set(cm.edit_groups.all()),
+        'add_owner_user_form': AddUserForm(),
+        'add_view_user_form': AddUserForm(),
+        'add_edit_user_form': AddUserForm(),
+        'add_view_group_form': AddGroupForm(),
+        'add_edit_group_form': AddGroupForm(),
     }
 
 res_cls = ""
@@ -686,9 +632,9 @@ def create_resource_new_workflow(request, *args, **kwargs):
     # Send pre-create resource signal - let any other app populate the empty metadata list object
     # also pass title to other apps, and give other apps a chance to populate page_redirect_url if they want
     # to redirect to their own page for resource creation rather than use core resource creation code
-    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata,
-                                               files=resource_files, title=res_title, url_key=url_key,
-                                               page_url_dict=page_url_dict, validate_files=file_validation_dict, **kwargs)
+    pre_create_resource.send(sender=res_cls, metadata=metadata, files=resource_files, title=res_title, url_key=url_key,
+                                               page_url_dict=page_url_dict, validate_files=file_validation_dict,
+                                               **kwargs)
 
     if 'are_files_valid' in file_validation_dict:
         if not file_validation_dict['are_files_valid']:
@@ -742,7 +688,6 @@ def create_resource_new_workflow(request, *args, **kwargs):
             owner=request.user,
             title=res_title,
             keywords=None,
-            dublin_metadata=None,
             metadata=metadata,
             files=request.FILES.getlist('files'),
             content=res_title
@@ -808,7 +753,6 @@ def create_resource(request, *args, **kwargs):
             owner=request.user,
             title=frm.cleaned_data['title'],
             keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None,
-            dublin_metadata=dcterms,
             content=frm.cleaned_data['abstract'] or frm.cleaned_data['title'],
             res_type_cls = res_cls,
             resource=resource,
