@@ -11,9 +11,8 @@ def ref_time_series_describe_resource_trigger(sender, **kwargs):
         page_url_dict = kwargs['page_url_dict']
         url_key = kwargs['url_key']
         page_url_dict[url_key] = "pages/create-ref-time-series.html"
+        global title
+        title = kwargs['title']
 
-@receiver(post_create_resource, sender=RefTimeSeries)
-def raster_post_trigger(sender, **kwargs):
-    if sender is RefTimeSeries:
-        resource = kwargs['resource']
+
 

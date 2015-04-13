@@ -6,7 +6,96 @@ from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
 from django.forms.models import formset_factory
-from functools import partial, wraps
+import copy
+
+class OriginalCoverageFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+                        Field('name', css_class=field_width),
+                        Field('projection', css_class=field_width),
+                        Field('northlimit', css_class=field_width),
+                        Field('eastlimit', css_class=field_width),
+                        Field('southlimit', css_class=field_width),
+                        Field('westlimit', css_class=field_width),
+                        Field('units', css_class=field_width),
+                 )
+
+        super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+class OriginalCoverageSpatialForm(forms.Form):
+    name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
+    projection = forms.CharField(max_length=100, required=False, label='Coordinate System/Geographic Projection')
+    northlimit = forms.DecimalField(label='North Latitude', widget=forms.TextInput())
+    eastlimit = forms.DecimalField(label='East Longitude', widget=forms.TextInput())
+    southlimit = forms.DecimalField(label='South Latitude', widget=forms.TextInput())
+    westlimit = forms.DecimalField(label='West Longitude', widget=forms.TextInput())
+    units = forms.CharField(max_length=50, label='Coordinate Units')
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(OriginalCoverageSpatialForm, self).__init__(*args, **kwargs)
+        self.helper = OriginalCoverageFormHelper(allow_edit, res_short_id, element_id, element_name='OriginalCoverage')
+        self.number = 0
+        self.delete_modal_form = None
+        self.errors.clear()
+
+        if not allow_edit:
+            for field in self.fields.values():
+                field.widget.attrs['readonly'] = True
+                field.widget.attrs['style'] = "background-color:white;"
+        else:
+            self.fields['projection'].widget.attrs['readonly'] = True
+            self.fields['projection'].widget.attrs['style'] = "background-color:white;"
+            self.fields['units'].widget.attrs['readonly'] = True
+            self.fields['units'].widget.attrs['style'] = "background-color:white;"
+
+    def clean(self):
+        # modify the form's cleaned_data dictionary
+        super(OriginalCoverageSpatialForm, self).clean()
+        temp_cleaned_data = copy.deepcopy(self.cleaned_data)
+        is_form_errors = False
+        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+            limit_data = temp_cleaned_data.get(limit, None)
+            if not limit_data:
+                self._errors[limit] = ["Data for %s is missing" % limit]
+                is_form_errors = True
+                del self.cleaned_data[limit]
+
+        if is_form_errors:
+            return self.cleaned_data
+
+        temp_cleaned_data['northlimit'] = str(temp_cleaned_data['northlimit'])
+        temp_cleaned_data['eastlimit'] = str(temp_cleaned_data['eastlimit'])
+        temp_cleaned_data['southlimit'] = str(temp_cleaned_data['southlimit'])
+        temp_cleaned_data['westlimit'] = str(temp_cleaned_data['westlimit'])
+
+        if 'projection' in temp_cleaned_data:
+            if len(temp_cleaned_data['projection']) == 0:
+                del temp_cleaned_data['projection']
+
+        if 'name' in temp_cleaned_data:
+            if len(temp_cleaned_data['name']) == 0:
+                del temp_cleaned_data['name']
+
+        self.cleaned_data['value'] = copy.deepcopy(temp_cleaned_data)
+
+        if 'northlimit' in self.cleaned_data:
+                del self.cleaned_data['northlimit']
+        if 'eastlimit' in self.cleaned_data:
+                del self.cleaned_data['eastlimit']
+        if 'southlimit' in self.cleaned_data:
+            del self.cleaned_data['southlimit']
+        if 'westlimit' in self.cleaned_data:
+            del self.cleaned_data['westlimit']
+        if 'name' in self.cleaned_data:
+            del self.cleaned_data['name']
+        if 'units' in self.cleaned_data:
+            del self.cleaned_data['units']
+        if 'projection' in self.cleaned_data:
+            del self.cleaned_data['projection']
+
+        return self.cleaned_data
 
 class CellInfoFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
@@ -108,7 +197,7 @@ class BandInfoFormHelper(BandBaseFormHelper):
 class BandInfoForm(ModelForm):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
         super(BandInfoForm, self).__init__(*args, **kwargs)
-        self.helper = BandInfoFormHelper(res_short_id, element_id, element_name='bandinformation')
+        self.helper = BandInfoFormHelper(res_short_id, element_id, element_name='BandInformation')
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit
@@ -155,7 +244,7 @@ class BaseBandInfoFormSet(BaseFormSet):
         bands_data = []
         for form in self.forms:
             band_data = {k: v for k, v in form.cleaned_data.iteritems()}
-            bands_data.append({'bandinformation': band_data})
+            bands_data.append({'BandInformation': band_data})
         return bands_data
 
 BandInfoFormSet = formset_factory(BandInfoForm, formset=BaseBandInfoFormSet, extra=0)

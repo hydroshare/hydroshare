@@ -192,13 +192,6 @@ def create_account(
             password=password,
         )
 
-    u.is_staff = False
-    if not active:
-        u.is_active=False
-    u.save()
-
-    u.groups = groups
-
     try:
         token = signing.dumps('verify_user_email:{0}:{1}'.format(u.pk, u.email))
         u.email_user(
@@ -213,8 +206,15 @@ go to http://{domain}/verify/{token}/ and verify your account.
     except:
         pass # FIXME should log this instead of ignoring it.
 
-    u.groups = groups
+    u.is_staff = False
+    if not active:
+        u.is_active=False
+    u.save()
 
+    u.groups = groups
+    ApiKey.objects.get_or_create(user=u)
+
+    u.groups = groups
 
     return u
 
@@ -604,7 +604,7 @@ def get_resource_list(
     """
     from django.db.models import Q
 
-    if not any((group, user, owner, from_date, to_date, start, count, keywords, dc, full_text_search, public)):
+    if not any((group, user, owner, from_date, to_date, start, count, keywords, dc, full_text_search, public, types)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
     resource_types = get_resource_types()

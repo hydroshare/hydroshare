@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.utils.timezone import now
 from django import forms
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseNotFound
 from mezzanine.pages.page_processors import processor_for
 from ga_resources.utils import json_or_jsonp
 from hs_core import hydroshare, page_processors
@@ -16,28 +16,43 @@ from lxml import etree
 import datetime
 from django.utils.timezone import now
 import os
+from hs_core.signals import post_create_resource
+import ast
+
+def get_his_urls(request):
+    service_url = 'http://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'
+    r = requests.get(service_url)
+    if r.status_code == 200:
+        response = r.text.encode('utf-8')
+        root = etree.XML(response)
+    url_list = []
+    for element in root.iter():
+        if "servURL" in element.tag:
+            url_list.append(element.text)
+    return json_or_jsonp(request, url_list)
+
 
 class ReferencedSitesForm(forms.Form):
-    wsdl_url = forms.URLField()
+    url = forms.URLField()
 
 def search_sites(request):
     f = ReferencedSitesForm(request.GET)
     if f.is_valid():
         params = f.cleaned_data
-        url = params['wsdl_url']
+        url = params['url']
         sites = ts_utils.sites_from_soap(url)
 
         return json_or_jsonp(request, sites)
 
 class ReferencedVariablesForm(forms.Form):
-    wsdl_url = forms.URLField()
+    url = forms.URLField()
     site = forms.CharField(min_length=0)
 
 def search_variables(request):
     f = ReferencedVariablesForm(request.GET)
     if f.is_valid():
         params = f.cleaned_data
-        url = params['wsdl_url']
+        url = params['url']
         site = params['site']
         variables = ts_utils.site_info_from_soap(url, site=site)
 
@@ -60,6 +75,8 @@ def time_series_from_service(request):
         variable = params.get('variable')
         if ref_type == 'rest':
             ts = ts_utils.time_series_from_service(url, ref_type)
+            site = ts.get('site_code')
+            variable = ts.get('variable_code')
         else:
             ts = ts_utils.time_series_from_service(url, ref_type, site_name_or_code=site, variable_code=variable)
         for_graph = ts['for_graph']
@@ -72,13 +89,13 @@ def time_series_from_service(request):
 
 
 class VerifyRestUrlForm(forms.Form):
-    rest_url = forms.URLField()
+    url = forms.URLField()
 
 def verify_rest_url(request):
     f = VerifyRestUrlForm(request.GET)
     if f.is_valid():
         params = f.cleaned_data
-        url = params['rest_url']
+        url = params['url']
         try:
             ts = requests.get(url)
             ts_xml = etree.XML(ts.text.encode('utf-8'))
@@ -91,32 +108,33 @@ def verify_rest_url(request):
         except:
             return json_or_jsonp(request, 400)
 
+
 class CreateRefTimeSeriesForm(forms.Form):
-    rest_url = forms.URLField(required=False)
-    wsdl_url = forms.URLField(required=False)
-    reference_type = forms.CharField(required=False, min_length=0)
+    url = forms.URLField(required=False)
     site = forms.CharField(required=False, min_length=0)
     variable = forms.CharField(required=False, min_length=0)
-    short_id = forms.CharField(required=False, min_length=0)
-
-
+    metadata = forms.CharField(required=False, min_length=0)
+    title = forms.CharField(required=False, min_length=0)
 
 @login_required
 def create_ref_time_series(request, *args, **kwargs):
     frm = CreateRefTimeSeriesForm(request.POST)
-
     if frm.is_valid():
 
-        if frm.cleaned_data['wsdl_url']:
-            url = frm.cleaned_data['wsdl_url']
-        elif frm.cleaned_data['rest_url']:
-            url = frm.cleaned_data['rest_url']
+        if frm.cleaned_data['url']:
+            url = frm.cleaned_data['url']
         else:
             url = ''
 
+        if url.endswith('WSDL') or url.endswith('wsdl'):
+            reference_type = 'soap'
+        else:
+            reference_type = 'rest'
+        reference_type = unicode(reference_type)
+
         # start_date_str = frm.cleaned_data["start_date"]
         # start_date_int = ts_utils.time_to_int(start_date_str)
-        site_name, site_code, variable_name, variable_code, short_id = None, None, None, None, None
+        site_name, site_code, variable_name, variable_code = None, None, None, None
 
         if frm.cleaned_data.get('site'):
             full_site = frm.cleaned_data['site'].replace(' ', '')
@@ -129,39 +147,69 @@ def create_ref_time_series(request, *args, **kwargs):
             n = full_variable.index(':')
             variable_name = full_variable[:n]
             variable_code = full_variable[n+1:]
-        reference_type = frm.cleaned_data['reference_type']
-
-        res = hydroshare.get_resource_by_shortkey(frm.cleaned_data['short_id'])
-        res.url = url
-        res.reference_type = reference_type
-        res.save()
-
+        metadata = frm.cleaned_data.get('metadata')
+        metadata = ast.literal_eval(metadata)
+        res = hydroshare.create_resource(
+            resource_type='RefTimeSeries',
+            owner=request.user,
+            title=frm.cleaned_data.get('title'),
+            metadata=metadata
+        )
 
         if reference_type == 'rest':
-            ts = ts_utils.time_series_from_service(url, reference_type)
+            ts = ts_utils.time_series_from_service(url, 'rest')
             site_code = ts['site_code']
             site_name = ts['site_name']
             variable_code = ts['variable_code']
             variable_name = ts['variable_name']
+        else:
+            ts = ts_utils.time_series_from_service(url, 'soap',
+                                                   site_name_or_code=site_code,
+                                                   variable_code=variable_code)
+
+        hydroshare.resource.create_metadata_element(
+            res.short_id,
+            'QualityControlLevel',
+            value=ts['QClevel'],
+            )
+
+        hydroshare.resource.create_metadata_element(
+            res.short_id,
+            'Method',
+            value=ts['method'],
+            )
+
+        hydroshare.resource.create_metadata_element(
+            res.short_id,
+            'ReferenceURL',
+            value=url,
+            type=reference_type
+        )
 
         hydroshare.resource.create_metadata_element(
             res.short_id,
             'Site',
             name=site_name,
-            code=site_code
+            code=site_code,
+            latitude=ts['latitude'],
+            longitude=ts['longitude']
         )
 
         hydroshare.resource.create_metadata_element(
             res.short_id,
             'Variable',
             name=variable_name,
-            code=variable_code
+            code=variable_code,
+            sample_medium=ts.get('sample_medium', 'unknown')
         )
+
         ts_utils.generate_files(res.short_id)
+
         for file_name in os.listdir("theme/static/img"):
             if 'visualization' in file_name:
                 # open(file_name, 'w')
                 os.remove("theme/static/img/"+file_name)
+
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeries)
@@ -181,6 +229,8 @@ def add_dublin_core(request, page):
     context['variable'] = content_model.metadata.variables.all().first()
     context['method'] = content_model.metadata.methods.all().first()
     context['quality_level'] = content_model.metadata.quality_levels.all().first
+    context['referenceURL'] = content_model.metadata.referenceURLs.all().first
+    context['short_id'] = content_model.short_id
     for f in content_model.files.all():
         if 'visual' in str(f.resource_file.name):
             context['visfile'] = f
@@ -190,73 +240,57 @@ def add_dublin_core(request, page):
 
 def update_files(request, shortkey, *args, **kwargs):
 
-    res = hydroshare.get_resource_by_shortkey(shortkey)
+    ts_utils.generate_files(shortkey)
+    # if files:
+    #     if len(res.files.all())>0:
+    #         for f in res.files.all():
+    #             f.resource_file.delete()
+    #     res_files = []
+    #     for f in files:
+    #         res_file = hydroshare.add_resource_files(res.short_id, f)[0]
+    #         res_files.append(res_file)
+    #         os.remove(f.name)
+    #     for fl in res.files.all():
+    #         if fl.resource_file:
+    #             pass
+    #         else:
+    #             fl.delete()
 
-    files = ts_utils.make_files(res.reference_type, res.url, res.data_site_code, res.variable_code, res.title)
-    if files:
-        if len(res.files.all())>0:
-            for f in res.files.all():
-                f.resource_file.delete()
-        res_files = []
-        for f in files:
-            res_file = hydroshare.add_resource_files(res.short_id, f)[0]
-            res_files.append(res_file)
-            os.remove(f.name)
-        for fl in res.files.all():
-            if fl.resource_file:
-                pass
-            else:
-                fl.delete()
+        # # cap 3 bags per day, 5 overall
+        # bag = ''
+        # bag = create_bag(res)
+        # if len(res.bags.all()) > 5:
+        #     for b in res.bags.all()[5:]:
+        #         b.delete()
+        # for f in res_files:
+        #     if str(f.resource_file).endswith('.csv'):
+        #         csv_name = str(f.resource_file)
+        #         sl_loc = csv_name.rfind('/')
+        #         csv_name = csv_name[sl_loc+1:]
+        #         csv_link = f.resource_file.url
+        #         csv_size = f.resource_file.size
+        #     if str(f.resource_file).endswith('.wml') and 'wml_2' in str(f.resource_file):
+        #         wml2_name = str(f.resource_file)
+        #         sl_loc = wml2_name.rfind('/')
+        #         wml2_name = wml2_name[sl_loc+1:]
+        #         wml2_link = f.resource_file.url
+        #         wml2_size = f.resource_file.size
+        #     if str(f.resource_file).endswith('.wml') and 'wml_1' in str(f.resource_file):
+        #         wml1_name = str(f.resource_file)
+        #         sl_loc = wml1_name.rfind('/')
+        #         wml1_name = wml1_name[sl_loc+1:]
+        #         wml1_link = f.resource_file.url
+        #         wml1_size = f.resource_file.size
+        #     if 'visual' in str(f.resource_file):
+        #         vis_link = f.resource_file.url
 
-        # cap 3 bags per day, 5 overall
-        bag = ''
-        bag = create_bag(res)
-        if len(res.bags.all()) > 5:
-            for b in res.bags.all()[5:]:
-                b.delete()
-        for f in res_files:
-            if str(f.resource_file).endswith('.csv'):
-                csv_name = str(f.resource_file)
-                sl_loc = csv_name.rfind('/')
-                csv_name = csv_name[sl_loc+1:]
-                csv_link = f.resource_file.url
-                csv_size = f.resource_file.size
-            if str(f.resource_file).endswith('.wml') and 'wml_2' in str(f.resource_file):
-                wml2_name = str(f.resource_file)
-                sl_loc = wml2_name.rfind('/')
-                wml2_name = wml2_name[sl_loc+1:]
-                wml2_link = f.resource_file.url
-                wml2_size = f.resource_file.size
-            if str(f.resource_file).endswith('.wml') and 'wml_1' in str(f.resource_file):
-                wml1_name = str(f.resource_file)
-                sl_loc = wml1_name.rfind('/')
-                wml1_name = wml1_name[sl_loc+1:]
-                wml1_link = f.resource_file.url
-                wml1_size = f.resource_file.size
-            if 'visual' in str(f.resource_file):
-                vis_link = f.resource_file.url
+    status_code = 200
 
-        status_code = 200
+        # #changing date to match Django formatting
+        # time = bag.timestamp.date().strftime('%b. %d, %Y, %I:%M %P')
+        # if time.endswith('am'):
+        #     time = time[:-2]+'a.m.'
+        # elif time.endswith('pm'):
+        #     time = time[:-2]+'p.m.'
 
-        #changing date to match Django formatting
-        time = bag.timestamp.date().strftime('%b. %d, %Y, %I:%M %P')
-        if time.endswith('am'):
-            time = time[:-2]+'a.m.'
-        elif time.endswith('pm'):
-            time = time[:-2]+'p.m.'
-
-        data = {'status_code': status_code,
-                'csv_name': csv_name,
-                'csv_link': csv_link,
-                'csv_size': csv_size,
-                'wml1_name': wml1_name,
-                'wml1_link': wml1_link,
-                'wml1_size': wml1_size,
-                'wml2_name': wml2_name,
-                'wml2_link': wml2_link,
-                'wml2_size': wml2_size,
-                'vis_link': vis_link,
-                'bag_url': bag.bag.url,
-                'bag_time': time
-        }
-        return json_or_jsonp(request, data)  # successfully generated new files
+    return json_or_jsonp(request, status_code)  # successfully generated new files

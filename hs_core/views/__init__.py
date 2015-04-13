@@ -95,7 +95,26 @@ def add_file_to_resource(request, *args, **kwargs):
         if file_format_type not in [mime.value for mime in res.metadata.formats.all()]:
             res.metadata.create_element('format', value=file_format_type)
 
-    post_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, **kwargs)
+    # receivers need to change the values of this dict if file validation fails
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+    extract_metadata = request.REQUEST.get('extract-metadata', 'No')
+    if extract_metadata == 'Yes':
+        extract_metadata = True
+    else:
+        extract_metadata = False
+
+    post_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, user=request.user,
+                                    validate_files=file_validation_dict,
+                                    extract_metadata=extract_metadata, **kwargs)
+    if 'are_files_valid' in file_validation_dict:
+        if not file_validation_dict['are_files_valid']:
+            error_message = file_validation_dict.get('message', None)
+            if not error_message:
+                error_message = "Uploaded file(s) failed validation."
+
+            request.session['file_validation_error'] = error_message
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -185,7 +204,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
         else:
             ajax_response_data = {'status': 'error'}
-            return HttpResponse(json.dumps(ajax_response_data))
+            return HttpResponse (json.dumps(ajax_response_data))
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
@@ -246,6 +265,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     fl = res.files.filter(pk=int(f)).first()
     file_name = fl.resource_file.name
+    res_cls = res.__class__
     pre_delete_file_from_resource.send(sender=res_cls, file=fl, resource=res, **kwargs)
     fl.resource_file.delete()
     fl.delete()
@@ -257,8 +277,8 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     resource_file_extensions = [os.path.splitext(f.resource_file.name)[1] for f in res.files.all()]
     if delete_file_extension not in resource_file_extensions:
         format_element = res.metadata.formats.filter(value=delete_file_mime_type).first()
-
-        res.metadata.delete_element(format_element.term, format_element.id)
+        if format_element:
+            res.metadata.delete_element(format_element.term, format_element.id)
 
     if res.public:
         if not res.can_be_public:
@@ -402,19 +422,32 @@ def verify_captcha(request):
         else:
             return HttpResponse('true', content_type='text/plain')
 
+def verify_account(request, *args, **kwargs):
+    context = {
+            'username' : request.GET['username'],
+            'email' : request.GET['email']
+        }
+    return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+
 @processor_for('resend-verification-email')
-def resend_verification_email(request, page):
-    u = get_object_or_404(User, username=request.GET['user'])
+def resend_verification_email(request):
+    u = get_object_or_404(User, username=request.GET['username'], email=request.GET['email'])
     try:
+        token = signing.dumps('verify_user_email:{0}:{1}'.format(u.pk, u.email))
         u.email_user(
             'Please verify your new Hydroshare account.',
             """
 This is an automated email from Hydroshare.org. If you requested a Hydroshare account, please
-go to http://{domain}/verify/{uid}/ and verify your account.
+go to http://{domain}/verify/{token}/ and verify your account.
 """.format(
             domain=Site.objects.get_current().domain,
-            uid=u.pk
+            token=token
         ))
+
+        context = {
+            'is_email_sent' : True
+        }
+        return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
     except:
         pass # FIXME should log this instead of ignoring it.
 
@@ -697,6 +730,9 @@ def create_resource_new_workflow(request, *args, **kwargs):
                          }
                     })
 
+    if url_key in page_url_dict:
+        return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
+
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
             owner=request.user,
@@ -708,11 +744,19 @@ def create_resource_new_workflow(request, *args, **kwargs):
             content=res_title
     )
 
+    # receivers need to change the values of this dict if file validation fails
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     # Send post-create resource signal
-    post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, **kwargs)
+    post_create_resource.send(sender=res_cls, resource=resource, user=request.user ,  metadata=metadata,
+                              validate_files=file_validation_dict, **kwargs)
 
-    if url_key in page_url_dict:
-        return render(request, page_url_dict[url_key], {'resource': resource})
+    if 'are_files_valid' in file_validation_dict:
+        if not file_validation_dict['are_files_valid']:
+            error_message = file_validation_dict.get('message', None)
+            if not error_message:
+                error_message = "Uploaded file(s) failed validation."
+
+            request.session['file_validation_error'] = error_message
 
     if resource is not None:
         # go to resource landing page
