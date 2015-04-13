@@ -116,7 +116,7 @@ def landing_page(request, page):
         context['add_variable_modal_form'] = add_variable_modal_form
         context['original_coverage_form'] = ori_cov_form
 
-        hs_core_context = add_generic_context(request, page)
-        context.update(hs_core_context)
+    hs_core_context = add_generic_context(request, page)
+    context.update(hs_core_context)
 
     return context
