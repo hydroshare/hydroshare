@@ -1,78 +1,9 @@
 {% extends "pages/page.html" %}
 
-{% load mezzanine_tags static blog_tags %}
+{% load mezzanine_tags static blog_tags accounts_tags %}
 
 
 {% block all_content %}
-    <script type="text/javascript" src="http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
-    <script type="text/javascript">
-        $(function() {
-            function cb() {
-                $("#recaptcha_privacy").attr('style', "display:none");
-                Recaptcha.focus_response_field();
-            }
-
-            Recaptcha.create("6LdNC_USAAAAAHSocU3ZpfEFHBwORoMdOBcrSUPP",
-            "recaptcha-div", {
-              theme: "clean",
-              callback: cb // Recaptcha.focus_response_field
-            });
-
-            $("#signup").click(function() {
-                var username = $("#username").val();
-                var firstName = $("#firstname").val();
-                var lastName = $("#lastname").val();
-                var email = $("#email").val();
-                var password = $("#password").val();
-                var pwconfirm = $("#pwconfirm").val();
-
-                function onSuccess() {
-                    document.location.href = '/verify-account/';
-                }
-                function onFailure(data, stuff) {
-                    console.log(data);
-                    console.log(stuff);
-                    alert('cannot create account');
-                }
-                if(password===pwconfirm) {
-                    $.ajax({
-                        type: "POST",
-                        url:'/hsapi/_internal/verify_captcha/',
-                        data:{
-                            challenge: Recaptcha.get_challenge(),
-                            response: Recaptcha.get_response()
-                        },
-                        success: function() {
-                            $.ajax({
-                                type: "POST",
-                                url:'/hsapi/accounts/',
-                                data: {
-                                    username: username,
-                                    first_name: firstName,
-                                    last_name: lastName,
-                                    email: email,
-                                    superuser: false,
-                                    password: password
-                                },
-                                success: onSuccess,
-                                error: onFailure
-                            });
-                        },
-                        error: function() {
-                            Recaptcha.reload();
-                        }
-                    });
-
-                }
-                else {
-                    $("#password").val('');
-                    $("#pwconfirm").val('');
-                    $("div.showcase").append('<p class="alert alert-danger">Passwords do not match</p>');
-                }
-            });
-        });
-    </script>
-
     <!-- Showcase
     ================ -->
 
@@ -107,35 +38,8 @@
 
                             <!-- signup -->
                             <div class="front-signup js-front-signup" style="padding-top: 1.5em;">
-                              <form action="" class="" method="post" role="form">
-                                  {% csrf_token %}
-                                  <div class="row">
-                                    <div class="form-group">
-                                      <input type="text" class="form-control" autocomplete="off" id="firstname" name="firstname" maxlength="20" placeholder="First name">
-                                    </div>
-                                    <div class="form-group">
-                                      <input type="text" class="form-control" autocomplete="off" id="lastname" name="lastname" maxlength="20" placeholder="Last name">
-                                    </div>
-
-                                    <div class="form-group">
-
-                                      <input type="email" class="text-input email-input form-control" autocomplete="off" id="email" name="email" placeholder="Email">
-                                    </div>
-                                      <div class="form-group">
-                                      <input type="text" class="form-control" autocomplete="off" id="username" name="username" maxlength="20" placeholder="Username">
-                                      </div>
-                                    <div class="form-group">
-                                      <input type="password" class="text-input form-control" name="password" id="password" placeholder="Password">
-                                    </div>
-                                        <div class="form-group">
-                                      <input type="password" class="text-input form-control" name="pwconfirm" id="pwconfirm" placeholder="Password Again">
-                                    </div>
-
-                                    <div id="recaptcha-div" style="margin-bottom: 0.5em; background: white; border-radius: 4px; border: 1px solid"></div>
-
-                                    <input class="hl-btn hl-btn-green btn-block" type="button" id="signup" value="Join HydroShare & start collaborating.">
-                                </div>
-                              </form>
+                               {% signup_form as form %}
+                               {% include "accounts/_signup_form.html" with form=form %}
                             </div>
                             <!-- signup -->
                             </div>
@@ -169,7 +73,7 @@
                 {% editable page.homepage.welcome_heading %}
                 <div class="block-header">
                     <h2>
-                        <span class="title">{{ page.homepage.welcome_heading }}</span>                    
+                        <span class="title">{{ page.homepage.welcome_heading }}</span>
                     </h2>
                 </div>
                 {% endeditable %}
@@ -214,5 +118,5 @@
             {% endcomment %}
         </div>
     </div>
-    
+
 {% endblock %}

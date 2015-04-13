@@ -2,16 +2,6 @@ from django.conf.urls import patterns, url
 from hs_core import views
 
 urlpatterns = patterns('',
-
-    url(r'^resource/owner/(?P<pk>[A-z0-9]+)/$', views.users_api.SetResourceOwner.as_view()),
-    url(r'^resource/accessRules/(?P<pk>[A-z0-9]+)/$', views.users_api.SetAccessRules.as_view()),
-    url(r'^accounts/$', views.users_api.CreateOrListAccounts.as_view()),
-    url(r'^accounts/(?P<pk>[A-z0-9]+)/$', views.users_api.UpdateAccountOrUserInfo.as_view()),
-    url(r'^groups/$', views.users_api.CreateOrListGroups.as_view()),
-    url(r'^groups/(?P<pk>[A-z0-9]+)/$', views.users_api.ListGroupMembers.as_view()),
-    url(r'^groups/(?P<g>[A-z0-9]+)/owner/(?P<u>[A-z0-9]+)/$', views.users_api.SetOrDeleteGroupOwner.as_view()),
-    url(r'^resources/$', views.users_api.GetResourceList.as_view()),
-
     # internal API
 
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/add-file-to-resource/$', views.add_file_to_resource),

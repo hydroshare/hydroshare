@@ -1,0 +1,101 @@
+<script type="text/javascript" src="http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
+<script type="text/javascript">
+    $(function() {
+        function cb() {
+            $("#recaptcha_privacy").attr('style', "display:none");
+            Recaptcha.focus_response_field();
+        }
+
+        Recaptcha.create("6LdNC_USAAAAAHSocU3ZpfEFHBwORoMdOBcrSUPP",
+        "recaptcha-div", {
+          theme: "clean",
+          callback: cb // Recaptcha.focus_response_field
+        });
+
+        $("#signup").click(function() {
+            var username = $("#username").val();
+            var firstName = $("#firstname").val();
+            var lastName = $("#lastname").val();
+            var email = $("#email").val();
+            var password = $("#password").val();
+            var pwconfirm = $("#pwconfirm").val();
+
+            function onSuccess() {
+                document.location.href = '/verify-account/';
+            }
+            function onFailure(data, stuff) {
+                console.log(data);
+                console.log(stuff);
+                alert('cannot create account');
+            }
+            if(password===pwconfirm) {
+                $.ajax({
+                    type: "POST",
+                    url:'/hsapi/_internal/verify_captcha/',
+                    data:{
+                        challenge: Recaptcha.get_challenge(),
+                        response: Recaptcha.get_response()
+                    },
+                    success: function() {
+                        $('#form-signup').submit();
+                        // $.ajax({
+                        //     type: "POST",
+                        //     url:'/hsapi/accounts/',
+                        //     data: {
+                        //         username: username,
+                        //         first_name: firstName,
+                        //         last_name: lastName,
+                        //         email: email,
+                        //         superuser: false,
+                        //         password: password
+                        //     },
+                        //     success: onSuccess,
+                        //     error: onFailure
+                        // });
+                    },
+                    error: function() {
+                        Recaptcha.reload();
+                    }
+                });
+
+            }
+            else {
+                $("#password").val('');
+                $("#pwconfirm").val('');
+                $("div.showcase").append('<p class="alert alert-danger">Passwords do not match</p>');
+            }
+        });
+    });
+</script>
+
+<form id=form-signup action="/accounts/signup/" class="" method="post" role="form">
+    {% csrf_token %}
+    {{ form.errors }}
+    {{ form.non_field_errors }}
+    <div class="row">
+        <div class="form-group">
+            {% include "includes/form_field.html" with field=form.first_name inline_label=True %}
+        </div>
+        <div class="form-group">
+            {% include "includes/form_field.html" with field=form.last_name inline_label=True %}
+        </div>
+        <div class="form-group">
+            {% include "includes/form_field.html" with field=form.email inline_label=True %}
+        </div>
+        <div class="form-group">
+            {% include "includes/form_field.html" with field=form.username inline_label=True %}
+        </div>
+        <div class="form-group">
+            {% include "includes/form_field.html" with field=form.password1 inline_label=True %}
+        </div>
+        <div class="form-group">
+            {% include "includes/form_field.html" with field=form.password2 inline_label=True %}
+        </div>
+    </div>
+    <div class="row">
+
+      <div id="recaptcha-div" style="margin-bottom: 0.5em; background: white; border-radius: 4px; border: 1px solid"></div>
+
+      <input class="hl-btn hl-btn-green btn-block" type="button" id="signup" value="Join HydroShare & start collaborating.">
+  </div>
+</form>
