@@ -237,6 +237,25 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 if element_name == 'title':
                     res.title = res.metadata.title.value
                     res.save()
+
+                    # update title in HSAccess Database for hydroshare access control
+                    try:
+                        ha_obj = HSAlib.HSAccess(str(request.user.username), 'unused', django_settings.HS_ACCESS_DB, django_settings.HS_ACCESS_USERNAME,
+                                                 django_settings.HS_ACCESS_PASSWORD, django_settings.HS_ACCESS_HOST, django_settings.HS_ACCESS_PORT)
+                    except:
+                        # unable to connect to the database
+                        raise DatabaseError("unable to connect to the database HSAccess.")
+
+                    try:
+                        homedir = django_settings.IRODS_CWD+"/"+res.short_id
+                        ha_obj.assert_resource(resource_path=homedir, resource_title=res.title, resource_uuid = res.short_id)
+                    except:
+                        # unable to connect to the database
+                        raise OperationalError("the resource %s cannot be inserted into HSAccess database." % resource.short_id)
+                    finally:
+                        # close the connection
+                        del ha_obj
+
                     if res.public:
                         if not res.can_be_public:
                             res.public = False
