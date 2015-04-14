@@ -291,6 +291,7 @@ INSTALLED_APPS = (
     "widget_tweaks",
     "hs_app_netCDF",
     "hs_model_program",
+    "hs_tools_resource",
 )
 
 # List of processors used by RequestContext to populate the context.
