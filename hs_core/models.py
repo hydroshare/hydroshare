@@ -118,6 +118,7 @@ def page_permissions_page_processor(request, page):
         "view_groups": set(page.view_groups.all()),
         "edit_users": set(page.edit_users.all()),
         "view_users": set(page.view_users.all()),
+        "owners": set(page.owners.all()),
         "can_edit": (user in set(page.edit_users.all())) \
                     or (len(set(page.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
     }
