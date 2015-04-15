@@ -33,23 +33,12 @@ def landing_page(request, page):
                                     element_id=content_model.metadata.url_bases.first().id
                                     if content_model.metadata.url_bases.first() else None)
 
-        ResTypeFormSetEdit = formset_factory(wraps(ResTypeForm)(partial(ResTypeForm,
-                                                                        allow_edit=edit_resource)),
-                                             formset=BaseFormSet, extra=0)
-        res_type_formset = ResTypeFormSetEdit(initial=content_model.metadata.res_types.all().values(),
-                                              prefix='res_type')
-        add_toolresourcetype_modal_form = ResTypeForm(allow_edit=edit_resource, res_short_id=content_model.short_id)
+        res_type_form = ResTypeForm(instance=content_model.metadata.res_types.first(),
+                                    res_short_id=content_model.short_id,
+                                    element_id=content_model.metadata.res_types.first().id
+                                    if content_model.metadata.res_types.first() else None)
 
-        for form in res_type_formset.forms:
-            if len(form.initial) > 0:
-                form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id,
-                                                                   'toolresourcetype',
-                                                                   form.initial['id'])
-                form.action = "/hsapi/_internal/%s/toolresourcetype/%s/update-metadata/" % (content_model.short_id,
-                                                                                            form.initial['id'])
-                form.number = form.initial['id']
-            else:
-                form.action = "/hsapi/_internal/%s/toolresourcetype/add-metadata/" % content_model.short_id
+
 
         fees_form = FeeForm(instance=content_model.metadata.fees.first(),
                             res_short_id=content_model.short_id,
@@ -70,8 +59,11 @@ def landing_page(request, page):
                                 ),
 
                                 AccordionGroup('Resource Types (required)',
-                                               ResTypeLayoutEdit),
-                                ModalDialogLayoutAddResType,
+                                               HTML("<div class='form-group' id='res_types'> "
+                                        '{% load crispy_forms_tags %} '
+                                        '{% crispy res_type_form %} '
+                                     '</div>'),
+                                ),
 
                                 AccordionGroup('Fees (optional)',
                                      HTML('<div class="form-group" id="fees"> '
@@ -94,10 +86,10 @@ def landing_page(request, page):
 
         context['resource_type'] = 'Tool Resource'
         context['url_base_form'] = url_base_form
-        context['res_types_formset'] = res_type_formset
-        context['add_toolresourcetype_modal_form'] = add_toolresourcetype_modal_form
+        context['res_type_form'] = res_type_form
         context['fees_form'] = fees_form
         context['version_form'] = version_form
+        context['res_types'] = get_resource_types()
 
     hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)
