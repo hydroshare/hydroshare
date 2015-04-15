@@ -779,10 +779,6 @@ def create_resource_new_workflow(request, *args, **kwargs):
         # unable to connect to the database
         raise DatabaseError("unable to connect to the database HSAccess.")
 
-<<<<<<< HEAD
-    # receivers need to change the values of this dict if file validation fails
-    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
-=======
     try:
         homedir = django_settings.IRODS_CWD+"/"+resource.short_id
         ha_obj.assert_resource(resource_path=homedir, resource_title=res_title, resource_uuid = resource.short_id)
@@ -792,7 +788,9 @@ def create_resource_new_workflow(request, *args, **kwargs):
     finally:
         # close the connection
         del ha_obj
->>>>>>> First cut of adding HSAccess API into HS Django front end
+
+    # receivers need to change the values of this dict if file validation fails
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     # Send post-create resource signal
     post_create_resource.send(sender=res_cls, resource=resource, user=request.user ,  metadata=metadata,
                               validate_files=file_validation_dict, **kwargs)
