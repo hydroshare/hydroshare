@@ -5,6 +5,7 @@ from hs_core.hydroshare.utils import get_file_mime_type, resource_modified
 from hs_core.models import GenericResource
 from hs_core import languages_iso
 from forms import *
+from hs_tools_resource.models import ToolResource
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -33,6 +34,16 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         edit_mode = True
 
     metadata_status = _get_metadata_status(content_model)
+
+    relevant_tools = []
+    for tool in ToolResource.objects.all():
+        if len(tool.metadata.res_types.all())>0:
+            for res_type in tool.metadata.res_types.all():
+                if str(content_model.content_model).lower() in str(res_type.tool_res_type).lower():
+                    tl={'title': tool.title,
+                        'url': tool.metadata.url_bases.first().value+"/?res_id="+content_model.short_id}
+                    relevant_tools.append(tl)
+
 
     if request:
         file_validation_error = check_for_file_validation(request)
@@ -94,7 +105,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                    'supported_file_types': content_model.get_supported_upload_file_types(),
                    'allow_multiple_file_upload': content_model.can_have_multiple_files(),
-                   'file_validation_error': file_validation_error if file_validation_error else None
+                   'file_validation_error': file_validation_error if file_validation_error else None,
+                   'relevant_tools': relevant_tools
 
         }
         return context

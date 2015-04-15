@@ -45,22 +45,6 @@ class ToolResource(Page, AbstractResource):
 
 processor_for(ToolResource)(resource_processor)
 
-@processor_for(ToolResource)
-def main_page(request, page):
-    from dublincore import models as dc
-    from django import forms
-
-    class DCTerm(forms.ModelForm):
-        class Meta:
-            model = dc.QualifiedDublinCoreElement
-            fields = ['term', 'content']
-
-    content_model = page.get_content_model()
-
-    return  { 'resource_type' : content_model._meta.verbose_name,
-              'dublin_core' : [t for t in content_model.dublin_metadata.all().exclude(term='AB')],
-              'dcterm_frm' : DCTerm()
-            }
 
 class RequestUrlBase(AbstractMetaDataElement):
     term = 'Request Url Base'
