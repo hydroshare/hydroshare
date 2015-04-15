@@ -99,7 +99,7 @@ def landing_page(request, page):
         context['fees_form'] = fees_form
         context['version_form'] = version_form
 
-    hs_core_dublin_context = add_dublin_core(request, page)
+    hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)
 
     return context
