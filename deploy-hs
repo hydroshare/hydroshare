@@ -81,8 +81,10 @@ if [ $1 ];
         echo "*** load database with contents of pg.development.sql ***"
         docker exec $CID psql -U postgres -h postgis -f pg.development.sql;
 fi
+echo "*** load HSAccess database with initial content ***"
+docker exec $CID psql -U postgres -d HSAccess -h postgis -f database.psql;
 echo "*** run data migration script to migrate data to HSAccess database ***"
-docker exec $CID python migrate_data_to_hs_access.py "postgres" "postgres" ${2};
+docker exec $CID python migrate_data_to_hs_access.py "postgres" "postgres" $2;
 echo "*** mangae.py collectstatic ***"
 docker exec $CID python manage.py collectstatic -v0 --noinput
 echo "*** manage.py makemigrations ***"
