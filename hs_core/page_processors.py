@@ -44,6 +44,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 relevant_tools.append(tl)
 
 
+
     if request:
         file_validation_error = check_for_file_validation(request)
 
