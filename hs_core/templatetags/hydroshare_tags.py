@@ -4,7 +4,7 @@ from future.builtins import int, open, str
 from hashlib import md5
 from json import loads
 import os
-from dublincore.models import AbstractQualifiedDublinCoreTerm
+#from dublincore.models import AbstractQualifiedDublinCoreTerm
 import re
 
 try:
@@ -50,19 +50,6 @@ from mezzanine import template
 
 register = template.Library()
 
-
-@register.filter
-def dcterm(content):
-    """
-    Takes a value edited via the WYSIWYG editor, and passes it through
-    each of the functions specified by the RICHTEXT_FILTERS setting.
-    """
-    def convert(name):
-        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1 \2', name)
-        return re.sub('([a-z0-9])([A-Z])', r'\1 \2', s1)
-
-    content = convert(dict(AbstractQualifiedDublinCoreTerm.DCTERMS)[content.term])
-    return content
 
 @register.filter
 def resource_type(content):

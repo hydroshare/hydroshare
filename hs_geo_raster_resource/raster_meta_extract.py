@@ -72,7 +72,11 @@ def get_original_coverage_info(raster_dataset):
     Return: meta of original projection and spatial extent of raster
     """
     # get horizontal projection and unit info
-    proj_wkt = raster_dataset.GetProjection()
+    try:
+        proj_wkt = raster_dataset.GetProjection()
+    except:
+        proj_wkt = None
+
     if proj_wkt:
         spatial_ref = osr.SpatialReference()
         spatial_ref.ImportFromWkt(proj_wkt)
@@ -95,24 +99,34 @@ def get_original_coverage_info(raster_dataset):
         projection = 'Unnamed'
 
     # get the bounding box
-    gt = raster_dataset.GetGeoTransform()
-    cols = raster_dataset.RasterXSize
-    rows = raster_dataset.RasterYSize
-    xarr = [0, cols]
-    yarr = [0, rows]
-    x_coor = []
-    y_coor = []
-    for px in xarr:
-        for py in yarr:
-            x = gt[0]+(px*gt[1])+(py*gt[2])
-            y = gt[3]+(px*gt[4])+(py*gt[5])
-            x_coor.append(x)
-            y_coor.append(y)
-        yarr.reverse()
-    northlimit = max(y_coor)  # max y
-    southlimit = min(y_coor)
-    westlimit = min(x_coor)  # min x
-    eastlimit = max(x_coor)
+    try:
+        gt = raster_dataset.GetGeoTransform()
+    except:
+        gt = None
+
+    if gt:
+        cols = raster_dataset.RasterXSize
+        rows = raster_dataset.RasterYSize
+        xarr = [0, cols]
+        yarr = [0, rows]
+        x_coor = []
+        y_coor = []
+        for px in xarr:
+            for py in yarr:
+                x = gt[0]+(px*gt[1])+(py*gt[2])
+                y = gt[3]+(px*gt[4])+(py*gt[5])
+                x_coor.append(x)
+                y_coor.append(y)
+            yarr.reverse()
+        northlimit = max(y_coor)  # max y
+        southlimit = min(y_coor)
+        westlimit = min(x_coor)  # min x
+        eastlimit = max(x_coor)
+    else:
+        northlimit = 0
+        southlimit = 0
+        westlimit = 0
+        eastlimit = 0
 
     spatial_coverage_info = OrderedDict([
         ('northlimit', northlimit),
@@ -131,36 +145,44 @@ def get_wgs84_coverage_info(raster_dataset):
     Return: meta of spatial extent as wgs84 geographic coordinate system of raster
     """
     # get original coordinate system
-    original_cs = osr.SpatialReference()
-    original_cs.ImportFromWkt(raster_dataset.GetProjection())
+    try:
+        proj = raster_dataset.GetProjection()
+    except:
+        proj = None
 
-    # create wgs84 geographic coordinate system
-    wgs84_cs = osr.SpatialReference()
-    wgs84_cs.ImportFromEPSG(4326)
+    if proj:
+        original_cs = osr.SpatialReference()
+        original_cs.ImportFromWkt(proj)
 
-    # get original bounding box info
-    original_coverage_info = get_original_coverage_info(raster_dataset)
-    original_northlimit = original_coverage_info['northlimit']
-    original_southlimit = original_coverage_info['southlimit']
-    original_westlimit = original_coverage_info['westlimit']
-    original_eastlimit = original_coverage_info['eastlimit']
+        # create wgs84 geographic coordinate system
+        wgs84_cs = osr.SpatialReference()
+        wgs84_cs.ImportFromEPSG(4326)
 
-    # create transform object
-    transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
-    if transform.this is not None:
-        # transform original bounding box to wgs84 bounding box
-        wgs84_westlimit,wgs84_northlimit = transform.TransformPoint(original_westlimit, original_northlimit)[:2]
-        wgs84_eastlimit,wgs84_southlimit = transform.TransformPoint(original_eastlimit, original_southlimit)[:2]
+        # get original bounding box info
+        original_coverage_info = get_original_coverage_info(raster_dataset)
+        original_northlimit = original_coverage_info['northlimit']
+        original_southlimit = original_coverage_info['southlimit']
+        original_westlimit = original_coverage_info['westlimit']
+        original_eastlimit = original_coverage_info['eastlimit']
 
-        wgs84_coverage_info = OrderedDict([
-            ('northlimit', wgs84_northlimit),
-            ('southlimit', wgs84_southlimit),
-            ('eastlimit', wgs84_eastlimit),
-            ('westlimit', wgs84_westlimit),
-            ('units','Decimal degrees'),
-            ('projection', 'WGS 84 EPSG:4326')
-        ])
-        return wgs84_coverage_info
+        # create transform object
+        transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
+        if transform.this is not None:
+            # transform original bounding box to wgs84 bounding box
+            wgs84_westlimit,wgs84_northlimit = transform.TransformPoint(original_westlimit, original_northlimit)[:2]
+            wgs84_eastlimit,wgs84_southlimit = transform.TransformPoint(original_eastlimit, original_southlimit)[:2]
+
+            wgs84_coverage_info = OrderedDict([
+                ('northlimit', wgs84_northlimit),
+                ('southlimit', wgs84_southlimit),
+                ('eastlimit', wgs84_eastlimit),
+                ('westlimit', wgs84_westlimit),
+                ('units','Decimal degrees'),
+                ('projection', 'WGS 84 EPSG:4326')
+            ])
+            return wgs84_coverage_info
+        else:
+            return None
     else:
         return None
 
@@ -171,39 +193,50 @@ def get_cell_and_band_info(raster_dataset):
     Return: meta info of cells in raster
     """
     # get cell size info
-    rows = raster_dataset.RasterYSize
-    columns = raster_dataset.RasterXSize
-    cell_size_x_value = raster_dataset.GetGeoTransform()[1]
-    cell_size_y_value = abs(raster_dataset.GetGeoTransform()[5])
+    if raster_dataset:
+        rows = raster_dataset.RasterYSize
+        columns = raster_dataset.RasterXSize
+        cell_size_x_value = raster_dataset.GetGeoTransform()[1]
+        cell_size_y_value = abs(raster_dataset.GetGeoTransform()[5])
 
+        # get coordinate system unit info
+        proj_wkt = raster_dataset.GetProjection()
+        if proj_wkt:
+            spatial_ref = osr.SpatialReference()
+            spatial_ref.ImportFromWkt(proj_wkt)
+            cell_size_unit = spatial_ref.GetAttrValue("UNIT", 0)
+            if re.match('metre', cell_size_unit, re.I):
+                cell_size_unit = 'meter'
+        else:
+            cell_size_unit = 'Unnamed'
 
-    # get coordinate system unit info
-    proj_wkt = raster_dataset.GetProjection()
-    if proj_wkt:
-        spatial_ref = osr.SpatialReference()
-        spatial_ref.ImportFromWkt(proj_wkt)
-        cell_size_unit = spatial_ref.GetAttrValue("UNIT", 0)
-        if re.match('metre', cell_size_unit, re.I):
-            cell_size_unit = 'meter'
+        # get band count, cell no data value, cell data type
+        band_count = raster_dataset.RasterCount
+        band = raster_dataset.GetRasterBand(1)
+        no_data_value = band.GetNoDataValue()
+        cell_data_type = gdal.GetDataTypeName(band.DataType)
+
+        cell_and_band_info = OrderedDict([
+            ('rows', rows),
+            ('columns', columns),
+            ('cellSizeXValue', cell_size_x_value),
+            ('cellSizeYValue', cell_size_y_value),
+            ('cellSizeUnit', cell_size_unit),
+            ('cellDataType', cell_data_type),
+            ('noDataValue', no_data_value),
+            ('bandCount', band_count)
+        ])
     else:
-        cell_size_unit = 'Unnamed'
-
-    # get band count, cell no data value, cell data type
-    band_count = raster_dataset.RasterCount
-    band = raster_dataset.GetRasterBand(1)
-    no_data_value = band.GetNoDataValue()
-    cell_data_type = gdal.GetDataTypeName(band.DataType)
-
-    cell_and_band_info = OrderedDict([
-        ('rows', rows),
-        ('columns', columns),
-        ('cellSizeXValue', cell_size_x_value),
-        ('cellSizeYValue', cell_size_y_value),
-        ('cellSizeUnit', cell_size_unit),
-        ('cellDataType', cell_data_type),
-        ('noDataValue', no_data_value),
-        ('bandCount', band_count)
-    ])
+        cell_and_band_info = OrderedDict([
+            ('rows', 0),
+            ('columns', 0),
+            ('cellSizeXValue', 0),
+            ('cellSizeYValue', 0),
+            ('cellSizeUnit', "Unnamed"),
+            ('cellDataType', "Unnamed"),
+            ('noDataValue', 0),
+            ('bandCount', 0)
+        ])
 
     return cell_and_band_info
 

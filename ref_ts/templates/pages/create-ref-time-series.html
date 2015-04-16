@@ -12,320 +12,467 @@
 
     <h2>Add HIS Reference Metadata for the <i>{{ title }}</i> resource</h2>
 
-<form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-ref-time-series/">
-    {% csrf_token %}
+    <form id="create-form" class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-ref-time-series/">
+        {% csrf_token %}
+
+        <div class="form-group" id="hisc-input">
+            <h4><strong>Select from HIS Central Services or input your own url:</strong></h4>
+            <p id="his-loading" style="color:#CC7A00"><i>(loading HIS Central services)</i></p>
+            <div class="ui-widget">
+                <label for="" class="col-sm-2 control-label">URL</label>
+                <div class="col-sm-10">
+                    <select class="" name="url" id="url" size="10" style="overflow-y: scroll;"></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-offset-2 col-sm-10" id="loading-1">
+            <h3 id="loading-1-text">Retrieving sites...</h3>
+        </div>
 
 
-    <h3>Select the type of Reference:</h3>
-  <div class="form-group">
-    <label for="" class="col-sm-2 control-label"></label>
-    <div class="col-sm-10">
-        <select class="form-control" name="reference_type" id="reference_type">
-            <option selected="selected" value="rest">CUAHSI HIS REST Service</option>
-            <option value="soap">CUAHSI HIS SOAP Service</option>
-        </select>
-    </div>
-  </div>
+        <div class="form-group cuahsi-his cuahsi-his-2">
+            <label for="" class="col-sm-2 control-label">Site</label>
+            <div class="col-sm-10">
+                <select class="form-control" name="site" id="site"></select>
+            </div>
+        </div>
 
-     <h3>Link to your Time Series:</h3>
-  <div class="form-group cuahsi-his cuahsi-his-1">
-    <label for="" class="col-sm-2 control-label">HIS URL</label>
-    <div class="col-sm-10">
-      <input type="text" class="form-control" name="wsdl_url" id="wsdl_url" placeholder="www.example.org.asmx?WSDL">
-      <button class="btn btn-block btn-primary" type="button" id="search-sites-button" data-loading-text="Retrieving Sites...">List Sites</button>
-    </div>
-  </div>
-
-  <div class="form-group rest-url">
-    <label for="" class="col-sm-2 control-label">Rest Url</label>
-    <div class="col-sm-10">
-      <input type="text" class="form-control" name="rest_url" id="verify-input" placeholder="http://example.gov/?format=waterml,1.1&sites=01646500">
-      <button class="btn btn-primary" type="button" id="verify-rest-button" data-loading-text="Verifying URL...">Verify and Preview</button>
-    </div>
-  </div>
-
-  <div class="form-group cuahsi-his cuahsi-his-2">
-    <label for="" class="col-sm-2 control-label">Site from Server</label>
-    <div class="col-sm-10">
-        <select class="form-control" name="site" id="site"></select>
-        <button class="btn btn-block btn-primary" type="button" id="search-vars-button" data-loading-text="Retrieving Variables...">Update Variables</button>
-    </div>
-  </div>
-
-  <div class="form-group cuahsi-his cuahsi-his-3">
-    <label for="" class="col-sm-2 control-label">Variable</label>
-    <div class="col-sm-10">
-        <select class="form-control" name="variable" id="variable"></select>
-        <button class="btn btn-block disabled" type="button" id="preview-button-soap">Preview Data</button>
-    </div>
-  </div>
-
-  <div class ="form-group" id ="preview-div" class="col-sm-offset-2 col-sm-10">
-
-  </div>
-
-  <div class="form-group" id="fail-notice">
-      <div class="col-sm-offset-2 col-sm-10">
-          <h3>Invalid Data! </h3>
-          <h5>This data failed to validate, which probably means that the WaterML document is not correctly formatted. This time series cannot be used to create a resource </h5>
-      </div>
-  </div>
+        <div class="col-sm-offset-2 col-sm-10" id="loading-2">
+            <h3 id="loading-2-text">Retrieving variables...</h3>
+        </div>
 
 
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-      <button type="submit" id="submit" class="btn btn-primary btn-lg btn-block disabled">Add HIS Time Series</button>
-    </div>
-  </div>
+        <div class="form-group cuahsi-his cuahsi-his-3">
+            <label for="" class="col-sm-2 control-label">Variable</label>
+            <div class="col-sm-10">
+                <select class="form-control" name="variable" id="variable"></select>
+            </div>
+        </div>
 
-  <div class="form-group" id="metadata" style="display: none;">
-    <div class="col-sm-offset-2 col-sm-10">
-      <input type="text" class="btn btn-primary btn-lg btn-block" name='metadata' value='{{ metadata }}'>
-    </div>
-  </div>
+        <div class ="form-group" id ="preview-div" class="col-sm-offset-2 col-sm-10">
 
-  <div class="form-group" id="title" style="display: none;">
-    <div class="col-sm-offset-2 col-sm-10">
-      <input type="text" class="btn btn-primary btn-lg btn-block" name='title' value='{{ title }}'>
-    </div>
-  </div>
+        </div>
+
+        <div class="form-group" id="fail-notice">
+            <div class="col-sm-offset-2 col-sm-10">
+                <h3>Invalid Data! </h3>
+                <h5>This data failed to validate, which probably means that the WaterML document is not correctly formatted. This time series cannot be used to create a resource </h5>
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" id="submit" class="btn btn-primary btn-lg btn-block disabled">Add HIS Time Series</button>
+            </div>
+        </div>
+
+        <div class="form-group" id="metadata" style="display: none;">
+            <div class="col-sm-offset-2 col-sm-10">
+                <input type="text" class="btn btn-primary btn-lg btn-block" name='metadata' value='{{ metadata }}'>
+            </div>
+        </div>
+
+        <div class="form-group" id="title" style="display: none;">
+            <div class="col-sm-offset-2 col-sm-10">
+                <input type="text" class="btn btn-primary btn-lg btn-block" name='title' value='{{ title }}'>
+            </div>
+        </div>
+
+{#        <div class="form-group" >#}
+{#            <div class="col-sm-offset-2 col-sm-10">#}
+{#                <input type="text" name='url' value='' >#}
+{#            </div>#}
+{#        </div>#}
 
 
 
-</form>
-
+    </form>
+    <style>
+        .custom-combobox {
+            width:100%;
+        }
+        .custom-combobox-toggle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            margin-left: -1px;
+            padding: 0;
+        }
+        .custom-combobox-input {
+            margin: 0;
+            padding: 5px 10px;
+        }
+        .ui-autocomplete-input {
+            width:100%;
+        }
+    </style>
 {% endblock %}
 
 {% block extra_js %}
-    <link rel="stylesheet" href="../../static/ref_ts/rickshaw/rickshaw.min.css">
-    <script src=" {% static "ref_ts/rickshaw/vendor/d3.min.js" %}"></script>
-    <script src=" {% static "ref_ts/rickshaw/vendor/d3.layout.min.js" %}"></script>
-    <script src=" {% static "ref_ts/rickshaw/rickshaw.min.js" %}"></script>
     <script type="text/javascript">
-    $(function() {
+        $(function() {
 
-        $( "#reference_type" )
-            .change(function () {
-                var b = $('#submit');
-                b.addClass('disabled');
+            var globurl = "";
 
-                if ($("[name='reference_type'] option:selected").text() == "CUAHSI HIS SOAP Service") {
-                    $('.cuahsi-his-1').show();
-                    $('#preview-div').html( '<div class="col-sm-offset-2" id="preview"></div>');
-                    $('.rest-url').hide();
-                }
-                else if ($("[name='reference_type'] option:selected").text() == "CUAHSI HIS REST Service"){
-                    $('.cuahsi-his').hide();
-                    $('#preview-div').html( '<div class="col-sm-offset-2" id="preview"></div>');
-                    $('.rest-url').show();
-                }
+            $(document).ready(function(){
                 $('#preview-div').hide();
+                $('#fail-notice').hide();
+                $('.cuahsi-his').hide();
+                $('#loading-1').hide();
+                $('#loading-2').hide();
+                get_his_central_urls();
             });
 
-        $(document).ready(function(){
-            $('.cuahsi-his').hide();
-            $('#preview-div').hide();
-            $('#fail-notice').hide();
-        });
+            function check_url(url){
+                globurl = url;
+                $('#url-input').removeClass("has-success");
+                $('#url-input').removeClass("has-error");
+                $('#fail-notice').hide();
+                $('#loading-1-text').html('<h3></h3>');
 
-        function removeOptions(selectbox){
-            var i;
-            for(i=selectbox.options.length-1;i>=0;i--)
-            {
-                selectbox.remove(i);
-            }
-        }
-
-        function compare(a,b) {
-            if (a.x < b.x)
-                return -1;
-            if (a.x > b.x)
-                return 1;
-            return 0;
-        }
-
-
-        function getVals(ref_type) {
-            if (ref_type == 'rest') {
-                var service_url = document.getElementsByName('rest_url')[0].value,
-                    site,
-                    variable;
-            }
-            else {
-                service_url = document.getElementsByName('wsdl_url')[0].value;
-                var full_site = document.getElementsByName('site')[0].value;
-                var n = full_site.indexOf(':');
-                site = full_site.substr(n+2);
-                var full_variable = document.getElementsByName('variable')[0].value;
-                n = full_variable.indexOf(':');
-                variable = full_variable.substr(n+2);
-            }
-            $.ajax({
-                type:"GET",
-                url:'/hsapi/_internal/time-series-from-service/',
-                data: {ref_type: ref_type,
-                    service_url: service_url,
-                    site: site,
-                    variable: variable},
-                success: function(data, xhr, status){
-                    var vis_file_name = data['vis_file_name'];
-                    $('#preview-div').html('<img src="{{ STATIC_URL }}img/'+vis_file_name+'" id="preview-graph" class="col-sm-offset-2"/>');
-                    $('#preview-div').show();
-                    var b = $('#submit');
-                    b.removeClass('disabled');
-                },
-                error: function(data, stuff){
-                    $('#fail-notice').show();
-                    console.log(data);
-                    console.log(stuff);
-                    $('#preview-div').hide();
-
+                if (url.match(/WSDL$/) || url.match(/wsdl$/)){
+                    $('.cuahsi-his-1').show();
+                    $('#preview-div').html( '<div class="col-sm-offset-2" id="preview"></div>');
+                    get_sites(url);
                 }
-            })
-        }
+                else {
+                    $('#loading-1').show();
+                    $('.cuahsi-his').hide();
+                    $.ajax({
+                        type: "GET",
+                        url: '/hsapi/_internal/verify-rest-url/',
+                        data: {url: url},
+                        success: function (data, xhr, status) {
+                            if (data == 200) {
+                                $('#url-input').addClass("has-success");
+                                getVals('rest');
+                            }
+                            else if (data == 400 || data == 404) {
+                                $('#loading-1-text').html('<h3>URL did not verify. There may be a problem with the URL you entered</h3>');
+                                $('#url-input').removeClass("has-success");
+                                $('#url-input').addClass("has-error");
+                            }
 
-        $("#search-sites-button").click(function() {
-            var btn = $(this);
-            btn.button('loading');
-            $.ajax({
-                type:"GET",
-                url:'/hsapi/_internal/search-sites/',
-                data: {wsdl_url: document.getElementsByName('wsdl_url')[0].value},
-                success: function(data, xhr, status){
-                    var select = document.getElementsByName('site')[0];
-                    removeOptions(select);
-                    for(var index in data) {
-                        var ln = ( index + " : " + data[index]);
-                        var opt = document.createElement('option');
-                        opt.value = ln;
-                        opt.innerHTML = ln;
-                        select.appendChild(opt);
-                    $('.cuahsi-his-2').show();
-                    $('.cuahsi-his-3').show();
+                        },
+                        error: function(){
+                            $('#url-input').removeClass("has-success");
+                            $('#url-input').addClass("has-error");
+                        }
+                    });
+                }
+
+                $('#preview-div').hide();
+                $('#fail-notice').hide();
+                var b = $('#submit');
+                b.addClass('disabled');
+            }
+
+            function get_his_central_urls(){
+                $.ajax({
+                    type: "GET",
+                    url: '/hsapi/_internal/get-his-urls/',
+                    success: function (data, xhr, status) {
+                        var select = document.getElementsByName('url')[0];
+                        removeOptions(select);
+                        $('#his-loading')
+                                .html('HIS Central Servers available')
+                                .css('color', 'Green');
+                        for (var site in data) {
+                            var ln = (data[site]);
+                            var opt = document.createElement('option');
+                            opt.value = ln;
+                            opt.innerHTML = ln;
+                            select.appendChild(opt);
+
+                        }
+
+                    },
+                    error: function(){
+                        $('#his-loading')
+                                .html('HIS Central Servers currently not available')
+                                .css('color','Red');
                     }
-                },
-                error: function(data, stuff){
-                    console.log(data);
-                    console.log(stuff);
-                    btn.button('reset');
-                    btn.html('This is NOT a valid HIS SOAP Url!');
-                    btn.addClass('btn-danger');
-                }
-            }).always(function () {btn.button('reset')});
-        });
+                });
+            }
 
-        $("#search-vars-button").click(function(){
-            var btn = $(this),
-                full_site = document.getElementsByName('site')[0].value,
-                    n = full_site.indexOf(':'),
+            function removeOptions(selectbox){
+                var i;
+                for(i=selectbox.options.length-1;i>=0;i--)
+                {
+                    selectbox.remove(i);
+                }
+            }
+
+            function get_sites(url){
+                $('#loading-1').show();
+                $('#loading-1-text').html('<h3>Retrieving Sites...</h3>');
+                $.ajax({
+                    type:"GET",
+                    url:'/hsapi/_internal/search-sites/',
+                    data: {url: url},
+                    success: function(data, xhr, status){
+                        var select = document.getElementsByName('site')[0];
+                        removeOptions(select);
+                        for(var site in data) {
+                            var ln = (data[site]);
+                            var opt = document.createElement('option');
+                            opt.value = ln;
+                            opt.innerHTML = ln;
+                            select.appendChild(opt);
+                            $('.cuahsi-his-2').show();
+                            $('#loading-1').hide();
+                        }
+                    },
+                    error: function(data, stuff){
+                        $('#loading-1-text').html('<h3">There was an error retrieving sites for this server</h3>');
+                                console.log(data);
+                        console.log(stuff);
+                    }
+                }).always(function () {btn.button('reset')});
+            }
+
+            function get_variables(site){
+                $('#loading-2').show();
+                var n = site.indexOf(':'),
+                        site_code = site.substr(n+2);
+                var url = globurl;
+
+                $.ajax({
+                    type:"GET",
+                    url:'/hsapi/_internal/search-variables/',
+                    data: {url: url,
+                        site: site_code},
+                    success: function(data, xhr, status){
+                        $('.cuahsi-his-3').show();
+                        var select = document.getElementsByName('variable')[0];
+                        removeOptions(select);
+                        for(var index in data) {
+                            var ln = ( data[index]);
+                            var opt = document.createElement('option');
+                            opt.value = ln;
+                            opt.innerHTML = ln;
+                            select.appendChild(opt);
+                            if (data.length == 1){
+                                getVals('soap');
+                            }
+                        }
+                        $('#loading-2').hide();
+                    },
+                    error: function(data, stuff) {
+                        $('#loading-2-text').html('<h3">There was an error retrieving variables for this site</h3>');
+                        console.log(data);
+                        console.log(stuff);
+
+                    }
+                })
+            }
+
+
+            function getVals(ref_type) {
+                $('#preview-div').html('<h2 class="col-sm-offset-2 col-sm-10">Retrieving Data . . .</h2>');
+                $('#preview-div').show();
+                if (ref_type == 'rest') {
+                    var service_url = globurl,
+                            site,
+                            variable;
+                }
+                else {
+                    service_url = globurl;
+                    var full_site = $('#site').val();
+                    var n = full_site.indexOf(':');
                     site = full_site.substr(n+2);
-            btn.button('loading');
-            $.ajax({
-                type:"GET",
-                url:'/hsapi/_internal/search-variables/',
-                data: {wsdl_url: document.getElementsByName('wsdl_url')[0].value,
-                    site: site},
-                success: function(data, xhr, status){
-                    var select = document.getElementsByName('variable')[0];
-                    removeOptions(select);
-                    for(var index in data) {
-                        var ln = ( index + " : " + data[index]);
-                        var opt = document.createElement('option');
-                        opt.value = ln;
-                        opt.innerHTML = ln;
-                        select.appendChild(opt);
-
-                    }
-                    var b = $('#preview-button-soap');
-                    b.removeClass('disabled');
-                    b.addClass('btn-primary');
-                },
-                error: function(data, stuff) {
-                    btn.button('reset');
-                    console.log(data);
-                    console.log(stuff);
-
+                    var full_variable = $('#variable').val();
+                    n = full_variable.indexOf(':');
+                    variable = full_variable.substr(n+2);
                 }
-            }).always(function () {btn.button('reset')});
-        });
+                $.ajax({
+                    type:"GET",
+                    url:'/hsapi/_internal/time-series-from-service/',
+                    data: {ref_type: ref_type,
+                        service_url: service_url,
+                        site: site,
+                        variable: variable},
+                    success: function(data, xhr, status){
+                        var vis_file_name = data['vis_file_name'];
+                        $('#preview-div').html('<img src="{{ STATIC_URL }}img/'+vis_file_name+'" id="preview-graph" class="col-sm-offset-2"/>');
+                        $('#preview-div').show();
+                        var b = $('#submit');
+                        b.removeClass('disabled');
+                        $('#loading-1').hide();
+                        $('#url').append($("<option></option>")
+                                .attr("value",service_url)
+                                .text(service_url));
+                        $('#url').val(service_url);
+                    },
+                    error: function(data, stuff){
+                        $('#url-input').removeClass("has-success");
+                        $('#fail-notice').show();
+                        console.log(data);
+                        console.log(stuff);
+                        $('#preview-div').hide();
+                        $('#loading-1').hide();
+                    }
+                })
+            }
 
-        $("#verify-rest-button").click(function(){
-            $('#preview-div').html('<h2 class="col-sm-offset-2 col-sm-10">Retrieving Data . . .</h2>');
-            $('#preview-div').show();
-            var btn = $(this);
-            btn.button('loading');
-            $.ajax({
-                type:"GET",
-                url:'/hsapi/_internal/verify-rest-url/',
-                data: {rest_url: document.getElementsByName('rest_url')[0].value},
-                success: function(data, xhr, status){
-                    var b = $('#verify-rest-button');
-                    if (data == 200 ){
-                        b.html('This is a valid HIS REST Url!');
-                        b.addClass('btn-success');
+            $('#variable').change(function(){
+                $('#fail-notice').hide();
+                var b = $('#submit');
+                b.addClass('disabled');
+                getVals('soap');
+
+            });
+
+            $('#site').change(function(){
+                $('.cuahsi-his-3').hide();
+                var site = $('#site').val();
+                get_variables(site);
+                $('#preview-div').hide();
+                $('#fail-notice').hide();
+                var select = $('#variable');
+                removeOptions(select);
+                var b = $('#preview-button-soap');
+                b.addClass('disabled');
+                var b = $('#submit');
+                b.addClass('disabled');
+            });
+
+            $('#create-form').on("keyup keypress", function(e) {
+                var code = e.keyCode || e.which;
+                if (code  == 13) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            $.widget( "custom.combobox", {
+                _create: function() {
+                    this.wrapper = $( "<span>" )
+                            .addClass( "custom-combobox" )
+                            .insertAfter( this.element );
+
+                    this.element.hide();
+                    this._createAutocomplete();
+                    this._createShowAllButton();
+                },
+
+                _createAutocomplete: function() {
+                    var selected = this.element.children( ":selected" ),
+                            value = selected.val() ? selected.text() : "";
+
+                    this.input = $( "<input>" )
+                            .appendTo( this.wrapper )
+                            .val( value )
+                            .attr( "title", "" )
+                            .addClass( "" )
+                            .autocomplete({
+                                delay: 0,
+                                minLength: 0,
+                                source: $.proxy( this, "_source" )
+                            })
+                            .tooltip({
+                                tooltipClass: "ui-state-highlight"
+                            });
+
+                    this._on( this.input, {
+                        autocompleteselect: function( event, ui ) {
+                            check_url(ui.item.value);
+                            ui.item.option.selected = true;
+                            this._trigger( "select", event, {
+                                item: ui.item.option
+                            });
+                        },
+
+                        autocompletechange: "_removeIfInvalid"
+                    });
+                },
+
+                _createShowAllButton: function() {
+                    var input = this.input,
+                            wasOpen = false;
+
+                    $( "<a>" )
+                            .attr( "title", "Show All Items" )
+                            .tooltip()
+                            .appendTo( this.wrapper )
+                            .button({
+                                icons: {
+                                    primary: "ui-icon-triangle-1-s"
+                                },
+                                text: false
+                            })
+                            .removeClass( "ui-corner-all" )
+                            .addClass( "custom-combobox-toggle ui-corner-right" )
+                            .mousedown(function() {
+                                wasOpen = input.autocomplete( "widget" ).is( ":visible" );
+                            })
+                            .click(function() {
+                                input.focus();
+
+                                // Close if already visible
+                                if ( wasOpen ) {
+                                    return;
+                                }
+
+                                // Pass empty string as value to search for, displaying all results
+                                input.autocomplete( "search", "" );
+                            });
+                },
+
+                _source: function( request, response ) {
+                    var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+                    check_url(request.term);
+                    response( this.element.children( "option" ).map(function() {
+                        var text = $( this ).text();
+                        if ( this.value && ( !request.term || matcher.test(text) ) )
+                            return {
+                                label: text,
+                                value: text,
+                                option: this
+                            };
+                    }) );
+                },
+
+                _removeIfInvalid: function( event, ui ) {
+
+                    // Selected an item, nothing to do
+                    if ( ui.item ) {
+                        return;
                     }
-                    else if (data == 400 || data == 404){
-                        b.html('This is NOT a valid HIS REST Url!');
-                        b.addClass('btn-danger');
+
+                    // Search for a match (case-insensitive)
+                    var value = this.input.val(),
+                            valueLowerCase = value.toLowerCase(),
+                            valid = false;
+                    this.element.children( "option" ).each(function() {
+                        if ( $( this ).text().toLowerCase() === valueLowerCase ) {
+                            this.selected = valid = true;
+                            return false;
+                        }
+                    });
+
+                    // Found a match, nothing to do
+                    if ( valid ) {
+                        return;
                     }
-                    getVals('rest');
 
                 },
-                error: console.log
 
-            }).always(function () {btn.button('active')});
+                _destroy: function() {
+                    this.wrapper.remove();
+                    this.element.show();
+                }
+            });
         });
 
-        $('#verify-input').on('input', function(){
-            var b = $('#verify-rest-button');
-            b.html('Verify');
-            b.removeClass('btn-danger');
-            b.removeClass('btn-success');
-            $('#preview-div').hide();
-            $('#fail-notice').hide();
-            var b = $('#submit');
-            b.addClass('disabled');
+        $(function() {
+            $( "#url" ).combobox();
+            $( "#toggle" ).click(function() {
+                $( "#combobox" ).toggle();
+            });
         });
-
-        $('#wsdl_url').on('input', function(){
-            $('#preview-div').html( '<div class="col-sm-offset-2" id="preview"></div>');
-            var b = $('#preview-button-soap');
-            b.addClass('disabled');
-            b.removeClass('btn-primary');
-            $('#fail-notice').hide();
-            $("#search-sites-button").html('List Sites');
-            $("#search-sites-button").removeClass('btn-danger');
-            $('.cuahsi-his-2').hide();
-            $('.cuahsi-his-3').hide();
-            var b = $('#submit');
-            b.addClass('disabled');
-
-        });
-
-        $('#variable').change(function(){
-            $('#fail-notice').hide();
-            var b = $('#submit');
-            b.addClass('disabled');
-            $('#preview-div').hide();
-        });
-
-        $('#site').change(function(){
-            $('#preview-div').hide();
-            $('#fail-notice').hide();
-            var select = document.getElementsByName('variable')[0];
-            removeOptions(select);
-            var b = $('#preview-button-soap');
-            b.addClass('disabled');
-            var b = $('#submit');
-            b.addClass('disabled');
-        });
-
-        $('#preview-button-soap').click(function(){
-            $('#preview-div').html('<h2 class="col-sm-offset-2 col-sm-10">Retrieving Data . . .</h2>');
-            $('#preview-div').show();
-            getVals('soap');
-        });
-    });
     </script>
 {% endblock %}
 

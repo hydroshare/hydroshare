@@ -278,7 +278,7 @@ INSTALLED_APPS = (
     # "tastypie_swagger",
     "ga_ows",
     "ga_resources",
-    "dublincore",
+    #"dublincore",
     "hs_core",
     "hs_metrics",
     #"hs_rhessys_inst_resource",
@@ -286,11 +286,12 @@ INSTALLED_APPS = (
     "hs_geo_raster_resource",
     "djcelery",
     "ref_ts",
-    #"hs_modelinstance",
-    #"hs_app_timeseries",
+    "hs_modelinstance",
+    "hs_app_timeseries",
     "widget_tweaks",
-    #"hs_app_netCDF",
-    #"hs_model_program",
+    "hs_app_netCDF",
+    "hs_model_program",
+    "hs_tools_resource",
 )
 
 # List of processors used by RequestContext to populate the context.

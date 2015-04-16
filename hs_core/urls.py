@@ -33,11 +33,11 @@ urlpatterns = patterns('',
     # internal API
 
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/add-file-to-resource/$', views.add_file_to_resource),
-    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/add-metadata/$', views.add_metadata_term),
+    #url(r'^_internal/(?P<shortkey>[A-z0-9]+)/add-metadata/$', views.add_metadata_term),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/(?P<element_name>[A-z]+)/add-metadata/$', views.add_metadata_element),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/(?P<element_name>[A-z]+)/(?P<element_id>[A-z0-9]+)/update-metadata/$', views.update_metadata_element),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/(?P<element_name>[A-z]+)/(?P<element_id>[A-z0-9]+)/delete-metadata/$', views.delete_metadata_element),
-    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/add-citation/$', views.add_citation),
+   # url(r'^_internal/(?P<shortkey>[A-z0-9]+)/add-citation/$', views.add_citation),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/delete-resource-file/(?P<f>[0-9]+)/$', views.delete_file),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/delete-resource/$', views.delete_resource),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/change-permissions/$', views.change_permissions),
