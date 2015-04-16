@@ -141,22 +141,12 @@ def create_account(
     """
     Create a new user within the HydroShare system.
 
-    REST URL:  POST /accounts
-
-    Parameters: user - An object containing the attributes of the user to be created
-
-    Returns: The userID of the user that was created
-
-    Return Type: userID
+    Returns: The user that was created
 
     Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.InvalidContent - The content of the user object is invalid
-    Exception.ServiceFailure - The service is unable to process the request
-
-    Note:  This would be done via a JSON object (user) that is in the POST request. Should set a random password, and
-    then send an email to make them verify the account. Unverified accounts can't log-in and are automatically deleted
-    after a specified time (according to policy).
+        Exceptions.NotAuthorized - The user is not authorized
+        Exceptions.InvalidContent - The content of the user object is invalid
+        Exception.ServiceFailure - The service is unable to process the request
 
     """
 
@@ -210,9 +200,6 @@ go to http://{domain}/verify/{token}/ and verify your account.
     if not active:
         u.is_active=False
     u.save()
-
-    u.groups = groups
-    ApiKey.objects.get_or_create(user=u)
 
     u.groups = groups
 

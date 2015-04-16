@@ -409,3 +409,4 @@ else:
 #
 AUTH_PROFILE_MODULE = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = 'bootstrap'
+ACCOUNTS_PROFILE_FORM_CLASS = "theme.forms.UserProfileForm"
