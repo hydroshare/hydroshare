@@ -66,7 +66,6 @@ class ResTypeForm(ModelForm):
         model = ToolResourceType
         fields = ['tool_res_type']
         exclude = ['content_object']
-        # widgets = {'value': forms.TextInput()}
 
 
 class ResTypeValidationForm(forms.Form):
