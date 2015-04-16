@@ -32,7 +32,6 @@ class UrlBaseForm(ModelForm):
         model = RequestUrlBase
         fields = ['value']
         exclude = ['content_object']
-        # widgets = {'value': forms.TextInput()}
 
 
 class UrlBaseValidationForm(forms.Form):
@@ -67,11 +66,10 @@ class ResTypeForm(ModelForm):
         model = ToolResourceType
         fields = ['tool_res_type']
         exclude = ['content_object']
-        # widgets = {'value': forms.TextInput()}
 
 
 class ResTypeValidationForm(forms.Form):
-    tool_res_type = forms.CharField(max_length="500")
+    tool_res_type = forms.Field()
 
 
 class FeeFormHelper(BaseFormHelper):

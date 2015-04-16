@@ -232,7 +232,7 @@ def add_dublin_core(request, page):
             wml2_url = f.resource_file.url
 
     for tool in context['relevant_tools']:
-        tool['url'] = tool['url']+"&fileurl="+request.build_absolute_uri(wml2_url)
+        tool['url'] = "{}{}{}".format(tool['url'], "&fileurl=", request.build_absolute_uri(wml2_url))
     context['extended_metadata_exists'] = extended_metadata_exists
     context['site'] = content_model.metadata.sites.all().first()
     context['variable'] = content_model.metadata.variables.all().first()
