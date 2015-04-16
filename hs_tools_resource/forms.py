@@ -52,10 +52,6 @@ class ResTypeFormHelper(BaseFormHelper):
                             '{% endfor %}'
                         )
                  )
-                 )
-
-        super(ResTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
-
 
         super(ResTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
