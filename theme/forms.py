@@ -257,7 +257,7 @@ class RatingForm(CommentSecurityForm):
         return rating_instance
 
 
-class UserProfileForm(forms.ModelForm):
+class SignupForm(forms.ModelForm):
     class Meta:
         model = User
         exclude = ['last_login', 'date_joined', 'password']

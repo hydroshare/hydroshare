@@ -70,7 +70,6 @@
 
 <form id=form-signup action="/accounts/signup/" class="" method="post" role="form">
     {% csrf_token %}
-    {{ form.errors }}
     {{ form.non_field_errors }}
     <div class="row">
         <div class="form-group">
