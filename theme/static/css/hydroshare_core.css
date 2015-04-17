@@ -844,6 +844,7 @@ li.account p{
     float:left;
     background-color: transparent;
     border: 0;
+    text-decoration: none;
 }
 
 #txt-abstract{
