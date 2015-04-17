@@ -163,7 +163,7 @@ def create_account(
     #    iaccount.create(username)
     #    iaccount.setPassward(username, password)
 
-    groups = groups if groups else []
+    groups = groups if groups else Group.objects.all()
     groups = Group.objects.in_bulk(*groups) if groups and isinstance(groups[0], int) else groups
 
     if superuser:
@@ -181,20 +181,6 @@ def create_account(
             last_name=last_name,
             password=password,
         )
-
-    try:
-        token = signing.dumps('verify_user_email:{0}:{1}'.format(u.pk, u.email))
-        u.email_user(
-            'Please verify your new Hydroshare account.',
-            """
-This is an automated email from Hydroshare.org. If you requested a Hydroshare account, please
-go to http://{domain}/verify/{token}/ and verify your account.
-""".format(
-            domain=Site.objects.get_current().domain,
-            token=token
-        ))
-    except:
-        pass # FIXME should log this instead of ignoring it.
 
     u.is_staff = False
     if not active:

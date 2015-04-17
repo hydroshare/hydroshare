@@ -281,7 +281,6 @@ class SignupForm(forms.ModelForm):
             first_name=data['first_name'],
             last_name=data['last_name'],
             superuser=False,
-            groups=[],
             password=data['password'],
             active=False,
         )
