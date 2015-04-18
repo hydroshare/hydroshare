@@ -28,27 +28,30 @@ def landing_page(request, page):
         context['fees'] = content_model.metadata.fees.all()
         context['version'] = content_model.metadata.versions.first()
     else:
-        url_base_form = UrlBaseForm(instance=content_model.metadata.url_bases.first(),
+        url_base = content_model.metadata.url_bases.first()
+        url_base_form = UrlBaseForm(instance=url_base,
                                     res_short_id=content_model.short_id,
-                                    element_id=content_model.metadata.url_bases.first().id
-                                    if content_model.metadata.url_bases.first() else None)
+                                    element_id=url_base.id
+                                    if url_base else None)
 
-        res_type_form = ResTypeForm(instance=content_model.metadata.res_types.first(),
+        res_type = content_model.metadata.res_types.first()
+        res_type_form = ResTypeForm(instance=res_type,
                                     res_short_id=content_model.short_id,
-                                    element_id=content_model.metadata.res_types.first().id
-                                    if content_model.metadata.res_types.first() else None)
+                                    element_id=res_type.id
+                                    if res_type else None)
 
 
-
-        fees_form = FeeForm(instance=content_model.metadata.fees.first(),
+        fee = content_model.metadata.fees.first()
+        fees_form = FeeForm(instance=fee,
                             res_short_id=content_model.short_id,
-                            element_id=content_model.metadata.fees.first().id
-                            if content_model.metadata.fees.first() else None)
+                            element_id=fee.id
+                            if fee else None)
 
-        version_form = VersionForm(instance=content_model.metadata.versions.first(),
+        version = content_model.metadata.versions.first()
+        version_form = VersionForm(instance=version,
                                    res_short_id=content_model.short_id,
-                                   element_id=content_model.metadata.versions.first().id
-                                   if content_model.metadata.versions.first() else None)
+                                   element_id=version.id
+                                   if version else None)
 
         ext_md_layout = Layout(
                                 AccordionGroup('Url Base (required)',
