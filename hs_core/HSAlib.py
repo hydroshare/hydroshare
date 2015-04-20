@@ -149,13 +149,13 @@ class HSAccessCore(object):
         """
         Register or update the registration of a user
 
-        :type user_login: str
-        :type user_name: str
+        :type user_login: basestring
+        :type user_name: basestring
         :type user_active: bool
         :type user_admin: bool
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_login: user login name
-        :param user_name: str: user print name
+        :param user_name: basestring: user print name
         :param user_active: bool: whether user is active
         :param user_admin: bool: whether user is an admin
         :param user_uuid: uuid to register or update; leave out to register a new user
@@ -176,22 +176,29 @@ class HSAccessCore(object):
         :todo: check logic for what a user can change.
         """
         # anti-bug main arguments
-        if type(user_name) is not str:
+        if not isinstance(user_name, basestring):
             raise HSAUsageException("user_name is not a string")
-        if type(user_login) is not str:
+        if not isinstance(user_login, basestring):
             raise HSAUsageException("user_login is not a string")
-        if type(user_active) is not bool:
+        if not isinstance(user_active, bool):
             raise HSAUsageException("user_active is not boolean")
-        if type(user_admin) is not bool:
+        if not isinstance(user_admin, bool):
             raise HSAUsageException("user_admin is not boolean")
 
-        if not self.user_exists(self.__user_uuid):
+        if not self.user_exists(self.get_uuid()):
             raise HSAUsageException("User uuid does not exist")
-        if not (self.user_is_active(self.__user_uuid)):
+        if not (self.user_is_active(self.get_uuid())):
             raise HSAccessException("User is inactive")
-        if not (self.user_is_admin(self.__user_uuid)):
-            raise HSAccessException("User is not an administrator")
-
+        if not (self.user_is_admin(self.get_uuid())):
+            if user_uuid is None or self.get_uuid() != user_uuid:
+                raise HSAccessException("Regular users cannot create users")
+            current_meta = self.get_user_metadata(user_uuid)
+            if user_admin != current_meta['admin']:
+                raise HSAccessException("Regular users cannot make themselves administrators")
+            if user_active != current_meta['active']:
+                raise HSAccessException("Regular users cannot deactivate themselves")
+            if user_login != current_meta['login']:
+                raise HSAccessException("Regular users cannot change their login names")
         if user_uuid is None:
             # try the other keys to see if it is defined
             try:
@@ -200,8 +207,8 @@ class HSAccessCore(object):
                 user_uuid = uuid.uuid4().hex
         # print "resource uuid is", resource_uuid
 
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
 
         assert_id = self.__get_user_id_from_uuid(self.__user_uuid)
 
@@ -218,9 +225,9 @@ class HSAccessCore(object):
         PRIVATE: add a new user record
 
         :type assertion_user_id: int
-        :type user_uuid: str
-        :type user_login: str
-        :type user_name: str
+        :type user_uuid: basestring
+        :type user_login: basestring
+        :type user_name: basestring
         :type user_active: bool
         :type user_admin: bool
         :param assertion_user_id: internal user id of user adding the login name
@@ -245,10 +252,10 @@ class HSAccessCore(object):
         """
         PRIVATE: update an existing user record
 
-        :type user_login: str
+        :type user_login: basestring
         :type assertion_user_id: int
-        :type user_uuid: str
-        :type user_name: str
+        :type user_uuid: basestring
+        :type user_name: basestring
         :type user_active: bool
         :type user_admin: bool
         :param user_login: login of user to update (primary key)
@@ -277,7 +284,7 @@ class HSAccessCore(object):
         """
         Determine whether a login name is registered in the HSAccess database
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: uuid of user; omit to report on current user
         :return: True if user exists
         :rtype: bool
@@ -287,8 +294,8 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         try:
             self.get_user_metadata(user_uuid)
             return True
@@ -300,7 +307,7 @@ class HSAccessCore(object):
         """
         Determine whether a user identified by uuid has admin privileges
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: uuid of user; omit to report on current user
         :return: True if user has admin privileges 
         :rtype: bool
@@ -314,7 +321,7 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
+        if not isinstance(user_uuid, basestring):
             raise HSAUsageException("user_uuid is not a unicode or str")
         meta = self.get_user_metadata(user_uuid)
         return meta['admin']
@@ -324,7 +331,7 @@ class HSAccessCore(object):
         """
         Determine whether a user uuid is an active user
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: uuid of user; omit to report on current user
         :return: True if user is active.
         :rtype: bool
@@ -337,7 +344,7 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
+        if not isinstance(user_uuid, basestring):
             raise HSAUsageException("user_uuid is not a unicode or str")
         meta = self.get_user_metadata(user_uuid)
         return meta['active']
@@ -351,8 +358,8 @@ class HSAccessCore(object):
         """
         PRIVATE: get user database id from login name
 
-        :type login: str
-        :param login: string login name
+        :type login: basestring
+        :param login: basestringing login name
         :return: integer user id
         :rtype: int
         """
@@ -369,7 +376,7 @@ class HSAccessCore(object):
         """
         PRIVATE: get user database id from user uuid
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: uuid of user; omit to report on current user
         :return: user id for use in internal functions. 
         :rtype: int
@@ -380,7 +387,7 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
+        if not isinstance(user_uuid, basestring):
             raise HSAUsageException("user_uuid is not a unicode or str")
         self.__cur.execute("select user_id from users where user_uuid=%s", (user_uuid,))
         if self.__cur.rowcount > 1:
@@ -395,10 +402,10 @@ class HSAccessCore(object):
         """
         PRIVATE: get user login name from user uuid e
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: uuid of user; omit to report on current user
         :return: user login name. 
-        :rtype: str
+        :rtype: basestring
 
         This returns the login name for a given user uuid. This is currently an iRODS login and has no
         meaning in the system. It is used as a last resort in 'assert_user' to insure that we do not
@@ -406,7 +413,7 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
+        if not isinstance(user_uuid, basestring):
             raise HSAUsageException("user_uuid is not a unicode or str")
         self.__cur.execute("select user_login from users where user_uuid=%s", (user_uuid,))
         if self.__cur.rowcount > 1:
@@ -421,15 +428,15 @@ class HSAccessCore(object):
         """
         PRIVATE: get user database id from login name
 
-        :type login: str
-        :param login: string login name
+        :type login: basestring
+        :param login: basestringing login name
         :return: user uuid
-        :rtype: str
+        :rtype: basestring
 
         This returns the user uuid from the login name. While this works reliably
         because login names are unique, this is only used to construct test cases.
         """
-        if type(login) is not str:
+        if not isinstance(login, basestring):
             raise HSAUsageException("login is not a string")
 
         self.__cur.execute("select user_uuid from users where user_login=%s", (login,))
@@ -446,7 +453,7 @@ class HSAccessCore(object):
         PRIVATE: Get a list of all registered user logins
 
         :return: list of login names
-        :rtype: List<str>
+        :rtype: list[basestring]
 
         Gets a list of user login names. These are used internally as unique
         identifiers but not accepted as command parameters.
@@ -473,11 +480,11 @@ class HSAccessCore(object):
         Return format is a list of dictionaries of the form::
 
             {
-            'login': *user_login*,
-            'uuid': *user uuid*,
-            'name': *user name*,
-            'active': *true if user is active*,
-            'admin':  *true if user is admin*
+                'login': *user_login*,
+                'uuid': *user uuid*,
+                'name': *user name*,
+                'active': *true if user is active*,
+                'admin':  *true if user is admin*
             }
 
         These entries can be edited and used as input to 'assert_user_metadata'.
@@ -501,17 +508,17 @@ class HSAccessCore(object):
         """
         Get metadata for a user as a dict record
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: uuid of user for which to fetch metadata; If None, then return data on current user.
-        :return: Dict of metadata for the login specified
-        :rtype: Dict
+        :return: dict of metadata for the login specified
+        :rtype: dict
 
         This gives more complete information than 'get_users', including the date of user creation.
         The extra data is not utilize in 'assert_user_metadata'.
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
+        if not isinstance(user_uuid, basestring):
             raise HSAUsageException("user_uuid is not a unicode or str")
         self.__cur.execute("""select u.user_login, u.user_uuid, u.user_name, u.user_active, u.user_admin,
           a.user_login as user_assertion_login, a.user_uuid as user_assertion_uuid, u.assertion_time
@@ -541,15 +548,22 @@ class HSAccessCore(object):
 
         Permissible assertions are those permissible to the currently logged-in user.
         """
-        user_uuid = metadata['uuid']
+        user_uuid = self.get_uuid()
         if not self.user_exists(user_uuid):
             raise HSAUsageException("User uuid does not exist")
+        if not self.user_is_active(user_uuid):
+            raise HSAUsageException("User uuid is inactive")
         if user_uuid != self.get_uuid() and not self.user_is_admin(self.get_uuid()):
             raise HSAccessException("Regular user cannot assert metadata for users other than self")
-        if metadata['admin'] and not self.user_is_admin():
-            raise HSAccessException("Regular user cannot make self an administrator")
-        if not metadata['active'] and not self.user_is_admin():
-            raise HSAccessException("Regular user cannot deactivate a user")
+        # allow regular users to change their names and nothing else
+        if not self.user_is_admin():
+            current_meta = self.get_user_metadata(user_uuid)
+            if metadata['admin'] != current_meta['admin']:
+                raise HSAccessException("Regular users cannot make themselves administrators")
+            if metadata['active'] != current_meta['active']:
+                raise HSAccessException("Regular users cannot deactivate themselves")
+            if metadata['login'] != current_meta['login']:
+                raise HSAccessException("Regular users cannot change their login names")
         self.assert_user(metadata['login'], metadata['name'],
                          metadata['active'], metadata['admin'], metadata['uuid'])
 
@@ -563,11 +577,14 @@ class HSAccessCore(object):
         Get information on all existing groups
 
         :return: a list of all group uuids and names, as dictionary objects
-        :rtype: Dict 
+        :rtype: dict 
 
         This returns a list of elements of the form::
 
-            { 'uuid': *uuid of group*, 'name': *name of group* }
+            { 
+                'uuid': *uuid of group*, 
+                'name': *name of group* 
+            }
 
         sorted in order of group name. Group names do not have to be unique.
 
@@ -592,11 +609,15 @@ class HSAccessCore(object):
         :rtype: list[dict[str, str]] 
 
         This returns a list of groups in the following format::
-            { 'name': *name of group*, 'uuid': *uuid of group* } ]
+
+            { 
+                'name': *name of group*, 
+                'uuid': *uuid of group* 
+            } 
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
+        if not isinstance(user_uuid, basestring):
             raise HSAUsageException("user_uuid is not a unicode or str")
         self.__cur.execute("""select g.group_uuid, g.group_name, x.privilege_code
                           from groups g
@@ -621,7 +642,11 @@ class HSAccessCore(object):
         :rtype: list[dict[str, str]]
 
         This returns a list of groups in the following format::
-            { 'name': *name of group*, 'uuid': *uuid of group* } ]
+
+            { 
+                'name': *name of group*, 
+                'uuid': *uuid of group* 
+            }
         """
         self.__cur.execute("""select g.group_uuid, g.group_name, 'ro' AS privilege_code
                            from groups g
@@ -641,7 +666,11 @@ class HSAccessCore(object):
         :rtype: list[dict[str, str]]
 
         This returns a list of groups in the following format::
-            { 'name': *name of group*, 'uuid': *uuid of group* } ]
+
+            { 
+                'name': *name of group*, 
+                'uuid': *uuid of group* 
+            }
         """
         self.__cur.execute("""select g.group_uuid, g.group_name,
                            CASE WHEN g.group_public THEN 'ro'
@@ -649,6 +678,7 @@ class HSAccessCore(object):
                            END AS privilege_code
                            from groups g
                            where g.group_discoverable = TRUE
+                              OR g.group_public = TRUE
                            order by g.group_name, g.group_uuid""")
         rows = self.__cur.fetchall()
         result = []
@@ -665,9 +695,13 @@ class HSAccessCore(object):
         :rtype: list[dict[str, str]] 
 
         This returns a list of groups in the following format::
-            { 'name': *name of group*, 'uuid': *uuid of group* } ]
+
+            { 
+                'name': *name of group*, 
+                'uuid': *uuid of group* 
+            }
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
+        if not isinstance(group_uuid, basestring):
             raise HSAUsageException("group_uuid is not a unicode or str")
         # THIS SHOULD HONOR group_public flags and user flags
         if not self.group_is_public(group_uuid) and not self.group_is_owned(group_uuid):
@@ -692,7 +726,7 @@ class HSAccessCore(object):
 
         :param group_uuid: uuid of group
         :return: dict of group metadata
-        :rtype: Dict 
+        :rtype: dict 
 
         This returns a dictionary record with the structure::
 
@@ -708,8 +742,25 @@ class HSAccessCore(object):
             }
 
         This value can be edited and used as an argument to 'assert_group_metadata'.
+
+        Note that there is an intentional disparity between the flags and actual function due to the implications: 
+
+            * public -> discoverable
+
+            * published -> immutable
+
+        which are implemented at the logic level rather than the flag level. 
+
+        The reason that these are not implemented at the flag level is so that
+
+            * make_X_not_public undoes make_X_public (x = group, resource)
+
+            * make_X_not_published undoes make_X_published (x = group, resource)
+        
+        Otherwise, if these were implemented at the flag level, these operations would not restore initial state.
+        One would also need "make_X_not_discoverable" or "make_X_not_immutable", respectively. 
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
+        if not isinstance(group_uuid, basestring):
             raise HSAUsageException("group_uuid is not a unicode or str")
         self.__cur.execute("""select g.group_uuid, g.group_name,
           g.group_active, g.group_shareable, g.group_discoverable, g.group_public,
@@ -755,7 +806,7 @@ class HSAccessCore(object):
         """
         PRIVATE: translate from group object identifier to database id
 
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: group object identifier
         :return: group_id in HSAccess database, for use in internal functions. 
         :rtype: int 
@@ -764,7 +815,7 @@ class HSAccessCore(object):
         a join target. This is an integer for speed. This identifier is never exposed
         to users or administrators of the system.
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
+        if not isinstance(group_uuid, basestring):
             raise HSAUsageException("group_uuid is not a unicode or str")
         self.__cur.execute("select group_id from groups where group_uuid=%s", (group_uuid,))
         if self.__cur.rowcount > 1:
@@ -779,15 +830,15 @@ class HSAccessCore(object):
         """
         PRIVATE: translate from group object identifier to database id
 
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: group object identifier
         :return: group name
-        :rtype: str 
+        :rtype: basestring 
 
         This returns the name of a group from its uuid. Group names are not generally unique and
         cannot be used as keys from which to locate groups.
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
+        if not isinstance(group_uuid, basestring):
             raise HSAUsageException("group_uuid is not a unicode or str")
         meta = self.get_group_metadata(group_uuid)
         return meta['name']
@@ -800,22 +851,22 @@ class HSAccessCore(object):
         """
         Register or update a group
 
-        :type group_name: str
+        :type group_name: basestring
         :type group_active: bool
         :type group_shareable: bool
         :type group_discoverable: bool
         :type group_public: bool
-        :type group_uuid: str
-        :type user_uuid: str
-        :param group_name: str: name of group
+        :type group_uuid: basestring
+        :type user_uuid: basestring
+        :param group_name: basestring: name of group
         :param group_active: bool: whether group is active
         :param group_shareable: bool: whether group can be managed by non-owners.
         :param group_discoverable: bool: whether group and owners are discoverable in listings.
         :param group_public: bool: whether group members are publicly accessible.
-        :param group_uuid: str: group identifier, if omitted or unset, then a new group_uuid is created and returned.
+        :param group_uuid: basestring: group identifier, if omitted, then a new group_uuid is created and returned.
         :param user_uuid: user identifier; omit to utilize current user.
         :return: uuid of group just modified; created if necessary.
-        :rtype: str 
+        :rtype: basestring 
 
         This creates a new group subject to several conventions:
 
@@ -837,20 +888,20 @@ class HSAccessCore(object):
         :todo: ensure that regular users cannot change too much!
         """
         # anti-bug main arguments
-        if type(group_name) is not str:
+        if not isinstance(group_name, basestring):
             raise HSAUsageException("group_name is not a string")
-        if type(group_active) is not bool:
+        if not isinstance(group_active, bool):
             raise HSAUsageException("group_active is not boolean")
-        if type(group_shareable) is not bool:
+        if not isinstance(group_shareable, bool):
             raise HSAUsageException("group_shareable is not boolean")
-        if type(group_discoverable) is not bool:
+        if not isinstance(group_discoverable, bool):
             raise HSAUsageException("group_discoverable is not boolean")
-        if type(group_public) is not bool:
+        if not isinstance(group_public, bool):
             raise HSAUsageException("group_public is not boolean")
 
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
+        if not isinstance(user_uuid, basestring):
             raise HSAUsageException("user_uuid is not a unicode or str")
         if not (self.user_exists(user_uuid)):
             raise HSAUsageException("User uuid does not exist")
@@ -862,7 +913,7 @@ class HSAccessCore(object):
         if group_uuid is None:
             group_uuid = uuid.uuid4().hex
 
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
+        if not isinstance(group_uuid, basestring):
             raise HSAUsageException("group_uuid is not a unicode or str")
 
         assert_id = self.__get_user_id_from_uuid(user_uuid)
@@ -894,8 +945,8 @@ class HSAccessCore(object):
         PRIVATE: add a new group to the registry
 
         :type assertion_user_id: int
-        :type group_uuid: str
-        :type group_name: str
+        :type group_uuid: basestring
+        :type group_name: basestring
         :type group_active: bool
         :type group_shareable: bool
         :type group_discoverable: bool
@@ -926,8 +977,8 @@ class HSAccessCore(object):
         PRIVATE: update a group record in the registry
 
         :type assertion_user_id: int
-        :type group_uuid: str
-        :type group_name: str
+        :type group_uuid: basestring
+        :type group_name: basestring
         :type group_active: bool
         :param assertion_user_id: internal id of requesting user
         :param group_uuid: group identifier
@@ -962,7 +1013,7 @@ class HSAccessCore(object):
         """
         Delete a group and all membership information
 
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: uuid of group to delete
 
         Retractions are handled via database cascade logic. This deletes all information about the
@@ -975,7 +1026,7 @@ class HSAccessCore(object):
         1. Only the owner of the group or an administrator can do this.
 
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
+        if not isinstance(group_uuid, basestring):
             raise HSAUsageException("group_uuid is not a unicode or str")
         # only an owner or administrator can retract a group
         if not self.user_is_admin(self.get_uuid()) \
@@ -996,7 +1047,7 @@ class HSAccessCore(object):
         """
         Determine whether group identifier (uuid) is registered
 
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: group object identifier
         :return: whether group object identifier is registered
         :rtype: bool 
@@ -1004,7 +1055,7 @@ class HSAccessCore(object):
         This is used to avoid execution exceptions by ensuring that a group uuid
         is valid before performing further actions.
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
+        if not isinstance(group_uuid, basestring):
             raise HSAUsageException("group_uuid is not a unicode or str")
         try:
             self.get_group_metadata(group_uuid)
@@ -1016,12 +1067,12 @@ class HSAccessCore(object):
         """
         True if a group is active
 
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: group identifier
         :return: True if group is active.
         :rtype: bool 
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
+        if not isinstance(group_uuid, basestring):
             raise HSAUsageException("group_uuid is not a unicode or str")
         meta = self.get_group_metadata(group_uuid)
         return meta['active']
@@ -1030,14 +1081,14 @@ class HSAccessCore(object):
         """
         True if a group is shareable
 
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: group identifier
         :return: True if group is shareable.
         :rtype: bool 
 
         If a group is shareable, then users with readwrite privilege can invite members. Otherwise, they cannot.
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
+        if not isinstance(group_uuid, basestring):
             raise HSAUsageException("group_uuid is not a unicode or str")
         meta = self.get_group_metadata(group_uuid)
         return meta['shareable']
@@ -1046,30 +1097,30 @@ class HSAccessCore(object):
         """
         True if a group is discoverable
 
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: group identifier
         :return: True if group is discoverable.
         :rtype: bool 
 
         If a group is discoverable, then it appears in the active groups along with its owner contact information.
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
+        if not isinstance(group_uuid, basestring):
             raise HSAUsageException("group_uuid is not a unicode or str")
         meta = self.get_group_metadata(group_uuid)
-        return meta['discoverable']
+        return meta['discoverable']  # or meta['public']
 
     def group_is_public(self, group_uuid):
         """
         True if a group is public
 
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: group identifier
         :return: True if group is discoverable.
         :rtype: bool 
 
         If a group is public, then others can see group members.
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
+        if not isinstance(group_uuid, basestring):
             raise HSAUsageException("group_uuid is not a unicode or str")
         meta = self.get_group_metadata(group_uuid)
         return meta['public']
@@ -1082,7 +1133,7 @@ class HSAccessCore(object):
         """
         PRIVATE: get resource_id from resource digital identifier (uuid)
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid:  resource object identifier
         :return: private resource_id in HSAccess database, for use in internal functions. 
         :rtype: int 
@@ -1092,7 +1143,7 @@ class HSAccessCore(object):
 
         Note: this method is not subject to access control.
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
+        if not isinstance(resource_uuid, basestring):
             raise HSAUsageException("resource_uuid is not a unicode or str")
         self.__cur.execute("select resource_id from resources where resource_uuid=%s", (resource_uuid,))
         if self.__cur.rowcount > 1:
@@ -1106,8 +1157,8 @@ class HSAccessCore(object):
         """
         PRIVATE: get resource_uuid from (unique) resource path
 
-        :type resource_path: str
-        :param resource_path: str: resource object path in iRODS
+        :type resource_path: basestring
+        :param resource_path: basestring: resource object path in iRODS
         :return: resource_uuid in HSAccess database, for use in internal functions. 
         :rtype: int 
 
@@ -1128,25 +1179,25 @@ class HSAccessCore(object):
         """
         Get metadata for a resource as a dict record
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid: resource identifier for which to fetch metadata
-        :return: Dict object containing all metadata for a resource. 
-        :rtype: Dict
+        :return: dict object containing all metadata for a resource. 
+        :rtype: dict
 
         This returns a dictionary item of the format::
 
             {
-            'title': *title of resource*,
-            'uuid': *uuid of resource*,
-            'path': *path of resource*,
-            'shareable': *whether resource is shareable*,
-            'discoverable': *whether resource is discoverable*,
-            'public': *whether resource is publicly accessible*,
-            'published': *whether resource is published and has a DOI*,
-            'immutable': *whether resource is immutable*,
-            'asserting_login': *login of user who made last change to metadata*,
-            'asserting_uuid': *uuid of user who made last change to metadata*,
-            'assertion_time': *time of last change to metadata*
+                'title': *title of resource*,
+                'uuid': *uuid of resource*,
+                'path': *path of resource*,
+                'shareable': *whether resource is shareable*,
+                'discoverable': *whether resource is discoverable*,
+                'public': *whether resource is publicly accessible*,
+                'published': *whether resource is published and has a DOI*,
+                'immutable': *whether resource is immutable*,
+                'asserting_login': *login of user who made last change to metadata*,
+                'asserting_uuid': *uuid of user who made last change to metadata*,
+                'assertion_time': *time of last change to metadata*
             }
 
         The record returned from 'get_resource_metadata' is suitable for use in
@@ -1155,8 +1206,25 @@ class HSAccessCore(object):
         The 'asserting_uuid' is not used during 'assert_resource_metadata'; this is a record
         of "who to blame" for the last change.
 
+        Note that there is an intentional disparity between the flags and actual function due to the implications: 
+
+            * public -> discoverable
+
+            * published -> immutable
+
+        which are implemented at the logic level rather than the flag level. 
+
+        The reason that these are not implemented at the flag level is so that
+
+            * make_X_not_public undoes make_X_public (x = group, resource)
+
+            * make_X_not_published undoes make_X_published (x = group, resource)
+        
+        Otherwise, if these were implemented at the flag level, these operations would not restore initial state.
+        One would also need "make_X_not_discoverable" or "make_X_not_immutable", respectively. 
+
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
+        if not isinstance(resource_uuid, basestring):
             raise HSAUsageException("resource_uuid is not a unicode or str")
 
         self.__cur.execute("""select r.resource_uuid, r.resource_path,
@@ -1187,7 +1255,7 @@ class HSAccessCore(object):
         else:
             raise HSAUsageException("Resource uuid does not exist")
 
-    def assert_resource_metadata(self, metadata, user_uuid=None):
+    def assert_resource_metadata(self, metadata):
         """
         Assert changes in resource metadata
 
@@ -1198,7 +1266,8 @@ class HSAccessCore(object):
         format from 'get_resource_metadata'. This can be used to edit resource
         fields incrementally.
         """
-        self.assert_resource(metadata['path'], metadata['title'], metadata['uuid'], user_uuid,
+
+        self.assert_resource(metadata['path'], metadata['title'], metadata['uuid'], self.get_uuid(),
                              metadata['immutable'], metadata['published'],
                              metadata['discoverable'], metadata['public'],
                              metadata['shareable'])
@@ -1215,16 +1284,16 @@ class HSAccessCore(object):
         """
         Add or modify a resource in the resource registry
 
-        :type resource_path: str
-        :type resource_title: str
+        :type resource_path: basestring
+        :type resource_title: basestring
         :type resource_shareable: bool
         :type resource_immutable: bool
         :type resource_published: bool
         :type resource_discoverable: bool
         :type resource_public: bool
         :type resource_shareable: bool
-        :type resource_uuid: str
-        :type user_uuid: str
+        :type resource_uuid: basestring
+        :type user_uuid: basestring
         :param resource_path: path to resource in iRODS  title
         :param resource_title: human-readable title
         :param resource_immutable: whether resource is immutable
@@ -1235,7 +1304,7 @@ class HSAccessCore(object):
         :param resource_uuid: resource identifier
         :param user_uuid: user identifier of asserting user; omit to use current user.
         :return: resource identifier used
-        :rtype: str
+        :rtype: basestring
 
         This routine creates or changes resource parameters.
 
@@ -1264,26 +1333,26 @@ class HSAccessCore(object):
         as an administrator. If admin privileges are not present in this case,
         an exception is raised.
         """
-        # anti-bug usage by requireing argument types
-        if type(resource_title) is not unicode:
-            raise HSAUsageException("resource_title is not a unicode or str")
-        if not(type(resource_path) is unicode or type(resource_path) is str):
-            raise HSAUsageException("resource_path is not a string or unicode")
-        if type(resource_shareable) is not bool:
+        # anti-bug usage by requiring argument types
+        if not isinstance(resource_title, basestring):
+            raise HSAUsageException("resource_title is not a string")
+        if not isinstance(resource_path, basestring):
+            raise HSAUsageException("resource_path is not a string")
+        if not isinstance(resource_shareable, bool):
             raise HSAUsageException("resource_shareable is not boolean")
-        if type(resource_discoverable) is not bool:
+        if not isinstance(resource_discoverable, bool):
             raise HSAUsageException("resource_discoverable is not boolean")
-        if type(resource_public) is not bool:
+        if not isinstance(resource_public, bool):
             raise HSAUsageException("resource_public is not boolean")
-        if type(resource_published) is not bool:
+        if not isinstance(resource_published, bool):
             raise HSAUsageException("resource_published is not boolean")
-        if type(resource_immutable) is not bool:
+        if not isinstance(resource_immutable, bool):
             raise HSAUsageException("resource_immutable is not boolean")
 
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         if not (self.user_exists(user_uuid)):
             raise HSAUsageException("User uuid does not exist")
         requesting_user_id = self.__get_user_id_from_uuid(user_uuid)
@@ -1300,8 +1369,8 @@ class HSAccessCore(object):
             except HSAException:
                 resource_uuid = uuid.uuid4().hex
 
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         # print "resource uuid is", resource_uuid
         if self.resource_exists(resource_uuid):
@@ -1319,17 +1388,18 @@ class HSAccessCore(object):
                 if not self.user_is_admin():
                     raise HSAccessException("User must be an administrator")
             # making mutable again requires admin
-            if not resource_immutable and resource_immutable != meta['immutable'] and not self.user_is_admin():
-                raise HSAccessException("Resource is marked as immutable")
+            # if not resource_immutable and resource_immutable != meta['immutable'] and not self.user_is_admin():
+            #     raise HSAccessException("Resource is marked as immutable")
+            if resource_title != meta['title'] \
+                    and not self.user_is_admin() \
+                    and not self.resource_is_readwrite(resource_uuid):
+                raise HSAccessException("Resource must be writeable")
             # only admin users or owners can change the resource title and flags
-            if self.user_is_admin(self.get_uuid()) or self.resource_is_owned(resource_uuid):
-                self.__assert_resource_update(requesting_user_id, resource_uuid,
-                                              resource_path, resource_title,
-                                              resource_immutable, resource_published,
-                                              resource_discoverable, resource_public,
-                                              resource_shareable)
-            else:
-                raise HSAccessException("Regular user must own resource")
+            self.__assert_resource_update(requesting_user_id, resource_uuid,
+                                          resource_path, resource_title,
+                                          resource_immutable, resource_published,
+                                          resource_discoverable, resource_public,
+                                          resource_shareable)
         else:
             # NEW RESOURCE
             # 1) put the resource into the registry
@@ -1358,15 +1428,15 @@ class HSAccessCore(object):
         """
         PRIVATE: add a new resource to the registry. 
 
-        :type resource_path: str
-        :type resource_title: str
+        :type resource_path: basestring
+        :type resource_title: basestring
         :type resource_shareable: bool
         :type resource_immutable: bool
         :type resource_published: bool
         :type resource_discoverable: bool
         :type resource_public: bool
         :type resource_shareable: bool
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param requesting_user_id: user id of adding person
         :param resource_uuid: resource identifier
         :param resource_path: path in iRODS
@@ -1399,9 +1469,9 @@ class HSAccessCore(object):
         PRIVATE: add a new resource to the registry
 
         :type requesting_user_id: int
-        :type resource_uuid: str
-        :type resource_path: str
-        :type resource_title: str
+        :type resource_uuid: basestring
+        :type resource_path: basestring
+        :type resource_title: basestring
         :type resource_immutable: bool
         :type resource_published: bool
         :type resource_discoverable: bool
@@ -1447,7 +1517,7 @@ class HSAccessCore(object):
         """
         Delete a resource and all privilege information
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid: uuid of resource to delete
 
         Retractions are handled via database cascade logic (ON DELETE CASCADE).
@@ -1459,8 +1529,8 @@ class HSAccessCore(object):
         1. Only the owner of the group or an administrator can do this.
 
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         # only an owner or administrator can retract a group
         if not self.user_is_admin(self.get_uuid()) \
@@ -1480,15 +1550,15 @@ class HSAccessCore(object):
         """
         Determine whether a resource is registered in the database
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid: resource identifier
         :return: whether resource is registered
         :rtype: bool 
 
         This determines whether a given resource uuid corresponds to an existing resource.
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         try:
             self.get_resource_metadata(resource_uuid)
@@ -1500,7 +1570,7 @@ class HSAccessCore(object):
         """
         Whether resource is flagged as immutable
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid:  resource identifier
         :return: True if resource has been flagged as immutable
         :rtype: bool 
@@ -1517,23 +1587,23 @@ class HSAccessCore(object):
         The spirit of the immutable flag is that the affected resource's landing page can then safely be
         issued a data citation.
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         meta = self.get_resource_metadata(resource_uuid)
-        return meta['immutable']
+        return meta['immutable']  # or meta['published']
 
     def resource_is_published(self, resource_uuid):
         """
         Whether resource is flagged as published
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid:  resource identifier
         :return: bool: whether resource has been flagged as published
         :rtype: bool 
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         meta = self.get_resource_metadata(resource_uuid)
         return meta['published']
@@ -1542,21 +1612,21 @@ class HSAccessCore(object):
         """
         Whether resource is flagged as discoverable
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid:  resource identifier
         :return: bool: whether resource has been flagged as published
         :rtype: bool 
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
         meta = self.get_resource_metadata(resource_uuid)
-        return meta['discoverable']
+        return meta['discoverable']  # or meta['public']
 
     def resource_is_public(self, resource_uuid):
         """
         Whether resource is flagged as public
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid:  resource identifier
         :return: bool: whether resource has been flagged as published
         :rtype: bool 
@@ -1568,13 +1638,13 @@ class HSAccessCore(object):
         """
         Whether resource is flagged as shareable
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid:  resource identifier
         :return: bool: whether resource has been flagged as published
         :rtype: bool 
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         meta = self.get_resource_metadata(resource_uuid)
         return meta['shareable']
@@ -1586,7 +1656,7 @@ class HSAccessCore(object):
         """
         PRIVATE: translate from privilege code to database id
 
-        :type code: str:
+        :type code: basestring:
         :param code: code for privilege level: own, rw, ro, ns
         :return: privilege_id in database system
         :rtype: int 
@@ -1652,10 +1722,10 @@ class HSAccessCore(object):
         """
         Get privilege code for user over a resource
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid: uuid of resource
         :return: one of 'own', 'rw', 'ro', 'none' 
-        :rtype: str 
+        :rtype: basestring 
 
         This returns one of the following strings:
 
@@ -1665,7 +1735,7 @@ class HSAccessCore(object):
 
             'rw'
 
-                User can change thsi resource
+                User can change this resource
 
             'ro'
 
@@ -1675,8 +1745,8 @@ class HSAccessCore(object):
 
                 No privilege over resource
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         pnum = self.__get_user_privilege_over_resource(resource_uuid)
         if pnum >= self.__PRIVILEGE_OWN and pnum <= self.__PRIVILEGE_NONE:
@@ -1688,7 +1758,7 @@ class HSAccessCore(object):
         """
         Summarize privileges of a user over a resource, without incorporating resource flags
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param resource_uuid: uuid of resource
         :param user_uuid: uuid of user; omit to report on current user
         :return: privilege number 1-4
@@ -1733,11 +1803,11 @@ class HSAccessCore(object):
         """
         Get privilege code for user over a resource
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid: uuid of resource
         :param user_uuid: uuid of user; omit to report on current user
         :return: one of 'own', 'rw', 'ro', or 'none' 
-        :rtype: str 
+        :rtype: basestring 
 
         This checks for both user resource permissions and resource flags.
         This returns one of the following strings:
@@ -1760,9 +1830,9 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(resource_uuid, basestring):
             raise HSAUsageException("resource_uuid is not a string")
 
         pnum = self.__get_cumulative_user_privilege_over_resource(resource_uuid, user_uuid)
@@ -1775,11 +1845,12 @@ class HSAccessCore(object):
         """
         Summarize privileges of a user over a resource, incorporating resource flags
 
-        :type resource_uuid: str
-        :type user_uuid: str
+        :type resource_uuid: basestring
+        :type user_uuid: basestring
         :param resource_uuid: uuid of resource
         :param user_uuid: uuid of user; omit to report on current user
         :returns: int: privilege number 1-4
+        :rtype: int
 
         The access privileges are the minimum (most powerful) privilege granted by any one user.
         These include:
@@ -1831,9 +1902,9 @@ class HSAccessCore(object):
         """
         Check if resource is accessible to a specific user in a specific way
 
-        :type user_uuid: str
-        :type resource_uuid: str
-        :type code: str
+        :type user_uuid: basestring
+        :type resource_uuid: basestring
+        :type code: basestring
         :param user_uuid: user uuid, key to users table
         :param resource_uuid: resource uuid: key to resources table
         :param code: privilege code: key to privileges table
@@ -1871,9 +1942,9 @@ class HSAccessCore(object):
         """
         Check if resource is accessible in a specific way, combining both user and resource permissions
 
-        :type user_uuid: str
-        :type resource_uuid: str
-        :type code: str
+        :type user_uuid: basestring
+        :type resource_uuid: basestring
+        :type code: basestring
         :param user_uuid: user uuid, key to users table
         :param resource_uuid: resource uuid: key to resources table
         :param code: privilege code: key to privileges table
@@ -1913,8 +1984,8 @@ class HSAccessCore(object):
         """
         Check whether a given resource is owned by a specific user
 
-        :type resource_uuid: str
-        :type user_uuid: str
+        :type resource_uuid: basestring
+        :type user_uuid: basestring
         :param resource_uuid: resource identifier for resource to be checked for access
         :param user_uuid: uuid of user whose privileges should be checked; omit to check current user
         :return: bool: True if user owns resource.
@@ -1927,10 +1998,10 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         return self.__resource_accessible(user_uuid, resource_uuid, 'own')
 
@@ -1938,8 +2009,8 @@ class HSAccessCore(object):
         """
         Check whether a given resource is read/write to a specific user
 
-        :type resource_uuid: str
-        :type user_uuid: str
+        :type resource_uuid: basestring
+        :type user_uuid: basestring
         :param resource_uuid: resource identifier for resource to be checked for access
         :param user_uuid: uuid of user whose privileges should be checked; omit to check current user
         :return: bool: True if user has readwrite privilege over resource.
@@ -1949,10 +2020,10 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         return self.__resource_cumulatively_accessible(user_uuid, resource_uuid, 'rw')
 
@@ -1960,8 +2031,8 @@ class HSAccessCore(object):
         """
         Check whether a given resource is readable by a specific user
 
-        :type resource_uuid: str
-        :type user_uuid: str
+        :type resource_uuid: basestring
+        :type user_uuid: basestring
         :param resource_uuid: resource identifier for resource to be checked for access
         :param user_uuid: uuid of user whose privileges should be checked; omit to check current user
         :return: bool: True if user has read-only privilege over resource.
@@ -1971,10 +2042,10 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         return self.__resource_cumulatively_accessible(user_uuid, resource_uuid, 'ro')
 
@@ -1994,9 +2065,9 @@ class HSAccessCore(object):
         """
         Share a specific resource with a specific user
 
-        :type resource_uuid: str
-        :type user_uuid: str
-        :type privilege_code: str
+        :type resource_uuid: basestring
+        :type user_uuid: basestring
+        :type privilege_code: basestring
         :param resource_uuid: uuid of resource to affect (key to resource table)
         :param user_uuid: login name of user to gain access (key to users table)
         :param privilege_code: privilege to grant (key to privileges table)
@@ -2016,10 +2087,10 @@ class HSAccessCore(object):
         4. An administrative user may arbitrarily change sharing parameters.
 
         """
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         user_id = self.__get_user_id_from_uuid(user_uuid)
         # requested privilege id
@@ -2145,8 +2216,8 @@ class HSAccessCore(object):
         """
         Remove all sharing with user (owner only)
 
-        :type resource_uuid: str
-        :type user_uuid: str
+        :type resource_uuid: basestring
+        :type user_uuid: basestring
         :param resource_uuid: resource to change
         :param user_uuid: user with whom resource is currently shared; omit for current user
 
@@ -2163,10 +2234,10 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         # assert_id = self.__get_user_id_from_uuid(self.get_uuid())
         resource_id = self.__get_resource_id_from_uuid(resource_uuid)
@@ -2202,9 +2273,9 @@ class HSAccessCore(object):
         """
         Share a resource with a group of users
 
-        :type resource_uuid: str
-        :type group_uuid: str
-        :type privilege_code: str
+        :type resource_uuid: basestring
+        :type group_uuid: basestring
+        :type privilege_code: basestring
         :param resource_uuid: the resource to be shared
         :param group_uuid: the group with which to share it: self.get_uuid() must be a member.
         :param privilege_code: the privilege to assign: must be less than or equal to self.get_uuid()'s privilege
@@ -2228,10 +2299,10 @@ class HSAccessCore(object):
         for the object.  It is possible to downgrade privilege assigned by a user whose privilege has been
         downgraded, but this has not been implemented.
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         group_id = self.__get_group_id_from_uuid(group_uuid)
         privilege_id = self.__get_privilege_id_from_code(privilege_code)
@@ -2241,7 +2312,7 @@ class HSAccessCore(object):
         if privilege_id == self.__PRIVILEGE_OWN:
             raise HSAUsageException("A group cannot own a resource")
         if not self.user_is_admin(self.get_uuid()):
-            if not self.user_in_group(group_uuid, self.get_uuid()):
+            if not self.user_is_in_group(group_uuid, self.get_uuid()):
                 raise HSAccessException("User is not a member of the group")
             if not (self.user_is_admin(self.get_uuid())):
                 # use join and aggregation to access privilege records
@@ -2329,18 +2400,18 @@ class HSAccessCore(object):
         """
         Remove all sharing with user (owner or administrator only)
 
-        :type resource_uuid: str
-        :type group_uuid: str
+        :type resource_uuid: basestring
+        :type group_uuid: basestring
         :param resource_uuid: resource to change
         :param group_uuid: group with whom resource is currently potentially shared
 
         Only a group owner or administrator may revoke all privileges over a resource.  This
         includes all grants of privilege no matter what the source within the group.
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         # assert_id = self.__get_user_id_from_uuid(self.get_uuid())
         resource_id = self.__get_resource_id_from_uuid(resource_uuid)
@@ -2356,12 +2427,12 @@ class HSAccessCore(object):
     # group membership
     ###########################################################
     # refactored to remove duplication between group privilege and membership
-    def user_in_group(self, group_uuid, user_uuid=None):
+    def user_is_in_group(self, group_uuid, user_uuid=None):
         """
         Check whether a user is a member of a group
 
-        :type user_uuid: str
-        :type group_uuid: str
+        :type user_uuid: basestring
+        :type group_uuid: basestring
         :param user_uuid: uuid of a valid user, omit to check current user
         :param group_uuid: group uuid of a valid group
         :return: bool: True if the uuid is in the group
@@ -2372,10 +2443,10 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         user_id = self.__get_user_id_from_uuid(user_uuid)
         group_id = self.__get_group_id_from_uuid(group_uuid)
         self.__cur.execute("""select privilege_id from user_group_privilege
@@ -2395,15 +2466,15 @@ class HSAccessCore(object):
     #     """
     #     Check whether a user is a member of a group
     #
-    #     :type user_uuid: str
-    #     :type group_uuid: str
+    #     :type user_uuid: basestring
+    #     :type group_uuid: basestring
     #     :param user_uuid: uuid of a valid user
     #     :param group_uuid: group uuid of a valid group
     #     :return: True if the uuid is in the group
     #     """
     #     if user_uuid is None:
     #         user_uuid = self.get_uuid()
-    #     if type(user_uuid) is not str:
+    #     if not isinstance(user_uuid, basestring):
     #         raise HSAUsageException("user_uuid is not a string")
     #     user_id = self.__get_user_id_from_uuid(user_uuid)
     #     group_id = self.__get_group_id_from_uuid(group_uuid)
@@ -2420,15 +2491,15 @@ class HSAccessCore(object):
     #     """
     #     Add a user to a group if not present already
     #
-    #     :type user_uuid: str
-    #     :type group_uuid: str
+    #     :type user_uuid: basestring
+    #     :type group_uuid: basestring
     #     :param user_uuid: user to be added to the group
     #     :param group_uuid: group to which to add user
     #     :return:
     #     """
     #     if user_uuid is None:
     #         user_uuid = self.get_uuid()
-    #     if type(user_uuid) is not str:
+    #     if not isinstance(user_uuid, basestring):
     #         raise HSAUsageException("user_uuid is not a string")
     #     # if not self.user_is_active(self.get_uuid()):
     #     #     raise HSAUsageException("User login '"+self.__get_user_login_from_uuid(self.get_uuid())
@@ -2452,7 +2523,7 @@ class HSAccessCore(object):
     #     """
     #     if user_uuid is None:
     #         user_uuid = self.get_uuid()
-    #     if type(user_uuid) is not str:
+    #     if not isinstance(user_uuid, basestring):
     #         raise HSAUsageException("user_uuid is not a string")
     #     requesting_id = self.__get_user_id_from_uuid(self.get_uuid())
     #     user_id = self.__get_user_id_from_uuid(user_uuid)
@@ -2468,8 +2539,8 @@ class HSAccessCore(object):
     #     """
     #     Remove a user from a group if not absent already
     #
-    #     :type user_uuid: str
-    #     :type group_uuid: str
+    #     :type user_uuid: basestring
+    #     :type group_uuid: basestring
     #     :param user_uuid: user to be removed from the group
     #     :param group_uuid: group from which to remove user
     #     :return:
@@ -2499,11 +2570,11 @@ class HSAccessCore(object):
         Get privilege code for user over a group
 
         :param group_uuid:
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: uuid of group
         :param user_uuid: uuid of user; omit to report on current user
         :return: one of 'own', 'rw', 'ro', 'none' 
-        :rtype: str 
+        :rtype: basestring 
 
         This checks for both user group permissions and group flags, including group_public.
         This returns one of the following strings:
@@ -2526,11 +2597,11 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
 
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         pnum = self.__get_cumulative_user_privilege_over_group(group_uuid, user_uuid)
         if pnum >= self.__PRIVILEGE_OWN and pnum <= self.__PRIVILEGE_NONE:
             return self.__PRIVILEGE_CODES[pnum-1]
@@ -2542,11 +2613,11 @@ class HSAccessCore(object):
         Get privilege code for user over a group
 
         :param group_uuid:
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: uuid of group
         :param user_uuid: uuid of user; omit to report on current user
         :return: one of 'own', 'rw', 'ro', or 'none' 
-        :rtype: str 
+        :rtype: basestring 
 
         This checks for both user group permissions and group flags, including group_public.
         This returns one of the following strings:
@@ -2569,10 +2640,10 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         pnum = self.__get_user_privilege_over_group(group_uuid, user_uuid)
         if pnum >= self.__PRIVILEGE_OWN and pnum <= self.__PRIVILEGE_NONE:
             return self.__PRIVILEGE_CODES[pnum-1]
@@ -2583,8 +2654,8 @@ class HSAccessCore(object):
     def __get_cumulative_user_privilege_over_group(self, group_uuid, user_uuid=None):
         """
         Get the privilege that is specified for a user over a specific group
-        :type user_uuid: str
-        :type group_uuid: str
+        :type user_uuid: basestring
+        :type group_uuid: basestring
         :param user_uuid: uuid of user for which to obtain privilege
         :param group_uuid: group to which to allow access
         :return: privilege code 1-4
@@ -2615,8 +2686,8 @@ class HSAccessCore(object):
     def __get_user_privilege_over_group(self, group_uuid, user_uuid=None):
         """
         Get the privilege that is specified for a user over a specific group
-        :type user_uuid: str
-        :type group_uuid: str
+        :type user_uuid: basestring
+        :type group_uuid: basestring
         :param user_uuid: uuid of user for which to obtain privilege
         :param group_uuid: group to which to allow access
         :return: privilege number 1-4
@@ -2644,9 +2715,9 @@ class HSAccessCore(object):
     def __group_cumulatively_accessible(self, user_uuid, group_uuid, code):
         """
         PRIVATE: check whether a group is accessible to a user
-        :type user_uuid: str
-        :type group_uuid: str
-        :type code: str
+        :type user_uuid: basestring
+        :type group_uuid: basestring
+        :type code: basestring
         :param user_uuid: uuid of user for whom to check privilege (key to users table)
         :param group_uuid: uuid of group for which to check privilege (key to groups table)
         :param code: privilege code (key to privileges table)
@@ -2669,8 +2740,8 @@ class HSAccessCore(object):
         """
         Check whether a group is owned by a user
 
-        :type user_uuid: str
-        :type group_uuid: str
+        :type user_uuid: basestring
+        :type group_uuid: basestring
         :param user_uuid: uuid of user to check
         :param group_uuid: group uuid of group to check
         :return: bool: True if group uuid is owned by user uuid
@@ -2678,10 +2749,10 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         return self.__group_cumulatively_accessible(user_uuid, group_uuid, 'own')
 
     # can invite members to group
@@ -2689,8 +2760,8 @@ class HSAccessCore(object):
         """
         Check whether a group is owned by a user
 
-        :type user_uuid: str
-        :type group_uuid: str
+        :type user_uuid: basestring
+        :type group_uuid: basestring
         :param user_uuid: uuid of user to check
         :param group_uuid: group uuid of group to check
         :return: bool: True if group uuid is read/write to user uuid
@@ -2698,10 +2769,10 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         return self.__group_cumulatively_accessible(user_uuid, group_uuid, 'rw')
 
     # minimal group membership: can see members but cannot add/invite them
@@ -2709,8 +2780,8 @@ class HSAccessCore(object):
         """
         Check whether a group is readable by a user
 
-        :type user_uuid: str
-        :type group_uuid: str
+        :type user_uuid: basestring
+        :type group_uuid: basestring
         :param user_uuid: uuid of user to check
         :param group_uuid: group uuid of group to check
         :return: bool: True if group uuid is readable by user uuid
@@ -2718,10 +2789,10 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         return self.__group_cumulatively_accessible(user_uuid, group_uuid, 'ro')
 
     # CLI: hs invite ....
@@ -2733,8 +2804,8 @@ class HSAccessCore(object):
         :param user_uuid:
         :param privilege_code:
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         user_id = self.__get_user_id_from_uuid(user_uuid)
         privilege_id = self.__get_privilege_id_from_code(privilege_code)
         group_id = self.__get_group_id_from_uuid(group_uuid)
@@ -2854,8 +2925,8 @@ class HSAccessCore(object):
         :param group_uuid: uuid of group
         :param user_uuid: uuid of user
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         user_id = self.__get_user_id_from_uuid(user_uuid)
         group_id = self.__get_group_id_from_uuid(group_uuid)
         requesting_id = self.__get_user_id_from_uuid(self.get_uuid())
@@ -2873,29 +2944,29 @@ class HSAccessCore(object):
         """
         Get a list of invitations to join groups that can be accepted or refused
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: uuid of user; omit for current user.
-        :return: Dict of group invitations. 
-        :rtype: Dict 
+        :return: dict of group invitations. 
+        :rtype: dict 
 
         This is from the point of view of the invited user.
         List group invitations in the form::
 
             {
-                'group_uuid': {uuid of group},
-                'group_name': {name of group},
-                'group_privilege': {privilege_code},
-                'inviting_user_uuid': {uuid of inviting user},
-                'inviting_user_name': {name of inviting user},
-                'inviting_user_login': {login of inviting user}
+                'group_uuid': *uuid of group*,
+                'group_name': *name of group*,
+                'group_privilege': *privilege_code*,
+                'inviting_user_uuid': *uuid of inviting user*,
+                'inviting_user_name': *name of inviting user*,
+                'inviting_user_login': *login of inviting user*
             }
 
         Note: this has been refactored to have a single level of dict objects rather than two.
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         self.__cur.execute("""select g.group_uuid, g.group_name, p.privilege_code,
                               a.user_uuid, a.user_name, a.user_login
                               from user_invitations_to_group i
@@ -2922,20 +2993,20 @@ class HSAccessCore(object):
         """
         Get a list of invitations to join groups that can be uninvited
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: uuid of user; omit for current user.
-        :return: Dict of invitations sent by a user 
-        :rtype: Dict 
+        :return: dict of invitations sent by a user 
+        :rtype: dict 
 
         This is from the point of view of the inviting user. List group invitations in the form::
 
             {
-                'group_uuid': {uuid of group},
-                'group_name': {name of group},
-                'group_privilege': {privilege_code},
-                'inviting_user_uuid': {uuid of inviting user},
-                'inviting_user_name': {name of inviting user},
-                'inviting_user_login': {login of inviting user}
+                'group_uuid': *uuid of group*,
+                'group_name': *name of group*,
+                'group_privilege': *privilege_code*,
+                'inviting_user_uuid': *uuid of inviting user*,
+                'inviting_user_name': *name of inviting user*,
+                'inviting_user_login': *login of inviting user*
             }
 
         Note: this has been refactored to have a single level of dict objects rather than two.
@@ -2943,8 +3014,8 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         self.__cur.execute("""select u.user_uuid, u.user_name, u.user_login,
                                      g.group_uuid, g.group_name,
                                      p.privilege_code,
@@ -2976,18 +3047,18 @@ class HSAccessCore(object):
         """
         Accept an invitation to join a group
 
-        :type group_uuid: str
-        :type host_uuid: str
+        :type group_uuid: basestring
+        :type host_uuid: basestring
         :param group_uuid: uuid of group for which to accept invitation
         :param host_uuid: user uuid of person who invited you
 
         Accept an invitation to a group previously made by another user via
         'invite_user_to_group'
         """
-        if not (type(host_uuid) is unicode or type(host_uuid) is str):
-            raise HSAUsageException("host_uuid is not a unicode or str")
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(host_uuid, basestring):
+            raise HSAUsageException("host_uuid is not a string")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         user_id = self.__get_user_id_from_uuid(self.get_uuid())
         group_id = self.__get_group_id_from_uuid(group_uuid)
         requesting_id = self.__get_user_id_from_uuid(host_uuid)
@@ -3009,10 +3080,10 @@ class HSAccessCore(object):
 
         Refuse an invitation created with 'invite_user_to_group'.
         """
-        if not (type(host_uuid) is unicode or type(host_uuid) is str):
-            raise HSAUsageException("host_uuid is not a unicode or str")
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(host_uuid, basestring):
+            raise HSAUsageException("host_uuid is not a string")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         user_id = self.__get_user_id_from_uuid(self.get_uuid())
         group_id = self.__get_group_id_from_uuid(group_uuid)
         requesting_id = self.__get_user_id_from_uuid(host_uuid)
@@ -3034,10 +3105,10 @@ class HSAccessCore(object):
         :param user_uuid:
         :param privilege_code:
         """
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         user_id = self.__get_user_id_from_uuid(user_uuid)
         privilege_id = self.__get_privilege_id_from_code(privilege_code)
@@ -3158,10 +3229,10 @@ class HSAccessCore(object):
         :param resource_uuid: uuid of resource
         :param user_uuid: uuid of user
         """
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         user_id = self.__get_user_id_from_uuid(user_uuid)
         resource_id = self.__get_resource_id_from_uuid(resource_uuid)
@@ -3180,29 +3251,29 @@ class HSAccessCore(object):
         """
         Get a list of invitations to join resources that can be accepted or refused
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: uuid of user; omit for current user.
-        :return: Dict of resource invitations. 
-        :rtype: Dict 
+        :return: dict of resource invitations. 
+        :rtype: dict 
 
         This is from the point of view of the invited user.
         List resource invitations in the form::
 
             {
-                'resource_uuid': {uuid of resource},
-                'resource_title': {name of resource},
-                'resource_privilege': {privilege_code},
-                'inviting_user_uuid': {uuid of inviting user},
-                'inviting_user_name': {name of inviting user},
-                'inviting_user_login': {login of inviting user}
+                'resource_uuid': *uuid of resource*,
+                'resource_title': *name of resource*,
+                'resource_privilege': *privilege_code*,
+                'inviting_user_uuid': *uuid of inviting user*,
+                'inviting_user_name': *name of inviting user*,
+                'inviting_user_login': *login of inviting user*
             }
 
         Note: this has been refactored to have a single level of dict objects rather than two.
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         self.__cur.execute("""select g.resource_uuid, g.resource_title, p.privilege_code, a.user_uuid, a.user_name, a.user_login
                               from user_invitations_to_resource i
                               left join resources g on i.resource_id=g.resource_id
@@ -3228,20 +3299,20 @@ class HSAccessCore(object):
         """
         Get a list of invitations to join resources that can be uninvited
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: uuid of user; omit for current user.
-        :return: Dict of invitations sent by user. 
-        :rtype: Dict 
+        :return: dict of invitations sent by user. 
+        :rtype: dict 
 
         This is from the point of view of the inviting user. List resource invitations in the form::
 
             {
-                'resource_uuid': {uuid of resource},
-                'resource_title': {name of resource},
-                'resource_privilege': {privilege_code},
-                'inviting_user_uuid': {uuid of inviting user},
-                'inviting_user_name': {name of inviting user},
-                'inviting_user_login': {login of inviting user}
+                'resource_uuid': *uuid of resource*,
+                'resource_title': *name of resource*,
+                'resource_privilege': *privilege_code*,
+                'inviting_user_uuid': *uuid of inviting user*,
+                'inviting_user_name': *name of inviting user*,
+                'inviting_user_login': *login of inviting user*
             }
 
         Note: this has been refactored to have a single level of dict objects rather than two.
@@ -3249,8 +3320,8 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         self.__cur.execute("""select g.resource_uuid, g.resource_title, p.privilege_code, u.user_uuid, u.user_name, u.user_login
                               from user_invitations_to_resource i
                               left join resources g on i.resource_id=g.resource_id
@@ -3276,18 +3347,18 @@ class HSAccessCore(object):
         """
         Accept an invitation to join a resource
 
-        :type resource_uuid: str
-        :type host_uuid: str
+        :type resource_uuid: basestring
+        :type host_uuid: basestring
         :param resource_uuid: uuid of resource for which to accept invitation
         :param host_uuid: user uuid of person who invited you
 
         Accept an invitation to a resource previously made by another user via
         'invite_user_to_resource'
         """
-        if not (type(host_uuid) is unicode or type(host_uuid) is str):
-            raise HSAUsageException("host_uuid is not a unicode or str")
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(host_uuid, basestring):
+            raise HSAUsageException("host_uuid is not a string")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         user_id = self.__get_user_id_from_uuid(self.get_uuid())
         resource_id = self.__get_resource_id_from_uuid(resource_uuid)
@@ -3310,10 +3381,10 @@ class HSAccessCore(object):
 
         Refuse an invitation created with 'invite_user_to_resource'.
         """
-        if not (type(host_uuid) is unicode or type(host_uuid) is str):
-            raise HSAUsageException("host_uuid is not a unicode or str")
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(host_uuid, basestring):
+            raise HSAUsageException("host_uuid is not a string")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         user_id = self.__get_user_id_from_uuid(self.get_uuid())
         resource_id = self.__get_resource_id_from_uuid(resource_uuid)
@@ -3330,9 +3401,9 @@ class HSAccessCore(object):
         """
         DEPRECATED: Attempt to share a group with a user: this allows read/write to the group membership list
 
-        :type group_uuid: str
-        :type user_uuid: str
-        :type privilege_code: str
+        :type group_uuid: basestring
+        :type user_uuid: basestring
+        :type privilege_code: basestring
         :param group_uuid: group identifier of group to which privilege should be assigned
         :param user_uuid: uuid of user to whom privilege should be granted
         :param privilege_code: privilege to be granted.
@@ -3358,10 +3429,10 @@ class HSAccessCore(object):
 
         :todo: not safe from removing last owner
         """
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         user_id = self.__get_user_id_from_uuid(user_uuid)
         privilege_id = self.__get_privilege_id_from_code(privilege_code)
         group_id = self.__get_group_id_from_uuid(group_uuid)
@@ -3475,8 +3546,8 @@ class HSAccessCore(object):
         """
         Attempt to unshare a group with a user
 
-        :type group_uuid: str
-        :type user_uuid: str
+        :type group_uuid: basestring
+        :type user_uuid: basestring
         :param group_uuid: group identifier of group for which privilege should be removed.
         :param user_uuid: uuid of user for whom privilege should be removed; omit for current user.
 
@@ -3491,10 +3562,10 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         # these serve as argument checks
         user_id = self.__get_user_id_from_uuid(user_uuid)
         group_id = self.__get_group_id_from_uuid(group_uuid)
@@ -3503,7 +3574,7 @@ class HSAccessCore(object):
         # access control logic:
         if self.user_is_admin(self.get_uuid()) \
                 or self.group_is_owned(group_uuid) \
-                or (user_uuid == self.get_uuid() and self.user_in_group(group_uuid, user_uuid)):
+                or (user_uuid == self.get_uuid() and self.user_is_in_group(group_uuid, user_uuid)):
             if self.get_number_of_group_owners(group_uuid) > 1 or not self.group_is_owned(group_uuid, user_uuid):
                 self.__cur.execute("delete from user_access_to_group where group_id=%s and user_id=%s",
                                    (group_id, user_id))
@@ -3522,26 +3593,26 @@ class HSAccessCore(object):
         """
         Make a list of resources held by user, sorted by title
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: uuid of user; omit for current user.
-        :return: List of resources containing dict items
+        :return: list of resources containing dict items
         :rtype: list[dict[str, str]] 
 
         This returns a list of resource dict records, in the format::
 
             {
-            'uuid': *uuid of resource*,
-            'title': *title of resource*,
-            'path': *path of resource*,
-            'privilege': *privilege code*
+                'uuid': *uuid of resource*,
+                'title': *title of resource*,
+                'path': *path of resource*,
+                'privilege': *privilege code*
             }
 
         Note: this is not currently subject to access control.
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         user_id = self.__get_user_id_from_uuid(user_uuid)
         self.__cur.execute("""select distinct r.resource_uuid, r.resource_title, r.resource_path, p.privilege_code
           from user_resource_privilege u
@@ -3560,24 +3631,24 @@ class HSAccessCore(object):
         """
         Make a list of resources held by user, sorted by title
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid: uuid of user; omit for current user.
-        :return: List of resources containing dict items
+        :return: list of resources containing dict items
         :rtype: list[dict[str, str]] 
 
         This returns a list of user dict records, in the format::
 
             {
-            'uuid': *uuid of user*,
-            'name': *name of user*,
-            'login': *login of user*,
-            'privilege': *privilege code*
+                'uuid': *uuid of user*,
+                'name': *name of user*,
+                'login': *login of user*,
+                'privilege': *privilege code*
             }
 
         Note: this is not currently subject to access control.
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         resource_id = self.__get_resource_id_from_uuid(resource_uuid)
         self.__cur.execute("""select distinct u.user_uuid, u.user_name, u.user_login, p.privilege_code
@@ -3597,24 +3668,24 @@ class HSAccessCore(object):
         """
         Retrieve resources accessible to a specific group.
 
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: uuid of the group to check
-        :return: List of Dicts of resource info
+        :return: list of Dicts of resource info
         :rtype: list[dict[str, str]] 
 
         This returns a list of resources accessible to a specific group, in the format::
 
             {
-            'uuid': *uuid of resource*,
-            'title': *title of resource*,
-            'path': *path of resource*,
-            'privilege': *privilege code*
+                'uuid': *uuid of resource*,
+                'title': *title of resource*,
+                'path': *path of resource*,
+                'privilege': *privilege code*
             }
 
         Note: this is not subject to access control.
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         group_id = self.__get_group_id_from_uuid(group_uuid)
         self.__cur.execute("""select DISTINCT r.resource_title, r.resource_uuid, r.resource_path, q.privilege_code
                               from resources r
@@ -3635,9 +3706,9 @@ class HSAccessCore(object):
         """
         Retrieve resources accessible to a specific group.
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid: uuid of the resource to check
-        :return: List of Dicts describing groups
+        :return: list of Dicts describing groups
         :rtype: list[dict[str, str]] 
 
         This returns a list of groups that can access a resource, in the format:
@@ -3650,8 +3721,8 @@ class HSAccessCore(object):
 
         Note: this is not subject to access control.
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         resource_id = self.__get_resource_id_from_uuid(resource_uuid)
         self.__cur.execute("""select DISTINCT g.group_name, g.group_uuid, q.privilege_code
@@ -3672,23 +3743,21 @@ class HSAccessCore(object):
         """
         Make a list of public resources, sorted by title
 
-        :type user_uuid: str
-        :param user_uuid: uuid of user; omit for current user.
-        :return: List of resources containing dict items
+        :return: list of resources containing dict items
         :rtype: list[dict[str, str]]
 
         This returns a list of resource dict records, in the format::
 
             {
-            'uuid': *uuid of resource*,
-            'title': *title of resource*,
-            'path': *path of resource*,
-            'privilege': *privilege code*
+                'uuid': *uuid of resource*,
+                'title': *title of resource*,
+                'path': *path of resource*,
+                'privilege': *privilege code*
             }
 
         Note: this is not currently subject to access control.
         """
-        self.__cur.execute("""select resource_uuid, resource_title, resource_path,
+        self.__cur.execute("""SELECT resource_uuid, resource_title, resource_path,
                            'ro' AS privilege_code
                            FROM resources
                            WHERE resource_public
@@ -3705,28 +3774,27 @@ class HSAccessCore(object):
         """
         Make a list of public resources, sorted by title
 
-        :type user_uuid: str
-        :param user_uuid: uuid of user; omit for current user.
-        :return: List of resources containing dict items
+        :return: list of resources containing dict items
         :rtype: list[dict[str, str]]
 
         This returns a list of resource dict records, in the format::
 
             {
-            'uuid': *uuid of resource*,
-            'title': *title of resource*,
-            'path': *path of resource*,
-            'privilege': *privilege code*
+                'uuid': *uuid of resource*,
+                'title': *title of resource*,
+                'path': *path of resource*,
+                'privilege': *privilege code*
             }
 
         Note: this is not currently subject to access control.
         """
-        self.__cur.execute("""select resource_uuid, resource_title, resource_path,
+        self.__cur.execute("""SELECT resource_uuid, resource_title, resource_path,
                            CASE WHEN resource_public THEN 'ro'
                                 ELSE 'none'
                            END AS privilege_code
                            FROM resources
                            WHERE resource_discoverable is TRUE
+                              OR resource_public is TRUE
                            ORDER BY resource_title""")
         result = []
         for row in self.__cur:
@@ -3737,20 +3805,20 @@ class HSAccessCore(object):
         return result
 
     # CLI: hs ls groups
-    def groups_of_user(self, user_uuid=None):
+    def get_groups_of_user(self, user_uuid=None):
         """
         Make a list of groups in which a user is a member.
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: uuid of user, or None to use current authorized user
-        :return: List of Dict entries for groups of user. 
+        :return: list of Dict entries for groups of user. 
         :rtype: list[dict[str, str]] 
 
         This returns a list of dictionaries, each of the form::
 
             {
-            'uuid': *group's uuid*,
-            'name': *group's name*
+                'uuid': *group's uuid*,
+                'name': *group's name*
             }
 
         for use in displaying group data.
@@ -3759,8 +3827,8 @@ class HSAccessCore(object):
         # default to irods user if no uuid given
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         user_id = self.__get_user_id_from_uuid(user_uuid)
         self.__cur.execute("""select distinct g.group_uuid, g.group_name
                               from user_membership_in_group m left join groups g on m.group_id=g.group_id
@@ -3778,7 +3846,7 @@ class HSAccessCore(object):
         """
         STUB: Create a folder in the user_folders relation
 
-        :type folder_name: str
+        :type folder_name: basestring
         :param folder_name: The name of the folder
 
         Uses self.get_uuid(): the identity of the current user.
@@ -3790,7 +3858,7 @@ class HSAccessCore(object):
         """
         STUB: Remove a folder; things in the folder become "unfiled"
 
-        :type folder_name: str
+        :type folder_name: basestring
         :param folder_name: The name of the folder
 
         Uses: self.get_uuid(): the identity of the current user.
@@ -3802,8 +3870,8 @@ class HSAccessCore(object):
         """
         STUB: Put a resource into a previously created folder
 
-        :type resource_uuid: str
-        :type folder_name: str
+        :type resource_uuid: basestring
+        :type folder_name: basestring
         :param resource_uuid: identifier of resource to put into folder
         :param folder_name: name of the folder
 
@@ -3816,8 +3884,8 @@ class HSAccessCore(object):
         """
         STUB: Remove a resource from a folder; it becomes unfiled.
 
-        :type resource_uuid: str
-        :type folder_name: str
+        :type resource_uuid: basestring
+        :type folder_name: basestring
         :param resource_uuid: identifier of resource to put into folder
         :param folder_name: name of the folder
         """
@@ -3828,7 +3896,7 @@ class HSAccessCore(object):
         STUB: Return a list of folders for this user
 
         :return: A list of folder names
-        :rtype: List<str> 
+        :rtype: list[basestring] 
 
         Uses self.get_uuid(): current user identity
         """
@@ -3838,16 +3906,20 @@ class HSAccessCore(object):
         """
         STUB: Get a structured dictionary of folders and their contents
 
-        :type folder: str
+        :type folder: basestring
         :param folder: the optional name of a folder to use as the top of the hierarchy
         :return: A dict object of contents
-        :rtype: Dict<str> 
+        :rtype: dict[basestring] 
 
         Uses self.get_uuid(): the current user.
 
         This returns a dictionary structure of the form::
 
-            { folder: { resource_uuid : { title : *resource title*, 'access' : *access code* }}}
+<<<<<<< HEAD
+            { folder: { resource_uuid : { title : <resource title>, 'access' : <access code> }}}
+=======
+            { 'folder': { 'resource_uuid': { 'title' : *resource title*, 'access' : *access code* }}}
+>>>>>>> master
 
         1. If folder is None, report on the whole hierarchy of user folders
 
@@ -3863,7 +3935,7 @@ class HSAccessCore(object):
         """
         STUB: Create a tag in the user_tags relation
 
-        :type tag_name: str
+        :type tag_name: basestring
         :param tag_name: The name of the tag
 
         Uses self.get_uuid(): the identity of the current user.
@@ -3877,7 +3949,7 @@ class HSAccessCore(object):
         """
         STUB: Remove a tag; things in the tag become "untagged"
 
-        :type tag_name: str
+        :type tag_name: basestring
         :param tag_name: The name of the tag
 
         Uses self.get_uuid(): the identity of the current user.
@@ -3891,8 +3963,8 @@ class HSAccessCore(object):
         """
         STUB: Assign a resource a previously created tag
 
-        :type resource_uuid: str
-        :type tag_name: str
+        :type resource_uuid: basestring
+        :type tag_name: basestring
         :param resource_uuid: identifier of resource to put into tag
         :param tag_name: name of the tag
 
@@ -3906,8 +3978,8 @@ class HSAccessCore(object):
         """
         STUB: Remove a tag from a resource; it becomes untagged.
 
-        :type resource_uuid: str
-        :type tag_name: str
+        :type resource_uuid: basestring
+        :type tag_name: basestring
         :param resource_uuid: identifier of resource to put into tag
         :param tag_name: name of the tag
 
@@ -3922,7 +3994,7 @@ class HSAccessCore(object):
         STUB: Return a list of tags for this user
 
         :return: A list of tag names
-        :rtype: List<str> 
+        :rtype: list[basestring] 
 
         Uses self.get_uuid(): current user identity
         """
@@ -3932,15 +4004,15 @@ class HSAccessCore(object):
         """
         STUB: Get a structured dictionary of tags and their contents
 
-        :type tag: str
+        :type tag: basestring
         :param tag: the name of a tag to use
         :return: A dict object of contents
-        :rtype: Dict<str> 
+        :rtype: dict[basestring] 
 
         Uses: self.get_uuid(): the current user.
         This returns a dictionary structure of the form::
 
-            { "tag": { resource_uuid : { title : *resource title*, 'access' : *access code* }}}
+            { 'tag': { 'resource_uuid' : { 'title' : *resource title*, 'access' : *access code* }}}
 
         If tag argument is not None, report on only one tag.
         """
@@ -3954,13 +4026,13 @@ class HSAccessCore(object):
         """
         Count the number of resource owners for a resource, for reporting purposes.
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid: identifier of resource to report upon
         :return: number of owners
         :rtype: int
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         resource_id = self.__get_resource_id_from_uuid(resource_uuid)
         return self.__get_number_of_resource_owners_by_id(resource_id)
@@ -3975,19 +4047,19 @@ class HSAccessCore(object):
         """
         Count the number of resource owners for a resource, for reporting purposes.
 
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: identifier of group to report upon
         :return: number of owners
         :rtype: int
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         group_id = self.__get_group_id_from_uuid(group_uuid)
         return self.__get_number_of_group_owners_by_id(group_id)
 
     def __get_number_of_group_owners_by_id(self, group_id):
-        self.__cur.execute("""select count(distinct user_id) as count from user_group_privilege
-                              where group_id=%s and privilege_id=1""",
+        self.__cur.execute("""SELECT count(distinct user_id) AS count FROM user_group_privilege
+                              WHERE group_id=%s and privilege_id=1""",
                            (group_id,))
         return self.__cur.fetchone()['count']
 
@@ -3995,7 +4067,7 @@ class HSAccessCore(object):
         """
         Count the number of resources owned by a user.
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: identifier of group to report upon; None reports upon current user
         :return: number of resources owned
         :rtype: int
@@ -4004,11 +4076,11 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         user_id = self.__get_user_id_from_uuid(user_uuid)
-        self.__cur.execute("""select count(distinct resource_id) as count from user_resource_privilege
-                              where user_id=%s and privilege_id=1""",
+        self.__cur.execute("""SELECT count(DISTINCT resource_id) AS count FROM user_resource_privilege
+                              WHERE user_id=%s AND privilege_id=1""",
                            (user_id,))
         return self.__cur.fetchone()['count']
 
@@ -4017,7 +4089,7 @@ class HSAccessCore(object):
         """
         Count the number of groups owned by a user.
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: identifier of group to report upon; None reports upon current user
         :return: number of groups owned
         :rtype: int
@@ -4026,11 +4098,11 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         user_id = self.__get_user_id_from_uuid(user_uuid)
-        self.__cur.execute("""select count(distinct group_id) as count from user_group_privilege
-                              where user_id=%s and privilege_id=1""",
+        self.__cur.execute("""SELECT count(distinct group_id) AS count FROM user_group_privilege
+                              WHERE user_id=%s AND privilege_id=1""",
                            (user_id,))
         return self.__cur.fetchone()['count']
 
@@ -4039,7 +4111,7 @@ class HSAccessCore(object):
         """
         Count the number of resources held by a user.
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: identifier of group to report upon; None reports upon current user
         :return: number of resources held
         :rtype: int
@@ -4048,11 +4120,11 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         user_id = self.__get_user_id_from_uuid(user_uuid)
-        self.__cur.execute("""select count(distinct resource_id) as count from user_resource_privilege
-                              where user_id=%s""",
+        self.__cur.execute("""SELECT count(distinct resource_id) AS count FROM user_resource_privilege
+                              WHERE user_id=%s""",
                            (user_id,))
         return self.__cur.fetchone()['count']
 
@@ -4064,7 +4136,7 @@ class HSAccessCore(object):
         """
         Count the number of groups in which a user is a member
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: identifier of group to report upon; None reports upon current user
         :return: number of groups joined
         :rtype: int
@@ -4073,8 +4145,8 @@ class HSAccessCore(object):
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         if not self.user_exists(user_uuid):
             raise HSAUsageException("User uuid does not exist")
         user_id = self.__get_user_id_from_uuid(user_uuid)
@@ -4092,7 +4164,7 @@ class HSAccessCore(object):
         Returns the uuid of the current user
 
         :return: uuid of current user
-        :rtype: str
+        :rtype: basestring
         """
         return self.__user_uuid
 
@@ -4101,7 +4173,7 @@ class HSAccessCore(object):
         Returns the (iRODS) login name of the current user
 
         :return: login name of current user
-        :rtype: str
+        :rtype: basestring
         """
         return self.__irods_user
 
@@ -4113,7 +4185,7 @@ class HSAccessCore(object):
         """
         PRIVATE: Delete all data from the database except for starting situation, for testing.
 
-        :type are_you_sure: str
+        :type are_you_sure: basestring
         :param are_you_sure: a string that must have the value "yes, I'm sure"
 
         This clears the database to an install state. This is used for testing,
@@ -4138,8 +4210,10 @@ class HSAccessCore(object):
         else:
             raise HSAccessException("User is not an administrator")
 
-
+############################################################
 # class encapsulates all access control actions, including convenience functions
+# Members of this class that are not inherited do not contact iRODS directly
+############################################################
 class HSAccess(HSAccessCore):
     """
     Access control class for HydroShare Users, Resources, and Groups
@@ -4157,24 +4231,58 @@ class HSAccess(HSAccessCore):
     ###########################################################
 
     def make_user_active(self, user_uuid):
+        """
+        Make a user active (admin only)
+
+        :type user_uuid: basestring
+        :param user_uuid: UUID of user to change
+
+        Administrative privilege required. 
+        """
         meta = self.get_user_metadata(user_uuid)
         if not meta['active']:
             meta['active'] = True
             self.assert_user_metadata(meta)
 
     def make_user_not_active(self, user_uuid):
+        """
+        Make a user inactive (admin only)
+
+        :type user_uuid: basestring
+        :param user_uuid: UUID of user to change
+
+        Administrative privilege required. 
+        """
         meta = self.get_user_metadata(user_uuid)
         if meta['active']:
             meta['active'] = False
             self.assert_user_metadata(meta)
 
     def make_user_admin(self, user_uuid):
+        """
+        Make a user an adminstrator (admin only)
+
+        :type user_uuid: basestring
+        :param user_uuid: UUID of user to change
+
+        Administrative privilege required. 
+        """
         meta = self.get_user_metadata(user_uuid)
         if not meta['admin']:
             meta['admin'] = True
             self.assert_user_metadata(meta)
 
     def make_user_not_admin(self, user_uuid):
+        """
+        Make a user not an adminstrator (admin only)
+
+        :type user_uuid: basestring
+        :param user_uuid: UUID of user to change
+
+        Administrative privilege required. 
+
+        Note: it is possible for an administrator to remove privileges from *self*. 
+        """
         meta = self.get_user_metadata(user_uuid)
         if meta['admin']:
             meta['admin'] = False
@@ -4185,124 +4293,242 @@ class HSAccess(HSAccessCore):
     ###########################################################
 
     # there is no 'make_resource_mutable' for normal users: this is discouraged!
-    def make_resource_immutable(self, resource_uuid, user_uuid=None):
+    def make_resource_immutable(self, resource_uuid):
+        """
+        Make a resource immutable (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of resource to change
+        """
         meta = self.get_resource_metadata(resource_uuid)
         if not meta['immutable']:
             meta['immutable'] = True
-            self.assert_resource_metadata(meta, user_uuid)
+            self.assert_resource_metadata(meta)
 
     # admin only
-    def make_resource_not_immutable(self, resource_uuid, user_uuid=None):
+    def make_resource_not_immutable(self, resource_uuid):
+        """
+        Make a resource not immutable (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of resource to change
+        """
         meta = self.get_resource_metadata(resource_uuid)
-        if not meta['immutable']:
+        if meta['immutable']:
             meta['immutable'] = False
-            self.assert_resource_metadata(meta, user_uuid)
+            self.assert_resource_metadata(meta)
 
     # making a resource public -- as a side effect -- makes it discoverable
-    def make_resource_public(self, resource_uuid, user_uuid=None):
+    def make_resource_public(self, resource_uuid):
+        """
+        Make a resource public (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of resource to change
+
+        Public resources are automatically discoverable.
+        """
         meta = self.get_resource_metadata(resource_uuid)
         if not meta['public']:  # or not meta['discoverable']:
             meta['public'] = True
             # meta['discoverable'] = True  # should I do this?
             # this checks access privileges
-            self.assert_resource_metadata(meta, user_uuid)
+            self.assert_resource_metadata(meta)
 
-    def make_resource_not_public(self, resource_uuid, user_uuid=None):
+    def make_resource_not_public(self, resource_uuid):
+        """
+        Make a resource not public (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of resource to change
+        """
         meta = self.get_resource_metadata(resource_uuid)
         if meta['public']:
             meta['public'] = False
             # this checks access privileges
-            self.assert_resource_metadata(meta, user_uuid)
+            self.assert_resource_metadata(meta)
 
-    def make_resource_discoverable(self, resource_uuid, user_uuid=None):
+    def make_resource_discoverable(self, resource_uuid):
+        """
+        Make a resource discoverable (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of resource to change
+        """
         meta = self.get_resource_metadata(resource_uuid)
         if not meta['discoverable']:
             meta['discoverable'] = True
             # this checks access privileges
-            self.assert_resource_metadata(meta, user_uuid)
+            self.assert_resource_metadata(meta)
 
-    def make_resource_not_discoverable(self, resource_uuid, user_uuid=None):
+    def make_resource_not_discoverable(self, resource_uuid):
+        """
+        Make a resource not discoverable (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of resource to change
+        """
         meta = self.get_resource_metadata(resource_uuid)
         if meta['discoverable']:
             meta['discoverable'] = False
             # this checks access privileges
-            self.assert_resource_metadata(meta, user_uuid)
+            self.assert_resource_metadata(meta)
 
-    def make_resource_published(self, resource_uuid, user_uuid=None):
+    def make_resource_published(self, resource_uuid):
+        """
+        Make a resource published (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of resource to change
+
+        Published resources are automatically immutable.
+        """
         meta = self.get_resource_metadata(resource_uuid)
         if not meta['published']:  # or not meta['discoverable']:
             meta['published'] = True
             # meta['discoverable'] = True  # should I do this?
             # this checks access privileges
-            self.assert_resource_metadata(meta, user_uuid)
+            self.assert_resource_metadata(meta)
 
-    def make_resource_not_published(self, resource_uuid, user_uuid=None):
+    def make_resource_not_published(self, resource_uuid):
+        """
+        Make a resource not published (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of resource to change
+        """
         meta = self.get_resource_metadata(resource_uuid)
         if meta['published']:
             meta['published'] = False
             # this checks access privileges
-            self.assert_resource_metadata(meta, user_uuid)
+            self.assert_resource_metadata(meta)
 
-    def make_resource_shareable(self, resource_uuid, user_uuid=None):
+    def make_resource_shareable(self, resource_uuid):
+        """
+        Make a resource shareable (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of resource to change
+
+        A user must additionally have access to the resource in order to share it.
+        """
         meta = self.get_resource_metadata(resource_uuid)
         if not meta['shareable']:
             meta['shareable'] = True
             # this checks access privileges
-            self.assert_resource_metadata(meta, user_uuid)
+            self.assert_resource_metadata(meta)
 
-    def make_resource_not_shareable(self, resource_uuid, user_uuid=None):
+    def make_resource_not_shareable(self, resource_uuid):
+        """
+        Make a resource not shareable (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of resource to change
+        """
         meta = self.get_resource_metadata(resource_uuid)
         if meta['shareable']:
             meta['shareable'] = False
             # this checks access privileges
-            self.assert_resource_metadata(meta, user_uuid)
+            self.assert_resource_metadata(meta)
 
     ###########################################################
     # Convenience functions for group state
     ###########################################################
     def make_group_active(self, group_uuid):
+        """
+        Make a group active (admin only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group to change
+        """
         meta = self.get_group_metadata(group_uuid)
         if not meta['active']:
             meta['active'] = True
             self.assert_group_metadata(meta)
 
     def make_group_not_active(self, group_uuid):
+        """
+        Make a group not active (admin only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group to change
+        """
         meta = self.get_group_metadata(group_uuid)
         if meta['active']:
             meta['active'] = False
             self.assert_group_metadata(meta)
 
     def make_group_shareable(self, group_uuid):
+        """
+        Make a group shareable (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group to change
+
+        A user must be a group member in order to share a group.
+        """
         meta = self.get_group_metadata(group_uuid)
         if not meta['shareable']:
             meta['shareable'] = True
             self.assert_group_metadata(meta)
 
     def make_group_not_shareable(self, group_uuid):
+        """
+        Make a group not shareable (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group to change
+        """
         meta = self.get_group_metadata(group_uuid)
         if meta['shareable']:
             meta['shareable'] = False
             self.assert_group_metadata(meta)
 
     def make_group_public(self, group_uuid):
+        """
+        Make a group public (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group to change
+
+        A public group is automatically discoverable.
+        """
         meta = self.get_group_metadata(group_uuid)
         if not meta['public']:
             meta['public'] = True
             self.assert_group_metadata(meta)
 
     def make_group_not_public(self, group_uuid):
+        """
+        Make a group not public (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group to change
+        """
         meta = self.get_group_metadata(group_uuid)
         if meta['public']:
             meta['public'] = False
             self.assert_group_metadata(meta)
 
     def make_group_discoverable(self, group_uuid):
+        """
+        Make a group discoverable (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group to change
+        """
         meta = self.get_group_metadata(group_uuid)
         if not meta['discoverable']:
             meta['discoverable'] = True
             self.assert_group_metadata(meta)
 
     def make_group_not_discoverable(self, group_uuid):
+        """
+        Make a group not discoverable (admin or owner only)
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group to change
+        """
         meta = self.get_group_metadata(group_uuid)
         if meta['discoverable']:
             meta['discoverable'] = False
@@ -4315,15 +4541,15 @@ class HSAccess(HSAccessCore):
         """
         Constructs a print name for any given user
 
-        :type user_uuid: str
+        :type user_uuid: basestring
         :param user_uuid: identifier of user, None for current user
         :return: print name for requested user
-        :rtype: str
+        :rtype: basestring
         """
         if user_uuid is None:
             user_uuid = self.get_uuid()
-        if not (type(user_uuid) is unicode or type(user_uuid) is str):
-            raise HSAUsageException("user_uuid is not a unicode or str")
+        if not isinstance(user_uuid, basestring):
+            raise HSAUsageException("user_uuid is not a string")
         meta = self.get_user_metadata(user_uuid)
         return meta['name'] + '(' + meta['uuid'] + ')'
 
@@ -4331,13 +4557,13 @@ class HSAccess(HSAccessCore):
         """
         Constructs a print name for any given resource
 
-        :type resource_uuid: str
+        :type resource_uuid: basestring
         :param resource_uuid: identifier of resource
         :return: print name for requested resource
-        :rtype: str
+        :rtype: basestring
         """
-        if not (type(resource_uuid) is unicode or type(resource_uuid) is str):
-            raise HSAUsageException("resource_uuid is not a unicode or str")
+        if not isinstance(resource_uuid, basestring):
+            raise HSAUsageException("resource_uuid is not a string")
 
         meta = self.get_resource_metadata(resource_uuid)
         return meta['title'] + '(' + meta['uuid'] + ')'
@@ -4346,12 +4572,141 @@ class HSAccess(HSAccessCore):
         """
         Constructs a print name for any given group
 
-        :type group_uuid: str
+        :type group_uuid: basestring
         :param group_uuid: identifier of group
         :return: print name for requested group
-        :rtype: str
+        :rtype: basestring
         """
-        if not (type(group_uuid) is unicode or type(group_uuid) is str):
-            raise HSAUsageException("group_uuid is not a unicode or str")
+        if not isinstance(group_uuid, basestring):
+            raise HSAUsageException("group_uuid is not a string")
         meta = self.get_group_metadata(group_uuid)
         return meta['name'] + '(' + meta['uuid'] + ')'
+
+    ###########################################################
+    # capability functions combine flag and invited protections
+    ###########################################################
+
+    ###############################
+    # resource management
+    ###############################
+
+    def can_view_resource(self, resource_uuid):
+        """
+        Return True if current user can view this resource
+
+        :type resource_uuid: basestring
+        :param resource_uuid: UUID of resource
+        :return: True if user can view resource
+        :rtype: bool
+        """
+        return self.user_is_admin() or self.resource_is_readable(resource_uuid)
+
+    def can_change_resource(self, resource_uuid):
+        """
+        Return True if current user can change data or metadata for this resource
+
+        :type resource_uuid: basestring
+        :param resource_uuid: UUID of resource
+        :return: True if user can change resource
+        :rtype: bool
+        """
+        return self.user_is_admin() or self.resource_is_readwrite(resource_uuid)
+
+    def can_delete_resource(self, resource_uuid):
+        """
+        Return True if current user can delete this resource
+
+        :type resource_uuid: basestring
+        :param resource_uuid: UUID of resource
+        :return: True if user can delete resource
+        :rtype: bool
+        """
+        return self.user_is_admin() or self.resource_is_owned(resource_uuid)
+
+    def can_share_resource(self, resource_uuid):
+        """
+        Return True if current user can share this resource with others
+
+        :type resource_uuid: basestring
+        :param resource_uuid: UUID of resource
+        :return: True if user can share resource
+        :rtype: bool
+        """
+        return self.user_is_admin() \
+               or self.resource_is_owned(resource_uuid) \
+               or (self.resource_is_readable(resource_uuid) \
+                   and self.resource_is_shareable(resource_uuid))
+
+    def can_change_resource_flags(self, resource_uuid):
+        """
+        Return True if current user can change resource accessibility flags
+
+        :type resource_uuid: basestring
+        :param resource_uuid: UUID of resource
+        :return: True if user can share resource
+        :rtype: bool
+        """
+        return self.user_is_admin() or self.resource_is_owned(resource_uuid)
+
+    ###############################
+    # group management
+    ###############################
+
+    def can_view_group(self, group_uuid):
+        """
+        Return True if current user can view this group's members
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group
+        :return: True if user can view group
+        :rtype: bool
+        """
+        return self.user_is_admin() or self.group_is_readable(group_uuid)
+
+    def can_change_group(self, group_uuid):
+        """
+        Return True if current user can invite members to group
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group
+        :return: True if user can invite members to group
+        :rtype: bool
+        """
+        return self.user_is_admin() or self.group_is_readwrite(group_uuid)
+
+    def can_delete_group(self, group_uuid):
+        """
+        Return True if current user can delete this group
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group
+        :return: True if user can delete this group
+        :rtype: bool
+        """
+        return self.user_is_admin() or self.group_is_owned(group_uuid)
+
+    def can_share_group(self, group_uuid):
+        """
+        Return True if current user can share this group with others
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group
+        :return: True if user can share this group
+        :rtype: bool
+        """
+        return self.user_is_admin() \
+               or self.group_is_owned(group_uuid) \
+               or (self.group_is_readable(group_uuid) \
+                   and self.group_is_shareable(group_uuid))
+
+    def can_change_group_flags(self, group_uuid):
+        """
+        Return True if current user can change group flags
+
+        :type group_uuid: basestring
+        :param group_uuid: UUID of group
+        :return: True if user change group flags
+        :rtype: bool
+        """
+        return self.user_is_admin() or self.group_is_owned(group_uuid)
+
