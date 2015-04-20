@@ -53,8 +53,8 @@
                 <table>
                     <tr><th>Authors:</th><td id="authors">
                         {% for cr in creators %}
-                            {% if cr.description %}<a href="{{ cr.description }}">{{ cr.name }}</a><span class="comma">,&nbsp</span>
-                            {% else %}<span>{{ cr.name }}</span><span class="comma">,&nbsp</span>{% endif %}
+                            {% if cr.description %}<a href="{{ cr.description }}">{{ cr.name }}</a><span class="comma">,&nbsp;</span>
+                            {% else %}<span>{{ cr.name }}</span><span class="comma">,&nbsp;</span>{% endif %}
                         {% endfor %}
                     </td></tr>
                     <tr><th>Owner:</th><td>{{ cm.user|contact|safe }}</td></tr>
@@ -113,9 +113,9 @@
                         </form>
                     {% else %}
                         {% if cm.public %}
-                            <strong>&nbspPublic</strong>
+                            <strong>&nbsp;Public</strong>
                         {% else %}
-                            <strong>&nbspPrivate</strong>
+                            <strong>&nbsp;Private</strong>
                         {% endif %}
                     {% endif %}
                 </div>
@@ -127,7 +127,7 @@
                         {% endif %}
 
                         {% if rights.url %}
-                            <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                            <span class="rights-url"><a href="{{ rights.url }}">&nbsp;{{ rights.url }}</a></span>
                         {% endif %}
                     </div>
                     {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
@@ -189,7 +189,7 @@
                                         <input name="t" value="owners" type="hidden"/>
                                         <button type="submit"
                                                 class="btn btn-update-list pull-left btn-default glyphicon"><span
-                                                class="button-label">&nbspUpdate access list</span></button>
+                                                class="button-label">&nbsp;Update access list</span></button>
                                                 <span data-toggle="tooltip" data-placement="auto"
                                                       title='Hold down "Control", or "Command" on a Mac, to select more than one.'
                                                       class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
@@ -200,7 +200,7 @@
                                         <div class="form-group">
                                             <button type="submit"
                                                     class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                                    class="button-label">&nbspAdd user</span></button>
+                                                    class="button-label">&nbsp;Add user</span></button>
                                             {{ add_owner_user_form.user }}
                                             <input name="t" value="add_owner" type="hidden"/>
                                         </div>
@@ -226,7 +226,7 @@
                                         <input name="t" value="edit_users" type="hidden"/>
                                         <button type="submit"
                                                 class="btn btn-update-list pull-left btn-default glyphicon"><span
-                                                class="button-label">&nbspUpdate access list</span></button>
+                                                class="button-label">&nbsp;Update access list</span></button>
                                                 <span data-toggle="tooltip" data-placement="auto"
                                                       title='Hold down "Control", or "Command" on a Mac, to select more than one.'
                                                       class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
@@ -238,7 +238,7 @@
                                         <div class="form-group">
                                             <button type="submit"
                                                     class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                                    class="button-label">&nbspAdd user</span></button>
+                                                    class="button-label">&nbsp;Add user</span></button>
                                             {{ add_edit_user_form.user }}
                                             <input name="t" value="add_edit_user" type="hidden"/>
                                         </div>
@@ -264,7 +264,7 @@
 {#                                        <input name="t" value="edit_groups" type="hidden"/>#}
 {#                                        <button type="submit"#}
 {#                                                class="btn btn-update-list pull-left btn-default glyphicon"><span#}
-{#                                                class="button-label">&nbspUpdate access list</span></button>#}
+{#                                                class="button-label">&nbsp;Update access list</span></button>#}
 {#                                                <span data-toggle="tooltip" data-placement="auto"#}
 {#                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
 {#                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
@@ -278,7 +278,7 @@
 {##}
 {#                                            <button type="submit"#}
 {#                                                    class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus"><span#}
-{#                                                    class="button-label">&nbspAdd group</span></button>#}
+{#                                                    class="button-label">&nbsp;Add group</span></button>#}
 {#                                            {{ add_edit_group_form.user }}#}
 {#                                            <input name="t" value="add_edit_group" type="hidden"/>#}
 {#                                        </div>#}
@@ -304,7 +304,7 @@
                                             <input name="t" value="view_users" type="hidden"/>
                                             <button type="submit"
                                                     class="btn btn-update-list pull-left btn-default glyphicon">
-                                                <span class="button-label">&nbspUpdate access list</span></button>
+                                                <span class="button-label">&nbsp;Update access list</span></button>
                                                     <span data-toggle="tooltip" data-placement="auto"
                                                           title='Hold down "Control", or "Command" on a Mac, to select more than one.'
                                                           class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
@@ -315,7 +315,7 @@
                                             <div class="form-group">
                                                 <button type="submit"
                                                         class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                                        class="button-label">&nbspAdd user</span></button>
+                                                        class="button-label">&nbsp;Add user</span></button>
                                                 {{ add_view_user_form.user }}
                                                 <input name="t" value="add_view_user" type="hidden"/>
                                             </div>
@@ -341,7 +341,7 @@
 {#                                            <input name="t" value="view_groups" type="hidden"/>#}
 {#                                            <button type="submit"#}
 {#                                                    class="btn btn-update-list pull-left btn-default glyphicon">#}
-{#                                                <span class="button-label">&nbspUpdate access list</span></button>#}
+{#                                                <span class="button-label">&nbsp;Update access list</span></button>#}
 {#                                                    <span data-toggle="tooltip" data-placement="auto"#}
 {#                                                          title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
 {#                                                          class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
@@ -353,7 +353,7 @@
 {#                                            <div class="form-group">#}
 {#                                                <button type="submit"#}
 {#                                                        class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus">#}
-{#                                                    <span class="button-label">&nbspAdd group</span></button>#}
+{#                                                    <span class="button-label">&nbsp;Add group</span></button>#}
 {#                                                {{ add_view_group_form.user }}#}
 {#                                                <input name="t" value="add_view_group" type="hidden"/>#}
 {#                                            </div>#}
@@ -475,14 +475,14 @@
                     <li class="active col-md-2 col-sm-2 col-xs-12">
                         <a href="#contactTab" data-toggle="tab">
                             <span class="glyphicon glyphicon-user"> </span>
-                            &nbspContact
+                            &nbsp;Contact
                         </a>
                     </li>
                     {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
                         <li class="col-md-2 col-sm-2 col-xs-12">
                             <a href="#coverageTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-globe"></span>
-                                &nbspCoverage
+                                &nbsp;Coverage
                             </a>
                         </li>
                     {% endif %}
@@ -490,7 +490,7 @@
                         <li class="col-md-3 col-sm-3 col-xs-12">
                             <a href="#relatedResourcesTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-book"></span>
-                                &nbspRelated Resources
+                                &nbsp;Related Resources
                             </a>
                         </li>
                     {% endif %}
@@ -498,7 +498,15 @@
                         <li class="col-md-3 col-sm-3 col-xs-12">
                             <a href="#resourceSpecificTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-folder-close"></span>
-                                &nbspResource Specific
+                                &nbsp;Resource Specific
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% if relevant_tools %}
+                        <li class="col-md-3 col-sm-3 col-xs-12">
+                            <a href="#relevantTools" data-toggle="tab">
+                                <span class="glyphicon glyphicon-wrench"></span>
+                                &nbsp;Relevant Tools
                             </a>
                         </li>
                     {% endif %}
@@ -690,6 +698,16 @@
                     {% block extended_metadata %}
 
                     {%  endblock %}
+                </div>
+
+                <!-- ========= RELEVANT TOOLS TAB ========= -->
+{#            {% if site or extended_metadata_exists or res_add_metadata %}#}
+                <div class="tab-pane" id="relevantTools">
+                    {% for tool in relevant_tools %}
+                        <h4>{{ tool.title }}</h4>
+                        <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch Tool</button></a>
+                        <hr>
+                    {% endfor %}
                 </div>
             </div>
 {#            {% endif %}#}

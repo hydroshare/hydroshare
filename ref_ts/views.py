@@ -224,6 +224,15 @@ def add_dublin_core(request, page):
             content_model.metadata.quality_levels.all().first():
         extended_metadata_exists = True
 
+    wml2_url = ""
+    for f in content_model.files.all():
+        if 'visual' in str(f.resource_file.name):
+            context['visfile'] = f
+        if 'wml_2' in str(f.resource_file.name):
+            wml2_url = f.resource_file.url
+
+    for tool in context['relevant_tools']:
+        tool['url'] = "{}{}{}".format(tool['url'], "&fileurl=", request.build_absolute_uri(wml2_url))
     context['extended_metadata_exists'] = extended_metadata_exists
     context['site'] = content_model.metadata.sites.all().first()
     context['variable'] = content_model.metadata.variables.all().first()
@@ -231,9 +240,6 @@ def add_dublin_core(request, page):
     context['quality_level'] = content_model.metadata.quality_levels.all().first
     context['referenceURL'] = content_model.metadata.referenceURLs.all().first
     context['short_id'] = content_model.short_id
-    for f in content_model.files.all():
-        if 'visual' in str(f.resource_file.name):
-            context['visfile'] = f
     return context
 
 

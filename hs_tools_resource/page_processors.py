@@ -28,38 +28,30 @@ def landing_page(request, page):
         context['fees'] = content_model.metadata.fees.all()
         context['version'] = content_model.metadata.versions.first()
     else:
-        url_base_form = UrlBaseForm(instance=content_model.metadata.url_bases.first(),
+        url_base = content_model.metadata.url_bases.first()
+        url_base_form = UrlBaseForm(instance=url_base,
                                     res_short_id=content_model.short_id,
-                                    element_id=content_model.metadata.url_bases.first().id
-                                    if content_model.metadata.url_bases.first() else None)
+                                    element_id=url_base.id
+                                    if url_base else None)
 
-        ResTypeFormSetEdit = formset_factory(wraps(ResTypeForm)(partial(ResTypeForm,
-                                                                        allow_edit=edit_resource)),
-                                             formset=BaseFormSet, extra=0)
-        res_type_formset = ResTypeFormSetEdit(initial=content_model.metadata.res_types.all().values(),
-                                              prefix='res_type')
-        add_toolresourcetype_modal_form = ResTypeForm(allow_edit=edit_resource, res_short_id=content_model.short_id)
+        res_type = content_model.metadata.res_types.first()
+        res_type_form = ResTypeForm(instance=res_type,
+                                    res_short_id=content_model.short_id,
+                                    element_id=res_type.id
+                                    if res_type else None)
 
-        for form in res_type_formset.forms:
-            if len(form.initial) > 0:
-                form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id,
-                                                                   'toolresourcetype',
-                                                                   form.initial['id'])
-                form.action = "/hsapi/_internal/%s/toolresourcetype/%s/update-metadata/" % (content_model.short_id,
-                                                                                            form.initial['id'])
-                form.number = form.initial['id']
-            else:
-                form.action = "/hsapi/_internal/%s/toolresourcetype/add-metadata/" % content_model.short_id
 
-        fees_form = FeeForm(instance=content_model.metadata.fees.first(),
+        fee = content_model.metadata.fees.first()
+        fees_form = FeeForm(instance=fee,
                             res_short_id=content_model.short_id,
-                            element_id=content_model.metadata.fees.first().id
-                            if content_model.metadata.fees.first() else None)
+                            element_id=fee.id
+                            if fee else None)
 
-        version_form = VersionForm(instance=content_model.metadata.versions.first(),
+        version = content_model.metadata.versions.first()
+        version_form = VersionForm(instance=version,
                                    res_short_id=content_model.short_id,
-                                   element_id=content_model.metadata.versions.first().id
-                                   if content_model.metadata.versions.first() else None)
+                                   element_id=version.id
+                                   if version else None)
 
         ext_md_layout = Layout(
                                 AccordionGroup('Url Base (required)',
@@ -70,8 +62,11 @@ def landing_page(request, page):
                                 ),
 
                                 AccordionGroup('Resource Types (required)',
-                                               ResTypeLayoutEdit),
-                                ModalDialogLayoutAddResType,
+                                               HTML("<div class='form-group' id='res_types'> "
+                                        '{% load crispy_forms_tags %} '
+                                        '{% crispy res_type_form %} '
+                                     '</div>'),
+                                ),
 
                                 AccordionGroup('Fees (optional)',
                                      HTML('<div class="form-group" id="fees"> '
@@ -94,12 +89,12 @@ def landing_page(request, page):
 
         context['resource_type'] = 'Tool Resource'
         context['url_base_form'] = url_base_form
-        context['res_types_formset'] = res_type_formset
-        context['add_toolresourcetype_modal_form'] = add_toolresourcetype_modal_form
+        context['res_type_form'] = res_type_form
         context['fees_form'] = fees_form
         context['version_form'] = version_form
+        context['res_types'] = get_resource_types()
 
-    hs_core_dublin_context = add_dublin_core(request, page)
+    hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)
 
     return context
