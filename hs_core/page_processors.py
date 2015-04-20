@@ -5,7 +5,7 @@ from hs_core.hydroshare.utils import get_file_mime_type, resource_modified
 from hs_core.models import GenericResource
 from hs_core import languages_iso
 from forms import *
-from hs_tools_resource.models import ToolResource
+from hs_tools_resource.models import ToolResourceType
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -36,12 +36,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     metadata_status = _get_metadata_status(content_model)
 
     relevant_tools = []
-    for tool in ToolResource.objects.all():
-        for res_type in tool.metadata.res_types.all():
-            if str(content_model.content_model).lower() in str(res_type.tool_res_type).lower():
-                tl = {'title': tool.title,
-                      'url': "{}{}{}".format(tool.metadata.url_bases.first().value, "/?res_id=", content_model.short_id)}
-                relevant_tools.append(tl)
+    for res_type in ToolResourceType.objects.all():
+        if str(content_model.content_model).lower() in str(res_type.tool_res_type).lower():
+            tl = {'title': res_type.content_object.resource.title,
+                  'url': "{}{}{}".format(res_type.content_object.resource.metadata.url_bases.first().value, "/?res_id=", content_model.short_id)}
+            relevant_tools.append(tl)
 
 
 
