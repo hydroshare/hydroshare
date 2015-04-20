@@ -97,6 +97,9 @@ urlpatterns += patterns('',
 
     # url("^$", "mezzanine.blog.views.blog_post_list", name="home"),
 
+    # Override Mezzanine URLs here, before the Mezzanine URL include
+    ("^accounts/signup/", "theme.views.signup"),
+
     # MEZZANINE'S URLS
     # ----------------
     # ADD YOUR OWN URLPATTERNS *ABOVE* THE LINE BELOW.

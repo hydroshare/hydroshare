@@ -32,10 +32,6 @@ from django.forms import ValidationError
 from inplaceeditform.commons import get_dict_from_obj, apply_filters, get_adaptor_class
 from inplaceeditform.views import _get_http_response, _get_adaptor
 
-from . import users_api
-from . import discovery_api
-from . import resource_api
-from . import social_api
 from hs_core.hydroshare import utils
 from hs_core.hydroshare import file_size_limit_for_display
 from hs_core.signals import *

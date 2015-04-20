@@ -32,16 +32,14 @@ class GroupOwnership(models.Model):
 def get_user(request):
     """authorize user based on API key if it was passed, otherwise just use the request's user.
 
+    NOTE: The API key portion has been removed with TastyPie and will be restored when the
+    new API is built.
+
     :param request:
     :return: django.contrib.auth.User
     """
 
-    from tastypie.models import ApiKey
-
-    if 'api_key' in request.REQUEST:
-        api_key = ApiKey.objects.get(key=request.REQUEST['api_key'])
-        return api_key.user
-    elif request.user.is_authenticated():
+    if request.user.is_authenticated():
         return User.objects.get(pk=request.user.pk)
     else:
         return request.user

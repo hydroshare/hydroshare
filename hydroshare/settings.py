@@ -274,8 +274,6 @@ INSTALLED_APPS = (
     "mezzanine.mobile",
     "autocomplete_light",
     "jquery_ui",
-    "tastypie",
-    # "tastypie_swagger",
     "ga_ows",
     "ga_resources",
     #"dublincore",
@@ -408,9 +406,6 @@ except ImportError:
     pass
 else:
     set_dynamic_settings(globals())
-
-
-TASTYPIE_SWAGGER_API_MODULE = 'hydroshare.urls.v1_api'
 
 #
 AUTH_PROFILE_MODULE = "theme.UserProfile"

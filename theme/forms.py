@@ -1,12 +1,7 @@
-from mezzanine.conf import settings
+
 from django import forms
-from mezzanine.core.forms import Html5Mixin
-from mezzanine.generic.models import ThreadedComment, Rating
 from django.utils.translation import ugettext, ugettext_lazy as _
-from mezzanine.utils.views import ip_for_request
 from django.contrib.comments.signals import comment_was_posted
-from mezzanine.utils.email import split_addresses, send_mail_template
-from mezzanine.utils.cache import add_cache_bypass
 from django.contrib.comments.forms import CommentSecurityForm
 from django.contrib.comments.models import Comment
 from django.contrib.contenttypes.models import ContentType
@@ -14,6 +9,17 @@ from django.utils.encoding import force_text
 from django.utils import timezone
 from django.utils.text import get_text_list
 from django.utils.translation import ungettext
+from django.contrib.auth.models import User
+
+from mezzanine.core.forms import Html5Mixin
+from mezzanine.generic.models import ThreadedComment, Rating
+from mezzanine.utils.views import ip_for_request
+from mezzanine.utils.email import split_addresses, send_mail_template
+from mezzanine.utils.cache import add_cache_bypass
+from mezzanine.conf import settings
+
+from .models import UserProfile
+from hs_core.hydroshare.users import create_account
 
 COMMENT_MAX_LENGTH = getattr(settings,'COMMENT_MAX_LENGTH', 3000)
 
@@ -249,3 +255,32 @@ class RatingForm(CommentSecurityForm):
             rating_instance = Rating(value=rating_value)
             rating_manager.add(rating_instance)
         return rating_instance
+
+
+class SignupForm(forms.ModelForm):
+    class Meta:
+        model = User
+        exclude = ['last_login', 'date_joined', 'password']
+
+    password1 = forms.CharField(label="Password", widget=forms.PasswordInput())
+    password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
+
+    def clean_password2(self):
+        data = self.cleaned_data
+        if data["password1"] == data["password2"]:
+            data["password"] = data["password1"]
+            return data
+        else:
+            raise forms.ValidationError("Password must be confirmed")
+
+    def save(self, *args, **kwargs):
+        data = self.cleaned_data
+        return create_account(
+            email=data['email'],
+            username=data['username'],
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            superuser=False,
+            password=data['password'],
+            active=False,
+        )

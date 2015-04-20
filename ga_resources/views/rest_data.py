@@ -12,21 +12,9 @@ from django.contrib.auth.models import User
 from ga_resources.drivers.spatialite import SpatialiteDriver
 from ga_resources.models import DataResource
 from mezzanine.pages.models import Page
-from tastypie.models import ApiKey
+
 from ga_resources import dispatch
 from ga_resources.utils import authorize, get_data_page_for_user, json_or_jsonp
-
-
-def get_user(request):
-    if 'api_key' in request.REQUEST:
-        api_key = ApiKey.objects.get(key=request.REQUEST['api_key'])
-        return api_key.user
-    elif request.user.is_authenticated():
-        return User.objects.get(pk=request.user.pk)
-    else:
-        return request.user
-
-
 
 
 def create_dataset(request):
@@ -321,4 +309,3 @@ class CRUDView(View):
 
     def delete(self, request, *args, **kwargs):
         return delete_row(request, kwargs['slug'], kwargs.get('ogc_fid', None))
-
