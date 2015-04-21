@@ -22,6 +22,10 @@ class ModelOutput(AbstractMetaDataElement):
         return ModelOutput.objects.create(**kwargs)
 
     @classmethod
+    def create(cls, **kwargs):
+        return ModelOutput.objects.create(**kwargs)
+
+    @classmethod
     def update(cls, element_id, **kwargs):
         model_output = ModelOutput.objects.get(id=element_id)
         if model_output:
