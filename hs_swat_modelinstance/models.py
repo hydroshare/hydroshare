@@ -12,7 +12,56 @@ from hs_modelinstance.models import ModelOutput, ExecutedBy
 
 
 # extended metadata elements for SWAT Model Instance resource type
+class ModelOutput(AbstractMetaDataElement):
+    term = 'ModelOutput'
+    includes_output = models.BooleanField(default=False)
 
+    @classmethod
+    def create(cls, **kwargs):
+        return ModelOutput.objects.create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        model_output = ModelOutput.objects.get(id=element_id)
+        if model_output:
+            for key, value in kwargs.iteritems():
+                setattr(model_output, key, value)
+
+            model_output.save()
+        else:
+            raise ObjectDoesNotExist("No ModelOutput element was found for the provided id:%s" % kwargs['id'])
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("ModelOutput element of a resource can't be deleted.")
+
+
+class ExecutedBy(AbstractMetaDataElement):
+    term = 'ExecutedBY'
+    name = models.CharField(max_length=500)
+    url = models.URLField()
+
+    def __unicode__(self):
+        self.name
+
+    @classmethod
+    def create(cls, **kwargs):
+        return ExecutedBy.objects.create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        executed_by = ExecutedBy.objects.get(id=element_id)
+        if executed_by:
+            for key, value in kwargs.iteritems():
+                setattr(executed_by, key, value)
+
+            executed_by.save()
+        else:
+            raise ObjectDoesNotExist("No ExecutedBy element was found for the provided id:%s" % kwargs['id'])
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("ExecutedBy element of a resource can't be deleted.")
 #Model Instance Resource type
 class SWATModelInstanceResource(Page, AbstractResource):
 
