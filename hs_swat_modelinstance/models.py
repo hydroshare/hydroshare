@@ -60,6 +60,7 @@ class ExecutedBy(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No ExecutedBy element was found for the provided id:%s" % kwargs['id'])
 
+
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("ExecutedBy element of a resource can't be deleted.")
