@@ -117,7 +117,8 @@ def site_info_from_soap(wsdl_url, **kwargs):
                     variable_code = element.text
                 if 'variableName' in tag:
                     variable_name = element.text
-                    variables.append(variable_name + ' : ' + variable_code)
+                    if variable_name + ' : ' + variable_code not in variables:
+                        variables.append(variable_name + ' : ' + variable_code)
         elif wml_version == '2.0':
             pass  # FIXME add what to do here
         else:
@@ -476,34 +477,6 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
                                       reference_type,
                                       site_name_or_code=data_site_code,
                                       variable_code=variable_code)
-    #update/create metadata elements
-    res = hydroshare.get_resource_by_shortkey(shortkey)
-    s = res.metadata.sites.all()[0]
-    hydroshare.resource.update_metadata_element(
-        shortkey,
-        'Site',
-        s.id,
-        latitude=ts['latitude'],
-        longitude=ts['longitude'])
-    v = res.metadata.variables.all()[0]
-    hydroshare.resource.update_metadata_element(
-        shortkey,
-        'Variable',
-        v.id,
-        sample_medium=ts.get('sample_medium', 'unknown')
-        )
-    hydroshare.resource.create_metadata_element(
-        shortkey,
-        'QualityControlLevel',
-        value=ts['QClevel'],
-        )
-    hydroshare.resource.create_metadata_element(
-        shortkey,
-        'Method',
-        value=ts['method'],
-        )
-
-
 
     vals = ts['values']
     for_graph = ts['for_graph']
@@ -513,15 +486,14 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
     vis_file = create_vis("", variable_code, data_site_code, for_graph, 'Date', variable_name, units, noDataValue)
     version = ts['wml_version']
     d = datetime.today()
-    date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
-    file_base = '{0}-{1}'.format(title.replace(" ", ""), date)
+    file_base = title.replace(" ", "")
     csv_name = '{0}.{1}'.format(file_base, 'csv')
     if version == '1':
         xml_end = 'wml_1'
-        xml_name = '{0}-{1}.wml'.format(file_base, xml_end)
+        xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
     elif version == '2.0':
         xml_end = 'wml_2_0'
-        xml_name = '{0}-{1}.wml'.format(file_base, xml_end)
+        xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
     for_csv = []
     od_vals = collections.OrderedDict(sorted(vals.items()))
     for k, v in od_vals.items():
@@ -551,10 +523,26 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
 #this fxn creates the calls the make files fxn and adds the files as resource files
 def generate_files(shortkey):
     res = hydroshare.get_resource_by_shortkey(shortkey)
-    files = make_files(res.short_id, res.metadata.referenceURLs.all()[0].type, res.metadata.referenceURLs.all()[0].value, res.metadata.sites.all()[0].code, res.metadata.variables.all()[0].code, res.title)
+    files = make_files(res.short_id,
+                       res.metadata.referenceURLs.all()[0].type,
+                       res.metadata.referenceURLs.all()[0].value,
+                       res.metadata.sites.all()[0].code,
+                       res.metadata.variables.all()[0].code,
+                       res.title)
+    if len(res.files.all()) > 0:
+        for existing_file in res.files.all():
+            existing_file.resource_file.delete()
+    if len(res.bags.all()) > 0:
+        for b in res.bags.all():
+            b.delete()
     for f in files:
         hydroshare.add_resource_files(res.short_id, f)
         os.remove(f.name)
+    for fl in res.files.all():
+        if fl.resource_file:
+            pass
+        else:
+            fl.delete()
     create_bag(res)
 
 #transforms wml1.1 to wml2.0
@@ -575,8 +563,7 @@ def transform_file(reference_type, url, data_site_code, variable_code, title):
     transform = etree.XSLT(xslt)
     newdom = transform(dom)
     d = datetime.today()
-    date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
-    xml_name = '{0}-{1}-{2}'.format(title.replace(" ", ""), date, 'wml_2_0.wml')
+    xml_name = '{0}-{1}'.format(title.replace(" ", ""), 'wml_2_0.xml')
     with open(xml_name, 'wb') as f:
         f.write(newdom)
     xml_file = open(xml_name, 'r')

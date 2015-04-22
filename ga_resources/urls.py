@@ -1,10 +1,7 @@
 from django.conf.urls import patterns, url, include
-from ga_resources import api, views
+from ga_resources import views
 
 urlpatterns = patterns('',
-    url(r'^resources/', include(api.resources.urls)),
-    url(r'^styles/', include(api.styles.urls)),
-    url(r'^layers/', include(api.layers.urls)),
     url(r'^wms/', views.WMS.as_view()),
     url(r'^(?P<layer>.*)/tms/(?P<z>[0-9]+)/(?P<x>[0-9]+)/(?P<y>[0-9]+)/', views.tms),
     url(r'^wfs/', views.WFS.as_view()),
@@ -15,9 +12,9 @@ urlpatterns = patterns('',
     url(r'^kmz-features/(?P<slug>.*)/', views.kmz_features),
     url(r'^kmz-resource/(?P<slug>.*):(?P<filename>.*)/?', views.kmz_resource),
     url(r'^kmz-coverages/(?P<slug>.*)/', views.kmz_ground_overlays_json),
-    
+
     # Page permissions
-    
+
     url(r'^edit-groups/(?P<group>[0-9]+)/(?P<slug>.*)/', views.edit_groups),
     url(r'^view-groups/(?P<group>[0-9]+)/(?P<slug>.*)/', views.view_groups),
     url(r'^edit-users/(?P<user>[0-9]+)/(?P<slug>.*)/', views.edit_users),

@@ -5,14 +5,20 @@ functions in the module are probably the date manipulation functions.
 from collections import namedtuple
 import datetime
 import json
+import re
+
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.forms import MultipleChoiceField, Field
 from django.http import HttpResponse
 from django.utils.formats import sanitize_separators
+
 from mezzanine.pages.models import Page
+
 from osgeo import osr
-import re
+
+from hs_core.models import get_user
+
 
 def best_name(user):
     if user.first_name:
@@ -94,33 +100,8 @@ def authorize(request, page=None, edit=False, add=False, delete=False, view=Fals
 
     return user
 
-def get_user(request):
-    """authorize user based on API key if it was passed, otherwise just use the request's user.
 
-    :param request:
-    :return: django.contrib.au
-    th.User
-    """
-    from tastypie.models import ApiKey
-
-    if 'json' in request.META['CONTENT_TYPE']:
-        try:
-            req = json.loads(request.body)
-            if 'api_key' in req:
-                api_key = ApiKey.objects.get(key=req['api_key'])
-                return api_key.user
-        except ValueError:
-            pass
-
-    if 'api_key' in request.REQUEST:
-        api_key = ApiKey.objects.get(key=request.REQUEST['api_key'])
-        return api_key.user
-    elif request.user.is_authenticated():
-        return User.objects.get(pk=request.user.pk)
-    else:
-        return request.user
-
-def _from_today(match):    
+def _from_today(match):
     plusminus = match.group(1)
     amt = match.group(2)
 
@@ -152,7 +133,7 @@ def _from_now(match):
 def parsetime(t):
     """Parses a time string into a datetime object.  This is the function used by parse the dates in an OWS request, so
     all OWS requests accept these date formats.  ParseTime accepts the following formats:
-        
+
         * '%Y.%m.%d-%H:%M:%S.%f'
         * '%Y.%m.%d-%H:%M:%S'
         * '%Y.%m.%d-%H:%M'
@@ -173,11 +154,11 @@ def parsetime(t):
         * "today"
         * "today+${days}"
         * "now+${weeks}w${days}d${hours}h${mins}m${seconds}s${millisecs}ms"
-    
+
     :param t: a string in one of the above formats.
     :return: a datetime object
     """
-    
+
     timeformats = [
         '%Y.%m.%d-%H:%M:%S.%f',
         '%Y.%m.%d-%H:%M:%S',
