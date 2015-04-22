@@ -134,8 +134,8 @@ class Variable(AbstractMetaDataElement):
     type = models.CharField(max_length=100, choices=VARIABLE_TYPES)
     shape = models.CharField(max_length=100)
     # optional variable attributes
-    descriptive_name = models.CharField(max_length=100, null=True,blank=True)
-    method = models.TextField(null=True, blank=True)
+    descriptive_name = models.CharField(max_length=100, null=True, blank=True, verbose_name='long name')
+    method = models.TextField(null=True, blank=True, verbose_name='comment')
     missing_value = models.CharField(max_length=100, null=True, blank=True)
 
     def __unicode__(self):
@@ -245,7 +245,7 @@ class NetcdfResource(Page, AbstractResource):
         return AbstractResource.can_view(self, request)
 
     class Meta:
-            verbose_name = 'NetCDF Resource'
+            verbose_name = 'Multidimensional NetCDF Resource'
 
 processor_for(NetcdfResource)(resource_processor)
 
