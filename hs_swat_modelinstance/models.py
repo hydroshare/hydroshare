@@ -195,10 +195,8 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_output = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
             hsterms_model_output_rdf_Description = etree.SubElement(hsterms_model_output, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_model_output_value = etree.SubElement(hsterms_model_output_rdf_Description, '{%s}IncludesModelOutput' % self.NAMESPACES['hsterms'])
-            if self.model_output.includes_output == True:
-                hsterms_model_output_value.text = "Yes"
-            else:
-                hsterms_model_output_value.text = "No"
+            if self.model_output.includes_output == True: hsterms_model_output_value.text = "Yes"
+            else: hsterms_model_output_value.text = "No"
         if self.executed_by:
             hsterms_executed_by = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by, '{%s}Description' % self.NAMESPACES['rdf'])
