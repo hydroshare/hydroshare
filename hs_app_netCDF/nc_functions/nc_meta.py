@@ -439,6 +439,7 @@ def extract_nc_data_variables_meta(nc_data_variables):
             'shape': ','.join(var_obj.dimensions),
             'descriptive_name': var_obj.long_name if hasattr(var_obj, 'long_name') else '',
             'missing_value': str(var_obj.missing_value if hasattr(var_obj, 'missing_value') else ''),
+            'method': str(var_obj.comment if hasattr(var_obj, 'comment') else ''),
         }
 
         # check and add variable 'type' info:
