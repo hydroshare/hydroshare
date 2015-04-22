@@ -11,7 +11,6 @@ class ModelOutputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        # for ModelOutput we have only one field includes_output
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('includes_output', css_class=field_width),
@@ -270,6 +269,7 @@ class ModelInputForm(ModelForm):
                   'soil_data_source_name',
                   'soil_data_source_URL']
         exclude = ['content_object']
+        widgets = {'has_other_parameters': forms.TextInput()}
 
 
 class ModelInputValidationForm(forms.Form):
