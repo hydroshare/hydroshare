@@ -11,7 +11,6 @@ class SWATmodelParametersFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        # for ModelOutput we have only one field includes_output
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('has_crop_rotation', css_class=field_width),
@@ -52,8 +51,16 @@ class SWATmodelParametersForm(ModelForm):
 
     class Meta:
         model = SWATmodelParameters
-        fields = ['has_crop_rotation', 'has_title_drainage', 'has_point_source', 'has_fertilizer', 'has_tilage_operation', 'has_inlet_of_draining_watershed', 'has_irrigation_operation', 'has_other_parameters']
+        fields = ['has_crop_rotation',
+                  'has_title_drainage',
+                  'has_point_source',
+                  'has_fertilizer',
+                  'has_tilage_operation',
+                  'has_inlet_of_draining_watershed',
+                  'has_irrigation_operation',
+                  'has_other_parameters']
         exclude = ['content_object']
+        widgets = {'has_other_parameters': forms.TextInput()}
 
 class SWATmodelParametersValidationForm(forms.Form):
     has_crop_rotation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
@@ -63,10 +70,46 @@ class SWATmodelParametersValidationForm(forms.Form):
     has_tilage_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
     has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
     has_irrigation_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
-    has_other_parameters = forms.CharField(max_length=200)
+    has_other_parameters = forms.CharField(max_length=500)
 
-    def clean_includes_output(self):
-        data = self.cleaned_data['has_crop_rotation', 'has_title_drainage', 'has_point_source', 'has_fertilizer', 'has_tilage_operation', 'has_inlet_of_draining_watershed', 'has_irrigation_operation', 'has_other_parameters']
+    def clean_has_crop_rotation(self):
+        data = self.cleaned_data['has_crop_rotation']
+        if data == u'False':
+            return False
+        else:
+            return True
+    def clean_has_title_drainage(self):
+        data = self.cleaned_data['has_title_drainage']
+        if data == u'False':
+            return False
+        else:
+            return True
+    def clean_has_point_source(self):
+        data = self.cleaned_data['has_point_source']
+        if data == u'False':
+            return False
+        else:
+            return True
+    def clean_has_fertilizer(self):
+        data = self.cleaned_data['has_fertilizer']
+        if data == u'False':
+            return False
+        else:
+            return True
+    def clean_has_tilage_operation(self):
+        data = self.cleaned_data['has_tilage_operation']
+        if data == u'False':
+            return False
+        else:
+            return True
+    def clean_has_inlet_of_draining_watershed(self):
+        data = self.cleaned_data['has_inlet_of_draining_watershed']
+        if data == u'False':
+            return False
+        else:
+            return True
+    def clean_has_irrigation_operation(self):
+        data = self.cleaned_data['has_irrigation_operation']
         if data == u'False':
             return False
         else:
