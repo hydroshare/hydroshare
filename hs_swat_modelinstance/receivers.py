@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update
 from hs_swat_modelinstance.models import SWATModelInstanceResource
 from hs_modelinstance.forms import *
+from forms import *
 
 @receiver(pre_metadata_element_create, sender=SWATModelInstanceResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
