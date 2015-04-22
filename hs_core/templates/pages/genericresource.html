@@ -1660,6 +1660,10 @@
                         <!-- ========= RESOURCE SPECIFIC TAB ========= -->
                         <div class="tab-pane" id="resourceSpecificTab">
                             {{ cm }}
+                            {%  if model_output_form.initial %}
+                                Model output form here
+
+                            {% endif %}
                         </div>
                     </div>
                 </div>
