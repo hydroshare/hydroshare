@@ -87,12 +87,16 @@ def landing_page(request, page):
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
 
+        res_type_names = []
+        for res_type_class in get_resource_types():
+            res_type_names.append(res_type_class.__name__)
+
         context['resource_type'] = 'Tool Resource'
         context['url_base_form'] = url_base_form
         context['res_type_form'] = res_type_form
         context['fees_form'] = fees_form
         context['version_form'] = version_form
-        context['res_types'] = get_resource_types()
+        context['res_types'] = res_type_names
 
     hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)

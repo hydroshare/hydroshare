@@ -42,13 +42,24 @@ class ToolResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # no file types are supported
+        return ()
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        # resource can't have any files
+        return False
+
+
 
 processor_for(ToolResource)(resource_processor)
 
 
 class RequestUrlBase(AbstractMetaDataElement):
     term = 'Request Url Base'
-    value = models.CharField(null=True, max_length = "500") # whatever the user gives us- format is "http://www.example.com/{resource-info}"
+    value = models.CharField(null=True, max_length="500") # whatever the user gives us- format is "http://www.example.com/{resource-info}"
 
 
     @classmethod
@@ -91,7 +102,7 @@ class RequestUrlBase(AbstractMetaDataElement):
 #the resource types that can be used by this tool- one class instance per type
 class ToolResourceType(AbstractMetaDataElement):
     term = 'Tool Resource Type'
-    tool_res_type = models.TextField(null=True)  #a string of the resource type class, lowered. like res.content_model
+    tool_res_type = models.CharField(null=True, max_length="500")  #a string of the resource type class, lowered. like res.content_model
 
     @classmethod
     def create(cls, **kwargs):

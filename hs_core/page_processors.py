@@ -38,9 +38,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     relevant_tools = []
     for res_type in ToolResourceType.objects.all():
         if str(content_model.content_model).lower() in str(res_type.tool_res_type).lower():
-            tl = {'title': res_type.content_object.resource.title,
-                  'url': "{}{}{}".format(res_type.content_object.resource.metadata.url_bases.first().value, "/?res_id=", content_model.short_id)}
-            relevant_tools.append(tl)
+            url = res_type.content_object.resource.metadata.url_bases.first()
+            if url:
+                tl = {'title': res_type.content_object.resource.title,
+                      'url': "{}{}{}".format(url.value, "/?res_id=", content_model.short_id)}
+                relevant_tools.append(tl)
 
 
 
