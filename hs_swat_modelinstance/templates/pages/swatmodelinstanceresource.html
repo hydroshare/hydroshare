@@ -208,6 +208,22 @@
                         </div>
                     {% endif %}
                 </div>
+                <div>
+                    {% if swat_model_parameters %}
+                        <h4><strong>SWAT model used parameters:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Has crop rotation?</strong></div>
+                            {% if swat_model_parameters.has_crop_rotation == True %}
+                                <div class="col-sm-8">Yes</div>
+                            {% else %}
+                                <div class="col-sm-8">No</div>
+                            {% endif %}
+
+                        </div>
+                    <hr style="border:0">
+                    {%  endif %}
+                </div>
             </div>
     {%  endif %}
 {%  endblock %}

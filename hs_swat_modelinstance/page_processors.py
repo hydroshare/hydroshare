@@ -1,6 +1,7 @@
 __author__ = 'Mohamed Morsy'
 from mezzanine.pages.page_processors import processor_for
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
+from forms import *
 from hs_core import page_processors
 from hs_core.views import *
 from forms import *

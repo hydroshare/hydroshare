@@ -533,7 +533,6 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_input_soil_data_source_name.text = self.model_input.soil_data_source_name
             hsterms_model_input_soil_data_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}soilDataSourceURL' % self.NAMESPACES['hsterms'])
             hsterms_model_input_soil_data_source_URL.text = self.model_input.soil_data_source_URL
-
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
 import receivers
