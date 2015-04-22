@@ -300,7 +300,8 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                                                    type=var_info['type'],
                                                    shape=var_info['shape'],
                                                    missing_value=var_info['missing_value'],
-                                                   descriptive_name=var_info['descriptive_name'])
+                                                   descriptive_name=var_info['descriptive_name'],
+                                                   method=var_info['method'])
 
 
                 # update the original spatial coverage meta
