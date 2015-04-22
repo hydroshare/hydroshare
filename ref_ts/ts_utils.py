@@ -32,7 +32,7 @@ def get_version(root):
             break
     return wml_version
 
-def sites_from_soap(wsdl_url, locations=[':']):
+def sites_from_soap(wsdl_url, locations='[:]'):
     """
     Note: locations (a list) is given by CUAHSI WOF standard
 
@@ -58,20 +58,18 @@ def sites_from_soap(wsdl_url, locations=[':']):
         raise Http404("Method 'GetSites' not found")
     except WebFault:
         raise Http404('This service does not support an all sites search. \
-Please provide a list of locations')  # ought to be a 400, but no page implemented for that
+        Please provide a list of locations')  # ought to be a 400, but no page implemented for that
     except:
-        raise Http404("Sorry, but we've encountered an unexpected error. This is most likely \
-due to incorrect formatting in the web service response.")
+        raise Http404("Sorry, but we've encountered an unexpected error. This is most likely\
+         due to incorrect formatting in the web service response.")
     try:
-        site_names = []
-        site_codes = []
+        sites = []
         root = etree.XML(response)
         wml_version = get_version(root)
         if wml_version == '1':
             for element in root:
                 if 'site' in element.tag:
-                    site_names.append(element[0][0].text)
-                    site_codes.append(element[0][1].text)
+                    sites.append(element[0][0].text + " : " + element[0][1].text)
         elif wml_version == '2.0':
             pass   # FIXME I need to change this, obviously
         else:
@@ -79,8 +77,9 @@ due to incorrect formatting in the web service response.")
     except:
         return "Parsing error: The Data in the WSDL Url '{0}' was not correctly formatted \
 according to the WaterOneFlow standard given at 'http://his.cuahsi.org/wofws.html#waterml'.".format(wsdl_url)
-    ret = dict(zip(site_names, site_codes))
-    return ret
+    # ret = dict(zip(site_names, site_codes))
+    sites = sorted(sites)
+    return sites
 
 def site_info_from_soap(wsdl_url, **kwargs):
     site = ':' + kwargs['site']
@@ -104,26 +103,27 @@ def site_info_from_soap(wsdl_url, **kwargs):
 
     try:
         response = client.service.GetSiteInfo(site)
+        response = response.encode('utf-8')
         root = etree.XML(response)
         wml_version = get_version(root)
-        variable_names = []
-        variable_codes = []
+        variable_name = ''
+        variable_code = ''
+        variables = []
         if wml_version =='1':
             for element in root.iter():
                 brack_lock = element.tag.index('}')  #The namespace in the tag is enclosed in {}.
                 tag = element.tag[brack_lock+1:]     #Takes only actual tag, no namespace
-                if 'variableName' in tag:
-                    variable_names.append(element.text)
-            for element in root.iter():
-                brack_lock = element.tag.index('}')  #The namespace in the tag is enclosed in {}.
-                tag = element.tag[brack_lock+1:]     #Takes only actual tag, no namespace
                 if 'variableCode' in tag:
-                    variable_codes.append(element.text)
+                    variable_code = element.text
+                if 'variableName' in tag:
+                    variable_name = element.text
+                    if variable_name + ' : ' + variable_code not in variables:
+                        variables.append(variable_name + ' : ' + variable_code)
         elif wml_version == '2.0':
             pass  # FIXME add what to do here
         else:
             raise Http404()
-        variables = dict(zip(variable_names, variable_codes))
+        variables = sorted(variables)
         return variables
     except:
         return "Parsing error: The Data in the WSDL Url '{0}' was not correctly formatted \
@@ -135,29 +135,41 @@ def time_to_int(t):
         ret = int(datetime.strptime(unicode(t), '%Y-%m-%dT%H:%M:%S.%f').strftime('%s'))
     except ValueError:
         try:
-            # if time format looks like '2014-07-22T10:45:00.000-05:00'
-            offset_hrs = int(t[-6:-3])
-            offset_min = int(t[-6]+t[-2:])
-            t = t[:-6]
-            epoch_secs = int(datetime.strptime(unicode(t), '%Y-%m-%dT%H:%M:%S.%f').strftime('%s'))
-            ret = epoch_secs + offset_hrs*3600 + offset_min*60
+            ret = int(datetime.strptime(unicode(t), '%Y-%m-%d').strftime('%s'))
         except ValueError:
             try:
                 # if time format looks like '2014-07-22T10:45:00'
+
                 ret = int(datetime.strptime(unicode(t), '%Y-%m-%dT%H:%M:%S').strftime('%s'))
             except ValueError:
-                #if the time format looks like '2014-07-22 10:45:00'
-                ret = int(datetime.strptime(unicode(t), '%Y-%m-%d %H:%M:%S').strftime('%s'))
+                try:
+                    #if the time format looks like '2014-07-22 10:45:00'
+                    ret = int(datetime.strptime(unicode(t), '%Y-%m-%d %H:%M:%S').strftime('%s'))
+                except:
+                # if time format looks like '2014-07-22T10:45:00.000-05:00'
+                    offset_hrs = int(t[-6:-3])
+                    offset_min = int(t[-6]+t[-2:])
+                    t = t[:-6]
+                    epoch_secs = int(datetime.strptime(unicode(t), '%Y-%m-%dT%H:%M:%S').strftime('%s'))
+                    ret = epoch_secs + offset_hrs*3600 + offset_min*60
+
+
     return ret
 
 def parse_1_0_and_1_1(root):
-    try:
+    # try:
+        time_series_response_present = False
         if 'timeSeriesResponse' in root.tag:
+            time_series_response_present = True
+        elif 'timeSeriesResponse' in root.text[:19]:
+            root = etree.fromstring(root.text)
+            time_series_response_present = True
+        if time_series_response_present:
             time_series = root[1]
             ts = etree.tostring(time_series)
             values = {}
             for_graph = []
-            units, site_name, variable_name, latitude, longitude, methodCode, method, QCcode, QClevel = None, None, None, None, None, None, None, None, None
+            noDataValue, units, site_name, site_code, variable_name, variable_code, latitude, longitude, methodCode, method, QCcode, QClevel = None, None, None, None, None, None, None, None, None, None, None, None
             unit_is_set = False
             methodCode_set = False
             QCcode_set = False
@@ -182,12 +194,19 @@ def parse_1_0_and_1_1(root):
                                 QCcode_set = True
                 if 'siteName' == tag:
                     site_name = element.text
+                if 'siteCode' == tag:
+                    site_code = element.text
                 if 'variableName' == tag:
                     variable_name = element.text
+                if 'variableCode' == tag:
+                    variable_code = element.text
                 if 'latitude' == tag:
                     latitude = element.text
                 if 'longitude' == tag:
                     longitude = element.text
+                if 'noDataValue' == tag:
+                    noDataValue = element.text
+
             if methodCode == 1:
                 method = 'No method specified'
             else:
@@ -195,13 +214,23 @@ def parse_1_0_and_1_1(root):
 
             if QCcode == 0:
                 QClevel = "Raw Data"
+            elif QCcode == "0":
+                QClevel = "Raw Data"
             elif QCcode == 1:
+                QClevel = "Quality Controlled Data"
+            elif QCcode == "1":
                 QClevel = "Quality Controlled Data"
             elif QCcode == 2:
                 QClevel = "Derived Products"
+            elif QCcode == "2":
+                QClevel = "Derived Products"
             elif QCcode == 3:
                 QClevel = "Interpreted Products"
+            elif QCcode == "3":
+                QClevel = "Interpreted Products"
             elif QCcode == 4:
+                QClevel = "Knowledge Products"
+            elif QCcode == "4":
                 QClevel = "Knowledge Products"
             else:
                 QClevel = 'Unknown'
@@ -209,26 +238,24 @@ def parse_1_0_and_1_1(root):
             for k, v in values.items():
                 t = time_to_int(k)
                 for_graph.append({'x': t, 'y': float(v)})
-            smallest_time = list(values.keys())[0]
-            for t in list(values.keys()):
-                if t < smallest_time:
-                    smallest_time = t
             return {'time_series': ts,
                     'site_name': site_name,
-                    'start_date': smallest_time,
+                    'site_code': site_code,
                     'variable_name': variable_name,
+                    'variable_code': variable_code,
                     'units': units,
                     'values': values,
                     'for_graph': for_graph,
                     'wml_version': '1',
                     'latitude': latitude,
                     'longitude': longitude,
+                    'noDataValue': noDataValue,
                     'QClevel': QClevel,
                     'method': method}
         else:
             return "Parsing error: The waterml document doesn't appear to be a WaterML 1.0/1.1 time series"
-    except:
-        return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
+    # except:
+    #     return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
 
 def parse_2_0(root):
     #try:
@@ -386,7 +413,6 @@ due to incorrect formatting in the web service format.")
             response = r.text.encode('utf-8')
     else:
         raise Http404()
-
     root = etree.XML(response)
     wml_version = get_version(root)
     if wml_version == '1':
@@ -397,7 +423,7 @@ due to incorrect formatting in the web service format.")
         raise Http404()
 
 #creates vis and returns open file
-def create_vis(path, varcode, site_code, data, xlab, variable_name, units):
+def create_vis(path, varcode, site_code, data, xlab, variable_name, units, noDataValue):
     loc = AutoDateLocator()
     fmt = AutoDateFormatter(loc)
     fmt.scaled[365.0] = '%y'
@@ -409,8 +435,9 @@ def create_vis(path, varcode, site_code, data, xlab, variable_name, units):
     x1 =[]
     y1 =[]
     for d in data:
-        x1.append(d['x'])
-        y1.append(d['y'])
+        if str(int(d['y'])) != str(noDataValue):
+            x1.append(d['x'])
+            y1.append(d['y'])
     vals_dict = dict(zip(x1, y1))
     sorted_vals = sorted(vals_dict.items(), key=operator.itemgetter(0))
     for d in sorted_vals:
@@ -451,51 +478,22 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
                                       site_name_or_code=data_site_code,
                                       variable_code=variable_code)
 
-    #update/create metadata elements
-    res = hydroshare.get_resource_by_shortkey(shortkey)
-    s = res.metadata.sites.all()[0]
-    hydroshare.resource.update_metadata_element(
-        shortkey,
-        'Site',
-        s.id,
-        latitude=ts['latitude'],
-        longitude=ts['longitude'])
-    v = res.metadata.variables.all()[0]
-    hydroshare.resource.update_metadata_element(
-        shortkey,
-        'Variable',
-        v.id,
-        sample_medium=ts.get('sample_medium', 'unknown')
-        )
-    hydroshare.resource.create_metadata_element(
-        shortkey,
-        'QualityControlLevel',
-        value=ts['QClevel'],
-        )
-    hydroshare.resource.create_metadata_element(
-        shortkey,
-        'Method',
-        value=ts['method'],
-        )
-
-
-
     vals = ts['values']
     for_graph = ts['for_graph']
     units = ts['units']
     variable_name = ts['variable_name']
-    vis_file = create_vis("", variable_code, data_site_code, for_graph, 'Date', variable_name, units)
+    noDataValue = ts.get('noDataValue', None)
+    vis_file = create_vis("", variable_code, data_site_code, for_graph, 'Date', variable_name, units, noDataValue)
     version = ts['wml_version']
     d = datetime.today()
-    date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
-    file_base = '{0}-{1}'.format(title.replace(" ", ""), date)
+    file_base = title.replace(" ", "")
     csv_name = '{0}.{1}'.format(file_base, 'csv')
     if version == '1':
         xml_end = 'wml_1'
-        xml_name = '{0}-{1}.wml'.format(file_base, xml_end)
+        xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
     elif version == '2.0':
         xml_end = 'wml_2_0'
-        xml_name = '{0}-{1}.wml'.format(file_base, xml_end)
+        xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
     for_csv = []
     od_vals = collections.OrderedDict(sorted(vals.items()))
     for k, v in od_vals.items():
@@ -525,10 +523,26 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
 #this fxn creates the calls the make files fxn and adds the files as resource files
 def generate_files(shortkey):
     res = hydroshare.get_resource_by_shortkey(shortkey)
-    files = make_files(res.short_id, res.reference_type, res.url, res.metadata.sites.all()[0].code, res.metadata.variables.all()[0].code, res.title)
+    files = make_files(res.short_id,
+                       res.metadata.referenceURLs.all()[0].type,
+                       res.metadata.referenceURLs.all()[0].value,
+                       res.metadata.sites.all()[0].code,
+                       res.metadata.variables.all()[0].code,
+                       res.title)
+    if len(res.files.all()) > 0:
+        for existing_file in res.files.all():
+            existing_file.resource_file.delete()
+    if len(res.bags.all()) > 0:
+        for b in res.bags.all():
+            b.delete()
     for f in files:
         hydroshare.add_resource_files(res.short_id, f)
         os.remove(f.name)
+    for fl in res.files.all():
+        if fl.resource_file:
+            pass
+        else:
+            fl.delete()
     create_bag(res)
 
 #transforms wml1.1 to wml2.0
@@ -538,7 +552,7 @@ def transform_file(reference_type, url, data_site_code, variable_code, title):
         response = client.service.GetValues(':'+data_site_code, ':'+variable_code, '', '', '')
     elif reference_type == 'rest':
         r = requests.get(url)
-        response = str(r.text)
+        response = r.content
     waterml_1 = etree.XML(response)
     wml_string = etree.tostring(waterml_1)
     s = StringIO(wml_string)
@@ -549,8 +563,7 @@ def transform_file(reference_type, url, data_site_code, variable_code, title):
     transform = etree.XSLT(xslt)
     newdom = transform(dom)
     d = datetime.today()
-    date = '{0}_{1}_{2}'.format(d.month, d.day, d.year)
-    xml_name = '{0}-{1}-{2}'.format(title.replace(" ", ""), date, 'wml_2_0.wml')
+    xml_name = '{0}-{1}'.format(title.replace(" ", ""), 'wml_2_0.xml')
     with open(xml_name, 'wb') as f:
         f.write(newdom)
     xml_file = open(xml_name, 'r')

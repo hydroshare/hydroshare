@@ -1,4 +1,4 @@
-{# This template is used as the landing page for TimeSeriesResource #}
+{# This template is used as the landing page for Geographic Raster Resource #}
 
 {% extends "pages/genericresource.html" %}
 {% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
@@ -7,6 +7,56 @@
     {% if extended_metadata_exists %}
         <div class="row">
             <div class="col-md-12">
+                <div>
+                    {% if originalCoverage %}
+                        <h4><strong>Original Spatial Coverage:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        {% if originalCoverage.name %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.name}}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.projection %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Coordinate System/Geographic Projection:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.projection}}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.northlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>North Latitude:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.northlimit }}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.eastlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>East Longitude:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.eastlimit }}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.southlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>South Latitude:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.southlimit }}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.westlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>West Longitude:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.westlimit}}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.units %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.units}}</div>
+                            </div>
+                        {%  endif %}
+                    <hr>
+                    {% endif %}
+                </div>
+
                 <div>
                     {% if cellInformation %}
                         <h4><strong>Cell Information:</strong></h4>

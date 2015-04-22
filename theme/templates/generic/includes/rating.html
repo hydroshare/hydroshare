@@ -9,13 +9,11 @@
     {% nevercache %}
     {% csrf_token %}
     {% endnevercache %}
-    <!--<ul>{{ rating_form }}</ul>-->
     {{ rating_form.content_type }}
     {{ rating_form.object_pk }}
     {{ rating_form.timestamp }}
     {{ rating_form.security_hash }}
     <input value="1" name="value" type="hidden"/>
-    <!--<input type="submit" class="hl-btn hl-btn-dark hl-btn-sm" value="{% trans "Rate" %}">-->
     <input type="submit" class="btn btn-default btn-sm" value="+1"/>
 </form>
 {% endif %}

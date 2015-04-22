@@ -68,6 +68,35 @@ class TestQualityControlLevelMetadataModel(TestCase):
     #     self.assertRaises(ValidationError, resource.delete_metadata_element(self.refts_res.short_id, 'QualityControlLevel', q.id))
 
 
+class TestRefURLMetadataModel(TestCase):
+    def setUp(self):
+
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.user = hydroshare.create_account(
+                'user1@nowhere.com',
+                username='user1',
+                first_name='Creator_FirstName',
+                last_name='Creator_LastName',
+                superuser=False,
+                groups=[self.group]
+            )
+        self.refts_res = hydroshare.create_resource(
+                resource_type='RefTimeSeries',
+                owner=self.user,
+                title='Test RefTS resource')
+
+    def tearDown(self):
+        User.objects.filter(username=self.user.username).delete()
+
+    def test_create_refurl_orig(self):
+        self.assertEqual(len(self.refts_res.metadata.methods.all()), 0)
+        resource.create_metadata_element(self.refts_res.short_id, 'ReferenceURL', value='www.google.com', type='SOAP')
+        self.assertEqual(len(self.refts_res.metadata.referenceURLs.all()), 1)
+        self.assertEqual(self.refts_res.metadata.referenceURLs.all()[0].value, 'www.google.com')
+        self.assertEqual(self.refts_res.metadata.referenceURLs.all()[0].type, 'SOAP')
+
+
+
 class TestMethodMetadataModel(TestCase):
     def setUp(self):
 
@@ -87,7 +116,6 @@ class TestMethodMetadataModel(TestCase):
 
     def tearDown(self):
         User.objects.filter(username=self.user.username).delete()
-        pass
 
     def test_create_method_orig(self):
         self.assertEqual(len(self.refts_res.metadata.methods.all()), 0)
@@ -134,7 +162,6 @@ class TestVariableMetadataModel(TestCase):
 
     def tearDown(self):
         User.objects.filter(username=self.user.username).delete()
-        pass
 
     def test_create_variable_orig(self):
         self.assertEqual(len(self.refts_res.metadata.variables.all()), 0)
@@ -199,7 +226,6 @@ class TestSiteMetadataModel(TestCase):
 
     def tearDown(self):
         User.objects.filter(username=self.user.username).delete()
-        pass
 
     def test_create_site_orig(self):
         self.assertEqual(len(self.refts_res.metadata.sites.all()), 0)
@@ -263,6 +289,7 @@ class TestXMLCreationModel(TestCase):
                 owner=self.user,
                 title='Test RefTS resource')
         resource.create_metadata_element(self.refts_res.short_id, 'QualityControlLevel', value='test quality level')
+        resource.create_metadata_element(self.refts_res.short_id, 'ReferenceURL', value='www.example.com', type='REST')
         resource.create_metadata_element(self.refts_res.short_id, 'Method', value='test method')
         resource.create_metadata_element(
                 self.refts_res.short_id,
@@ -282,6 +309,8 @@ class TestXMLCreationModel(TestCase):
     def test_xml_creation(self):
         xml_doc = self.refts_res.metadata.get_xml()
         self.assertTrue('test quality level' in xml_doc)
+        self.assertTrue('www.example.com' in xml_doc)
+        self.assertTrue('REST' in xml_doc)
         self.assertTrue('test method' in xml_doc)
         self.assertTrue('test variable name' in xml_doc)
         self.assertTrue('test code' in xml_doc)

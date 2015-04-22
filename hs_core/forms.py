@@ -1181,8 +1181,8 @@ class CoverageSpatialForm(forms.Form):
     #zunits = forms.CharField(max_length=50, required=False, label='Elevation Units', help_text='e.g., meters')
     northlimit = forms.DecimalField(label='North Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
     eastlimit = forms.DecimalField(label='East Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
-    southlimit = forms.DecimalField(label='South Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
-    westlimit = forms.DecimalField(label='West Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    southlimit = forms.DecimalField(label='South Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    westlimit = forms.DecimalField(label='West Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
     #uplimit = forms.DecimalField(required=False, label='Up Limit', widget=forms.TextInput())
     #downlimit = forms.DecimalField(required=False, label='Down Limit', widget=forms.TextInput())
 

@@ -109,18 +109,18 @@ def add_resource(request, shortkey, *args, **kwargs):
 
 @processor_for(ResourceAggregation)
 def add_dublin_core(request, page):
-    from dublincore import models as dc
+    #from dublincore import models as dc
 
-    class DCTerm(forms.ModelForm):
-        class Meta:
-            model = dc.QualifiedDublinCoreElement
-            fields = ['term', 'content']
+    # class DCTerm(forms.ModelForm):
+    #     class Meta:
+    #         model = dc.QualifiedDublinCoreElement
+    #         fields = ['term', 'content']
 
     cm = page.get_content_model()
-    try:
-        abstract = cm.dublin_metadata.filter(term='AB').first().content
-    except:
-        abstract = None
+    # try:
+    #     abstract = cm.dublin_metadata.filter(term='AB').first().content
+    # except:
+    #     abstract = None
 
     resources = Resource.objects.filter(object_id=cm.id)
     agg_resources = {}
@@ -135,11 +135,11 @@ def add_dublin_core(request, page):
             agg_resources[res.title] = [short_id, description]
 
     return {
-        'dublin_core': [t for t in cm.dublin_metadata.all().exclude(term='AB').exclude(term='DM').exclude(term='DC').exclude(term='DTS').exclude(term='T')],
-        'abstract' : abstract,
+        #'dublin_core': [t for t in cm.dublin_metadata.all().exclude(term='AB').exclude(term='DM').exclude(term='DC').exclude(term='DTS').exclude(term='T')],
+        'abstract' : None,
         'short_id' : cm.short_id,
         'agg_resources': agg_resources,
-        'dcterm_frm': DCTerm(),
+        #'dcterm_frm': DCTerm(),
         'bag': cm.bags.first(),
         'users': User.objects.all(),
         'groups': Group.objects.all(),

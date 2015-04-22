@@ -16,7 +16,7 @@ from mezzanine.generic.models import Keyword, AssignedKeyword
 import os.path
 from django_irods.storage import IrodsStorage
 # from dublincore.models import QualifiedDublinCoreElement
-from dublincore import models as dc
+#from dublincore import models as dc
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -32,16 +32,14 @@ class GroupOwnership(models.Model):
 def get_user(request):
     """authorize user based on API key if it was passed, otherwise just use the request's user.
 
+    NOTE: The API key portion has been removed with TastyPie and will be restored when the
+    new API is built.
+
     :param request:
     :return: django.contrib.auth.User
     """
 
-    from tastypie.models import ApiKey
-
-    if 'api_key' in request.REQUEST:
-        api_key = ApiKey.objects.get(key=request.REQUEST['api_key'])
-        return api_key.user
-    elif request.user.is_authenticated():
+    if request.user.is_authenticated():
         return User.objects.get(pk=request.user.pk)
     else:
         return request.user
@@ -1360,10 +1358,12 @@ class AbstractResource(ResourcePermissionsMixin):
                                         related_name='last_changed_%(app_label)s_%(class)s',
                                         null=True
     )
-    dublin_metadata = generic.GenericRelation(
-        'dublincore.QualifiedDublinCoreElement',
-        help_text='The dublin core metadata of the resource'
-    )
+
+    # dublin_metadata = generic.GenericRelation(
+    #     'dublincore.QualifiedDublinCoreElement',
+    #     help_text='The dublin core metadata of the resource'
+    # )
+
     files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource')
     bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource')
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
@@ -1475,11 +1475,11 @@ class AbstractResource(ResourcePermissionsMixin):
     @classmethod
     def get_supported_upload_file_types(cls):
         # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
-        # to allow only specific file types return a tuple of those file extensions (ex: return (".csv", ".txt"))
+        # to allow only specific file types return a tuple of those file extensions (ex: return (".csv", ".txt",))
         # to not allow any file upload, return a empty tuple ( return ())
 
         # by default all file types are supported
-        return (".*")
+        return (".*",)
 
 
     @classmethod
@@ -1970,7 +1970,7 @@ class CoreMetaData(models.Model):
 def resource_processor(request, page):
     extra = page_permissions_page_processor(request, page)
     extra['res'] = page.get_content_model()
-    extra['dc'] = { m.term_name : m.content for m in extra['res'].dublin_metadata.all() }
+    #extra['dc'] = { m.term_name : m.content for m in extra['res'].dublin_metadata.all() }
     return extra
 
 

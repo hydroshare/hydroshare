@@ -22,8 +22,10 @@ def get_nc_dataset(nc_file_name):
 
     Return: the netCDF dataset
     """
-
-    nc_dataset = netCDF4.Dataset(nc_file_name, 'r')
+    try:
+        nc_dataset = netCDF4.Dataset(nc_file_name, 'r')
+    except:
+        nc_dataset = None
 
     return nc_dataset
 
@@ -493,12 +495,14 @@ def get_nc_grid_mapping_projection_import_string(nc_dataset):
                 if para_name == '+proj=':
                     proj4_string = proj4_string + '+proj=' + para_value
                 elif hasattr(nc_grid_mapping_variable, para_value):
-                    if para_name == '+lat_1':
-                        value = nc_grid_mapping_variable.standard_parallel.sort()
+                    if para_name == '+lat_1=':
+                        value = str(nc_grid_mapping_variable.standard_parallel).strip('[]').split()
                         if len(value) == 1:
-                            proj4_string = proj4_string + ' +lat_1='+str(value[0])
+                            proj4_string = proj4_string + ' +lat_1='+value[0]
                         elif len(value) == 2:
-                            proj4_string = proj4_string + ' +lat_1='+str(value[0])+' +lat_2='+str(value[1])
+                            a = float(value[0])
+                            b = float(value[1])
+                            proj4_string = proj4_string + ' +lat_1='+str(min(a, b))+' +lat_2='+str(max(a, b))
                     else:
                         proj4_string = proj4_string + ' ' + para_name + str(getattr(nc_grid_mapping_variable, para_value))
                 else:

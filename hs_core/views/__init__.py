@@ -32,10 +32,6 @@ from django.forms import ValidationError
 from inplaceeditform.commons import get_dict_from_obj, apply_filters, get_adaptor_class
 from inplaceeditform.views import _get_http_response, _get_adaptor
 
-from . import users_api
-from . import discovery_api
-from . import resource_api
-from . import social_api
 from hs_core.hydroshare import utils
 from hs_core.hydroshare import file_size_limit_for_display
 from hs_core.signals import *
@@ -78,7 +74,19 @@ def add_file_to_resource(request, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     res_cls = res.__class__
     res_files = request.FILES.getlist('files')
-    pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, **kwargs)
+
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+    pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, user=request.user,
+                                   validate_files=file_validation_dict, **kwargs)
+    if 'are_files_valid' in file_validation_dict:
+        if not file_validation_dict['are_files_valid']:
+            error_message = file_validation_dict.get('message', None)
+            if not error_message:
+                error_message = "Uploaded file(s) failed validation."
+
+            request.session['file_validation_error'] = error_message
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
     for f in res_files:
         res.files.add(ResourceFile(content_object=res, resource_file=f))
 
@@ -87,23 +95,26 @@ def add_file_to_resource(request, *args, **kwargs):
         if file_format_type not in [mime.value for mime in res.metadata.formats.all()]:
             res.metadata.create_element('format', value=file_format_type)
 
-    post_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, **kwargs)
-    resource_modified(res, request.user)
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    # receivers need to change the values of this dict if file validation fails
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+    extract_metadata = request.REQUEST.get('extract-metadata', 'No')
+    if extract_metadata == 'Yes':
+        extract_metadata = True
+    else:
+        extract_metadata = False
 
-def add_citation(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    res.dublin_metadata.create(term='REF', content=request.REQUEST['content'])
-    resource_modified(res, request.user)
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    post_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, user=request.user,
+                                    validate_files=file_validation_dict,
+                                    extract_metadata=extract_metadata, **kwargs)
+    if 'are_files_valid' in file_validation_dict:
+        if not file_validation_dict['are_files_valid']:
+            error_message = file_validation_dict.get('message', None)
+            if not error_message:
+                error_message = "Uploaded file(s) failed validation."
 
+            request.session['file_validation_error'] = error_message
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-def add_metadata_term(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    res.dublin_metadata.create(
-        term=request.REQUEST['term'],
-        content=request.REQUEST['content']
-    )
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -177,7 +188,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
         else:
             ajax_response_data = {'status': 'error'}
-            return HttpResponse(json.dumps(ajax_response_data))
+            return HttpResponse (json.dumps(ajax_response_data))
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
@@ -238,6 +249,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     fl = res.files.filter(pk=int(f)).first()
     file_name = fl.resource_file.name
+    res_cls = res.__class__
     pre_delete_file_from_resource.send(sender=res_cls, file=fl, resource=res, **kwargs)
     fl.resource_file.delete()
     fl.delete()
@@ -249,8 +261,8 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     resource_file_extensions = [os.path.splitext(f.resource_file.name)[1] for f in res.files.all()]
     if delete_file_extension not in resource_file_extensions:
         format_element = res.metadata.formats.filter(value=delete_file_mime_type).first()
-
-        res.metadata.delete_element(format_element.term, format_element.id)
+        if format_element:
+            res.metadata.delete_element(format_element.term, format_element.id)
 
     if res.public:
         if not res.can_be_public:
@@ -394,19 +406,32 @@ def verify_captcha(request):
         else:
             return HttpResponse('true', content_type='text/plain')
 
+def verify_account(request, *args, **kwargs):
+    context = {
+            'username' : request.GET['username'],
+            'email' : request.GET['email']
+        }
+    return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+
 @processor_for('resend-verification-email')
-def resend_verification_email(request, page):
-    u = get_object_or_404(User, username=request.GET['user'])
+def resend_verification_email(request):
+    u = get_object_or_404(User, username=request.GET['username'], email=request.GET['email'])
     try:
+        token = signing.dumps('verify_user_email:{0}:{1}'.format(u.pk, u.email))
         u.email_user(
             'Please verify your new Hydroshare account.',
             """
 This is an automated email from Hydroshare.org. If you requested a Hydroshare account, please
-go to http://{domain}/verify/{uid}/ and verify your account.
+go to http://{domain}/verify/{token}/ and verify your account.
 """.format(
             domain=Site.objects.get_current().domain,
-            uid=u.pk
+            token=token
         ))
+
+        context = {
+            'is_email_sent' : True
+        }
+        return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
     except:
         pass # FIXME should log this instead of ignoring it.
 
@@ -426,12 +451,13 @@ def my_resources(request, page):
 #    if not request.user.is_authenticated():
 #        return HttpResponseRedirect('/accounts/login/')
 
-    import sys
-    sys.path.append("/home/docker/pycharm-debug")
-    import pydevd
+    #import sys
+    #sys.path.append("/home/docker/pycharm-debug")
+    #import pydevd
+
     # IP Address for Ubuntu VM must be: 172.17.42.1
     # IP Address for boot2docker: varies
-    pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    #pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
@@ -488,34 +514,10 @@ def my_resources(request, page):
             'first': start,
             'last': start+len(res),
             'ct': total_res_cnt,
-            'dcterms' : (
-                ('AB', 'Abstract'),
-                ('BX', 'Box'),
-                ('CN', 'Contributor'),
-                ('CVR', 'Coverage'),
-                ('CR', 'Creator'),
-                ('DT', 'Date'),
-                ('DTS', 'DateSubmitted'),
-                ('DC', 'DateCreated'),
-                ('DM', 'DateModified'),
-                ('DSC', 'Description'),
-                ('FMT', 'Format'),
-                ('ID', 'Identifier'),
-                ('LG', 'Language'),
-                ('PD', 'Period'),
-                ('PT', 'Point'),
-                ('PBL', 'Publisher'),
-                ('REL', 'Relation'),
-                ('RT', 'Rights'),
-                ('SRC', 'Source'),
-                ('SUB', 'Subject'),
-                ('T', 'Title'),
-                ('TYP', 'Type'),
-    )
         }
 
 @processor_for(GenericResource)
-def add_dublin_core(request, page):
+def add_generic_context(request, page):
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
@@ -523,37 +525,23 @@ def add_dublin_core(request, page):
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
-    from dublincore import models as dc
-
-    class DCTerm(forms.ModelForm):
-        class Meta:
-            model=dc.QualifiedDublinCoreElement
-            fields = ['term', 'content']
-
     cm = page.get_content_model()
-    try:
-        abstract = cm.dublin_metadata.filter(term='AB').first().content
-    except:
-        abstract = None
 
     return {
-        'dublin_core' : [t for t in cm.dublin_metadata.all().exclude(term='AB')],
-        # 'abstract' : abstract,
-        'resource_type' : cm._meta.verbose_name,
-        'dcterm_frm' : DCTerm(),
-        'bag' : cm.bags.first(),
-        'users' : User.objects.all(),
-        'groups' : Group.objects.all(),
-        'owners' : set(cm.owners.all()),
-        'view_users' : set(cm.view_users.all()),
-        'view_groups' : set(cm.view_groups.all()),
-        'edit_users' : set(cm.edit_users.all()),
-        'edit_groups' : set(cm.edit_groups.all()),
-        'add_owner_user_form' : AddUserForm(),
-        'add_view_user_form' : AddUserForm(),
-        'add_edit_user_form' : AddUserForm(),
-        'add_view_group_form' : AddGroupForm(),
-        'add_edit_group_form' : AddGroupForm(),
+        'resource_type': cm._meta.verbose_name,
+        'bag': cm.bags.first(),
+        'users': User.objects.all(),
+        'groups': Group.objects.all(),
+        'owners': set(cm.owners.all()),
+        'view_users': set(cm.view_users.all()),
+        'view_groups': set(cm.view_groups.all()),
+        'edit_users': set(cm.edit_users.all()),
+        'edit_groups': set(cm.edit_groups.all()),
+        'add_owner_user_form': AddUserForm(),
+        'add_view_user_form': AddUserForm(),
+        'add_edit_user_form': AddUserForm(),
+        'add_view_group_form': AddGroupForm(),
+        'add_edit_group_form': AddGroupForm(),
     }
 
 res_cls = ""
@@ -641,9 +629,9 @@ def create_resource_new_workflow(request, *args, **kwargs):
     # Send pre-create resource signal - let any other app populate the empty metadata list object
     # also pass title to other apps, and give other apps a chance to populate page_redirect_url if they want
     # to redirect to their own page for resource creation rather than use core resource creation code
-    pre_create_resource.send(sender=res_cls, dublin_metadata=None, metadata=metadata,
-                                               files=resource_files, title=res_title, url_key=url_key,
-                                               page_url_dict=page_url_dict, validate_files=file_validation_dict, **kwargs)
+    pre_create_resource.send(sender=res_cls, metadata=metadata, files=resource_files, title=res_title, url_key=url_key,
+                                               page_url_dict=page_url_dict, validate_files=file_validation_dict,
+                                               **kwargs)
 
     if 'are_files_valid' in file_validation_dict:
         if not file_validation_dict['are_files_valid']:
@@ -689,22 +677,32 @@ def create_resource_new_workflow(request, *args, **kwargs):
                          }
                     })
 
+    if url_key in page_url_dict:
+        return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
+
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
             owner=request.user,
             title=res_title,
             keywords=None,
-            dublin_metadata=None,
             metadata=metadata,
             files=request.FILES.getlist('files'),
             content=res_title
     )
 
+    # receivers need to change the values of this dict if file validation fails
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     # Send post-create resource signal
-    post_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, **kwargs)
+    post_create_resource.send(sender=res_cls, resource=resource, user=request.user ,  metadata=metadata,
+                              validate_files=file_validation_dict, **kwargs)
 
-    if url_key in page_url_dict:
-        return render(request, page_url_dict[url_key], {'resource': resource})
+    if 'are_files_valid' in file_validation_dict:
+        if not file_validation_dict['are_files_valid']:
+            error_message = file_validation_dict.get('message', None)
+            if not error_message:
+                error_message = "Uploaded file(s) failed validation."
+
+            request.session['file_validation_error'] = error_message
 
     if resource is not None:
         # go to resource landing page
@@ -752,7 +750,6 @@ def create_resource(request, *args, **kwargs):
             owner=request.user,
             title=frm.cleaned_data['title'],
             keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None,
-            dublin_metadata=dcterms,
             content=frm.cleaned_data['abstract'] or frm.cleaned_data['title'],
             res_type_cls = res_cls,
             resource=resource,

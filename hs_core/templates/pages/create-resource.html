@@ -26,11 +26,12 @@
                 <option value="GenericResource">Generic Resource</option>
                 <option value="RasterResource">Geographic Raster Resource</option>
                 <option value="TimeSeriesResource">Time Series Resource</option>
-                {# <option value="InstResource">RHESSys Instance Resource</option> #}
+{#                <option value="InstResource">RHESSys Instance Resource</option> #}
                 <option value="RefTimeSeries">HIS Referenced Time Series</option>
                 <option value="ModelInstanceResource">Model Instance Resource</option>
                 <option value="NetcdfResource">Multidimensional Space and Time Data Resource</option>
                 <option value="ModelProgramResource">Model Program Resource</option>
+                <option value="ToolResource">Tool Resource</option>
             </select>
         </div>
     </div>
@@ -53,7 +54,7 @@
         </table>
 
         <h2 style="color:red">{{ file_size_error }}</h2>
-        <h2 style="color:red">{{ file_validation_error }}</h2>
+        <h2 id="file-type-error" style="color:red">{{ file_validation_error }}</h2>
     </div>
 
     <div class="form-group">
@@ -138,20 +139,28 @@
             var fileList = this.files || []
             var ext = ".*";
             for (var i = 0; i < fileList.length; i++) {
-                console.log('found file ' + i + ' = ' + fileList[i].name);
                 ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
                 ext = "." + ext;
                 var ext_found = false;
-                var index;
-                for(index=0; index< file_types.length; index++){
-                    if (ext === file_types[index]){
-                        ext_found = true;
-                        break;
+                if (ext === file_types) {
+                    ext_found = true;
+                }
+                else {
+                    var index;
+                    for (index = 0; index < file_types.length; index++) {
+                        if (ext === file_types[index].trim()) {
+                            ext_found = true;
+                            break;
+                        }
                     }
                 }
                 if(!ext_found){
                     this.value ='';
-                    alert('Invalid file type:' + ext)
+                    var err_msg = "Invalid file type: '" + ext +"'";
+                    $('#file-type-error').text(err_msg);
+                }
+                else{
+                    $('#file-type-error').text('');
                 }
             }
 

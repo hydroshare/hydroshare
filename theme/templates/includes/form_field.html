@@ -6,14 +6,16 @@
     <fieldset class="form-group input_{{ field.id_for_label }} {{ field.field.type }}
     {% if field.errors %} has-error{% endif %} {{ field_classes }}">
 
-    {% if field.label %}
+    {% if field.label and not inline_label %}
         <label class="control-label" for="{{ field.auto_id }}">{{ field.label }}</label>
     {% endif %}
 
     {% if readonly %}
         {% render_field field readonly="readonly" %}
+    {% elif inline_label %}
+        {% render_field field placeholder=field.label %}
     {% else %}
-        {% render_field field %}
+        {% render_field field placeholder=field.label %}
     {% endif %}
 
     {% if field.errors %}
@@ -22,7 +24,7 @@
                 {% if not forloop.first %} / {% endif %}{{ e }}
             {% endfor %}
         </p>
-    {% elif field.help_text %}
+    {% elif field.help_text and not inline_label %}
         <p class="help-block">{{ field.help_text }}</p>
     {% endif %}
     </fieldset>
