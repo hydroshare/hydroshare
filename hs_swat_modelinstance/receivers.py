@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update
 from hs_swat_modelinstance.models import SWATModelInstanceResource
 from hs_modelinstance.forms import *
+from forms import *
 
 @receiver(pre_metadata_element_create, sender=SWATModelInstanceResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
@@ -12,6 +13,8 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     if element_name == "modeloutput":
         element_form = ModelOutputValidationForm(request.POST)
     elif element_name == 'executedby':
+        element_form = ExecutedByValidationForm(request.POST)
+    elif element_name == 'swatmodelparameters':
         element_form = ExecutedByValidationForm(request.POST)
 
     if element_form.is_valid():
@@ -29,6 +32,8 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         element_form = ModelOutputValidationForm(request.POST)
     elif element_name == 'executedby':
         element_form = ExecutedByValidationForm(request.POST)
+    elif element_name == 'swatmodelparameters':
+        element_form = SWATmodelParametersValidationForm(request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
