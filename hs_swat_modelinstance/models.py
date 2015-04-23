@@ -72,21 +72,41 @@ class SWATmodelParameters(AbstractMetaDataElement):
     has_tilage_operation = models.BooleanField(default=False)
     has_inlet_of_draining_watershed = models.BooleanField(default=False)
     has_irrigation_operation = models.BooleanField(default=False)
-    has_other_parameters = models.CharField(max_length=500)
+    has_other_parameters = models.CharField(max_length=500, null=True, blank=True)
 
     def __unicode__(self):
         self.has_other_parameters
 
     @classmethod
     def create(cls, **kwargs):
-        return SWATmodelParameters.objects.create(**kwargs)
+        if not 'has_crop_rotation' in kwargs:
+            raise ValidationError("SWATmodelParameters has_crop_rotation is missing.")
+        if not 'has_title_drainage' in kwargs:
+            raise ValidationError("SWATmodelParameters has_title_drainage is missing.")
+        if not 'has_point_source' in kwargs:
+            raise ValidationError("SWATmodelParameters has_point_source is missing.")
+        if not 'has_fertilizer' in kwargs:
+            raise ValidationError("SWATmodelParameters has_fertilizer is missing.")
+        if not 'has_tilage_operation' in kwargs:
+            raise ValidationError("SWATmodelParameters has_tilage_operation is missing.")
+        if not 'has_inlet_of_draining_watershed' in kwargs:
+            raise ValidationError("SWATmodelParameters has_inlet_of_draining_watershed is missing.")
+        if not 'has_irrigation_operation' in kwargs:
+            raise ValidationError("SWATmodelParameters has_irrigation_operation is missing.")
+        if not 'has_other_parameters' in kwargs:
+            raise ValidationError("SWATmodelParameters has_other_parameters is missing.")
+
+        return SWATmodelParameters.objects.create(has_crop_rotation=kwargs['has_crop_rotation'], has_title_drainage=kwargs['has_title_drainage'], has_point_source=kwargs['has_point_source'],
+                                            has_fertilizer=kwargs['has_fertilizer'], has_tilage_operation=kwargs['has_tilage_operation'], has_inlet_of_draining_watershed=kwargs['has_inlet_of_draining_watershed'],
+                                            has_irrigation_operation=kwargs['has_irrigation_operation'], has_other_parameters=kwargs['has_other_parameters'], content_object=metadata_obj)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         swat_model_parameters = SWATmodelParameters.objects.get(id=element_id)
         if swat_model_parameters:
             for key, value in kwargs.iteritems():
-                setattr(swat_model_parameters, key, value)
+                if key in ('has_crop_rotation', 'has_title_drainage', 'has_point_source', 'has_fertilizer', 'has_tilage_operation', 'has_inlet_of_draining_watershed', 'has_irrigation_operation', 'has_other_parameters'):
+                    setattr(swat_model_parameters, key, value)
 
             swat_model_parameters.save()
         else:
