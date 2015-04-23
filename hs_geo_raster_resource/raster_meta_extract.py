@@ -8,13 +8,13 @@ http://gis.stackexchange.com/questions/57834/how-to-get-raster-corner-coordinate
 
 __author__ = 'Tian Gan'
 
-
 import gdal
 from gdalconst import *
 from osgeo import osr
 import json
 from collections import OrderedDict
 import re
+import logging
 
 def get_raster_meta_json(raster_file_name):
     """
@@ -74,7 +74,11 @@ def get_original_coverage_info(raster_dataset):
     # get horizontal projection and unit info
     try:
         proj_wkt = raster_dataset.GetProjection()
-    except:
+    except Exception as ex:
+        # an exception occurs when doing GetGeoTransform, which means an invalid geotiff is uploaded, print exception
+        # to log without blocking the main resource creation workflow since we allow user to upload a tiff file without valid tags
+        log = logging.getLogger()
+        log.exception(ex.message)
         proj_wkt = None
 
     if proj_wkt:
@@ -95,13 +99,17 @@ def get_original_coverage_info(raster_dataset):
             proj = spatial_ref.GetAttrValue("PROJECTION", 0) if spatial_ref.GetAttrValue("PROJECTION", 0) else ''
             projection = datum + ' '+proj
     else:
-        unit = 'Unnamed'
-        projection = 'Unnamed'
+        unit = 'NA'
+        projection = 'NA'
 
     # get the bounding box
     try:
         gt = raster_dataset.GetGeoTransform()
-    except:
+    except Exception as ex:
+        # an exception occurs when doing GetGeoTransform, which means an invalid geotiff is uploaded, print exception
+        # to log without blocking the main resource creation workflow since we allow user to upload a tiff file without valid tags
+        log = logging.getLogger()
+        log.exception(ex.message)
         gt = None
 
     if gt:
@@ -123,10 +131,10 @@ def get_original_coverage_info(raster_dataset):
         westlimit = min(x_coor)  # min x
         eastlimit = max(x_coor)
     else:
-        northlimit = 0
-        southlimit = 0
-        westlimit = 0
-        eastlimit = 0
+        northlimit = 'NA'
+        southlimit = 'NA'
+        westlimit = 'NA'
+        eastlimit = 'NA'
 
     spatial_coverage_info = OrderedDict([
         ('northlimit', northlimit),
@@ -147,7 +155,11 @@ def get_wgs84_coverage_info(raster_dataset):
     # get original coordinate system
     try:
         proj = raster_dataset.GetProjection()
-    except:
+    except Exception as ex:
+        # an exception occurs when doing GetGeoTransform, which means an invalid geotiff is uploaded, print exception
+        # to log without blocking the main resource creation workflow since we allow user to upload a tiff file without valid tags
+        log = logging.getLogger()
+        log.exception(ex.message)
         proj = None
 
     if proj:
@@ -182,9 +194,23 @@ def get_wgs84_coverage_info(raster_dataset):
             ])
             return wgs84_coverage_info
         else:
-            return None
+            return OrderedDict([
+                    ('northlimit', 'NA'),
+                    ('southlimit', 'NA'),
+                    ('eastlimit', 'NA'),
+                    ('westlimit', 'NA'),
+                    ('units','Decimal degrees'),
+                    ('projection', 'WGS 84 EPSG:4326')
+                ])
     else:
-        return None
+        return OrderedDict([
+                    ('northlimit', 'NA'),
+                    ('southlimit', 'NA'),
+                    ('eastlimit', 'NA'),
+                    ('westlimit', 'NA'),
+                    ('units','Decimal degrees'),
+                    ('projection', 'WGS 84 EPSG:4326')
+                ])
 
 def get_cell_and_band_info(raster_dataset):
     """
@@ -208,7 +234,7 @@ def get_cell_and_band_info(raster_dataset):
             if re.match('metre', cell_size_unit, re.I):
                 cell_size_unit = 'meter'
         else:
-            cell_size_unit = 'Unnamed'
+            cell_size_unit = 'NA'
 
         # get band count, cell no data value, cell data type
         band_count = raster_dataset.RasterCount
@@ -232,10 +258,10 @@ def get_cell_and_band_info(raster_dataset):
             ('columns', 0),
             ('cellSizeXValue', 0),
             ('cellSizeYValue', 0),
-            ('cellSizeUnit', "Unnamed"),
-            ('cellDataType', "Unnamed"),
+            ('cellSizeUnit', "NA"),
+            ('cellDataType', "NA"),
             ('noDataValue', 0),
-            ('bandCount', 0)
+            ('bandCount', 1)
         ])
 
     return cell_and_band_info
