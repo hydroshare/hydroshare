@@ -131,16 +131,7 @@ def create_bag(resource):
     with open(bagit_path + '/resourcemap.xml', 'w') as out:
         out.write(xml_string)
 
-    bagit.make_bag(bagit_path, checksum=['md5'], bag_info={
-        'title': resource.title,
-        'author': resource.owners.all()[0].username,
-        'author_email': resource.owners.all()[0].email,
-        'version': arrow.get(resource.updated).format("YYYY.MM.DD.HH.mm.ss"),
-        'resource_type': '.'.join((resource._meta.app_label, resource._meta.object_name)),
-        'hydroshare_version': getattr(settings, 'HYDROSHARE_VERSION', "R1 development"),
-        'shortkey': resource.short_id,
-        'slug': resource.slug
-    })
+    bagit.make_bag(bagit_path, checksum=['md5'])
 
     zf = os.path.join(dest_prefix, resource.short_id) + ".zip"
     make_zipfile(output_filename=zf, source_dir=bagit_path)
