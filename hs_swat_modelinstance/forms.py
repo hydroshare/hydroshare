@@ -70,7 +70,7 @@ class SWATmodelParametersValidationForm(forms.Form):
     has_tilage_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
     has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
     has_irrigation_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
-    has_other_parameters = forms.CharField(max_length=500)
+    has_other_parameters = forms.CharField(max_length=500, required=False)
 
     def clean_has_crop_rotation(self):
         data = self.cleaned_data['has_crop_rotation']
