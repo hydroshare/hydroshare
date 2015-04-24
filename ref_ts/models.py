@@ -10,7 +10,7 @@ from django.contrib.contenttypes import generic
 class RefTimeSeries(Page, AbstractResource):
 
         class Meta:
-                verbose_name = "Referenced HIS Time Series"
+                verbose_name = "HIS Referenced Time Series"
 
         def extra_capabilities(self):
             return None
