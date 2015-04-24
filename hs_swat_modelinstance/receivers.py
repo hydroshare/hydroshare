@@ -15,7 +15,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     elif element_name == 'executedby':
         element_form = ExecutedByValidationForm(request.POST)
     elif element_name == 'swatmodelparameters':
-        element_form = ExecutedByValidationForm(request.POST)
+        element_form = SWATmodelParametersValidationForm(request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
