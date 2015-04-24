@@ -1521,7 +1521,7 @@ class Bags(models.Model):
 class GenericResource(Page, AbstractResource):
 
     class Meta:
-        verbose_name = 'Generic Hydroshare Resource'
+        verbose_name = 'Generic'
 
     def can_add(self, request):
         return AbstractResource.can_add(self, request)

@@ -245,7 +245,7 @@ class NetcdfResource(Page, AbstractResource):
         return AbstractResource.can_view(self, request)
 
     class Meta:
-            verbose_name = 'Multidimensional NetCDF Resource'
+            verbose_name = 'Multidimensional (NetCDF)'
 
 processor_for(NetcdfResource)(resource_processor)
 
