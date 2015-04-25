@@ -96,6 +96,7 @@ class SWATmodelParameters(AbstractMetaDataElement):
         if not 'has_other_parameters' in kwargs:
             raise ValidationError("SWATmodelParameters has_other_parameters is missing.")
 
+        metadata_obj = kwargs['content_object']
         return SWATmodelParameters.objects.create(has_crop_rotation=kwargs['has_crop_rotation'], has_title_drainage=kwargs['has_title_drainage'], has_point_source=kwargs['has_point_source'],
                                             has_fertilizer=kwargs['has_fertilizer'], has_tilage_operation=kwargs['has_tilage_operation'], has_inlet_of_draining_watershed=kwargs['has_inlet_of_draining_watershed'],
                                             has_irrigation_operation=kwargs['has_irrigation_operation'], has_other_parameters=kwargs['has_other_parameters'], content_object=metadata_obj)
