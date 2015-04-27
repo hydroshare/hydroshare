@@ -1652,6 +1652,7 @@ span.name-label{
 	top: 0px;
 	height: 35px;
 	border: none;
+	background: transparent;
 }
 
 .resource-search ul {

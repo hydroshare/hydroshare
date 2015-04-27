@@ -98,6 +98,12 @@
 
                 this.$input.on('keyup', this.scanForItem.bind(this))
 
+                var self = this;
+                this.$options.on('click', '.term-option', function() {
+                    var $el = $(this);
+                    self.addItem($el.attr('data-label'), $el.text(), $el.attr('data-id'));
+                });
+
                 this.setPadding();
             },
 
@@ -109,12 +115,16 @@
                     if (term.length === 0) {
                         resolve([]);
                     } else {
-                        $.ajax("/hsapi/_internal/search/autocomplete/").then(function(r){
+                        var req = {
+                            url: "/hsapi/_internal/search/autocomplete/",
+                            data: {
+                                term: term,
+                            },
+                        }
+                        $.ajax(req).then(function(r){
                             var results = [];
                             for (var i=0; i < r.length; i++) {
-                                if (r[i].value.indexOf(term) >= 0) {
-                                    results.push(r[i]);
-                                }
+                                results.push(r[i]);
                             }
                             resolve(results);
                         });
@@ -162,13 +172,14 @@
                 var self = this;
                 this.$options.html("");
                 $.each(options, function() {
-                    self.addOption(this.label, this.value);
+                    self.addOption(this.label, this.value, this.id);
                 });
             },
-            addOption: function(type, value) {
+            addOption: function(type, value, id) {
                 // <li data-label=foo>bar</li>
-                var $item = $("<li></li>");
+                var $item = $("<li class=term-option></li>");
                 $item.attr('data-label', type);
+                $item.attr('data-id', id);
                 $item.text(value);
                 this.$options.append($item);
 
@@ -198,10 +209,11 @@
                 }
             },
 
-            addItem: function(type, value) {
+            addItem: function(type, value, id) {
                 // <li data-label=foo>bar</li>
                 var $item = $("<li></li>");
                 $item.attr('data-label', type);
+                $item.attr('data-id', id);
                 $item.text(value);
                 this.$ul.append($item);
 
