@@ -37,10 +37,12 @@
                 <div class="custom-btn-toolbar">
                     <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
                         {% csrf_token %}
-                        <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
-                        <span data-toggle="tooltip" data-placement="auto" title="Delete"
-                              class="glyphicon glyphicon-trash icon-button btn-remove"></span>
-                        </a>
+                        {% if page.perms.delete %}
+                            <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
+                            <span data-toggle="tooltip" data-placement="auto" title="Delete"
+                                  class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                            </a>
+                        {% endif %}
                         <input name="resource-mode" type="hidden" value="edit"/>
                         <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
                                 title="Edit" class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
@@ -57,7 +59,11 @@
                             {% else %}<span>{{ cr.name }}</span><span class="comma">,&nbsp;</span>{% endif %}
                         {% endfor %}
                     </td></tr>
-                    <tr><th>Owner:</th><td>{{ cm.user|contact|safe }}</td></tr>
+                    <tr><th>Owners:</th><td>
+                        {% for u in owners %}
+                            <span>{{ u|contact|safe }}</span>&nbsp;&nbsp;
+                        {% endfor %}
+                    </td></tr>
                     <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
                     <tr><th>Created:</th><td>{{ cm.created }}</td></tr>
                     <tr><th>Last updated:</th><td> {{ cm.updated }} by {%  if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
