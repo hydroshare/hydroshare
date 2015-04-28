@@ -35,20 +35,6 @@ def landing_page(request, page):
         context['model_input'] = content_model.metadata.model_input
 
         #add SWAT Model parameters context
-#        swat_para_dict = {}
-#        swat_para_obj = content_model.metadata.swat_model_parameters
-#        if swat_para_obj:
-#            swat_para_dict['has_crop_rotation'] = swat_para_obj.value['has_crop_rotation']
-#            swat_para_dict['has_title_drainage'] = swat_para_obj.value['has_title_drainage']
-#            swat_para_dict['has_point_source'] = swat_para_obj.value['has_point_source']
-#            swat_para_dict['has_fertilizer'] = swat_para_obj.value['has_fertilizer']
-#            swat_para_dict['has_tilage_operation'] = swat_para_obj.value['has_tilage_operation']
-#            swat_para_dict['has_inlet_of_draining_watershed'] = swat_para_obj.value['has_inlet_of_draining_watershed']
-#            swat_para_dict['has_irrigation_operation'] = swat_para_obj.value['has_irrigation_operation']
-#            swat_para_dict['has_other_parameters'] = swat_para_obj.value['has_other_parameters']
-#            context['swat_model_parameters'] = swat_para_dict
-#        else:
-#            context['swat_model_parameters'] = None
     else:
         model_output_form = ModelOutputForm(instance=content_model.metadata.model_output, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.model_output.id if content_model.metadata.model_output else None)
@@ -58,7 +44,6 @@ def landing_page(request, page):
 
         model_objective_form = ModelObjectiveForm(instance=content_model.metadata.model_objective, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.model_objective.id if content_model.metadata.model_objective else None)
-
         simulation_type_form = simulationTypeForm(instance=content_model.metadata.simulation_type, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.simulation_type.id if content_model.metadata.simulation_type else None)
 
