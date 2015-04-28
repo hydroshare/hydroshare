@@ -1,3 +1,4 @@
+__author__ = 'Mohamed Morsy'
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -69,7 +70,7 @@ class SWATmodelParameters(AbstractMetaDataElement):
     has_title_drainage = models.BooleanField(default=False)
     has_point_source = models.BooleanField(default=False)
     has_fertilizer = models.BooleanField(default=False)
-    has_tilage_operation = models.BooleanField(default=False)
+    has_tillage_operation = models.BooleanField(default=False)
     has_inlet_of_draining_watershed = models.BooleanField(default=False)
     has_irrigation_operation = models.BooleanField(default=False)
     has_other_parameters = models.CharField(max_length=500, null=True, blank=True)
@@ -87,8 +88,8 @@ class SWATmodelParameters(AbstractMetaDataElement):
             raise ValidationError("SWATmodelParameters has_point_source is missing.")
         if not 'has_fertilizer' in kwargs:
             raise ValidationError("SWATmodelParameters has_fertilizer is missing.")
-        if not 'has_tilage_operation' in kwargs:
-            raise ValidationError("SWATmodelParameters has_tilage_operation is missing.")
+        if not 'has_tillage_operation' in kwargs:
+            raise ValidationError("SWATmodelParameters has_tillage_operation is missing.")
         if not 'has_inlet_of_draining_watershed' in kwargs:
             raise ValidationError("SWATmodelParameters has_inlet_of_draining_watershed is missing.")
         if not 'has_irrigation_operation' in kwargs:
@@ -98,7 +99,7 @@ class SWATmodelParameters(AbstractMetaDataElement):
 
         metadata_obj = kwargs['content_object']
         return SWATmodelParameters.objects.create(has_crop_rotation=kwargs['has_crop_rotation'], has_title_drainage=kwargs['has_title_drainage'], has_point_source=kwargs['has_point_source'],
-                                            has_fertilizer=kwargs['has_fertilizer'], has_tilage_operation=kwargs['has_tilage_operation'], has_inlet_of_draining_watershed=kwargs['has_inlet_of_draining_watershed'],
+                                            has_fertilizer=kwargs['has_fertilizer'], has_tillage_operation=kwargs['has_tillage_operation'], has_inlet_of_draining_watershed=kwargs['has_inlet_of_draining_watershed'],
                                             has_irrigation_operation=kwargs['has_irrigation_operation'], has_other_parameters=kwargs['has_other_parameters'], content_object=metadata_obj)
 
     @classmethod
@@ -106,7 +107,7 @@ class SWATmodelParameters(AbstractMetaDataElement):
         swat_model_parameters = SWATmodelParameters.objects.get(id=element_id)
         if swat_model_parameters:
             for key, value in kwargs.iteritems():
-                if key in ('has_crop_rotation', 'has_title_drainage', 'has_point_source', 'has_fertilizer', 'has_tilage_operation', 'has_inlet_of_draining_watershed', 'has_irrigation_operation', 'has_other_parameters'):
+                if key in ('has_crop_rotation', 'has_title_drainage', 'has_point_source', 'has_fertilizer', 'has_tillage_operation', 'has_inlet_of_draining_watershed', 'has_irrigation_operation', 'has_other_parameters'):
                     setattr(swat_model_parameters, key, value)
 
             swat_model_parameters.save()
@@ -213,26 +214,26 @@ class SWATModelInstanceMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         if self.model_output:
-            hsterms_model_output = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
+            hsterms_model_output = etree.SubElement(container, '{%s}ModelOutput' % self.NAMESPACES['hsterms'])
             hsterms_model_output_rdf_Description = etree.SubElement(hsterms_model_output, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_model_output_value = etree.SubElement(hsterms_model_output_rdf_Description, '{%s}IncludesModelOutput' % self.NAMESPACES['hsterms'])
             if self.model_output.includes_output == True: hsterms_model_output_value.text = "Yes"
             else: hsterms_model_output_value.text = "No"
         if self.executed_by:
-            hsterms_executed_by = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
+            hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramName' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_name.text = self.executed_by.name
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_url.text = self.executed_by.url
         if self.swat_model_parameters:
-            hsterms_swat_model_parameters = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
+            hsterms_swat_model_parameters = etree.SubElement(container, '{%s}SWATmodelParameters' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_rdf_Description = etree.SubElement(hsterms_swat_model_parameters, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_swat_model_parameters_has_crop_rotation = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasCropRotation' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_has_title_drainage = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasTitleDrainage' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_has_point_source = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasPointSource' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_has_fertilizer = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasFertilizer' % self.NAMESPACES['hsterms'])
-            hsterms_swat_model_parameters_has_tilage_operation = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasTilageOperation' % self.NAMESPACES['hsterms'])
+            hsterms_swat_model_parameters_has_tillage_operation = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasTillageOperation' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_has_inlet_of_draining_watershed = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasInletOfDrainingWatershed' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_has_irrigation_operation = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasIrrigationOperation' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_has_other_parameters = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasOtherParameters' % self.NAMESPACES['hsterms'])
@@ -245,8 +246,8 @@ class SWATModelInstanceMetaData(CoreMetaData):
             else: hsterms_swat_model_parameters_has_point_source.text = "No"
             if self.swat_model_parameters.has_fertilizer == True: hsterms_swat_model_parameters_has_fertilizer.text = "Yes"
             else: hsterms_swat_model_parameters_has_fertilizer.text = "No"
-            if self.swat_model_parameters.has_tilage_operation == True: hsterms_swat_model_parameters_has_tilage_operation.text = "Yes"
-            else: hsterms_swat_model_parameters_has_tilage_operation.text = "No"
+            if self.swat_model_parameters.has_tillage_operation == True: hsterms_swat_model_parameters_has_tillage_operation.text = "Yes"
+            else: hsterms_swat_model_parameters_has_tillage_operation.text = "No"
             if self.swat_model_parameters.has_inlet_of_draining_watershed == True: hsterms_swat_model_parameters_has_inlet_of_draining_watershed.text = "Yes"
             else: hsterms_swat_model_parameters_has_inlet_of_draining_watershed.text = "No"
             if self.swat_model_parameters.has_irrigation_operation == True: hsterms_swat_model_parameters_has_irrigation_operation.text = "Yes"
