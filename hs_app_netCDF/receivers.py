@@ -36,6 +36,21 @@ def netcdf_pre_create_resource(sender, **kwargs):
                     res_dublin_core_meta = {}
                     res_type_specific_meta = {}
 
+                # add creator:
+                if res_dublin_core_meta.get('creator_name'):
+                    name = res_dublin_core_meta['creator_name']
+                    email = res_dublin_core_meta.get('creator_email', '')
+                    url = res_dublin_core_meta.get('creator_url', '')
+                    creator = {'creator': {'name': name, 'email': email, 'homepage': url}}
+                    metadata.append(creator)
+
+                # add contributor:
+                if res_dublin_core_meta.get('contributor_name'):
+                    name_list = res_dublin_core_meta['contributor_name'].split(',')
+                    for name in name_list:
+                        contributor = {'contributor': {'name': name}}
+                        metadata.append(contributor)
+
                 # add title
                 if res_dublin_core_meta.get('title'):
                     if res_title == 'Untitled resource':
@@ -45,18 +60,28 @@ def netcdf_pre_create_resource(sender, **kwargs):
                 if res_dublin_core_meta.get('description'):
                     description = {'description': {'abstract': res_dublin_core_meta['description']}}
                     metadata.append(description)
+
+                # add keywords
+                if res_dublin_core_meta.get('subject'):
+                    keywords = res_dublin_core_meta['subject'].split(',')
+                    for keyword in keywords:
+                        metadata.append({'subject': {'value': keyword}})
+
                 # add source
                 if res_dublin_core_meta.get('source'):
                     source = {'source': {'derived_from': res_dublin_core_meta['source']}}
                     metadata.append(source)
+
                 # add relation
                 if res_dublin_core_meta.get('references'):
                     relation = {'relation': {'type': 'cites', 'value': res_dublin_core_meta['references']}}
                     metadata.append(relation)
+
                 # add coverage - period
                 if res_dublin_core_meta.get('period'):
                     period = {'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
                     metadata.append(period)
+
                 # add coverage - box
                 if res_dublin_core_meta.get('box'):
                     box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
@@ -275,7 +300,8 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                                                    type=var_info['type'],
                                                    shape=var_info['shape'],
                                                    missing_value=var_info['missing_value'],
-                                                   descriptive_name=var_info['descriptive_name'])
+                                                   descriptive_name=var_info['descriptive_name'],
+                                                   method=var_info['method'])
 
 
                 # update the original spatial coverage meta

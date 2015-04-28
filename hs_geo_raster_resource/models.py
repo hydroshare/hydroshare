@@ -231,7 +231,7 @@ class CellInformation(AbstractMetaDataElement):
 #
 class RasterResource(Page, AbstractResource):
     class Meta:
-        verbose_name = 'Geographic Raster Resource'
+        verbose_name = 'Geographic Raster'
 
     @property
     def metadata(self):

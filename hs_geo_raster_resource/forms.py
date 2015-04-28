@@ -44,11 +44,12 @@ class OriginalCoverageSpatialForm(forms.Form):
             for field in self.fields.values():
                 field.widget.attrs['readonly'] = True
                 field.widget.attrs['style'] = "background-color:white;"
-        else:
-            self.fields['projection'].widget.attrs['readonly'] = True
-            self.fields['projection'].widget.attrs['style'] = "background-color:white;"
-            self.fields['units'].widget.attrs['readonly'] = True
-            self.fields['units'].widget.attrs['style'] = "background-color:white;"
+        # enabling all element fields for editing
+        # else:
+        #     self.fields['projection'].widget.attrs['readonly'] = True
+        #     self.fields['projection'].widget.attrs['style'] = "background-color:white;"
+        #     self.fields['units'].widget.attrs['readonly'] = True
+        #     self.fields['units'].widget.attrs['style'] = "background-color:white;"
 
     def clean(self):
         # modify the form's cleaned_data dictionary
@@ -119,20 +120,21 @@ class CellInfoForm(ModelForm):
         super(CellInfoForm, self).__init__(*args, **kwargs)
         self.helper = CellInfoFormHelper(allow_edit, res_short_id, element_id, element_name='CellInformation')
 
-        # only noDataValue field needs to be set up read-only or not depending on whether the value is extracted from file or not
         if not allow_edit:
-            self.fields['noDataValue'].widget.attrs['readonly'] = "readonly"
+            for field in self.fields.values():
+                field.widget.attrs['readonly'] = True
+                field.widget.attrs['style'] = "background-color:white;"
 
     class Meta:
         model = CellInformation
         fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellSizeUnit', 'cellDataType', 'noDataValue']
         exclude = ['content_object']
-        widgets = { 'rows': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'columns': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'cellSizeXValue': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'cellSizeYValue': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'cellSizeUnit': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'cellDataType': forms.TextInput(attrs={'readonly':'readonly'}),
+        widgets = { 'rows': forms.TextInput(), #(attrs={'readonly':'readonly'}),
+                    'columns': forms.TextInput(), #(attrs={'readonly':'readonly'}),
+                    'cellSizeXValue': forms.TextInput(), #(attrs={'readonly':'readonly'}),
+                    'cellSizeYValue': forms.TextInput(), #(attrs={'readonly':'readonly'}),
+                    'cellSizeUnit': forms.TextInput(), #(attrs={'readonly':'readonly'}),
+                    'cellDataType': forms.TextInput(), #(attrs={'readonly':'readonly'}),
                     'noDataValue': forms.TextInput()}
 
 class CellInfoValidationForm(forms.Form):

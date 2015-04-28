@@ -193,7 +193,7 @@ class TimeSeriesResult(AbstractMetaDataElement):
 
 class TimeSeriesResource(Page, AbstractResource):
     class Meta:
-        verbose_name = 'Time Series Resource'
+        verbose_name = 'Time Series'
 
     @property
     def metadata(self):

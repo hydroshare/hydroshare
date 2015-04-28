@@ -107,20 +107,20 @@
                             {# Optional extended meta subelement for Variable #}
                             {% if variable.descriptive_name %}
                                 <div class="row">
-                                    <div class="col-sm-4"><strong>Descriptive Name:</strong></div>
+                                    <div class="col-sm-4"><strong>Long Name:</strong></div>
                                     <div class="col-sm-8">{{ variable.descriptive_name }}</div>
-                                </div>
-                            {% endif %}
-                            {% if variable.method %}
-                                <div class="row">
-                                    <div class="col-sm-4"><strong>Method:</strong></div>
-                                    <div class="col-sm-8">{{ variable.method }}</div>
                                 </div>
                             {% endif %}
                             {% if variable.missing_value %}
                                 <div class="row">
                                     <div class="col-sm-4"><strong>Missing Value:</strong></div>
                                     <div class="col-sm-8">{{ variable.missing_value }}</div>
+                                </div>
+                            {% endif %}
+                            {% if variable.method %}
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>Comment:</strong></div>
+                                    <div class="col-sm-8">{{ variable.method }}</div>
                                 </div>
                             {% endif %}
 
