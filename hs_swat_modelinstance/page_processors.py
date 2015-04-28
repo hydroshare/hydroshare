@@ -29,20 +29,6 @@ def landing_page(request, page):
         context['swat_model_parameters'] = content_model.metadata.swat_model_parameters
 
         #add SWAT Model parameters context
-#        swat_para_dict = {}
-#        swat_para_obj = content_model.metadata.swat_model_parameters
-#        if swat_para_obj:
-#            swat_para_dict['has_crop_rotation'] = swat_para_obj.value['has_crop_rotation']
-#            swat_para_dict['has_title_drainage'] = swat_para_obj.value['has_title_drainage']
-#            swat_para_dict['has_point_source'] = swat_para_obj.value['has_point_source']
-#            swat_para_dict['has_fertilizer'] = swat_para_obj.value['has_fertilizer']
-#            swat_para_dict['has_tilage_operation'] = swat_para_obj.value['has_tilage_operation']
-#            swat_para_dict['has_inlet_of_draining_watershed'] = swat_para_obj.value['has_inlet_of_draining_watershed']
-#            swat_para_dict['has_irrigation_operation'] = swat_para_obj.value['has_irrigation_operation']
-#            swat_para_dict['has_other_parameters'] = swat_para_obj.value['has_other_parameters']
-#            context['swat_model_parameters'] = swat_para_dict
-#        else:
-#            context['swat_model_parameters'] = None
     else:
         model_output_form = ModelOutputForm(instance=content_model.metadata.model_output, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.model_output.id if content_model.metadata.model_output else None)
@@ -50,22 +36,6 @@ def landing_page(request, page):
         executed_by_form = ExecutedByForm(instance=content_model.metadata.executed_by, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.executed_by.id if content_model.metadata.executed_by else None)
 
- #       swat_para_dict = {}
- #       swat_para_obj = content_model.metadata.swat_model_parameters
- #       if swat_para_obj:
- #           swat_para_dict['has_crop_rotation'] = swat_para_obj.value['has_crop_rotation']
- #           swat_para_dict['has_title_drainage'] = swat_para_obj.value['has_title_drainage']
- #           swat_para_dict['has_point_source'] = swat_para_obj.value['has_point_source']
- #           swat_para_dict['has_fertilizer'] = swat_para_obj.value['has_fertilizer']
- #           swat_para_dict['has_tilage_operation'] = swat_para_obj.value['has_tilage_operation']
- #           swat_para_dict['has_inlet_of_draining_watershed'] = swat_para_obj.value['has_inlet_of_draining_watershed']
- #           swat_para_dict['has_irrigation_operation'] = swat_para_obj.value['has_irrigation_operation']
- #           swat_para_dict['has_other_parameters'] = swat_para_obj.value['has_other_parameters']
- #       else:
- #           swat_para_obj = None
-
- #       swat_model_parameters_form = SWATmodelParametersForm(intial=swat_para_dict, allow_edit=edit_resource, res_short_id=content_model.short_id,
- #                            element_id=swat_para_obj.id if swat_para_obj else None)
         swat_model_parameters_form = SWATmodelParametersForm(instance=content_model.metadata.swat_model_parameters, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.swat_model_parameters.id if content_model.metadata.swat_model_parameters else None)
 

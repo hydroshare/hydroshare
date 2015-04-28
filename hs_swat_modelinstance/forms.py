@@ -17,7 +17,7 @@ class SWATmodelParametersFormHelper(BaseFormHelper):
                         Field('has_title_drainage', css_class=field_width),
                         Field('has_point_source', css_class=field_width),
                         Field('has_fertilizer', css_class=field_width),
-                        Field('has_tilage_operation', css_class=field_width),
+                        Field('has_tillage_operation', css_class=field_width),
                         Field('has_inlet_of_draining_watershed', css_class=field_width),
                         Field('has_irrigation_operation', css_class=field_width),
                         Field('has_other_parameters', css_class=field_width),
@@ -31,7 +31,7 @@ class SWATmodelParametersForm(ModelForm):
     has_title_drainage = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
     has_point_source = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
     has_fertilizer = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
-    has_tilage_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
+    has_tillage_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
     has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
     has_irrigation_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
     has_other_parameters = forms.CharField(max_length=200)
@@ -43,7 +43,7 @@ class SWATmodelParametersForm(ModelForm):
         self.fields['has_title_drainage'].widget.attrs['style'] = "width:auto;margin-top:-5px"
         self.fields['has_point_source'].widget.attrs['style'] = "width:auto;margin-top:-5px"
         self.fields['has_fertilizer'].widget.attrs['style'] = "width:auto;margin-top:-5px"
-        self.fields['has_tilage_operation'].widget.attrs['style'] = "width:auto;margin-top:-5px"
+        self.fields['has_tillage_operation'].widget.attrs['style'] = "width:auto;margin-top:-5px"
         self.fields['has_inlet_of_draining_watershed'].widget.attrs['style'] = "width:auto;margin-top:-5px"
         self.fields['has_irrigation_operation'].widget.attrs['style'] = "width:auto;margin-top:-5px"
 
@@ -55,7 +55,7 @@ class SWATmodelParametersForm(ModelForm):
                   'has_title_drainage',
                   'has_point_source',
                   'has_fertilizer',
-                  'has_tilage_operation',
+                  'has_tillage_operation',
                   'has_inlet_of_draining_watershed',
                   'has_irrigation_operation',
                   'has_other_parameters']
@@ -63,13 +63,13 @@ class SWATmodelParametersForm(ModelForm):
         widgets = {'has_other_parameters': forms.TextInput()}
 
 class SWATmodelParametersValidationForm(forms.Form):
-    has_crop_rotation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
-    has_title_drainage = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
-    has_point_source = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
-    has_fertilizer = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
-    has_tilage_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
-    has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
-    has_irrigation_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
+    has_crop_rotation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
+    has_title_drainage = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
+    has_point_source = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
+    has_fertilizer = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
+    has_tillage_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
+    has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
+    has_irrigation_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
     has_other_parameters = forms.CharField(max_length=500, required=False)
 
     def clean_has_crop_rotation(self):
@@ -96,8 +96,8 @@ class SWATmodelParametersValidationForm(forms.Form):
             return False
         else:
             return True
-    def clean_has_tilage_operation(self):
-        data = self.cleaned_data['has_tilage_operation']
+    def clean_has_tillage_operation(self):
+        data = self.cleaned_data['has_tillage_operation']
         if data == u'False':
             return False
         else:
