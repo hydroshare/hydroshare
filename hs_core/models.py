@@ -109,7 +109,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_delete(self, request):
         user = get_user(request)
         if user.is_authenticated():
-            if user.is_superuser | self.owners.filter(pk=user.pk).exists():
+            if user.is_superuser or self.owners.filter(pk=user.pk).exists():
                 return True
             else:
                 return False
