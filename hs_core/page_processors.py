@@ -213,6 +213,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         temporal_coverage_data_dict['start'] = temporal_coverage.value['start']
         temporal_coverage_data_dict['end'] = temporal_coverage.value['end']
         temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
+        temporal_coverage_data_dict['id'] = temporal_coverage.id
     else:
         temporal_coverage = None
 
@@ -230,6 +231,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
         spatial_coverage_data_dict['projection'] = spatial_coverage.value.get('projection', None)
         spatial_coverage_data_dict['type'] = spatial_coverage.type
+        spatial_coverage_data_dict['id'] = spatial_coverage.id
         if spatial_coverage.type == 'point':
             spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
             spatial_coverage_data_dict['north'] = spatial_coverage.value['north']

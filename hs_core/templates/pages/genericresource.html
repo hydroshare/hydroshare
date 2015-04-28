@@ -7,41 +7,93 @@
     {% with page.get_content_model as cm %}
         {% keywords_for page as kws %}
         {% set_page_permissions page %}
+        <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
+        <input type="hidden" id="allow-multiple-file-upload" value={{ cm.can_have_multiple_files }}>
+        <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
 
-        {% if not metadata_form %}
-            {% if not keywords or not abstract %}
+        {% block error %}
+            {%  if file_validation_error %}
                 <div class="alert alert-danger alert-dismissible" role="alert">
-                  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                  <strong>Data for the following required elements are missing:</strong>
-                    <ul>
-                    {% if not abstract %}
-                       <li>Abstract</li>
-                    {% endif %}
-                    {% if not keywords %}
-                       <li>Keywords</li>
-                    {% endif %}
-                    {% if title|stringformat:"s" == "Untitled resource" %}
-                       <li>Title: needs to be changed</li>
-                    {% endif %}
-                </ul>
-             </div>
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                      <strong>Uploaded File Validation Error:{{ file_validation_error }}</strong>
+                 </div>
+            {%  endif %}
+        {% endblock %}
+{#        ======= Missing fields notification =======#}
+
+            {% if not metadata_form %}
+                {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                      <strong>Data for the following required elements are missing:</strong>
+                        <ul>
+                        {% for element in missing_metadata_elements %}
+                            <li>{{ element }}</li>
+                        {% endfor %}
+                        {% if title|stringformat:"s" == "Untitled resource" %}
+                           <li>Title: needs to be changed</li>
+                        {% endif %}
+                    </ul>
+                 </div>
+                {% endif %}
             {% endif %}
-            {% if page.perms.change %}
+
+            {#        ======= Title =======#}
+            {% if not metadata_form %}
+            <h2>{{ title }}</h2>
+            {% else %}
+            <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
+                  id="id-title"
+                  method="post">
+                {% csrf_token %}
+                <fieldset>
+                    <div id="div_id_value" class="control-group">
+                        <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                     id="txt-title"
+                                                     maxlength="300" name="value" type="text"
+                                                     value="{{ cm.metadata.title }}"></div>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary pull-right"
+                                onclick="metadata_update_ajax_submit('id-title'); return false;"
+                                style="display: none;">
+                            Save changes
+                        </button>
+                    </div>
+                </fieldset>
+            </form>
+            {% endif %}
+            {#        ======= Top right buttons =======#}
+            {% if not metadata_form %}
+                {% if page.perms.change %}
+                    <div class="lined-wrapper">
+                    <div class="custom-btn-toolbar">
+                        <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
+                            {% csrf_token %}
+                            <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
+                            <span data-toggle="tooltip" data-placement="auto" title="Delete"
+                                  class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                            </a>
+                            <input name="resource-mode" type="hidden" value="edit"/>
+                            <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
+                                    title="Edit" class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
+                        </form>
+                    </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="lined-wrapper">
                 <div class="custom-btn-toolbar">
-                    <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
-                        {% csrf_token %}
-                        <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
-                        <span data-toggle="tooltip" data-placement="auto" title="Delete"
-                              class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                            <a href="{{ cm.get_absolute_url }}">
+                        <span data-toggle="tooltip" data-placement="auto" title="Back"
+                              class="glyphicon glyphicon-circle-arrow-left icon-button btn-edit"></span>
                         </a>
-                        <input name="resource-mode" type="hidden" value="edit"/>
-                        <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
-                                title="Edit" class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
-                    </form>
+                </div>
                 </div>
             {% endif %}
 
-            <h2>{{ title }}</h2>
+            {#        ======= Authors =======#}
+            {% if not metadata_form %}
             <div class="info-group">
                 <table>
                     <tr><th>Authors:</th><td id="authors">
@@ -56,19 +108,97 @@
                     <tr><th>Last updated:</th><td> {{ cm.updated }} by {%  if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
                 </table>
             </div>
-
-            {% if abstract %}
-                <div class="content-block">
-                    <h3>Abstract</h3>
-                    <span class="abstract">{{ abstract }}</span>
+            {% else %}
+                <div class="info-group">
+                    <table>
+                        <tr>
+                            <th>Authors:</th>
+                            <td>
+                                    <span id="authors">
+                                        {% for author in creator_formset.initial %}
+                                            {% if author.description %}<a href="{{ author.description }}">
+                                                {{ author.name }}</a><span class="comma">,&nbsp</span>
+                                                {% else %}<span>{{ author.name }}</span>
+                                                <span class="comma">,&nbsp</span>{% endif %}
+                                        {% endfor %}
+                                    </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Owner:</th>
+                            <td>{{ cm.user|contact|safe }}</td>
+                        </tr>
+                        <tr>
+                            <th>Resource type:</th>
+                            <td>{{ cm|resource_type }}</td>
+                        </tr>
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ cm.created|date }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last updated:</th>
+                            <td> {{ cm.updated|date }}</td>
+                        </tr>
+                    </table>
                 </div>
             {% endif %}
 
+            {#        ======= Abstract =======#}
+            {% if not metadata_form %}
+                {% if abstract %}
+                    <div class="content-block">
+                        <h3>Abstract</h3>
+                        <span class="abstract">{{ abstract }}</span>
+                    </div>
+                {% endif %}
+            {% else %}
+                <h3>Abstract</h3>
+                {% if cm.metadata.description %}
+                <form action="/hsapi/_internal/{{ cm.short_id }}/description/{{ cm.metadata.description.id }}/update-metadata/"
+                      id="id-description" method="post">
+                    {% csrf_token %}
+                    <fieldset>
+                        <div id="div_id_abstract" class="control-group">
+                            <div class="controls"><textarea class="form-control input-sm textarea" cols="40"
+                                                            id="id_abstract" name="abstract"
+                                                            rows="10">{{ cm.metadata.description }}</textarea></div>
+                        </div>
+                        <div style="margin-top:10px">
+                            <button type="button" class="btn btn-primary pull-right"
+                                    onclick="metadata_update_ajax_submit('id-description'); return false;"
+                                    style="display: none;">Save changes
+                            </button>
+                        </div>
+                    </fieldset>
+                </form>
+                {% else %}
+                <form action="/hsapi/_internal/{{ cm.short_id }}/description/add-metadata/"
+                      id="id-description" method="post">
+                    {% csrf_token %}
+                    <fieldset>
+                        <div id="div_id_abstract" class="control-group">
+                            <div class="controls"><textarea class="form-control input-sm textarea" cols="40"
+                                                            id="id_abstract" name="abstract" rows="10"></textarea></div>
+                        </div>
+                        <div style="margin-top:10px">
+                            <button type="button" class="btn btn-primary pull-right"
+                                    onclick="metadata_update_ajax_submit('id-description'); return false;"
+                                    style="display: none;">Save changes
+                            </button>
+                        </div>
+                    </fieldset>
+                </form>
+                {% endif %}
+            {% endif %}
+
+            {#        ======= Citation =======#}
             <div class="content-block">
                 <h3>How to cite</h3>
                 <span id="citation-text">{{ citation }}</span>
             </div>
 
+            {#        ======= Sharing =======#}
             <div class="content-block">
                 <h3>Sharing</h3>
 
@@ -363,7 +493,10 @@
                 {% endif %}
                 </div>
             </div>
-            {% if keywords %}
+
+
+            {% if not metadata_form %}
+                {% if keywords %}
                 <div class="content-block">
                     <h3>Keywords</h3>
 
@@ -374,7 +507,39 @@
                         </ul>
                     </div>
                 </div>
+                {% endif %}
+            {% else %}
+                <h3>Keywords</h3>
+                <form action="/hsapi/_internal/{{ cm.short_id }}/subject/add-metadata/" id="id-subject"
+                      method="post">
+                    {% csrf_token %}
+                    <div class="tags">
+                        <div id="add-keyword-wrapper" class="input-group">
+                            <input id="txt-keyword" type="text" class="form-control" placeholder="Keyword">
+                        <span class="input-group-btn">
+                            <a id="btn-add-keyword" class="btn btn-success" type="button">Add</a>
+                        </span>
+                        </div>
+                        <ul id="lst-tags" class="custom-well tag-list">
+                        </ul>
+                    </div>
+
+                    <fieldset>
+                        <div id="div_id_value" class="control-group">
+                            <div class="controls"><input class="form-control input-sm textInput" id="id_value"
+                                                         maxlength="500" name="value" type="text"
+                                                         style="display: none;">{{ cm.keywords_string }}</div>
+                        </div>
+                        <div style="margin-top:10px">
+                            <button type="button" class="btn btn-primary pull-right"
+                                    onclick="metadata_update_ajax_submit('id-subject'); return false;"
+                                    style="display: none;">Save changes
+                            </button>
+                        </div>
+                    </fieldset>
+                </form>
             {% endif %}
+
 
             <div>
                 <h3>Content</h3>
@@ -473,7 +638,7 @@
                             &nbspContact
                         </a>
                     </li>
-                    {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
+                    {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
                         <li class="col-md-2 col-sm-2 col-xs-12">
                             <a href="#coverageTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-globe"></span>
@@ -481,19 +646,27 @@
                             </a>
                         </li>
                     {% endif %}
-                    {% if sources or relations %}
-                        <li class="col-md-3 col-sm-3 col-xs-12">
+                    {% if sources or relations or metadata_form %}
+                        <li class="col-md-2 col-sm-2 col-xs-12">
                             <a href="#relatedResourcesTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-book"></span>
                                 &nbspRelated Resources
                             </a>
                         </li>
                     {% endif %}
-                    {% if extended_metadata_exists %}
-                        <li class="col-md-3 col-sm-3 col-xs-12">
+                    {% if extended_metadata_exists or metadata_form %}
+                        <li class="col-md-2 col-sm-2 col-xs-12">
                             <a href="#resourceSpecificTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-folder-close"></span>
                                 &nbspResource Specific
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% if relevant_tools or metadata_form %}
+                        <li class="col-md-2 col-sm-2 col-xs-12">
+                            <a href="#relevantTools" data-toggle="tab">
+                                <span class="glyphicon glyphicon-wrench"></span>
+                                &nbsp;Relevant Tools
                             </a>
                         </li>
                     {% endif %}
@@ -504,6 +677,7 @@
             <div class="tab-content">
                 <!-- ========= CONTACT TAB ========= -->
                 <div class="tab-pane active" id="contactTab">
+                    {% if not metadata_form %}
                     <table class="table table-striped">
                         <tbody>
                         <tr>
@@ -545,10 +719,98 @@
                         {% endif %}
                         </tbody>
                     </table>
+                    {% else %}
+                     <div class="tab-pane active" id="contactTab">
+                        <table id="contact-table" class="table table-striped">
+                            <tbody>
+                            <tr>
+                                <th class="division-title">Authors</th>
+                            </tr>
+                            <tr class="header-row">
+                                <th>Name</th>
+                                <th>Organization</th>
+                                <th>Address</th>
+                                <th>Phone</th>
+                                <th>Actions</th>
+                            </tr>
+                            {% for author in creator_formset.initial %}
+                            <tr>
+                                <td>{{ author.name }}</td>
+                                <td>{%  if  author.organization %}{{ author.organization }}{% endif %}</td>
+                                <td>{%  if  author.address %}{{ author.address }}{% endif %}</td>
+                                <td>{%  if  author.phone %}{{ author.phone }}{% endif %}</td>
+                                <td>
+                                    <a data-toggle="modal" data-placement="auto" title="Edit"
+                                            class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                            data-target="#edit-creator-dialog{{ author.id }}"
+                                            ></a>
+
+                                    {# Prevent deletion of last creator#}
+                                    {% if creator_formset.initial|length > 1 %}
+                                    <a data-toggle="modal" data-placement="auto" title="Remove"
+                                            class="glyphicon glyphicon-trash icon-button btn-remove"
+                                            data-target="#delete-creator-dialog{{ author.id }}"></a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                            {% endfor %}
+                            <tr>
+                                <th class="division-title">
+                                    <a type="button" class="btn btn-success" data-toggle="modal"
+                                       data-target="#add-creator-dialog" multiple="multiple">
+                                                    <span class="glyphicon glyphicon-plus"><span
+                                                            class="button-label"> Add author...</span></span>
+                                    </a>
+                                </th>
+                            </tr>
+                            <tr>
+                                <th class="division-title">Contributors</th>
+                            </tr>
+                            <tr class="header-row">
+                                <th>Name</th>
+                                <th>Organization</th>
+                                <th>Address</th>
+                                <th>Phone</th>
+                                <th>Actions</th>
+                            </tr>
+                            {% for contributor in contributor_formset.initial %}
+                            <tr>
+                                <td>{{ contributor.name }}</td>
+                                <td>{%  if  contributor.organization %}{{ contributor.organization }}{% endif %}</td>
+                                <td>{%  if  contributor.address %}{{ contributor.address }}{% endif %}</td>
+                                <td>{%  if  contributor.phone %}{{ contributor.phone }}{% endif %}</td>
+                                <td>
+                                    <a data-toggle="modal" data-placement="auto" title="Edit"
+                                            class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                            data-target="#edit-contributor-dialog{{ contributor.id }}"
+                                            ></a>
+                                    <a data-toggle="modal" data-placement="auto" title="Remove"
+                                            class="glyphicon glyphicon-trash icon-button btn-remove"
+                                            data-target="#delete-contributor-dialog{{ contributor.id }}"
+                                            ></a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            <tr>
+                                <th class="division-title">
+                                    <a type="button" class="btn btn-success" data-toggle="modal"
+                                       data-target="#add-contributor-dialog" multiple="multiple">
+                                        <span class="glyphicon glyphicon-plus"><span class="button-label"> Add contributor...</span></span>
+                                    </a>
+                                </th>
+                            </tr>
+
+                            </tbody>
+                        </table>
+                     </div>
+                    {% endif %}
             </div>
                 <!-- ========= COVERAGE TAB ========= -->
-                {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage %}
+                {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
                 <div class="tab-pane" id="coverageTab">
+                    {% if not metadata_form %}
                     {% if spatial_coverage.north or spatial_coverage.northlimit %}
                         <h4><strong>Spatial</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
@@ -639,6 +901,7 @@
                         {% endif %}
 
                     {% endif %}
+
                     {% if spatial_coverage.north or spatial_coverage.northlimit %}
                         <hr style="border: 0;">
                     {% endif %}
@@ -655,696 +918,7 @@
                             <div class="col-sm-8">{{ temporal_coverage.end_date }}</div>
                         </div>
                     {% endif %}
-                </div>
-            {% endif %}
-                <!-- ========= RELATED RESOURCES TAB ========= -->
-                {% if sources or relations %}
-                <div class="tab-pane" id="relatedResourcesTab">
-                {% if sources %}
-                    <h4><strong>Sources:</strong></h4>
-                    <hr style="margin-top: 0px;margin-bottom: 2px">
-                    {% for source in sources %}
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Derived From:</strong></div>
-                            <div class="col-sm-8">{{ source.derived_from }}</div>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-                {% if relations %}
-                    <hr style="border: 0;">
-                    <h4><strong>Relations:</strong></h4>
-                    <hr style="margin-top: 0px;margin-bottom: 2px">
-                    {% for relation in relations %}
-                        <div class="row">
-                            <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
-                            <div class="col-sm-8">{{ relation.value }}</div>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-                </div>
-            {% endif %}
-                <!-- ========= RESOURCE SPECIFIC TAB ========= -->
-{#            {% if site or extended_metadata_exists or res_add_metadata %}#}
-                <div class="tab-pane" id="resourceSpecificTab">
-                    {% block extended_metadata %}
-
-                    {%  endblock %}
-                </div>
-            </div>
-{#            {% endif %}#}
-            </div>
-            </div>
-            <!-- ==== Tabs end ==== -->
-            {% comments_for cm %}
-        {% endif %}
-
-
-        {% if metadata_form %}
-{#        ============= FORM EDIT BEGINS ==============#}
-            <form role="form">
-                <div class="custom-btn-toolbar">
-                    <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
-                        {% csrf_token %}
-                        <button id="save" type="submit" data-toggle="tooltip" data-placement="auto"
-                                title="Edit" class="glyphicon glyphicon-floppy-disk icon-button btn-edit"></button>
-                        <button id="btn-cancel" type="submit" data-toggle="tooltip" data-placement="auto"
-                                title="Cancel" class="glyphicon glyphicon-remove-sign icon-button btn-remove"></button>
-                    </form>
-                </div>
-                {#           ------- TITLE -------  #}
-
-            <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/" id="id-title"
-                  method="post">
-                {% csrf_token %}
-                <fieldset>
-                    <div id="div_id_value" class="control-group">
-                        <div class="controls"><input class="form-control input-sm textinput textInput" id="txt-title"
-                                                     maxlength="300" name="value" type="text" value="{{ cm.metadata.title }}"></div>
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-primary pull-right"
-                                onclick="metadata_update_ajax_submit('id-title'); return false;" style="display: none;">
-                            Save changes
-                        </button>
-                    </div>
-                </fieldset>
-            </form>
-
-                <div class="info-group">
-                    <table>
-                        <tr>
-                            <th>Authors:</th>
-                            <td>
-                                    <span id="authors">
-                                        {% for author in creator_formset.initial %}
-                                            {% if author.description %}<a href="{{ author.description }}">{{ author.name }}</a><span class="comma">,&nbsp</span>
-                                            {% else %}<span>{{ author.name }}</span><span class="comma">,&nbsp</span>{% endif %}
-                                        {% endfor %}
-                                    </span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Owner:</th>
-                            <td>{{ cm.user|contact|safe }}</td>
-                        </tr>
-                        <tr>
-                            <th>Resource type:</th>
-                            <td>{{ cm|resource_type }}</td>
-                        </tr>
-                        <tr>
-                            <th>Created:</th>
-                            <td>{{ cm.created|date }}</td>
-                        </tr>
-                        <tr>
-                            <th>Last updated:</th>
-                            <td> {{ cm.updated|date }}</td>
-                        </tr>
-                    </table>
-                </div>
-
-                {#           ------- ABSTRACT -------  #}
-            <h3>Abstract</h3>
-            {% if cm.metadata.description %}
-             <form action="/hsapi/_internal/{{ cm.short_id }}/description/{{ cm.metadata.description.id }}/update-metadata/"
-                  id="id-description" method="post">
-                {% csrf_token %}
-                <fieldset>
-                    <div id="div_id_abstract" class="control-group">
-                        <div class="controls"><textarea class="form-control input-sm textarea" cols="40"
-                                                        id="id_abstract" name="abstract" rows="10">{{ cm.metadata.description }}</textarea></div>
-                    </div>
-                    <div style="margin-top:10px">
-                        <button type="button" class="btn btn-primary pull-right"
-                                onclick="metadata_update_ajax_submit('id-description'); return false;"
-                                style="display: none;">Save changes
-                        </button>
-                    </div>
-                </fieldset>
-            </form>
-            {% else %}
-            <form action="/hsapi/_internal/{{ cm.short_id }}/description/add-metadata/"
-                  id="id-description" method="post">
-                {% csrf_token %}
-                <fieldset>
-                    <div id="div_id_abstract" class="control-group">
-                        <div class="controls"><textarea class="form-control input-sm textarea" cols="40"
-                                                        id="id_abstract" name="abstract" rows="10"></textarea></div>
-                    </div>
-                    <div style="margin-top:10px">
-                        <button type="button" class="btn btn-primary pull-right"
-                                onclick="metadata_update_ajax_submit('id-description'); return false;"
-                                style="display: none;">Save changes
-                        </button>
-                    </div>
-                </fieldset>
-            </form>
-            {% endif %}
-
-
-                {#           ------- CITATION -------  #}
-            <div class="content-block">
-                <h3>How to cite</h3>
-                <span id="citation-text">{{ citation }}</span>
-            </div>
-
-                {#           ------- SHARING -------  #}
-            <div class="content-block">
-                <h3>Sharing</h3>
-                <div id="sharing-status">
-                <span class="pull-left">Sharing status:</span>
-                <form id="form-sharing" class="pull-left"
-                      action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
-                    {% csrf_token %}
-                    {% if cm.public %}
-                        <input name="t" type="hidden" value="make_private"/>
-                        <div class="btn-group" role="group" aria-label="...">
-                            <button id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                    title='Can be viewed and downloaded by anyone.' type="button"
-                                    class="btn btn-default active">Public
-                            </button>
-                            <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                    title='Can be viewed and downloaded only by designated users or research groups.'
-                                    type="submit" class="btn btn-default">Private
-                            </button>
-                        </div>
                     {% else %}
-                        <input name="t" type="hidden" value="make_public"/>
-                        <div class="btn-group" role="group" aria-label="...">
-                            <button id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                    title='Can be viewed and downloaded by anyone.' type="submit"
-                                    class="btn btn-default">Public
-                            </button>
-                            <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                    title='Can be viewed and downloaded only by designated users or research groups.'
-                                    type="button" class="btn btn-default active">Private
-                            </button>
-                        </div>
-                    {% endif %}
-                </form>
-
-                </div>
-                    <form action="/hsapi/_internal/{{ cm.short_id }}/rights/{{ cm.metadata.rights.id }}/update-metadata/"
-                          id="id-rights" method="post">
-                        {% csrf_token %}
-                        <fieldset>
-                            <p></p>
-                            <div class="col-md-6">
-                                <label class="control-label" for="select_license"> Select a license </label>
-                                <span data-toggle="tooltip" data-placement="auto" title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
-                                      class="glyphicon glyphicon-info-sign"></span>
-                                <select id="select_license" class="form-control">
-                                    <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option>
-                                    <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option>
-                                    <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons Attribution-NoDerivs CC BY-ND</option>
-                                    <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA</option>
-                                    <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NoCommercial CC BY-NC</option>
-                                    <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <div id="div_id_statement" class="control-group">
-                                    <label for="id_statement" class="control-label"> Statement</label>
-                                    <div class="controls">
-                                        <textarea class="form-control input-sm textarea" cols="40"
-                                                                    id="id_statement" name="statement" readonly="True"
-                                                                    rows="3" style="background-color:white;">{{ cm.metadata.rights.statement }}</textarea>
-                                    </div>
-                                </div>
-                                <div id="div_id_url" class="control-group">
-                                    <label for="id_url" class="control-label">Url</label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm urlinput" id="id_url"
-                                                 maxlength="200" name="url" readonly="True"
-                                                 style="background-color:white;" type="url"
-                                                 value={{ cm.metadata.rights.url }}>
-                                    </div>
-                                </div>
-                                <img id="img-badge" class="cc-image"
-                                {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                                   src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
-                                {% endif %}
-                                />
-                            </div>
-
-                            <div style="margin-top:10px">
-                                <button type="button" class="btn btn-primary pull-right"
-                                        onclick="metadata_update_ajax_submit('id-rights'); return false;"
-                                        style="display: none;">Save changes
-                                </button>
-                            </div>
-                        </fieldset>
-
-
-                    </form>
-
-                    <div id="permission-panel">
-                        {% if user == cm.user %}
-                            <p>You are the owner of this resource.</p>
-                        {% elif is_edit_user %}
-                            <p>You have been given specific permission to edit this resource.</p>
-                        {% elif in_edit_group %}
-                            Your research group(s) have been given specific permission to edit this resource.</p>
-                        {% elif is_view_user %}
-                            <p>You have been given specific permission to view this resource.</p>
-                        {% elif in_view_group %}
-                            <p>Your research group(s) have been given specific permission to view this resource.</p>
-                        {% endif %}
-
-                        {% if page.perms.change %}
-                    <div class="panel panel-default panel-faq">
-                        <div class="panel-heading">
-                            <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
-                                <h4 class="panel-title">
-                                    Manage access
-                                    <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
-                                </h4>
-                            </a>
-                        </div>
-                        <div id="faq-cat-1-sub-1" class="panel-collapse collapse" style="height: auto;">
-                            <div class="panel-body">
-                                <div class="col-md-4">
-                                    <div class="custom-well">
-                                        <h5 class="access-panel-title"><strong>Users with full read/write permissions on this resource</strong></h5>
-
-                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <select name="designees" id="owners-select" multiple class="form-control"
-                                                    size="{{ owners.count }}">
-                                                {% for u in owners %}
-                                                    <option value="{{ u.pk }}" selected>{{ u|best_name }}
-                                                        ({{ u.username }})
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
-                                            <input name="t" value="owners" type="hidden"/>
-                                            <button type="submit"
-                                                    class="btn btn-update-list pull-left btn-default glyphicon"><span
-                                                    class="button-label">&nbspUpdate access list</span></button>
-                                                    <span data-toggle="tooltip" data-placement="auto"
-                                                          title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                                          class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                                        </form>
-                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                              method="POST" style="padding-top:0.3em">
-                                            {% csrf_token %}
-                                            <div class="form-group">
-                                                <button type="submit"
-                                                        class="btn btn-success btn-add-access pull-left glyphicon glyphicon-plus"><span
-                                                        class="button-label">&nbspAdd user</span></button>
-                                                {{ add_owner_user_form.user }}
-                                                <input name="t" value="add_owner" type="hidden"/>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="custom-well">
-                                        <h5 class="access-panel-title"><strong>Users who can edit the content of this resource</strong></h5>
-
-                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <select name="designees" id="edit_users-select" multiple
-                                                    class="form-control" size="{{ edit_users.count }}">
-                                                {% for u in edit_users %}
-                                                    <option value="{{ u.pk }}" selected>{{ u|best_name }}
-                                                        ({{ u.username }})
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
-                                            <input name="t" value="edit_users" type="hidden"/>
-                                            <button type="submit"
-                                                    class="btn btn-update-list pull-left btn-default glyphicon"><span
-                                                    class="button-label">&nbspUpdate access list</span></button>
-                                                    <span data-toggle="tooltip" data-placement="auto"
-                                                          title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                                          class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                                        </form>
-                                        <form class="form-inline"
-                                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                              method="POST" style="padding-top:0.3em">
-                                            {% csrf_token %}
-                                            <div class="form-group">
-                                                <button type="submit"
-                                                        class="btn btn-success btn-add-access pull-left glyphicon glyphicon-plus"><span
-                                                        class="button-label">&nbspAdd user</span></button>
-                                                {{ add_edit_user_form.user }}
-                                                <input name="t" value="add_edit_user" type="hidden"/>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-
-        {#                        <div class="col-md-4">#}
-        {#                            <div class="custom-well">#}
-        {#                                <h5 class="access-panel-title"><strong>Research groups that can edit the content of this resource</strong>#}
-        {#                                </h5>#}
-        {##}
-        {#                                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
-        {#                                      method="POST">#}
-        {#                                    {% csrf_token %}#}
-        {#                                    <select name="designees" id="edit_groups-select" multiple#}
-        {#                                            class="form-control" size="{{ edit_groups.count }}">#}
-        {#                                        {% for u in edit_groups %}#}
-        {#                                            <option value="{{ u.pk }}"#}
-        {#                                                    {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>#}
-        {#                                        {% endfor %}#}
-        {#                                    </select>#}
-        {#                                    <input name="t" value="edit_groups" type="hidden"/>#}
-        {#                                    <button type="submit"#}
-        {#                                            class="btn btn-update-list pull-left btn-default glyphicon"><span#}
-        {#                                            class="button-label">&nbspUpdate access list</span></button>#}
-        {#                                            <span data-toggle="tooltip" data-placement="auto"#}
-        {#                                                  title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
-        {#                                                  class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
-        {#                                </form>#}
-        {#                                <form class="form-inline"#}
-        {#                                      action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
-        {#                                      method="POST" style="padding-top:0.3em">#}
-        {#                                    {% csrf_token %}#}
-        {#                                    <div class="form-group">#}
-        {##}
-        {##}
-        {#                                        <button type="submit"#}
-        {#                                                class="btn btn-success btn-add-access pull-left glyphicon glyphicon-plus"><span#}
-        {#                                                class="button-label">&nbspAdd group</span></button>#}
-        {#                                        {{ add_edit_group_form.user }}#}
-        {#                                        <input name="t" value="add_edit_group" type="hidden"/>#}
-        {#                                    </div>#}
-        {#                                </form>#}
-        {#                            </div>#}
-        {#                        </div>#}
-
-                                {% if not cm.public %}
-                                    <div class="col-md-4">
-                                        <div class="custom-well">
-                                            <h5 class="access-panel-title"><strong>Users who can view and download the resource</strong></h5>
-
-                                            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                                  method="POST">
-                                                {% csrf_token %}
-                                                <select name="designees" id="view_users-select" multiple
-                                                        class="form-control" size="{{ view_users.count }}">
-                                                    {% for u in view_users %}
-                                                        <option value="{{ u.pk }}"
-                                                                {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                                <input name="t" value="view_users" type="hidden"/>
-                                                <button type="submit"
-                                                        class="btn btn-update-list pull-left btn-default glyphicon">
-                                                    <span class="button-label">&nbspUpdate access list</span></button>
-                                                        <span data-toggle="tooltip" data-placement="auto"
-                                                              title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                                              class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                                            </form>
-                                            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                                  method="POST" style="padding-top:0.3em">
-                                                {% csrf_token %}
-                                                <div class="form-group">
-                                                    <button type="submit"
-                                                            class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                                            class="button-label">&nbspAdd user</span></button>
-                                                    {{ add_view_user_form.user }}
-                                                    <input name="t" value="add_view_user" type="hidden"/>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-
-        {#                            <div class="col-md-4">#}
-        {#                                <div class="custom-well">#}
-        {#                                    <h5 class="access-panel-title"><strong>Research groups that can view and download the resource</strong>#}
-        {#                                    </h5>#}
-        {##}
-        {#                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
-        {#                                          method="POST">#}
-        {#                                        {% csrf_token %}#}
-        {#                                        <select name="designees" id="view_groups-select" multiple#}
-        {#                                                class="form-control" size="{{ view_groups.count }}">#}
-        {#                                            {% for u in view_groups %}#}
-        {#                                                <option value="{{ u.pk }}"#}
-        {#                                                        {% if u in view_groups %}selected{% endif %}>{{ u }}</option>#}
-        {#                                            {% endfor %}#}
-        {#                                        </select>#}
-        {#                                        <input name="t" value="view_groups" type="hidden"/>#}
-        {#                                        <button type="submit"#}
-        {#                                                class="btn btn-update-list pull-left btn-default glyphicon">#}
-        {#                                            <span class="button-label">&nbspUpdate access list</span></button>#}
-        {#                                                <span data-toggle="tooltip" data-placement="auto"#}
-        {#                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
-        {#                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
-        {#                                    </form>#}
-        {#                                    <form class="form-inline"#}
-        {#                                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
-        {#                                          method="POST" style="padding-top:0.3em">#}
-        {#                                        {% csrf_token %}#}
-        {#                                        <div class="form-group">#}
-        {#                                            <button type="submit"#}
-        {#                                                    class="btn btn-success btn-add-access pull-left glyphicon glyphicon-plus">#}
-        {#                                                <span class="button-label">&nbspAdd group</span></button>#}
-        {#                                            {{ add_view_group_form.user }}#}
-        {#                                            <input name="t" value="add_view_group" type="hidden"/>#}
-        {#                                        </div>#}
-        {#                                    </form>#}
-        {#                                </div>#}
-        {#                            </div>#}
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-                    </div>
-                </div>
-            </div>
-
-                {#           ------- Keywords -------  #}
-
-            <h3>Keywords</h3>
-
-
-            <form action="/hsapi/_internal/{{ cm.short_id }}/subject/add-metadata/" id="id-subject"
-                  method="post">
-                {% csrf_token %}
-                <div class="tags">
-                    <div id="add-keyword-wrapper" class="input-group">
-                        <input id="txt-keyword" type="text" class="form-control" placeholder="Keyword">
-                        <span class="input-group-btn">
-                            <a id="btn-add-keyword" class="btn btn-success" type="button">Add</a>
-                        </span>
-                    </div>
-                    <ul id="lst-tags" class="custom-well tag-list">
-                    </ul>
-                </div>
-
-                <fieldset>
-                    <div id="div_id_value" class="control-group">
-                        <div class="controls"><input class="form-control input-sm textInput" id="id_value"
-                                                     maxlength="500" name="value" type="text" style="display: none;">{{ cm.keywords_string }}</div>
-                    </div>
-                    <div style="margin-top:10px">
-                        <button type="button" class="btn btn-primary pull-right"
-                                onclick="metadata_update_ajax_submit('id-subject'); return false;"
-                                style="display: none;">Save changes
-                        </button>
-                    </div>
-                </fieldset>
-            </form>
-
-            {#           ------- Content -------  #}
-            <div>
-                <h3>Content</h3>
-                <div class="custom-well">
-                {#            {% block extra_content %}#}
-                {#            {% endblock %}#}
-                <div class="table-container">
-                    <table class="table-plain table-striped">
-                        {% for f in cm.files.all %}
-                            {#======= Modal window begins =======#}
-                            <div class="modal fade" id="delete-resource-file-{{ f.pk }}" tabindex="-1" role="dialog"
-                                 aria-labelledby="myModalLabel" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <button type="button" class="close" data-dismiss="modal"
-                                                    aria-hidden="true">&times;</button>
-                                            <h4 class="modal-title">Confirm file deletion</h4>
-                                        </div>
-                                        <div class="modal-body">
-                                            This will delete the file from the resource. Consider saving a copy if
-                                            it is important to you.
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-default" data-dismiss="modal">
-                                                Cancel
-                                            </button>
-                                            <a type="button" class="btn btn-danger"
-                                               href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {#======= Modal window ends =======#}
-                            <tr>
-                                <td>
-                                    <span class="glyphicon glyphicon-file file-icon"></span>
-                                                <span>
-                                                    <span class="label-file-name">{{ f.resource_file.name|slice:"33:" }}</span>
-                                                    <p class="label-file-size">{{ f.resource_file.size|filesizeformat }}</p>
-                                                </span>
-                                </td>
-                                <td>
-                                    {% if page.perms.change %}
-                                        <a href="{{ f.resource_file.url }}"><span data-toggle="modal"
-                                                                                  data-target="#delete-resource-file-{{ f.pk }}"
-                                                                                  data-placement="auto"
-                                                                                  title="Delete"
-                                                                                  class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>
-                                    {% endif %}
-
-                                    {% if preview %}
-                                        <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"
-                                                                                  data-placement="auto"
-                                                                                  title="Preview"
-                                                                                  class="glyphicon glyphicon-eye-open icon-button"></span></a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </table>
-                </div>
-
-                <!-- Buttons -->
-                <a type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
-                   multiple="multiple">
-                    <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
-                </a>
-            </div>
-            </div>
-                <!-- === Tabs begin === -->
-            <div class="tab-elements">
-                <div class="panel-tabs">
-                    <ul class="nav nav-tabs">
-                        <li class="active col-md-3 col-sm-3 col-xs-12">
-                            <a href="#contactTab" data-toggle="tab">
-                                <span class="glyphicon glyphicon-user"> </span>
-                                &nbspContact
-                            </a>
-                        </li>
-                        <li class="col-md-3 col-sm-3 col-xs-12">
-                            <a href="#coverageTab" data-toggle="tab">
-                                <span class="glyphicon glyphicon-globe"></span>
-                                &nbspCoverage
-                            </a>
-                        </li>
-                        <li class="col-md-3 col-sm-3 col-xs-12">
-                            <a href="#relatedResourcesTab" data-toggle="tab">
-                                <span class="glyphicon glyphicon-book"></span>
-                                &nbspRelated Resources
-                            </a>
-                        </li>
-                        <li class="col-md-3 col-sm-3 col-xs-12">
-                            <a href="#resourceSpecificTab" data-toggle="tab">
-                                <span class="glyphicon glyphicon-folder-close"></span>
-                                &nbspResource Specific
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="tabs-body">
-                    <!-- Tab panes -->
-                    <div class="tab-content">
-                        <!-- ========= CONTACT TAB ========= -->
-                        <div class="tab-pane active" id="contactTab">
-                            <table id="contact-table" class="table table-striped">
-                                <tbody>
-                                <tr>
-                                    <th class="division-title">Authors</th>
-                                </tr>
-                                <tr class="header-row">
-                                    <th>Name</th>
-                                    <th>Organization</th>
-                                    <th>Address</th>
-                                    <th>Phone</th>
-                                    <th>Actions</th>
-                                </tr>
-                                {% for author in creator_formset.initial %}
-                                <tr>
-                                    <td>{{ author.name }}</td>
-                                    <td>{%  if  author.organization %}{{ author.organization }}{% endif %}</td>
-                                    <td>{%  if  author.address %}{{ author.address }}{% endif %}</td>
-                                    <td>{%  if  author.phone %}{{ author.phone }}{% endif %}</td>
-                                    <td>
-                                        <button data-toggle="tooltip" data-placement="auto" title="Edit"
-                                                class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
-                                         <a data-toggle="tooltip" data-placement="auto" title="Remove"
-                                                class="glyphicon glyphicon-trash icon-button btn-remove"
-                                                href="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/delete-metadata/"></a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                                <tr>
-                                    <th class="division-title">
-                                        <a type="button" class="btn btn-success" data-toggle="modal"
-                                           data-target="#add-creator-dialog" multiple="multiple">
-                                                        <span class="glyphicon glyphicon-plus"><span
-                                                                class="button-label"> Add author...</span></span>
-                                        </a>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <th class="division-title">Contributors</th>
-                                </tr>
-                                <tr class="header-row">
-                                    <th>Name</th>
-                                    <th>Organization</th>
-                                    <th>Address</th>
-                                    <th>Phone</th>
-                                    <th>Actions</th>
-                                </tr>
-                                {% for contributor in contributor_formset.initial %}
-                                <tr>
-                                    <td>{{ contributor.name }}</td>
-                                    <td>{%  if  contributor.organization %}{{ contributor.organization }}{% endif %}</td>
-                                    <td>{%  if  contributor.address %}{{ contributor.address }}{% endif %}</td>
-                                    <td>{%  if  contributor.phone %}{{ contributor.phone }}{% endif %}</td>
-                                    <td>
-                                        <button data-toggle="tooltip" data-placement="auto" title="Edit"
-                                                class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
-                                        <a data-toggle="tooltip" data-placement="auto" title="Remove"
-                                                class="glyphicon glyphicon-trash icon-button btn-remove" href="/hsapi/_internal/{{ cm.short_id }}/contributor/{{ contributor.id }}/delete-metadata/"></a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-
-                                <tr>
-                                    <th class="division-title">
-                                        <a type="button" class="btn btn-success" data-toggle="modal"
-                                           data-target="#add-contributor-dialog" multiple="multiple">
-                                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add contributor...</span></span>
-                                        </a>
-                                    </th>
-                                </tr>
-
-                                </tbody>
-                            </table>
-                        </div>
-                        <!-- ========= COVERAGE TAB ========= -->
-                <div class="tab-pane" id="coverageTab">
                     <div class="form-group col-md-6 col-sm-12 col-xs-12" id="coverage-spatial">
                         {% if not coverage_spatial_form.initial.north and not coverage_spatial_form.initial.northlimit %}
                         <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
@@ -1438,7 +1012,7 @@
                             </fieldset>
                         </form>
                         {% else %}
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{{ coverage_spatial_form.number }}/update-metadata/"
+                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{{ coverage_spatial_form.initial.id }}/update-metadata/"
                               id="id-coverage-spatial" method="post">
                             {% csrf_token %}
                             <fieldset>
@@ -1556,7 +1130,7 @@
                         {% endif %}
                     </div>
 
-{#                    Add new temporal coverage#}
+{#                   Add new temporal coverage#}
                     <div class="form-group col-md-6 col-sm-12 col-xs-12" id="coverage-temporal">
                         {% if not coverage_temporal_form.initial.start %}
                         <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
@@ -1569,7 +1143,7 @@
                                     Start Date<span class="asteriskField">*</span></label>
 
                                     <div class="controls">
-                                        <input class="form-control input-sm dateinput hasDatepicker" id="id_start"
+                                        <input class="form-control input-sm dateinput" id="id_start"
                                             name="start" type="text">
                                     </div>
                                 </div>
@@ -1577,21 +1151,21 @@
                                     <label for="id_end" class="control-label requiredField">End Date<span class="asteriskField">*</span></label>
 
                                     <div class="controls">
-                                        <input class="form-control input-sm dateinput hasDatepicker" id="id_end"
+                                        <input class="form-control input-sm dateinput" id="id_end"
                                             name="end" type="text">
                                     </div>
                                 </div>
                                 <div style="margin-top:10px">
                                     <button type="button" class="btn btn-primary pull-right"
-                                            onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;"
-                                            style="display: none;">Save changes
+                                            onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;">
+                                        Save changes
                                     </button>
                                 </div>
                             </fieldset>
                         </form>
                             {% else %}
 {#                            Temporal update form here#}
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/20/update-metadata/"
+                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{{ coverage_temporal_form.initial.id }}/update-metadata/"
                               id="id-coverage-temporal" method="post">
                              {% csrf_token %}
                             <fieldset>
@@ -1601,16 +1175,16 @@
                                     Start Date<span class="asteriskField">*</span></label>
 
                                     <div class="controls">
-                                        <input class="form-control input-sm dateinput hasDatepicker" id="id_start"
-                                            name="start" type="text">
+                                        <input class="form-control input-sm dateinput" id="id_start"
+                                            name="start" type="text" value="{{ coverage_temporal_form.initial.start }}">
                                     </div>
                                 </div>
                                 <div id="div_id_end" class="control-group">
                                     <label for="id_end" class="control-label requiredField">End Date<span class="asteriskField">*</span></label>
 
                                     <div class="controls">
-                                        <input class="form-control input-sm dateinput hasDatepicker" id="id_end"
-                                            name="end" type="text">
+                                        <input class="form-control input-sm dateinput" id="id_end"
+                                            name="end" type="text" value="{{ coverage_temporal_form.initial.end }}">
                                     </div>
                                 </div>
                                 <div style="margin-top:10px">
@@ -1623,9 +1197,35 @@
                         </form>
                         {% endif %}
                             </div>
+                    {% endif %}
                 </div>
-                        <!-- ========= RELATED RESOURCES TAB ========= -->
-                        <div class="tab-pane" id="relatedResourcesTab">
+            {% endif %}
+                <!-- ========= RELATED RESOURCES TAB ========= -->
+            {% if sources or relations or metadata_form %}
+            <div class="tab-pane" id="relatedResourcesTab">
+                {% if not metadata_form %}
+                {% if sources %}
+                    <h4><strong>Sources</strong></h4>
+                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                    {% for source in sources %}
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Derived From:</strong></div>
+                            <div class="col-sm-8">{{ source.derived_from }}</div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% if relations %}
+                    <hr style="border: 0;">
+                    <h4><strong>Relations</strong></h4>
+                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                    {% for relation in relations %}
+                        <div class="row">
+                            <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
+                            <div class="col-sm-8">{{ relation.value }}</div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% else %}
                     <table class="table">
                         <tbody>
                         <legend>Sources</legend>
@@ -1633,14 +1233,21 @@
                             <tr>
                                 <th scope="row" class="dataset-label">Derived From:</th>
                                 <td class="dataset-details">{{ source.derived_from }}</td>
+                                <td>
+                                    <a data-toggle="modal" data-placement="auto"
+                                       title="Remove" class="glyphicon glyphicon-trash icon-button btn-remove"
+                                       data-target="#delete-source-element-dialog{{ source.id }}"
+                                       style="top: -5px;"></a>
+                                </td>
+
                             </tr>
                         {% endfor %}
                         </tbody>
                     </table>
 
-                        <tr><a id="add-source" class="btn btn-success" data-toggle="modal" data-target="#add-source-dialog"><i
+                    <tr><a id="add-source" class="btn btn-success" data-toggle="modal" data-target="#add-source-dialog"><i
                             class="fa fa-plus"></i> Add source</a></tr>
-                        <hr style="border: 0;">
+                    <hr style="border: 0;">
                     <table class="table">
                         <tbody>
                         <legend>Relations</legend>
@@ -1648,34 +1255,352 @@
                             <tr>
                                 <th scope="row" class="dataset-label">{{ relation.type }}:</th>
                                 <td class="dataset-details">{{ relation.value }}</td>
+                                <td>
+                                    <a data-toggle="modal" data-placement="auto"
+                                       title="Remove" class="glyphicon glyphicon-trash icon-button btn-remove"
+                                       data-target="#delete-relation-element-dialog{{ relation.id }}"
+                                       style="top: -5px;"></a>
+                                </td>
                             </tr>
                         {% endfor %}
 
                         </tbody>
                     </table>
-                        <a id="add-relation" class="btn btn-success" data-toggle="modal" data-target="#add-relation-dialog"><i
+                    <a id="add-relation" class="btn btn-success" data-toggle="modal" data-target="#add-relation-dialog"><i
                             class="fa fa-plus"></i> Add relation</a>
-
-                </div>
-                        <!-- ========= RESOURCE SPECIFIC TAB ========= -->
-                        <div class="tab-pane" id="resourceSpecificTab">
-                            {{ cm }}
-                            {%  if model_output_form.initial %}
-                                Model output form here
-
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
+                {% endif %}
             </div>
-            {#        ============= FORM EDIT ENDS ==============#}
-        {% endif %}
+            {% endif %}
+                <!-- ========= RESOURCE SPECIFIC TAB ========= -->
+            {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
+                <div class="tab-pane" id="resourceSpecificTab">
+                {% if not metadata_form %}
 
+                    {% block extended_metadata %}
 
+                    {%  endblock %}
+
+                {%  else %}
+                    Resource specific form here
+                {%  endif %}
+                </div>
+            {%  endif %}
+                <!-- ========= RELEVANT TOOLS TAB ========= -->
+            {% if relevant_tools or metadata_form %}
+                <div class="tab-pane" id="relevantTools">
+                {% if not metadata_form %}
+                    {% for tool in relevant_tools %}
+                        <h4>{{ tool.title }}</h4>
+                        <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch Tool</button></a>
+                        <hr>
+                    {% endfor %}
+                {% else %}
+                    ------- Relevant tools form here -------
+                {%  endif %}
+                </div>
+            {% endif %}
+            </div>
+            </div>
+            </div>
+        <!-- ==== Tabs end ==== -->
+        {% comments_for cm %}
         {#                #}
         {# dialogs follow #}
         {#                #}
 
+        {% for source in source_formset.initial %}
+        <div class="modal fade in" id="delete-source-element-dialog{{ source.id }}" tabindex="-1" role="dialog"
+             aria-labelledby="myModalLabel" aria-hidden="false">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="myModalLabel">Delete metadata element</h4></div>
+                    <div class="modal-body"><strong>Are you sure you want to delete this metadata element?</strong>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a type="button" class="btn btn-danger"
+                           href="/hsapi/_internal/{{ cm.short_id }}/source/{{ source.id }}/delete-metadata/">Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% for relation in relation_formset.initial %}
+        <div class="modal fade in" id="delete-relation-element-dialog{{ relation.id }}" tabindex="-1" role="dialog"
+             aria-labelledby="myModalLabel" aria-hidden="false">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="myModalLabel">Delete metadata element</h4></div>
+                    <div class="modal-body"><strong>Are you sure you want to delete this metadata element?</strong>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a type="button" class="btn btn-danger"
+                           href="/hsapi/_internal/{{ cm.short_id }}/relation/{{ relation.id }}/delete-metadata/">Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+
+        {% for contributor in contributor_formset.initial %}
+        <div class="modal fade" id="edit-contributor-dialog{{ contributor.id }}" tabindex="-1" role="dialog"
+             aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="id_contributor_{{ contributor.id }}" action="/hsapi/_internal/{{ cm.short_id }}/contributor/{{ contributor.id }}/update-metadata/"
+                          method="POST"
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input name="resource-mode" type="hidden" value="edit">
+
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-hidden="true">×
+                            </button>
+                            <h4 class="modal-title" id="myModalLabel"> Edit contributor </h4></div>
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                {% csrf_token %}
+                                <fieldset>
+                                    <div id="div_id_name" class="control-group">
+                                        <label class="control-label requiredField">Name<span
+                                                class="asteriskField">*</span></label>
+
+                                        <div class="controls"><input
+                                                class="form-control input-sm textinput textInput"
+                                                id="id_contributor-{{ contributor.order|add:"- 1" }}-name" maxlength="100" name="contributor-{{ contributor.order|add:"- 1" }}-name"
+                                                required="required" type="text" value="{% if contributor.name %}{{ contributor.name }}{% endif %}"></div>
+                                    </div>
+                                    <div id="div_id_description" class="control-group">
+                                        <label class="control-label">HydroShare User Identifier (URL)</label>
+
+                                        <div class="controls"><input
+                                                class="form-control input-sm urlinput"
+                                                id="id_contributor-{{ contributor.order|add:"- 1" }}-description" maxlength="200"
+                                                name="contributor-{{ contributor.order|add:"- 1" }}-description" type="url" value="{% if contributor.description %}{{ contributor.description }}{% endif %}"></div>
+                                    </div>
+                                    <div id="div_id_organization" class="control-group">
+                                        <label class="control-label">Organization</label>
+
+                                        <div class="controls"><input
+                                                class="form-control input-sm textinput textInput"
+                                                id="id_contributor-{{ contributor.order|add:"- 1" }}-organization" maxlength="200"
+                                                name="contributor-{{ contributor.order|add:"- 1" }}-organization" type="text" value="{% if contributor.organization %}{{ contributor.organization }}{% endif %}"></div>
+                                    </div>
+                                    <div id="div_id_email" class="control-group">
+                                        <label class="control-label">Email</label>
+
+                                        <div class="controls">
+                                            <input class="form-control input-sm emailinput"
+                                                   id="id_contributor-{{ contributor.order|add:"- 1" }}-email" maxlength="75" name="contributor-{{ contributor.order|add:"- 1" }}-email"
+                                                   type="email" value="{% if contributor.email %}{{ contributor.email }}{% endif %}">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_address" class="control-group">
+                                        <label class="control-label">Address</label>
+
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="id_contributor-{{ contributor.order|add:"- 1" }}-address" maxlength="250"
+                                                   name="contributor-{{ contributor.order|add:"- 1" }}-address"
+                                                   type="text" value="{% if contributor.address %}{{ contributor.address }}{% endif %}">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_phone" class="control-group">
+                                        <label class="control-label">Phone</label>
+
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="id_contributor-{{ contributor.order|add:"- 1" }}-phone" maxlength="25" name="contributor-{{ contributor.order|add:"- 1" }}-phone"
+                                                   type="text" value="{% if contributor.phone %}{{ contributor.phone }}{% endif %}">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_homepage" class="control-group">
+                                        <label class="control-label">Homepage</label>
+
+                                        <div class="controls"><input
+                                                class="form-control input-sm urlinput"
+                                                id="id_contributor-{{ contributor.order|add:"- 1" }}-homepage" maxlength="200" name="contributor-{{ contributor.order|add:"- 1" }}-homepage"
+                                                type="url" value="{% if contributor.homepage %}{{ contributor.homepage }}{% endif %}"></div>
+                                    </div>
+                                    <div id="div_id_order" class="control-group">
+                                        <label class="control-label">Order<span class="asteriskField">*</span></label>
+
+                                        <div class="controls"><input
+                                                class="form-control input-sm urlinput"
+                                                id="id_contributor-{{ contributor.order|add:"- 1" }}-order" name="contributor-{{ contributor.order|add:"- 1" }}-order" required="required"
+                                                type="number" value="{% if contributor.order %}{{ contributor.order }}{% endif %}"></div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">
+                                Close
+                            </button>
+
+                            <button type="button" class="btn btn-primary pull-right"
+                                    onclick="metadata_update_ajax_submit('id_contributor_{{ contributor.id }}'); return false;"
+                                    >Save changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="delete-contributor-dialog{{ contributor.id }}" tabindex="-1" role="dialog"
+             aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="myModalLabel">Delete metadata element</h4></div>
+                    <div class="modal-body"><strong>Are you sure you want to delete this metadata element?</strong>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a type="button" class="btn btn-danger"
+                           href="/hsapi/_internal/{{ cm.short_id }}/contributor/{{ contributor.id }}/delete-metadata/">Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% endfor %}
+
+        {% for author in creator_formset.initial %}
+        <div class="modal fade" id="edit-creator-dialog{{ author.id }}" tabindex="-1" role="dialog"
+             aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="id_creator_{{ author.id }}" action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
+                          method="POST"
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input name="resource-mode" type="hidden" value="edit">
+
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-hidden="true">×
+                            </button>
+                            <h4 class="modal-title" id="myModalLabel"> Edit author </h4></div>
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                {% csrf_token %}
+                                <fieldset>
+                                    <div id="div_id_name" class="control-group">
+                                        <label class="control-label requiredField">Name<span
+                                                class="asteriskField">*</span></label>
+
+                                        <div class="controls"><input
+                                                class="form-control input-sm textinput textInput"
+                                                id="id_creator-{{ author.order|add:"- 1" }}-name" maxlength="100" name="creator-{{ author.order|add:"- 1" }}-name"
+                                                required="required" type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
+                                    </div>
+                                    <div id="div_id_description" class="control-group">
+                                        <label class="control-label">HydroShare User Identifier (URL)</label>
+
+                                        <div class="controls"><input
+                                                class="form-control input-sm urlinput"
+                                                id="id_creator-{{ author.order|add:"- 1" }}-description" maxlength="200"
+                                                name="creator-{{ author.order|add:"- 1" }}-description" type="url" value="{% if author.description %}{{ author.description }}{% endif %}"></div>
+                                    </div>
+                                    <div id="div_id_organization" class="control-group">
+                                        <label class="control-label">Organization</label>
+
+                                        <div class="controls"><input
+                                                class="form-control input-sm textinput textInput"
+                                                id="id_creator-{{ author.order|add:"- 1" }}-organization" maxlength="200"
+                                                name="creator-{{ author.order|add:"- 1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
+                                    </div>
+                                    <div id="div_id_email" class="control-group">
+                                        <label class="control-label">Email</label>
+
+                                        <div class="controls">
+                                            <input class="form-control input-sm emailinput"
+                                                   id="id_creator-{{ author.order|add:"- 1" }}-email" maxlength="75" name="creator-{{ author.order|add:"- 1" }}-email"
+                                                   type="email" value="{% if author.email %}{{ author.email }}{% endif %}">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_address" class="control-group">
+                                        <label class="control-label">Address</label>
+
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="id_creator-{{ author.order|add:"- 1" }}-address" maxlength="250"
+                                                   name="creator-{{ author.order|add:"- 1" }}-address"
+                                                   type="text" value="{% if author.address %}{{ author.address }}{% endif %}">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_phone" class="control-group">
+                                        <label class="control-label">Phone</label>
+
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="id_creator-{{ author.order|add:"- 1" }}-phone" maxlength="25" name="creator-{{ author.order|add:"- 1" }}-phone"
+                                                   type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_homepage" class="control-group">
+                                        <label class="control-label">Homepage</label>
+
+                                        <div class="controls"><input
+                                                class="form-control input-sm urlinput"
+                                                id="id_creator-{{ author.order|add:"- 1" }}-homepage" maxlength="200" name="creator-{{ author.order|add:"- 1" }}-homepage"
+                                                type="url" value="{% if author.homepage %}{{ author.homepage }}{% endif %}"></div>
+                                    </div>
+                                    <div id="div_id_order" class="control-group">
+                                        <label class="control-label">Order<span class="asteriskField">*</span></label>
+
+                                        <div class="controls"><input
+                                                class="form-control input-sm urlinput"
+                                                id="id_creator-{{ author.order|add:"- 1" }}-order" name="creator-{{ author.order|add:"- 1" }}-order" required="required"
+                                                type="number" value="{% if author.order %}{{ author.order }}{% endif %}"></div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">
+                                Close
+                            </button>
+
+                            <button type="button" class="btn btn-primary pull-right"
+                                    onclick="metadata_update_ajax_submit('id_creator_{{ author.id }}'); return false;"
+                                    >Save changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="delete-creator-dialog{{ author.id }}" tabindex="-1" role="dialog"
+             aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="myModalLabel">Delete metadata element</h4></div>
+                    <div class="modal-body"><strong>Are you sure you want to delete this metadata element?</strong>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a type="button" class="btn btn-danger"
+                           href="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/delete-metadata/">Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
         <!-- Modal -->
         <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
              aria-labelledby="myModalLabel" aria-hidden="true">
