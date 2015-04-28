@@ -109,9 +109,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_delete(self, request):
         user = get_user(request)
         if user.is_authenticated():
-            if user.is_superuser:
-                return True
-            elif user.pk in { o.pk for o in self.owners.all() }:
+            if user.is_superuser | self.owners.filter(pk=user.pk).exists():
                 return True
             else:
                 return False
@@ -125,7 +123,7 @@ class ResourcePermissionsMixin(Ownable):
         if user.is_authenticated():
             if user.is_superuser:
                 return True
-            elif user.pk in { o.pk for o in self.owners.all() }:
+            elif self.owners.filter(pk=user.pk).exists():
                 return True
             elif self.edit_users.filter(pk=user.pk).exists():
                 return True
@@ -144,7 +142,7 @@ class ResourcePermissionsMixin(Ownable):
         if user.is_authenticated():
             if user.is_superuser:
                 return True
-            elif user.pk in { o.pk for o in self.owners.all() }:
+            elif self.owners.filter(pk=user.pk).exists():
                 return True
             elif self.edit_users.filter(pk=user.pk).exists():
                 return True
@@ -158,8 +156,6 @@ class ResourcePermissionsMixin(Ownable):
                 return False
         else:
             return False
-
-
 
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
