@@ -36,7 +36,22 @@
                     <hr style="border:0">
                     {% endif %}
                 </div>
-            <div>
+                <div>
+                    {% if model_objective %}
+                        <h4><strong>Model Objective:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>SWAT model objective:</strong></div>
+                            <div class="col-sm-8">{{ model_objective.swat_model_objective }}</div>
+                            {% if model_objective.other_objectives %}
+                                <div class="col-sm-4"><strong>SWAT model other objectives:</strong></div>
+                                <div class="col-sm-8">{{ model_objective.other_objectives }}</div>
+                            {% endif %}
+                        </div>
+                    <hr style="border:0">
+                    {% endif %}
+                </div>
+                <div>
                     {% if swat_model_parameters %}
                         <h4><strong>SWAT model used parameters:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
