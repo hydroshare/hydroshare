@@ -86,10 +86,10 @@
             {% else %}
                 <div class="lined-wrapper">
                 <div class="custom-btn-toolbar">
-                            <a href="{{ cm.get_absolute_url }}">
-                        <span data-toggle="tooltip" data-placement="auto" title="Back"
+                    <a href="{{ cm.get_absolute_url }}">
+                        <span data-toggle="tooltip" data-placement="auto" title="View resource"
                               class="glyphicon glyphicon-circle-arrow-left icon-button btn-edit"></span>
-                        </a>
+                    </a>
                 </div>
                 </div>
             {% endif %}
@@ -135,7 +135,7 @@
                             {% endfor %}
                         </td></tr>
                         </tr><tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
-                        <tr><th>Created:</th><td>{{ cm.created|date }}</td></tr>
+                        <tr><th>Created:</th><td>{{ cm.created }}</td></tr>
                         <tr><th>Last updated:</th><td> {{ cm.updated }} by {%  if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
                     </table>
                 </div>
@@ -239,7 +239,7 @@
                         {% endif %}
                     {% endif %}
                 </div>
-
+                {% if not metadata_form %}
                 {% if rights.statement or rights.url %}
                     <div id="rights">
                         {% if rights.statement %}
@@ -264,7 +264,71 @@
                         <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
                     {% endif %}
                 {% endif %}
+                {% else %}
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/rights/{{ cm.metadata.rights.id }}/update-metadata/"#}
+                          id="id-rights" method="post">
+                        {% csrf_token %}
+                        <fieldset>
+                            <p></p>
+                            <div class="col-md-6">
+                                <label class="control-label" for="select_license"> Select a license </label>
+                                <span data-toggle="tooltip" data-placement="auto" title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
+                                      class="glyphicon glyphicon-info-sign"></span>
+                                <select id="select_license" class="form-control">
+                                    <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option>
+                                    <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option>
+                                    <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons Attribution-NoDerivs CC BY-ND</option>
+                                    <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA</option>
+                                    <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NoCommercial CC BY-NC</option>
+                                    <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <div id="div_id_statement" class="control-group">
+                                    <label for="id_statement" class="control-label"> Statement</label>
+                                    <div class="controls">
+                                        <textarea class="form-control input-sm textarea" cols="40"
+                                                                    id="id_statement" name="statement" readonly="True"
+                                                                    rows="3" style="background-color:white;">{{ cm.metadata.rights.statement }}</textarea>
+                                    </div>
+                                </div>
+                                <div id="div_id_url" class="control-group">
+                                    <label for="id_url" class="control-label">Url</label>
 
+                                    <div class="controls">
+                                        <input class="form-control input-sm urlinput" id="id_url"
+                                                 maxlength="200" name="url" readonly="True"
+                                                 style="background-color:white;" type="url"
+                                                 value={{ cm.metadata.rights.url }}>
+                                    </div>
+                                </div>
+                                <img id="img-badge" class="cc-image"
+                                {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
+                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
+                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
+                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
+                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+                                   src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
+                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
+                                {% endif %}
+                                />
+                            </div>
+
+                            <div style="margin-top:10px">
+                                <button type="button" class="btn btn-primary pull-right"
+                                        onclick="metadata_update_ajax_submit('id-rights'); return false;"
+                                        style="display: none;">Save changes
+                                </button>
+                            </div>
+                        </fieldset>
+                    </form>
+                {% endif %}
                 <div id="permission-panel">
                 {% if user == cm.user %}
                     <p>You are the owner of this resource.</p>
