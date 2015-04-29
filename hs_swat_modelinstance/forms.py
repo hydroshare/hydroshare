@@ -90,7 +90,6 @@ class SWATmodelParametersForm(ModelForm):
                   'has_irrigation_operation',
                   'has_other_parameters']
         exclude = ['content_object']
-        widgets = {'has_other_parameters': forms.TextInput()}
 
 class SWATmodelParametersValidationForm(forms.Form):
     has_crop_rotation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
