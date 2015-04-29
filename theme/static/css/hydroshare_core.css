@@ -1224,7 +1224,7 @@ body > .container{
     margin-bottom: 5px;
 }
 
-#success-alert{
+#success-alert, #error-alert{
     position: fixed;
     z-index: 999;
     margin-right: auto;

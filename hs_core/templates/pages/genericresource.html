@@ -1,6 +1,6 @@
 {% extends 'pages/page.html' %}
 
-{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags %}
+{% load geoanalytics_tags ratings_tags pages_tags mezzanine_tags comments_tags keyword_tags hydroshare_tags crispy_forms_tags inplace_edit %}
 
 {% block main %}
 
@@ -70,10 +70,12 @@
                     <div class="custom-btn-toolbar">
                         <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
                             {% csrf_token %}
+                            {% if page.perms.delete %}
                             <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
                             <span data-toggle="tooltip" data-placement="auto" title="Delete"
                                   class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                             </a>
+                            {% endif %}
                             <input name="resource-mode" type="hidden" value="edit"/>
                             <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
                                     title="Edit" class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
@@ -98,11 +100,15 @@
                 <table>
                     <tr><th>Authors:</th><td id="authors">
                         {% for cr in creators %}
-                            {% if cr.description %}<a href="{{ cr.description }}">{{ cr.name }}</a><span class="comma">,&nbsp</span>
-                            {% else %}<span>{{ cr.name }}</span><span class="comma">,&nbsp</span>{% endif %}
+                            {% if cr.description %}<a href="{{ cr.description }}">{{ cr.name }}</a><span class="comma">,&nbsp;</span>
+                            {% else %}<span>{{ cr.name }}</span><span class="comma">,&nbsp;</span>{% endif %}
                         {% endfor %}
                     </td></tr>
-                    <tr><th>Owner:</th><td>{{ cm.user|contact|safe }}</td></tr>
+                    <tr><th>Owners:</th><td>
+                        {% for u in owners %}
+                            <span>{{ u|contact|safe }}</span>&nbsp;&nbsp;
+                        {% endfor %}
+                    </td></tr>
                     <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
                     <tr><th>Created:</th><td>{{ cm.created }}</td></tr>
                     <tr><th>Last updated:</th><td> {{ cm.updated }} by {%  if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
@@ -113,33 +119,24 @@
                     <table>
                         <tr>
                             <th>Authors:</th>
-                            <td>
-                                    <span id="authors">
-                                        {% for author in creator_formset.initial %}
-                                            {% if author.description %}<a href="{{ author.description }}">
-                                                {{ author.name }}</a><span class="comma">,&nbsp</span>
-                                                {% else %}<span>{{ author.name }}</span>
-                                                <span class="comma">,&nbsp</span>{% endif %}
-                                        {% endfor %}
-                                    </span>
+                            <td><span id="authors">
+                                    {% for author in creator_formset.initial %}
+                                        {% if author.description %}<a href="{{ author.description }}">
+                                            {{ author.name }}</a><span class="comma">,&nbsp</span>
+                                            {% else %}<span>{{ author.name }}</span>
+                                            <span class="comma">,&nbsp</span>{% endif %}
+                                    {% endfor %}
+                                </span>
                             </td>
                         </tr>
-                        <tr>
-                            <th>Owner:</th>
-                            <td>{{ cm.user|contact|safe }}</td>
-                        </tr>
-                        <tr>
-                            <th>Resource type:</th>
-                            <td>{{ cm|resource_type }}</td>
-                        </tr>
-                        <tr>
-                            <th>Created:</th>
-                            <td>{{ cm.created|date }}</td>
-                        </tr>
-                        <tr>
-                            <th>Last updated:</th>
-                            <td> {{ cm.updated|date }}</td>
-                        </tr>
+                        <tr><th>Owners:</th><td>
+                            {% for u in owners %}
+                                <span>{{ u|contact|safe }}</span>&nbsp;&nbsp;
+                            {% endfor %}
+                        </td></tr>
+                        </tr><tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
+                        <tr><th>Created:</th><td>{{ cm.created|date }}</td></tr>
+                        <tr><th>Last updated:</th><td> {{ cm.updated }} by {%  if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
                     </table>
                 </div>
             {% endif %}
@@ -561,8 +558,7 @@
                                                 <h4 class="modal-title">Confirm file deletion</h4>
                                             </div>
                                             <div class="modal-body">
-                                                This will delete the file from the resource. Consider saving a copy if
-                                                it is important to you.
+                                                Consider saving a copy of the file before you delete it if it is important to you.
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-default" data-dismiss="modal">
@@ -604,7 +600,6 @@
                                     </td>
                                 </tr>
                             {% endfor %}
-
                         </table>
                     </div>
                     {% endif %}
@@ -617,9 +612,7 @@
                         </a>
                     {% endfor %}
 
-                    {#                      {% if page.perms.change and resource_type != "Geographic Raster Resource" %}#}
                     {% if page.perms.change %}
-                        {#                        <td><button class="btn btn-success"  data-toggle="modal" data-target="#add-file-dialog" multiple="multiple">Add file</button></td>#}
                         <td><a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
                                multiple="multiple">
                             <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
@@ -735,7 +728,7 @@
                             </tr>
                             {% for author in creator_formset.initial %}
                             <tr>
-                                <td>{{ author.name }}</td>
+                                <td>{% if author.description %} <a href="{{ author.description }}">{{ author.name }}</a>{% else %}{{ author.name }}{% endif %}</td>
                                 <td>{%  if  author.organization %}{{ author.organization }}{% endif %}</td>
                                 <td>{%  if  author.address %}{{ author.address }}{% endif %}</td>
                                 <td>{%  if  author.phone %}{{ author.phone }}{% endif %}</td>
@@ -776,7 +769,7 @@
                             </tr>
                             {% for contributor in contributor_formset.initial %}
                             <tr>
-                                <td>{{ contributor.name }}</td>
+                                <td>{% if contributor.description %} <a href="{{ contributor.description }}">{{ contributor.name }}</a>{% else %}{{ contributor.name }}{% endif %}</td>
                                 <td>{%  if  contributor.organization %}{{ contributor.organization }}{% endif %}</td>
                                 <td>{%  if  contributor.address %}{{ contributor.address }}{% endif %}</td>
                                 <td>{%  if  contributor.phone %}{{ contributor.phone }}{% endif %}</td>
@@ -1321,6 +1314,7 @@
         {#                #}
         {# dialogs follow #}
         {#                #}
+        {%  block modal %}
 
         {% for source in source_formset.initial %}
         <div class="modal fade in" id="delete-source-element-dialog{{ source.id }}" tabindex="-1" role="dialog"
@@ -1380,6 +1374,7 @@
         </div>
 
         {% endfor %}
+
         {% for relation in relation_formset.initial %}
         <div class="modal fade in" id="delete-relation-element-dialog{{ relation.id }}" tabindex="-1" role="dialog"
              aria-labelledby="myModalLabel" aria-hidden="false">
@@ -1454,7 +1449,6 @@
             </div>
         </div>
         {% endfor %}
-
 
         {% for contributor in contributor_formset.initial %}
         <div class="modal fade" id="edit-contributor-dialog{{ contributor.id }}" tabindex="-1" role="dialog"
@@ -1568,7 +1562,6 @@
                 </div>
             </div>
         </div>
-
         {% endfor %}
 
         {% for author in creator_formset.initial %}
@@ -1672,6 +1665,7 @@
                 </div>
             </div>
         </div>
+
         <div class="modal fade" id="delete-creator-dialog{{ author.id }}" tabindex="-1" role="dialog"
              aria-labelledby="myModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -1690,32 +1684,34 @@
             </div>
         </div>
         {% endfor %}
-        <!-- Modal -->
-        <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title" id="submit-for-publication-title">Submit resource for publication</h4>
-                    </div>
-                    <div class="modal-body">
-                        <p>
-                            Once you submit the resource for publication it cannot be changed again. This will assign a
-                            DOI to the
-                            resource as it stands now and mark it as permanent. To make any changes after this, you
-                            <strong>must</strong>
-                            create a brand new resource. Click "Publish" if you really intend to do this.
-                        </p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/">Publish</a>
+
+        {%  block modal_publish_resource %}
+            <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
+                 aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="submit-for-publication-title">Submit resource for publication</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p>
+                                Once you submit the resource for publication it cannot be changed again. This will assign a
+                                DOI to the
+                                resource as it stands now and mark it as permanent. To make any changes after this, you
+                                <strong>must</strong>
+                                create a brand new resource. Click "Publish" if you really intend to do this.
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/">Publish</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <!-- Modal -->
+        {%  endblock %}
+
         <div class="modal fade" id="add-source-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
              aria-hidden="true">
             <div class="modal-dialog">
@@ -1810,33 +1806,35 @@
             </div>
         </div>
 
-        <div class="modal fade" id="delete-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title" id="delete-resource-title">Delete Resource</h4>
-                    </div>
-                    <div class="modal-body">
-                        <strong>THIS IS A PERMANENT ACTION. </strong>
-                        <ul>
-                            <li>This will delete the resource file.</li>
-                            <li>A copy of your resource file will not be retained by Hydroshare.</li>
-                            <li>We highly recommend that you download the latest copy of your resource file before
-                                confirming this action.
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <a type="button" class="btn btn-danger"
-                           href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
+        {% block modal_delete_resource %}
+            <div class="modal fade" id="delete-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="delete-resource-title">Delete Resource</h4>
+                        </div>
+                        <div class="modal-body">
+                            <strong>THIS IS A PERMANENT ACTION. </strong>
+                            <ul>
+                                <li>This will delete the resource file.</li>
+                                <li>A copy of your resource file will not be retained by Hydroshare.</li>
+                                <li>We highly recommend that you download the latest copy of your resource file before
+                                    confirming this action.
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <a type="button" class="btn btn-danger"
+                               href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <!-- Modal -->
+        {%  endblock %}
+
         <div class="modal fade" id="add-dcterm-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
              aria-hidden="true">
             <div class="modal-dialog">
@@ -1861,7 +1859,7 @@
                 </div>
             </div>
         </div>
-        <!-- Modal -->
+
         <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
              aria-hidden="true">
             <div class="modal-dialog">
@@ -1888,6 +1886,7 @@
                 </div>
             </div>
         </div>
+
         <div class="modal fade" id="add-creator-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -1965,6 +1964,7 @@
                 </div>
             </div>
         </div>
+
         <div class="modal fade in" id="add-contributor-dialog" tabindex="-1" role="dialog"
              aria-labelledby="myModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -2056,35 +2056,40 @@
             </div>
         </div>
 
-        <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST"
-                          enctype="multipart/form-data">
+        <!-- Modal -->
+        {%  block modal_add_file %}
+            <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST"
+                              enctype="multipart/form-data">
 
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>
-                        </div>
-                        <div class="modal-body">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="add-citation-input">Select files:</label>
-                                <input type="file" name="files" id="add-file-input" multiple/>
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>
                             </div>
-
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Save changes</button>
-                        </div>
-                    </form>
+                            <div class="modal-body">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="add-file-input">Select files:</label>
+                                    <input type="file" name="files" id="add-file-input" multiple/>
+                                </div>
+                                <div id="file-types">Any file type can be uploaded.</div>
+                                <div id="file-multiple">Multiple file upload is allowed.</div>
+                                <br>
+                                <h3 style="color: red" id="file-type-error"></h3>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Save changes</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-
-
+        {%  endblock %}
+        {%  endblock %}
     {% endwith %}
 
     {% block extra_js %}
@@ -2137,16 +2142,6 @@
 
     }
 
-    function toggle_metadata_display(){
-        if ($("#metadata-show-toggle").text() === 'Show All'){
-            $("#metadata-show-toggle").text('Collapse All');
-            $('.accordion-body:not(".in")').collapse('show');
-        }
-        else {
-            $("#metadata-show-toggle").text('Show All');
-            $('.accordion-body.in').collapse('hide');
-        }
-    }
     function metadata_update_ajax_submit(form_id){
             $alert_success = '<div class="alert alert-success" id="success-alert"> \
                 <button type="button" class="close" data-dismiss="alert">x</button> \
@@ -2219,7 +2214,10 @@
                         });
                     }
                     else{
-                        $('#' + form_id).before($alert_error);
+                        $('body > .container').append($alert_error);
+                        $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
+                            $(".alert-danger").alert('close');
+                        });
                     }
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown)
@@ -2266,45 +2264,46 @@
                 onAddKeyword();
             }
         });
+
         // hide add file button if necessary
         var file_count = $("#file-count").attr('value');
         //set allowed file types
         var file_types = $("#supported-file-types").attr('value');
-{#        console.log(file_types)#}
+        console.log(file_types)
         if(file_types!= ".*"){
-            $("#file-types").text("Only the listed file types can be uploaded " + file_types + ".");
+            var display_file_types = file_types.substring(0, file_types.length-2) + ').'
+            $("#file-types").text("Only the listed file types can be uploaded: " + display_file_types);
         }
-        else
-        {
+        else{
            $("#file-types").text("Any file type can be uploaded.");
         }
         // set if multiple file can be uploaded
         var allow_multiple_file_upload = $("#allow-multiple-file-upload").attr('value');
-        console.log(allow_multiple_file_upload);
         if(allow_multiple_file_upload === "True"){
             $("#file-multiple").text("Multiple file upload is allowed.");
-            $("#add-file-input").attr('multiple', 'multiple')
+            $("#btn-add-file").attr('multiple', 'multiple');
+            $("#add-file-input").attr('multiple', 'multiple');
         }
         else{
             $("#file-multiple").text("Only one file can be uploaded.");
+            $("#btn-add-file").removeAttr('multiple');
             $("#add-file-input").removeAttr('multiple');
             if(file_count > 0){
-                $("#add-file-button").hide();
+                $("#btn-add-file").hide();
             }
         }
         // hide add file button if file upload is not allowed for the resource type
         if(file_types == "()"){
-            $("#add-file-button").hide();
+            $("#btn-add-file").hide();
         }
+
         // file upload validation when file is selected for upload
         $('#add-file-input').on('change', function() {
             var file_types = $("#supported-file-types").attr('value');
-            console.log(file_types)
             if(file_types!= ".*"){
                 file_types = file_types.substring(1,file_types.length - 1).split(",");
             }
-            else
-            {
+            else{
                $("#file-types").text("Any file type can be uploaded.");
                 return;
             }
@@ -2314,21 +2313,30 @@
                 ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
                 ext = "'." + ext +"'";
                 var ext_found = false;
-                var index;
-                for (index = 0; index < file_types.length; index++) {
-                    //console.log('ext:' + file_types[index].trim());
-                    if (ext == file_types[index].trim()) {
-                        ext_found = true;
-                        break;
+                if (ext === file_types) {
+                    ext_found = true;
+                }
+                else {
+                    var index;
+                    for (index = 0; index < file_types.length; index++) {
+                        if (ext === file_types[index].trim()) {
+                            ext_found = true;
+                            break;
+                        }
                     }
                 }
                 if (!ext_found) {
                     //remove user selected files
                     this.value = '';
-                    alert('Invalid file type:' + ext)
+                    var err_msg = 'Invalid file type: ' + ext;
+                    $('#file-type-error').text(err_msg);
+                    //alert('Invalid file type:' + ext)
+                }
+                else{
+                    $('#file-type-error').text('');
                 }
             }
-        })
+        });
         if($("#id_type_1").is(':checked')){ //box type coverage
              $("#div_id_north").hide();
              $("#div_id_east").hide();
@@ -2353,7 +2361,7 @@
             }
         })
         // open all metadata collasible elements on page load
-        $('.accordion-body:not(".in")').collapse('show');
+{#        $('.accordion-body:not(".in")').collapse('show');#}
         $("#select_license").on('change', function () {
             var value = this.value;
             if (value === "other") {
@@ -2628,30 +2636,30 @@
             return false;
         }
         // Register the click event handlers
-        $("#addCreator").click(function () {
-            return addForm(this, "creator");
-        });
-        $(".delete-creator").click(function () {
-            return deleteForm(this, "creator");
-        });
-        $("#addContributor").click(function () {
-            return addForm(this, "contributor");
-        });
-        $("#addLinkCreator").click(function () {
-            return addLink(this, "creator");
-        });
-        $(".delete-contributor").click(function () {
-            return deleteForm(this, "contributors");
-        });
-        $(".delete-link-contributor").click(function () {
-            return deleteLink(this, "contributors");
-        });
-        $(".delete-link-creator").click(function () {
-            return deleteLink(this, "creator");
-        });
-        $("#addSource").click(function () {
-            return addForm(this, "source");
-        });
+{#        $("#addCreator").click(function () {#}
+{#            return addForm(this, "creator");#}
+{#        });#}
+{#        $(".delete-creator").click(function () {#}
+{#            return deleteForm(this, "creator");#}
+{#        });#}
+{#        $("#addContributor").click(function () {#}
+{#            return addForm(this, "contributor");#}
+{#        });#}
+{#        $("#addLinkCreator").click(function () {#}
+{#            return addLink(this, "creator");#}
+{#        });#}
+{#        $(".delete-contributor").click(function () {#}
+{#            return deleteForm(this, "contributors");#}
+{#        });#}
+{#        $(".delete-link-contributor").click(function () {#}
+{#            return deleteLink(this, "contributors");#}
+{#        });#}
+{#        $(".delete-link-creator").click(function () {#}
+{#            return deleteLink(this, "creator");#}
+{#        });#}
+{#        $("#addSource").click(function () {#}
+{#            return addForm(this, "source");#}
+{#        });#}
         $("form input:radio").change(function () {
             if ($(this).val() == "point") {
                 //alert('you select the point radio button');
