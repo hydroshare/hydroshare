@@ -14,6 +14,8 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         element_form = ModelOutputValidationForm(request.POST)
     elif element_name == 'executedby':
         element_form = ExecutedByValidationForm(request.POST)
+    elif element_name == 'modelobjective':
+        element_form = modelObjectiveValidationForm(request.POST)
     elif element_name == 'swatmodelparameters':
         element_form = SWATmodelParametersValidationForm(request.POST)
 
@@ -32,6 +34,8 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         element_form = ModelOutputValidationForm(request.POST)
     elif element_name == 'executedby':
         element_form = ExecutedByValidationForm(request.POST)
+    elif element_name == 'modelobjective':
+        element_form = modelObjectiveValidationForm(request.POST)
     elif element_name == 'swatmodelparameters':
         element_form = SWATmodelParametersValidationForm(request.POST)
 
