@@ -64,6 +64,45 @@ class ExecutedBy(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("ExecutedBy element of a resource can't be deleted.")
 
+
+
+class modelObjective(AbstractMetaDataElement):
+    term = 'modelObjective'
+    objective_choices = (('Hydrology', 'Hydrology'), ('Water quality', 'Water quality'), ('BMPs', 'BMPs'), ('Climate / Landuse Change', 'Climate / Landuse Change'), ('Other', 'Other'))
+    swat_model_objective = models.CharField(max_length=100, choices=objective_choices)
+    other_objectives = models.CharField(max_length=500, null=True, blank=True)
+
+    def __unicode__(self):
+        self.other_objectives
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'swat_model_objective' in kwargs:
+            if not kwargs['swat_model_objective'] in ['Hydrology', 'Water quality', 'BMPs', 'Climate / Landuse Change', 'Other']:
+                raise ValidationError('Invalid swat_model_objective:%s' % kwargs['type'])
+        else:
+            raise ValidationError("swat_model_objective is missing.")
+        if not 'other_objectives' in kwargs:
+            raise ValidationError("modelObjective other_objectives is missing.")
+        metadata_obj = kwargs['content_object']
+        return modelObjective.objects.create(swat_model_objective=kwargs['swat_model_objective'], other_objectives=kwargs['other_objectives'], content_object=metadata_obj)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        model_objective = modelObjective.objects.get(id=element_id)
+        if model_objective:
+            for key, value in kwargs.iteritems():
+                if key in ('swat_model_objective', 'other_objectives'):
+                    setattr(model_objective, key, value)
+            model_objective.save()
+        else:
+            raise ObjectDoesNotExist("No modelObjective element was found for the provided id:%s" % kwargs['id'])
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("modelObjective element of a resource can't be deleted.")
+
+
 class SWATmodelParameters(AbstractMetaDataElement):
     term = 'SWATmodelParameters'
     has_crop_rotation = models.BooleanField(default=False)
@@ -150,6 +189,7 @@ processor_for(SWATModelInstanceResource)(resource_processor)
 class SWATModelInstanceMetaData(CoreMetaData):
     _model_output = generic.GenericRelation(ModelOutput)
     _executed_by = generic.GenericRelation(ExecutedBy)
+    _model_objective = generic.GenericRelation(modelObjective)
     _swat_model_parameters = generic.GenericRelation(SWATmodelParameters)
     _swat_model_instance_resource = generic.GenericRelation(SWATModelInstanceResource)
 
@@ -166,8 +206,13 @@ class SWATModelInstanceMetaData(CoreMetaData):
         return self._executed_by.all().first()
 
     @property
+    def model_objective(self):
+        return self._model_objective.all().first()
+
+    @property
     def swat_model_parameters(self):
         return self._swat_model_parameters.all().first()
+
 
     @classmethod
     def get_supported_element_names(cls):
@@ -176,6 +221,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
         # add the name of any additional element to the list
         elements.append('ModelOutput')
         elements.append('ExecutedBy')
+        elements.append('modelObjective')
         elements.append('SWATmodelParameters')
         return elements
 
@@ -185,6 +231,8 @@ class SWATModelInstanceMetaData(CoreMetaData):
         if not self.model_output:
             return False
         if not self.executed_by:
+            return False
+        if not self.model_objective:
             return False
         if not self.swat_model_parameters:
             return False
@@ -197,6 +245,9 @@ class SWATModelInstanceMetaData(CoreMetaData):
             missing_required_elements.append('ModelOutput')
         if not self.executed_by:
             missing_required_elements.append('ExecutedBy')
+        if not self.model_objective:
+            missing_required_elements.append('modelObjective')
+        return missing_required_elements
         if not self.swat_model_parameters:
             missing_required_elements.append('SWATmodelParameters')
         return missing_required_elements
@@ -226,6 +277,13 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_executed_by_name.text = self.executed_by.name
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_url.text = self.executed_by.url
+        if self.model_objective:
+            hsterms_model_objective = etree.SubElement(container, '{%s}modelObjective' % self.NAMESPACES['hsterms'])
+            hsterms_model_objective_rdf_Description = etree.SubElement(hsterms_model_objective, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_model_objective_swat_model_objective = etree.SubElement(hsterms_model_objective_rdf_Description, '{%s}modelObjective' % self.NAMESPACES['hsterms'])
+            hsterms_model_objective_swat_model_objective.text = self.model_objective.swat_model_objective
+            hsterms_model_objective_other_objectives = etree.SubElement(hsterms_model_objective_rdf_Description, '{%s}otherObjectives' % self.NAMESPACES['hsterms'])
+            hsterms_model_objective_other_objectives.text = self.model_objective.other_objectives
         if self.swat_model_parameters:
             hsterms_swat_model_parameters = etree.SubElement(container, '{%s}SWATmodelParameters' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_rdf_Description = etree.SubElement(hsterms_swat_model_parameters, '{%s}Description' % self.NAMESPACES['rdf'])
