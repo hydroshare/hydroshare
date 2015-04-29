@@ -229,7 +229,6 @@ class SWATModelParametersValidationForm(forms.Form):
 
 class ModelInputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
-
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
