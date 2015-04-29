@@ -1219,9 +1219,19 @@ body > .container{
 
 .lined-wrapper{
     width: 100%;
-    border-top: 1px solid rgb(173, 173, 173);
+    border-top: 1px solid rgb(204, 204, 204);
     margin-top: 5px;
     margin-bottom: 5px;
+}
+
+#success-alert{
+    position: fixed;
+    z-index: 999;
+    margin-right: auto;
+    width: 50%;
+    left: 50%;
+    margin-left: -25%;
+    top: 60px;
 }
 
 .cc-image{
