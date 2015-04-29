@@ -36,6 +36,9 @@ def landing_page(request, page):
         executed_by_form = ExecutedByForm(instance=content_model.metadata.executed_by, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.executed_by.id if content_model.metadata.executed_by else None)
 
+        model_objective_form = modelObjectiveForm(instance=content_model.metadata.model_objective, res_short_id=content_model.short_id,
+                             element_id=content_model.metadata.model_objective.id if content_model.metadata.model_objective else None)
+
         swat_model_parameters_form = SWATmodelParametersForm(instance=content_model.metadata.swat_model_parameters, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.swat_model_parameters.id if content_model.metadata.swat_model_parameters else None)
 
