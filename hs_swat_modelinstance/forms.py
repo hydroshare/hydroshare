@@ -25,10 +25,8 @@ class ModelOutputForm(ModelForm):
         super(ModelOutputForm, self).__init__(*args, **kwargs)
         self.helper = ModelOutputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelOutput')
         self.fields['includes_output'].widget.attrs['style'] = "width:auto;margin-top:-5px"
-
         #if len(self.initial) == 0:
             #self.initial['includes_output'] = False
-
     class Meta:
         model = ModelOutput
         fields = ['includes_output']
@@ -226,7 +224,6 @@ class SWATModelParametersValidationForm(forms.Form):
     has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
     has_irrigation_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
     has_other_parameters = forms.CharField(max_length=500, required=False)
-
 class ModelInputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
