@@ -111,7 +111,6 @@ processor_for(ModelProgramResource)(resource_processor)
 
 class ModelProgramMetaData(CoreMetaData):
     mpmetadata = generic.GenericRelation(MpMetadata)
-    _mp_resource = generic.GenericRelation(ModelProgramResource)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -120,10 +119,6 @@ class ModelProgramMetaData(CoreMetaData):
         # add the name of any additional element to the list
         elements.append('mpmetadata')
         return elements
-
-    @property
-    def resource(self):
-        return self._mp_resource.all().first()
 
     def get_xml(self):
         from lxml import etree
@@ -138,19 +133,18 @@ class ModelProgramMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         # inject raster resource specific metadata elements into container element
-        if self.resource:
-            fields = [  'software_version',
-                        'software_language',
-                        'operating_sys',
-                        'date_released',
-                        'program_website',
-                        'software_repo',
-                        'release_notes',
-                        'user_manual',
-                        'theoretical_manual',
-                        'source_code']
-            model_program_object = self.mpmetadata.all().first()
-            self.add_metadata_element_to_xml(container, model_program_object, fields)
+        fields = [  'software_version',
+                    'software_language',
+                    'operating_sys',
+                    'date_released',
+                    'program_website',
+                    'software_repo',
+                    'release_notes',
+                    'user_manual',
+                    'theoretical_manual',
+                    'source_code']
+        model_program_object = self.mpmetadata.all().first()
+        self.add_metadata_element_to_xml(container, model_program_object, fields)
 
         xml_string = etree.tostring(RDF_ROOT, pretty_print=True)
 

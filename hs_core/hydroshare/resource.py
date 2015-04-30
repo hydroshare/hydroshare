@@ -1,21 +1,16 @@
 ### resource API
+import os
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
-import django.dispatch
-from django.contrib.auth.models import User
 from mezzanine.generic.models import Keyword, AssignedKeyword
-#from dublincore.models import QualifiedDublinCoreElement
+
 from hs_core.hydroshare import hs_bagit
-from hs_core.hydroshare.utils import get_resource_types, current_site_url
+from hs_core.hydroshare.utils import get_resource_types
 from hs_core.models import ResourceFile
 from hs_core import signals
 from . import utils
-import os
-import mimetypes
-
-#pre_create_resource = django.dispatch.Signal(providing_args=['dublin_metadata', 'metadata', 'files'])
-#post_create_resource = django.dispatch.Signal(providing_args=['resource', 'metadata'])
 
 file_size_limit = 10*(1024 ** 3)
 file_size_limit_for_display = '10G'
@@ -77,7 +72,8 @@ def get_science_metadata(pk):
     Exceptions.NotFound  - The resource identified by pid does not exist
     Exception.ServiceFailure  - The service is unable to process the request
     """
-    return get_system_metadata(pk)
+    res = utils.get_resource_by_shortkey(pk)
+    return res.metadata.get_xml()
 
 
 def get_system_metadata(pk):
@@ -350,116 +346,84 @@ def create_resource(
 
     :return: a new resource which is an instance of resource_type.
     """
+    try:
+        cls = check_resource_type(resource_type)
+        owner = utils.user_from_id(owner)
 
-    for tp in get_resource_types():
-        if resource_type == tp.__name__:
-            cls = tp
-            break
-    else:
-        raise NotImplementedError("Type {resource_type} does not exist".format(resource_type=resource_type))
+        # create the resource
+        resource = cls.objects.create(
+            user=owner,
+            creator=owner,
+            title=title,
+            last_changed_by=owner,
+            in_menus=[],
+            **kwargs
+        )
 
-    for file in files:
-        if file._size > file_size_limit:
-            # file is greater than file_size_limit, which is not allowed
-            return None
+        # by default make resource private
+        resource.public = False
+        resource.save()
 
-    # Send pre-create resource signal
+        if not metadata:
+            metadata = []
 
-    #signals.pre_create_resource.send(sender=res_type_cls, dublin_metadata=dublin_metadata, metadata=metadata, files=files, resource=resource, **kwargs)
-    owner = utils.user_from_id(owner)
+        add_resource_files(resource.short_id, *files)
 
-    # create the resource
-    resource = cls.objects.create(
-        user=owner,
-        creator=owner,
-        title=title,
-        last_changed_by=owner,
-        in_menus=[],
-        **kwargs
-    )
+        if 'owner' in kwargs:
+            owner = utils.user_from_id(kwargs['owner'])
+            resource.owners.add(owner)
 
-    # by default make resource private
-    resource.public = False
-    resource.save()
-
-    if not metadata:
-        metadata = []
-
-    file_format_types = []
-    for file in files:
-        ResourceFile.objects.create(content_object=resource, resource_file=file)
-
-        file_format_type = utils.get_file_mime_type(file.name)
-        if file_format_type not in file_format_types:
-            file_format_types.append(file_format_type)
-            metadata.append({'format': {'value': file_format_type}})
-
-    if 'owner' in kwargs:
-        owner = utils.user_from_id(kwargs['owner'])
         resource.owners.add(owner)
 
-    resource.owners.add(owner)
+        if edit_users:
+            for user in edit_users:
+                user = utils.user_from_id(user)
+                resource.edit_users.add(user)
+                resource.view_users.add(user)
+        if view_users:
+            for user in view_users:
+                user = utils.user_from_id(user)
+                resource.view_users.add(user)
 
-    if edit_users:   
-        for user in edit_users:
-            user = utils.user_from_id(user)
-            resource.edit_users.add(user)
-            resource.view_users.add(user)
-    if view_users:
-        for user in view_users:
-            user = utils.user_from_id(user)
-            resource.view_users.add(user)
-    
-    if edit_groups:   
-        for group in edit_groups:
-            group = utils.group_from_id(group)
-            resource.edit_groups.add(group)
-            resource.view_groups.add(group)
-    if view_groups:
-        for group in view_groups:
-            group = utils.group_from_id(group)
-            resource.view_groups.add(group)
+        if edit_groups:
+            for group in edit_groups:
+                group = utils.group_from_id(group)
+                resource.edit_groups.add(group)
+                resource.view_groups.add(group)
+        if view_groups:
+            for group in view_groups:
+                group = utils.group_from_id(group)
+                resource.view_groups.add(group)
 
-    if keywords:
-        ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
-        ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
+        if keywords:
+            ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
+            ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
 
-        for k in ks:
-            AssignedKeyword.objects.create(content_object=resource, keyword=k)
+            for k in ks:
+                AssignedKeyword.objects.create(content_object=resource, keyword=k)
 
-    # for creating metadata elements based on the new metadata implementation
-    if metadata:
+        # prepare default metadata
+        utils.prepare_resource_default_metadata(resource=resource, metadata=metadata, res_title=title)
+
         for element in metadata:
             # here k is the name of the element
             # v is a dict of all element attributes/field names and field values
             k, v = element.items()[0]
             resource.metadata.create_element(k, **v)
 
-    resource.metadata.create_element('identifier', name='hydroShareIdentifier',
-                                     url='{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id))
-    resource.metadata.create_element('date', type='created', start_date=resource.created)
-    resource.metadata.create_element('date', type='modified', start_date=resource.updated)
+        # add the subject elements from the AssignedKeywords (new metadata implementation)
+        for akw in AssignedKeyword.objects.filter(object_pk=resource.id).all():
+            resource.metadata.create_element('subject', value=akw.keyword.title)
 
-    if resource.creator.first_name:
-        first_creator_name = "{first_name} {last_name}".format(first_name=resource.creator.first_name,
-                                                                   last_name=resource.creator.last_name)
-    else:
-        first_creator_name = resource.creator.username
+        hs_bagit.create_bag(resource)
 
-    first_creator_email = resource.creator.email
-
-    resource.metadata.create_element('creator', name=first_creator_name, email=first_creator_email, order=1)
-
-    # add the subject elements from the AssignedKeywords (new metadata implementation)
-    for akw in AssignedKeyword.objects.filter(object_pk=resource.id).all():
-        resource.metadata.create_element('subject', value=akw.keyword.title)
-
-    # Send post-create resource signal
-    #signals.post_create_resource.send(sender=res_type_cls, resource=resource, metadata=metadata, **kwargs)
-
-    hs_bagit.create_bag(resource)
+    except Exception as ex:
+        if resource:
+            resource.delete()
+        raise Exception(ex.message)
 
     return resource
+
 
 def update_resource(
         pk,
@@ -592,6 +556,12 @@ def add_resource_files(pk, *files):
             content_object=resource,
             resource_file=File(file) if not isinstance(file, UploadedFile) else file
         ))
+
+        # add format metadata element if necessary
+        file_format_type = utils.get_file_mime_type(file.name)
+        if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
+            resource.metadata.create_element('format', value=file_format_type)
+
     return ret
 
 def update_system_metadata(pk, **kwargs):
@@ -680,11 +650,13 @@ def delete_resource(pk):
 
     Note:  Only HydroShare administrators will be able to delete formally published resour
     """
-    utils.get_resource_by_shortkey(pk).delete()
+    #utils.get_resource_by_shortkey(pk).delete()
+    res = utils.get_resource_by_shortkey(pk)
+    res.delete()
     return pk
 
 
-def delete_resource_file(pk, filename):
+def delete_resource_file(pk, filename_or_id, user):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist, the Exceptions.NotFound exception
     is raised.
@@ -716,19 +688,45 @@ def delete_resource_file(pk, filename):
     version. Once a resource is obsoleted, no other resources can obsolete it.
     """
     resource = utils.get_resource_by_shortkey(pk)
+    res_cls = resource.__class__
+
+    try:
+        file_id = int(filename_or_id)
+        filter_condition = lambda fl: fl.id == file_id
+    except ValueError:
+        filter_condition = lambda fl: os.path.basename(fl.resource_file.name) == filename_or_id
+
     for f in ResourceFile.objects.filter(object_id=resource.id):
-        if os.path.basename(f.resource_file.name) == filename:
+        if filter_condition(f):
+            # send signal
+            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource)
+
+            file_name = f.resource_file.name
             f.resource_file.delete()
             f.delete()
+            delete_file_mime_type = utils.get_file_mime_type(file_name)
+            delete_file_extension = os.path.splitext(file_name)[1]
+
+            # if there is no other resource file with the same extension as the
+            # file just deleted then delete the matching format metadata element for the resource
+            resource_file_extensions = [os.path.splitext(f.resource_file.name)[1] for f in resource.files.all()]
+            if delete_file_extension not in resource_file_extensions:
+                format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
+                if format_element:
+                    resource.metadata.delete_element(format_element.term, format_element.id)
             break
     else:
-        raise ObjectDoesNotExist(filename)
+        raise ObjectDoesNotExist(filename_or_id)
 
     if resource.public:
         if not resource.can_be_public:
             resource.public = False
             resource.save()
-    return filename
+
+    # generate bag
+    utils.resource_modified(resource, user)
+
+    return filename_or_id
 
 
 def publish_resource(pk):
