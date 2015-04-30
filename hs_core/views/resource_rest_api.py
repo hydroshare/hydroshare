@@ -103,7 +103,7 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
     # get resource bag file or science metadata
     def _get(self, request, pk):
         if request.content_type == 'application/zip':
-            resource, _, _ = view_utils.authorize(request, pk, view=True)
+            resource, _, _ = view_utils.authorize(request, pk, view=True, edit=True, full=True)
             resource_bag = resource.bags.first().bag
             # redirects to django_irods/views.download function
             return HttpResponseRedirect(resource_bag.url)
@@ -115,7 +115,7 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
         raise NotImplementedError()
 
     def delete(self, request, pk):
-        view_utils.authorize(request, pk, edit=True)
+        view_utils.authorize(request, pk, full=True)
         hydroshare.delete_resource(pk)
         # spec says we need return the id of the resource that got deleted - otherwise would have used status code 204
         # and not 200
@@ -287,7 +287,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
         return ['GET', 'PUT']
 
     def get(self, request, pk):
-        view_utils.authorize(request, pk, view=True)
+        view_utils.authorize(request, pk, view=True, edit=True, full=True)
 
         # TODO: once the science metadata xml file is available as a separate file on iRODS, that file needs to be returned
         return Response(data=hydroshare.get_science_metadata(pk), status=status.HTTP_200_OK)
@@ -353,7 +353,7 @@ class ResourceFileCRUD(APIView):
         return ['GET', 'POST', 'DELETE', 'PUT']
 
     def get(self, request, pk, filename):
-        view_utils.authorize(request, pk, view=True)
+        view_utils.authorize(request, pk, view=True, edit=True, full=True)
         try:
             f = hydroshare.get_resource_file(pk, filename)
         except ObjectDoesNotExist:
@@ -365,7 +365,7 @@ class ResourceFileCRUD(APIView):
         return HttpResponseRedirect(f.url)
 
     def post(self, request, pk):
-        resource, _, _ = view_utils.authorize(request, pk, edit=True)
+        resource, _, _ = view_utils.authorize(request, pk, edit=True, full=True)
         resource_files = request.FILES.values()
         if len(resource_files) == 0:
             error_msg = {'file': 'No file was found to add to the resource.'}
@@ -400,7 +400,7 @@ class ResourceFileCRUD(APIView):
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk, filename):
-        resource, _, user = view_utils.authorize(request, pk, edit=True)
+        resource, _, user = view_utils.authorize(request, pk, edit=True, full=True)
         try:
             hydroshare.delete_resource_file(pk, filename, user)
         except ObjectDoesNotExist as ex:    # matching file not found

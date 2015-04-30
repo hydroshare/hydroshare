@@ -371,12 +371,8 @@ def create_resource(
 
         if 'owner' in kwargs:
             owner = utils.user_from_id(kwargs['owner'])
-            resource.view_users.add(owner)
-            resource.edit_users.add(owner)
             resource.owners.add(owner)
 
-        resource.view_users.add(owner)
-        resource.edit_users.add(owner)
         resource.owners.add(owner)
 
         if edit_users:
