@@ -721,14 +721,14 @@
                         </li>
                         {% endif %}
                     {% endif %}
-                    {% if relevant_tools or metadata_form %}
-                        <li class="col-xs-2 col-md-2">
-                            <a href="#relevantTools" data-toggle="tab">
-                                <span class="glyphicon glyphicon-wrench"></span>
-                                &nbsp;Relevant Tools
-                            </a>
-                        </li>
-                    {% endif %}
+{#                    {% if relevant_tools or metadata_form %}#}
+{#                        <li class="col-xs-2 col-md-2">#}
+{#                            <a href="#relevantTools" data-toggle="tab">#}
+{#                                <span class="glyphicon glyphicon-wrench"></span>#}
+{#                                &nbsp;Relevant Tools#}
+{#                            </a>#}
+{#                        </li>#}
+{#                    {% endif %}#}
                 </ul>
             </div>
             <div class="tabs-body">
@@ -1361,20 +1361,20 @@
                 </div>
                 {%  endif %}
             {%  endif %}
-                <!-- ========= RELEVANT TOOLS TAB ========= -->
-            {% if relevant_tools or metadata_form %}
-                <div class="tab-pane" id="relevantTools">
-                {% if not metadata_form %}
-                    {% for tool in relevant_tools %}
-                        <h4>{{ tool.title }}</h4>
-                        <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch Tool</button></a>
-                        <hr>
-                    {% endfor %}
-                {% else %}
-                    ------- Relevant tools form here -------
-                {%  endif %}
-                </div>
-            {% endif %}
+{#                <!-- ========= RELEVANT TOOLS TAB ========= -->#}
+{#            {% if relevant_tools or metadata_form %}#}
+{#                <div class="tab-pane" id="relevantTools">#}
+{#                {% if not metadata_form %}#}
+{#                    {% for tool in relevant_tools %}#}
+{#                        <h4>{{ tool.title }}</h4>#}
+{#                        <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch Tool</button></a>#}
+{#                        <hr>#}
+{#                    {% endfor %}#}
+{#                {% else %}#}
+{#                    ------- Relevant tools form here -------#}
+{#                {%  endif %}#}
+{#                </div>#}
+{#            {% endif %}#}
             </div>
             </div>
             </div>
@@ -2184,9 +2184,12 @@
             }
 
             // If does not exist, add it
-            if(!exists && keyword != ""){
-                $("#lst-tags").append('<li class="tag"><span>' + keyword[i] +
-                        '</span>&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>');
+            if(!exists && keyword[i] != ""){
+                var li = $("<li class='tag'><span></span></li>");
+                li.find('span').text(keyword[i]);
+                li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>')
+                $("#lst-tags").append(li);
+
                 $(".icon-remove").click(onRemoveKeyword);
                 $(this).closest("form-control").find("button").show();
                 updateKeywords();
@@ -2208,7 +2211,6 @@
         }
 
         $("#id-subject").find("#id_value").val(keywords);
-
     }
 
     function metadata_update_ajax_submit(form_id){
@@ -2321,8 +2323,12 @@
         var keywords = keywordString.split(",");
         $("#lst-tags").empty();
         for (var i = 0; i < keywords.length; i++){
-            $("#lst-tags").append('<li class="tag"><span>' + keywords[i] +
-                        '</span>&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a></li>');
+            if (keywords[i] != ""){
+                var li = $("<li class='tag'><span></span></li>");
+                li.find('span').text(keywords[i]);
+                li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>')
+                $("#lst-tags").append(li);
+            }
         }
 
         $(".icon-remove").click(onRemoveKeyword);
