@@ -871,7 +871,7 @@
                     {% if spatial_coverage.north or spatial_coverage.northlimit %}
                         <h4><strong>Spatial</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
-                    {% endif %}
+
 
                     {% if spatial_coverage.type == 'point' %}
                         {#                                TODO: find a place for doi field#}
@@ -958,10 +958,11 @@
                         {% endif %}
 
                     {% endif %}
-
-                    {% if spatial_coverage.north or spatial_coverage.northlimit %}
-                        <hr style="border: 0;">
+                    <hr style="border: 0;">
                     {% endif %}
+{#                    {% if spatial_coverage.north or spatial_coverage.northlimit %}#}
+{#                        #}
+{#                    {% endif %}#}
 
                     {% if temporal_coverage %}
                         <h4><strong>Temporal</strong></h4>
@@ -982,7 +983,7 @@
                               id="id-coverage-spatial" method="post">
                             {% csrf_token %}
                             <fieldset>
-                                <legend>Coverage</legend>
+                                <legend>Spatial</legend>
                                 <div id="div_id_type" class="control-group">
                                     <div class="controls">
                                         <label class="radio control-label">
@@ -1073,7 +1074,7 @@
                               id="id-coverage-spatial" method="post">
                             {% csrf_token %}
                             <fieldset>
-                                <legend>Coverage</legend>
+                                <legend>Spatial</legend>
                                 <div id="div_id_type" class="control-group">
                                     <div class="controls">
                                         <label class="radio control-label">
@@ -1352,7 +1353,7 @@
                     {%  endblock %}
 
                 {%  else %}
-                   ------- Resource specific form here -------
+{#                   {%  crispy extended_metadata_layout  %}#}
                 {%  endif %}
                 </div>
             {%  endif %}

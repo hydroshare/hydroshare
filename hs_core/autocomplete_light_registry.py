@@ -5,9 +5,22 @@ class UserAutocomplete(autocomplete_light.AutocompleteModelBase):
     search_fields=['username','email','first_name','last_name']
     
     def choice_label(self, choice):
-        if (choice.first_name + choice.last_name) and choice.email:
-            return choice.first_name + " " + choice.last_name + " - " + choice.email
-        return choice.email
+        label = ""
+
+        if choice.first_name:
+            label += choice.first_name
+
+        if choice.last_name:
+            if choice.first_name:
+                label += " "
+            label += choice.last_name
+
+        if choice.email:
+            if choice.first_name or choice.last_name:
+                label += " - "
+            label += choice.email
+
+        return label
 
 autocomplete_light.register(User, UserAutocomplete)
 
