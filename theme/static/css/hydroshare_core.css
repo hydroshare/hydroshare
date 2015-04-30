@@ -1000,7 +1000,12 @@ html, body{
     /*background:#F4F4F4;*/
 }
 
-
+a[data-toggle='tab']{
+    /*display: inline-block !important;*/
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
 #btn-public.active{
     color:#FFF;

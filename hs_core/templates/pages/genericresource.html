@@ -638,10 +638,10 @@
                                 <tr>
                                     <td>
                                         <span class="glyphicon glyphicon-file file-icon"></span>
-                                <span>
-                                    <span class="label-file-name">{{ f.resource_file.name|slice:"33:" }}</span>
-                                    <p class="label-file-size">{{ f.resource_file.size|filesizeformat }}</p>
-                                </span>
+                                        <span>
+                                            <span class="label-file-name">{{ f.resource_file.name|slice:"33:" }}</span>
+                                            <p class="label-file-size">{{ f.resource_file.size|filesizeformat }}</p>
+                                        </span>
                                     </td>
                                     {#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
                                     <td>
@@ -689,14 +689,14 @@
             <div class="tab-elements">
             <div class="panel-tabs">
                 <ul class="nav nav-tabs">
-                    <li class="active col-md-2 col-sm-2 col-xs-12">
+                    <li class="active col-xs-2 col-md-2">
                         <a href="#contactTab" data-toggle="tab">
                             <span class="glyphicon glyphicon-user"> </span>
                             &nbspContact
                         </a>
                     </li>
                     {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
-                        <li class="col-md-2 col-sm-2 col-xs-12">
+                        <li class="col-xs-2 col-md-2">
                             <a href="#coverageTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-globe"></span>
                                 &nbspCoverage
@@ -704,7 +704,7 @@
                         </li>
                     {% endif %}
                     {% if sources or relations or metadata_form %}
-                        <li class="col-md-2 col-sm-2 col-xs-12">
+                        <li class="col-xs-2 col-md-2">
                             <a href="#relatedResourcesTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-book"></span>
                                 &nbspRelated Resources
@@ -712,15 +712,17 @@
                         </li>
                     {% endif %}
                     {% if extended_metadata_exists or metadata_form %}
-                        <li class="col-md-2 col-sm-2 col-xs-12">
+                        {% if  cm|resource_type != "Generic" %}
+                        <li class="col-xs-2 col-md-2">
                             <a href="#resourceSpecificTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-folder-close"></span>
                                 &nbspResource Specific
                             </a>
                         </li>
+                        {% endif %}
                     {% endif %}
                     {% if relevant_tools or metadata_form %}
-                        <li class="col-md-2 col-sm-2 col-xs-12">
+                        <li class="col-xs-2 col-md-2">
                             <a href="#relevantTools" data-toggle="tab">
                                 <span class="glyphicon glyphicon-wrench"></span>
                                 &nbsp;Relevant Tools
@@ -1345,6 +1347,7 @@
             {% endif %}
                 <!-- ========= RESOURCE SPECIFIC TAB ========= -->
             {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
+                {% if  cm|resource_type != "Generic" %}
                 <div class="tab-pane" id="resourceSpecificTab">
                 {% if not metadata_form %}
 
@@ -1353,9 +1356,10 @@
                     {%  endblock %}
 
                 {%  else %}
-{#                   {%  crispy extended_metadata_layout  %}#}
+                   {%  crispy metadata_form  %}
                 {%  endif %}
                 </div>
+                {%  endif %}
             {%  endif %}
                 <!-- ========= RELEVANT TOOLS TAB ========= -->
             {% if relevant_tools or metadata_form %}

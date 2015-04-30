@@ -252,7 +252,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                                 res_short_id=content_model.short_id,
                                                 element_id=spatial_coverage.id if spatial_coverage else None)
 
-    metadata_form = MetaDataForm(resource_mode='edit' if edit_mode else 'view',
+    # metadata_form = MetaDataForm(resource_mode='edit' if edit_mode else 'view',
+    #                              extended_metadata_layout=extended_metadata_layout)
+
+    metadata_form = ExtendedMetadataForm(resource_mode='edit' if edit_mode else 'view',
                                  extended_metadata_layout=extended_metadata_layout)
 
     context = {'metadata_form': metadata_form,
