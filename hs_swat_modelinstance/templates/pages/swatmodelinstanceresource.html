@@ -63,6 +63,27 @@
                     {% endif %}
                 </div>
                 <div>
+                    {% if model_methods %}
+                        <h4><strong>Model Methods:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            {% if model_methods.runoff_calculation_method %}
+                                <div class="col-sm-4"><strong>Runoff calculation method:</strong></div>
+                                <div class="col-sm-8">{{ model_methods.runoff_calculation_method }}</div>
+                            {% endif %}
+                            {% if model_methods.flow_routing_method %}
+                                <div class="col-sm-4"><strong>Flow routing method:</strong></div>
+                                <div class="col-sm-8">{{ model_methods.flow_routing_method }}</div>
+                            {% endif %}
+                            {% if model_methods.PET_estimation_method %}
+                                <div class="col-sm-4"><strong>PET estimation method:</strong></div>
+                                <div class="col-sm-8">{{ model_methods.PET_estimation_method }}</div>
+                            {% endif %}
+                        </div>
+                    <hr style="border:0">
+                    {% endif %}
+                </div>
+                <div>
                     {% if swat_model_parameters %}
                         <h4><strong>SWAT model used parameters:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
