@@ -3,9 +3,6 @@ from hs_core import views
 
 urlpatterns = patterns('',
 
-    # user API
-    url(r'^authenticate/$', views.user_rest_api.authenticate_user, name='authenticate'),
-
     # resource API
     url(r'^resource/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ResourceListRetrieveCreateUpdateDelete.as_view(),
         name='get_update_delete_resource'),
