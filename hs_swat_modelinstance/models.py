@@ -453,7 +453,6 @@ class SWATModelInstanceMetaData(CoreMetaData):
             return False
         if not self.model_objective:
             return False
-            return False
         return True
 
     def get_required_missing_elements(self):
