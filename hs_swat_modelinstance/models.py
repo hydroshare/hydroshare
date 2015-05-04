@@ -248,7 +248,6 @@ class SWATModelInstanceMetaData(CoreMetaData):
             missing_required_elements.append('ExecutedBy')
         if not self.model_objective:
             missing_required_elements.append('modelObjective')
-        return missing_required_elements
         if not self.swat_model_parameters:
             missing_required_elements.append('SWATmodelParameters')
         return missing_required_elements
