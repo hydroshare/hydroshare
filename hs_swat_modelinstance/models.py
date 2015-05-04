@@ -115,6 +115,35 @@ class simulationType(AbstractMetaDataElement):
     type_choices = (('Normal Simulation', 'Normal Simulation'), ('Sensitivity Analysis', 'Sensitivity Analysis'),\
                     ('Auto-Calibration', 'Auto-Calibration'))
     simulation_type_name = models.CharField(max_length=100, choices=type_choices, verbose_name='Simulation type')
+    def __unicode__(self):
+        self.simulation_type
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'simulation_type_name' in kwargs:
+            if not kwargs['simulation_type_name'] in ['Normal Simulation', 'Sensitivity Analysis', 'Auto-Calibration']:
+                raise ValidationError('Invalid simulation type:%s' % kwargs['type'])
+        else:
+            raise ValidationError("simulation type is missing.")
+
+        metadata_obj = kwargs['content_object']
+        return simulationType.objects.create(simulation_type_name=kwargs['simulation_type_name'], content_object=metadata_obj)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        simulation_type = simulationType.objects.get(id=element_id)
+        if simulation_type:
+            for key, value in kwargs.iteritems():
+                if key in ('simulation_type_name'):
+                    setattr(simulation_type, key, value)
+            simulation_type.save()
+        else:
+            raise ObjectDoesNotExist("No simulationType element was found for the provided id:%s" % kwargs['id'])
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("simulationType element of a resource can't be deleted.")
+
 
     def __unicode__(self):
         self.simulation_type

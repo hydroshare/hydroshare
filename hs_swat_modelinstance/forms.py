@@ -132,6 +132,35 @@ class simulationTypeForm(ModelForm):
 class simulationTypeValidationForm(forms.Form):
     simulation_type_name = forms.CharField(max_length=100, required=False)
 
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+                        Field('simulation_type_name', css_class=field_width),
+                 )
+        kwargs['element_name_label'] = 'Simulation type'
+        super(simulationTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+class simulationTypeForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        type_choices = tuple([('Choose a type', 'Choose a type'),\
+                                   ('Normal Simulation', 'Normal Simulation'),\
+                                   ('Sensitivity Analysis', 'Sensitivity Analysis'),\
+                                   ('Auto-Calibration', 'Auto-Calibration')])
+        super(simulationTypeForm, self).__init__(*args, **kwargs)
+        self.helper = simulationTypeFormHelper(allow_edit, res_short_id, element_id, element_name='simulationType')
+        self.fields['simulation_type_name'].choices = type_choices
+
+    class Meta:
+        model = simulationType
+        fields = ['simulation_type_name']
+        exclude = ['content_object']
+
+
+class simulationTypeValidationForm(forms.Form):
+    simulation_type_name = forms.CharField(max_length=100, required=False)
+
 class ModelMethodsFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
