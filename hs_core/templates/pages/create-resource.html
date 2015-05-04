@@ -48,6 +48,11 @@
             <tr>
                 <td><input type="file" name="files" id="select-file" multiple/></td>
             </tr>
+            <tr>
+                <td><a id="select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsSignin" multiple="multiple">
+                    <span class="glyphicon glyphicon-plus"><span class="button-label">Browse iRODS...</span></span>
+                </a></td>
+            </tr>
         </tbody>
         <div id="file-types">Any file type can be uploaded.</div>
         <div id="file-multiple">Multiple file upload is allowed.</div>
@@ -64,6 +69,52 @@
     </div>
 </form>
 
+{% block modal %}
+    {% block modal_irods_login %}
+        <div class="modal fade" id="irodsSignin" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <form class="form-signin" role="form" action="{% url "irods_login" %}" method="post">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <h4 class="modal-title" id="myModalLabel">Sign in</h4>
+                        </div>
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <input type="hidden" name="path" value="{{ request.path }}"/>
+                            <div class="form-group">
+                                <label for="id_username" class="sr-only">Username: {{request.session.user}}</label>
+                                <input id="id_username" class="form-control" name="username" placeholder="Username" type="text" />
+                            </div>
+                            <div class="form-group">
+                                <label for="id_password" class="sr-only">Password:</label>
+                                <input id="id_password" class="form-control" name="password" placeholder="Password" type="password" />
+                            </div>
+                            <div class="form-group">
+                                <label for="id_port" class="sr-only">Port:</label>
+                                <input id="id_port" class="form-control" name="port" placeholder="Port" value="1247" type="text" />
+                            </div>
+                            <div class="form-group">
+                                <label for="id_host" class="sr-only">Host:</label>
+                                <input id="id_host" class="form-control" name="host" placeholder="Host" type="text" />
+                            </div>
+                            <div class="form-group">
+                                <label for="id_zone" class="sr-only">Zone:</label>
+                                <input id="id_zone" class="form-control" name="zone" placeholder="Zone" type="text" />
+                            </div>
+                            <label class="checkbox">
+                                <input type="checkbox" />Remember Me
+                            </label>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Sign in</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endblock %}
 {% endblock %}
 
 {% block extra_js %}
@@ -168,4 +219,5 @@
 
     })
     </script>
+{% endblock %}
 {% endblock %}
