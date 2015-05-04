@@ -69,6 +69,37 @@ class simulationTypeForm(ModelForm):
 class simulationTypeValidationForm(forms.Form):
     simulation_type_name = forms.CharField(max_length=100, required=False)
 
+class modelMethodsFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+                        Field('runoff_calculation_method', css_class=field_width),
+                        Field('flow_routing_method', css_class=field_width),
+                        Field('PET_estimation_method', css_class=field_width),
+                 )
+        kwargs['element_name_label'] = 'Model Methods'
+        super(modelMethodsFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+class modelMethodsForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(modelMethodsForm, self).__init__(*args, **kwargs)
+        self.helper = modelMethodsFormHelper(allow_edit, res_short_id, element_id, element_name='modelMethods')
+
+    class Meta:
+        model = modelMethods
+        fields = ['runoff_calculation_method',
+                  'flow_routing_method',
+                  'PET_estimation_method']
+        exclude = ['content_object']
+
+
+class modelMethodsValidationForm(forms.Form):
+    runoff_calculation_method = forms.CharField(max_length=500, required=False)
+    flow_routing_method = forms.CharField(max_length=500, required=False)
+    PET_estimation_method = forms.CharField(max_length=500, required=False)
+
 class SWATmodelParametersFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 

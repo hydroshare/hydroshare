@@ -137,6 +137,44 @@ class simulationType(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("simulationType element of a resource can't be deleted.")
 
+class modelMethods(AbstractMetaDataElement):
+    term = 'modelMethods'
+    runoff_calculation_method = models.CharField(max_length=500, null=True, blank=True)
+    flow_routing_method = models.CharField(max_length=500, null=True, blank=True)
+    PET_estimation_method = models.CharField(max_length=500, null=True, blank=True)
+
+    def __unicode__(self):
+        self.runoff_calculation_method
+
+    @classmethod
+    def create(cls, **kwargs):
+        if not 'runoff_calculation_method' in kwargs:
+            raise ValidationError("modelMethods runoffCalculationMethod is missing.")
+        if not 'flow_routing_method' in kwargs:
+            raise ValidationError("modelMethods flowRoutingMethod is missing.")
+        if not 'PET_estimation_method' in kwargs:
+            raise ValidationError("modelMethods PETestimationMethod is missing.")
+        metadata_obj = kwargs['content_object']
+        return modelMethods.objects.create(runoff_calculation_method=kwargs['runoff_calculation_method'],\
+                                             flow_routing_method=kwargs['flow_routing_method'],\
+                                             PET_estimation_method=kwargs['PET_estimation_method'],\
+                                             content_object=metadata_obj)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        model_methods = modelMethods.objects.get(id=element_id)
+        if model_methods:
+            for key, value in kwargs.iteritems():
+                if key in ('runoff_calculation_method', 'flow_routing_method', 'PET_estimation_method'):
+                    setattr(model_methods, key, value)
+            model_methods.save()
+        else:
+            raise ObjectDoesNotExist("No modelMethods element was found for the provided id:%s" % kwargs['id'])
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("modelMethods element of a resource can't be deleted.")
+
 
 class SWATmodelParameters(AbstractMetaDataElement):
     term = 'SWATmodelParameters'
@@ -226,6 +264,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
     _executed_by = generic.GenericRelation(ExecutedBy)
     _model_objective = generic.GenericRelation(modelObjective)
     _simulation_type = generic.GenericRelation(simulationType)
+    _model_methods = generic.GenericRelation(modelMethods)
     _swat_model_parameters = generic.GenericRelation(SWATmodelParameters)
     _swat_model_instance_resource = generic.GenericRelation(SWATModelInstanceResource)
 
@@ -250,6 +289,10 @@ class SWATModelInstanceMetaData(CoreMetaData):
         return self._simulation_type.all().first()
 
     @property
+    def model_methods(self):
+        return self._model_methods.all().first()
+
+    @property
     def swat_model_parameters(self):
         return self._swat_model_parameters.all().first()
 
@@ -263,6 +306,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
         elements.append('ExecutedBy')
         elements.append('modelObjective')
         elements.append('simulationType')
+        elements.append('modelMethods')
         elements.append('SWATmodelParameters')
         return elements
 
@@ -324,6 +368,15 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_simulation_type_rdf_Description = etree.SubElement(hsterms_simulation_type, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_simulation_type_name = etree.SubElement(hsterms_simulation_type_rdf_Description, '{%s}simulationType' % self.NAMESPACES['hsterms'])
             hsterms_simulation_type_name.text = self.simulation_type.simulation_type_name
+        if self.model_methods:
+            hsterms_model_methods = etree.SubElement(container, '{%s}modelMethods' % self.NAMESPACES['hsterms'])
+            hsterms_model_methods_rdf_Description = etree.SubElement(hsterms_model_methods, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_model_methods_runoff_calculation_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}runoffCalculationMethod' % self.NAMESPACES['hsterms'])
+            hsterms_model_methods_runoff_calculation_method.text = self.model_methods.runoff_calculation_method
+            hsterms_model_methods_flow_routing_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}flowRoutingMethod' % self.NAMESPACES['hsterms'])
+            hsterms_model_methods_flow_routing_method.text = self.model_methods.flow_routing_method
+            hsterms_model_methods_PET_estimation_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}PETestimationMethod' % self.NAMESPACES['hsterms'])
+            hsterms_model_methods_PET_estimation_method.text = self.model_methods.PET_estimation_method
         if self.swat_model_parameters:
             hsterms_swat_model_parameters = etree.SubElement(container, '{%s}SWATmodelParameters' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_rdf_Description = etree.SubElement(hsterms_swat_model_parameters, '{%s}Description' % self.NAMESPACES['rdf'])

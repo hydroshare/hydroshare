@@ -20,6 +20,7 @@ def landing_page(request, page):
                 content_model.metadata.executed_by or \
                 content_model.metadata.model_objective or \
                 content_model.metadata.simulation_type or \
+                content_model.metadata.model_methods or \
                 content_model.metadata.swat_model_parameters:
             extended_metadata_exists = True
 
@@ -28,6 +29,7 @@ def landing_page(request, page):
         context['executed_by'] = content_model.metadata.executed_by
         context['model_objective'] = content_model.metadata.model_objective
         context['simulation_type'] = content_model.metadata.simulation_type
+        context['model_methods'] = content_model.metadata.model_methods
         context['swat_model_parameters'] = content_model.metadata.swat_model_parameters
 
         #add SWAT Model parameters context
@@ -43,6 +45,9 @@ def landing_page(request, page):
 
         simulation_type_form = simulationTypeForm(instance=content_model.metadata.simulation_type, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.simulation_type.id if content_model.metadata.simulation_type else None)
+
+        model_methods_form = modelMethodsForm(instance=content_model.metadata.model_methods, res_short_id=content_model.short_id,
+                             element_id=content_model.metadata.model_methods.id if content_model.metadata.model_methods else None)
 
         swat_model_parameters_form = SWATmodelParametersForm(instance=content_model.metadata.swat_model_parameters, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.swat_model_parameters.id if content_model.metadata.swat_model_parameters else None)
@@ -76,6 +81,13 @@ def landing_page(request, page):
                                      '</div> '),
                                 ),
 
+                                AccordionGroup('Model Methods',
+                                     HTML('<div class="form-group" id="modelmethods"> '
+                                        '{% load crispy_forms_tags %} '
+                                        '{% crispy model_methods_form %} '
+                                     '</div> '),
+                                ),
+
                                 AccordionGroup('SWAT Model Parameters (required)',
                                      HTML('<div class="form-group" id="swatmodelparameters"> '
                                         '{% load crispy_forms_tags %} '
@@ -93,6 +105,7 @@ def landing_page(request, page):
         context['executed_by_form'] = executed_by_form
         context['model_objective_form'] = model_objective_form
         context['simulation_type_form'] = simulation_type_form
+        context['model_methods_form'] = model_methods_form
         context['swat_model_parameters_form'] = swat_model_parameters_form
 
     hs_core_context = add_generic_context(request, page)
