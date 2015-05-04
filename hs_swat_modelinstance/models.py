@@ -436,7 +436,6 @@ class SWATModelInstanceMetaData(CoreMetaData):
         if not self.model_objective:
             missing_required_elements.append('ModelObjective')
         return missing_required_elements
-        return missing_required_elements
 
 
     def get_xml(self, pretty_print=True):
