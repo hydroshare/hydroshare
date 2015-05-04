@@ -193,7 +193,7 @@ class TimeSeriesResult(AbstractMetaDataElement):
 
 class TimeSeriesResource(Page, AbstractResource):
     class Meta:
-        verbose_name = 'Time Series Resource'
+        verbose_name = 'Time Series'
 
     @property
     def metadata(self):
@@ -225,12 +225,6 @@ class TimeSeriesMetaData(CoreMetaData):
     _method = generic.GenericRelation(Method)
     _processing_level = generic.GenericRelation(ProcessingLevel)
     _time_series_result = generic.GenericRelation(TimeSeriesResult)
-    _time_series_resource = generic.GenericRelation(TimeSeriesResource)
-
-
-    @property
-    def resource(self):
-        return self._time_series_resource.all().first()
 
     @property
     def site(self):

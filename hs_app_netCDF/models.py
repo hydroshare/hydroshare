@@ -134,8 +134,8 @@ class Variable(AbstractMetaDataElement):
     type = models.CharField(max_length=100, choices=VARIABLE_TYPES)
     shape = models.CharField(max_length=100)
     # optional variable attributes
-    descriptive_name = models.CharField(max_length=100, null=True,blank=True)
-    method = models.TextField(null=True, blank=True)
+    descriptive_name = models.CharField(max_length=100, null=True, blank=True, verbose_name='long name')
+    method = models.TextField(null=True, blank=True, verbose_name='comment')
     missing_value = models.CharField(max_length=100, null=True, blank=True)
 
     def __unicode__(self):
@@ -245,7 +245,7 @@ class NetcdfResource(Page, AbstractResource):
         return AbstractResource.can_view(self, request)
 
     class Meta:
-            verbose_name = 'NetCDF Resource'
+            verbose_name = 'Multidimensional (NetCDF)'
 
 processor_for(NetcdfResource)(resource_processor)
 
@@ -253,7 +253,6 @@ processor_for(NetcdfResource)(resource_processor)
 class NetcdfMetaData(CoreMetaData):
     variables = generic.GenericRelation(Variable)
     ori_coverage = generic.GenericRelation(OriginalCoverage)
-    _netcdf_resource = generic.GenericRelation(NetcdfResource)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -263,10 +262,6 @@ class NetcdfMetaData(CoreMetaData):
         elements.append('Variable')
         elements.append('OriginalCoverage')
         return elements
-
-    @property
-    def resource(self):
-        return self._netcdf_resource.all().first()
 
     def has_all_required_elements(self):
         if not super(NetcdfMetaData, self).has_all_required_elements():

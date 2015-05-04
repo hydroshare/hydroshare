@@ -46,10 +46,11 @@ class ResTypeFormHelper(BaseFormHelper):
         layout = Layout(
                         Field('tool_res_type', css_class=field_width),
                         HTML(
-                            '<h4>available resource types</h4>'
+                            '<ul>'
                             '{% for r in res_types %}'
-                            '<p>{{ r.content_object.model }}</p>'
+                            '<li>{{ r }}</li>'
                             '{% endfor %}'
+                            '</ul>'
                         )
                  )
 

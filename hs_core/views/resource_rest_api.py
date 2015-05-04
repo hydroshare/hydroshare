@@ -1,0 +1,416 @@
+__author__ = 'Pabitra'
+
+import os
+
+from django.shortcuts import redirect
+from django.core.urlresolvers import reverse
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponseRedirect
+
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, generics
+from rest_framework.exceptions import *
+
+from hs_core import hydroshare
+from hs_core.views import utils as view_utils
+from hs_core.views import serializers
+
+
+class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIView, generics.ListAPIView):
+    """
+    Retrieve, create, or delete a resource, and list resources
+
+    REST URL: hsapi/resource/{pk}
+    HTTP method: GET
+    :return: (on success): resource bag file if request content-type is 'application/zip' otherwise resource science metadata file
+
+    REST URL: hsapi/resource/{pk}
+    HTTP method: DELETE
+    :return: (on success): json string of the format: {'resource_id':pk}
+
+    REST URL: hsapi/resource/{pk}
+    HTTP method: PUT
+    :return: (on success): json string of the format: {'resource_id':pk}
+
+    :type   str
+    :param  pk: resource id
+    :rtype:  json string for http methods DELETE and PUT, and resource file data bytes for GET
+    :raises:
+    NotFound: return json format: {'detail': 'No resource was found for resource id':pk}
+    PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
+    ValidationError: return json format: {parameter-1': ['error message-1'], 'parameter-2': ['error message-2'], .. }
+
+    Get a list of resources based on the following filter query parameters
+
+    For an anonymous user, all public resources will be listed.
+    For any authenticated user with no other query parameters provided in the request, all resources that are viewable
+    by the user will be listed.
+
+    REST URL: hsapi/resource/{query parameters}
+    HTTP method: GET
+
+    Supported query parameters (all are optional):
+
+    :type   owner: str
+    :type   types: list of resource type class names
+    :type   from_date:  str (e.g., 2015-04-01)
+    :type   to_date:    str (e.g., 2015-05-01)
+    :type   edit_permission: bool
+    :param  owner: (optional) - to get a list of resources owned by a specified username
+    :param  types: (optional) - to get a list of resources of the specified resource types
+    :param  from_date: (optional) - to get a list of resources created on or after this date
+    :param  to_date: (optional) - to get a list of resources created on or before this date
+    :param  edit_permission: (optional) - to get a list of resources for which the authorised user has edit permission
+    :rtype:  json string
+    :return:  a paginated list of resources with data for resource id, title, resource type, creator, sharing status,
+    date created, date last updated, resource bag url path, and science metadata url path
+
+    example return json format:
+
+        {   "count":n
+            "next": link to next page
+            "previous": link to previous page
+            "results":[
+                    {"resource_type": resource type, "resource_title": resource title, "resource_id": resource id,
+                    'creator': creator name, 'sharing_status': Public or Private, 'date_created': date resource created,
+                    'date_last_update': date resource last updated, 'bag_url': link to bag file, 'science_metadata_url':
+                    link to science metadata},
+                    {"resource_type": resource type, "resource_title": resource title, "resource_id": resource id,
+                    'creator': creator name, 'sharing_status': Public or Private, 'date_created': date resource created,
+                    'date_last_update': date resource last updated, 'bag_url': link to bag file, 'science_metadata_url':
+                    link to science metadata},
+            ]
+        }
+
+    :raises:
+    ValidationError: return json format: {'parameter-1':['error message-1'], 'parameter-2': ['error message-2'], .. }
+    """
+
+    pagination_class = PageNumberPagination
+
+    @property
+    def allowed_methods(self):
+        return ['GET', 'POST', 'PUT', 'DELETE']
+
+    def get(self, request, pk=None):
+        if pk:
+            return self._get(request, pk)
+        # get a list of resources
+        return self.list(request)
+
+    # get resource bag file or science metadata
+    def _get(self, request, pk):
+        if request.content_type == 'application/zip':
+            resource, _, _ = view_utils.authorize(request, pk, view=True, edit=True, full=True)
+            resource_bag = resource.bags.first().bag
+            # redirects to django_irods/views.download function
+            return HttpResponseRedirect(resource_bag.url)
+        else:
+            return redirect('get_update_science_metadata', pk=pk)
+
+    def put(self, request, pk):
+        # TODO: update resource - involves overwriting a resource from the provided bag file
+        raise NotImplementedError()
+
+    def delete(self, request, pk):
+        view_utils.authorize(request, pk, full=True)
+        hydroshare.delete_resource(pk)
+        # spec says we need return the id of the resource that got deleted - otherwise would have used status code 204
+        # and not 200
+        return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        return ResourceCreate().create(request)
+
+    # needed for list of resources
+    def get_queryset(self):
+        resource_list_request_validator = serializers.ResourceListRequestValidator(data=self.request.query_params)
+        if not resource_list_request_validator.is_valid():
+            raise ValidationError(detail=resource_list_request_validator.errors)
+
+        filter_parms = resource_list_request_validator.validated_data
+        filter_parms['user'] = (self.request.user if self.request.user.is_authenticated() else None)
+        if len(filter_parms['types']) == 0:
+            filter_parms['types'] = None
+
+        filter_parms['public'] = not self.request.user.is_authenticated()
+
+        filter_parms['keywords'] = None
+
+        filtered_res_list = []
+        filter_parms = dict(filter_parms)
+
+        resource_table = hydroshare.get_resource_list(**filter_parms)
+        res = set()
+
+        for resources in resource_table.values():
+            res = res.union(resources)
+
+        res_list = list(res)
+        for res in res_list:
+            resource_bag = hydroshare.get_resource(res.short_id)
+            if res.creator.first_name:
+                creator_name = res.creator.first_name
+                if res.creator.last_name:
+                    creator_name += " %s" % res.creator.last_name
+            else:
+                creator_name = res.creator.username
+
+            sharing_status = 'Public' if res.public else 'Private'
+
+            bag_url = hydroshare.utils.current_site_url() + resource_bag.bag.url
+            science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[res.short_id])
+            resource_list_item = serializers.ResourceListItem(resource_type=res.__class__.__name__,
+                                                              resource_id=res.short_id,
+                                                              resource_title=res.title,
+                                                              creator=creator_name,
+                                                              sharing_status=sharing_status,
+                                                              date_created=res.created,
+                                                              date_last_updated=res.updated,
+                                                              bag_url=bag_url,
+                                                              science_metadata_url=science_metadata_url)
+            filtered_res_list.append(resource_list_item)
+
+        return filtered_res_list
+
+    def get_serializer_class(self):
+        return serializers.ResourceListItemSerializer
+
+
+class ResourceCreate(generics.CreateAPIView):
+    """
+    Create a new resource
+
+    REST URL: hsapi/resource
+    HTTP method: POST
+
+    Request data payload parameters:
+    :type   resource_type: str
+    :type   title: str
+    :type   edit_users: str
+    :type   edit_groups: str
+    :type   view_users: str
+    :type   view_groups: str
+    :param  resource_type: resource type name
+    :param  title: (optional) title of the resource (default value: 'Untitled resource')
+    :param  edit_users: (optional) list of comma separated usernames that should have edit permission for the resource
+    :param  edit_groups: (optional) list of comma separated group names that should have edit permission for the resource
+    :param  view_users: (optional) list of comma separated usernames that should have view permission for the resource
+    :param  view_groups: (optional) list of comma separated group names that should have view permission for the resource
+    :return: id and type of the resource created
+    :rtype: json string of the format: {'resource-id':id, 'resource_type': resource type}
+    :raises:
+    NotAuthenticated: return json format: {'detail': 'Authentication credentials were not provided.'}
+    ValidationError: return json format: {parameter-1':['error message-1'], 'parameter-2': ['error message-2'], .. }
+    """
+
+    def get_serializer_class(self):
+        return serializers.ResourceCreateRequestValidator
+
+    # Override the create() method from the CreateAPIView class
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            raise NotAuthenticated()
+
+        resource_create_request_validator = serializers.ResourceCreateRequestValidator(data=request.data)
+        if not resource_create_request_validator.is_valid():
+            raise ValidationError(detail=resource_create_request_validator.errors)
+
+        validated_request_data = resource_create_request_validator.validated_data
+        resource_type = validated_request_data['resource_type']
+
+        res_title = validated_request_data.get('title', 'Untitled resource')
+        if len(request.FILES) > 0:
+            raise ValidationError(detail={'files': 'File upload is not allowed. Add files after the resource is created.'})
+
+        _, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
+                                                                       resource_title=res_title,
+                                                                       page_redirect_url_key=None,
+                                                                       files=(),
+                                                                       metadata=None,  **kwargs)
+
+        try:
+            resource = hydroshare.create_resource(
+                    resource_type=resource_type,
+                    owner=request.user,
+                    title=res_title,
+                    edit_users=validated_request_data.get('edit_users', None),
+                    view_users=validated_request_data.get('view_users', None),
+                    edit_groups=validated_request_data.get('edit_groups', None),
+                    view_groups=validated_request_data.get('view_groups', None),
+                    keywords=None,
+                    metadata=metadata,
+                    files=(),
+            )
+        except Exception as ex:
+            error_msg = {'resource': "Resource creation failed. %s" % ex.message}
+            raise ValidationError(detail=error_msg)
+
+        response_data = {'resource_type': resource_type, 'resource_id': resource.short_id}
+        return Response(data=response_data,  status=status.HTTP_201_CREATED)
+
+
+class ScienceMetadataRetrieveUpdate(APIView):
+    """
+    Retrieve resource science metadata
+
+    REST URL: hsapi/scimeta/{pk}
+    HTTP method: GET
+
+    :type pk: str
+    :param pk: id of the resource
+    :return: science metadata as xml string
+    :rtype: str
+    :raises:
+    NotFound: return json format: {'detail': 'No resource was found for resource id:pk'}
+    PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
+
+    REST URL: hsapi/scimeta/{pk}
+    HTTP method: PUT
+
+    :type pk: str
+    :param pk: id of the resource
+    :type metadata: json
+    :param metadata: resource metadata
+    :return: resource id
+    :rtype: json of the format: {'resource_id':pk}
+    :raises:
+    NotFound: return json format: {'detail': 'No resource was found for resource id':pk}
+    PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
+    ValidationError: return json format: {parameter-1': ['error message-1'], 'parameter-2': ['error message-2'], .. }
+    """
+
+    @property
+    def allowed_methods(self):
+        return ['GET', 'PUT']
+
+    def get(self, request, pk):
+        view_utils.authorize(request, pk, view=True, edit=True, full=True)
+
+        # TODO: once the science metadata xml file is available as a separate file on iRODS, that file needs to be returned
+        return Response(data=hydroshare.get_science_metadata(pk), status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        # TODO: update science metadata using the metadata json data provided - will do in the next iteration
+        # Should this update any extracted metadata? It would be easier to implement if we allow update of
+        # any metadata.
+        raise NotImplementedError()
+
+
+class ResourceFileCRUD(APIView):
+    """
+    Retrieve, add, update or delete a resource file
+
+    REST URL: hsapi/resource/{pk}/files/{filename}
+    HTTP method: GET
+
+    :type pk: str
+    :type filename: str
+    :param pk: resource id
+    :param filename: name of the file to retrieve/download
+    :return: resource file data
+    :rtype: file data bytes
+
+    REST URL: POST hsapi/resource/{pk}/files
+    HTTP method: POST
+
+    Request post data: file data (required)
+    :type pk: str
+    :param pk: resource id
+    :return: id of the resource and name of the file added
+    :rtype: json string of format: {'resource_id':pk, 'file_name': name of the file added}
+
+    REST URL: hsapi/resource/{pk}/files/{filename}
+    HTTP method: PUT
+
+    :type pk: str
+    :type filename: str
+    :param pk: resource id
+    :param filename: name of the file to update
+    :return: id of the resource and name of the file
+    :rtype: json string of format: {'resource_id':pk, 'file_name': name of the file updates}
+
+    REST URL: hsapi/resource/{pk}/files/{filename}
+    HTTP method: DELETE
+
+    :type pk: str
+    :type filename: str
+    :param pk: resource id
+    :param filename: name of the file to delete
+    :return: id of the resource and name of the file
+    :rtype: json string of format: {'resource_id':pk, 'file_name': name of the file deleted}
+
+    :raises:
+    NotFound: return json format: {'detail': 'No resource was found for resource id':pk}
+    PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
+    ValidationError: return json format: {'parameter-1':['error message-1'], 'parameter-2': ['error message-2'], .. }
+    """
+
+    @property
+    def allowed_methods(self):
+        return ['GET', 'POST', 'DELETE', 'PUT']
+
+    def get(self, request, pk, filename):
+        view_utils.authorize(request, pk, view=True, edit=True, full=True)
+        try:
+            f = hydroshare.get_resource_file(pk, filename)
+        except ObjectDoesNotExist:
+            err_msg = 'File with file name {file_name} does not exist for resource with resource id ' \
+                      '{res_id}'.format(file_name=filename, res_id=pk)
+            raise NotFound(detail=err_msg)
+
+        # redirects to django_irods/views.download function
+        return HttpResponseRedirect(f.url)
+
+    def post(self, request, pk):
+        resource, _, _ = view_utils.authorize(request, pk, edit=True, full=True)
+        resource_files = request.FILES.values()
+        if len(resource_files) == 0:
+            error_msg = {'file': 'No file was found to add to the resource.'}
+            raise ValidationError(detail=error_msg)
+        elif len(resource_files) > 1:
+            error_msg = {'file': 'More than one file was found. Only one file can be added at a time.'}
+            raise ValidationError(detail=error_msg)
+
+        # TODO: I know there has been some discussion when to validate a file
+        # I agree that we should not validate and extract metadata as part of the file add api
+        # Once we have a decision, I will change this implementation accordingly. In that case we have
+        # to implement additional rest endpoints for file validation and extraction.
+        try:
+            hydroshare.utils.resource_file_add_pre_process(resource=resource, files=[resource_files[0]],
+                                                          user=request.user, extract_metadata=True)
+
+        except (hydroshare.utils.ResourceFileSizeException, hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+            error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
+            raise ValidationError(detail=error_msg)
+
+        try:
+           res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource, files=[resource_files[0]],
+                                                                   user=request.user, extract_metadata=True)
+
+        except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+            error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
+            raise ValidationError(detail=error_msg)
+
+        # prepare response data
+        file_name = os.path.basename(res_file_objects[0].resource_file.name)
+        response_data = {'resource_id': pk, 'file_name': file_name}
+        return Response(data=response_data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, pk, filename):
+        resource, _, user = view_utils.authorize(request, pk, edit=True, full=True)
+        try:
+            hydroshare.delete_resource_file(pk, filename, user)
+        except ObjectDoesNotExist as ex:    # matching file not found
+            raise NotFound(detail=ex.message)
+
+        # prepare response data
+        response_data = {'resource_id': pk, 'file_name': filename}
+        return Response(data=response_data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk, filename):
+        # TODO: Currently we do not have this action for the front end. Will implement in the next iteration
+        # Implement only after we have a decision when to validate a file
+        raise NotImplementedError()

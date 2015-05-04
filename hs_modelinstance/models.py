@@ -112,11 +112,6 @@ processor_for(ModelInstanceResource)(resource_processor)
 class ModelInstanceMetaData(CoreMetaData):
     _model_output = generic.GenericRelation(ModelOutput)
     _executed_by = generic.GenericRelation(ExecutedBy)
-    _model_instance_resource = generic.GenericRelation(ModelInstanceResource)
-
-    @property
-    def resource(self):
-        return self._model_instance_resource.all().first()
 
     @property
     def model_output(self):

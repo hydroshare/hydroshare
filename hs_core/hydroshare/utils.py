@@ -1,25 +1,30 @@
 from __future__ import absolute_import
 
+import mimetypes
+import os
+import json
+
 from django.db.models import get_model, get_models
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
-import mimetypes
-import os
-from hs_core.models import AbstractResource, Bags
-#from dublincore.models import QualifiedDublinCoreElement
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
 from django.core.serializers import get_serializer
-from mezzanine.conf import settings
-from . import hs_bagit
-#from hs_scholar_profile.models import *
 
-import importlib
-import json
-from lxml import etree
-import arrow
-#from hydroshare import settings
+from mezzanine.conf import settings
+
+from hs_core.signals import *
+from hs_core.models import AbstractResource
+from . import hs_bagit
+
+
+class ResourceFileSizeException(Exception):
+    pass
+
+
+class ResourceFileValidationException(Exception):
+    pass
 
 cached_resource_types = None
 
@@ -153,12 +158,13 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     hs_bagit.create_bag(resource)
 
 
-def _get_user_info(user):
-    from hs_core.api import UserResource
+# def _get_user_info(user):
+#     from hs_core.api import UserResource
+#
+#     ur = UserResource()
+#     ur_bundle = ur.build_bundle(obj=user)
+#     return json.loads(ur.serialize(None, ur.full_dehydrate(ur_bundle), 'application/json'))
 
-    ur = UserResource()
-    ur_bundle = ur.build_bundle(obj=user)
-    return json.loads(ur.serialize(None, ur.full_dehydrate(ur_bundle), 'application/json'))
 
 def _validate_email( email ):
     from django.core.validators import validate_email
@@ -195,3 +201,147 @@ def get_file_mime_type(file_name):
         file_format_type = 'application/%s' % os.path.splitext(file_name)[1][1:]
 
     return file_format_type
+
+
+def check_file_dict_for_error(file_validation_dict):
+    if 'are_files_valid' in file_validation_dict:
+        if not file_validation_dict['are_files_valid']:
+            error_message = file_validation_dict.get('message', "Uploaded file(s) failed validation.")
+            raise ResourceFileValidationException(error_message)
+
+
+def validate_resource_file_size(resource_files):
+    from .resource import check_resource_files, file_size_limit_for_display
+    valid = check_resource_files(resource_files)
+    if not valid:
+        error_msg = 'The resource file is larger than the supported size limit: %s.' % file_size_limit_for_display
+        raise ResourceFileSizeException(error_msg)
+
+
+def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key, files=(), metadata=None,  **kwargs):
+    from.resource import check_resource_type
+    if not resource_title:
+        resource_title = 'Untitled resource'
+    else:
+        resource_title = resource_title.strip()
+        if len(resource_title) == 0:
+            resource_title = 'Untitled resource'
+
+    resource_cls = check_resource_type(resource_type)
+    if len(files) > 0:
+        validate_resource_file_size(files)
+
+    if not metadata:
+        metadata = []
+    page_url_dict = {}
+
+    # receivers need to change the values of this dict if file validation fails
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+
+    # Send pre-create resource signal - let any other app populate the empty metadata list object
+    # also pass title to other apps, and give other apps a chance to populate page_redirect_url if they want
+    # to redirect to their own page for resource creation rather than use core resource creation code
+    pre_create_resource.send(sender=resource_cls, metadata=metadata, files=files, title=resource_title,
+                             url_key=page_redirect_url_key, page_url_dict=page_url_dict,
+                             validate_files=file_validation_dict, **kwargs)
+
+    if len(files) > 0:
+        check_file_dict_for_error(file_validation_dict)
+
+    return page_url_dict, resource_title,  metadata
+
+
+def resource_post_create_actions(resource, user, metadata,  **kwargs):
+     # receivers need to change the values of this dict if file validation fails
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+    # Send post-create resource signal
+    post_create_resource.send(sender=type(resource), resource=resource, user=user,  metadata=metadata,
+                              validate_files=file_validation_dict, **kwargs)
+
+    check_file_dict_for_error(file_validation_dict)
+
+
+def prepare_resource_default_metadata(resource, metadata, res_title):
+    add_title = True
+    for element in metadata:
+        if 'title' in element:
+            if 'value' in element['title']:
+                res_title = element['title']['value']
+                add_title = False
+            else:
+                metadata.remove(element)
+            break
+
+    if add_title:
+        metadata.append({'title': {'value': res_title}})
+
+    add_language = True
+    for element in metadata:
+        if 'language' in element:
+            if 'code' in element['language']:
+                add_language = False
+            else:
+                metadata.remove(element)
+            break
+
+    if add_language:
+        metadata.append({'language': {'code': 'eng'}})
+
+    add_rights = True
+    for element in metadata:
+        if 'rights' in element:
+            if 'statement' in element['rights'] and 'url' in element['rights']:
+                add_rights = False
+            else:
+                metadata.remove(element)
+            break
+
+    if add_rights:
+        # add the default rights/license element
+        metadata.append({'rights':
+                             {'statement': 'This resource is shared under the Creative Commons Attribution CC BY.',
+                              'url': 'http://creativecommons.org/licenses/by/4.0/'
+                             }
+                        })
+
+    metadata.append({'identifier': {'name':'hydroShareIdentifier',
+                                    'url':'{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id)}})
+
+    metadata.append({'date': {'type': 'created', 'start_date': resource.created}})
+    metadata.append({'date': {'type': 'modified', 'start_date': resource.updated}})
+
+    if resource.creator.first_name:
+        first_creator_name = "{first_name} {last_name}".format(first_name=resource.creator.first_name,
+                                                                   last_name=resource.creator.last_name)
+    else:
+        first_creator_name = resource.creator.username
+
+    first_creator_email = resource.creator.email
+
+    metadata.append({'creator': {'name': first_creator_name, 'email': first_creator_email, 'order': 1}})
+
+
+def resource_file_add_pre_process(resource, files, user, extract_metadata=False, **kwargs):
+    validate_resource_file_size(files)
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+    pre_add_files_to_resource.send(sender=resource.__class__, files=files, resource=resource, user=user,
+                                   validate_files=file_validation_dict, extract_metadata=extract_metadata, **kwargs)
+
+    check_file_dict_for_error(file_validation_dict)
+
+
+def resource_file_add_process(resource, files, user, extract_metadata=False, **kwargs):
+    from .resource import add_resource_files
+    resource_file_objects = add_resource_files(resource.short_id, *files)
+
+    # receivers need to change the values of this dict if file validation fails
+    # in case of file validation failure it is assumed the resource type also deleted the file
+    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+    post_add_files_to_resource.send(sender=resource.__class__, files=files, resource=resource, user=user,
+                                    validate_files=file_validation_dict, extract_metadata=extract_metadata, **kwargs)
+
+    check_file_dict_for_error(file_validation_dict)
+
+    resource_modified(resource, user)
+    return resource_file_objects
+

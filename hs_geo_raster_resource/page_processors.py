@@ -36,7 +36,7 @@ def landing_page(request, page):
         context['bandInformation'] = content_model.metadata.bandInformation
     else:
         cellinfo_form = CellInfoForm(instance=content_model.metadata.cellInformation, res_short_id=content_model.short_id,
-                                     allow_edit = True if content_model.metadata.cellInformation.noDataValue is None else False,
+                                     allow_edit = True,
                                     element_id=content_model.metadata.cellInformation.id if content_model.metadata.cellInformation else None)
 
         BandInfoFormSetEdit = formset_factory(wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=edit_resource)), formset=BaseBandInfoFormSet, extra=0)
@@ -53,7 +53,7 @@ def landing_page(request, page):
             ori_coverage_data_dict['southlimit'] = content_model.metadata.originalCoverage.value['southlimit']
             ori_coverage_data_dict['westlimit'] = content_model.metadata.originalCoverage.value['westlimit']
 
-            allow_edit_flag = True #if content_model.metadata.originalCoverage.value['projection']=='Unnamed' else False
+            allow_edit_flag = True
             ori_coverage_form = OriginalCoverageSpatialForm(initial=ori_coverage_data_dict, res_short_id=content_model.short_id,
                                                             allow_edit = allow_edit_flag, element_id=content_model.metadata.originalCoverage.id)
             ori_coverage_layout = AccordionGroup('Original Coverage (required)',

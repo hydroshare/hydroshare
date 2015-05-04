@@ -54,10 +54,10 @@ class ResourcePermissionsMixin(Ownable):
         help_text='If this is true, the resource is viewable and downloadable by anyone',
         default=True
     )
-    # DO WE STILL NEED owners?
+
     owners = models.ManyToManyField(User,
                                     related_name='owns_%(app_label)s_%(class)s',
-                                    help_text='The person who uploaded the resource'
+                                    help_text='The person who has total ownership of the resource'
     )
     frozen = models.BooleanField(
         help_text='If this is true, the resource should not be modified',
@@ -107,29 +107,32 @@ class ResourcePermissionsMixin(Ownable):
         return self.can_change(request)
 
     def can_delete(self, request):
-        return self.can_change(request)
+        user = get_user(request)
+        if user.is_authenticated():
+            if user.is_superuser or self.owners.filter(pk=user.pk).exists():
+                return True
+            else:
+                return False
+        else:
+            return False
+
 
     def can_change(self, request):
         user = get_user(request)
 
         if user.is_authenticated():
             if user.is_superuser:
-                ret = True
-            elif self.creator and user.pk == self.creator.pk:
-                ret = True
-            elif user.pk in { o.pk for o in self.owners.all() }:
-                ret = True
+                return True
+            elif self.owners.filter(pk=user.pk).exists():
+                return True
             elif self.edit_users.filter(pk=user.pk).exists():
-                ret = True
+                return True
             elif self.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                ret = True
+                return True
             else:
-                ret = False
+                return False
         else:
-            ret = False
-
-        return ret
-
+            return False
 
     def can_view(self, request):
         user = get_user(request)
@@ -138,24 +141,21 @@ class ResourcePermissionsMixin(Ownable):
             return True
         if user.is_authenticated():
             if user.is_superuser:
-                ret = True
-            elif self.creator and user.pk == self.creator.pk:
-                ret = True
-            elif user.pk in { o.pk for o in self.owners.all() }:
-                ret = True
+                return True
+            elif self.owners.filter(pk=user.pk).exists():
+                return True
+            elif self.edit_users.filter(pk=user.pk).exists():
+                return True
             elif self.view_users.filter(pk=user.pk).exists():
-                ret = True
+                return True
+            elif self.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
+                return True
             elif self.view_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                ret = True
+                return True
             else:
-                ret = False
+                return False
         else:
-            ret = False
-
-        return ret
-
-
-
+            return False
 
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
@@ -168,6 +168,7 @@ def page_permissions_page_processor(request, page):
         "view_groups": set(page.view_groups.all()),
         "edit_users": set(page.edit_users.all()),
         "view_users": set(page.view_users.all()),
+        "owners": set(page.owners.all()),
         "can_edit": (user in set(page.edit_users.all())) \
                     or (len(set(page.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
     }
@@ -624,7 +625,6 @@ class Date(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         dt = Date.objects.get(id=element_id)
-        metadata_obj = kwargs['content_object']
         if dt:
             if 'start_date' in kwargs:
                 try:
@@ -634,7 +634,7 @@ class Date(AbstractMetaDataElement):
                 if dt.type == 'created':
                     raise ValidationError("Resource creation date can't be changed")
                 elif dt.type == 'modified':
-                    dt.start_date = metadata_obj.resource.updated
+                    dt.start_date = now().isoformat()
                     dt.save()
                 elif dt.type == 'valid':
                     if 'end_date' in kwargs:
@@ -652,7 +652,7 @@ class Date(AbstractMetaDataElement):
                     dt.start_date = start_dt
                     dt.save()
             elif dt.type == 'modified':
-                dt.start_date = metadata_obj.resource.updated
+                dt.start_date = now().isoformat()
                 dt.save()
             else:
                 raise ValidationError("Date value is missing.")
@@ -1378,6 +1378,19 @@ class AbstractResource(ResourcePermissionsMixin):
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
+    def delete(self, using=None):
+        for fl in self.files.all():
+            fl.resource_file.delete()
+
+        for bag in self.bags.all():
+            bag.bag.delete()
+            bag.delete()
+
+        self.metadata.delete_all_elements()
+        self.metadata.delete()
+
+        super(AbstractResource, self).delete()
+
     # this property needs to be overriden by any specific resource type
     # that needs additional metadata elements on top of core metadata data elements
     @property
@@ -1521,7 +1534,7 @@ class Bags(models.Model):
 class GenericResource(Page, AbstractResource):
 
     class Meta:
-        verbose_name = 'Generic Hydroshare Resource'
+        verbose_name = 'Generic'
 
     def can_add(self, request):
         return AbstractResource.can_add(self, request)
@@ -1589,7 +1602,6 @@ class CoreMetaData(models.Model):
     _rights = generic.GenericRelation(Rights)
     _type = generic.GenericRelation(Type)
     _publisher = generic.GenericRelation(Publisher)
-    _resource = generic.GenericRelation(GenericResource)
 
     @property
     def title(self):
@@ -1602,10 +1614,6 @@ class CoreMetaData(models.Model):
     @property
     def language(self):
         return self._language.all().first()
-
-    @property
-    def resource(self):
-        return self._resource.all().first()
 
     @property
     def rights(self):

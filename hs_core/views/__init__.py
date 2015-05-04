@@ -1,41 +1,39 @@
 from __future__ import absolute_import
 from collections import defaultdict
-from django.contrib.auth import login, authenticate
+import json
+import requests
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
+from django.core import exceptions as ex
 from django.template import RequestContext
-from django.utils.timezone import now
-import json
-from mezzanine.conf import settings
+from django.core import signing
 from django import forms
-from mezzanine.generic.models import Keyword
-import mimetypes
-import os
+
+from mezzanine.conf import settings
+from mezzanine.pages.page_processors import processor_for
+import autocomplete_light
+from inplaceeditform.commons import get_dict_from_obj, apply_filters
+from inplaceeditform.views import _get_http_response, _get_adaptor
+
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, user_from_id
 from .utils import authorize
 from hs_core.models import ResourceFile, GenericResource, resource_processor, CoreMetaData
-import requests
-from django.core import exceptions as ex
-from mezzanine.pages.page_processors import processor_for
-from django.template import RequestContext
-from django.core import signing
-from django.template import Context
-import django.dispatch
-from django.contrib.contenttypes.models import ContentType
-from django.forms import ValidationError
-from inplaceeditform.commons import get_dict_from_obj, apply_filters, get_adaptor_class
-from inplaceeditform.views import _get_http_response, _get_adaptor
+
+from . import resource_rest_api
+from . import user_rest_api
 
 from hs_core.hydroshare import utils
+from . import utils as view_utils
 from hs_core.hydroshare import file_size_limit_for_display
 from hs_core.signals import *
-import autocomplete_light
+
 
 def short_url(request, *args, **kwargs):
     try:
@@ -65,57 +63,31 @@ def verify(request, *args, **kwargs):
     return HttpResponseRedirect('/')
 
 
-def add_file_to_resource(request, *args, **kwargs):
-    try:
-        shortkey = kwargs['shortkey']
-    except KeyError:
-        raise TypeError('shortkey must be specified...')
-
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    res_cls = res.__class__
+def add_file_to_resource(request, shortkey, *args, **kwargs):
+    resource, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     res_files = request.FILES.getlist('files')
-
-    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
-    pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, user=request.user,
-                                   validate_files=file_validation_dict, **kwargs)
-    if 'are_files_valid' in file_validation_dict:
-        if not file_validation_dict['are_files_valid']:
-            error_message = file_validation_dict.get('message', None)
-            if not error_message:
-                error_message = "Uploaded file(s) failed validation."
-
-            request.session['file_validation_error'] = error_message
-            return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-    for f in res_files:
-        res.files.add(ResourceFile(content_object=res, resource_file=f))
-
-        # add format metadata element if necessary
-        file_format_type = utils.get_file_mime_type(f.name)
-        if file_format_type not in [mime.value for mime in res.metadata.formats.all()]:
-            res.metadata.create_element('format', value=file_format_type)
-
-    # receivers need to change the values of this dict if file validation fails
-    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
-    if extract_metadata == 'Yes':
-        extract_metadata = True
-    else:
-        extract_metadata = False
+    extract_metadata = True if extract_metadata.lower() == 'yes' else False
 
-    post_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, user=request.user,
-                                    validate_files=file_validation_dict,
-                                    extract_metadata=extract_metadata, **kwargs)
-    if 'are_files_valid' in file_validation_dict:
-        if not file_validation_dict['are_files_valid']:
-            error_message = file_validation_dict.get('message', None)
-            if not error_message:
-                error_message = "Uploaded file(s) failed validation."
+    try:
+        utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
+                                            extract_metadata=extract_metadata)
 
-            request.session['file_validation_error'] = error_message
-            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    except hydroshare.utils.ResourceFileSizeException as ex:
+        request.session['file_size_error'] = ex.message
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-    resource_modified(res, request.user)
+    except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+        request.session['file_validation_error'] = ex.message
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    try:
+        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
+                                                   extract_metadata=extract_metadata)
+
+    except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+        request.session['file_validation_error'] = ex.message
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -246,48 +218,16 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    fl = res.files.filter(pk=int(f)).first()
-    file_name = fl.resource_file.name
-    res_cls = res.__class__
-    pre_delete_file_from_resource.send(sender=res_cls, file=fl, resource=res, **kwargs)
-    fl.resource_file.delete()
-    fl.delete()
+    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    hydroshare.delete_resource_file(shortkey, f, user)
 
-    delete_file_mime_type = utils.get_file_mime_type(file_name)
-    delete_file_extension = os.path.splitext(file_name)[1]
-    # if there is no other resource file with the same extension as the
-    # file just deleted then delete the matching format metadata element for the resource
-    resource_file_extensions = [os.path.splitext(f.resource_file.name)[1] for f in res.files.all()]
-    if delete_file_extension not in resource_file_extensions:
-        format_element = res.metadata.formats.filter(value=delete_file_mime_type).first()
-        if format_element:
-            res.metadata.delete_element(format_element.term, format_element.id)
-
-    if res.public:
-        if not res.can_be_public:
-            res.public = False
-            res.save()
-
-    resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
-    for fl in res.files.all():
-        fl.resource_file.delete()
-
-    for bag in res.bags.all():
-        bag.bag.delete()
-        bag.delete()
-
-    res.metadata.delete_all_elements()
-    res.metadata.delete()
-    # deleting the metadata container object deletes the resource
-    # so no need to delete the resource separately
-    #res.delete()
+    res.delete()
     return HttpResponseRedirect('/my-resources/')
 
 
@@ -599,121 +539,6 @@ def create_resource_select_resource_type(request, *args, **kwargs):
     return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
 
 
-@login_required
-def create_resource_new_workflow(request, *args, **kwargs):
-    resource_type=request.POST['resource-type']
-    res_title = request.POST['title']
-    if len(res_title) == 0:
-        res_title = 'Untitled resource'
-
-    global res_cls, resource
-    resource_files = request.FILES.getlist('files')
-    valid = hydroshare.check_resource_files(resource_files)
-    if not valid:
-        context = {
-            'file_size_error' : 'The resource file is larger than the supported size limit %s. '
-                                'Select resource files within %s to create resource.'
-                                % (file_size_limit_for_display, file_size_limit_for_display)
-        }
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
-
-    res_cls = hydroshare.check_resource_type(resource_type)
-
-    metadata = []
-    page_url_dict = {}
-    url_key = "page_redirect_url"
-
-    # receivers need to change the values of this dict if file validation fails
-    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
-
-    # Send pre-create resource signal - let any other app populate the empty metadata list object
-    # also pass title to other apps, and give other apps a chance to populate page_redirect_url if they want
-    # to redirect to their own page for resource creation rather than use core resource creation code
-    pre_create_resource.send(sender=res_cls, metadata=metadata, files=resource_files, title=res_title, url_key=url_key,
-                                               page_url_dict=page_url_dict, validate_files=file_validation_dict,
-                                               **kwargs)
-
-    if 'are_files_valid' in file_validation_dict:
-        if not file_validation_dict['are_files_valid']:
-            error_message = file_validation_dict.get('message', None)
-            if not error_message:
-                error_message = "Uploaded file(s) failed validation."
-            context = {
-                'file_validation_error': error_message
-            }
-            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
-
-    # generic resource core metadata and resource creation
-    add_title = True
-    for element in metadata:
-        if 'title' in element:
-            if 'value' in element['title']:
-                res_title = element['title']['value']
-                add_title = False
-            else:
-                metadata.remove(element)
-            break
-
-    if add_title:
-        metadata.append({'title': {'value': res_title}})
-
-    add_language = True
-    for element in metadata:
-        if 'language' in element:
-            if 'code' in element['language']:
-                #language_code = element['language']['code']
-                add_language = False
-            else:
-                metadata.remove(element)
-            break
-
-    if add_language:
-        metadata.append({'language': {'code': 'eng'}})
-
-    # add the default rights/license element
-    metadata.append({'rights':
-                         {'statement': 'This resource is shared under the Creative Commons Attribution CC BY.',
-                          'url': 'http://creativecommons.org/licenses/by/4.0/'
-                         }
-                    })
-
-    if url_key in page_url_dict:
-        return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
-
-    resource = hydroshare.create_resource(
-            resource_type=request.POST['resource-type'],
-            owner=request.user,
-            title=res_title,
-            keywords=None,
-            metadata=metadata,
-            files=request.FILES.getlist('files'),
-            content=res_title
-    )
-
-    # receivers need to change the values of this dict if file validation fails
-    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
-    # Send post-create resource signal
-    post_create_resource.send(sender=res_cls, resource=resource, user=request.user ,  metadata=metadata,
-                              validate_files=file_validation_dict, **kwargs)
-
-    if 'are_files_valid' in file_validation_dict:
-        if not file_validation_dict['are_files_valid']:
-            error_message = file_validation_dict.get('message', None)
-            if not error_message:
-                error_message = "Uploaded file(s) failed validation."
-
-            request.session['file_validation_error'] = error_message
-
-    if resource is not None:
-        # go to resource landing page
-        return HttpResponseRedirect(resource.get_absolute_url())
-    else:
-        context = {
-            'resource_creation_error': 'Resource creation failed'
-        }
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
-
-
 class CreateResourceForm(forms.Form):
     title = forms.CharField(required=True)
     creators = forms.CharField(required=False, min_length=0)
@@ -723,42 +548,52 @@ class CreateResourceForm(forms.Form):
 
 @login_required
 def create_resource(request, *args, **kwargs):
-    global resource
-    qrylst = request.POST
-    frm = CreateResourceForm(qrylst)
-    if frm.is_valid():
-        dcterms = [
-            { 'term': 'T', 'content': frm.cleaned_data['title'] },
-            { 'term': 'AB',  'content': frm.cleaned_data['abstract'] or frm.cleaned_data['title']},
-            { 'term': 'DT', 'content': now().isoformat()},
-            { 'term': 'DC', 'content': now().isoformat()}
-        ]
-        for cn in frm.cleaned_data['contributors'].split(','):
-            cn = cn.strip()
-            if(cn !=""):
-                dcterms.append({'term': 'CN', 'content': cn})
-        for cr in frm.cleaned_data['creators'].split(','):
-            cr = cr.strip()
-            if(cr !=""):
-                dcterms.append({'term': 'CR', 'content': cr})
-        global res_cls
-        # Send pre_call_create_resource signal
-        metadata = []
-        pre_call_create_resource.send(sender=res_cls, resource=resource, metadata=metadata, request_post = qrylst)
-        res = hydroshare.create_resource(
-            resource_type=qrylst['resource-type'],
-            owner=request.user,
-            title=frm.cleaned_data['title'],
-            keywords=[k.strip() for k in frm.cleaned_data['keywords'].split(',')] if frm.cleaned_data['keywords'] else None,
-            content=frm.cleaned_data['abstract'] or frm.cleaned_data['title'],
-            res_type_cls = res_cls,
-            resource=resource,
-            metadata=metadata
+    resource_type = request.POST['resource-type']
+    res_title = request.POST['title']
+
+    url_key = "page_redirect_url"
+    resource_files = request.FILES.getlist('files')
+
+    try:
+        page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
+                                                                    resource_title=res_title,
+                                                                    page_redirect_url_key=url_key, **kwargs)
+    except utils.ResourceFileSizeException as ex:
+        context = {'file_size_error': ex.message}
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
+    except utils.ResourceFileValidationException as ex:
+        context = {'file_validation_error': ex.message}
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
+    except Exception as ex:
+        context = {'resource_creation_error': ex.message}
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
+    if url_key in page_url_dict:
+        return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
+
+    try:
+        resource = hydroshare.create_resource(
+                resource_type=request.POST['resource-type'],
+                owner=request.user,
+                title=res_title,
+                keywords=None,
+                metadata=metadata,
+                files=request.FILES.getlist('files'),
+                content=res_title
         )
-        if res is not None:
-            return HttpResponseRedirect(res.get_absolute_url())
-    else:
-        raise ValidationError(frm.errors)
+    except Exception as ex:
+        context = {'resource_creation_error': ex.message }
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
+    try:
+        utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)
+    except (utils.ResourceFileValidationException, Exception) as ex:
+        request.session['file_validation_error'] = ex.message
+
+    # go to resource landing page
+    return HttpResponseRedirect(resource.get_absolute_url())
 
 @login_required
 def get_file(request, *args, **kwargs):
