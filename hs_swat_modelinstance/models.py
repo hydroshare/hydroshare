@@ -102,6 +102,40 @@ class modelObjective(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("modelObjective element of a resource can't be deleted.")
 
+class simulationType(AbstractMetaDataElement):
+    term = 'simulationType'
+    type_choices = (('Normal Simulation', 'Normal Simulation'), ('Sensitivity Analysis', 'Sensitivity Analysis'), ('Auto-Calibration', 'Auto-Calibration'))
+    simulation_type_name = models.CharField(max_length=100, choices=type_choices)
+
+    def __unicode__(self):
+        self.simulation_type
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'simulation_type_name' in kwargs:
+            if not kwargs['simulation_type_name'] in ['Normal Simulation', 'Sensitivity Analysis', 'Auto-Calibration']:
+                raise ValidationError('Invalid simulation type:%s' % kwargs['type'])
+        else:
+            raise ValidationError("simulation type is missing.")
+
+        metadata_obj = kwargs['content_object']
+        return simulationType.objects.create(simulation_type_name=kwargs['simulation_type_name'], content_object=metadata_obj)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        simulation_type = simulationType.objects.get(id=element_id)
+        if simulation_type:
+            for key, value in kwargs.iteritems():
+                if key in ('simulation_type_name'):
+                    setattr(simulation_type, key, value)
+            simulation_type.save()
+        else:
+            raise ObjectDoesNotExist("No simulationType element was found for the provided id:%s" % kwargs['id'])
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("simulationType element of a resource can't be deleted.")
+
 
 class SWATmodelParameters(AbstractMetaDataElement):
     term = 'SWATmodelParameters'
@@ -190,6 +224,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
     _model_output = generic.GenericRelation(ModelOutput)
     _executed_by = generic.GenericRelation(ExecutedBy)
     _model_objective = generic.GenericRelation(modelObjective)
+    _simulation_type = generic.GenericRelation(simulationType)
     _swat_model_parameters = generic.GenericRelation(SWATmodelParameters)
     _swat_model_instance_resource = generic.GenericRelation(SWATModelInstanceResource)
 
@@ -210,6 +245,10 @@ class SWATModelInstanceMetaData(CoreMetaData):
         return self._model_objective.all().first()
 
     @property
+    def simulation_type(self):
+        return self._simulation_type.all().first()
+
+    @property
     def swat_model_parameters(self):
         return self._swat_model_parameters.all().first()
 
@@ -222,6 +261,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
         elements.append('ModelOutput')
         elements.append('ExecutedBy')
         elements.append('modelObjective')
+        elements.append('simulationType')
         elements.append('SWATmodelParameters')
         return elements
 
@@ -283,6 +323,11 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_objective_swat_model_objective.text = self.model_objective.swat_model_objective
             hsterms_model_objective_other_objectives = etree.SubElement(hsterms_model_objective_rdf_Description, '{%s}otherObjectives' % self.NAMESPACES['hsterms'])
             hsterms_model_objective_other_objectives.text = self.model_objective.other_objectives
+        if self.simulation_type:
+            hsterms_simulation_type = etree.SubElement(container, '{%s}simulationType' % self.NAMESPACES['hsterms'])
+            hsterms_simulation_type_rdf_Description = etree.SubElement(hsterms_simulation_type, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_simulation_type_name = etree.SubElement(hsterms_simulation_type_rdf_Description, '{%s}simulationType' % self.NAMESPACES['hsterms'])
+            hsterms_simulation_type_name.text = self.simulation_type.simulation_type_name
         if self.swat_model_parameters:
             hsterms_swat_model_parameters = etree.SubElement(container, '{%s}SWATmodelParameters' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_rdf_Description = etree.SubElement(hsterms_swat_model_parameters, '{%s}Description' % self.NAMESPACES['rdf'])

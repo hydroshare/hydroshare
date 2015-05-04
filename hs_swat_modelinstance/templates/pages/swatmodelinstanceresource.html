@@ -52,6 +52,17 @@
                     {% endif %}
                 </div>
                 <div>
+                    {% if simulation_type %}
+                        <h4><strong>Simulation Type:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>SWAT simulation type:</strong></div>
+                            <div class="col-sm-8">{{ simulation_type.simulation_type_name }}</div>
+                        </div>
+                    <hr style="border:0">
+                    {% endif %}
+                </div>
+                <div>
                     {% if swat_model_parameters %}
                         <h4><strong>SWAT model used parameters:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
