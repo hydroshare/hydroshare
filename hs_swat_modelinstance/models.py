@@ -192,25 +192,25 @@ class ModelMethods(AbstractMetaDataElement):
         if not 'PET_estimation_method' in kwargs:
             raise ValidationError("modelMethods PETestimationMethod is missing.")
         metadata_obj = kwargs['content_object']
-        return modelMethods.objects.create(runoff_calculation_method=kwargs['runoff_calculation_method'],\
+        return ModelMethods.objects.create(runoff_calculation_method=kwargs['runoff_calculation_method'],\
                                              flow_routing_method=kwargs['flow_routing_method'],\
                                              PET_estimation_method=kwargs['PET_estimation_method'],\
                                              content_object=metadata_obj)
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        model_methods = modelMethods.objects.get(id=element_id)
+        model_methods = ModelMethods.objects.get(id=element_id)
         if model_methods:
             for key, value in kwargs.iteritems():
                 if key in ('runoff_calculation_method', 'flow_routing_method', 'PET_estimation_method'):
                     setattr(model_methods, key, value)
             model_methods.save()
         else:
-            raise ObjectDoesNotExist("No modelMethods element was found for the provided id:%s" % kwargs['id'])
+            raise ObjectDoesNotExist("No ModelMethods element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("modelMethods element of a resource can't be deleted.")
+        raise ValidationError("ModelMethods element of a resource can't be deleted.")
 
 
     def __unicode__(self):
