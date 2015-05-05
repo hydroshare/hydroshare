@@ -68,7 +68,8 @@ class ExecutedBy(AbstractMetaDataElement):
 
 class modelObjective(AbstractMetaDataElement):
     term = 'modelObjective'
-    objective_choices = (('Hydrology', 'Hydrology'), ('Water quality', 'Water quality'), ('BMPs', 'BMPs'), ('Climate / Landuse Change', 'Climate / Landuse Change'), ('Other', 'Other'))
+    objective_choices = (('Hydrology', 'Hydrology'), ('Water quality', 'Water quality'),\
+                         ('BMPs', 'BMPs'), ('Climate / Landuse Change', 'Climate / Landuse Change'), ('Other', 'Other'))
     swat_model_objective = models.CharField(max_length=100, choices=objective_choices)
     other_objectives = models.CharField(max_length=500, null=True, blank=True)
 
@@ -85,7 +86,9 @@ class modelObjective(AbstractMetaDataElement):
         if not 'other_objectives' in kwargs:
             raise ValidationError("modelObjective other_objectives is missing.")
         metadata_obj = kwargs['content_object']
-        return modelObjective.objects.create(swat_model_objective=kwargs['swat_model_objective'], other_objectives=kwargs['other_objectives'], content_object=metadata_obj)
+        return modelObjective.objects.create(swat_model_objective=kwargs['swat_model_objective'],\
+                                             other_objectives=kwargs['other_objectives'],\
+                                             content_object=metadata_obj)
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -104,8 +107,9 @@ class modelObjective(AbstractMetaDataElement):
 
 class simulationType(AbstractMetaDataElement):
     term = 'simulationType'
-    type_choices = (('Normal Simulation', 'Normal Simulation'), ('Sensitivity Analysis', 'Sensitivity Analysis'), ('Auto-Calibration', 'Auto-Calibration'))
-    simulation_type_name = models.CharField(max_length=100, choices=type_choices)
+    type_choices = (('Normal Simulation', 'Normal Simulation'), ('Sensitivity Analysis', 'Sensitivity Analysis'),\
+                    ('Auto-Calibration', 'Auto-Calibration'))
+    simulation_type_name = models.CharField(max_length=100, choices=type_choices, verbose_name='Simulation type')
 
     def __unicode__(self):
         self.simulation_type
@@ -209,16 +213,24 @@ class SWATmodelParameters(AbstractMetaDataElement):
             raise ValidationError("SWATmodelParameters has_other_parameters is missing.")
 
         metadata_obj = kwargs['content_object']
-        return SWATmodelParameters.objects.create(has_crop_rotation=kwargs['has_crop_rotation'], has_title_drainage=kwargs['has_title_drainage'], has_point_source=kwargs['has_point_source'],
-                                            has_fertilizer=kwargs['has_fertilizer'], has_tillage_operation=kwargs['has_tillage_operation'], has_inlet_of_draining_watershed=kwargs['has_inlet_of_draining_watershed'],
-                                            has_irrigation_operation=kwargs['has_irrigation_operation'], has_other_parameters=kwargs['has_other_parameters'], content_object=metadata_obj)
+        return SWATmodelParameters.objects.create(has_crop_rotation=kwargs['has_crop_rotation'],\
+                                                  has_title_drainage=kwargs['has_title_drainage'],\
+                                                  has_point_source=kwargs['has_point_source'],\
+                                                  has_fertilizer=kwargs['has_fertilizer'],\
+                                                  has_tillage_operation=kwargs['has_tillage_operation'],\
+                                                  has_inlet_of_draining_watershed=kwargs['has_inlet_of_draining_watershed'],\
+                                                  has_irrigation_operation=kwargs['has_irrigation_operation'],\
+                                                  has_other_parameters=kwargs['has_other_parameters'],\
+                                                  content_object=metadata_obj)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         swat_model_parameters = SWATmodelParameters.objects.get(id=element_id)
         if swat_model_parameters:
             for key, value in kwargs.iteritems():
-                if key in ('has_crop_rotation', 'has_title_drainage', 'has_point_source', 'has_fertilizer', 'has_tillage_operation', 'has_inlet_of_draining_watershed', 'has_irrigation_operation', 'has_other_parameters'):
+                if key in ('has_crop_rotation', 'has_title_drainage', 'has_point_source',\
+                           'has_fertilizer', 'has_tillage_operation', 'has_inlet_of_draining_watershed',\
+                           'has_irrigation_operation', 'has_other_parameters'):
                     setattr(swat_model_parameters, key, value)
 
             swat_model_parameters.save()
@@ -229,7 +241,81 @@ class SWATmodelParameters(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("SWATmodelParameters element of a resource can't be deleted.")
 
+class ModelInput(AbstractMetaDataElement):
+    term = 'ModelInput'
+    rainfall_time_step = models.CharField(max_length=100, null=True, blank=True)
+    simulation_time_step = models.CharField(max_length=100, null=True, blank=True)
+    watershed_area = models.CharField(max_length=100, null=True, blank=True, verbose_name='Waterhsed area in square kilometers')
+    number_of_subbasins = models.CharField(max_length=100, null=True, blank=True)
+    number_of_HRUs = models.CharField(max_length=100, null=True, blank=True)
+    DEM_resolution = models.CharField(max_length=100, null=True, blank=True, verbose_name='DEM resolution in meters')
+    DEM_source_name = models.CharField(max_length=200, null=True, blank=True)
+    DEM_source_URL = models.URLField(null=True, blank=True)
+    landUse_data_source_name = models.CharField(max_length=200, null=True, blank=True)
+    landUse_data_source_URL = models.URLField(null=True, blank=True)
+    soil_data_source_name = models.CharField(max_length=200, null=True, blank=True)
+    soil_data_source_URL = models.URLField(null=True, blank=True)
 
+    def __unicode__(self):
+        self.rainfall_time_step
+
+    @classmethod
+    def create(cls, **kwargs):
+        if not 'rainfall_time_step' in kwargs:
+            raise ValidationError("ModelInput rainfallTimeStep is missing.")
+        if not 'simulation_time_step' in kwargs:
+            raise ValidationError("ModelInput simualtionTimeStep is missing.")
+        if not 'watershed_area' in kwargs:
+            raise ValidationError("ModelInput watershedArea is missing.")
+        if not 'number_of_subbasins' in kwargs:
+            raise ValidationError("ModelInput numberOfSubbasins is missing.")
+        if not 'number_of_HRUs' in kwargs:
+            raise ValidationError("ModelInput numberOfHRUs is missing.")
+        if not 'DEM_resolution' in kwargs:
+            raise ValidationError("ModelInput DEMresolution is missing.")
+        if not 'DEM_source_name' in kwargs:
+            raise ValidationError("ModelInput DEMsourceName is missing.")
+        if not 'DEM_source_URL' in kwargs:
+            raise ValidationError("ModelInput DEMsourceURL is missing.")
+        if not 'landUse_data_source_name' in kwargs:
+            raise ValidationError("ModelInput landUseDataSourceName is missing.")
+        if not 'landUse_data_source_URL' in kwargs:
+            raise ValidationError("ModelInput landUseDataSourceURL is missing.")
+        if not 'soil_data_source_name' in kwargs:
+            raise ValidationError("ModelInput soilDataSourceName is missing.")
+        if not 'soil_data_source_URL' in kwargs:
+            raise ValidationError("ModelInput soilDataSourceURL is missing.")
+        metadata_obj = kwargs['content_object']
+        return ModelInput.objects.create(rainfall_time_step=kwargs['rainfall_time_step'],\
+                                             simulation_time_step=kwargs['simulation_time_step'],\
+                                             watershed_area=kwargs['watershed_area'],\
+                                             number_of_subbasins=kwargs['number_of_subbasins'],\
+                                             number_of_HRUs=kwargs['number_of_HRUs'],\
+                                             DEM_resolution=kwargs['DEM_resolution'],\
+                                             DEM_source_name=kwargs['DEM_source_name'],\
+                                             DEM_source_URL=kwargs['DEM_source_URL'],\
+                                             landUse_data_source_name=kwargs['landUse_data_source_name'],\
+                                             landUse_data_source_URL=kwargs['landUse_data_source_URL'],\
+                                             soil_data_source_name=kwargs['soil_data_source_name'],\
+                                             soil_data_source_URL=kwargs['soil_data_source_URL'],\
+                                             content_object=metadata_obj)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        model_input = ModelInput.objects.get(id=element_id)
+        if model_input:
+            for key, value in kwargs.iteritems():
+                if key in ('rainfall_time_step', 'simulation_time_step', 'watershed_area','number_of_subbasins',\
+                           'number_of_HRUs', 'DEM_resolution', 'DEM_source_name', 'DEM_source_URL',\
+                           'landUse_data_source_name', 'landUse_data_source_URL', 'soil_data_source_name', 'soil_data_source_URL'):
+                    setattr(model_input, key, value)
+            model_input.save()
+        else:
+            raise ObjectDoesNotExist("No ModelInput element was found for the provided id:%s" % kwargs['id'])
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("ModelInput element of a resource can't be deleted.")
 
 #SWAT Model Instance Resource type
 class SWATModelInstanceResource(Page, AbstractResource):
@@ -265,6 +351,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
     _simulation_type = generic.GenericRelation(simulationType)
     _model_methods = generic.GenericRelation(modelMethods)
     _swat_model_parameters = generic.GenericRelation(SWATmodelParameters)
+    _model_input = generic.GenericRelation(ModelInput)
     _swat_model_instance_resource = generic.GenericRelation(SWATModelInstanceResource)
 
     @property
@@ -295,6 +382,10 @@ class SWATModelInstanceMetaData(CoreMetaData):
     def swat_model_parameters(self):
         return self._swat_model_parameters.all().first()
 
+    @property
+    def model_input(self):
+        return self._model_input.all().first()
+
 
     @classmethod
     def get_supported_element_names(cls):
@@ -307,6 +398,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
         elements.append('simulationType')
         elements.append('modelMethods')
         elements.append('SWATmodelParameters')
+        elements.append('ModelInput')
         return elements
 
     def has_all_required_elements(self):
@@ -402,6 +494,34 @@ class SWATModelInstanceMetaData(CoreMetaData):
             else: hsterms_swat_model_parameters_has_inlet_of_draining_watershed.text = "No"
             if self.swat_model_parameters.has_irrigation_operation == True: hsterms_swat_model_parameters_has_irrigation_operation.text = "Yes"
             else: hsterms_swat_model_parameters_has_irrigation_operation.text = "No"
+        if self.model_input:
+            hsterms_model_input = etree.SubElement(container, '{%s}ModelInput' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_rdf_Description = etree.SubElement(hsterms_model_input, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_model_input_rainfall_time_step = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}rainfallTimeStep' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_rainfall_time_step.text = self.model_input.rainfall_time_step
+            hsterms_model_input_simulation_time_step = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}simulationTimeStep' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_simulation_time_step.text = self.model_input.simulation_time_step
+            hsterms_model_input_watershed_area = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}watershedArea' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_watershed_area.text = self.model_input.watershed_area
+            hsterms_model_input_number_of_subbasins = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}numberOfSubbasins' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_number_of_subbasins.text = self.model_input.number_of_subbasins + 'km2'
+            hsterms_model_input_number_of_HRUs = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}numberOfHRUs' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_number_of_HRUs.text = self.model_input.number_of_HRUs
+            hsterms_model_input_DEM_resolution = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMresolution' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_DEM_resolution.text = self.model_input.DEM_resolution + 'm'
+            hsterms_model_input_DEM_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMsourceName' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_DEM_source_name.text = self.model_input.DEM_source_name
+            hsterms_model_input_DEM_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMsourceURL' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_DEM_source_URL.text = self.model_input.DEM_source_URL
+            hsterms_model_input_landUse_data_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}landUseDataSourceName' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_landUse_data_source_name.text = self.model_input.landUse_data_source_name
+            hsterms_model_input_landUse_data_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}landUseDataSourceURL' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_landUse_data_source_URL.text = self.model_input.landUse_data_source_URL
+            hsterms_model_input_soil_data_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}soilDataSourceName' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_soil_data_source_name.text = self.model_input.soil_data_source_name
+            hsterms_model_input_soil_data_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}soilDataSourceURL' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_soil_data_source_URL.text = self.model_input.soil_data_source_URL
+
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
 import receivers
