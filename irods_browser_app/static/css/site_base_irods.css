@@ -1,0 +1,83 @@
+#save_file {
+	padding: 3px;
+	cursor: pointer;
+	opacity:1;
+}
+
+#save_file:hover {
+	opacity: 0.7;
+}
+
+#irodsContent .modal-lg {
+	width: 570px;
+}
+
+#irodsContent .form-signin {
+	max-width: 865px;
+	padding: 5px;
+}
+
+#irods_content_label {
+	color: #357ebd;
+}
+
+#irodsContent .modal-body {
+	height: 335px;
+}
+
+#irodsContent #irods_structure {
+	width: 517px;
+	height: 300px;
+	padding: 10px;
+	float:left;
+	box-shadow:1px 1px 3px 1px #000;
+}
+
+#irodsContent #irods_structure #viewing input {
+	padding-left: 10px;
+	padding-right: 10px;
+	border-radius: 10px;
+	margin-left: 5px;
+	width: 277px;
+}
+
+#irodsContent #irods_structure #file_struct {
+	margin-top: 10px;
+	height: 244px;
+	overflow: scroll;
+}
+
+
+#irods_search {
+  position: absolute;
+  right: 32px;
+  top: 15px;
+  float: left
+}
+
+#irods_search img{
+  right: 29px;
+  position: relative;
+  opacity: 0.8;
+}
+
+#irods_search input {
+	padding-left: 10px;
+	padding-right: 25px;
+	border-radius: 10px;
+	margin-left: 5px;
+	width: 277px;
+}
+
+.file,.folder {
+	cursor:pointer; 
+	opacity:0.8;
+}
+
+.file:hover,.folder:hover {
+	opacity:1;
+}
+
+#irodsContent .ajax-loader, #irodsContent .modal-backdrop.up-load {
+	display:none;
+}
