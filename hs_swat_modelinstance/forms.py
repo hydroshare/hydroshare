@@ -7,7 +7,7 @@ from models import *
 from hs_core.forms import BaseFormHelper
 
 #SWATmodelParameters element forms
-class modelObjectiveFormHelper(BaseFormHelper):
+class ModelObjectiveFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
@@ -17,25 +17,25 @@ class modelObjectiveFormHelper(BaseFormHelper):
                         Field('other_objectives', css_class=field_width),
                  )
         kwargs['element_name_label'] = 'Model objective'
-        super(modelObjectiveFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(ModelObjectiveFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
-class modelObjectiveForm(ModelForm):
+class ModelObjectiveForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         objective_choices = tuple([('Choose an objective', 'Choose an objective'), ('Hydrology', 'Hydrology'),\
                                    ('Water quality', 'Water quality'), ('BMPs', 'BMPs'),\
                                    ('Climate / Landuse Change', 'Climate / Landuse Change'), ('Other', 'Other')])
-        super(modelObjectiveForm, self).__init__(*args, **kwargs)
-        self.helper = modelObjectiveFormHelper(allow_edit, res_short_id, element_id, element_name='modelObjective')
+        super(ModelObjectiveForm, self).__init__(*args, **kwargs)
+        self.helper = ModelObjectiveFormHelper(allow_edit, res_short_id, element_id, element_name='ModelObjective')
         self.fields['swat_model_objective'].choices = objective_choices
 
     class Meta:
-        model = modelObjective
+        model = ModelObjective
         fields = ['swat_model_objective',
                   'other_objectives']
         exclude = ['content_object']
 
 
-class modelObjectiveValidationForm(forms.Form):
+class ModelObjectiveValidationForm(forms.Form):
     swat_model_objective = forms.CharField(max_length=100, required=False)
     other_objectives = forms.CharField(max_length=500, required=False)
 
@@ -69,7 +69,7 @@ class simulationTypeForm(ModelForm):
 class simulationTypeValidationForm(forms.Form):
     simulation_type_name = forms.CharField(max_length=100, required=False)
 
-class modelMethodsFormHelper(BaseFormHelper):
+class ModelMethodsFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
@@ -80,27 +80,27 @@ class modelMethodsFormHelper(BaseFormHelper):
                         Field('PET_estimation_method', css_class=field_width),
                  )
         kwargs['element_name_label'] = 'Model Methods'
-        super(modelMethodsFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(ModelMethodsFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
-class modelMethodsForm(ModelForm):
+class ModelMethodsForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        super(modelMethodsForm, self).__init__(*args, **kwargs)
-        self.helper = modelMethodsFormHelper(allow_edit, res_short_id, element_id, element_name='modelMethods')
+        super(ModelMethodsForm, self).__init__(*args, **kwargs)
+        self.helper = ModelMethodsFormHelper(allow_edit, res_short_id, element_id, element_name='ModelMethods')
 
     class Meta:
-        model = modelMethods
+        model = ModelMethods
         fields = ['runoff_calculation_method',
                   'flow_routing_method',
                   'PET_estimation_method']
         exclude = ['content_object']
 
 
-class modelMethodsValidationForm(forms.Form):
+class ModelMethodsValidationForm(forms.Form):
     runoff_calculation_method = forms.CharField(max_length=500, required=False)
     flow_routing_method = forms.CharField(max_length=500, required=False)
     PET_estimation_method = forms.CharField(max_length=500, required=False)
 
-class SWATmodelParametersFormHelper(BaseFormHelper):
+class SWATModelParametersFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
@@ -116,10 +116,10 @@ class SWATmodelParametersFormHelper(BaseFormHelper):
                         Field('has_other_parameters', css_class=field_width),
                  )
         kwargs['element_name_label'] = 'SWAT model used parameters'
-        super(SWATmodelParametersFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(SWATModelParametersFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 
-class SWATmodelParametersForm(ModelForm):
+class SWATModelParametersForm(ModelForm):
     has_crop_rotation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
     has_title_drainage = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
     has_point_source = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
@@ -130,8 +130,8 @@ class SWATmodelParametersForm(ModelForm):
 
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        super(SWATmodelParametersForm, self).__init__(*args, **kwargs)
-        self.helper = SWATmodelParametersFormHelper(allow_edit, res_short_id, element_id, element_name='SWATmodelParameters')
+        super(SWATModelParametersForm, self).__init__(*args, **kwargs)
+        self.helper = SWATModelParametersFormHelper(allow_edit, res_short_id, element_id, element_name='SWATModelParameters')
         self.fields['has_crop_rotation'].widget.attrs['style'] = "width:auto;margin-top:-5px"
         self.fields['has_title_drainage'].widget.attrs['style'] = "width:auto;margin-top:-5px"
         self.fields['has_point_source'].widget.attrs['style'] = "width:auto;margin-top:-5px"
@@ -141,7 +141,7 @@ class SWATmodelParametersForm(ModelForm):
         self.fields['has_irrigation_operation'].widget.attrs['style'] = "width:auto;margin-top:-5px"
 
     class Meta:
-        model = SWATmodelParameters
+        model = SWATModelParameters
         fields = ['has_crop_rotation',
                   'has_title_drainage',
                   'has_point_source',
@@ -152,7 +152,7 @@ class SWATmodelParametersForm(ModelForm):
                   'has_other_parameters']
         exclude = ['content_object']
 
-class SWATmodelParametersValidationForm(forms.Form):
+class SWATModelParametersValidationForm(forms.Form):
     has_crop_rotation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
     has_title_drainage = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
     has_point_source = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)

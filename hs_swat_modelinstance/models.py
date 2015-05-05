@@ -66,8 +66,8 @@ class ExecutedBy(AbstractMetaDataElement):
 
 
 
-class modelObjective(AbstractMetaDataElement):
-    term = 'modelObjective'
+class ModelObjective(AbstractMetaDataElement):
+    term = 'ModelObjective'
     objective_choices = (('Hydrology', 'Hydrology'), ('Water quality', 'Water quality'),\
                          ('BMPs', 'BMPs'), ('Climate / Landuse Change', 'Climate / Landuse Change'), ('Other', 'Other'))
     swat_model_objective = models.CharField(max_length=100, choices=objective_choices)
@@ -86,24 +86,24 @@ class modelObjective(AbstractMetaDataElement):
         if not 'other_objectives' in kwargs:
             raise ValidationError("modelObjective other_objectives is missing.")
         metadata_obj = kwargs['content_object']
-        return modelObjective.objects.create(swat_model_objective=kwargs['swat_model_objective'],\
+        return ModelObjective.objects.create(swat_model_objective=kwargs['swat_model_objective'],\
                                              other_objectives=kwargs['other_objectives'],\
                                              content_object=metadata_obj)
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        model_objective = modelObjective.objects.get(id=element_id)
+        model_objective = ModelObjective.objects.get(id=element_id)
         if model_objective:
             for key, value in kwargs.iteritems():
                 if key in ('swat_model_objective', 'other_objectives'):
                     setattr(model_objective, key, value)
             model_objective.save()
         else:
-            raise ObjectDoesNotExist("No modelObjective element was found for the provided id:%s" % kwargs['id'])
+            raise ObjectDoesNotExist("No ModelObjective element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("modelObjective element of a resource can't be deleted.")
+        raise ValidationError("ModelObjective element of a resource can't be deleted.")
 
 class simulationType(AbstractMetaDataElement):
     term = 'simulationType'
@@ -140,8 +140,8 @@ class simulationType(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("simulationType element of a resource can't be deleted.")
 
-class modelMethods(AbstractMetaDataElement):
-    term = 'modelMethods'
+class ModelMethods(AbstractMetaDataElement):
+    term = 'ModelMethods'
     runoff_calculation_method = models.CharField(max_length=500, null=True, blank=True)
     flow_routing_method = models.CharField(max_length=500, null=True, blank=True)
     PET_estimation_method = models.CharField(max_length=500, null=True, blank=True)
@@ -158,29 +158,29 @@ class modelMethods(AbstractMetaDataElement):
         if not 'PET_estimation_method' in kwargs:
             raise ValidationError("modelMethods PETestimationMethod is missing.")
         metadata_obj = kwargs['content_object']
-        return modelMethods.objects.create(runoff_calculation_method=kwargs['runoff_calculation_method'],\
+        return ModelMethods.objects.create(runoff_calculation_method=kwargs['runoff_calculation_method'],\
                                              flow_routing_method=kwargs['flow_routing_method'],\
                                              PET_estimation_method=kwargs['PET_estimation_method'],\
                                              content_object=metadata_obj)
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        model_methods = modelMethods.objects.get(id=element_id)
+        model_methods = ModelMethods.objects.get(id=element_id)
         if model_methods:
             for key, value in kwargs.iteritems():
                 if key in ('runoff_calculation_method', 'flow_routing_method', 'PET_estimation_method'):
                     setattr(model_methods, key, value)
             model_methods.save()
         else:
-            raise ObjectDoesNotExist("No modelMethods element was found for the provided id:%s" % kwargs['id'])
+            raise ObjectDoesNotExist("No ModelMethods element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("modelMethods element of a resource can't be deleted.")
+        raise ValidationError("ModelMethods element of a resource can't be deleted.")
 
 
-class SWATmodelParameters(AbstractMetaDataElement):
-    term = 'SWATmodelParameters'
+class SWATModelParameters(AbstractMetaDataElement):
+    term = 'SWATModelParameters'
     has_crop_rotation = models.BooleanField(default=False)
     has_title_drainage = models.BooleanField(default=False)
     has_point_source = models.BooleanField(default=False)
@@ -196,24 +196,24 @@ class SWATmodelParameters(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if not 'has_crop_rotation' in kwargs:
-            raise ValidationError("SWATmodelParameters has_crop_rotation is missing.")
+            raise ValidationError("SWATModelParameters has_crop_rotation is missing.")
         if not 'has_title_drainage' in kwargs:
-            raise ValidationError("SWATmodelParameters has_title_drainage is missing.")
+            raise ValidationError("SWATModelParameters has_title_drainage is missing.")
         if not 'has_point_source' in kwargs:
-            raise ValidationError("SWATmodelParameters has_point_source is missing.")
+            raise ValidationError("SWATModelParameters has_point_source is missing.")
         if not 'has_fertilizer' in kwargs:
-            raise ValidationError("SWATmodelParameters has_fertilizer is missing.")
+            raise ValidationError("SWATModelParameters has_fertilizer is missing.")
         if not 'has_tillage_operation' in kwargs:
-            raise ValidationError("SWATmodelParameters has_tillage_operation is missing.")
+            raise ValidationError("SWATModelParameters has_tillage_operation is missing.")
         if not 'has_inlet_of_draining_watershed' in kwargs:
-            raise ValidationError("SWATmodelParameters has_inlet_of_draining_watershed is missing.")
+            raise ValidationError("SWATModelParameters has_inlet_of_draining_watershed is missing.")
         if not 'has_irrigation_operation' in kwargs:
-            raise ValidationError("SWATmodelParameters has_irrigation_operation is missing.")
+            raise ValidationError("SWATModelParameters has_irrigation_operation is missing.")
         if not 'has_other_parameters' in kwargs:
-            raise ValidationError("SWATmodelParameters has_other_parameters is missing.")
+            raise ValidationError("SWATModelParameters has_other_parameters is missing.")
 
         metadata_obj = kwargs['content_object']
-        return SWATmodelParameters.objects.create(has_crop_rotation=kwargs['has_crop_rotation'],\
+        return SWATModelParameters.objects.create(has_crop_rotation=kwargs['has_crop_rotation'],\
                                                   has_title_drainage=kwargs['has_title_drainage'],\
                                                   has_point_source=kwargs['has_point_source'],\
                                                   has_fertilizer=kwargs['has_fertilizer'],\
@@ -225,7 +225,7 @@ class SWATmodelParameters(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        swat_model_parameters = SWATmodelParameters.objects.get(id=element_id)
+        swat_model_parameters = SWATModelParameters.objects.get(id=element_id)
         if swat_model_parameters:
             for key, value in kwargs.iteritems():
                 if key in ('has_crop_rotation', 'has_title_drainage', 'has_point_source',\
@@ -235,11 +235,11 @@ class SWATmodelParameters(AbstractMetaDataElement):
 
             swat_model_parameters.save()
         else:
-            raise ObjectDoesNotExist("No SWATmodelParameters element was found for the provided id:%s" % kwargs['id'])
+            raise ObjectDoesNotExist("No SWATModelParameters element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("SWATmodelParameters element of a resource can't be deleted.")
+        raise ValidationError("SWATModelParameters element of a resource can't be deleted.")
 
 class ModelInput(AbstractMetaDataElement):
     term = 'ModelInput'
@@ -356,10 +356,10 @@ processor_for(SWATModelInstanceResource)(resource_processor)
 class SWATModelInstanceMetaData(CoreMetaData):
     _model_output = generic.GenericRelation(ModelOutput)
     _executed_by = generic.GenericRelation(ExecutedBy)
-    _model_objective = generic.GenericRelation(modelObjective)
+    _model_objective = generic.GenericRelation(ModelObjective)
     _simulation_type = generic.GenericRelation(simulationType)
-    _model_methods = generic.GenericRelation(modelMethods)
-    _swat_model_parameters = generic.GenericRelation(SWATmodelParameters)
+    _model_methods = generic.GenericRelation(ModelMethods)
+    _swat_model_parameters = generic.GenericRelation(SWATModelParameters)
     _model_input = generic.GenericRelation(ModelInput)
     _swat_model_instance_resource = generic.GenericRelation(SWATModelInstanceResource)
 
@@ -403,10 +403,10 @@ class SWATModelInstanceMetaData(CoreMetaData):
         # add the name of any additional element to the list
         elements.append('ModelOutput')
         elements.append('ExecutedBy')
-        elements.append('modelObjective')
+        elements.append('ModelObjective')
         elements.append('simulationType')
-        elements.append('modelMethods')
-        elements.append('SWATmodelParameters')
+        elements.append('ModelMethods')
+        elements.append('SWATModelParameters')
         elements.append('ModelInput')
         return elements
 
@@ -428,7 +428,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
         if not self.executed_by:
             missing_required_elements.append('ExecutedBy')
         if not self.model_objective:
-            missing_required_elements.append('modelObjective')
+            missing_required_elements.append('ModelObjective')
         return missing_required_elements
 
 
@@ -457,9 +457,9 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_url.text = self.executed_by.url
         if self.model_objective:
-            hsterms_model_objective = etree.SubElement(container, '{%s}modelObjective' % self.NAMESPACES['hsterms'])
+            hsterms_model_objective = etree.SubElement(container, '{%s}ModelObjective' % self.NAMESPACES['hsterms'])
             hsterms_model_objective_rdf_Description = etree.SubElement(hsterms_model_objective, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_model_objective_swat_model_objective = etree.SubElement(hsterms_model_objective_rdf_Description, '{%s}modelObjective' % self.NAMESPACES['hsterms'])
+            hsterms_model_objective_swat_model_objective = etree.SubElement(hsterms_model_objective_rdf_Description, '{%s}ModelObjective' % self.NAMESPACES['hsterms'])
             hsterms_model_objective_swat_model_objective.text = self.model_objective.swat_model_objective
             hsterms_model_objective_other_objectives = etree.SubElement(hsterms_model_objective_rdf_Description, '{%s}otherObjectives' % self.NAMESPACES['hsterms'])
             hsterms_model_objective_other_objectives.text = self.model_objective.other_objectives
@@ -469,16 +469,16 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_simulation_type_name = etree.SubElement(hsterms_simulation_type_rdf_Description, '{%s}simulationType' % self.NAMESPACES['hsterms'])
             hsterms_simulation_type_name.text = self.simulation_type.simulation_type_name
         if self.model_methods:
-            hsterms_model_methods = etree.SubElement(container, '{%s}modelMethods' % self.NAMESPACES['hsterms'])
+            hsterms_model_methods = etree.SubElement(container, '{%s}ModelMethods' % self.NAMESPACES['hsterms'])
             hsterms_model_methods_rdf_Description = etree.SubElement(hsterms_model_methods, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_model_methods_runoff_calculation_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}runoffCalculationMethod' % self.NAMESPACES['hsterms'])
             hsterms_model_methods_runoff_calculation_method.text = self.model_methods.runoff_calculation_method
             hsterms_model_methods_flow_routing_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}flowRoutingMethod' % self.NAMESPACES['hsterms'])
             hsterms_model_methods_flow_routing_method.text = self.model_methods.flow_routing_method
-            hsterms_model_methods_PET_estimation_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}PETestimationMethod' % self.NAMESPACES['hsterms'])
+            hsterms_model_methods_PET_estimation_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}PETEstimationMethod' % self.NAMESPACES['hsterms'])
             hsterms_model_methods_PET_estimation_method.text = self.model_methods.PET_estimation_method
         if self.swat_model_parameters:
-            hsterms_swat_model_parameters = etree.SubElement(container, '{%s}SWATmodelParameters' % self.NAMESPACES['hsterms'])
+            hsterms_swat_model_parameters = etree.SubElement(container, '{%s}SWATModelParameters' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_rdf_Description = etree.SubElement(hsterms_swat_model_parameters, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_swat_model_parameters_has_crop_rotation = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasCropRotation' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_has_title_drainage = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasTitleDrainage' % self.NAMESPACES['hsterms'])
@@ -516,11 +516,11 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_input_number_of_subbasins.text = self.model_input.number_of_subbasins
             hsterms_model_input_number_of_HRUs = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}numberOfHRUs' % self.NAMESPACES['hsterms'])
             hsterms_model_input_number_of_HRUs.text = self.model_input.number_of_HRUs
-            hsterms_model_input_DEM_resolution = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMresolution' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_DEM_resolution = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMResolution' % self.NAMESPACES['hsterms'])
             hsterms_model_input_DEM_resolution.text = self.model_input.DEM_resolution + ' m'
-            hsterms_model_input_DEM_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMsourceName' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_DEM_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMSourceName' % self.NAMESPACES['hsterms'])
             hsterms_model_input_DEM_source_name.text = self.model_input.DEM_source_name
-            hsterms_model_input_DEM_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMsourceURL' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_DEM_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMSourceURL' % self.NAMESPACES['hsterms'])
             hsterms_model_input_DEM_source_URL.text = self.model_input.DEM_source_URL
             hsterms_model_input_landUse_data_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}landUseDataSourceName' % self.NAMESPACES['hsterms'])
             hsterms_model_input_landUse_data_source_name.text = self.model_input.landUse_data_source_name
