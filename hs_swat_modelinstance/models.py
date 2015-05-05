@@ -329,6 +329,15 @@ class SWATModelInstanceResource(Page, AbstractResource):
         md = SWATModelInstanceMetaData()
         return self._get_metadata(md)
 
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # all file types are supported
+        return ('.*')
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        return True
+
     def can_add(self, request):
         return AbstractResource.can_add(self, request)
 
@@ -502,13 +511,13 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_input_simulation_time_step = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}simulationTimeStep' % self.NAMESPACES['hsterms'])
             hsterms_model_input_simulation_time_step.text = self.model_input.simulation_time_step
             hsterms_model_input_watershed_area = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}watershedArea' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_watershed_area.text = self.model_input.watershed_area
+            hsterms_model_input_watershed_area.text = self.model_input.watershed_area+ ' km2'
             hsterms_model_input_number_of_subbasins = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}numberOfSubbasins' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_number_of_subbasins.text = self.model_input.number_of_subbasins + 'km2'
+            hsterms_model_input_number_of_subbasins.text = self.model_input.number_of_subbasins
             hsterms_model_input_number_of_HRUs = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}numberOfHRUs' % self.NAMESPACES['hsterms'])
             hsterms_model_input_number_of_HRUs.text = self.model_input.number_of_HRUs
             hsterms_model_input_DEM_resolution = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMresolution' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_DEM_resolution.text = self.model_input.DEM_resolution + 'm'
+            hsterms_model_input_DEM_resolution.text = self.model_input.DEM_resolution + ' m'
             hsterms_model_input_DEM_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMsourceName' % self.NAMESPACES['hsterms'])
             hsterms_model_input_DEM_source_name.text = self.model_input.DEM_source_name
             hsterms_model_input_DEM_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMsourceURL' % self.NAMESPACES['hsterms'])
