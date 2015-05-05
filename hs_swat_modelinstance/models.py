@@ -380,6 +380,63 @@ class ModelInput(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No ModelInput element was found for the provided id:%s" % kwargs['id'])
 
+    def __unicode__(self):
+        self.rainfall_time_step
+
+    @classmethod
+    def create(cls, **kwargs):
+        if not 'rainfall_time_step' in kwargs:
+            raise ValidationError("ModelInput rainfallTimeStep is missing.")
+        if not 'simulation_time_step' in kwargs:
+            raise ValidationError("ModelInput simualtionTimeStep is missing.")
+        if not 'watershed_area' in kwargs:
+            raise ValidationError("ModelInput watershedArea is missing.")
+        if not 'number_of_subbasins' in kwargs:
+            raise ValidationError("ModelInput numberOfSubbasins is missing.")
+        if not 'number_of_HRUs' in kwargs:
+            raise ValidationError("ModelInput numberOfHRUs is missing.")
+        if not 'DEM_resolution' in kwargs:
+            raise ValidationError("ModelInput DEMresolution is missing.")
+        if not 'DEM_source_name' in kwargs:
+            raise ValidationError("ModelInput DEMsourceName is missing.")
+        if not 'DEM_source_URL' in kwargs:
+            raise ValidationError("ModelInput DEMsourceURL is missing.")
+        if not 'landUse_data_source_name' in kwargs:
+            raise ValidationError("ModelInput landUseDataSourceName is missing.")
+        if not 'landUse_data_source_URL' in kwargs:
+            raise ValidationError("ModelInput landUseDataSourceURL is missing.")
+        if not 'soil_data_source_name' in kwargs:
+            raise ValidationError("ModelInput soilDataSourceName is missing.")
+        if not 'soil_data_source_URL' in kwargs:
+            raise ValidationError("ModelInput soilDataSourceURL is missing.")
+        metadata_obj = kwargs['content_object']
+        return ModelInput.objects.create(rainfall_time_step=kwargs['rainfall_time_step'],\
+                                             simulation_time_step=kwargs['simulation_time_step'],\
+                                             watershed_area=kwargs['watershed_area'],\
+                                             number_of_subbasins=kwargs['number_of_subbasins'],\
+                                             number_of_HRUs=kwargs['number_of_HRUs'],\
+                                             DEM_resolution=kwargs['DEM_resolution'],\
+                                             DEM_source_name=kwargs['DEM_source_name'],\
+                                             DEM_source_URL=kwargs['DEM_source_URL'],\
+                                             landUse_data_source_name=kwargs['landUse_data_source_name'],\
+                                             landUse_data_source_URL=kwargs['landUse_data_source_URL'],\
+                                             soil_data_source_name=kwargs['soil_data_source_name'],\
+                                             soil_data_source_URL=kwargs['soil_data_source_URL'],\
+                                             content_object=metadata_obj)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        model_input = ModelInput.objects.get(id=element_id)
+        if model_input:
+            for key, value in kwargs.iteritems():
+                if key in ('rainfall_time_step', 'simulation_time_step', 'watershed_area','number_of_subbasins',\
+                           'number_of_HRUs', 'DEM_resolution', 'DEM_source_name', 'DEM_source_URL',\
+                           'landUse_data_source_name', 'landUse_data_source_URL', 'soil_data_source_name', 'soil_data_source_URL'):
+                    setattr(model_input, key, value)
+            model_input.save()
+        else:
+            raise ObjectDoesNotExist("No ModelInput element was found for the provided id:%s" % kwargs['id'])
+
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("ModelInput element of a resource can't be deleted.")
@@ -595,6 +652,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_input_soil_data_source_name.text = self.model_input.soil_data_source_name
             hsterms_model_input_soil_data_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}soilDataSourceURL' % self.NAMESPACES['hsterms'])
             hsterms_model_input_soil_data_source_URL.text = self.model_input.soil_data_source_URL
+
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
 import receivers
