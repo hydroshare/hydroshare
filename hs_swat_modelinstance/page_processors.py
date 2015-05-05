@@ -42,16 +42,16 @@ def landing_page(request, page):
         executed_by_form = ExecutedByForm(instance=content_model.metadata.executed_by, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.executed_by.id if content_model.metadata.executed_by else None)
 
-        model_objective_form = modelObjectiveForm(instance=content_model.metadata.model_objective, res_short_id=content_model.short_id,
+        model_objective_form = ModelObjectiveForm(instance=content_model.metadata.model_objective, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.model_objective.id if content_model.metadata.model_objective else None)
 
         simulation_type_form = simulationTypeForm(instance=content_model.metadata.simulation_type, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.simulation_type.id if content_model.metadata.simulation_type else None)
 
-        model_methods_form = modelMethodsForm(instance=content_model.metadata.model_methods, res_short_id=content_model.short_id,
+        model_methods_form = ModelMethodsForm(instance=content_model.metadata.model_methods, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.model_methods.id if content_model.metadata.model_methods else None)
 
-        swat_model_parameters_form = SWATmodelParametersForm(instance=content_model.metadata.swat_model_parameters, res_short_id=content_model.short_id,
+        swat_model_parameters_form = SWATModelParametersForm(instance=content_model.metadata.swat_model_parameters, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.swat_model_parameters.id if content_model.metadata.swat_model_parameters else None)
 
         model_input_form = ModelInputForm(instance=content_model.metadata.model_input, res_short_id=content_model.short_id,

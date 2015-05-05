@@ -15,13 +15,13 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     elif element_name == 'executedby':
         element_form = ExecutedByValidationForm(request.POST)
     elif element_name == 'modelobjective':
-        element_form = modelObjectiveValidationForm(request.POST)
+        element_form = ModelObjectiveValidationForm(request.POST)
     elif element_name == 'simulationtype':
         element_form = simulationTypeValidationForm(request.POST)
     elif element_name == 'modelmethods':
-        element_form = modelMethodsValidationForm(request.POST)
+        element_form = ModelMethodsValidationForm(request.POST)
     elif element_name == 'swatmodelparameters':
-        element_form = SWATmodelParametersValidationForm(request.POST)
+        element_form = SWATModelParametersValidationForm(request.POST)
     elif element_name == 'modelinput':
         element_form = ModelInputValidationForm(request.POST)
 
@@ -41,13 +41,13 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     elif element_name == 'executedby':
         element_form = ExecutedByValidationForm(request.POST)
     elif element_name == 'modelobjective':
-        element_form = modelObjectiveValidationForm(request.POST)
+        element_form = ModelObjectiveValidationForm(request.POST)
     elif element_name == 'simulationtype':
         element_form = simulationTypeValidationForm(request.POST)
     elif element_name == 'modelmethods':
-        element_form = modelMethodsValidationForm(request.POST)
+        element_form = ModelMethodsValidationForm(request.POST)
     elif element_name == 'swatmodelparameters':
-        element_form = SWATmodelParametersValidationForm(request.POST)
+        element_form = SWATModelParametersValidationForm(request.POST)
     elif element_name == 'modelinput':
         element_form = ModelInputValidationForm(request.POST)
 
