@@ -149,6 +149,63 @@
                                 <div class="col-sm-8">{{ swat_model_parameters.has_other_parameters }}</div>
                             {% endif %}
                         </div>
+                    <hr style="border:0">
+                    {% endif %}
+                </div>
+                <div>
+                    {% if model_input %}
+                        <h4><strong>Model Input:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            {% if model_input.rainfall_time_step %}
+                                <div class="col-sm-4"><strong>Rainfall time step:</strong></div>
+                                <div class="col-sm-8">{{ model_input.rainfall_time_step }}</div>
+                            {% endif %}
+                            {% if model_input.simulation_time_step %}
+                                <div class="col-sm-4"><strong>Simulation time step:</strong></div>
+                                <div class="col-sm-8">{{ model_input.simulation_time_step }}</div>
+                            {% endif %}
+                            {% if model_input.watershed_area %}
+                                <div class="col-sm-4"><strong>Watershed area in square kilometers:</strong></div>
+                                <div class="col-sm-8">{{ model_input.watershed_area }}</div>
+                            {% endif %}
+                            {% if model_input.number_of_subbasins %}
+                                <div class="col-sm-4"><strong>Number of subbasins:</strong></div>
+                                <div class="col-sm-8">{{ model_input.number_of_subbasins }}</div>
+                            {% endif %}
+                            {% if model_input.number_of_HRUs %}
+                                <div class="col-sm-4"><strong>Number of HRUs:</strong></div>
+                                <div class="col-sm-8">{{ model_input.number_of_HRUs }}</div>
+                            {% endif %}
+                            {% if model_input.DEM_resolution %}
+                                <div class="col-sm-4"><strong>DEM resolution in meters:</strong></div>
+                                <div class="col-sm-8">{{ model_input.DEM_resolution }}</div>
+                            {% endif %}
+                            {% if model_input.DEM_source_name %}
+                                <div class="col-sm-4"><strong>DEM source name:</strong></div>
+                                <div class="col-sm-8">{{ model_input.DEM_source_name }}</div>
+                            {% endif %}
+                            {% if model_input.DEM_source_URL %}
+                                <div class="col-sm-4"><strong>DEM source URL:</strong></div>
+                                <div class="col-sm-8"><a id="permalink" href={{ model_input.DEM_source_URL }}>{{ model_input.DEM_source_URL }}</a></div>
+                            {% endif %}
+                            {% if model_input.landUse_data_source_name %}
+                                <div class="col-sm-4"><strong>LandUse data source name:</strong></div>
+                                <div class="col-sm-8">{{ model_input.landUse_data_source_name }}</div>
+                            {% endif %}
+                            {% if model_input.landUse_data_source_URL %}
+                                <div class="col-sm-4"><strong>LandUse data source URL:</strong></div>
+                                <div class="col-sm-8"><a id="permalink" href={{ model_input.landUse_data_source_URL }}>{{ model_input.landUse_data_source_URL }}</a></div>
+                            {% endif %}
+                            {% if model_input.soil_data_source_name %}
+                                <div class="col-sm-4"><strong>Soil data source name:</strong></div>
+                                <div class="col-sm-8">{{ model_input.soil_data_source_name }}</div>
+                            {% endif %}
+                            {% if model_input.soil_data_source_URL %}
+                                <div class="col-sm-4"><strong>Soil data source URL:</strong></div>
+                                <div class="col-sm-8"> <a id="permalink" href={{ model_input.soil_data_source_URL }}>{{ model_input.soil_data_source_URL }}</a></div>
+                            {% endif %}
+                        </div>
                     {% endif %}
                 </div>
             </div>

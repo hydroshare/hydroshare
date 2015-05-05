@@ -22,6 +22,8 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         element_form = modelMethodsValidationForm(request.POST)
     elif element_name == 'swatmodelparameters':
         element_form = SWATmodelParametersValidationForm(request.POST)
+    elif element_name == 'modelinput':
+        element_form = ModelInputValidationForm(request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
@@ -46,6 +48,8 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         element_form = modelMethodsValidationForm(request.POST)
     elif element_name == 'swatmodelparameters':
         element_form = SWATmodelParametersValidationForm(request.POST)
+    elif element_name == 'modelinput':
+        element_form = ModelInputValidationForm(request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
