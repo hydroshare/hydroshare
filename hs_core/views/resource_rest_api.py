@@ -14,6 +14,7 @@ from rest_framework import status, generics
 from rest_framework.exceptions import *
 
 from hs_core import hydroshare
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.views import utils as view_utils
 from hs_core.views import serializers
 
@@ -24,7 +25,8 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
 
     REST URL: hsapi/resource/{pk}
     HTTP method: GET
-    :return: (on success): resource bag file if request content-type is 'application/zip' otherwise resource science metadata file
+    :return: (on success): JSON string representing resource summary, which includes key system metadata, as well as
+    URLs to the bag and science metadata
 
     REST URL: hsapi/resource/{pk}
     HTTP method: DELETE
@@ -67,7 +69,21 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
     :return:  a paginated list of resources with data for resource id, title, resource type, creator, sharing status,
     date created, date last updated, resource bag url path, and science metadata url path
 
-    example return json format:
+    example return json format for GET /hsapi/resource/<RESOURCE_ID>:
+
+    {
+        "resource_type": resource type,
+        "resource_title": resource title,
+        "resource_id": resource id,
+        "creator": creator user name,
+        "date_created": date resource created,
+        "date_last_updated": date resource last updated,
+        "sharing_status": Public or Private,
+        "bag_url": link to bag file,
+        "science_metadata_url": link to science metadata
+    }
+
+    example return json format for GET /hsapi/resource:
 
         {   "count":n
             "next": link to next page
@@ -100,15 +116,14 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
         # get a list of resources
         return self.list(request)
 
-    # get resource bag file or science metadata
+    # get resource summary, which includes key system metadata, as well as
+    # URLs to the bag and science metadata
     def _get(self, request, pk):
-        if request.content_type == 'application/zip':
-            resource, _, _ = view_utils.authorize(request, pk, view=True, edit=True, full=True)
-            resource_bag = resource.bags.first().bag
-            # redirects to django_irods/views.download function
-            return HttpResponseRedirect(resource_bag.url)
-        else:
-            return redirect('get_update_science_metadata', pk=pk)
+        view_utils.authorize(request, pk, view=True, full=True)
+        res = get_resource_by_shortkey(pk)
+        ser = self.get_serializer_class()(self._resourceToResourceListItem(res))
+
+        return Response(data=ser.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
         # TODO: update resource - involves overwriting a resource from the provided bag file
@@ -140,7 +155,6 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
         filter_parms['keywords'] = None
 
         filtered_res_list = []
-        filter_parms = dict(filter_parms)
 
         resource_table = hydroshare.get_resource_list(**filter_parms)
         res = set()
@@ -148,32 +162,35 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
         for resources in resource_table.values():
             res = res.union(resources)
 
-        res_list = list(res)
-        for res in res_list:
-            resource_bag = hydroshare.get_resource(res.short_id)
-            if res.creator.first_name:
-                creator_name = res.creator.first_name
-                if res.creator.last_name:
-                    creator_name += " %s" % res.creator.last_name
-            else:
-                creator_name = res.creator.username
-
-            sharing_status = 'Public' if res.public else 'Private'
-
-            bag_url = hydroshare.utils.current_site_url() + resource_bag.bag.url
-            science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[res.short_id])
-            resource_list_item = serializers.ResourceListItem(resource_type=res.__class__.__name__,
-                                                              resource_id=res.short_id,
-                                                              resource_title=res.title,
-                                                              creator=creator_name,
-                                                              sharing_status=sharing_status,
-                                                              date_created=res.created,
-                                                              date_last_updated=res.updated,
-                                                              bag_url=bag_url,
-                                                              science_metadata_url=science_metadata_url)
+        for r in res:
+            resource_list_item = self._resourceToResourceListItem(r)
             filtered_res_list.append(resource_list_item)
 
         return filtered_res_list
+
+    def _resourceToResourceListItem(self, r):
+        resource_bag = hydroshare.get_resource(r.short_id)
+        if r.creator.first_name:
+            creator_name = r.creator.first_name
+            if r.creator.last_name:
+                creator_name += " %s" % r.creator.last_name
+        else:
+            creator_name = r.creator.username
+
+        sharing_status = 'Public' if r.public else 'Private'
+
+        bag_url = hydroshare.utils.current_site_url() + resource_bag.bag.url
+        science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
+        resource_list_item = serializers.ResourceListItem(resource_type=r.__class__.__name__,
+                                                          resource_id=r.short_id,
+                                                          resource_title=r.title,
+                                                          creator=creator_name,
+                                                          sharing_status=sharing_status,
+                                                          date_created=r.created,
+                                                          date_last_updated=r.updated,
+                                                          bag_url=bag_url,
+                                                          science_metadata_url=science_metadata_url)
+        return resource_list_item
 
     def get_serializer_class(self):
         return serializers.ResourceListItemSerializer
