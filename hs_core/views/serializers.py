@@ -75,7 +75,7 @@ class ResourceListItemSerializer(serializers.Serializer):
     creator = serializers.CharField(max_length=100)
     date_created = serializers.DateTimeField(format='%m-%d-%Y')
     date_last_updated = serializers.DateTimeField(format='%m-%d-%Y')
-    sharing_status = serializers.CharField(max_length=20)
+    public = serializers.BooleanField()
     bag_url = serializers.URLField()
     science_metadata_url = serializers.URLField()
 
@@ -85,7 +85,7 @@ ResourceListItem = namedtuple('ResourceListItem',
                               'resource_id, '
                               'resource_title, '
                               'creator, '
-                              'sharing_status, '
+                              'public, '
                               'date_created, '
                               'date_last_updated, '
                               'bag_url, '
