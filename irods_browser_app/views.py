@@ -86,7 +86,12 @@ def upload(request):
         port = request.session["port"]
         host = request.session["host"]
         zone = request.session["zone"]
-        # to do: use iget to transfer selected data object to local as a NamedTemporaryFile
+        # use iget to transfer selected data object to local as a NamedTemporaryFile
+        from django_irods.storage import IrodsStorage
+        irods_storage = IrodsStorage()
+        irods_storage.set_user_session(username=user, password=password, host=host, port=port, zone=zone)
+        tmpFile = irods_storage.download(file_name)
+
         context = {
             'irods_loggedin': True,
             'irods_user': user,
