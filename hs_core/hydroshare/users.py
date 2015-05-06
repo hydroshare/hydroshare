@@ -583,7 +583,7 @@ def get_resource_list(
     resource_types = get_resource_types()
 
     # filtering based on resource type.
-    if types is not None:
+    if types:
         queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in types)
     else:
         queries = dict((el, []) for el in resource_types)

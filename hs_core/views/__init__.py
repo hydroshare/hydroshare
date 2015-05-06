@@ -448,17 +448,6 @@ class FilterForm(forms.Form):
 
 @processor_for('my-resources')
 def my_resources(request, page):
-#    if not request.user.is_authenticated():
-#        return HttpResponseRedirect('/accounts/login/')
-
-    #import sys
-    #sys.path.append("/home/docker/pycharm-debug")
-    #import pydevd
-
-    # IP Address for Ubuntu VM must be: 172.17.42.1
-    # IP Address for boot2docker: varies
-    #pydevd.settrace('172.17.42.1', port=21000, suspend=False)
-
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
         res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
@@ -472,7 +461,9 @@ def my_resources(request, page):
         start = startno or 0
         from_date = frm.cleaned_data['from_date'] or None
         keywords = [k.strip() for k in request.REQUEST['keywords'].split(',')] if request.REQUEST.get('keywords', None) else None
+        words = request.REQUEST.get('text', None)
         public = not request.user.is_authenticated()
+        types = [t.strip() for t in request.REQUEST.getlist('type')]
 
         dcterms = defaultdict(dict)
         for k, v in filter(lambda (x, y): x.startswith('dc'), request.REQUEST.items()):
@@ -488,8 +479,10 @@ def my_resources(request, page):
             edit_permission=edit_permission,
             from_date=from_date,
             dc=list(dcterms.values()) if dcterms else None,
-            keywords=keywords if keywords else None,
-            public=public
+            keywords=keywords,
+            full_text_search=words,
+            public=public,
+            types=types
         ).values():
             res = res.union(lst)
         total_res_cnt = len(res)
