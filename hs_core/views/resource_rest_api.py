@@ -177,7 +177,7 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
         else:
             creator_name = r.creator.username
 
-        sharing_status = 'Public' if r.public else 'Private'
+        public = True if r.public else False
 
         bag_url = hydroshare.utils.current_site_url() + resource_bag.bag.url
         science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
@@ -185,7 +185,7 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
                                                           resource_id=r.short_id,
                                                           resource_title=r.title,
                                                           creator=creator_name,
-                                                          sharing_status=sharing_status,
+                                                          public=public,
                                                           date_created=r.created,
                                                           date_last_updated=r.updated,
                                                           bag_url=bag_url,
