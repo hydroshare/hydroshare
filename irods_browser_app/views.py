@@ -30,6 +30,7 @@ def login(request):
     zone = str(request.POST['zone'])
     host = str(request.POST['host'])
     datastore = "/%s/home/%s" % (zone, user)
+    remember = request.POST.get('remember', None)
     global irods_sess
     irods_sess = iRODSSession(user=user, password=password, zone=zone, host=host, port=port)
 
@@ -48,7 +49,10 @@ def login(request):
         request.session["port"] = port
         request.session["host"] = host
         request.session["zone"] = zone
-        request.session["logged"] = True
+        if remember:
+            request.session["remember"] = remember
+        else:
+            request.session["remember"] = ''
         context = {
             'irods_loggedin': True,
             'irods_user': user,
@@ -64,6 +68,7 @@ def store(request):
     port = request.session["port"]
     host = request.session["host"]
     zone = request.session["zone"]
+
     global irods_sess
     coll = irods_sess.collections.get(str(request.POST['store']))
     store = search_ds(coll)
