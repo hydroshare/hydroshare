@@ -193,7 +193,7 @@ class TimeSeriesResult(AbstractMetaDataElement):
 
 class TimeSeriesResource(Page, AbstractResource):
     class Meta:
-        verbose_name = 'Time Series Resource'
+        verbose_name = 'Time Series'
 
     @property
     def metadata(self):
@@ -394,7 +394,7 @@ class TimeSeriesMetaData(CoreMetaData):
             hsterms_units_name = etree.SubElement(hsterms_units_rdf_Description, '{%s}UnitsName' % self.NAMESPACES['hsterms'])
             hsterms_units_name.text = self.time_series_result.units_name
 
-            hsterms_units_abbv = etree.SubElement(hsterms_units_rdf_Description, '{%s}UnitsType' % self.NAMESPACES['hsterms'])
+            hsterms_units_abbv = etree.SubElement(hsterms_units_rdf_Description, '{%s}UnitsAbbreviation' % self.NAMESPACES['hsterms'])
             hsterms_units_abbv.text = self.time_series_result.units_abbreviation
 
             hsterms_status = etree.SubElement(hsterms_time_series_result_rdf_Description, '{%s}Status' % self.NAMESPACES['hsterms'])
@@ -406,7 +406,7 @@ class TimeSeriesMetaData(CoreMetaData):
             hsterms_value_count = etree.SubElement(hsterms_time_series_result_rdf_Description, '{%s}ValueCount' % self.NAMESPACES['hsterms'])
             hsterms_value_count.text = str(self.time_series_result.value_count)
 
-            hsterms_statistics = etree.SubElement(hsterms_time_series_result_rdf_Description, '{%s}AggregationStatistics' % self.NAMESPACES['hsterms'])
+            hsterms_statistics = etree.SubElement(hsterms_time_series_result_rdf_Description, '{%s}AggregationStatistic' % self.NAMESPACES['hsterms'])
             hsterms_statistics.text = self.time_series_result.aggregation_statistics
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
