@@ -27,9 +27,6 @@ class ModelOutputForm(ModelForm):
         self.helper = ModelOutputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelOutput')
         self.fields['includes_output'].widget.attrs['style'] = "width:auto;margin-top:-5px"
 
-        #if len(self.initial) == 0:
-            #self.initial['includes_output'] = False
-
     class Meta:
         model = ModelOutput
         fields = ['includes_output']
@@ -67,7 +64,6 @@ class ExecutedByForm(ModelForm):
         model = ExecutedBy
         fields = ['name']
         exclude = ['content_object']
-        widgets = {'name': forms.TextInput()}
 
 class ExecutedByValidationForm(forms.Form):
     name = forms.CharField(max_length=200)
@@ -227,3 +223,61 @@ class SWATModelParametersValidationForm(forms.Form):
     has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
     has_irrigation_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
     has_other_parameters = forms.CharField(max_length=500, required=False)
+
+class ModelInputFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+                        Field('rainfall_time_step', css_class=field_width),
+                        Field('simulation_time_step', css_class=field_width),
+                        Field('watershed_area', css_class=field_width),
+                        Field('number_of_subbasins', css_class=field_width),
+                        Field('number_of_HRUs', css_class=field_width),
+                        Field('DEM_resolution', css_class=field_width),
+                        Field('DEM_source_name', css_class=field_width),
+                        Field('DEM_source_URL', css_class=field_width),
+                        Field('landUse_data_source_name', css_class=field_width),
+                        Field('landUse_data_source_URL', css_class=field_width),
+                        Field('soil_data_source_name', css_class=field_width),
+                        Field('soil_data_source_URL', css_class=field_width),
+                 )
+        kwargs['element_name_label'] = 'Model Input'
+        super(ModelInputFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+class ModelInputForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(ModelInputForm, self).__init__(*args, **kwargs)
+        self.helper = ModelInputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelInput')
+
+    class Meta:
+        model = ModelInput
+        fields = ['rainfall_time_step',
+                  'simulation_time_step',
+                  'watershed_area',
+                  'number_of_subbasins',
+                  'number_of_HRUs',
+                  'DEM_resolution',
+                  'DEM_source_name',
+                  'DEM_source_URL',
+                  'landUse_data_source_name',
+                  'landUse_data_source_URL',
+                  'soil_data_source_name',
+                  'soil_data_source_URL']
+        exclude = ['content_object']
+
+
+class ModelInputValidationForm(forms.Form):
+    rainfall_time_step = forms.CharField(max_length=100, required=False)
+    simulation_time_step = forms.CharField(max_length=100, required=False)
+    watershed_area = forms.CharField(max_length=100, required=False)
+    number_of_subbasins = forms.CharField(max_length=100, required=False)
+    number_of_HRUs = forms.CharField(max_length=100, required=False)
+    DEM_resolution = forms.CharField(max_length=100, required=False)
+    DEM_source_name = forms.CharField(max_length=200, required=False)
+    DEM_source_URL = forms.URLField(required=False)
+    landUse_data_source_name = forms.CharField(max_length=200, required=False)
+    landUse_data_source_URL = forms.URLField(required=False)
+    soil_data_source_name = forms.CharField(max_length=200, required=False)
+    soil_data_source_URL = forms.URLField(required=False)

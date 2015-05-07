@@ -112,7 +112,7 @@ class simulationType(AbstractMetaDataElement):
     simulation_type_name = models.CharField(max_length=100, choices=type_choices, verbose_name='Simulation type')
 
     def __unicode__(self):
-        self.simulation_type
+        self.simulation_type_name
 
     @classmethod
     def create(cls, **kwargs):
