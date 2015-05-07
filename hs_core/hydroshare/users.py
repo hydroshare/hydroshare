@@ -645,23 +645,26 @@ def get_resource_list(
         if dc:
             for metadata in dc:
                 if metadata['content']:
+                    # TODO These are WAY too expensive to keep
                     queries[t] = filter(lambda r: r.dublin_metadata.filter(term=metadata['term']).exists(), queries[t])
                     queries[t] = filter(lambda r: r.dublin_metadata.filter(content=metadata['content']).exists(), queries[t])
+                    # queries[t] = queries[t].filter(dublin_metadata__term=metadata["term"])
+                    # queries[t] = queries[t].filter(dublin_metadata__content__contains=metadata["content"])
         qcnt = 0
         if queries[t]:
             qcnt = queries[t].__len__();
 
         if start is not None and count is not None:
-            if qcnt>start:
-                if(qcnt>=start+count):
+            if qcnt > start:
+                if qcnt >= start + count:
                     queries[t] = queries[t][start:start+count]
                 else:
                     queries[t] = queries[t][start:qcnt]
         elif start is not None:
-            if qcnt>=start:
+            if qcnt >= start:
                 queries[t] = queries[t][start:qcnt]
         elif count is not None:
-            if qcnt>count:
+            if qcnt > count:
                 queries[t] = queries[t][0:count]
 
     return queries

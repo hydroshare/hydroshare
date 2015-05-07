@@ -471,6 +471,7 @@ def my_resources(request, page):
             vtype = k[2:-1]
             dcterms[num][vtype] = v
 
+        # TODO ten separate SQL queries for basically the same data
         res = set()
         for lst in get_resource_list(
             user=user,
@@ -491,6 +492,7 @@ def my_resources(request, page):
 
         # need to return total number of resources as 'ct' so have to get all resources
         # and then filter by start and count
+        # TODO this is doing some pagination/limits before sorting, so it won't be consistent
         if(start>=total_res_cnt):
             start = total_res_cnt-res_cnt
         if(start < 0):
@@ -500,6 +502,7 @@ def my_resources(request, page):
 
         reslst = reslst[start:start+res_cnt]
 
+        # TODO sorts should be in SQL not python
         res = sorted(reslst, key=lambda x: x.title)
 
         return {

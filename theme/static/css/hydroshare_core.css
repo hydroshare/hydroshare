@@ -1701,5 +1701,6 @@ ul.resource-search-options {
 	margin: 2px auto;
 }
 .resource-search-options li.selected {
-	background-color: #cca;
+	background-color: #aab;
+	color: white;
 }

@@ -247,6 +247,9 @@
             hideOptions: function() {
                 this.$options.html("");
             },
+            countOptions: function() {
+                return this.$options.find('li').length;
+            },
             addOption: function(type, value, id) {
                 // <li data-label=foo>bar</li>
                 var $item = $("<li class=term-option></li>");
@@ -264,6 +267,8 @@
                 } else {
                     this.curOpt += 1;
                 }
+
+                this.curOpt = Math.min(this.curOpt, this.countOptions() - 1);
                 this._showSelection();
             },
             selectUp: function() {
@@ -272,6 +277,8 @@
                 } else {
                     this.curOpt -= 1;
                 }
+
+                this.curOpt = Math.max(this.curOpt, 0);
                 this._showSelection();
             },
             resetSelection: function() {
@@ -316,7 +323,7 @@
 
             setPadding: function() {
                 $li = this.$items.find('li');
-                var width = 0;
+                var width = 3;
                 $li.each(function(){ width += $(this).outerWidth()+5; });
                 this.$input.css('padding-left', width+"px");
             },

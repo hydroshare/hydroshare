@@ -22,9 +22,9 @@ def autocomplete(request):
     types = [t for t in get_resource_types() if term.lower() in t.__name__.lower()]
     resp += [{'label': 'type', 'value': t.__name__, 'id': t.__name__} for t in types]
 
-    resources = get_resource_list(
-        full_text_search=term,
-    )
+    # resources = get_resource_list(
+    #     full_text_search=term,
+    # )
 
     # todo: users
     # todo: groups
