@@ -550,7 +550,14 @@ resource = None
 
 @login_required
 def create_resource_select_resource_type(request, *args, **kwargs):
-    return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
+
+    context = {
+            'irods_loggedin': request.session.get('irods_loggedin', False),
+            'irods_user': request.session.get('user', ''),
+            'irods_file_name': request.session.get('irods_file_name', '')
+        }
+
+    return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
 @login_required
 def create_resource_new_workflow(request, *args, **kwargs):

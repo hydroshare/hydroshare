@@ -1,6 +1,6 @@
 import json
 from django.shortcuts import render_to_response
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from irods.session import iRODSSession
 
@@ -53,13 +53,10 @@ def login(request):
             request.session["remember"] = remember
         else:
             request.session["remember"] = ''
-        context = {
-            'irods_loggedin': True,
-            'irods_user': user,
-            'irods_file_name': 'No file selected'
-        }
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
+        request.session['irods_loggedin'] = True
+        request.session['irods_file_name'] = 'No file selected'
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 def store(request):
     return_object = []
@@ -83,9 +80,6 @@ def upload(request):
         file_name = str(request.POST['upload'])
         user = request.session["user"]
 
-        context = {
-            'irods_loggedin': True,
-            'irods_user': user,
-            'irods_file_name': file_name,
-        }
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        request.session['irods_loggedin'] = True
+        request.session['irods_file_name'] = file_name
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
