@@ -9,12 +9,11 @@ import hs_core.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pages', '__first__'),
-        ('hs_model_program', '0001_initial'),
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('hs_core', '0002_auto_20150310_1927'),
         ('auth', '0001_initial'),
+        ('pages', '__first__'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('contenttypes', '0001_initial'),
+        ('hs_core', '0001_initial'),
     ]
 
     operations = [
@@ -23,9 +22,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('name', models.CharField(max_length=500, choices=[(b'-', b'    ')])),
+                ('name', models.CharField(max_length=500)),
+                ('url', models.URLField()),
                 ('content_type', models.ForeignKey(related_name='hs_modelinstance_executedby_related', to='contenttypes.ContentType')),
-                ('model_program_fk', models.ForeignKey(blank=True, to='hs_model_program.ModelProgramResource', null=True)),
             ],
             options={
                 'abstract': False,
@@ -46,9 +45,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('page_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='pages.Page')),
                 ('comments_count', models.IntegerField(default=0, editable=False)),
-                ('rating_count', models.IntegerField(default=0, editable=False)),
-                ('rating_sum', models.IntegerField(default=0, editable=False)),
-                ('rating_average', models.FloatField(default=0, editable=False)),
                 ('public', models.BooleanField(default=True, help_text=b'If this is true, the resource is viewable and downloadable by anyone')),
                 ('frozen', models.BooleanField(default=False, help_text=b'If this is true, the resource should not be modified')),
                 ('do_not_distribute', models.BooleanField(default=False, help_text=b'If this is true, the resource owner has to designate viewers')),
@@ -79,7 +75,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('includes_output', models.BooleanField(default=False)),
+                ('includes_output', models.BooleanField()),
                 ('content_type', models.ForeignKey(related_name='hs_modelinstance_modeloutput_related', to='contenttypes.ContentType')),
             ],
             options={
