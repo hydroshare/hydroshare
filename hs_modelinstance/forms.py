@@ -1,6 +1,7 @@
 __author__ = 'Mohamed'
 from django.forms import ModelForm
 from django import forms
+
 from crispy_forms.layout import *
 from crispy_forms.bootstrap import *
 from models import *
@@ -30,7 +31,7 @@ class ModelOutputForm(ModelForm):
         self.fields['includes_output'].widget.attrs['style'] = "width:auto;margin-top:-5px"
 
         # if len(self.initial) == 0:
-        #self.initial['includes_output'] = False
+        # self.initial['includes_output'] = False
 
     class Meta:
         model = ModelOutput
@@ -74,7 +75,7 @@ class ExecutedByForm(ModelForm):
         mp_resource = users.get_resource_list(user=owner, types=['ModelProgramResource'])
 
         # change above line to this once issue #262 is merged into develop
-        #mp_resource = users.get_resource_list(types=['ModelProgramResource'])
+        # mp_resource = users.get_resource_list(types=['ModelProgramResource'])
 
 
         CHOICES = tuple([('Unknown', 'Unknown')] + [(r.short_id, r.title) for r in mp_resource.values()[0]])

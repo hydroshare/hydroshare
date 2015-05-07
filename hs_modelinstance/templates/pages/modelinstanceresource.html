@@ -7,28 +7,28 @@
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
         <div class="row">
-            <div class="col-md-12">
-                <div>
-                    {% if model_output %}
-                        <h4><strong>Model Output:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Includes output files?</strong></div>
-                            {% if model_output.includes_output == True %}
-                                <div class="col-sm-8">Yes</div>
-                            {% else %}
-                                <div class="col-sm-8">No</div>
-                            {% endif %}
+        <div class="col-md-12">
+            <div>
+                {% if model_output %}
+                    <h4><strong>Model Output:</strong></h4>
+                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                    <div class="row">
+                        <div class="col-sm-4"><strong>Includes output files?</strong></div>
+                        {% if model_output.includes_output == True %}
+                            <div class="col-sm-8">Yes</div>
+                        {% else %}
+                            <div class="col-sm-8">No</div>
+                        {% endif %}
 
-                        </div>
+                    </div>
                     <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if executed_by.name %}
-                        <h4><strong>Executed By:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
+                {% endif %}
+            </div>
+            <div>
+                {% if executed_by.name %}
+                    <h4><strong>Executed By:</strong></h4>
+                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                    <div class="row">
 
                         <div class="col-sm-4"><strong>Name</strong></div>
                         <div class="col-sm-8">{{ executed_by.model_program_fk.title }}</div>
@@ -36,7 +36,7 @@
                         <div class="col-sm-4"><strong>Version</strong></div>
                         <div class="col-sm-8">
                             {% if executed_by.model_program_fk.metadata.mpmetadata.first.software_version.strip %}
-                                {{executed_by.model_program_fk.metadata.mpmetadata.first.software_version}}
+                                {{ executed_by.model_program_fk.metadata.mpmetadata.first.software_version }}
                             {% else %}
                                 Not Provided
 
@@ -46,20 +46,22 @@
                         <div class="col-sm-4"><strong>Resource URL</strong></div>
 
 
-                       <div class="col-sm-8"> <a id="permalink" href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/">http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a></div>
-
+                        <div class="col-sm-8"><a id="permalink"
+                                                 href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/">http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
                         </div>
+
+                    </div>
 
                     <hr>
 
-                    {% endif %}
-                    </div>
+                {% endif %}
             </div>
-    {%  endif %}
-{%  endblock %}
+        </div>
+    {% endif %}
+{% endblock %}
 {% block extra_js %}
     {{ block.super }}
 
     {# resource specific js can go here #}
 
-{%  endblock %}
+{% endblock %}

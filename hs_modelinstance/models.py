@@ -3,12 +3,12 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
 from django.db import models
+from django.shortcuts import get_object_or_404
+from django.contrib.sites.models import get_current_site
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
-from django.shortcuts import get_object_or_404
-from django.contrib.sites.models import get_current_site
 from hs_model_program.models import ModelProgramResource
 from hs_core.signals import *
 
