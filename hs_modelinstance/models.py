@@ -39,7 +39,7 @@ class ModelOutput(AbstractMetaDataElement):
 
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
-    name = models.CharField(max_length=500, choices=(('-','    '),))
+    name = models.CharField(max_length=500, choices=(('-', '    '),))
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True)
 
 
@@ -86,9 +86,9 @@ class ExecutedBy(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("ExecutedBy element of a resource can't be deleted.")
 
-#Model Instance Resource type
-class ModelInstanceResource(Page, AbstractResource):
 
+# Model Instance Resource type
+class ModelInstanceResource(Page, AbstractResource):
     class Meta:
         verbose_name = 'Model Instance Resource'
 
@@ -109,6 +109,7 @@ class ModelInstanceResource(Page, AbstractResource):
 
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
+
 
 processor_for(ModelInstanceResource)(resource_processor)
 
@@ -165,20 +166,27 @@ class ModelInstanceMetaData(CoreMetaData):
 
         if self.model_output:
             hsterms_model_output = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
-            hsterms_model_output_rdf_Description = etree.SubElement(hsterms_model_output, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_model_output_value = etree.SubElement(hsterms_model_output_rdf_Description, '{%s}IncludesModelOutput' % self.NAMESPACES['hsterms'])
+            hsterms_model_output_rdf_Description = etree.SubElement(hsterms_model_output,
+                                                                    '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_model_output_value = etree.SubElement(hsterms_model_output_rdf_Description,
+                                                          '{%s}IncludesModelOutput' % self.NAMESPACES['hsterms'])
             if self.model_output.includes_output == True:
                 hsterms_model_output_value.text = "Yes"
             else:
                 hsterms_model_output_value.text = "No"
         if self.executed_by:
             hsterms_executed_by = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramName' % self.NAMESPACES['hsterms'])
+            hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by,
+                                                                   '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description,
+                                                        '{%s}ModelProgramName' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_name.text = self.executed_by.model_program_fk.title
-            hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_url.text = 'http://%s%s'%(get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
+            hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description,
+                                                       '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
+            hsterms_executed_by_url.text = 'http://%s%s' % (
+                get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
+
 
 import receivers
