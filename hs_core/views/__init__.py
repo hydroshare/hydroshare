@@ -9,6 +9,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
 from django.template import RequestContext
 from django.utils.timezone import now
+from django.core.files.uploadedfile import UploadedFile
 import json
 from mezzanine.conf import settings
 from django import forms
@@ -546,58 +547,10 @@ def add_generic_context(request, page):
 
 res_cls = ""
 resource = None
-@login_required
-def describe_resource(request, *args, **kwargs):
-    resource_type=request.POST['resource-type']
-    res_title = request.POST['title']
-    global res_cls, resource
-    resource_files=request.FILES.getlist('files')
-    valid = hydroshare.check_resource_files(resource_files)
-    if not valid:
-        context = {
-            'file_size_error' : 'The resource file is larger than the supported size limit %s. Select resource files within %s to create resource.' % (file_size_limit_for_display, file_size_limit_for_display)
-        }
-        return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
-    res_cls = hydroshare.check_resource_type(resource_type)
-    # Send pre_describe_resource signal for other resource type apps to listen, extract, and add their own metadata
-    ret_responses = pre_describe_resource.send(sender=res_cls, files=resource_files, title=res_title)
-
-    create_res_context = {
-        'resource_type': resource_type,
-        'res_title': res_title,
-    }
-    page_url = 'pages/create-resource.html'
-    use_generic = True
-    for receiver, response in ret_responses:
-        if response is not None:
-            for key in response:
-                if key != 'create_resource_page_url':
-                    create_res_context[key] = response[key]
-                else:
-                    page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
-                    use_generic = False
-
-    if use_generic:
-        # create barebone resource with resource_files to database model for later update since on Django 1.7, resource_files get closed automatically at the end of each request
-        owner = user_from_id(request.user)
-        resource = res_cls.objects.create(
-                user=owner,
-                creator=owner,
-                title=res_title,
-                last_changed_by=owner,
-                in_menus=[],
-                **kwargs
-        )
-        for file in resource_files:
-            ResourceFile.objects.create(content_object=resource, resource_file=file)
-
-    return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
-
 
 @login_required
 def create_resource_select_resource_type(request, *args, **kwargs):
     return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
-
 
 @login_required
 def create_resource_new_workflow(request, *args, **kwargs):
@@ -608,6 +561,22 @@ def create_resource_new_workflow(request, *args, **kwargs):
 
     global res_cls, resource
     resource_files = request.FILES.getlist('files')
+
+    irods_fname = request.POST['irods_file_name']
+    if irods_fname:
+        user = request.session["user"]
+        password = request.session["password"]
+        port = request.session["port"]
+        host = request.session["host"]
+        zone = request.session["zone"]
+        # use iget to transfer selected data object to local as a NamedTemporaryFile
+        from django_irods.storage import IrodsStorage
+        irods_storage = IrodsStorage()
+        irods_storage.set_user_session(username=user, password=password, host=host, port=port, zone=zone)
+        tmpFile = irods_storage.download(irods_fname)
+        fname = os.path.basename(irods_fname.rstrip(os.sep))
+        resource_files.append(UploadedFile(file=tmpFile, name=fname))
+
     valid = hydroshare.check_resource_files(resource_files)
     if not valid:
         context = {
@@ -686,7 +655,7 @@ def create_resource_new_workflow(request, *args, **kwargs):
             title=res_title,
             keywords=None,
             metadata=metadata,
-            files=request.FILES.getlist('files'),
+            files=resource_files,
             content=res_title
     )
 

@@ -48,6 +48,7 @@
     <div id="upload-file">
         <h3>Add your files here:</h3>
         <table class="table" id="file-list">
+        <input type="hidden" name="irods_file_name" value={% if irods_loggedin %} {{ irods_file_name }} {% else %} "" {% endif %}/>
         <tbody id="files">
             <tr>
                 <td><input type="file" name="files" id="select-file" multiple/></td>
@@ -61,7 +62,7 @@
                     <a id="select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsContent">
                         <span class="glyphicon glyphicon-plus"><span class="button-label">Browse iRODS...</span></span>
                     </a>
-                    {{ irods_files }}
+                    {{ irods_file_name }}
                 {% else %}
                     {{ login_message }}
                 {%  endif %}
@@ -143,16 +144,15 @@
                 <div class="modal-body">
                   {% csrf_token %}
                   <input type="hidden" name="store" id="root_store" value="{{ request.session.datastore }}"/>
-                   <input type="hidden" name="upload" id="upload_store" value=""/>
+                  <input type="hidden" name="upload" id="upload_store" value=""/>
                     <div id="irods_structure">
-                        <div id="viewing">Viewing : <input type="text" id="irods_view_store" > <input type="text" id="irods_view_store_2" style="display:none;"></div>
-                        <div id = "file_struct">
-                            <!-- <div class="irods_folder" ><img src="{{STATIC_URL}}img/folder.png"></div> -->
-                         </div>
+                        <div id="viewing">Viewing : <input type="text" id="irods_view_store" ></div>
+                        <div id = "file_struct"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                  <button type="submit" id="iget_irods" class="btn btn-primary btn-block">Select</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" id="iget_irods" class="btn btn-primary">Select</button>
                 </div>
               </form>
             </div>
