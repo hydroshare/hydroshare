@@ -3,7 +3,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.shortcuts import get_object_or_404
 from django.contrib.sites.models import get_current_site
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
@@ -51,7 +50,9 @@ class ExecutedBy(AbstractMetaDataElement):
     def create(cls, **kwargs):
         shortid = kwargs['name']
 
-        obj = get_object_or_404(ModelProgramResource,short_id=shortid)
+        # get the MP object that matches.  Returns None if nothing is found
+        obj = ModelProgramResource.objects.filter(short_id=shortid).first()
+
         kwargs['model_program_fk'] = obj
         metadata_obj = kwargs['content_object']
         title = obj.title
@@ -65,7 +66,10 @@ class ExecutedBy(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         shortid = kwargs['name']
-        obj = get_object_or_404(ModelProgramResource,short_id=shortid)
+
+        # get the MP object that matches.  Returns None if nothing is found
+        obj = ModelProgramResource.objects.filter(short_id=shortid).first()
+
         kwargs['model_program_fk'] = obj
 
         executed_by = ExecutedBy.objects.get(id=element_id)
@@ -73,7 +77,7 @@ class ExecutedBy(AbstractMetaDataElement):
             for key, value in kwargs.iteritems():
                 setattr(executed_by, key, value)
 
-            # todo: save foreign key fails here!
+            # todo: save foreign key fails here if obj is None.  Why???
             executed_by.save()
         else:
             raise ObjectDoesNotExist("No ExecutedBy element was found for the provided id:%s" % kwargs['id'])
