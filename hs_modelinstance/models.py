@@ -39,12 +39,12 @@ class ModelOutput(AbstractMetaDataElement):
 
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
-    name = models.CharField(max_length=500, choices=(('-', '    '),))
+    model_name = models.CharField(max_length=500, choices=(('-', '    '),))
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True)
 
 
     def __unicode__(self):
-        self.name
+        self.model_name
 
     @classmethod
     def create(cls, **kwargs):
@@ -65,7 +65,7 @@ class ExecutedBy(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        shortid = kwargs['name']
+        shortid = kwargs['model_name']
 
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()

@@ -56,7 +56,7 @@ class ExecutedByFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-            Field('name', css_class=field_width),
+            Field('model_name', css_class=field_width),
         )
 
         kwargs['element_name_label'] = 'Model Program used for execution'
@@ -81,7 +81,7 @@ class ExecutedByForm(ModelForm):
         CHOICES = tuple([('Unknown', 'Unknown')] + [(r.short_id, r.title) for r in mp_resource.values()[0]])
 
         # Set the choice lists as the file names in the content model
-        self.fields['name'].choices = CHOICES
+        self.fields['model_name'].choices = CHOICES
 
 
     class Meta:
@@ -90,6 +90,6 @@ class ExecutedByForm(ModelForm):
 
 
 class ExecutedByValidationForm(forms.Form):
-    name = forms.CharField(max_length=200)
+    model_name = forms.CharField(max_length=200)
     model_program_fk = forms
 
