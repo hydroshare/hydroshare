@@ -1,5 +1,3 @@
-
-
 $('#select-irods-file').on('click',function(){
     $('#file_struct').children().remove();
 	store = $('#root_store').val();
@@ -18,54 +16,50 @@ function get_store(store,parent,margin){
 	form_data = new FormData()
 	form_data.append('store',store)
 	$.ajax({
-            mode: "queue",
-			url: '/irods/store/',
-			async: true,
-			type: "POST",
-			data: form_data,
-			processData: false,
-			contentType: false,
-			success: function (data, status) {
-				data = jQuery.parseJSON(data);
-				if (data[0].length ==0 && data[1].length ==0) {
-					$(parent).append("<div class='file' style='margin-left:"+margin+"px;'> -- EMPTY --</div>");
-				}
-				else {
-					$.each(data[1],function(i,v){
-						$(parent).append("<div class='folder' id = 'irods_folder_"+v+"' name='"+store+"/"+v+"' style='margin-left:"+margin+"px;'><img src='/static/img/folder.png' width='15' height='15'>&nbsp; "+v+"</div>");
-					});
-					
-					$.each(data[0],function(i,v){
-						$(parent).append("<div class='file' id='irods_file_"+v+"' name='"+store+"/"+v+"' style='margin-left:"+margin+"px;'><img src='/static/img/file.png' width='15' height='15'>&nbsp; "+v+"</div>")
-						$('.file').on('click',function(e){
-							$('.file').css('background','');
-							$('.file').removeClass('selected');
-							$(e.target).css('background','#cecece');
-							$(e.target).addClass('selected');
-							set_datastore($(this).parent('div')[0], 0)
-							return false
-						});
-					});
-				}
-				//enable_settings();
-	        },		
+        mode: "queue",
+        url: '/irods/store/',
+        async: true,
+        type: "POST",
+        data: form_data,
+        processData: false,
+        contentType: false,
+        success: function (data, status) {
+            data = jQuery.parseJSON(data);
+            if (data[0].length ==0 && data[1].length ==0) {
+                $(parent).append("<div class='file' style='margin-left:"+margin+"px;'> -- EMPTY --</div>");
+            }
+            else {
+                $.each(data[1],function(i,v) {
+                    $(parent).append("<div class='folder' id = 'irods_folder_"+v+"' name='"+store+"/"+v+"' style='margin-left:"+margin+"px;'><img src='/static/img/folder.png' width='15' height='15'>&nbsp; "+v+"</div>");
+                });
 
-	        error: function(status) {
-	        	return false;
-	        }											
-		});
+                $.each(data[0],function(i,v) {
+                    $(parent).append("<div class='file' id='irods_file_"+v+"' name='"+store+"/"+v+"' style='margin-left:"+margin+"px;'><img src='/static/img/file.png' width='15' height='15'>&nbsp; "+v+"</div>")
+                    $('.file').on('click',function(e){
+                        $('.file').css('background','');
+                        $('.file').removeClass('selected');
+                        $(e.target).css('background','#cecece');
+                        $(e.target).addClass('selected');
+                        set_datastore($(this).parent('div')[0], 0)
+                        return false
+                    });
+                });
+            }
+        },
+
+        error: function(status) {
+            return false;
+        }
+	});
 	return true;
 }
 
 function enable_settings(){
 	// Folder click settings
-
-$('body').on('click', '.folder' ,function(){
-
-		 //console.log($(this).hasClass('isOpen')); 
-		 margin_left = $(this).css('margin-left');
-		 margin_left = parseInt(margin_left.substring(0,margin_left.length-2)) + 10;
-		if($(this).hasClass('isOpen')){
+    $('body').on('click', '.folder' ,function() {
+		margin_left = $(this).css('margin-left');
+		margin_left = parseInt(margin_left.substring(0,margin_left.length-2)) + 10;
+		if($(this).hasClass('isOpen')) {
 			$(this).addClass('isClose');
 			$(this).removeClass('isOpen');
 			$(this).children('div').hide();
@@ -83,11 +77,8 @@ $('body').on('click', '.folder' ,function(){
 			$(this).addClass('isOpen');
 			set_datastore($(this).attr('name'),1);
 		}
-	//});
-return false;
-});
-
-
+        return false;
+    });
 }
 
 function set_datastore(store,isFolder) {
@@ -98,10 +89,8 @@ function set_datastore(store,isFolder) {
 }
 
 // ### IRODS FUNCTION FOR VIEWING INPUT BOX UPON PRESSING RETURN ###
-
 $('#irods_view_store').keypress(function(e) {
     if(e.which == 13) {
- 
         store = $(this).val();
         if (store=='') {
         	store = $('#root_store').val();
@@ -132,10 +121,8 @@ $("#irodsContent form").bind("keypress", function (e) {
 });
 
 $('#iget_irods').on('click',function(){
-	var name = '';
-	name = $('.selected').attr('name');
+	var name = $('.selected').attr('name');
 	$('#upload_store').val(name);
 	$('#irodsContent .modal-backdrop.up-load').show();
 	$('#irodsContent .ajax-loader').show();
 });
-

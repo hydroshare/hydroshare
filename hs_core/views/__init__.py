@@ -562,7 +562,7 @@ def create_resource_new_workflow(request, *args, **kwargs):
     global res_cls, resource
     resource_files = request.FILES.getlist('files')
 
-    irods_fname = request.POST['irods_file_name']
+    irods_fname = request.session.get('irods_file_name', '')
     if irods_fname:
         user = request.session["user"]
         password = request.session["password"]
