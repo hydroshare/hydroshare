@@ -711,14 +711,17 @@
                             </a>
                         </li>
                     {% endif %}
-                    {% if extended_metadata_exists or metadata_form %}
-                        {% if  cm|resource_type != "Generic" %}
-                        <li class="col-xs-2 col-md-2">
-                            <a href="#resourceSpecificTab" data-toggle="tab">
-                                <span class="glyphicon glyphicon-folder-close"></span>
-                                &nbspResource Specific
-                            </a>
-                        </li>
+                    {% if extended_metadata_exists or metadata_form  %}
+                        {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
+                        {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
+                            {% if  cm|resource_type != "Generic" %}
+                            <li class="col-xs-2 col-md-2">
+                                <a href="#resourceSpecificTab" data-toggle="tab">
+                                    <span class="glyphicon glyphicon-folder-close"></span>
+                                    &nbspResource Specific
+                                </a>
+                            </li>
+                            {% endif %}
                         {% endif %}
                     {% endif %}
 {#                    {% if relevant_tools or metadata_form %}#}
@@ -1344,18 +1347,21 @@
             {% endif %}
                 <!-- ========= RESOURCE SPECIFIC TAB ========= -->
             {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
-                {% if  cm|resource_type != "Generic" %}
-                <div class="tab-pane" id="resourceSpecificTab">
-                {% if not metadata_form %}
+                {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
+                {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
+                    {% if  cm|resource_type != "Generic" %}
+                    <div class="tab-pane" id="resourceSpecificTab">
+                    {% if not metadata_form %}
 
-                    {% block extended_metadata %}
+                        {% block extended_metadata %}
 
-                    {%  endblock %}
+                        {%  endblock %}
 
-                {%  else %}
-                   {%  crispy metadata_form  %}
-                {%  endif %}
-                </div>
+                    {%  else %}
+                       {%  crispy metadata_form  %}
+                    {%  endif %}
+                    </div>
+                    {%  endif %}
                 {%  endif %}
             {%  endif %}
 {#                <!-- ========= RELEVANT TOOLS TAB ========= -->#}
