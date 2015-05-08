@@ -9,6 +9,26 @@
 {% endblock %}
 
 {% block main %}
+    {% block error %}
+        {%  if file_validation_error %}
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <strong>Uploaded File Validation Error:{{ file_validation_error }}</strong>
+             </div>
+        {%  endif %}
+        {%  if file_size_error %}
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <strong>Uploaded File Size Error:{{ file_size_error }}</strong>
+             </div>
+        {%  endif %}
+        {%  if resource_creation_error %}
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <strong>Failed to Create Resource:{{ resource_creation_error }}</strong>
+             </div>
+        {%  endif %}
+    {% endblock %}
 
     <h2>Select a resource type and upload files as needed to create a new resource</h2>
 

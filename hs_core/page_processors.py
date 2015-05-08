@@ -1,7 +1,5 @@
 from mezzanine.pages.page_processors import processor_for
-#from dublincore.models import QualifiedDublinCoreElement
-from hs_core.hydroshare import current_site_url
-from hs_core.hydroshare.utils import get_file_mime_type, resource_modified
+
 from hs_core.models import GenericResource
 from hs_core import languages_iso
 from forms import *
