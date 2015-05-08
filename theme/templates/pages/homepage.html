@@ -11,9 +11,9 @@
         <div id="wrap" style="background-image: url('{{ MEDIA_URL }}{% thumbnail page.homepage.header_background 1000 500 %}');">
             <div class="container">
                 <div class="row">
-                    <div class="col-md-6 col-sm-12">
+                    <div class="col-lg-6 col-md-12">
                         {% editable page.homepage.heading %}
-                        <h1 class="animated slideInDown"><img src="{{ STATIC_URL }}img/logo-lg.png" alt="{{ page.homepage.heading }}"/>{# page.homepage.heading #}</h1>
+                        <h1 class="animated slideInDown"><img class="fit" src="{{ STATIC_URL }}img/logo-lg.png" alt="{{ page.homepage.heading }}"/>{# page.homepage.heading #}</h1>
                         {% endeditable %}
                         {% editable page.homepage.slide_in_one_icon page.homepage.slide_in_one page.homepage.slide_in_two_icon page.homepage.slide_in_two page.homepage.slide_in_three_icon page.homepage.slide_in_three %}
                         <div class="list">
@@ -31,7 +31,7 @@
                         </div>
                         {% endeditable %}
                     </div>
-                    <div class="col-md-6 hidden-sm hidden-xs">
+                    <div class="col-lg-6 col-md-12">
                         <div class="showcase">
                             {% if user.is_anonymous %}
                             <div class="iMac animated fadeInDown">
