@@ -68,6 +68,11 @@ function show_model_details(e) {
             "       <td align='left'><a href="+data['url']+" target='_blank'>"+"Resource Landing Page"+"</a></td></tr>" +
             "<t/table>";
 
+        },
+        error: function (data) {
+
+            alert ('there was an error during ajax post');
+
         }
     });
 

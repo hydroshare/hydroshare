@@ -23,11 +23,12 @@ def get_model_metadata(request):
         metadata = dict(
             description=obj.description,
             program_website=mpmeta.program_website,
-            date_released=mpmeta.date_released,
+            date_released=str(mpmeta.date_released),
             software_version=mpmeta.software_version,
             software_language=mpmeta.software_language,
             operating_sys=mpmeta.operating_sys,
             url = "http://"+request.get_host()+"/resource/"+resource_id+"/",
         )
+    j = json.dumps({'test':1})
     json_data = json.dumps(metadata)
     return HttpResponse(json_data, content_type="application/json")
