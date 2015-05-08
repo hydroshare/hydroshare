@@ -1,20 +1,17 @@
 import json
-from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseRedirect
-from django.template import RequestContext
 from irods.session import iRODSSession
 
 irods_sess = None
 
 def search_ds(coll):
-    print coll
     store = {}
     file = []
     folder = []
-    if (coll.data_objects != []):
+    if coll.data_objects:
         for files in coll.data_objects:
             file.append(files.name)
-    if (coll.subcollections != []):
+    if coll.subcollections:
         for folders in coll.subcollections:
             folder.append(folders.name)
 
@@ -35,13 +32,12 @@ def login(request):
     irods_sess = iRODSSession(user=user, password=password, zone=zone, host=host, port=port)
 
     try:
-        irods_coll = irods_sess.collections.get(datastore)
+        irods_sess.collections.get(datastore)
     except:
-        context = {
-            'irods_loggedin': False,
-            'login_message': 'iRODS login failed'
-        }
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        request.session['irods_loggedin'] = False
+        request.session['login_message'] = 'iRODS login failed'
+        request.session['irods_file_name'] = ''
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
     else:
         request.session["user"] = user
         request.session["datastore"] = datastore
@@ -53,33 +49,21 @@ def login(request):
             request.session["remember"] = remember
         else:
             request.session["remember"] = ''
-
         request.session['irods_loggedin'] = True
-        request.session['irods_file_name'] = 'No file selected'
+        request.session['irods_file_name'] = ''
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 def store(request):
     return_object = []
-    user = request.session["user"]
-    password = request.session["password"]
-    port = request.session["port"]
-    host = request.session["host"]
-    zone = request.session["zone"]
-
     global irods_sess
     coll = irods_sess.collections.get(str(request.POST['store']))
     store = search_ds(coll)
     return_object.append(store['files'])
     return_object.append(store['folder'])
-
     return HttpResponse(json.dumps(return_object), status=201)
 
 def upload(request):
-    global work_space
-    if request.method == 'POST':
-        file_name = str(request.POST['upload'])
-        user = request.session["user"]
-
-        request.session['irods_loggedin'] = True
-        request.session['irods_file_name'] = file_name
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    file_name = str(request.POST['upload'])
+    request.session['irods_loggedin'] = True
+    request.session['irods_file_name'] = file_name
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
