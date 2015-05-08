@@ -38,6 +38,8 @@ from hs_core.hydroshare import file_size_limit_for_display
 from hs_core.signals import *
 import autocomplete_light
 
+from django_irods.storage import IrodsStorage
+
 def short_url(request, *args, **kwargs):
     try:
         shortkey = kwargs['shortkey']
@@ -75,6 +77,20 @@ def add_file_to_resource(request, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     res_cls = res.__class__
     res_files = request.FILES.getlist('files')
+
+    irods_fname = request.session.get('irods_add_file_name', '')
+    if irods_fname:
+        user = request.session["user"]
+        password = request.session["password"]
+        port = request.session["port"]
+        host = request.session["host"]
+        zone = request.session["zone"]
+        # use iget to transfer selected data object to local as a NamedTemporaryFile
+        irods_storage = IrodsStorage()
+        irods_storage.set_user_session(username=user, password=password, host=host, port=port, zone=zone)
+        tmpFile = irods_storage.download(irods_fname)
+        fname = os.path.basename(irods_fname.rstrip(os.sep))
+        res_files.append(UploadedFile(file=tmpFile, name=fname))
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, user=request.user,
@@ -449,9 +465,6 @@ class FilterForm(forms.Form):
 
 @processor_for('my-resources')
 def my_resources(request, page):
-#    if not request.user.is_authenticated():
-#        return HttpResponseRedirect('/accounts/login/')
-
     #import sys
     #sys.path.append("/home/docker/pycharm-debug")
     #import pydevd
@@ -570,7 +583,6 @@ def create_resource_new_workflow(request, *args, **kwargs):
         host = request.session["host"]
         zone = request.session["zone"]
         # use iget to transfer selected data object to local as a NamedTemporaryFile
-        from django_irods.storage import IrodsStorage
         irods_storage = IrodsStorage()
         irods_storage.set_user_session(username=user, password=password, host=host, port=port, zone=zone)
         tmpFile = irods_storage.download(irods_fname)

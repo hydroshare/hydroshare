@@ -1,4 +1,4 @@
-$('#select-irods-file').on('click',function(){
+$('#btn-select-irods-file').on('click',function(){
     $('#file_struct').children().remove();
 	store = $('#root_store').val();
 	// Setting up the view tab

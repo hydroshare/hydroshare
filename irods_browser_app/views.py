@@ -65,5 +65,18 @@ def store(request):
 def upload(request):
     file_name = str(request.POST['upload'])
     request.session['irods_loggedin'] = True
-    request.session['irods_file_name'] = file_name
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    ref_url = request.META['HTTP_REFERER']
+    urlstrs = ref_url.rsplit('/', 2)
+    lsize = len(urlstrs)
+    base_url = urlstrs[lsize-1]
+    if not base_url:
+        base_url=urlstrs[lsize-2]
+    if base_url == "create-resource":
+        # create resource using irods file
+        request.session['irods_file_name'] = file_name
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    else:
+        # add irods file into an existing resource
+        request.session['irods_add_file_name'] = file_name
+        res_id = request.POST['res_id']
+        return HttpResponseRedirect('/hsapi/_internal/{res_id}/add-file-to-resource/'.format(res_id=res_id))

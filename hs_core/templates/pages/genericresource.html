@@ -2,6 +2,10 @@
 
 {% load geoanalytics_tags ratings_tags pages_tags mezzanine_tags comments_tags keyword_tags hydroshare_tags crispy_forms_tags inplace_edit %}
 
+{% block extra_head %}
+      <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
+{% endblock %}
+
 {% block main %}
 
     {% with page.get_content_model as cm %}
@@ -466,10 +470,21 @@
                     {% endfor %}
 
                     {% if page.perms.change %}
-                        <td><a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
+                        <a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
                                multiple="multiple">
                             <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
-                        </a></td>
+                        </a>
+                        <a id="btn-signin-irods"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsSignin">
+                            <span class="glyphicon glyphicon-plus"><span class="button-label">Sign in iRODS...</span></span>
+                        </a>
+                        {% if request.session.irods_loggedin %}
+                            Signed in as {{ request.session.user }}
+                            <a id="btn-select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsContent">
+                                <span class="glyphicon glyphicon-plus"><span class="button-label">Add file from iRODS...</span></span>
+                            </a>
+                        {% else %}
+                            {{ request.session.login_message }}
+                        {%  endif %}
                     {% endif %}
                 </div>
             </div>
@@ -762,6 +777,7 @@
 
         <!-- Modal -->
         {%  block modal %}
+            {% include "irods.html" %}
             {%  block modal_publish_resource %}
                 <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
                      aria-labelledby="myModalLabel" aria-hidden="true">
@@ -855,6 +871,7 @@
     {% endwith %}
 
     {% block extra_js %}
+    <script type="text/javascript" src="{{STATIC_URL}}js/irods.js" ></script>
     <script type="text/javascript">
     $(function() {
     });

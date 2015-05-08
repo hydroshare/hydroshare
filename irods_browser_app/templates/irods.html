@@ -1,0 +1,75 @@
+{% block modal_irods_login %}
+    <div class="modal fade" id="irodsSignin" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <form class="form-signin" role="form" action="/irods/login/" method="post">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Sign in</h4>
+                    </div>
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <input type="hidden" name="path" value="{{ request.path }}"/>
+                        <div class="form-group">
+                            <label for="id_username" class="sr-only">Username: </label>
+                            <input id="id_username" class="form-control" name="username" placeholder="Username" value={% if request.session.remember and request.session.user %}{{request.session.user}}{% else %}""{% endif %} type="text" />
+                        </div>
+                        <div class="form-group">
+                            <label for="id_password" class="sr-only">Password:</label>
+                            <input id="id_password" class="form-control" name="password" placeholder="Password" value={% if request.session.remember and request.session.password %}{{request.session.password}}{% else %}""{% endif %} type="password" />
+                        </div>
+                        <div class="form-group">
+                            <label for="id_port" class="sr-only">Port:</label>
+                            <input id="id_port" class="form-control" name="port" placeholder="Port" value="1247" type="text" />
+                        </div>
+                        <div class="form-group">
+                            <label for="id_host" class="sr-only">Host:</label>
+                            <input id="id_host" class="form-control" name="host" placeholder="Host" value={% if request.session.remember and request.session.host %}{{request.session.host}}{% else %}""{% endif %} type="text" />
+                        </div>
+                        <div class="form-group">
+                            <label for="id_zone" class="sr-only">Zone:</label>
+                            <input id="id_zone" class="form-control" name="zone" placeholder="Zone" value={% if request.session.remember and request.session.zone %}{{request.session.zone}}{% else %}""{% endif %} type="text" />
+                        </div>
+                        <label class="checkbox">
+                            <input type="checkbox" name="remember" {% if request.session.remember %} checked {% endif %}/>Remember Me
+                        </label>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Sign in</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block modal_irods_browse %}
+    <div class="modal fade" id="irodsContent" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true">
+      <div class="modal-backdrop up-load" style="opacity:0.5"></div>
+      <img class="ajax-loader" width='100' height='100' src="{{STATIC_URL}}img/ajax-loader.gif" align='center' style="position:absolute;z-index:100000;top:28%;left:50%;">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <h4 class="modal-title" id="myModalLabel">iRODS user: <span id="irods_content_label">{{request.session.user}}</span> </h4>
+          </div>
+          <form class="form-signin" role="form" action="/irods/upload/" method="post">
+            <div class="modal-body">
+              {% csrf_token %}
+              <input type="hidden" name="store" id="root_store" value="{{ request.session.datastore }}"/>
+              <input type="hidden" name="res_id" id="res_id" value="{{ cm.short_id }}"/>
+              <input type="hidden" name="upload" id="upload_store" value=""/>
+                <div id="irods_structure">
+                    <div id="viewing">Viewing : <input type="text" id="irods_view_store" ></div>
+                    <div id = "file_struct"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="submit" id="iget_irods" class="btn btn-primary">Select</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+{% endblock %}
