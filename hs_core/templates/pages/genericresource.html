@@ -25,7 +25,7 @@
                 {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
                     <div class="alert alert-success alert-dismissible" role="alert">
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                      <strong>Congratulations!</strong> Now that your resource has been created please take some time to add data for:
+                      <strong>Congratulations!</strong> <span>Now that your resource has been created please take some time to add data for:</span>
                         <ul>
                         {% for element in missing_metadata_elements %}
                             <li>{{ element }}</li>
@@ -34,13 +34,13 @@
                            <li>Title: needs to be changed</li>
                         {% endif %}
                     </ul>
-                    <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
-                        {% csrf_token %}
-                        <input name="resource-mode" type="hidden" value="edit"/>
-                        <button id="alert-edit-button" type="submit" data-toggle="tooltip" data-placement="auto"
-                                title="Edit this resource" class="btn-edit"> Edit this resource
-                        </button>
-                    </form>
+
+                    <hr>
+                    <span>
+                        <span class="glyphicon glyphicon-question-sign">
+                        </span> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> )
+                        below to edit this resource.
+                    </span>
                  </div>
                 {% endif %}
             {% endif %}
