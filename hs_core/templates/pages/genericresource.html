@@ -21,11 +21,11 @@
         {% endblock %}
 {#        ======= Missing fields notification =======#}
 
-            {% if not metadata_form %}
+            {% if not metadata_form and page.perms.change %}
                 {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
-                    <div class="alert alert-danger alert-dismissible" role="alert">
+                    <div class="alert alert-success alert-dismissible" role="alert">
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                      <strong>Data for the following required elements are missing:</strong>
+                      <strong>Congratulations!</strong> Now that your resource has been created please take some time to add data for:
                         <ul>
                         {% for element in missing_metadata_elements %}
                             <li>{{ element }}</li>
@@ -34,6 +34,13 @@
                            <li>Title: needs to be changed</li>
                         {% endif %}
                     </ul>
+                    <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
+                        {% csrf_token %}
+                        <input name="resource-mode" type="hidden" value="edit"/>
+                        <button id="alert-edit-button" type="submit" data-toggle="tooltip" data-placement="auto"
+                                title="Edit this resource" class="btn-edit"> Edit this resource
+                        </button>
+                    </form>
                  </div>
                 {% endif %}
             {% endif %}
@@ -72,13 +79,13 @@
                             {% csrf_token %}
                             {% if page.perms.delete %}
                             <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
-                            <span data-toggle="tooltip" data-placement="auto" title="Delete"
+                            <span data-toggle="tooltip" data-placement="auto" title="Delete this resource"
                                   class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                             </a>
                             {% endif %}
                             <input name="resource-mode" type="hidden" value="edit"/>
                             <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
-                                    title="Edit" class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
+                                    title="Edit this resource" class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
                         </form>
                     </div>
                     </div>

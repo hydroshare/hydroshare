@@ -1328,6 +1328,12 @@ body > .container{
     color: #428BD2;
 }
 
+#alert-edit-button{
+    margin-top: 15px;
+    font-size: 16px;
+    margin-left: 20px;
+}
+
 .btn-download{
     color:#428bca;
 }
