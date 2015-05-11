@@ -264,18 +264,32 @@ class SWATModelParameters(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if not 'has_crop_rotation' in kwargs:
             raise ValidationError("SWATModelParameters has_crop_rotation is missing.")
+        else:
+            kwargs['has_crop_rotation'] = 1 if kwargs['has_crop_rotation'] == 'True' else 0
         if not 'has_title_drainage' in kwargs:
             raise ValidationError("SWATModelParameters has_title_drainage is missing.")
+        else:
+            kwargs['has_title_drainage'] = 1 if kwargs['has_title_drainage'] == 'True' else 0
         if not 'has_point_source' in kwargs:
             raise ValidationError("SWATModelParameters has_point_source is missing.")
+        else:
+            kwargs['has_point_source'] = 1 if kwargs['has_point_source'] == 'True' else 0
         if not 'has_fertilizer' in kwargs:
             raise ValidationError("SWATModelParameters has_fertilizer is missing.")
+        else:
+            kwargs['has_fertilizer'] = 1 if kwargs['has_fertilizer'] == 'True' else 0
         if not 'has_tillage_operation' in kwargs:
             raise ValidationError("SWATModelParameters has_tillage_operation is missing.")
+        else:
+            kwargs['has_tillage_operation'] = 1 if kwargs['has_tillage_operation'] == 'True' else 0
         if not 'has_inlet_of_draining_watershed' in kwargs:
             raise ValidationError("SWATModelParameters has_inlet_of_draining_watershed is missing.")
+        else:
+            kwargs['has_inlet_of_draining_watershed'] = 1 if kwargs['has_inlet_of_draining_watershed'] == 'True' else 0
         if not 'has_irrigation_operation' in kwargs:
             raise ValidationError("SWATModelParameters has_irrigation_operation is missing.")
+        else:
+            kwargs['has_irrigation_operation'] = 1 if kwargs['has_irrigation_operation'] == 'True' else 0
         if not 'has_other_parameters' in kwargs:
             raise ValidationError("SWATModelParameters has_other_parameters is missing.")
 
@@ -298,6 +312,8 @@ class SWATModelParameters(AbstractMetaDataElement):
                 if key in ('has_crop_rotation', 'has_title_drainage', 'has_point_source',\
                            'has_fertilizer', 'has_tillage_operation', 'has_inlet_of_draining_watershed',\
                            'has_irrigation_operation', 'has_other_parameters'):
+                    if key != 'has_other_parameters':
+                        value = 1 if value == 'True' else 0
                     setattr(swat_model_parameters, key, value)
 
             swat_model_parameters.save()
