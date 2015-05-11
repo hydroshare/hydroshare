@@ -43,8 +43,7 @@ def landing_page(request, page):
 
         context['resource_type'] = 'Model Program Resource'
         context['output_form'] = output_form
-    hs_core_dublin_context = add_dublin_core(request, page)
-    context.update(hs_core_dublin_context)
 
-
+    hs_core_context = add_generic_context(request, page)
+    context.update(hs_core_context)
     return context

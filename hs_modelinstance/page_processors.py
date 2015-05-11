@@ -52,6 +52,7 @@ def landing_page(request, page):
         context['resource_type'] = 'Model Instance Resource'
         context['model_output_form'] = model_output_form
         context['executed_by_form'] = executed_by_form
-    hs_core_dublin_context = add_dublin_core(request, page)
-    context.update(hs_core_dublin_context)
+
+    hs_core_context = add_generic_context(request, page)
+    context.update(hs_core_context)
     return context

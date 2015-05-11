@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import UploadedFile
 import django.dispatch
 from django.contrib.auth.models import User
 from mezzanine.generic.models import Keyword, AssignedKeyword
-from dublincore.models import QualifiedDublinCoreElement
+#from dublincore.models import QualifiedDublinCoreElement
 from hs_core.hydroshare import hs_bagit
 from hs_core.hydroshare.utils import get_resource_types, current_site_url
 from hs_core.models import ResourceFile
@@ -303,7 +303,7 @@ def check_resource_type(resource_type):
 def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=None, dublin_metadata=None, metadata=None, content=None,
+        keywords=None, metadata=None, content=None,
         files=(), res_type_cls=None, resource=None, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
@@ -344,26 +344,12 @@ def create_resource(
     :param edit_groups: list of group names or Group instances who will be given edit permissions
     :param view_groups: list of group names or Group instances who will be given view permissions
     :param keywords: string list. list of keywords to add to the resource
-    :param dublin_metadata: list of dicts containing keys { 'term', 'content' } respecting dublin core std.
     :param metadata: list of dicts containing keys (element names) and corresponding values as dicts { 'creator': {'name':'John Smith'}}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
     :return: a new resource which is an instance of resource_type.
     """
-    # if files:
-    #     check_file = True
-    #     for file in files:
-    #         if file.closed:
-    #             check_file = False
-    # else:
-    #     check_file = False
-    # if check_file:
-    #     valid = check_resource_files(files)
-    #     if not valid:
-    #         return None
-    # if res_type_cls is None:
-    #     res_type_cls = check_resource_type(resource_type)
 
     for tp in get_resource_types():
         if resource_type == tp.__name__:
@@ -381,29 +367,6 @@ def create_resource(
 
     #signals.pre_create_resource.send(sender=res_type_cls, dublin_metadata=dublin_metadata, metadata=metadata, files=files, resource=resource, **kwargs)
     owner = utils.user_from_id(owner)
-
-    # if resource is None:
-    #     # create the resource
-    #     resource = res_type_cls.objects.create(
-    #         user=owner,
-    #         creator=owner,
-    #         title=title,
-    #         last_changed_by=owner,
-    #         in_menus=[],
-    #         **kwargs
-    #     )
-    #     for file in files:
-    #         ResourceFile.objects.create(content_object=resource, resource_file=file)
-    # else:
-    #     # resource is already created with minimum barebone right after the resource files are uploaded, update resource accordingly with more info
-    #     resource.user = owner
-    #     resource.creator = owner
-    #     resource.title = title
-    #     #tid = resource.content_object.Title.object_id
-    #     #resource.title.update(res_type_cls, tid, {"value":title})
-    #     resource.last_changed_by = owner
-    #     resource.content = content
-    #     resource.save()
 
     # create the resource
     resource = cls.objects.create(
@@ -433,12 +396,8 @@ def create_resource(
 
     if 'owner' in kwargs:
         owner = utils.user_from_id(kwargs['owner'])
-        resource.view_users.add(owner)
-        resource.edit_users.add(owner)
         resource.owners.add(owner)
 
-    resource.view_users.add(owner)
-    resource.edit_users.add(owner)
     resource.owners.add(owner)
 
     if edit_users:   
@@ -468,16 +427,6 @@ def create_resource(
         for k in ks:
             AssignedKeyword.objects.create(content_object=resource, keyword=k)
 
-    # for creating metadata elements based on the old metadata implementation
-    # TODO: Pabitra: This needs to go
-    if dublin_metadata:
-        for d in dublin_metadata:
-            QualifiedDublinCoreElement.objects.create(
-                term=d['term'],
-                content=d['content'],
-                content_object=resource
-            )
-
     # for creating metadata elements based on the new metadata implementation
     if metadata:
         for element in metadata:
@@ -504,11 +453,6 @@ def create_resource(
     # add the subject elements from the AssignedKeywords (new metadata implementation)
     for akw in AssignedKeyword.objects.filter(object_pk=resource.id).all():
         resource.metadata.create_element('subject', value=akw.keyword.title)
-        QualifiedDublinCoreElement.objects.create(
-                term='SUB',
-                content=akw.keyword.title,
-                content_object=resource
-            )
 
     # Send post-create resource signal
     #signals.post_create_resource.send(sender=res_type_cls, resource=resource, metadata=metadata, **kwargs)
@@ -520,7 +464,7 @@ def create_resource(
 def update_resource(
         pk,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=None, dublin_metadata=None, metadata=None,
+        keywords=None, metadata=None,
         *files, **kwargs):
     """
     Called by clients to update a resource in HydroShare.
@@ -567,8 +511,6 @@ def update_resource(
 
     if 'owner' in kwargs:
         owner = utils.user_from_id(kwargs['owner'])
-        resource.view_users.add(owner)
-        resource.edit_users.add(owner)
         resource.owners.add(owner)
 
     if edit_users:
@@ -604,16 +546,6 @@ def update_resource(
 
         for k in ks:
             AssignedKeyword.objects.create(content_object=resource, keyword=k)
-
-    # for creating metadata elements based on the old metadata implementation
-    if dublin_metadata:
-        QualifiedDublinCoreElement.objects.filter(object_id=resource.id).delete()
-        for d in dublin_metadata:
-            QualifiedDublinCoreElement.objects.create(
-                term=d['term'],
-                content=d['content'],
-                content_object=resource
-            )
 
     # for creating metadata elements based on the new metadata implementation
     if metadata:
@@ -669,7 +601,7 @@ def update_system_metadata(pk, **kwargs):
     return update_science_metadata(pk, **kwargs)
 
 
-def update_science_metadata(pk, dublin_metadata=None, metadata=None, keywords=None, **kwargs):
+def update_science_metadata(pk, metadata=None, keywords=None, **kwargs):
     """
     Called by clients to update the science metadata for a resource in HydroShare.
 
@@ -713,16 +645,6 @@ def update_science_metadata(pk, dublin_metadata=None, metadata=None, keywords=No
 
         for k in ks:
             AssignedKeyword.objects.create(content_object=resource.id, keyword=k)
-
-    # for creating metadata elements based on the old metadata implementation
-    if dublin_metadata:
-        QualifiedDublinCoreElement.objects.filter(object_id=resource.id).delete()
-        for d in dublin_metadata:
-            QualifiedDublinCoreElement.objects.create(
-                term=d['term'],
-                content=d['content'],
-                content_object=resource
-            )
 
     # for creating metadata elements based on the new metadata implementation
     if metadata:

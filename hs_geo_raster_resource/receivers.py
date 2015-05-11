@@ -21,11 +21,8 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
             res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
 
             wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
-            if wgs_cov_info is not None:
-                # add core metadata coverage - box
-                box = {'coverage': {'type': 'box', 'value': wgs_cov_info }}
-            else:
-                box = {'coverage': {'type': 'box', 'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }}
+            # add core metadata coverage - box
+            box = {'coverage': {'type': 'box', 'value': wgs_cov_info }}
             metadata.append(box)
 
             # Save extended meta to metadata variable
@@ -53,27 +50,27 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
                 ('columns', 0),
                 ('cellSizeXValue', 0),
                 ('cellSizeYValue', 0),
-                ('cellSizeUnit', "Unnamed"),
-                ('cellDataType', "Unnamed"),
+                ('cellSizeUnit', "NA"),
+                ('cellDataType', "NA"),
                 ('noDataValue', 0)
             ])
             metadata.append({'CellInformation': cell_info})
             bcount = 1
-            # spatial_coverage_info = OrderedDict([
-            #     ('units', "Unnamed"),
-            #     ('projection', 'Unnamed'),
-            #     ('northlimit', 0),
-            #     ('southlimit', 0),
-            #     ('eastlimit', 0),
-            #     ('westlimit', 0)
-            # ])
+            spatial_coverage_info = OrderedDict([
+                 ('units', "NA"),
+                 ('projection', 'NA'),
+                 ('northlimit', 'NA'),
+                 ('southlimit', 'NA'),
+                 ('eastlimit', 'NA'),
+                 ('westlimit', 'NA')
+            ])
             # add core metadata coverage - box
-            # box = {'coverage': {'type': 'box', 'value': spatial_coverage_info}}
-            # metadata.append(box)
-            #
-            # # Save extended meta to metadata variable
-            # ori_cov = {'OriginalCoverage': {'value': spatial_coverage_info }}
-            # metadata.append(ori_cov)
+            box = {'coverage': {'type': 'box', 'value': spatial_coverage_info}}
+            metadata.append(box)
+
+            # Save extended meta to metadata variable
+            ori_cov = {'OriginalCoverage': {'value': spatial_coverage_info }}
+            metadata.append(ori_cov)
 
         for i in range(bcount):
             band_dict = OrderedDict()
@@ -99,11 +96,7 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
             #res.metadata.update_element('coverage', cov_box.id, type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
 
             wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
-            if wgs_cov_info is not None:
-                # add core metadata coverage - box
-                res.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
-            else:
-                res.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info']['original_coverage_info'])
+            res.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
 
             # update extended original box coverage
             #ori_cov_box = res.metadata.originalCoverage
@@ -138,8 +131,8 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
         #cov_box = res.metadata.coverages.all().filter(type='box').first()
         # from collections import OrderedDict
         # spatial_coverage_info = OrderedDict([
-        #         ('units', "Unnamed"),
-        #         ('projection', 'Unnamed'),
+        #         ('units', "NA"),
+        #         ('projection', 'NA'),
         #         ('northlimit', 0),
         #         ('southlimit', 0),
         #         ('eastlimit', 0),
@@ -162,8 +155,8 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
         res.metadata.cellInformation.delete()
         res.metadata.create_element('CellInformation', name=res.title, rows=0, columns = 0,
                                         cellSizeXValue = 0, cellSizeYValue = 0,
-                                        cellSizeUnit = "Unnamed",
-                                        cellDataType = "Unnamed",
+                                        cellSizeUnit = "NA",
+                                        cellDataType = "NA",
                                         noDataValue = 0)
 
         # reset extended metadata BandInformation now that the only file is deleted
@@ -180,7 +173,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     elif element_name == 'bandinformation':
         element_form = BandInfoValidationForm(request.POST)
     elif element_name == 'originalcoverage':
-        element_form = OriginalCoverageSpatialForm(request.POST)
+        element_form = OriginalCoverageSpatialForm(data=request.POST)
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
@@ -200,7 +193,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
             form_data[field_name] = request.POST[matching_key]
         element_form = BandInfoValidationForm(form_data)
     elif element_name == 'originalcoverage':
-        element_form = OriginalCoverageSpatialForm(request.POST)
+        element_form = OriginalCoverageSpatialForm(data=request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}

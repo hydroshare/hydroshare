@@ -141,26 +141,15 @@ def create_account(
     """
     Create a new user within the HydroShare system.
 
-    REST URL:  POST /accounts
-
-    Parameters: user - An object containing the attributes of the user to be created
-
-    Returns: The userID of the user that was created
-
-    Return Type: userID
+    Returns: The user that was created
 
     Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.InvalidContent - The content of the user object is invalid
-    Exception.ServiceFailure - The service is unable to process the request
-
-    Note:  This would be done via a JSON object (user) that is in the POST request. Should set a random password, and
-    then send an email to make them verify the account. Unverified accounts can't log-in and are automatically deleted
-    after a specified time (according to policy).
+        Exceptions.NotAuthorized - The user is not authorized
+        Exceptions.InvalidContent - The content of the user object is invalid
+        Exception.ServiceFailure - The service is unable to process the request
 
     """
 
-    from tastypie.models import ApiKey
     from django.contrib.auth.models import User, Group
     from django.contrib.sites.models import Site
     from django.conf import settings
@@ -174,7 +163,7 @@ def create_account(
     #    iaccount.create(username)
     #    iaccount.setPassward(username, password)
 
-    groups = groups if groups else []
+    groups = groups if groups else Group.objects.all()
     groups = Group.objects.in_bulk(*groups) if groups and isinstance(groups[0], int) else groups
 
     if superuser:
@@ -193,27 +182,10 @@ def create_account(
             password=password,
         )
 
-    try:
-        token = signing.dumps('verify_user_email:{0}:{1}'.format(u.pk, u.email))
-        u.email_user(
-            'Please verify your new Hydroshare account.',
-            """
-This is an automated email from Hydroshare.org. If you requested a Hydroshare account, please
-go to http://{domain}/verify/{token}/ and verify your account.
-""".format(
-            domain=Site.objects.get_current().domain,
-            token=token
-        ))
-    except:
-        pass # FIXME should log this instead of ignoring it.
-
     u.is_staff = False
     if not active:
         u.is_active=False
     u.save()
-
-    u.groups = groups
-    ApiKey.objects.get_or_create(user=u)
 
     u.groups = groups
 
@@ -563,7 +535,6 @@ def get_resource_list(
 ):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
-    REST URL:  GET /resourceList?groups__contains={groupID}
 
     Parameters:
     queryType - string specifying the type of query being performed
@@ -579,8 +550,7 @@ def get_resource_list(
     Exceptions.NotFound - The group identified by groupID does not exist
     Exception.ServiceFailure - The service is unable to process the request
 
-    Note:  See http://django-tastypie.readthedocs.org/en/latest/resources.html#basic-filtering for implementation
-    details and example. We may want to modify this method to return more than just the pids for resources so that some
+    We may want to modify this method to return more than just the pids for resources so that some
     metadata for the list of resources returned could be displayed without having to call
     HydroShare.getScienceMetadata() and HydroShare.GetSystemMetadata() for every resource in the returned list.
 
@@ -607,7 +577,7 @@ def get_resource_list(
     """
     from django.db.models import Q
 
-    if not any((group, user, owner, from_date, to_date, start, count, keywords, dc, full_text_search, public)):
+    if not any((group, user, owner, from_date, to_date, start, count, keywords, dc, full_text_search, public, types)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
     resource_types = get_resource_types()

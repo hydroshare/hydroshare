@@ -10,7 +10,7 @@ from django.contrib.contenttypes import generic
 class RefTimeSeries(Page, AbstractResource):
 
         class Meta:
-                verbose_name = "Referenced HIS Time Series Resource"
+                verbose_name = "HIS Referenced Time Series"
 
         def extra_capabilities(self):
             return None
@@ -49,6 +49,48 @@ class RefTimeSeries(Page, AbstractResource):
 
 
 processor_for(RefTimeSeries)(resource_processor)
+
+class ReferenceURL(AbstractMetaDataElement):
+    term = 'Reference URL'
+    value = models.CharField(max_length=500)
+    type = models.CharField(max_length=4)
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'value' in kwargs:
+            if 'content_object' in kwargs:
+                metadata_obj = kwargs['content_object']
+                metadata_type = ContentType.objects.get_for_model(metadata_obj)
+                referenceURL = ReferenceURL.objects.filter(value__iexact=kwargs['value'], object_id=metadata_obj.id, content_type=metadata_type).first()
+                if referenceURL:
+                    raise ValidationError('Reference URL:%s already exists' % kwargs['value'])
+                referenceURL = ReferenceURL.objects.create(value=kwargs['value'], type=kwargs['type'], content_object=metadata_obj)
+                return referenceURL
+            else:
+                raise ValidationError('Metadata instance for which Reference URL element to be created is missing.')
+        else:
+            raise ValidationError("Value of Reference URL is missing.")
+
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        referenceURL = ReferenceURL.objects.get(id=element_id)
+        if referenceURL:
+            if 'value' in kwargs:
+                referenceURL.value = kwargs['value']
+                referenceURL.save()
+            else:
+                raise ValidationError('Value of Reference URL is missing')
+        else:
+            raise ObjectDoesNotExist("No Reference URL element was found for the provided id:%s" % kwargs['id'])
+
+    @classmethod
+    def remove(cls, element_id):
+        referenceURL = ReferenceURL.objects.get(id=element_id)
+        if referenceURL:
+            referenceURL.delete()
+        else:
+            raise ObjectDoesNotExist("No method element was found for id:%d." % element_id)
 
 class Method(AbstractMetaDataElement):
     term = 'Method'
@@ -303,6 +345,7 @@ class RefTSMetadata(CoreMetaData):
     quality_levels = generic.GenericRelation(QualityControlLevel)
     variables = generic.GenericRelation(Variable)
     sites = generic.GenericRelation(Site)
+    referenceURLs = generic.GenericRelation(ReferenceURL)
     _refts_resource = generic.GenericRelation(RefTimeSeries)
 
     @classmethod
@@ -314,6 +357,7 @@ class RefTSMetadata(CoreMetaData):
         elements.append('QualityControlLevel')
         elements.append('Variable')
         elements.append('Site')
+        elements.append('ReferenceURL')
         return elements
 
     @property
@@ -331,6 +375,15 @@ class RefTSMetadata(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         # inject resource specific metadata elements to container element
+        for refURL in self.referenceURLs.all():
+            hsterms_refURL = etree.SubElement(container, '{%s}ReferenceURL' % self.NAMESPACES['hsterms'])
+            hsterms_refURL_rdf_Description = etree.SubElement(hsterms_refURL, '{%s}Description' % self.NAMESPACES['rdf'])
+
+            hsterms_name = etree.SubElement(hsterms_refURL_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
+            hsterms_name.text = refURL.value
+            hsterms_name = etree.SubElement(hsterms_refURL_rdf_Description, '{%s}type' % self.NAMESPACES['hsterms'])
+            hsterms_name.text = refURL.type
+
         for method in self.methods.all():
             hsterms_method = etree.SubElement(container, '{%s}method' % self.NAMESPACES['hsterms'])
             hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])

@@ -128,7 +128,7 @@ class UserProfile(models.Model):
     organization = models.CharField(
         max_length=1024,
         null=True,
-        blank=False,
+        blank=True,
         help_text="The name of the organization you work for."
     )
     organization_type = models.CharField(max_length=1024, null=True, blank=True, choices=(

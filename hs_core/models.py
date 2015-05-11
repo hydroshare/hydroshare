@@ -16,7 +16,7 @@ from mezzanine.generic.models import Keyword, AssignedKeyword
 import os.path
 from django_irods.storage import IrodsStorage
 # from dublincore.models import QualifiedDublinCoreElement
-from dublincore import models as dc
+#from dublincore import models as dc
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -32,16 +32,14 @@ class GroupOwnership(models.Model):
 def get_user(request):
     """authorize user based on API key if it was passed, otherwise just use the request's user.
 
+    NOTE: The API key portion has been removed with TastyPie and will be restored when the
+    new API is built.
+
     :param request:
     :return: django.contrib.auth.User
     """
 
-    from tastypie.models import ApiKey
-
-    if 'api_key' in request.REQUEST:
-        api_key = ApiKey.objects.get(key=request.REQUEST['api_key'])
-        return api_key.user
-    elif request.user.is_authenticated():
+    if request.user.is_authenticated():
         return User.objects.get(pk=request.user.pk)
     else:
         return request.user
@@ -56,10 +54,10 @@ class ResourcePermissionsMixin(Ownable):
         help_text='If this is true, the resource is viewable and downloadable by anyone',
         default=True
     )
-    # DO WE STILL NEED owners?
+
     owners = models.ManyToManyField(User,
                                     related_name='owns_%(app_label)s_%(class)s',
-                                    help_text='The person who uploaded the resource'
+                                    help_text='The person who has total ownership of the resource'
     )
     frozen = models.BooleanField(
         help_text='If this is true, the resource should not be modified',
@@ -109,29 +107,32 @@ class ResourcePermissionsMixin(Ownable):
         return self.can_change(request)
 
     def can_delete(self, request):
-        return self.can_change(request)
+        user = get_user(request)
+        if user.is_authenticated():
+            if user.is_superuser or self.owners.filter(pk=user.pk).exists():
+                return True
+            else:
+                return False
+        else:
+            return False
+
 
     def can_change(self, request):
         user = get_user(request)
 
         if user.is_authenticated():
             if user.is_superuser:
-                ret = True
-            elif self.creator and user.pk == self.creator.pk:
-                ret = True
-            elif user.pk in { o.pk for o in self.owners.all() }:
-                ret = True
+                return True
+            elif self.owners.filter(pk=user.pk).exists():
+                return True
             elif self.edit_users.filter(pk=user.pk).exists():
-                ret = True
+                return True
             elif self.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                ret = True
+                return True
             else:
-                ret = False
+                return False
         else:
-            ret = False
-
-        return ret
-
+            return False
 
     def can_view(self, request):
         user = get_user(request)
@@ -140,24 +141,21 @@ class ResourcePermissionsMixin(Ownable):
             return True
         if user.is_authenticated():
             if user.is_superuser:
-                ret = True
-            elif self.creator and user.pk == self.creator.pk:
-                ret = True
-            elif user.pk in { o.pk for o in self.owners.all() }:
-                ret = True
+                return True
+            elif self.owners.filter(pk=user.pk).exists():
+                return True
+            elif self.edit_users.filter(pk=user.pk).exists():
+                return True
             elif self.view_users.filter(pk=user.pk).exists():
-                ret = True
+                return True
+            elif self.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
+                return True
             elif self.view_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                ret = True
+                return True
             else:
-                ret = False
+                return False
         else:
-            ret = False
-
-        return ret
-
-
-
+            return False
 
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
@@ -170,6 +168,7 @@ def page_permissions_page_processor(request, page):
         "view_groups": set(page.view_groups.all()),
         "edit_users": set(page.edit_users.all()),
         "view_users": set(page.view_users.all()),
+        "owners": set(page.owners.all()),
         "can_edit": (user in set(page.edit_users.all())) \
                     or (len(set(page.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
     }
@@ -1360,10 +1359,12 @@ class AbstractResource(ResourcePermissionsMixin):
                                         related_name='last_changed_%(app_label)s_%(class)s',
                                         null=True
     )
-    dublin_metadata = generic.GenericRelation(
-        'dublincore.QualifiedDublinCoreElement',
-        help_text='The dublin core metadata of the resource'
-    )
+
+    # dublin_metadata = generic.GenericRelation(
+    #     'dublincore.QualifiedDublinCoreElement',
+    #     help_text='The dublin core metadata of the resource'
+    # )
+
     files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource')
     bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource')
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
@@ -1521,7 +1522,7 @@ class Bags(models.Model):
 class GenericResource(Page, AbstractResource):
 
     class Meta:
-        verbose_name = 'Generic Hydroshare Resource'
+        verbose_name = 'Generic'
 
     def can_add(self, request):
         return AbstractResource.can_add(self, request)
@@ -1970,7 +1971,7 @@ class CoreMetaData(models.Model):
 def resource_processor(request, page):
     extra = page_permissions_page_processor(request, page)
     extra['res'] = page.get_content_model()
-    extra['dc'] = { m.term_name : m.content for m in extra['res'].dublin_metadata.all() }
+    #extra['dc'] = { m.term_name : m.content for m in extra['res'].dublin_metadata.all() }
     return extra
 
 

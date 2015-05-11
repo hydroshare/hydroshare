@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# restore-hs
+
+# set local variables
+### hydrodev VM
+HS_PATH=/home/${USER}/hydroshare
+BACKUP_PATH=/home/${USER}/backup
+### custom settings (Linux, OS X, etc.)
+#HS_PATH=/Users/${USER}/Github/hydroshare
+#BACKUP_PATH=/Users/${USER}/Github/backup
+
+# set variables for use in script
+FIG_VER=$(fig --version)
+DC_VER=$(docker-compose --version)
+CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
+MEDIA_FILES=${HS_PATH}/media_files
+
+# clone hydroshare repository if it does not exist
+if [ ! -d "$HS_PATH" ]; then
+    echo "*** clone hydroshare repository to ${HS_PATH} ***"
+    cd /home/${USER}/
+    git clone https://github.com/hydroshare/hydroshare.git
+    cd $HS_PATH
+fi
+
+# restore settings.py
+echo "*** restore ${HS_PATH}/settings.py ***"
+yes | cp -rf $BACKUP_PATH/settings.py $HS_PATH/hydroshare/settings.py
+
+# restore local_settings.py
+echo "*** restore ${HS_PATH}/local_settings.py ***"
+yes | cp -rf $BACKUP_PATH/local_settings.py $HS_PATH/hydroshare/local_settings.py
+
+# restore Dockerfile
+echo "*** restore ${HS_PATH}/Dockerfile ***"
+yes | cp -rf $BACKUP_PATH/Dockerfile $HS_PATH/Dockerfile
+
+# restore database file
+echo "*** restore ${HS_PATH}/pg.deploy.sql ***"
+yes | cp -rf $BACKUP_PATH/pg.deploy.sql $HS_PATH/pg.deploy.sql
+
+# restore media files
+echo "*** restore ${HS_PATH}/media.deploy.tar.gz ***"
+yes | cp -rf $BACKUP_PATH/media.deploy.tar.gz $HS_PATH/media.deploy.tar.gz
+cd $HS_PATH
+tar -xzvf media.deploy.tar.gz
+if [ ! -d "$HS_PATH/hydroshare/static" ]; then
+    echo "*** creating directory ${HS_PATH}/hydroshare/static ***"
+    mkdir $HS_PATH/hydroshare/static;
+fi
+cd $HS_PATH
+yes | cp -r media_files/media hydroshare/static/
+
+# restore fig.yml or docker-compose.yml
+if [ ${#FIG_VER} -gt 0 ];
+then
+    echo "*** found ${FIG_VER} installed ***"
+    echo "*** restore ${HS_PATH}/fig.yml ***"
+    yes | cp -rf $BACKUP_PATH/fig.yml $HS_PATH/fig.yml;
+else
+    echo "*** found ${DC_VER} installed ***"
+    echo "*** restore ${HS_PATH}/docker-compose.yml ***"
+    yes | cp -rf $BACKUP_PATH/docker-compose.yml $HS_PATH/docker-compose.yml;
+fi
+
+echo "*** FINISHED SCRIPT restore-hs ***"
+exit;
