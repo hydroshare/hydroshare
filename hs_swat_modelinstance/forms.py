@@ -25,8 +25,7 @@ class ModelOutputForm(ModelForm):
         super(ModelOutputForm, self).__init__(*args, **kwargs)
         self.helper = ModelOutputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelOutput')
         self.fields['includes_output'].widget.attrs['style'] = "width:auto;margin-top:-5px"
-        #if len(self.initial) == 0:
-            #self.initial['includes_output'] = False
+
     class Meta:
         model = ModelOutput
         fields = ['includes_output']
@@ -64,7 +63,6 @@ class ExecutedByForm(ModelForm):
         model = ExecutedBy
         fields = ['name']
         exclude = ['content_object']
-        widgets = {'name': forms.TextInput()}
 
 class ExecutedByValidationForm(forms.Form):
     name = forms.CharField(max_length=200)
@@ -325,7 +323,6 @@ class ModelInputForm(ModelForm):
                   'soil_data_source_name',
                   'soil_data_source_URL']
         exclude = ['content_object']
-        widgets = {'has_other_parameters': forms.TextInput()}
 
 
 class ModelInputValidationForm(forms.Form):

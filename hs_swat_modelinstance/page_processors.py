@@ -43,6 +43,7 @@ def landing_page(request, page):
 
         model_objective_form = ModelObjectiveForm(instance=content_model.metadata.model_objective, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.model_objective.id if content_model.metadata.model_objective else None)
+
         simulation_type_form = simulationTypeForm(instance=content_model.metadata.simulation_type, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.simulation_type.id if content_model.metadata.simulation_type else None)
 

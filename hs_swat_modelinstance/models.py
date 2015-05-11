@@ -22,10 +22,6 @@ class ModelOutput(AbstractMetaDataElement):
         return ModelOutput.objects.create(**kwargs)
 
     @classmethod
-    def create(cls, **kwargs):
-        return ModelOutput.objects.create(**kwargs)
-
-    @classmethod
     def update(cls, element_id, **kwargs):
         model_output = ModelOutput.objects.get(id=element_id)
         if model_output:
@@ -63,7 +59,6 @@ class ExecutedBy(AbstractMetaDataElement):
             executed_by.save()
         else:
             raise ObjectDoesNotExist("No ExecutedBy element was found for the provided id:%s" % kwargs['id'])
-
 
     @classmethod
     def remove(cls, element_id):
@@ -115,38 +110,9 @@ class simulationType(AbstractMetaDataElement):
     type_choices = (('Normal Simulation', 'Normal Simulation'), ('Sensitivity Analysis', 'Sensitivity Analysis'),\
                     ('Auto-Calibration', 'Auto-Calibration'))
     simulation_type_name = models.CharField(max_length=100, choices=type_choices, verbose_name='Simulation type')
-    def __unicode__(self):
-        self.simulation_type
-
-    @classmethod
-    def create(cls, **kwargs):
-        if 'simulation_type_name' in kwargs:
-            if not kwargs['simulation_type_name'] in ['Normal Simulation', 'Sensitivity Analysis', 'Auto-Calibration']:
-                raise ValidationError('Invalid simulation type:%s' % kwargs['type'])
-        else:
-            raise ValidationError("simulation type is missing.")
-
-        metadata_obj = kwargs['content_object']
-        return simulationType.objects.create(simulation_type_name=kwargs['simulation_type_name'], content_object=metadata_obj)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        simulation_type = simulationType.objects.get(id=element_id)
-        if simulation_type:
-            for key, value in kwargs.iteritems():
-                if key in ('simulation_type_name'):
-                    setattr(simulation_type, key, value)
-            simulation_type.save()
-        else:
-            raise ObjectDoesNotExist("No simulationType element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("simulationType element of a resource can't be deleted.")
-
 
     def __unicode__(self):
-        self.simulation_type
+        self.simulation_type_name
 
     @classmethod
     def create(cls, **kwargs):
@@ -179,39 +145,6 @@ class ModelMethods(AbstractMetaDataElement):
     runoff_calculation_method = models.CharField(max_length=500, null=True, blank=True)
     flow_routing_method = models.CharField(max_length=500, null=True, blank=True)
     PET_estimation_method = models.CharField(max_length=500, null=True, blank=True)
-
-    def __unicode__(self):
-        self.runoff_calculation_method
-
-    @classmethod
-    def create(cls, **kwargs):
-        if not 'runoff_calculation_method' in kwargs:
-            raise ValidationError("modelMethods runoffCalculationMethod is missing.")
-        if not 'flow_routing_method' in kwargs:
-            raise ValidationError("modelMethods flowRoutingMethod is missing.")
-        if not 'PET_estimation_method' in kwargs:
-            raise ValidationError("modelMethods PETestimationMethod is missing.")
-        metadata_obj = kwargs['content_object']
-        return ModelMethods.objects.create(runoff_calculation_method=kwargs['runoff_calculation_method'],\
-                                             flow_routing_method=kwargs['flow_routing_method'],\
-                                             PET_estimation_method=kwargs['PET_estimation_method'],\
-                                             content_object=metadata_obj)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        model_methods = ModelMethods.objects.get(id=element_id)
-        if model_methods:
-            for key, value in kwargs.iteritems():
-                if key in ('runoff_calculation_method', 'flow_routing_method', 'PET_estimation_method'):
-                    setattr(model_methods, key, value)
-            model_methods.save()
-        else:
-            raise ObjectDoesNotExist("No ModelMethods element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("ModelMethods element of a resource can't be deleted.")
-
 
     def __unicode__(self):
         self.runoff_calculation_method
@@ -338,63 +271,6 @@ class ModelInput(AbstractMetaDataElement):
     landUse_data_source_URL = models.URLField(null=True, blank=True)
     soil_data_source_name = models.CharField(max_length=200, null=True, blank=True)
     soil_data_source_URL = models.URLField(null=True, blank=True)
-
-    def __unicode__(self):
-        self.rainfall_time_step
-
-    @classmethod
-    def create(cls, **kwargs):
-        if not 'rainfall_time_step' in kwargs:
-            raise ValidationError("ModelInput rainfallTimeStep is missing.")
-        if not 'simulation_time_step' in kwargs:
-            raise ValidationError("ModelInput simualtionTimeStep is missing.")
-        if not 'watershed_area' in kwargs:
-            raise ValidationError("ModelInput watershedArea is missing.")
-        if not 'number_of_subbasins' in kwargs:
-            raise ValidationError("ModelInput numberOfSubbasins is missing.")
-        if not 'number_of_HRUs' in kwargs:
-            raise ValidationError("ModelInput numberOfHRUs is missing.")
-        if not 'DEM_resolution' in kwargs:
-            raise ValidationError("ModelInput DEMresolution is missing.")
-        if not 'DEM_source_name' in kwargs:
-            raise ValidationError("ModelInput DEMsourceName is missing.")
-        if not 'DEM_source_URL' in kwargs:
-            raise ValidationError("ModelInput DEMsourceURL is missing.")
-        if not 'landUse_data_source_name' in kwargs:
-            raise ValidationError("ModelInput landUseDataSourceName is missing.")
-        if not 'landUse_data_source_URL' in kwargs:
-            raise ValidationError("ModelInput landUseDataSourceURL is missing.")
-        if not 'soil_data_source_name' in kwargs:
-            raise ValidationError("ModelInput soilDataSourceName is missing.")
-        if not 'soil_data_source_URL' in kwargs:
-            raise ValidationError("ModelInput soilDataSourceURL is missing.")
-        metadata_obj = kwargs['content_object']
-        return ModelInput.objects.create(rainfall_time_step=kwargs['rainfall_time_step'],\
-                                             simulation_time_step=kwargs['simulation_time_step'],\
-                                             watershed_area=kwargs['watershed_area'],\
-                                             number_of_subbasins=kwargs['number_of_subbasins'],\
-                                             number_of_HRUs=kwargs['number_of_HRUs'],\
-                                             DEM_resolution=kwargs['DEM_resolution'],\
-                                             DEM_source_name=kwargs['DEM_source_name'],\
-                                             DEM_source_URL=kwargs['DEM_source_URL'],\
-                                             landUse_data_source_name=kwargs['landUse_data_source_name'],\
-                                             landUse_data_source_URL=kwargs['landUse_data_source_URL'],\
-                                             soil_data_source_name=kwargs['soil_data_source_name'],\
-                                             soil_data_source_URL=kwargs['soil_data_source_URL'],\
-                                             content_object=metadata_obj)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        model_input = ModelInput.objects.get(id=element_id)
-        if model_input:
-            for key, value in kwargs.iteritems():
-                if key in ('rainfall_time_step', 'simulation_time_step', 'watershed_area','number_of_subbasins',\
-                           'number_of_HRUs', 'DEM_resolution', 'DEM_source_name', 'DEM_source_URL',\
-                           'landUse_data_source_name', 'landUse_data_source_URL', 'soil_data_source_name', 'soil_data_source_URL'):
-                    setattr(model_input, key, value)
-            model_input.save()
-        else:
-            raise ObjectDoesNotExist("No ModelInput element was found for the provided id:%s" % kwargs['id'])
 
     def __unicode__(self):
         self.rainfall_time_step
