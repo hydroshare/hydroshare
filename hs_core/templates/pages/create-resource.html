@@ -100,7 +100,17 @@
         var json_response_file_types = {};
         var json_response_multiple_file = {};
         var selected_file = undefined;
+        var sel_res_type = sessionStorage.getItem("res_type");
+        if(sel_res_type != null)
+            $('#resource-type').val(sel_res_type);
+        var sel_res_title = sessionStorage.getItem("res_title");
+        if(sel_res_title != null)
+            $('#title').val(sel_res_title);
+        $('#title').change(function() {
+            sessionStorage.setItem("res_title", this.value);
+        });
         $('#resource-type').on('change', function(){
+            sessionStorage.setItem("res_type", this.value);
             $('#select-file').value ='';
             $('#select-file').attr('value','');
             if(selected_file != undefined){
