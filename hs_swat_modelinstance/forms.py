@@ -282,6 +282,7 @@ class SWATModelParametersValidationForm(forms.Form):
     has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
     has_irrigation_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
     has_other_parameters = forms.CharField(max_length=500, required=False)
+
 class ModelInputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
