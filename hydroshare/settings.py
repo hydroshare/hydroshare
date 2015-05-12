@@ -285,11 +285,11 @@ INSTALLED_APPS = (
     "hs_geo_raster_resource",
     "djcelery",
     "ref_ts",
-    "hs_modelinstance",
+    # "hs_modelinstance",
     "hs_app_timeseries",
     "widget_tweaks",
     "hs_app_netCDF",
-    "hs_model_program",
+    # "hs_model_program",
     "hs_tools_resource",
 )
 
