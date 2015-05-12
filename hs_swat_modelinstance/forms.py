@@ -6,14 +6,17 @@ from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
 
+def field_width():
+    width = 'form-control input-sm'
+    return width
+
 #SWATmodelParameters element forms
 class ModelOutputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('includes_output', css_class=field_width),
+                        Field('includes_output', css_class=field_width()),
                  )
         kwargs['element_name_label'] = 'Includes output files?'
         super(ModelOutputFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -29,7 +32,6 @@ class ModelOutputForm(ModelForm):
     class Meta:
         model = ModelOutput
         fields = ['includes_output']
-        exclude = ['content_object']
 
 class ModelOutputValidationForm(forms.Form):
     includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
@@ -45,9 +47,8 @@ class ExecutedByFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('name', css_class=field_width),
+                        Field('name', css_class=field_width()),
                  )
 
         kwargs['element_name_label'] = 'Model Program used for execution'
@@ -62,7 +63,6 @@ class ExecutedByForm(ModelForm):
     class Meta:
         model = ExecutedBy
         fields = ['name']
-        exclude = ['content_object']
 
 class ExecutedByValidationForm(forms.Form):
     name = forms.CharField(max_length=200)
@@ -72,19 +72,18 @@ class ModelObjectiveFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('swat_model_objective', css_class=field_width),
-                        Field('other_objectives', css_class=field_width),
+                        Field('swat_model_objective', css_class=field_width()),
+                        Field('other_objectives', css_class=field_width()),
                  )
         kwargs['element_name_label'] = 'Model objective'
         super(ModelObjectiveFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 class ModelObjectiveForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        objective_choices = tuple([('Choose an objective', 'Choose an objective'), ('Hydrology', 'Hydrology'),\
-                                   ('Water quality', 'Water quality'), ('BMPs', 'BMPs'),\
-                                   ('Climate / Landuse Change', 'Climate / Landuse Change'), ('Other', 'Other')])
+        objective_choices = (('Choose an objective', 'Choose an objective'), ('Hydrology', 'Hydrology'),
+                                   ('Water quality', 'Water quality'), ('BMPs', 'BMPs'),
+                                   ('Climate / Landuse Change', 'Climate / Landuse Change'), ('Other', 'Other'))
         super(ModelObjectiveForm, self).__init__(*args, **kwargs)
         self.helper = ModelObjectiveFormHelper(allow_edit, res_short_id, element_id, element_name='ModelObjective')
         self.fields['swat_model_objective'].choices = objective_choices
@@ -93,7 +92,6 @@ class ModelObjectiveForm(ModelForm):
         model = ModelObjective
         fields = ['swat_model_objective',
                   'other_objectives']
-        exclude = ['content_object']
 
 
 class ModelObjectiveValidationForm(forms.Form):
@@ -104,19 +102,18 @@ class simulationTypeFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('simulation_type_name', css_class=field_width),
+                        Field('simulation_type_name', css_class=field_width()),
                  )
         kwargs['element_name_label'] = 'Simulation type'
         super(simulationTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 class simulationTypeForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        type_choices = tuple([('Choose a type', 'Choose a type'),\
-                                   ('Normal Simulation', 'Normal Simulation'),\
-                                   ('Sensitivity Analysis', 'Sensitivity Analysis'),\
-                                   ('Auto-Calibration', 'Auto-Calibration')])
+        type_choices = (('Choose a type', 'Choose a type'),
+                                   ('Normal Simulation', 'Normal Simulation'),
+                                   ('Sensitivity Analysis', 'Sensitivity Analysis'),
+                                   ('Auto-Calibration', 'Auto-Calibration'))
         super(simulationTypeForm, self).__init__(*args, **kwargs)
         self.helper = simulationTypeFormHelper(allow_edit, res_short_id, element_id, element_name='simulationType')
         self.fields['simulation_type_name'].choices = type_choices
@@ -124,21 +121,20 @@ class simulationTypeForm(ModelForm):
     class Meta:
         model = simulationType
         fields = ['simulation_type_name']
-        exclude = ['content_object']
 
 
 class simulationTypeValidationForm(forms.Form):
     simulation_type_name = forms.CharField(max_length=100, required=False)
 
+
 class ModelMethodsFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('runoff_calculation_method', css_class=field_width),
-                        Field('flow_routing_method', css_class=field_width),
-                        Field('PET_estimation_method', css_class=field_width),
+                        Field('runoff_calculation_method', css_class=field_width()),
+                        Field('flow_routing_method', css_class=field_width()),
+                        Field('PET_estimation_method', css_class=field_width()),
                  )
         kwargs['element_name_label'] = 'Model Methods'
         super(ModelMethodsFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -153,67 +149,6 @@ class ModelMethodsForm(ModelForm):
         fields = ['runoff_calculation_method',
                   'flow_routing_method',
                   'PET_estimation_method']
-        exclude = ['content_object']
-
-
-class ModelMethodsValidationForm(forms.Form):
-    runoff_calculation_method = forms.CharField(max_length=500, required=False)
-    flow_routing_method = forms.CharField(max_length=500, required=False)
-    PET_estimation_method = forms.CharField(max_length=500, required=False)
-
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
-
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
-        layout = Layout(
-                        Field('simulation_type_name', css_class=field_width),
-                 )
-        kwargs['element_name_label'] = 'Simulation type'
-        super(simulationTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
-
-class simulationTypeForm(ModelForm):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        type_choices = tuple([('Choose a type', 'Choose a type'),\
-                                   ('Normal Simulation', 'Normal Simulation'),\
-                                   ('Sensitivity Analysis', 'Sensitivity Analysis'),\
-                                   ('Auto-Calibration', 'Auto-Calibration')])
-        super(simulationTypeForm, self).__init__(*args, **kwargs)
-        self.helper = simulationTypeFormHelper(allow_edit, res_short_id, element_id, element_name='simulationType')
-        self.fields['simulation_type_name'].choices = type_choices
-
-    class Meta:
-        model = simulationType
-        fields = ['simulation_type_name']
-        exclude = ['content_object']
-
-
-class simulationTypeValidationForm(forms.Form):
-    simulation_type_name = forms.CharField(max_length=100, required=False)
-
-class ModelMethodsFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
-
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
-        layout = Layout(
-                        Field('runoff_calculation_method', css_class=field_width),
-                        Field('flow_routing_method', css_class=field_width),
-                        Field('PET_estimation_method', css_class=field_width),
-                 )
-        kwargs['element_name_label'] = 'Model Methods'
-        super(ModelMethodsFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
-
-class ModelMethodsForm(ModelForm):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        super(ModelMethodsForm, self).__init__(*args, **kwargs)
-        self.helper = ModelMethodsFormHelper(allow_edit, res_short_id, element_id, element_name='ModelMethods')
-
-    class Meta:
-        model = ModelMethods
-        fields = ['runoff_calculation_method',
-                  'flow_routing_method',
-                  'PET_estimation_method']
-        exclude = ['content_object']
 
 
 class ModelMethodsValidationForm(forms.Form):
@@ -225,29 +160,29 @@ class SWATModelParametersFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('has_crop_rotation', css_class=field_width),
-                        Field('has_title_drainage', css_class=field_width),
-                        Field('has_point_source', css_class=field_width),
-                        Field('has_fertilizer', css_class=field_width),
-                        Field('has_tillage_operation', css_class=field_width),
-                        Field('has_inlet_of_draining_watershed', css_class=field_width),
-                        Field('has_irrigation_operation', css_class=field_width),
-                        Field('has_other_parameters', css_class=field_width),
+                        Field('has_crop_rotation', css_class=field_width()),
+                        Field('has_title_drainage', css_class=field_width()),
+                        Field('has_point_source', css_class=field_width()),
+                        Field('has_fertilizer', css_class=field_width()),
+                        Field('has_tillage_operation', css_class=field_width()),
+                        Field('has_inlet_of_draining_watershed', css_class=field_width()),
+                        Field('has_irrigation_operation', css_class=field_width()),
+                        Field('has_other_parameters', css_class=field_width()),
                  )
         kwargs['element_name_label'] = 'SWAT model used parameters'
         super(SWATModelParametersFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 
 class SWATModelParametersForm(ModelForm):
-    has_crop_rotation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
-    has_title_drainage = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
-    has_point_source = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
-    has_fertilizer = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
-    has_tillage_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
-    has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
-    has_irrigation_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
+    choices = ((True, 'Yes'), (False, 'No'))
+    has_crop_rotation = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
+    has_title_drainage = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
+    has_point_source = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
+    has_fertilizer = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
+    has_tillage_operation = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
+    has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
+    has_irrigation_operation = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
 
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
@@ -271,35 +206,34 @@ class SWATModelParametersForm(ModelForm):
                   'has_inlet_of_draining_watershed',
                   'has_irrigation_operation',
                   'has_other_parameters']
-        exclude = ['content_object']
 
 class SWATModelParametersValidationForm(forms.Form):
-    has_crop_rotation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
-    has_title_drainage = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
-    has_point_source = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
-    has_fertilizer = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
-    has_tillage_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
-    has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
-    has_irrigation_operation = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
-    has_other_parameters = forms.CharField(max_length=500, required=False)
+    choices = ((True, 'Yes'), (False, 'No'))
+    has_crop_rotation = forms.TypedChoiceField(choices=choices, required=False)
+    has_title_drainage = forms.TypedChoiceField(choices=choices, required=False)
+    has_point_source = forms.TypedChoiceField(choices=choices, required=False)
+    has_fertilizer = forms.TypedChoiceField(choices=choices, required=False)
+    has_tillage_operation = forms.TypedChoiceField(choices=choices, required=False)
+    has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=choices, required=False)
+    has_irrigation_operation = forms.TypedChoiceField(choices=choices, required=False)
+    has_other_parameters = forms.CharField(max_length=200, required=False)
 
 class ModelInputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('rainfall_time_step', css_class=field_width),
-                        Field('simulation_time_step', css_class=field_width),
-                        Field('watershed_area', css_class=field_width),
-                        Field('number_of_subbasins', css_class=field_width),
-                        Field('number_of_HRUs', css_class=field_width),
-                        Field('DEM_resolution', css_class=field_width),
-                        Field('DEM_source_name', css_class=field_width),
-                        Field('DEM_source_URL', css_class=field_width),
-                        Field('landUse_data_source_name', css_class=field_width),
-                        Field('landUse_data_source_URL', css_class=field_width),
-                        Field('soil_data_source_name', css_class=field_width),
-                        Field('soil_data_source_URL', css_class=field_width),
+                        Field('rainfall_time_step', css_class=field_width()),
+                        Field('simulation_time_step', css_class=field_width()),
+                        Field('watershed_area', css_class=field_width()),
+                        Field('number_of_subbasins', css_class=field_width()),
+                        Field('number_of_HRUs', css_class=field_width()),
+                        Field('DEM_resolution', css_class=field_width()),
+                        Field('DEM_source_name', css_class=field_width()),
+                        Field('DEM_source_URL', css_class=field_width()),
+                        Field('landUse_data_source_name', css_class=field_width()),
+                        Field('landUse_data_source_URL', css_class=field_width()),
+                        Field('soil_data_source_name', css_class=field_width()),
+                        Field('soil_data_source_URL', css_class=field_width()),
                  )
         kwargs['element_name_label'] = 'Model Input'
         super(ModelInputFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -323,7 +257,6 @@ class ModelInputForm(ModelForm):
                   'landUse_data_source_URL',
                   'soil_data_source_name',
                   'soil_data_source_URL']
-        exclude = ['content_object']
 
 
 class ModelInputValidationForm(forms.Form):
