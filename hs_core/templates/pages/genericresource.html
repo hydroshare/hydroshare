@@ -25,7 +25,8 @@
                 {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
                     <div class="alert alert-success alert-dismissible" role="alert">
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                      <strong>Congratulations!</strong> <span>Now that your resource has been created please take some time to add data for:</span>
+                      <strong>Congratulations!</strong> <span>Now that your resource has been created click on the edit button below to add additional metadata.</span>
+                      <p>The following metadata are still required before you can make the resource public:</p>
                         <ul>
                         {% for element in missing_metadata_elements %}
                             <li>{{ element }}</li>
@@ -36,11 +37,10 @@
                     </ul>
 
                     <hr>
-                    <span>
-                        <span class="glyphicon glyphicon-question-sign">
-                        </span> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> )
-                        below to edit this resource.
-                    </span>
+
+                    <span class="glyphicon glyphicon-question-sign"></span>
+                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
+
                  </div>
                 {% endif %}
             {% endif %}
