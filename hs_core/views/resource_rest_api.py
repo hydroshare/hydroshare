@@ -50,7 +50,7 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
     For any authenticated user with no other query parameters provided in the request, all resources that are viewable
     by the user will be listed.
 
-    REST URL: hsapi/resource/{query parameters}
+    REST URL: hsapi/resourceList/{query parameters}
     HTTP method: GET
 
     Supported query parameters (all are optional):
@@ -66,7 +66,7 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
     :param  to_date: (optional) - to get a list of resources created on or before this date
     :param  edit_permission: (optional) - to get a list of resources for which the authorised user has edit permission
     :rtype:  json string
-    :return:  a paginated list of resources with data for resource id, title, resource type, creator, sharing status,
+    :return:  a paginated list of resources with data for resource id, title, resource type, creator, public,
     date created, date last updated, resource bag url path, and science metadata url path
 
     example return json format for GET /hsapi/resource/<RESOURCE_ID>:
@@ -78,7 +78,7 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
         "creator": creator user name,
         "date_created": date resource created,
         "date_last_updated": date resource last updated,
-        "sharing_status": Public or Private,
+        "public": True or False,
         "bag_url": link to bag file,
         "science_metadata_url": link to science metadata
     }
@@ -90,11 +90,11 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
             "previous": link to previous page
             "results":[
                     {"resource_type": resource type, "resource_title": resource title, "resource_id": resource id,
-                    'creator': creator name, 'sharing_status': Public or Private, 'date_created': date resource created,
+                    'creator': creator name, 'public': True or False, 'date_created': date resource created,
                     'date_last_update': date resource last updated, 'bag_url': link to bag file, 'science_metadata_url':
                     link to science metadata},
                     {"resource_type": resource type, "resource_title": resource title, "resource_id": resource id,
-                    'creator': creator name, 'sharing_status': Public or Private, 'date_created': date resource created,
+                    'creator': creator name, 'public': True or False, 'date_created': date resource created,
                     'date_last_update': date resource last updated, 'bag_url': link to bag file, 'science_metadata_url':
                     link to science metadata},
             ]
@@ -170,12 +170,7 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
 
     def _resourceToResourceListItem(self, r):
         resource_bag = hydroshare.get_resource(r.short_id)
-        if r.creator.first_name:
-            creator_name = r.creator.first_name
-            if r.creator.last_name:
-                creator_name += " %s" % r.creator.last_name
-        else:
-            creator_name = r.creator.username
+        creator_name = r.creator.username
 
         public = True if r.public else False
 

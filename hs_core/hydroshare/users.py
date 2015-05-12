@@ -523,7 +523,7 @@ def delete_group_owner(group, user):
     GroupOwnership.objects.filter(group=group, owner=user).delete()
 
 
-def get_resource_list(
+def get_resource_list(creator=None,
         group=None, user=None, owner=None,
         from_date=None, to_date=None,
         start=None, count=None,
@@ -577,7 +577,7 @@ def get_resource_list(
     """
     from django.db.models import Q
 
-    if not any((group, user, owner, from_date, to_date, start, count, keywords, dc, full_text_search, public, types)):
+    if not any((creator, group, user, owner, from_date, to_date, start, count, keywords, dc, full_text_search, public, types)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
     resource_types = get_resource_types()
@@ -601,6 +601,10 @@ def get_resource_list(
                 user = user_from_id(user)
                 queries[t].append(Q(edit_users=user) | Q(owners=user))
         else:
+            if creator:
+                creator = user_from_id(creator)
+                queries[t].append(Q(creator=creator))
+
             if group:
                 group = group_from_id(group)
                 queries[t].append(Q(edit_groups=group) | Q(view_groups=group))
