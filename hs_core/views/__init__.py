@@ -465,12 +465,6 @@ def my_resources(request, page):
         public = not request.user.is_authenticated()
         types = [t.strip() for t in request.REQUEST.getlist('type')]
 
-        dcterms = defaultdict(dict)
-        for k, v in filter(lambda (x, y): x.startswith('dc'), request.REQUEST.items()):
-            num = int(k[-1])
-            vtype = k[2:-1]
-            dcterms[num][vtype] = v
-
         # TODO ten separate SQL queries for basically the same data
         res = set()
         for lst in get_resource_list(
@@ -479,7 +473,6 @@ def my_resources(request, page):
             published=published,
             edit_permission=edit_permission,
             from_date=from_date,
-            dc=list(dcterms.values()) if dcterms else None,
             keywords=keywords,
             full_text_search=words,
             public=public,
@@ -723,20 +716,6 @@ def create_resource(request, *args, **kwargs):
     qrylst = request.POST
     frm = CreateResourceForm(qrylst)
     if frm.is_valid():
-        dcterms = [
-            { 'term': 'T', 'content': frm.cleaned_data['title'] },
-            { 'term': 'AB',  'content': frm.cleaned_data['abstract'] or frm.cleaned_data['title']},
-            { 'term': 'DT', 'content': now().isoformat()},
-            { 'term': 'DC', 'content': now().isoformat()}
-        ]
-        for cn in frm.cleaned_data['contributors'].split(','):
-            cn = cn.strip()
-            if(cn !=""):
-                dcterms.append({'term': 'CN', 'content': cn})
-        for cr in frm.cleaned_data['creators'].split(','):
-            cr = cr.strip()
-            if(cr !=""):
-                dcterms.append({'term': 'CR', 'content': cr})
         global res_cls
         # Send pre_call_create_resource signal
         metadata = []
