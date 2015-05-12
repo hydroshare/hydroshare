@@ -7,7 +7,7 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ResourceListRetrieveCreateUpdateDelete.as_view(),
         name='get_update_delete_resource'),
 
-    url(r'^resource/$', views.resource_rest_api.ResourceListRetrieveCreateUpdateDelete.as_view(),
+    url(r'^resourceList/$', views.resource_rest_api.ResourceListRetrieveCreateUpdateDelete.as_view(),
         name='list_create_resource'),
 
     url(r'^scimeta/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
