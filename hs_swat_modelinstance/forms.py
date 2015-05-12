@@ -34,7 +34,7 @@ class ModelOutputForm(ModelForm):
         fields = ['includes_output']
 
 class ModelOutputValidationForm(forms.Form):
-    includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
+    includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
 
     def clean_includes_output(self):
         data = self.cleaned_data['includes_output']
@@ -96,7 +96,7 @@ class ModelObjectiveForm(ModelForm):
 
 class ModelObjectiveValidationForm(forms.Form):
     swat_model_objective = forms.CharField(max_length=100, required=False)
-    other_objectives = forms.CharField(max_length=500, required=False)
+    other_objectives = forms.CharField(max_length=200, required=False)
 
 class simulationTypeFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
@@ -152,9 +152,9 @@ class ModelMethodsForm(ModelForm):
 
 
 class ModelMethodsValidationForm(forms.Form):
-    runoff_calculation_method = forms.CharField(max_length=500, required=False)
-    flow_routing_method = forms.CharField(max_length=500, required=False)
-    PET_estimation_method = forms.CharField(max_length=500, required=False)
+    runoff_calculation_method = forms.CharField(max_length=200, required=False)
+    flow_routing_method = forms.CharField(max_length=200, required=False)
+    PET_estimation_method = forms.CharField(max_length=200, required=False)
 
 class SWATModelParametersFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
