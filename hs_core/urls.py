@@ -5,7 +5,7 @@ urlpatterns = patterns('',
 
     # resource API
     url(r'^resourceList/$', views.resource_rest_api.ResourceList.as_view(),
-        name='list_create_resource'),
+        name='list_resource'),
 
     url(r'^resource/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ResourceCreateReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
