@@ -29,6 +29,5 @@ def get_model_metadata(request):
             operating_sys=mpmeta.operating_sys,
             url = "http://"+request.get_host()+"/resource/"+resource_id+"/",
         )
-    j = json.dumps({'test':1})
     json_data = json.dumps(metadata)
     return HttpResponse(json_data, content_type="application/json")

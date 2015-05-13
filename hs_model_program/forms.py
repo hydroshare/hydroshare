@@ -19,7 +19,7 @@ class BaseFormHelper(FormHelper):
             if element_id:
                 self.form_tag = True
                 self.form_action = "/hsapi/_internal/%s/%s/%s/update-metadata/" % (
-                res_short_id, element_name, element_id)
+                    res_short_id, element_name, element_id)
             else:
                 self.form_action = "/hsapi/_internal/%s/%s/add-metadata/" % (res_short_id, element_name)
                 self.form_tag = False
@@ -41,8 +41,7 @@ class BaseFormHelper(FormHelper):
         else:
             self.layout = Layout(
                 Fieldset(element_name,
-                         element_layout,
-                         ),
+                         element_layout,),
             )
 
 
