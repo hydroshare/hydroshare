@@ -25,7 +25,7 @@
                 {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
                     <div class="alert alert-success alert-dismissible" role="alert">
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                      <strong>Congratulations!</strong> <span>Now that your resource has been created click on the edit button below to add additional metadata.</span>
+                      {% if just_created %}<strong>Congratulations! </strong>{% endif %}<span>Now that your resource has been created click on the edit button below to add additional metadata.</span>
                       <p>The following metadata are still required before you can make the resource public:</p>
                         <ul>
                         {% for element in missing_metadata_elements %}
@@ -350,7 +350,6 @@
                 {% endif %}
 
                 {% if page.perms.change %}
-
                     <div class="panel panel-default panel-faq">
                     <div class="panel-heading">
                         <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
@@ -1203,7 +1202,7 @@
                         {% endif %}
                     </div>
 
-{#                   Add new temporal coverage#}
+                    {#  Add new temporal coverage#}
                     <div class="form-group col-md-6 col-sm-12 col-xs-12" id="coverage-temporal">
                         {% if not coverage_temporal_form.initial.start %}
                         <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
@@ -1457,7 +1456,6 @@
                 </div>
             </div>
         </div>
-
         {% endfor %}
 
         {% for relation in relation_formset.initial %}

@@ -42,9 +42,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 relevant_tools.append(tl)
 
 
-
+    just_created = False
     if request:
         file_validation_error = check_for_file_validation(request)
+
+        just_created = request.session.get('just_created', False)
+        if 'just_created' in request.session:
+            del request.session['just_created']
 
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
@@ -104,8 +108,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'supported_file_types': content_model.get_supported_upload_file_types(),
                    'allow_multiple_file_upload': content_model.can_have_multiple_files(),
                    'file_validation_error': file_validation_error if file_validation_error else None,
-                   'relevant_tools': relevant_tools
-
+                   'relevant_tools': relevant_tools,
+                   'just_created': just_created
         }
         return context
 
