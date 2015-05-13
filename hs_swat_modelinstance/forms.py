@@ -10,7 +10,7 @@ def field_width():
     width = 'form-control input-sm'
     return width
 
-#SWATmodelParameters element forms
+
 class ModelOutputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
@@ -31,7 +31,7 @@ class ModelOutputForm(ModelForm):
 
     class Meta:
         model = ModelOutput
-        fields = ['includes_output']
+        fields = ('includes_output',)
 
 class ModelOutputValidationForm(forms.Form):
     includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
@@ -62,7 +62,7 @@ class ExecutedByForm(ModelForm):
 
     class Meta:
         model = ExecutedBy
-        fields = ['name']
+        fields = ('name',)
 
 class ExecutedByValidationForm(forms.Form):
     name = forms.CharField(max_length=200)
@@ -83,15 +83,15 @@ class ModelObjectiveForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         objective_choices = (('Choose an objective', 'Choose an objective'), ('Hydrology', 'Hydrology'),
                                    ('Water quality', 'Water quality'), ('BMPs', 'BMPs'),
-                                   ('Climate / Landuse Change', 'Climate / Landuse Change'), ('Other', 'Other'))
+                                   ('Climate / Landuse Change', 'Climate / Landuse Change'), ('Other', 'Other'),)
         super(ModelObjectiveForm, self).__init__(*args, **kwargs)
         self.helper = ModelObjectiveFormHelper(allow_edit, res_short_id, element_id, element_name='ModelObjective')
         self.fields['swat_model_objective'].choices = objective_choices
 
     class Meta:
         model = ModelObjective
-        fields = ['swat_model_objective',
-                  'other_objectives']
+        fields = ('swat_model_objective',
+                  'other_objectives',)
 
 
 class ModelObjectiveValidationForm(forms.Form):
@@ -113,14 +113,14 @@ class simulationTypeForm(ModelForm):
         type_choices = (('Choose a type', 'Choose a type'),
                                    ('Normal Simulation', 'Normal Simulation'),
                                    ('Sensitivity Analysis', 'Sensitivity Analysis'),
-                                   ('Auto-Calibration', 'Auto-Calibration'))
+                                   ('Auto-Calibration', 'Auto-Calibration'),)
         super(simulationTypeForm, self).__init__(*args, **kwargs)
         self.helper = simulationTypeFormHelper(allow_edit, res_short_id, element_id, element_name='simulationType')
         self.fields['simulation_type_name'].choices = type_choices
 
     class Meta:
         model = simulationType
-        fields = ['simulation_type_name']
+        fields = ('simulation_type_name',)
 
 
 class simulationTypeValidationForm(forms.Form):
@@ -146,9 +146,9 @@ class ModelMethodsForm(ModelForm):
 
     class Meta:
         model = ModelMethods
-        fields = ['runoff_calculation_method',
+        fields = ('runoff_calculation_method',
                   'flow_routing_method',
-                  'PET_estimation_method']
+                  'PET_estimation_method',)
 
 
 class ModelMethodsValidationForm(forms.Form):
@@ -198,14 +198,14 @@ class SWATModelParametersForm(ModelForm):
 
     class Meta:
         model = SWATModelParameters
-        fields = ['has_crop_rotation',
+        fields = ('has_crop_rotation',
                   'has_title_drainage',
                   'has_point_source',
                   'has_fertilizer',
                   'has_tillage_operation',
                   'has_inlet_of_draining_watershed',
                   'has_irrigation_operation',
-                  'has_other_parameters']
+                  'has_other_parameters',)
 
 class SWATModelParametersValidationForm(forms.Form):
     choices = ((True, 'Yes'), (False, 'No'))
@@ -245,7 +245,7 @@ class ModelInputForm(ModelForm):
 
     class Meta:
         model = ModelInput
-        fields = ['rainfall_time_step',
+        fields = ('rainfall_time_step',
                   'simulation_time_step',
                   'watershed_area',
                   'number_of_subbasins',
@@ -256,7 +256,7 @@ class ModelInputForm(ModelForm):
                   'landUse_data_source_name',
                   'landUse_data_source_URL',
                   'soil_data_source_name',
-                  'soil_data_source_URL']
+                  'soil_data_source_URL',)
 
 
 class ModelInputValidationForm(forms.Form):
