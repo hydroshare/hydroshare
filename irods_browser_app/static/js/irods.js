@@ -1,4 +1,5 @@
 $('#btn-select-irods-file').on('click',function(){
+    $('#res_type').val($('#resource-type').val());
     $('#file_struct').children().remove();
 	store = $('#root_store').val();
 	// Setting up the view tab
@@ -180,10 +181,11 @@ function irods_upload() {
         type: "POST",
         data: {
             upload: $('#upload_store').val(),
-            res_id: $('#res_id').val()
+            res_type: $('#res_type').val()
         },
         success: function(json) {
             $("#irods-sel-file").text(json.irods_file_name);
+            $("#file-type-error").text(json.file_type_error);
             $('#irodsContent').modal('hide');
         },
         error: function(xhr, errmsg, err) {

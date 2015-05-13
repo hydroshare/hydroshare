@@ -93,8 +93,10 @@
         var selected_file = undefined;
 
         $('#resource-type').on('change', function(){
-            $('#select-file').value ='';
+            $('#select-file').value  = '';
             $('#select-file').attr('value','');
+            $('#irods-sel-file').text("No file selected");
+
             if(selected_file != undefined){
                 selected_file.value = '';
             }
