@@ -1,22 +1,23 @@
 __author__ = 'Mohamed Morsy'
 from django.forms import ModelForm
 from django import forms
+from crispy_forms import *
 from crispy_forms.layout import *
 from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
 
-def field_width():
-    width = 'form-control input-sm'
-    return width
-
+class MetadataField(layout.Field):
+          def __init__(self, *args, **kwargs):
+              kwargs['css_class'] = 'form-control input-sm'
+              super(MetadataField, self).__init__(*args, **kwargs)
 
 class ModelOutputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        Field('includes_output', css_class=field_width()),
+                        MetadataField('includes_output'),
                  )
         kwargs['element_name_label'] = 'Includes output files?'
         super(ModelOutputFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -48,7 +49,7 @@ class ExecutedByFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        Field('name', css_class=field_width()),
+                        MetadataField('name'),
                  )
 
         kwargs['element_name_label'] = 'Model Program used for execution'
@@ -73,8 +74,8 @@ class ModelObjectiveFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        Field('swat_model_objective', css_class=field_width()),
-                        Field('other_objectives', css_class=field_width()),
+                        MetadataField('swat_model_objective'),
+                        MetadataField('other_objectives'),
                  )
         kwargs['element_name_label'] = 'Model objective'
         super(ModelObjectiveFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -103,7 +104,7 @@ class simulationTypeFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        Field('simulation_type_name', css_class=field_width()),
+                        MetadataField('simulation_type_name'),
                  )
         kwargs['element_name_label'] = 'Simulation type'
         super(simulationTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -132,9 +133,9 @@ class ModelMethodsFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        Field('runoff_calculation_method', css_class=field_width()),
-                        Field('flow_routing_method', css_class=field_width()),
-                        Field('PET_estimation_method', css_class=field_width()),
+                        MetadataField('runoff_calculation_method'),
+                        MetadataField('flow_routing_method'),
+                        MetadataField('PET_estimation_method'),
                  )
         kwargs['element_name_label'] = 'Model Methods'
         super(ModelMethodsFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -161,14 +162,14 @@ class SWATModelParametersFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        Field('has_crop_rotation', css_class=field_width()),
-                        Field('has_title_drainage', css_class=field_width()),
-                        Field('has_point_source', css_class=field_width()),
-                        Field('has_fertilizer', css_class=field_width()),
-                        Field('has_tillage_operation', css_class=field_width()),
-                        Field('has_inlet_of_draining_watershed', css_class=field_width()),
-                        Field('has_irrigation_operation', css_class=field_width()),
-                        Field('has_other_parameters', css_class=field_width()),
+                        MetadataField('has_crop_rotation'),
+                        MetadataField('has_title_drainage'),
+                        MetadataField('has_point_source'),
+                        MetadataField('has_fertilizer'),
+                        MetadataField('has_tillage_operation'),
+                        MetadataField('has_inlet_of_draining_watershed'),
+                        MetadataField('has_irrigation_operation'),
+                        MetadataField('has_other_parameters'),
                  )
         kwargs['element_name_label'] = 'SWAT model used parameters'
         super(SWATModelParametersFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -222,18 +223,18 @@ class ModelInputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        Field('rainfall_time_step', css_class=field_width()),
-                        Field('simulation_time_step', css_class=field_width()),
-                        Field('watershed_area', css_class=field_width()),
-                        Field('number_of_subbasins', css_class=field_width()),
-                        Field('number_of_HRUs', css_class=field_width()),
-                        Field('DEM_resolution', css_class=field_width()),
-                        Field('DEM_source_name', css_class=field_width()),
-                        Field('DEM_source_URL', css_class=field_width()),
-                        Field('landUse_data_source_name', css_class=field_width()),
-                        Field('landUse_data_source_URL', css_class=field_width()),
-                        Field('soil_data_source_name', css_class=field_width()),
-                        Field('soil_data_source_URL', css_class=field_width()),
+                        MetadataField('rainfall_time_step'),
+                        MetadataField('simulation_time_step'),
+                        MetadataField('watershed_area'),
+                        MetadataField('number_of_subbasins'),
+                        MetadataField('number_of_HRUs'),
+                        MetadataField('DEM_resolution'),
+                        MetadataField('DEM_source_name'),
+                        MetadataField('DEM_source_URL'),
+                        MetadataField('landUse_data_source_name'),
+                        MetadataField('landUse_data_source_URL'),
+                        MetadataField('soil_data_source_name'),
+                        MetadataField('soil_data_source_URL'),
                  )
         kwargs['element_name_label'] = 'Model Input'
         super(ModelInputFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
