@@ -6,15 +6,15 @@ $('#btn-select-irods-file').on('click',function(){
 	$('#irods_view_store').val(store);
 	// loading file structs
 	parent = $('#file_struct');
-	get_store(store,parent,0)
+	get_store(store,parent,0);
 	enable_settings();
 });
 
 function get_store(store,parent,margin){
 	margin_left = $(parent).css('margin-left');
 	margin_left = (parseInt(margin_left.substring(0,margin_left.length-2))-10) + 10;
-	form_data = new FormData()
-	form_data.append('store',store)
+	form_data = new FormData();
+	form_data.append('store',store);
 	$.ajax({
         mode: "queue",
         url: '/irods/store/',
@@ -125,4 +125,77 @@ $('#iget_irods').on('click',function(){
 	$('#upload_store').val(name);
 	$('#irodsContent .modal-backdrop.up-load').show();
 	$('#irodsContent .ajax-loader').show();
+});
+
+// Submit post on submit
+$('#post-form').on('submit', function(event){
+    event.preventDefault();
+    console.log("form submitted!")  // sanity check
+    create_post();
+});
+
+function irods_login() {
+    $.ajax({
+        url: "/irods/login/",
+        type: "POST",
+        data: {
+            user: $('#username').val(),
+            password: $('#password').val(),
+            zone: $('#zone').val(),
+            host: $('#host').val(),
+            port: $('#port').val()
+        },
+        success: function(json) {
+            if(json.irods_loggedin) {
+                $("#sign-in-info").text("Signed in as " + json.user);
+                $("#irods_content_label").text(json.user);
+                $('#root_store').val(json.datastore);
+                $("#btn-select-irods-file").show();
+                $("#irods-sel-file").text("No file selected");
+            }
+            else {
+                $("#sign-in-info").text('iRODS login failed');
+                $("#btn-select-irods-file").hide();
+            }
+            $('#irodsSignin').modal('hide');
+        },
+        error: function(xhr, errmsg, err) {
+            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+            $("#sign-in-info").text('iRODS login failed');
+            $("#btn-select-irods-file").hide();
+            $('#irodsSignin').modal('hide');
+        }
+    });
+}
+
+$('#irodsLogin').on('submit', function(event){
+    event.preventDefault();
+
+    irods_login();
+});
+
+function irods_upload() {
+    $.ajax({
+        url: "/irods/upload/",
+        type: "POST",
+        data: {
+            upload: $('#upload_store').val(),
+            res_id: $('#res_id').val()
+        },
+        success: function(json) {
+            $("#irods-sel-file").text(json.irods_file_name);
+            $('#irodsContent').modal('hide');
+        },
+        error: function(xhr, errmsg, err) {
+            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+            $("#irods-sel-file").text("No file selected");
+            $('#irodsContent').modal('hide');
+        }
+    });
+}
+
+$('#irodsUpload').on('submit', function(event){
+    event.preventDefault();
+
+    irods_upload();
 });

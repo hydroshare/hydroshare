@@ -1,6 +1,7 @@
 import json
 from django.http import HttpResponse, HttpResponseRedirect
 from irods.session import iRODSSession
+from irods.exception import CollectionDoesNotExist
 
 irods_sess = None
 
@@ -21,37 +22,56 @@ def search_ds(coll):
 
 # Create your views here.
 def login(request):
-    port = int(request.POST['port'])
-    user = str(request.POST['username'])
-    password = str(request.POST['password'])
-    zone = str(request.POST['zone'])
-    host = str(request.POST['host'])
-    datastore = "/%s/home/%s" % (zone, user)
-    remember = request.POST.get('remember', None)
-    global irods_sess
-    irods_sess = iRODSSession(user=user, password=password, zone=zone, host=host, port=port)
+    if request.method == 'POST':
+        port = int(request.POST['port'])
+        user = str(request.POST['user'])
+        password = str(request.POST['password'])
+        zone = str(request.POST['zone'])
+        host = str(request.POST['host'])
+        datastore = "/%s/home/%s" % (zone, user)
 
-    try:
-        irods_sess.collections.get(datastore)
-    except:
-        request.session['irods_loggedin'] = False
-        request.session['login_message'] = 'iRODS login failed'
-        request.session['irods_file_name'] = ''
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
-    else:
-        request.session["user"] = user
-        request.session["datastore"] = datastore
-        request.session["password"] = password
-        request.session["port"] = port
-        request.session["host"] = host
-        request.session["zone"] = zone
-        if remember:
-            request.session["remember"] = remember
+        response_data = {}
+
+        global irods_sess
+        irods_sess = iRODSSession(user=user, password=password, zone=zone, host=host, port=port)
+
+        try:
+            irods_sess.collections.get(datastore)
+        except CollectionDoesNotExist:
+            request.session['irods_loggedin'] = False
+            request.session['login_message'] = 'iRODS login failed'
+            request.session['irods_file_name'] = ''
+            response_data['irods_loggedin'] = False
+            response_data['login_message'] = 'iRODS login failed'
+            response_data['irods_file_name'] = ''
+            response_data['error'] = "iRODS collection does not exist"
+            return HttpResponse(
+                json.dumps(response_data),
+                content_type="application/json"
+            )
         else:
-            request.session["remember"] = ''
-        request.session['irods_loggedin'] = True
-        request.session['irods_file_name'] = ''
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+            request.session["user"] = user
+            request.session["datastore"] = datastore
+            request.session["password"] = password
+            request.session["port"] = port
+            request.session["host"] = host
+            request.session["zone"] = zone
+            request.session['irods_loggedin'] = True
+            request.session['irods_file_name'] = ''
+
+            response_data['user'] = user
+            response_data['datastore'] = datastore
+            response_data['irods_loggedin'] = True
+            response_data['irods_file_name'] = ''
+            return HttpResponse(
+                json.dumps(response_data),
+                content_type = "application/json"
+            )
+    else:
+        return HttpResponse(
+            json.dumps({"error": "Not POST request"}),
+            content_type="application/json"
+        )
 
 def store(request):
     return_object = []
@@ -63,20 +83,27 @@ def store(request):
     return HttpResponse(json.dumps(return_object), status=201)
 
 def upload(request):
-    file_name = str(request.POST['upload'])
-    request.session['irods_loggedin'] = True
-    ref_url = request.META['HTTP_REFERER']
-    urlstrs = ref_url.rsplit('/', 2)
-    lsize = len(urlstrs)
-    base_url = urlstrs[lsize-1]
-    if not base_url:
-        base_url=urlstrs[lsize-2]
-    if base_url == "create-resource":
+    if request.method == 'POST':
+        file_name = str(request.POST['upload'])
+        request.session['irods_loggedin'] = True
+        response_data = {}
         # create resource using irods file
         request.session['irods_file_name'] = file_name
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        response_data['irods_file_name'] = file_name
+        return HttpResponse(
+            json.dumps(response_data),
+            content_type = "application/json"
+        )
     else:
-        # add irods file into an existing resource
-        request.session['irods_add_file_name'] = file_name
-        res_id = request.POST['res_id']
-        return HttpResponseRedirect('/hsapi/_internal/{res_id}/add-file-to-resource/'.format(res_id=res_id))
+        return HttpResponse(
+            json.dumps({"error": "Not POST request"}),
+            content_type="application/json"
+        )
+
+def upload_add(request):
+    file_name = str(request.POST['upload'])
+    request.session['irods_loggedin'] = True
+    # add irods file into an existing resource
+    request.session['irods_add_file_name'] = file_name
+    res_id = request.POST['res_id']
+    return HttpResponseRedirect('/hsapi/_internal/{res_id}/add-file-to-resource/'.format(res_id=res_id))

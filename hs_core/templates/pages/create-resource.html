@@ -54,21 +54,11 @@
             </tr>
             <tr>
                 <td><a id="btn-signin-irods"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsSignin">
-                    <span class="glyphicon glyphicon-plus"><span class="button-label">Sign in iRODS...</span></span>
-                </a>
-                {% if request.session.irods_loggedin %}
-                    Signed in as {{ request.session.user }}
-                    <a id="btn-select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsContent">
-                        <span class="glyphicon glyphicon-plus"><span class="button-label">Browse iRODS...</span></span>
-                    </a>
-                    {% if not request.session.irods_file_name %}
-                        No files selected
-                    {% else %}
-                        {{ request.session.irods_file_name }}
-                    {% endif %}
-                {% else %}
-                    {{ request.session.login_message }}
-                {%  endif %}
+                    <span class="glyphicon glyphicon-plus"><span class="button-label">Sign in iRODS...</span></span></a>
+                <span id="sign-in-info"></span>
+                <a id="btn-select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsContent" style="display:none;">
+                    <span class="glyphicon glyphicon-plus"><span class="button-label">Browse iRODS...</span></span></a>
+                <span id="irods-sel-file"></span>
                 </td>
             </tr>
         </tbody>
@@ -88,7 +78,8 @@
 </form>
 
 {% block modal %}
-{% include "irods.html" %}
+{% include "irods_signin.html" %}
+{% include "irods_upload_create.html" %}
 {% endblock %}
 
 {% block extra_js %}
@@ -96,21 +87,12 @@
     <script type="text/javascript">
     $(function() {
     });
-    $(document).ready(function(){
+    $(document).ready(function() {
         var json_response_file_types = {};
         var json_response_multiple_file = {};
         var selected_file = undefined;
-        var sel_res_type = sessionStorage.getItem("res_type");
-        if(sel_res_type != null)
-            $('#resource-type').val(sel_res_type);
-        var sel_res_title = sessionStorage.getItem("res_title");
-        if(sel_res_title != null)
-            $('#title').val(sel_res_title);
-        $('#title').change(function() {
-            sessionStorage.setItem("res_title", this.value);
-        });
+
         $('#resource-type').on('change', function(){
-            sessionStorage.setItem("res_type", this.value);
             $('#select-file').value ='';
             $('#select-file').attr('value','');
             if(selected_file != undefined){
@@ -163,7 +145,6 @@
                     $("#file-multiple").text('Error in determining if multiple file upload is allowed for this resource type');
                 }
             })
-
         })
 
         $('#select-file').on('change', function(){
@@ -199,9 +180,7 @@
                     $('#file-type-error').text('');
                 }
             }
-
         })
-
     })
     </script>
 {% endblock %}
