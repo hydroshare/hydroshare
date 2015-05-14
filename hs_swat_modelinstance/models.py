@@ -189,10 +189,10 @@ class SWATModelParameters(AbstractMetaDataElement):
     has_tillage_operation = models.BooleanField(default=False)
     has_inlet_of_draining_watershed = models.BooleanField(default=False)
     has_irrigation_operation = models.BooleanField(default=False)
-    has_other_parameters = models.CharField(max_length=200, null=True, blank=True)
+    other_parameters = models.CharField(max_length=200, null=True, blank=True)
 
     def __unicode__(self):
-        self.has_other_parameters
+        self.other_parameters
 
     @classmethod
     def create(cls, **kwargs):
@@ -224,8 +224,8 @@ class SWATModelParameters(AbstractMetaDataElement):
             raise ValidationError("SWATModelParameters has_irrigation_operation is missing.")
         else:
             kwargs['has_irrigation_operation'] = 1 if kwargs['has_irrigation_operation'] == 'True' else 0
-        if not 'has_other_parameters' in kwargs:
-            raise ValidationError("SWATModelParameters has_other_parameters is missing.")
+        if not 'other_parameters' in kwargs:
+            raise ValidationError("SWATModelParameters other_parameters is missing.")
 
         metadata_obj = kwargs['content_object']
         return SWATModelParameters.objects.create(has_crop_rotation=kwargs['has_crop_rotation'],
@@ -235,7 +235,7 @@ class SWATModelParameters(AbstractMetaDataElement):
                                                   has_tillage_operation=kwargs['has_tillage_operation'],
                                                   has_inlet_of_draining_watershed=kwargs['has_inlet_of_draining_watershed'],
                                                   has_irrigation_operation=kwargs['has_irrigation_operation'],
-                                                  has_other_parameters=kwargs['has_other_parameters'],
+                                                  other_parameters=kwargs['other_parameters'],
                                                   content_object=metadata_obj)
 
     @classmethod
@@ -245,8 +245,8 @@ class SWATModelParameters(AbstractMetaDataElement):
             for key, value in kwargs.iteritems():
                 if key in ('has_crop_rotation', 'has_title_drainage', 'has_point_source',
                            'has_fertilizer', 'has_tillage_operation', 'has_inlet_of_draining_watershed',
-                           'has_irrigation_operation', 'has_other_parameters'):
-                    if key != 'has_other_parameters':
+                           'has_irrigation_operation', 'other_parameters'):
+                    if key != 'other_parameters':
                         value = 1 if value == 'True' else 0
                     setattr(swat_model_parameters, key, value)
 
@@ -496,8 +496,8 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_swat_model_parameters_has_tillage_operation = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasTillageOperation' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_has_inlet_of_draining_watershed = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasInletOfDrainingWatershed' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_has_irrigation_operation = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasIrrigationOperation' % self.NAMESPACES['hsterms'])
-            hsterms_swat_model_parameters_has_other_parameters = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}hasOtherParameters' % self.NAMESPACES['hsterms'])
-            hsterms_swat_model_parameters_has_other_parameters.text = self.swat_model_parameters.has_other_parameters
+            hsterms_swat_model_parameters_other_parameters = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}otherParameters' % self.NAMESPACES['hsterms'])
+            hsterms_swat_model_parameters_other_parameters.text = self.swat_model_parameters.other_parameters
             if self.swat_model_parameters.has_crop_rotation == True:
                 hsterms_swat_model_parameters_has_crop_rotation.text = "Yes"
             else:

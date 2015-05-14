@@ -168,7 +168,7 @@ class SWATModelParametersFormHelper(BaseFormHelper):
                         MetadataField('has_tillage_operation'),
                         MetadataField('has_inlet_of_draining_watershed'),
                         MetadataField('has_irrigation_operation'),
-                        MetadataField('has_other_parameters'),
+                        MetadataField('other_parameters'),
                  )
         kwargs['element_name_label'] = 'SWAT model used parameters'
         super(SWATModelParametersFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -199,7 +199,7 @@ class SWATModelParametersForm(ModelForm):
                   'has_tillage_operation',
                   'has_inlet_of_draining_watershed',
                   'has_irrigation_operation',
-                  'has_other_parameters',)
+                  'other_parameters',)
 
 class SWATModelParametersValidationForm(forms.Form):
     choices = ((True, 'Yes'), (False, 'No'))
@@ -210,7 +210,7 @@ class SWATModelParametersValidationForm(forms.Form):
     has_tillage_operation = forms.TypedChoiceField(choices=choices, required=False)
     has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=choices, required=False)
     has_irrigation_operation = forms.TypedChoiceField(choices=choices, required=False)
-    has_other_parameters = forms.CharField(max_length=200, required=False)
+    other_parameters = forms.CharField(max_length=200, required=False)
 
 class ModelInputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):

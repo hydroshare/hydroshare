@@ -130,9 +130,9 @@
                             {% else %}
                                 <div class="col-sm-8">No</div>
                             {% endif %}
-                            {% if swat_model_parameters.has_other_parameters %}
-                                <div class="col-sm-4"><strong>Has other parameters:</strong></div>
-                                <div class="col-sm-8">{{ swat_model_parameters.has_other_parameters }}</div>
+                            {% if swat_model_parameters.other_parameters %}
+                                <div class="col-sm-4"><strong>Other parameters:</strong></div>
+                                <div class="col-sm-8">{{ swat_model_parameters.other_parameters }}</div>
                             {% endif %}
                         </div>
                     <hr style="border:0">
