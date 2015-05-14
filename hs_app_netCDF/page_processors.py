@@ -19,7 +19,7 @@ def landing_page(request, page):
 
     if not edit_resource: # not editing mode
         # get the context from hs_core
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None, request=request)
         extended_metadata_exists = False
 
         if content_model.metadata.variables.all() or content_model.metadata.ori_coverage.all():

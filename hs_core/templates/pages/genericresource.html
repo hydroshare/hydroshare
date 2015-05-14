@@ -482,7 +482,12 @@
                         <a id="btn-select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsContent" {% if not request.session.irods_loggedin %}style="display:none;"{% endif %}>
                             <span class="glyphicon glyphicon-plus"><span class="button-label">Add file from iRODS...</span></span>
                         </a>
-
+                        {% if file_type_error %}
+                          <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button id="validation-error-close" type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>
+                          </div>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
@@ -983,6 +988,7 @@
     },duration);
         document.body.appendChild(el);
     }
+
     $(document).ready(function () {
         // hide add file button if necessary
         var file_count = $("#file-count").attr('value');
@@ -992,30 +998,40 @@
         if(file_types!= ".*"){
             var display_file_types = file_types.substring(0, file_types.length-2) + ').'
             $("#file-types").text("Only the listed file types can be uploaded: " + display_file_types);
+            $("#file-types-irods").text("Only the listed file types can be uploaded: " + display_file_types);
         }
         else
         {
            $("#file-types").text("Any file type can be uploaded.");
+           $("#file-types-irods").text("Any file type can be uploaded.");
         }
         // set if multiple file can be uploaded
         var allow_multiple_file_upload = $("#allow-multiple-file-upload").attr('value');
 
         if(allow_multiple_file_upload === "True"){
             $("#file-multiple").text("Multiple file upload is allowed.");
+            $("#file-multiple-irods").text("Multiple file upload is allowed.");
             $("#btn-add-file").attr('multiple', 'multiple');
             $("#add-file-input").attr('multiple', 'multiple');
         }
         else{
             $("#file-multiple").text("Only one file can be uploaded.");
+            $("#file-multiple-irods").text("Only one file can be uploaded.");
             $("#btn-add-file").removeAttr('multiple');
             $("#add-file-input").removeAttr('multiple');
             if(file_count > 0){
                 $("#btn-add-file").hide();
+                $("#btn-signin-irods").hide();
+                $("#sign-in-info").hide();
+                $("#btn-select-irods-file").hide();
             }
         }
         // hide add file button if file upload is not allowed for the resource type
         if(file_types == "()"){
             $("#btn-add-file").hide();
+            $("#btn-signin-irods").hide();
+            $("#sign-in-info").hide();
+            $("#btn-select-irods-file").hide();
         }
         // file upload validation when file is selected for upload
         $('#add-file-input').on('change', function() {

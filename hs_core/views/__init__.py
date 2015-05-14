@@ -80,17 +80,34 @@ def add_file_to_resource(request, *args, **kwargs):
 
     irods_fname = request.session.get('irods_add_file_name', '')
     if irods_fname:
-        user = request.session["user"]
-        password = request.session["password"]
-        port = request.session["port"]
-        host = request.session["host"]
-        zone = request.session["zone"]
-        # use iget to transfer selected data object to local as a NamedTemporaryFile
-        irods_storage = IrodsStorage()
-        irods_storage.set_user_session(username=user, password=password, host=host, port=port, zone=zone)
-        tmpFile = irods_storage.download(irods_fname)
-        fname = os.path.basename(irods_fname.rstrip(os.sep))
-        res_files.append(UploadedFile(file=tmpFile, name=fname))
+        file_types = res_cls.get_supported_upload_file_types()
+        valid = False
+        if file_types == ".*":
+            valid = True
+        else:
+            ext = os.path.splitext(irods_fname)[1]
+            if ext == file_types:
+                valid = True
+            else:
+                for index in range(len(file_types)):
+                    if ext == file_types[index].strip():
+                        valid = True
+                        break
+        if not valid:
+            request.session['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        else:
+            user = request.session["user"]
+            password = request.session["password"]
+            port = request.session["port"]
+            host = request.session["host"]
+            zone = request.session["zone"]
+            # use iget to transfer selected data object to local as a NamedTemporaryFile
+            irods_storage = IrodsStorage()
+            irods_storage.set_user_session(username=user, password=password, host=host, port=port, zone=zone)
+            tmpFile = irods_storage.download(irods_fname)
+            fname = os.path.basename(irods_fname.rstrip(os.sep))
+            res_files.append(UploadedFile(file=tmpFile, name=fname))
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=res_cls, files=res_files, resource=res, user=request.user,
