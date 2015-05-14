@@ -19,28 +19,29 @@ from hs_core.views import utils as view_utils
 from hs_core.views import serializers
 
 
-# Utility methods shared across classes
-def _resourceToResourceListItem(r):
-    resource_bag = hydroshare.get_resource(r.short_id)
-    creator_name = r.creator.username
+# Mixins
+class ResourceToListItemMixin(object):
+    def resourceToResourceListItem(self, r):
+        resource_bag = hydroshare.get_resource(r.short_id)
+        creator_name = r.creator.username
 
-    public = True if r.public else False
+        public = True if r.public else False
 
-    bag_url = hydroshare.utils.current_site_url() + resource_bag.bag.url
-    science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
-    resource_list_item = serializers.ResourceListItem(resource_type=r.__class__.__name__,
-                                                      resource_id=r.short_id,
-                                                      resource_title=r.title,
-                                                      creator=creator_name,
-                                                      public=public,
-                                                      date_created=r.created,
-                                                      date_last_updated=r.updated,
-                                                      bag_url=bag_url,
-                                                      science_metadata_url=science_metadata_url)
-    return resource_list_item
+        bag_url = hydroshare.utils.current_site_url() + resource_bag.bag.url
+        science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
+        resource_list_item = serializers.ResourceListItem(resource_type=r.__class__.__name__,
+                                                          resource_id=r.short_id,
+                                                          resource_title=r.title,
+                                                          creator=creator_name,
+                                                          public=public,
+                                                          date_created=r.created,
+                                                          date_last_updated=r.updated,
+                                                          bag_url=bag_url,
+                                                          science_metadata_url=science_metadata_url)
+        return resource_list_item
 
 
-class ResourceList(generics.ListAPIView):
+class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
     """
     Get a list of resources based on the following filter query parameters
 
@@ -114,7 +115,7 @@ class ResourceList(generics.ListAPIView):
             res = res.union(resources)
 
         for r in res:
-            resource_list_item = _resourceToResourceListItem(r)
+            resource_list_item = self.resourceToResourceListItem(r)
             filtered_res_list.append(resource_list_item)
 
         return filtered_res_list
@@ -122,7 +123,7 @@ class ResourceList(generics.ListAPIView):
     def get_serializer_class(self):
         return serializers.ResourceListItemSerializer
 
-class ResourceCreateReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
+class ResourceCreateReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceToListItemMixin):
     """
     Create, read, or delete a resource
 
@@ -179,7 +180,7 @@ class ResourceCreateReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
         """
         view_utils.authorize(request, pk, view=True, full=True)
         res = get_resource_by_shortkey(pk)
-        ser = self.get_serializer_class()(_resourceToResourceListItem(res))
+        ser = self.get_serializer_class()(self.resourceToResourceListItem(res))
 
         return Response(data=ser.data, status=status.HTTP_200_OK)
 
