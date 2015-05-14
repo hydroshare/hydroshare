@@ -388,17 +388,10 @@ class FilterForm(forms.Form):
 
 @processor_for('my-resources')
 def my_resources(request, page):
-#    if not request.user.is_authenticated():
-#        return HttpResponseRedirect('/accounts/login/')
-
     # import sys
     # sys.path.append("/home/docker/pycharm-debug")
     # import pydevd
-
-    # IP Address for Ubuntu VM must be: 172.17.42.1
-    # IP Address for boot2docker: varies
     # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
-
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
         res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
@@ -412,14 +405,11 @@ def my_resources(request, page):
         start = startno or 0
         from_date = frm.cleaned_data['from_date'] or None
         keywords = [k.strip() for k in request.REQUEST['keywords'].split(',')] if request.REQUEST.get('keywords', None) else None
+        words = request.REQUEST.get('text', None)
         public = not request.user.is_authenticated()
+        types = [t.strip() for t in request.REQUEST.getlist('type')]
 
-        dcterms = defaultdict(dict)
-        for k, v in filter(lambda (x, y): x.startswith('dc'), request.REQUEST.items()):
-            num = int(k[-1])
-            vtype = k[2:-1]
-            dcterms[num][vtype] = v
-
+        # TODO ten separate SQL queries for basically the same data
         res = set()
         for lst in get_resource_list(
             user=user,
@@ -427,9 +417,10 @@ def my_resources(request, page):
             published=published,
             edit_permission=edit_permission,
             from_date=from_date,
-            dc=list(dcterms.values()) if dcterms else None,
-            keywords=keywords if keywords else None,
-            public=public
+            keywords=keywords,
+            full_text_search=words,
+            public=public,
+            types=types
         ).values():
             res = res.union(lst)
         total_res_cnt = len(res)
@@ -438,6 +429,7 @@ def my_resources(request, page):
 
         # need to return total number of resources as 'ct' so have to get all resources
         # and then filter by start and count
+        # TODO this is doing some pagination/limits before sorting, so it won't be consistent
         if(start>=total_res_cnt):
             start = total_res_cnt-res_cnt
         if(start < 0):
@@ -447,6 +439,7 @@ def my_resources(request, page):
 
         reslst = reslst[start:start+res_cnt]
 
+        # TODO sorts should be in SQL not python
         res = sorted(reslst, key=lambda x: x.title)
 
         return {
@@ -595,6 +588,7 @@ def create_resource(request, *args, **kwargs):
     # go to resource landing page
     request.session['just_created'] = True
     return HttpResponseRedirect(resource.get_absolute_url())
+
 
 @login_required
 def get_file(request, *args, **kwargs):

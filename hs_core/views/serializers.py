@@ -54,6 +54,7 @@ class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
 
 
 class ResourceListRequestValidator(serializers.Serializer):
+    creator = serializers.CharField(min_length=1, required=False, validators=[validate_user_name])
     group = serializers.CharField(min_length=1, required=False, validators=[validate_group_name])
     user = serializers.CharField(min_length=1, required=False, validators=[validate_user_name])
     owner = serializers.CharField(min_length=1, required=False, validators=[validate_user_name])

@@ -19,38 +19,37 @@ from hs_core.views import utils as view_utils
 from hs_core.views import serializers
 
 
-class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIView, generics.ListAPIView):
+# Mixins
+class ResourceToListItemMixin(object):
+    def resourceToResourceListItem(self, r):
+        resource_bag = hydroshare.get_resource(r.short_id)
+        creator_name = r.creator.username
+
+        public = True if r.public else False
+
+        bag_url = hydroshare.utils.current_site_url() + resource_bag.bag.url
+        science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
+        resource_list_item = serializers.ResourceListItem(resource_type=r.__class__.__name__,
+                                                          resource_id=r.short_id,
+                                                          resource_title=r.title,
+                                                          creator=creator_name,
+                                                          public=public,
+                                                          date_created=r.created,
+                                                          date_last_updated=r.updated,
+                                                          bag_url=bag_url,
+                                                          science_metadata_url=science_metadata_url)
+        return resource_list_item
+
+
+class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
     """
-    Retrieve, create, or delete a resource, and list resources
-
-    REST URL: hsapi/resource/{pk}
-    HTTP method: GET
-    :return: (on success): JSON string representing resource summary, which includes key system metadata, as well as
-    URLs to the bag and science metadata
-
-    REST URL: hsapi/resource/{pk}
-    HTTP method: DELETE
-    :return: (on success): json string of the format: {'resource_id':pk}
-
-    REST URL: hsapi/resource/{pk}
-    HTTP method: PUT
-    :return: (on success): json string of the format: {'resource_id':pk}
-
-    :type   str
-    :param  pk: resource id
-    :rtype:  json string for http methods DELETE and PUT, and resource file data bytes for GET
-    :raises:
-    NotFound: return json format: {'detail': 'No resource was found for resource id':pk}
-    PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
-    ValidationError: return json format: {parameter-1': ['error message-1'], 'parameter-2': ['error message-2'], .. }
-
     Get a list of resources based on the following filter query parameters
 
     For an anonymous user, all public resources will be listed.
     For any authenticated user with no other query parameters provided in the request, all resources that are viewable
     by the user will be listed.
 
-    REST URL: hsapi/resource/{query parameters}
+    REST URL: hsapi/resourceList/{query parameters}
     HTTP method: GET
 
     Supported query parameters (all are optional):
@@ -66,78 +65,31 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
     :param  to_date: (optional) - to get a list of resources created on or before this date
     :param  edit_permission: (optional) - to get a list of resources for which the authorised user has edit permission
     :rtype:  json string
-    :return:  a paginated list of resources with data for resource id, title, resource type, creator, sharing status,
+    :return:  a paginated list of resources with data for resource id, title, resource type, creator, public,
     date created, date last updated, resource bag url path, and science metadata url path
 
-    example return json format for GET /hsapi/resource/<RESOURCE_ID>:
-
-    {
-        "resource_type": resource type,
-        "resource_title": resource title,
-        "resource_id": resource id,
-        "creator": creator user name,
-        "date_created": date resource created,
-        "date_last_updated": date resource last updated,
-        "sharing_status": Public or Private,
-        "bag_url": link to bag file,
-        "science_metadata_url": link to science metadata
-    }
-
-    example return json format for GET /hsapi/resource:
+    example return JSON format for GET /hsapi/resourceList:
 
         {   "count":n
             "next": link to next page
             "previous": link to previous page
             "results":[
                     {"resource_type": resource type, "resource_title": resource title, "resource_id": resource id,
-                    'creator': creator name, 'sharing_status': Public or Private, 'date_created': date resource created,
+                    'creator': creator name, 'public': True or False, 'date_created': date resource created,
                     'date_last_update': date resource last updated, 'bag_url': link to bag file, 'science_metadata_url':
                     link to science metadata},
                     {"resource_type": resource type, "resource_title": resource title, "resource_id": resource id,
-                    'creator': creator name, 'sharing_status': Public or Private, 'date_created': date resource created,
+                    'creator': creator name, 'public': True or False, 'date_created': date resource created,
                     'date_last_update': date resource last updated, 'bag_url': link to bag file, 'science_metadata_url':
                     link to science metadata},
             ]
         }
 
-    :raises:
-    ValidationError: return json format: {'parameter-1':['error message-1'], 'parameter-2': ['error message-2'], .. }
     """
-
     pagination_class = PageNumberPagination
 
-    @property
-    def allowed_methods(self):
-        return ['GET', 'POST', 'PUT', 'DELETE']
-
-    def get(self, request, pk=None):
-        if pk:
-            return self._get(request, pk)
-        # get a list of resources
+    def get(self, request):
         return self.list(request)
-
-    # get resource summary, which includes key system metadata, as well as
-    # URLs to the bag and science metadata
-    def _get(self, request, pk):
-        view_utils.authorize(request, pk, view=True, full=True)
-        res = get_resource_by_shortkey(pk)
-        ser = self.get_serializer_class()(self._resourceToResourceListItem(res))
-
-        return Response(data=ser.data, status=status.HTTP_200_OK)
-
-    def put(self, request, pk):
-        # TODO: update resource - involves overwriting a resource from the provided bag file
-        raise NotImplementedError()
-
-    def delete(self, request, pk):
-        view_utils.authorize(request, pk, full=True)
-        hydroshare.delete_resource(pk)
-        # spec says we need return the id of the resource that got deleted - otherwise would have used status code 204
-        # and not 200
-        return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
-
-    def post(self, request):
-        return ResourceCreate().create(request)
 
     # needed for list of resources
     def get_queryset(self):
@@ -163,34 +115,88 @@ class ResourceListRetrieveCreateUpdateDelete(generics.RetrieveUpdateDestroyAPIVi
             res = res.union(resources)
 
         for r in res:
-            resource_list_item = self._resourceToResourceListItem(r)
+            resource_list_item = self.resourceToResourceListItem(r)
             filtered_res_list.append(resource_list_item)
 
         return filtered_res_list
 
-    def _resourceToResourceListItem(self, r):
-        resource_bag = hydroshare.get_resource(r.short_id)
-        if r.creator.first_name:
-            creator_name = r.creator.first_name
-            if r.creator.last_name:
-                creator_name += " %s" % r.creator.last_name
-        else:
-            creator_name = r.creator.username
+    def get_serializer_class(self):
+        return serializers.ResourceListItemSerializer
 
-        public = True if r.public else False
+class ResourceCreateReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceToListItemMixin):
+    """
+    Create, read, or delete a resource
 
-        bag_url = hydroshare.utils.current_site_url() + resource_bag.bag.url
-        science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
-        resource_list_item = serializers.ResourceListItem(resource_type=r.__class__.__name__,
-                                                          resource_id=r.short_id,
-                                                          resource_title=r.title,
-                                                          creator=creator_name,
-                                                          public=public,
-                                                          date_created=r.created,
-                                                          date_last_updated=r.updated,
-                                                          bag_url=bag_url,
-                                                          science_metadata_url=science_metadata_url)
-        return resource_list_item
+    REST URL: hsapi/resource/{pk}
+    HTTP method: GET
+    :return: (on success): JSON string representing resource summary, which includes key system metadata, as well as
+    URLs to the bag and science metadata
+
+    REST URL: hsapi/resource/{pk}
+    HTTP method: DELETE
+    :return: (on success): json string of the format: {'resource_id':pk}
+
+    REST URL: hsapi/resource/{pk}
+    HTTP method: PUT
+    :return: (on success): json string of the format: {'resource_id':pk}
+
+    :type   str
+    :param  pk: resource id
+    :rtype:  JSON string for http methods DELETE and PUT, and resource file data bytes for GET
+    :raises:
+    NotFound: return JSON format: {'detail': 'No resource was found for resource id':pk}
+    PermissionDenied: return JSON format: {'detail': 'You do not have permission to perform this action.'}
+    ValidationError: return JSON format: {parameter-1': ['error message-1'], 'parameter-2': ['error message-2'], .. }
+
+    example return JSON format for GET /hsapi/resource/<RESOURCE_ID>:
+
+    {
+        "resource_type": resource type,
+        "resource_title": resource title,
+        "resource_id": resource id,
+        "creator": creator user name,
+        "date_created": date resource created,
+        "date_last_updated": date resource last updated,
+        "public": True or False,
+        "bag_url": link to bag file,
+        "science_metadata_url": link to science metadata
+    }
+
+
+    :raises:
+    ValidationError: return json format: {'parameter-1':['error message-1'], 'parameter-2': ['error message-2'], .. }
+    """
+
+    pagination_class = PageNumberPagination
+
+    @property
+    def allowed_methods(self):
+        return ['GET', 'POST', 'PUT', 'DELETE']
+
+
+    def get(self, request, pk):
+        """ Get resource summary, which includes key system metadata, as well as
+            URLs to the bag and science metadata
+        """
+        view_utils.authorize(request, pk, view=True, full=True)
+        res = get_resource_by_shortkey(pk)
+        ser = self.get_serializer_class()(self.resourceToResourceListItem(res))
+
+        return Response(data=ser.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        # TODO: update resource - involves overwriting a resource from the provided bag file
+        raise NotImplementedError()
+
+    def delete(self, request, pk):
+        view_utils.authorize(request, pk, full=True)
+        hydroshare.delete_resource(pk)
+        # spec says we need return the id of the resource that got deleted - otherwise would have used status code 204
+        # and not 200
+        return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        return ResourceCreate().create(request)
 
     def get_serializer_class(self):
         return serializers.ResourceListItemSerializer

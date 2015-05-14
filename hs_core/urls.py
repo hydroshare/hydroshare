@@ -4,11 +4,11 @@ from hs_core import views
 urlpatterns = patterns('',
 
     # resource API
-    url(r'^resource/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ResourceListRetrieveCreateUpdateDelete.as_view(),
-        name='get_update_delete_resource'),
+    url(r'^resourceList/$', views.resource_rest_api.ResourceList.as_view(),
+        name='list_resource'),
 
-    url(r'^resource/$', views.resource_rest_api.ResourceListRetrieveCreateUpdateDelete.as_view(),
-        name='list_create_resource'),
+    url(r'^resource/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ResourceCreateReadUpdateDelete.as_view(),
+        name='get_update_delete_resource'),
 
     url(r'^scimeta/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
         name='get_update_science_metadata'),
@@ -36,5 +36,7 @@ urlpatterns = patterns('',
     url(r'^_internal/resend_verification_email/$', views.resend_verification_email),
     url(r'^_internal/(?P<resource_type>[A-z]+)/supported-file-types/$', views.get_supported_file_types_for_resource_type),
     url(r'^_internal/(?P<resource_type>[A-z]+)/allow-multiple-file/$', views.is_multiple_file_allowed_for_resource_type),
+
+    url(r'^_internal/search/autocomplete/', "hs_core.views.autocomplete.autocomplete"),
 )
 
