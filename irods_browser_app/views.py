@@ -110,11 +110,13 @@ def upload(request):
         request.session['irods_loggedin'] = True
         # create resource using irods file
         request.session['irods_file_name'] = file_name
-        response_data['irods_file_name'] = file_name
+
         if valid:
             response_data['file_type_error'] = ''
+            response_data['irods_file_name'] = file_name
         else:
             response_data['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
+            response_data['irods_file_name'] = 'No file selected'
 
         return HttpResponse(
             json.dumps(response_data),
