@@ -527,7 +527,7 @@ def get_resource_list(creator=None,
         group=None, user=None, owner=None,
         from_date=None, to_date=None,
         start=None, count=None,
-        keywords=None, dc=None,
+        keywords=None,
         full_text_search=None,
         published=False,
         edit_permission=False,
@@ -568,12 +568,6 @@ def get_resource_list(creator=None,
         count = int
         keywords = list of keywords
         types = list of resource type names, used for filtering
-        dc = list of lookups which are dicts following the following specifications:
-            { term : dublin core term short name
-              qualifier : dublin core term qualifier
-              content : content of the dublin core term ("content" can be suffixed by django-style field lookups like
-                content__startswith, etc
-            }
     """
     from django.db.models import Q
 
@@ -583,7 +577,7 @@ def get_resource_list(creator=None,
     resource_types = get_resource_types()
 
     # filtering based on resource type.
-    if types is not None:
+    if types:
         queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in types)
     else:
         queries = dict((el, []) for el in resource_types)
@@ -629,10 +623,6 @@ def get_resource_list(creator=None,
         #if keywords:
         #    queries[t].append(Q(keywords__title__in=keywords))
 
-        #if dc:
-        #    for lookup in dc:
-        #        queries[t].append(Q(dublin_metadata__term=lookup['term']) & Q(dublin_metadata__content__contains=lookup['content']))
-
         flt = t.objects.all()
         for q in queries[t]:
             flt = flt.filter(q)
@@ -649,26 +639,21 @@ def get_resource_list(creator=None,
             for k in keywords:
                 queries[t] = flt.filter(keywords_string__contains=k)
 
-        if dc:
-            for metadata in dc:
-                if metadata['content']:
-                    queries[t] = filter(lambda r: r.dublin_metadata.filter(term=metadata['term']).exists(), queries[t])
-                    queries[t] = filter(lambda r: r.dublin_metadata.filter(content=metadata['content']).exists(), queries[t])
         qcnt = 0
         if queries[t]:
             qcnt = queries[t].__len__();
 
         if start is not None and count is not None:
-            if qcnt>start:
-                if(qcnt>=start+count):
+            if qcnt > start:
+                if qcnt >= start + count:
                     queries[t] = queries[t][start:start+count]
                 else:
                     queries[t] = queries[t][start:qcnt]
         elif start is not None:
-            if qcnt>=start:
+            if qcnt >= start:
                 queries[t] = queries[t][start:qcnt]
         elif count is not None:
-            if qcnt>count:
+            if qcnt > count:
                 queries[t] = queries[t][0:count]
 
     return queries

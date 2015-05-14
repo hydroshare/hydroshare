@@ -1486,11 +1486,11 @@ span.name-label{
 }
 
 @media (max-width: 1200px) { /* Adjusting for large devices */
-	
+
 @media (max-width: 768px) { /* Adjusting for mobile */
 
 	/* Index page background */
-	
+
 	#wrap h1 {
 		font-size: 32px;
 		margin: 70px 0 0 0;
@@ -1510,7 +1510,7 @@ span.name-label{
 		font-size: 20px;
 		font-weight: 300;
 	}
-	
+
 	/* Registration Steps */
 
 	.step {
@@ -1528,15 +1528,15 @@ span.name-label{
 	.step a.sbtn {
 		margin-left: 65px;
 	}
-	
+
 	/* Registration form popover */
-	
+
 	.signup .popover {
 		display: none;
 	}
-	
+
 	/* 404 */
-	
+
 	.not-found .digits {
 		font-size: 140px;
 	}
@@ -1550,9 +1550,9 @@ span.name-label{
 	.not-found h2 {
 		font-size: 18px;
 	}
-	
+
 	/* Pricing page */
-	
+
 	.pricing .head {
 		padding: 20px;
 	}
@@ -1585,9 +1585,9 @@ span.name-label{
 	a.carousel-arrow-next {
 		left: 50%;
 	}
-	
+
 	/* Navbar dropdown */
-	
+
 	.dropdown-menu .divider {
 	  height: 1px;
 	  margin: 9px 0;
@@ -1637,3 +1637,70 @@ span.name-label{
   }
 }}
 
+.resource-search {
+	width: 100%;
+	position: relative;
+	height: 43px;
+	border: 1px solid lightgrey;
+	margin-bottom: 3px;
+}
+
+.resource-search input {
+	margin: 3px 0px;
+	width: 100%;
+	position: absolute;
+	top: 0px;
+	height: 35px;
+	border: none;
+	background: transparent;
+}
+
+.resource-search ul {
+	margin: 7px 0px 0px;
+	padding-left: 2px;
+}
+
+.resource-search li {
+	background: lightgrey;
+	padding: 4px;
+	padding-right: 8px;
+	border-radius: 12px;
+	margin-left: 3px;
+
+}
+.resource-search li::before {
+	content: attr(data-label);
+	background-color: grey;
+	border-top-left-radius: 10px;
+	border-bottom-left-radius: 10px;
+	padding: 3px;
+	padding-left: 6px;
+	margin-right: 6px;
+	color: white;
+}
+
+.resource-search-items ul {
+	position: absolute;
+	top: 0px;
+}
+.resource-search-items li {
+	display: inline-block;
+}
+
+ul.resource-search-options {
+	margin: 40px 0px 0px;
+	padding-left: 2px;
+	border: 1px solid lightgrey;
+	border-top: none;
+	background-color: white;
+
+	list-style: none;
+}
+.resource-search-options li {
+	display: block;
+	margin: 2px auto;
+}
+.resource-search-options li.selected {
+	background-color: #aab;
+	color: white;
+}

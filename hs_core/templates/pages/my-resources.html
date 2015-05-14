@@ -11,22 +11,21 @@
         <div class="col-lg-2" id="folders">
             <ul class="nav nav-stacked">
                 <li><a href="?creator={{ user.pk }}">Owned by me</a></li>
-                {#  <li><a href="#">Starred <i class="fa fa-star"></i></a></li> #}
                 <li><a href="?user={{ user.pk }}&edit_permission=true">Editable by me</a></li>
                 {% if user.pk %}
                     <li><a href="?user={{ user.pk }}">Viewable by me</a></li>
                 {% else %}
                     <li><a href="/my-resources">Viewable by me</a></li>
                 {%  endif %}
-               {#  <li><a href="?published=true">Published</a></li>#}
-                {# <li><a href="#">Recent</a></li> #}
+                <li><a class="btn btn-success" href="/hsapi/_internal/create-resource"><i class="fa fa-plus"></i> Create new</a></li>
             </ul>
         </div>
         <div class="col-lg-10" id="items">
             <h2 class="page-title">Resources</h2>
-            <div style="padding-bottom: 0.5em">
-{#            <a class="btn btn-success" href="/resource-selection/"><i class="fa fa-plus"></i> Create new</a>#}
-                <a class="btn btn-success" href="/hsapi/_internal/create-resource"><i class="fa fa-plus"></i> Create new</a>
+            <div class=resource-search>
+                <input class=resource-search-entry placeholder="Search..."></input>
+                <ul class=resource-search-items></ul>
+                <ul class=resource-search-options></ul>
             </div>
             <table class="table table-striped table-hover" id="item-selectors">
                 <tr>
@@ -85,5 +84,253 @@
                 return false;
             })
         })
+
+        var urlParams;
+        (window.onpopstate = function () {
+            var match,
+                pl     = /\+/g,  // Regex for replacing addition symbol with a space
+                search = /([^&=]+)=?([^&]*)/g,
+                decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+                query  = window.location.search.substring(1);
+
+            urlParams = {};
+            var decoded;
+            while (match = search.exec(query)) {
+                decoded = decode(match[1]);
+                if (typeof urlParams[decoded] === "undefined") {
+                    urlParams[decoded] = [];
+                }
+                urlParams[decoded].push(decode(match[2]));
+            }
+        })();
+
+        $.widget("custom.ResourceFilter", {
+            options: {
+
+            },
+
+            _create: function() {
+                var $el = this.element;
+                var $input = this.$input = this.element.find('input');
+                this.$items = this.element.find('.resource-search-items');
+                this.$options = this.element.find('.resource-search-options');
+                this.curOpt = null;
+
+                $input.on('keyup', this.scanForItem.bind(this))
+                $input.on('keydown', function(ev) {
+                    if (ev.keyCode == 40 || ev.keyCode == 38) {
+                        ev.preventDefault();
+                        return false;
+                    } else if (ev.keyCode == 8) {
+                        if ($input[0].selectionStart === 0 && $input[0].selectionEnd === 0) {
+                            $el.ResourceFilter("removeLastItem");
+                            return;
+                        }
+                    }
+                })
+
+                var self = this;
+                this.$options.on('click', '.term-option', function() {
+                    var $el = $(this);
+                    self.addItem($el.attr('data-label'), $el.text(), $el.attr('data-id'));
+                    self.clearCurrentlyTypingTerm();
+                    self.$input.focus();
+                    self.showOptions();
+                });
+
+                // Find existing search and populate the search field
+                $input.val("");
+                if (typeof urlParams.type !== "undefined") {
+                    for (var i=0; i < urlParams.type.length; i++) {
+                        this.addItem("type", urlParams.type[i], urlParams.type[i]);
+                    }
+                }
+                $input.val(urlParams.text[0]);
+                $input.focus();
+
+                this.setPadding();
+            },
+
+            // return: [{type: T, value: V}, ...]
+            searchForTerm: function(term) {
+                var terms = [];
+
+                return new Promise(function(resolve, error) {
+                    if (term.length === 0) {
+                        resolve([]);
+                    } else {
+                        var req = {
+                            url: "/hsapi/_internal/search/autocomplete/",
+                            data: {
+                                term: term,
+                            },
+                        }
+                        $.ajax(req).then(function(r){
+                            var results = [];
+                            for (var i=0; i < r.length; i++) {
+                                results.push(r[i]);
+                            }
+                            resolve(results);
+                        });
+                    }
+                });
+            },
+
+            // KeyCode Values
+            //
+            // 40 UP
+            // 38 DOWN
+            // 27 ESCAPE
+            // 13 ENTER
+            // 8  BACKSPACE
+
+            scanForItem: function(ev) {
+                switch (ev.keyCode) {
+                    case 13: // ENTER
+                        var $termOpt = $(".term-option.selected");
+                        if ($termOpt.length > 0) {
+                            $termOpt.click();
+                        } else {
+                            var items = this.getItems();
+                            var textsearch = this.$input.val();
+                            var qs = "";
+
+                            for (var i=0; i < items.length; i++) {
+                                var item = items[i];
+                                if (item.type == "type") {
+                                    qs += "&type=" + item.id;
+                                }
+                            }
+                            qs += "&text=" + textsearch;
+                            window.location.search = qs;
+                        }
+                    case 40: // UP
+                        this.selectDown();
+                        break;
+                    case 38: // DOWN
+                        this.selectUp();
+                        break;
+                    case 27: // ESCAPE
+                        this.hideOptions();
+                        break;
+                    case 8: // BACKSPACE
+                    default: // While Typing ...
+                        var self = this;
+                        var text = this.$input.val();
+                        var termPos = text.search(/\w+:\w+ $/);
+                        if (termPos >= 0) {
+                            var remaining = text.slice(0, termPos);
+                            var term = text.slice(termPos);
+                            var term_parts = term.split(':');
+
+                            this.$input.val(remaining);
+                            this.addItem(term_parts[0], term_parts[1]);
+                        } else {
+                            var current = text.slice(text.search(/\w+$/));
+                            this.searchForTerm(current).then(this.showOptions.bind(this));
+                        }
+                }
+            },
+
+            clearCurrentlyTypingTerm: function() {
+                this.$input.val("");
+            },
+
+            showOptions: function(options) {
+                var self = this;
+                this.$options.html("");
+                $.each(options, function() {
+                    self.addOption(this.label, this.value, this.id);
+                });
+                this.resetSelection();
+            },
+            hideOptions: function() {
+                this.$options.html("");
+            },
+            countOptions: function() {
+                return this.$options.find('li').length;
+            },
+            addOption: function(type, value, id) {
+                // <li data-label=foo>bar</li>
+                var $item = $("<li class=term-option></li>");
+                $item.attr('data-label', type);
+                $item.attr('data-id', id);
+                $item.text(value);
+                this.$options.append($item);
+
+                this.setPadding();
+                this._showSelection();
+            },
+            selectDown: function() {
+                if (this.curOpt === null) {
+                    this.curOpt = 0;
+                } else {
+                    this.curOpt += 1;
+                }
+
+                this.curOpt = Math.min(this.curOpt, this.countOptions() - 1);
+                this._showSelection();
+            },
+            selectUp: function() {
+                if (this.curOpt === null) {
+                    this.curOpt = this.$options.length - 1;
+                } else {
+                    this.curOpt -= 1;
+                }
+
+                this.curOpt = Math.max(this.curOpt, 0);
+                this._showSelection();
+            },
+            resetSelection: function() {
+                this.curOpt = 0;
+            },
+            _showSelection: function() {
+                if (this.curOpt !== null) {
+                    this.$options.find('li').removeClass('selected');
+                    this.$options.find('li:eq('+this.curOpt+')').addClass('selected');
+                }
+            },
+
+            addItem: function(type, value, id) {
+                // <li data-label=foo>bar</li>
+                var $item = $("<li></li>");
+                $item.attr('data-label', type);
+                $item.attr('data-id', id);
+                $item.text(value);
+                this.$items.append($item);
+
+                this.setPadding();
+            },
+
+            getItems: function() {
+                var items = [];
+                this.$items.find('li').each(function(i, li) {
+                    var $item = $(li);
+                    items.push({
+                        "type": $item.attr('data-label'),
+                        "id": $item.attr('data-id'),
+                        "value": $item.text(),
+                    });
+                });
+                return items;
+            },
+
+            removeLastItem: function() {
+                this.$items.find('li:last-child').remove();
+
+                this.setPadding();
+            },
+
+            setPadding: function() {
+                $li = this.$items.find('li');
+                var width = 3;
+                $li.each(function(){ width += $(this).outerWidth()+5; });
+                this.$input.css('padding-left', width+"px");
+            },
+        });
+
+        $(function() {
+            $('.resource-search').ResourceFilter();
+        });
     </script>
 {% endblock %}
