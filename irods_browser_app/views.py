@@ -78,6 +78,10 @@ def login(request):
 def store(request):
     return_object = []
     global irods_sess
+    if not irods_sess:
+        irods_sess = iRODSSession(user=request.session.get('user'), password=request.session.get('password'),
+                                  zone=request.session.get('zone'), host=request.session.get('host'),
+                                  port=request.session.get('port'))
     coll = irods_sess.collections.get(str(request.POST['store']))
     store = search_ds(coll)
     return_object.append(store['files'])
