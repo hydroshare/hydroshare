@@ -28,13 +28,10 @@ def landing_page(request, page):
         output_form = mp_form(files = content_model.files, instance=content_model.metadata.mpmetadata.all().first(), res_short_id=content_model.short_id, element_id=content_model.metadata.mpmetadata.all().first().id if content_model.metadata.mpmetadata.all().first() else None)
 
 
-        ext_md_layout = Layout(
-                                AccordionGroup('Model Program Extended Metadata',
-                                    HTML("<div class='form-group' id='extended_metadata'> "
+        ext_md_layout = Layout(HTML("<div class='form-group col-lg-6 col-md-8 col-md-12' id='extended_metadata'> "
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy output_form %} '
                                      '</div>'),
-                                ),
                         )
 
 
