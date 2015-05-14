@@ -346,7 +346,6 @@ class RefTSMetadata(CoreMetaData):
     variables = generic.GenericRelation(Variable)
     sites = generic.GenericRelation(Site)
     referenceURLs = generic.GenericRelation(ReferenceURL)
-    _refts_resource = generic.GenericRelation(RefTimeSeries)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -359,10 +358,6 @@ class RefTSMetadata(CoreMetaData):
         elements.append('Site')
         elements.append('ReferenceURL')
         return elements
-
-    @property
-    def resource(self):
-        return self._refts_resource.all().first()
 
     def get_xml(self):
         from lxml import etree

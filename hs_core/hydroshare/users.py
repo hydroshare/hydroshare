@@ -602,16 +602,19 @@ def get_resource_list(
             if user:
                 user = user_from_id(user)
                 if owner:
-                    queries[t].append(Q(owners=user))
+                    owner = user_from_id(owner)
+                    queries[t].append(Q(owners=owner))
+                    if user != owner:
+                        public = True
                 else:
                     queries[t].append(Q(edit_users=user) | Q(view_users=user) | Q(owners=user) | Q(public=True))
 
         if from_date and to_date:
-            queries[t].append(Q(updated__range=(from_date, to_date)))
+            queries[t].append(Q(created__range=(from_date, to_date)))
         elif from_date:
-            queries[t].append(Q(updated__ge=from_date))
+            queries[t].append(Q(created__gte=from_date))
         elif to_date:
-            queries[t].append(Q(updated__le=to_date))
+            queries[t].append(Q(created__lte=to_date))
 
         #if keywords:
         #    queries[t].append(Q(keywords__title__in=keywords))
