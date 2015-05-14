@@ -177,25 +177,19 @@ class SWATModelParametersFormHelper(BaseFormHelper):
 
 class SWATModelParametersForm(ModelForm):
     choices = ((True, 'Yes'), (False, 'No'))
-    has_crop_rotation = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
-    has_title_drainage = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
-    has_point_source = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
-    has_fertilizer = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
-    has_tillage_operation = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
-    has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
-    has_irrigation_operation = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect)
+    style= 'width:auto;margin-top:-5px'
+    has_crop_rotation = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
+    has_title_drainage = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
+    has_point_source = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
+    has_fertilizer = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
+    has_tillage_operation = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
+    has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
+    has_irrigation_operation = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
 
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(SWATModelParametersForm, self).__init__(*args, **kwargs)
         self.helper = SWATModelParametersFormHelper(allow_edit, res_short_id, element_id, element_name='SWATModelParameters')
-        self.fields['has_crop_rotation'].widget.attrs['style'] = "width:auto;margin-top:-5px"
-        self.fields['has_title_drainage'].widget.attrs['style'] = "width:auto;margin-top:-5px"
-        self.fields['has_point_source'].widget.attrs['style'] = "width:auto;margin-top:-5px"
-        self.fields['has_fertilizer'].widget.attrs['style'] = "width:auto;margin-top:-5px"
-        self.fields['has_tillage_operation'].widget.attrs['style'] = "width:auto;margin-top:-5px"
-        self.fields['has_inlet_of_draining_watershed'].widget.attrs['style'] = "width:auto;margin-top:-5px"
-        self.fields['has_irrigation_operation'].widget.attrs['style'] = "width:auto;margin-top:-5px"
 
     class Meta:
         model = SWATModelParameters

@@ -378,11 +378,6 @@ class SWATModelInstanceMetaData(CoreMetaData):
     _model_methods = generic.GenericRelation(ModelMethods)
     _swat_model_parameters = generic.GenericRelation(SWATModelParameters)
     _model_input = generic.GenericRelation(ModelInput)
-    _swat_model_instance_resource = generic.GenericRelation(SWATModelInstanceResource)
-
-    @property
-    def resource(self):
-        return self._swat_model_instance_resource.all().first()
 
     @property
     def model_output(self):
