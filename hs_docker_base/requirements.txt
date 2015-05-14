@@ -98,4 +98,3 @@ urllib3==1.5
 virtualenv==1.11.4
 websocket-client==0.25.0
 wsgiref==0.1.2
--e git+https://github.com/iPlantCollaborativeOpenSource/python-irodsclient.git@master#egg=python-irodsclient
