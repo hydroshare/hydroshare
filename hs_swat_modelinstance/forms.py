@@ -24,11 +24,10 @@ class ModelOutputFormHelper(BaseFormHelper):
 
 
 class ModelOutputForm(ModelForm):
-    includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect)
+    includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect(attrs={'style': 'width:auto;margin-top:-5px'}))
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelOutputForm, self).__init__(*args, **kwargs)
         self.helper = ModelOutputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelOutput')
-        self.fields['includes_output'].widget.attrs['style'] = "width:auto;margin-top:-5px"
 
     class Meta:
         model = ModelOutput
