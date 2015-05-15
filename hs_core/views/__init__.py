@@ -98,12 +98,15 @@ def add_file_to_resource(request, shortkey, *args, **kwargs):
             host = request.session["host"]
             zone = request.session["zone"]
             # use iget to transfer selected data object to local as a NamedTemporaryFile
-            irods_storage = IrodsStorage()
-            irods_storage.set_user_session(username=user, password=password, host=host, port=port, zone=zone)
-            tmpFile = irods_storage.download(irods_fname)
-            fname = os.path.basename(irods_fname.rstrip(os.sep))
-            res_files.append(UploadedFile(file=tmpFile, name=fname))
-
+            try:
+                irods_storage = IrodsStorage()
+                irods_storage.set_user_session(username=user, password=password, host=host, port=port, zone=zone)
+                tmpFile = irods_storage.download(irods_fname)
+                fname = os.path.basename(irods_fname.rstrip(os.sep))
+                res_files.append(UploadedFile(file=tmpFile, name=fname))
+            except Exception as ex:
+                request.session['file_validation_error'] = ex.message
+                return HttpResponseRedirect(request.META['HTTP_REFERER'])
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
                                             extract_metadata=extract_metadata)

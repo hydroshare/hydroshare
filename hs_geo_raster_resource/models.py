@@ -271,6 +271,9 @@ class RasterMetaData(CoreMetaData):
     _raster_resource = generic.GenericRelation(RasterResource)
 
     @property
+    def resource(self):
+        return self._raster_resource.all().first()
+    @property
     def cellInformation(self):
         return self._cell_information.all().first()
 

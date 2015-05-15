@@ -1,7 +1,7 @@
 #save_file {
 	padding: 3px;
 	cursor: pointer;
-	opacity:1;
+	opacity: 1;
 }
 
 #save_file:hover {
@@ -29,8 +29,8 @@
 	width: 517px;
 	height: 300px;
 	padding: 10px;
-	float:left;
-	box-shadow:1px 1px 3px 1px #000;
+	float: left;
+	box-shadow: 1px 1px 3px 1px #000;
 }
 
 #irodsContent #irods_structure #viewing input {
@@ -49,16 +49,16 @@
 
 
 #irods_search {
-  position: absolute;
-  right: 32px;
-  top: 15px;
-  float: left
+    position: absolute;
+    right: 32px;
+    top: 15px;
+    float: left
 }
 
-#irods_search img{
-  right: 29px;
-  position: relative;
-  opacity: 0.8;
+#irods_search img {
+    right: 29px;
+    position: relative;
+    opacity: 0.8;
 }
 
 #irods_search input {
@@ -75,9 +75,9 @@
 }
 
 .file:hover,.folder:hover {
-	opacity:1;
+    opacity: 1;
 }
 
 #irodsContent .ajax-loader, #irodsContent .modal-backdrop.up-load {
-	display:none;
+    display: none;
 }
