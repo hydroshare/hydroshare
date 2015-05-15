@@ -268,6 +268,7 @@ class RasterMetaData(CoreMetaData):
     _cell_information = generic.GenericRelation(CellInformation)
     _band_information = generic.GenericRelation(BandInformation)
     _ori_coverage = generic.GenericRelation(OriginalCoverage)
+    _raster_resource = generic.GenericRelation(RasterResource)
 
     @property
     def cellInformation(self):
