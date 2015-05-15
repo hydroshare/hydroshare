@@ -1,7 +1,5 @@
 from mezzanine.pages.page_processors import processor_for
-#from dublincore.models import QualifiedDublinCoreElement
-from hs_core.hydroshare import current_site_url
-from hs_core.hydroshare.utils import get_file_mime_type, resource_modified
+
 from hs_core.models import GenericResource
 from hs_core import languages_iso
 from forms import *
@@ -50,9 +48,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 relevant_tools.append(tl)
 
 
-
+    just_created = False
     if request:
         file_validation_error = check_for_file_validation(request)
+
+        just_created = request.session.get('just_created', False)
+        if 'just_created' in request.session:
+            del request.session['just_created']
 
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
@@ -113,7 +115,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'allow_multiple_file_upload': content_model.can_have_multiple_files(),
                    'file_validation_error': file_validation_error if file_validation_error else None,
                    'relevant_tools': relevant_tools,
-                   'file_type_error': file_type_error
+                   'file_type_error': file_type_error,
+                   'just_created': just_created
         }
         return context
 
@@ -220,6 +223,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         temporal_coverage_data_dict['start'] = temporal_coverage.value['start']
         temporal_coverage_data_dict['end'] = temporal_coverage.value['end']
         temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
+        temporal_coverage_data_dict['id'] = temporal_coverage.id
     else:
         temporal_coverage = None
 
@@ -237,6 +241,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
         spatial_coverage_data_dict['projection'] = spatial_coverage.value.get('projection', None)
         spatial_coverage_data_dict['type'] = spatial_coverage.type
+        spatial_coverage_data_dict['id'] = spatial_coverage.id
         if spatial_coverage.type == 'point':
             spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
             spatial_coverage_data_dict['north'] = spatial_coverage.value['north']
@@ -256,7 +261,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                                 res_short_id=content_model.short_id,
                                                 element_id=spatial_coverage.id if spatial_coverage else None)
 
-    metadata_form = MetaDataForm(resource_mode='edit' if edit_mode else 'view',
+    # metadata_form = MetaDataForm(resource_mode='edit' if edit_mode else 'view',
+    #                              extended_metadata_layout=extended_metadata_layout)
+
+    metadata_form = ExtendedMetadataForm(resource_mode='edit' if edit_mode else 'view',
                                  extended_metadata_layout=extended_metadata_layout)
 
     context = {'metadata_form': metadata_form,

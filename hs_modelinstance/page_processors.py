@@ -29,20 +29,16 @@ def landing_page(request, page):
         executed_by_form = ExecutedByForm(instance=content_model.metadata.executed_by, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.executed_by.id if content_model.metadata.executed_by else None)
 
-        ext_md_layout = Layout(
-                                AccordionGroup('Model Output (required)',
-                                    HTML("<div class='form-group' id='modeloutput'> "
+        ext_md_layout = Layout(HTML("<div class='form-group col-lg-6 col-xs-12' id='modeloutput'> "
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy model_output_form %} '
                                      '</div>'),
-                                ),
 
-                                AccordionGroup('Executed By (required)',
-                                     HTML('<div class="form-group" id="executedby"> '
+
+                                HTML('<div class="form-group col-lg-6 col-xs-12" id="executedby"> '
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy executed_by_form %} '
                                      '</div> '),
-                                ),
                         )
 
 

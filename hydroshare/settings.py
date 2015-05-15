@@ -274,6 +274,7 @@ INSTALLED_APPS = (
     "mezzanine.mobile",
     "autocomplete_light",
     "jquery_ui",
+    "rest_framework",
     "ga_ows",
     "ga_resources",
     #"dublincore",
@@ -285,11 +286,11 @@ INSTALLED_APPS = (
     "hs_geo_raster_resource",
     "djcelery",
     "ref_ts",
-    "hs_modelinstance",
+    # "hs_modelinstance",
     "hs_app_timeseries",
     "widget_tweaks",
     "hs_app_netCDF",
-    "hs_model_program",
+    # "hs_model_program",
     "hs_tools_resource",
 )
 
@@ -411,3 +412,13 @@ else:
 #
 AUTH_PROFILE_MODULE = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = 'bootstrap'
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 5,
+    'PAGE_SIZE_QUERY_PARAM': 'PAGE_SIZE',
+    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    )
+}

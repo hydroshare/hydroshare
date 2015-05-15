@@ -253,7 +253,6 @@ processor_for(NetcdfResource)(resource_processor)
 class NetcdfMetaData(CoreMetaData):
     variables = generic.GenericRelation(Variable)
     ori_coverage = generic.GenericRelation(OriginalCoverage)
-    _netcdf_resource = generic.GenericRelation(NetcdfResource)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -263,10 +262,6 @@ class NetcdfMetaData(CoreMetaData):
         elements.append('Variable')
         elements.append('OriginalCoverage')
         return elements
-
-    @property
-    def resource(self):
-        return self._netcdf_resource.all().first()
 
     def has_all_required_elements(self):
         if not super(NetcdfMetaData, self).has_all_required_elements():

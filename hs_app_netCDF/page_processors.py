@@ -93,8 +93,7 @@ def landing_page(request, page):
 
         # get the context from hs_core
         ext_md_layout = Layout(
-                                AccordionGroup('Original Coverage',
-                                     HTML('<div class="form-group" id="originalcoverage"> '
+                                HTML('<div class="form-group col-lg-6 col-xs-12" id="originalcoverage"> '
                                             '{% load crispy_forms_tags %} '
                                             '{% crispy original_coverage_form %} '
                                           '</div> '
@@ -104,10 +103,11 @@ def landing_page(request, page):
                                                 '<input class="btn-danger btn btn-md" onclick="check_ori_meta_status()" type="button" data-toggle="modal" data-target="#delete-original-coverage-element-dialog" value="Delete Original Coverage">'
                                             '</div>'
                                           '</div>'
+                                            '<hr style="border: 0;">'
                                           '{% crispy original_coverage_form.delete_modal_form %} '
                                      ),
-                                ),
-                                AccordionGroup('Variable', VariableLayoutEdit),
+
+                                VariableLayoutEdit,
                                 ModalDialogLayoutAddVariable,
                             )
 
