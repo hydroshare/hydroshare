@@ -9,9 +9,10 @@ import hs_core.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auth', '0001_initial'),
         ('pages', '__first__'),
+        ('hs_model_program', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('auth', '0001_initial'),
         ('contenttypes', '0001_initial'),
         ('hs_core', '0001_initial'),
     ]
@@ -22,9 +23,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('name', models.CharField(max_length=500)),
-                ('url', models.URLField()),
+                ('model_name', models.CharField(max_length=500, choices=[(b'-', b'    ')])),
                 ('content_type', models.ForeignKey(related_name='hs_modelinstance_executedby_related', to='contenttypes.ContentType')),
+                ('model_program_fk', models.ForeignKey(blank=True, to='hs_model_program.ModelProgramResource', null=True)),
             ],
             options={
                 'abstract': False,
@@ -45,6 +46,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('page_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='pages.Page')),
                 ('comments_count', models.IntegerField(default=0, editable=False)),
+                ('rating_count', models.IntegerField(default=0, editable=False)),
+                ('rating_sum', models.IntegerField(default=0, editable=False)),
+                ('rating_average', models.FloatField(default=0, editable=False)),
                 ('public', models.BooleanField(default=True, help_text=b'If this is true, the resource is viewable and downloadable by anyone')),
                 ('frozen', models.BooleanField(default=False, help_text=b'If this is true, the resource should not be modified')),
                 ('do_not_distribute', models.BooleanField(default=False, help_text=b'If this is true, the resource owner has to designate viewers')),
@@ -59,7 +63,7 @@ class Migration(migrations.Migration):
                 ('edit_groups', models.ManyToManyField(help_text=b'This is the set of Hydroshare Groups who can edit the resource', related_name='group_editable_hs_modelinstance_modelinstanceresource', null=True, to='auth.Group', blank=True)),
                 ('edit_users', models.ManyToManyField(help_text=b'This is the set of Hydroshare Users who can edit the resource', related_name='user_editable_hs_modelinstance_modelinstanceresource', null=True, to=settings.AUTH_USER_MODEL, blank=True)),
                 ('last_changed_by', models.ForeignKey(related_name='last_changed_hs_modelinstance_modelinstanceresource', to=settings.AUTH_USER_MODEL, help_text=b'The person who last changed the resource', null=True)),
-                ('owners', models.ManyToManyField(help_text=b'The person who uploaded the resource', related_name='owns_hs_modelinstance_modelinstanceresource', to=settings.AUTH_USER_MODEL)),
+                ('owners', models.ManyToManyField(help_text=b'The person who has total ownership of the resource', related_name='owns_hs_modelinstance_modelinstanceresource', to=settings.AUTH_USER_MODEL)),
                 ('user', models.ForeignKey(related_name='modelinstanceresources', verbose_name='Author', to=settings.AUTH_USER_MODEL)),
                 ('view_groups', models.ManyToManyField(help_text=b'This is the set of Hydroshare Groups who can view the resource', related_name='group_viewable_hs_modelinstance_modelinstanceresource', null=True, to='auth.Group', blank=True)),
                 ('view_users', models.ManyToManyField(help_text=b'This is the set of Hydroshare Users who can view the resource', related_name='user_viewable_hs_modelinstance_modelinstanceresource', null=True, to=settings.AUTH_USER_MODEL, blank=True)),
@@ -75,7 +79,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('includes_output', models.BooleanField()),
+                ('includes_output', models.BooleanField(default=False)),
                 ('content_type', models.ForeignKey(related_name='hs_modelinstance_modeloutput_related', to='contenttypes.ContentType')),
             ],
             options={
