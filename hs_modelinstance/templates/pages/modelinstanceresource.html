@@ -1,46 +1,69 @@
-{# This template is used as the landing page for TimeSeriesResource #}
+{# This template is used as the landing page for Generic Model Instance resource type #}
 
 {% extends "pages/genericresource.html" %}
-{#{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}#}
+{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
 {#{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags inplace_edit %}#}
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
         <div class="row">
-            <div class="col-md-12">
-                <div>
-                    {% if model_output %}
-                        <h4><strong>Model Output:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Includes output files?</strong></div>
-                            {% if model_output.includes_output == True %}
-                                <div class="col-sm-8">Yes</div>
-                            {% else %}
-                                <div class="col-sm-8">No</div>
-                            {% endif %}
+        <div class="col-md-12">
+            <div>
+                {% if model_output %}
+                    <h4><strong>Model Output:</strong></h4>
+                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                    <div class="row">
+                        <div class="col-sm-4"><strong>Includes output files?</strong></div>
+                        {% if model_output.includes_output == True %}
+                            <div class="col-sm-8">Yes</div>
+                        {% else %}
+                            <div class="col-sm-8">No</div>
+                        {% endif %}
 
-                        </div>
+                    </div>
                     <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if executed_by.name %}
-                        <h4><strong>Executed By:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Model Program used for execution:</strong></div>
-                            <div class="col-sm-8">{{ executed_by.name }}</div>
+                {% endif %}
+            </div>
+            <div>
+                {% if executed_by.name %}
+                    <h4><strong>Executed By:</strong></h4>
+                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                    <div class="row">
+
+                        <div class="col-sm-4"><strong>Name</strong></div>
+                        <div class="col-sm-8">{{ executed_by.model_program_fk.title }}</div>
+
+                        <div class="col-sm-4"><strong>Version</strong></div>
+                        <div class="col-sm-8">
+                            {% if executed_by.model_program_fk.metadata.mpmetadata.first.software_version.strip %}
+                                {{ executed_by.model_program_fk.metadata.mpmetadata.first.software_version }}
+                            {% else %}
+                                Not Provided
+
+                            {% endif %}
                         </div>
-                    {% endif %}
-                </div>
+
+                        <div class="col-sm-4"><strong>Resource URL</strong></div>
+
+
+                        <div class="col-sm-8"><a id="permalink"
+                                                 href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/">http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
+                        </div>
+
+                    </div>
+
+                    <hr>
+
+                {% endif %}
             </div>
         </div>
-    {%  endif %}
-{%  endblock %}
+    {% endif %}
+{% endblock %}
 {% block extra_js %}
     {{ block.super }}
 
     {# resource specific js can go here #}
+    <script src="../../static/js/model_instance.js"></script>
 
-{%  endblock %}
+
+{% endblock %}

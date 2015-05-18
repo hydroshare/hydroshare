@@ -1,52 +1,69 @@
+import datetime as dt
+
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group
 from django.db import models
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
-from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
-import datetime as dt
 from mezzanine.pages.page_processors import processor_for
+
+from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.signals import *
-from django.dispatch import receiver
 
 
 class MpMetadata(AbstractMetaDataElement):
-
     # version
-    software_version = models.CharField(verbose_name='Version ',null=True,blank=True,default='1.0',max_length=255,help_text='The software version of the model')
+    software_version = models.CharField(verbose_name='Version ', null=True, blank=True, default='1.0', max_length=255,
+                                        help_text='The software version of the model')
 
     # program language
-    software_language = models.CharField(verbose_name="Language", null=True,blank=True,default='',max_length=100,help_text="The programming language(s) that the model was written in")
+    software_language = models.CharField(verbose_name="Language", null=True, blank=True, default='', max_length=100,
+                                         help_text="The programming language(s) that the model was written in")
 
     # operating system
-    operating_sys = models.CharField(verbose_name='Operating System',null=True,blank=True,default='unknown',max_length=255, help_text='Compatible operating systems')
+    operating_sys = models.CharField(verbose_name='Operating System', null=True, blank=True, default='unknown',
+                                     max_length=255, help_text='Compatible operating systems')
 
     # release date
-    date_released = models.DateTimeField(verbose_name='Release Date',null=True,blank=True, default=dt.datetime.now(), help_text='The date of the software release (m/d/Y H:M)')
+    date_released = models.DateTimeField(verbose_name='Release Date', null=True, blank=True, default=dt.datetime.now(),
+                                         help_text='The date of the software release (m/d/Y H:M)')
 
     # web page
-    program_website = models.CharField(verbose_name='Website', null=True, blank=True,default= None, max_length=255,help_text='A URL providing addition information about the software')
+    program_website = models.CharField(verbose_name='Website', null=True, blank=True, default=None, max_length=255,
+                                       help_text='A URL providing addition information about the software')
 
     # repository
-    software_repo = models.CharField(verbose_name='Software Repository', null=True,blank=True, default= None, max_length=255,help_text='A URL for the source code repository (e.g. git, mecurial, svn)')
+    software_repo = models.CharField(verbose_name='Software Repository', null=True, blank=True, default=None,
+                                     max_length=255,
+                                     help_text='A URL for the source code repository (e.g. git, mecurial, svn)')
 
-   # release notes
-    release_notes = models.CharField(verbose_name="Release Notes", null=True,blank=True,default="",max_length=400, help_text="Notes about the software release (e.g. bug fixes, new functionality)", choices=(('-','    '),))
+    # release notes
+    release_notes = models.CharField(verbose_name="Release Notes", null=True, blank=True, default="", max_length=400,
+                                     help_text="Notes about the software release (e.g. bug fixes, new functionality)",
+                                     choices=(('-', '    '),))
 
     # user manual
-    user_manual = models.CharField(verbose_name='User Manual',name='user_manual', null=True,blank=True, default=None,max_length=400, help_text='User manual for the model program (e.g. .doc, .md, .rtf, .pdf', choices=(('-','    '),))
+    user_manual = models.CharField(verbose_name='User Manual', name='user_manual', null=True, blank=True, default=None,
+                                   max_length=400,
+                                   help_text='User manual for the model program (e.g. .doc, .md, .rtf, .pdf',
+                                   choices=(('-', '    '),))
 
     # theoretical manual
-    theoretical_manual = models.CharField(verbose_name='Theoretical Manual',name='theoretical_manual', null=True, blank=True,default=None, max_length=400, help_text='Theoretical manual for the model program (e.g. .doc, .md, .rtf, .pdf', choices=(('-','    '),))
+    theoretical_manual = models.CharField(verbose_name='Theoretical Manual', name='theoretical_manual', null=True,
+                                          blank=True, default=None, max_length=400,
+                                          help_text='Theoretical manual for the model program (e.g. .doc, .md, .rtf, .pdf',
+                                          choices=(('-', '    '),))
 
     # source code
-    source_code = models.CharField(verbose_name='Source Code',name='source_code', default=None, null=True,blank=True,max_length=400, help_text='Archive of the  source code for the model (e.g. .zip, .tar)', choices=(('-','    '),))
+    source_code = models.CharField(verbose_name='Source Code', name='source_code', default=None, null=True, blank=True,
+                                   max_length=400,
+                                   help_text='Archive of the  source code for the model (e.g. .zip, .tar)',
+                                   choices=(('-', '    '),))
 
 
     @classmethod
     def create(cls, **kwargs):
-
-       # todo: add validation
+        # todo: add validation
 
         mpmetadata = MpMetadata.objects.create(**kwargs)
 
@@ -55,11 +72,9 @@ class MpMetadata(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-
-
         metadata = MpMetadata.objects.get(id=element_id)
 
-        #todo: validate
+        # todo: validate
 
         metadata.software_version = kwargs['software_version']
         metadata.software_language = kwargs['software_language']
@@ -74,7 +89,6 @@ class MpMetadata(AbstractMetaDataElement):
         metadata.save()
 
 
-
     @classmethod
     def remove(cls, element_id):
         metadata = MpMetadata.objects.get(id=element_id)
@@ -83,6 +97,7 @@ class MpMetadata(AbstractMetaDataElement):
 
 class ModelProgramResource(Page, AbstractResource):
     term = 'ModelProgramInformation'
+
     @property
     def metadata(self):
         md = ModelProgramMetaData()
@@ -104,9 +119,7 @@ class ModelProgramResource(Page, AbstractResource):
         verbose_name = 'Model Program Resource'
 
 
-
 processor_for(ModelProgramResource)(resource_processor)
-
 
 
 class ModelProgramMetaData(CoreMetaData):
@@ -133,16 +146,16 @@ class ModelProgramMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         # inject raster resource specific metadata elements into container element
-        fields = [  'software_version',
-                    'software_language',
-                    'operating_sys',
-                    'date_released',
-                    'program_website',
-                    'software_repo',
-                    'release_notes',
-                    'user_manual',
-                    'theoretical_manual',
-                    'source_code']
+        fields = ['software_version',
+                  'software_language',
+                  'operating_sys',
+                  'date_released',
+                  'program_website',
+                  'software_repo',
+                  'release_notes',
+                  'user_manual',
+                  'theoretical_manual',
+                  'source_code']
         model_program_object = self.mpmetadata.all().first()
         self.add_metadata_element_to_xml(container, model_program_object, fields)
 
@@ -150,10 +163,8 @@ class ModelProgramMetaData(CoreMetaData):
 
         return xml_string
 
+
 import recievers
-
-
-
 
 
 

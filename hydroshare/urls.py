@@ -52,6 +52,7 @@ urlpatterns += patterns('',
     url('^irods/', include('irods_browser_app.urls')),
     #url('^hs_party/', include('hs_party.urls')),
     url('^hs_metrics/', include('hs_metrics.urls')),
+    url('^hsapi/', include('hs_modelinstance.urls')),
 )
 
 if settings.DEBUG is False:   #if DEBUG is True it will be served automatically
