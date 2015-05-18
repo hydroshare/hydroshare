@@ -530,13 +530,13 @@ def create_resource(request, *args, **kwargs):
 
     resource_files = request.FILES.getlist('files')
 
-    irods_fname = request.session.get('irods_file_name', '')
+    irods_fname = request.POST.get('irods_file_name')
     if irods_fname:
-        user = request.session["user"]
-        password = request.session["password"]
-        port = request.session["port"]
-        host = request.session["host"]
-        zone = request.session["zone"]
+        user = request.POST.get('irods-username')
+        password = request.POST.get("irods-password")
+        port = request.POST.get("irods-port")
+        host = request.POST.get("irods-host")
+        zone = request.POST.get("irods-zone")
         # use iget to transfer selected data object to local as a NamedTemporaryFile
         irods_storage = IrodsStorage()
         irods_storage.set_user_session(username=user, password=password, host=host, port=port, zone=zone)

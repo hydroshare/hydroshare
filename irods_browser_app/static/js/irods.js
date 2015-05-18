@@ -16,6 +16,11 @@ function get_store(store,parent,margin){
 	margin_left = (parseInt(margin_left.substring(0,margin_left.length-2))-10) + 10;
 	form_data = new FormData();
 	form_data.append('store',store);
+    form_data.append('user',sessionStorage.username);
+    form_data.append('password',sessionStorage.password);
+    form_data.append('zone',sessionStorage.zone);
+    form_data.append('port',sessionStorage.port);
+    form_data.append('host',sessionStorage.host);
 	$.ajax({
         mode: "queue",
         url: '/irods/store/',
@@ -26,7 +31,7 @@ function get_store(store,parent,margin){
         contentType: false,
         success: function (data, status) {
             data = jQuery.parseJSON(data);
-            if (data[0].length ==0 && data[1].length ==0) {
+            if (data[0].length == 0 && data[1].length == 0) {
                 $(parent).append("<div class='file' style='margin-left:"+margin+"px;'> -- EMPTY --</div>");
             }
             else {
@@ -140,7 +145,7 @@ function irods_login() {
         url: "/irods/login/",
         type: "POST",
         data: {
-            user: $('#username').val(),
+            username: $('#username').val(),
             password: $('#password').val(),
             zone: $('#zone').val(),
             host: $('#host').val(),
@@ -153,6 +158,16 @@ function irods_login() {
                 $('#root_store').val(json.datastore);
                 $("#btn-select-irods-file").show();
                 $("#irods-sel-file").text("No file selected");
+                sessionStorage.username = json.user;
+                sessionStorage.password = json.password;
+                sessionStorage.port = json.port;
+                sessionStorage.host = json.host;
+                sessionStorage.zone = json.zone;
+                $("#irods-username").text(json.user);
+                $("#irods-password").text(json.password);
+                $("#irods-zone").text(json.zone);
+                $("#irods-host").text(json.host);
+                $("#irods-port").text(json.port);
             }
             else {
                 $("#sign-in-info").text('iRODS login failed');
@@ -187,6 +202,12 @@ function irods_upload() {
             $("#irods-sel-file").text(json.irods_file_name);
             $("#file-type-error").text(json.file_type_error);
             $('#irodsContent').modal('hide');
+            $('#irods_file_name').text(json.irods_file_name)
+            $("#irods-username").text(sessionStorage.username)
+            $("#irods-password").text(sessionStorage.password)
+            $("#irods-host").text(sessionStorage.host)
+            $("#irods-zone").text(sessionStorage.zone)
+            $("#irods-port").text(sessionStorage.port)
         },
         error: function(xhr, errmsg, err) {
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);

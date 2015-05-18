@@ -5,8 +5,6 @@ from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
 from hs_core import hydroshare
 
-irods_sess = None
-
 def search_ds(coll):
     store = {}
     file = []
@@ -26,7 +24,7 @@ def search_ds(coll):
 def login(request):
     if request.method == 'POST':
         port = int(request.POST['port'])
-        user = str(request.POST['user'])
+        user = str(request.POST['username'])
         password = str(request.POST['password'])
         zone = str(request.POST['zone'])
         host = str(request.POST['host'])
@@ -34,15 +32,11 @@ def login(request):
 
         response_data = {}
 
-        global irods_sess
         irods_sess = iRODSSession(user=user, password=password, zone=zone, host=host, port=port)
 
         try:
             irods_sess.collections.get(datastore)
         except CollectionDoesNotExist:
-            request.session['irods_loggedin'] = False
-            request.session['login_message'] = 'iRODS login failed'
-            request.session['irods_file_name'] = ''
             response_data['irods_loggedin'] = False
             response_data['login_message'] = 'iRODS login failed'
             response_data['irods_file_name'] = ''
@@ -52,16 +46,11 @@ def login(request):
                 content_type="application/json"
             )
         else:
-            request.session["user"] = user
-            request.session["datastore"] = datastore
-            request.session["password"] = password
-            request.session["port"] = port
-            request.session["host"] = host
-            request.session["zone"] = zone
-            request.session['irods_loggedin'] = True
-            request.session['irods_file_name'] = ''
-
             response_data['user'] = user
+            response_data['password'] = password
+            response_data['port'] = port
+            response_data['host'] = host
+            response_data['zone'] = zone
             response_data['datastore'] = datastore
             response_data['irods_loggedin'] = True
             response_data['irods_file_name'] = ''
@@ -77,12 +66,11 @@ def login(request):
 
 def store(request):
     return_object = []
-    global irods_sess
-    if not irods_sess:
-        irods_sess = iRODSSession(user=request.session.get('user'), password=request.session.get('password'),
-                                  zone=request.session.get('zone'), host=request.session.get('host'),
-                                  port=request.session.get('port'))
-    coll = irods_sess.collections.get(str(request.POST['store']))
+    irods_sess = iRODSSession(user=str(request.POST['user']), password=str(request.POST['password']),
+                                  zone=str(request.POST['zone']), host=str(request.POST['host']),
+                                  port=int(request.POST['port']))
+    datastore = str(request.POST['store'])
+    coll = irods_sess.collections.get(datastore)
     store = search_ds(coll)
     return_object.append(store['files'])
     return_object.append(store['folder'])
@@ -107,9 +95,6 @@ def upload(request):
                         valid = True
                         break
         response_data = {}
-        request.session['irods_loggedin'] = True
-        # create resource using irods file
-        request.session['irods_file_name'] = file_name
 
         if valid:
             response_data['file_type_error'] = ''
@@ -130,7 +115,6 @@ def upload(request):
 
 def upload_add(request):
     file_name = str(request.POST['upload'])
-    request.session['irods_loggedin'] = True
     # add irods file into an existing resource
     request.session['irods_add_file_name'] = file_name
     res_id = request.POST['res_id']
