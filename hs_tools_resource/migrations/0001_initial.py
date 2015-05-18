@@ -58,6 +58,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('page_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='pages.Page')),
                 ('comments_count', models.IntegerField(default=0, editable=False)),
+                ('rating_count', models.IntegerField(default=0, editable=False)),
+                ('rating_sum', models.IntegerField(default=0, editable=False)),
+                ('rating_average', models.FloatField(default=0, editable=False)),
                 ('public', models.BooleanField(default=True, help_text=b'If this is true, the resource is viewable and downloadable by anyone')),
                 ('frozen', models.BooleanField(default=False, help_text=b'If this is true, the resource should not be modified')),
                 ('do_not_distribute', models.BooleanField(default=False, help_text=b'If this is true, the resource owner has to designate viewers')),
@@ -72,7 +75,7 @@ class Migration(migrations.Migration):
                 ('edit_groups', models.ManyToManyField(help_text=b'This is the set of Hydroshare Groups who can edit the resource', related_name='group_editable_hs_tools_resource_toolresource', null=True, to='auth.Group', blank=True)),
                 ('edit_users', models.ManyToManyField(help_text=b'This is the set of Hydroshare Users who can edit the resource', related_name='user_editable_hs_tools_resource_toolresource', null=True, to=settings.AUTH_USER_MODEL, blank=True)),
                 ('last_changed_by', models.ForeignKey(related_name='last_changed_hs_tools_resource_toolresource', to=settings.AUTH_USER_MODEL, help_text=b'The person who last changed the resource', null=True)),
-                ('owners', models.ManyToManyField(help_text=b'The person who uploaded the resource', related_name='owns_hs_tools_resource_toolresource', to=settings.AUTH_USER_MODEL)),
+                ('owners', models.ManyToManyField(help_text=b'The person who has total ownership of the resource', related_name='owns_hs_tools_resource_toolresource', to=settings.AUTH_USER_MODEL)),
                 ('user', models.ForeignKey(related_name='toolresources', verbose_name='Author', to=settings.AUTH_USER_MODEL)),
                 ('view_groups', models.ManyToManyField(help_text=b'This is the set of Hydroshare Groups who can view the resource', related_name='group_viewable_hs_tools_resource_toolresource', null=True, to='auth.Group', blank=True)),
                 ('view_users', models.ManyToManyField(help_text=b'This is the set of Hydroshare Users who can view the resource', related_name='user_viewable_hs_tools_resource_toolresource', null=True, to=settings.AUTH_USER_MODEL, blank=True)),
@@ -88,7 +91,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('tool_res_type', models.TextField(null=True)),
+                ('tool_res_type', models.CharField(max_length=b'500', null=True)),
                 ('content_type', models.ForeignKey(related_name='hs_tools_resource_toolresourcetype_related', to='contenttypes.ContentType')),
             ],
             options={
