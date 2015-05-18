@@ -2,7 +2,6 @@ __author__ = 'Pabitra'
 
 import os
 
-from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect
@@ -123,7 +122,7 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
     def get_serializer_class(self):
         return serializers.ResourceListItemSerializer
 
-class ResourceCreateReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceToListItemMixin):
+class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceToListItemMixin):
     """
     Create, read, or delete a resource
 
@@ -166,7 +165,6 @@ class ResourceCreateReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, Reso
     :raises:
     ValidationError: return json format: {'parameter-1':['error message-1'], 'parameter-2': ['error message-2'], .. }
     """
-
     pagination_class = PageNumberPagination
 
     @property
@@ -194,9 +192,6 @@ class ResourceCreateReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, Reso
         # spec says we need return the id of the resource that got deleted - otherwise would have used status code 204
         # and not 200
         return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
-
-    def post(self, request):
-        return ResourceCreate().create(request)
 
     def get_serializer_class(self):
         return serializers.ResourceListItemSerializer
@@ -231,6 +226,9 @@ class ResourceCreate(generics.CreateAPIView):
 
     def get_serializer_class(self):
         return serializers.ResourceCreateRequestValidator
+
+    def post(self, request):
+        return self.create(request)
 
     # Override the create() method from the CreateAPIView class
     def create(self, request, *args, **kwargs):

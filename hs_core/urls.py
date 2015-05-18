@@ -5,9 +5,12 @@ urlpatterns = patterns('',
 
     # resource API
     url(r'^resourceList/$', views.resource_rest_api.ResourceList.as_view(),
-        name='list_resource'),
+        name='list_resources'),
 
-    url(r'^resource/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ResourceCreateReadUpdateDelete.as_view(),
+    url(r'^resource/$', views.resource_rest_api.ResourceCreate.as_view(),
+        name='create_resource'),
+
+    url(r'^resource/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
 
     url(r'^scimeta/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
