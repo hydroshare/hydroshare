@@ -20,7 +20,6 @@ class OriginalCoverage(AbstractMetaDataElement):
                 'southlimit':southernmost coordinate value,
                 'westlimit':westernmost coordinate value,
                 'units:units applying to 4 limits (north, east, south & east),
-                'name':coverage name value here (optional),
                 'projection': name of the projection (optional)}"
     """
     _value = models.CharField(max_length=1024, null=True)
@@ -44,7 +43,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                         raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or 'units' is missing.")
 
                 value_dict = {k: v for k, v in kwargs['value'].iteritems()
-                              if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'name', 'projection')}
+                              if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
 
                 value_json = json.dumps(value_dict)
                 metadata_obj = kwargs['content_object']
@@ -64,9 +63,6 @@ class OriginalCoverage(AbstractMetaDataElement):
                     raise ValidationError('Invalid coverage value format.')
 
                 value_dict = cov.value
-
-                if 'name' in kwargs['value']:
-                    value_dict['name'] = kwargs['value']['name']
 
                 for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
                     if item_name in kwargs['value']:
@@ -342,7 +338,7 @@ class RasterMetaData(CoreMetaData):
 
         if self.originalCoverage:
             ori_coverage = self.originalCoverage;
-            cov = etree.SubElement(container, '{%s}originalCoverage' % self.NAMESPACES['hsterms'])
+            cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
             cov_term = '{%s}' + 'box'
             coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
             rdf_coverage_value = etree.SubElement(coverage_terms, '{%s}value' % self.NAMESPACES['rdf'])

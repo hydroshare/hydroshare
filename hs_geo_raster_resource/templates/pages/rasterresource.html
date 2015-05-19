@@ -32,10 +32,10 @@
                                 <div class="col-sm-8">{{ originalCoverage.northlimit }}</div>
                             </div>
                         {% endif %}
-                        {% if originalCoverage.eastlimit %}
+                        {% if originalCoverage.westlimit %}
                             <div class="row">
-                                <div class="col-sm-4"style="text-indent:40px"><strong>East</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.eastlimit }}</div>
+                                <div class="col-sm-4" style="text-indent:40px"><strong>West</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.westlimit}}</div>
                             </div>
                         {% endif %}
                         {% if originalCoverage.southlimit %}
@@ -44,12 +44,13 @@
                                 <div class="col-sm-8">{{ originalCoverage.southlimit }}</div>
                             </div>
                         {% endif %}
-                        {% if originalCoverage.westlimit %}
+                        {% if originalCoverage.eastlimit %}
                             <div class="row">
-                                <div class="col-sm-4" style="text-indent:40px"><strong>West</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.westlimit}}</div>
+                                <div class="col-sm-4"style="text-indent:40px"><strong>East</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.eastlimit }}</div>
                             </div>
                         {% endif %}
+
 
                     <hr>
                     {% endif %}

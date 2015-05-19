@@ -15,31 +15,35 @@ class OriginalCoverageFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('name', css_class=field_width),
                         Field('projection', css_class=field_width),
-                        Field('northlimit', css_class=field_width),
-                        Field('eastlimit', css_class=field_width),
-                        Field('southlimit', css_class=field_width),
-                        Field('westlimit', css_class=field_width),
                         Field('units', css_class=field_width),
+                        Field('northlimit', css_class=field_width),
+                        Field('westlimit', css_class=field_width),
+                        Field('southlimit', css_class=field_width),
+                        Field('eastlimit', css_class=field_width),
+
+
+
                  )
 
-        super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Spatial Reference', *args, **kwargs)
 
 
 class OriginalCoverageSpatialForm(forms.Form):
-    name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
-    projection = forms.CharField(max_length=100, required=False, label='Coordinate System/Geographic Projection')
-    northlimit = forms.DecimalField(label='North Latitude', widget=forms.TextInput())
-    eastlimit = forms.DecimalField(label='East Longitude', widget=forms.TextInput())
-    southlimit = forms.DecimalField(label='South Latitude', widget=forms.TextInput())
-    westlimit = forms.DecimalField(label='West Longitude', widget=forms.TextInput())
-    units = forms.CharField(max_length=50, label='Coordinate Units')
+    projection = forms.CharField(max_length=100, required=False, label='Coordinate Reference System')
+    northlimit = forms.DecimalField(label='North Extent', widget=forms.TextInput())
+    eastlimit = forms.DecimalField(label='East Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput())
+    units = forms.CharField(max_length=50, label='Coordinate Reference System Unit')
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(OriginalCoverageSpatialForm, self).__init__(*args, **kwargs)
         self.helper = OriginalCoverageFormHelper(allow_edit, res_short_id, element_id, element_name='OriginalCoverage')
+        self.delete_modal_form = None
         self.number = 0
         self.delete_modal_form = None
+        self.allow_edit = allow_edit
         self.errors.clear()
 
         if not allow_edit:
@@ -77,10 +81,6 @@ class OriginalCoverageSpatialForm(forms.Form):
             if len(temp_cleaned_data['projection']) == 0:
                 del temp_cleaned_data['projection']
 
-        if 'name' in temp_cleaned_data:
-            if len(temp_cleaned_data['name']) == 0:
-                del temp_cleaned_data['name']
-
         self.cleaned_data['value'] = copy.deepcopy(temp_cleaned_data)
 
         if 'northlimit' in self.cleaned_data:
@@ -91,8 +91,6 @@ class OriginalCoverageSpatialForm(forms.Form):
             del self.cleaned_data['southlimit']
         if 'westlimit' in self.cleaned_data:
             del self.cleaned_data['westlimit']
-        if 'name' in self.cleaned_data:
-            del self.cleaned_data['name']
         if 'units' in self.cleaned_data:
             del self.cleaned_data['units']
         if 'projection' in self.cleaned_data:
@@ -115,13 +113,13 @@ class CellInfoFormHelper(BaseFormHelper):
                         Field('noDataValue', css_class=field_width),
                  )
 
-        super(CellInfoFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(CellInfoFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Cell Information', *args, **kwargs)
 
 
 class CellInfoForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(CellInfoForm, self).__init__(*args, **kwargs)
-        self.helper = CellInfoFormHelper(allow_edit, res_short_id, element_id, element_name='Cell Information')
+        self.helper = CellInfoFormHelper(allow_edit, res_short_id, element_id, element_name='CellInformation')
 
         if not allow_edit:
             for field in self.fields.values():
@@ -132,11 +130,11 @@ class CellInfoForm(ModelForm):
         model = CellInformation
         fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType', 'noDataValue']
         exclude = ['content_object']
-        widgets = { 'rows': forms.TextInput(), #(attrs={'readonly':'readonly'}),
-                    'columns': forms.TextInput(), #(attrs={'readonly':'readonly'}),
+        widgets = { 'rows': forms.TextInput(attrs={'readonly':'readonly'}),
+                    'columns': forms.TextInput(attrs={'readonly':'readonly'}),
                     'cellSizeXValue': forms.TextInput(), #(attrs={'readonly':'readonly'}),
                     'cellSizeYValue': forms.TextInput(), #(attrs={'readonly':'readonly'}),
-                    'cellDataType': forms.TextInput(), #(attrs={'readonly':'readonly'}),
+                    'cellDataType': forms.TextInput(attrs={'readonly':'readonly'}),
                     'noDataValue': forms.TextInput()}
 
 
@@ -198,7 +196,7 @@ class BandInfoFormHelper(BandBaseFormHelper):
                         Field('comment', css_class=field_width)
                  )
 
-        super(BandInfoFormHelper, self).__init__(res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(BandInfoFormHelper, self).__init__(res_short_id, element_id, element_name, layout, *args, **kwargs)
 
 
 class BandInfoForm(ModelForm):
@@ -261,11 +259,11 @@ BandInfoFormSet = formset_factory(BandInfoForm, formset=BaseBandInfoFormSet, ext
 BandInfoLayoutEdit = Layout(
                         HTML('{% load crispy_forms_tags %} '
                              '{% for form in bandinfo_formset.forms %} '
-                                 '<div class="item form-group"> '
+                                 '<div class="item form-group col-xs-12 col-md-4"> '
                                  '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
                                  '{% crispy form %} '
                                  '<div class="row" style="margin-top:10px">'
-                                    '<div class="col-md-12">'
+                                    '<div class="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6">'
                                         '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'
                                     '</div>'
                                  '</div>'
