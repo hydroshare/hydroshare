@@ -7,6 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 import json
 
+
 # extended metadata for raster resource type to store the original box type coverage since the core metadata coverage
 # stores the converted WGS84 geographic coordinate system projection coverage, see issue #210 on github for details
 class OriginalCoverage(AbstractMetaDataElement):
@@ -81,6 +82,7 @@ class OriginalCoverage(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Coverage element can't be deleted.")
 
+
 class BandInformation(AbstractMetaDataElement):
     term = 'BandInformation'
     # required fields
@@ -151,6 +153,7 @@ class BandInformation(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("BandInformation element of the raster resource cannot be deleted.")
 
+
 class CellInformation(AbstractMetaDataElement):
     term = 'CellInformation'
     # required fields
@@ -160,7 +163,6 @@ class CellInformation(AbstractMetaDataElement):
     columns = models.IntegerField(null=True)
     cellSizeXValue = models.FloatField(null=True)
     cellSizeYValue = models.FloatField(null=True)
-    cellSizeUnit = models.CharField(max_length=50, null=True)
     cellDataType = models.CharField(max_length=50, null=True)
 
     # optional fields
@@ -199,8 +201,7 @@ class CellInformation(AbstractMetaDataElement):
 
         cell_info = CellInformation.objects.create(name=kwargs['name'], rows=kwargs['rows'], columns=kwargs['columns'],
                                                    cellSizeXValue=kwargs['cellSizeXValue'], cellSizeYValue=kwargs['cellSizeYValue'],
-                                                   cellSizeUnit=kwargs['cellSizeUnit'], cellDataType=kwargs['cellDataType'],
-                                                   content_object=kwargs['content_object'])
+                                                   cellDataType=kwargs['cellDataType'], content_object=kwargs['content_object'])
 
         # check for the optional fields and save them to the CellInformation metadata
         if 'noDataValue' in kwargs:
@@ -215,7 +216,7 @@ class CellInformation(AbstractMetaDataElement):
         cell_info = CellInformation.objects.get(id=element_id)
         if cell_info:
             for key, value in kwargs.iteritems():
-                #if key in ('rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellSizeUnit', 'cellDataType', 'noDataValue'):
+                #if key in ('rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType', 'noDataValue'):
                 setattr(cell_info, key, value)
 
             cell_info.save()
@@ -225,6 +226,7 @@ class CellInformation(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("CellInformation element of a raster resource cannot be removed")
+
 
 #
 # To create a new resource, use these two super-classes.
@@ -262,6 +264,7 @@ class RasterResource(Page, AbstractResource):
 
 # this would allow us to pick up additional form elements for the template before the template is displayed via Mezzanine page processor
 processor_for(RasterResource)(resource_processor)
+
 
 class RasterMetaData(CoreMetaData):
     # required non-repeatable cell information metadata elements
@@ -330,7 +333,7 @@ class RasterMetaData(CoreMetaData):
         # inject raster resource specific metadata elements to container element
         if self.cellInformation:
             cellinfo_fields = ['name', 'rows', 'columns', 'cellSizeXValue', 'cellSizeYValue',
-                           'cellSizeUnit', 'cellDataType', 'noDataValue']
+                           'cellDataType', 'noDataValue']
             self.add_metadata_element_to_xml(container, self.cellInformation, cellinfo_fields)
 
         for band_info in self.bandInformation:

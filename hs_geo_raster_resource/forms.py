@@ -8,6 +8,7 @@ from hs_core.forms import BaseFormHelper
 from django.forms.models import formset_factory
 import copy
 
+
 class OriginalCoverageFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
@@ -24,6 +25,7 @@ class OriginalCoverageFormHelper(BaseFormHelper):
                  )
 
         super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
 
 class OriginalCoverageSpatialForm(forms.Form):
     name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
@@ -98,6 +100,7 @@ class OriginalCoverageSpatialForm(forms.Form):
 
         return self.cleaned_data
 
+
 class CellInfoFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
@@ -108,17 +111,17 @@ class CellInfoFormHelper(BaseFormHelper):
                         Field('columns', css_class=field_width),
                         Field('cellSizeXValue', css_class=field_width),
                         Field('cellSizeYValue', css_class=field_width),
-                        Field('cellSizeUnit', css_class=field_width),
                         Field('cellDataType', css_class=field_width),
                         Field('noDataValue', css_class=field_width),
                  )
 
         super(CellInfoFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
+
 class CellInfoForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(CellInfoForm, self).__init__(*args, **kwargs)
-        self.helper = CellInfoFormHelper(allow_edit, res_short_id, element_id, element_name='CellInformation')
+        self.helper = CellInfoFormHelper(allow_edit, res_short_id, element_id, element_name='Cell Information')
 
         if not allow_edit:
             for field in self.fields.values():
@@ -127,24 +130,24 @@ class CellInfoForm(ModelForm):
 
     class Meta:
         model = CellInformation
-        fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellSizeUnit', 'cellDataType', 'noDataValue']
+        fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType', 'noDataValue']
         exclude = ['content_object']
         widgets = { 'rows': forms.TextInput(), #(attrs={'readonly':'readonly'}),
                     'columns': forms.TextInput(), #(attrs={'readonly':'readonly'}),
                     'cellSizeXValue': forms.TextInput(), #(attrs={'readonly':'readonly'}),
                     'cellSizeYValue': forms.TextInput(), #(attrs={'readonly':'readonly'}),
-                    'cellSizeUnit': forms.TextInput(), #(attrs={'readonly':'readonly'}),
                     'cellDataType': forms.TextInput(), #(attrs={'readonly':'readonly'}),
                     'noDataValue': forms.TextInput()}
+
 
 class CellInfoValidationForm(forms.Form):
     rows = forms.IntegerField(required=True)
     columns = forms.IntegerField(required=True)
     cellSizeXValue = forms.FloatField(required = True)
     cellSizeYValue = forms.FloatField(required = True)
-    cellSizeUnit = forms.CharField(max_length=50, required = True)
     cellDataType = forms.CharField(max_length=50, required=True)
     noDataValue = forms.FloatField(required = False)
+
 
 # repeatable element related forms
 class BandBaseFormHelper(FormHelper):
@@ -181,6 +184,7 @@ class BandBaseFormHelper(FormHelper):
                             ),
                           )
 
+
 class BandInfoFormHelper(BandBaseFormHelper):
     def __init__(self, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
@@ -196,10 +200,11 @@ class BandInfoFormHelper(BandBaseFormHelper):
 
         super(BandInfoFormHelper, self).__init__(res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
+
 class BandInfoForm(ModelForm):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
         super(BandInfoForm, self).__init__(*args, **kwargs)
-        self.helper = BandInfoFormHelper(res_short_id, element_id, element_name='BandInformation')
+        self.helper = BandInfoFormHelper(res_short_id, element_id, element_name='Band Information')
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit
@@ -231,12 +236,14 @@ class BandInfoForm(ModelForm):
                    'comment': forms.Textarea,
                    'method': forms.Textarea}
 
+
 class BandInfoValidationForm(forms.Form):
     name = forms.CharField(max_length=50, required=True)
     variableName = forms.CharField(max_length=100, required=True)
     variableUnit = forms.CharField(max_length=50, required=True)
     method = forms.CharField(required=False)
     comment = forms.CharField(required=False)
+
 
 class BaseBandInfoFormSet(BaseFormSet):
     def add_fields(self, form, index):
