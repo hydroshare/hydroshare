@@ -19,14 +19,17 @@
                  </div>
             {%  endif %}
         {% endblock %}
-{#        ======= Missing fields notification =======#}
 
+            {#  ======= Missing fields notification =======#}
             {% if not metadata_form and page.perms.change %}
                 {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
                     <div class="alert alert-success alert-dismissible" role="alert">
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                      {% if just_created %}<strong>Congratulations! </strong>{% endif %}<span>Now that your resource has been created click on the edit button below to add additional metadata.</span>
-                      <p>The following metadata are still required before you can make the resource public:</p>
+                      {% if just_created %}
+                          <strong>Congratulations! </strong><span>Now that your resource has been created the following metadata are still required:</span>
+                      {% else %}
+                          <span>The following metadata are still required:</span>
+                      {% endif %}
                         <ul>
                         {% for element in missing_metadata_elements %}
                             <li>{{ element }}</li>
@@ -35,17 +38,14 @@
                            <li>Title: needs to be changed</li>
                         {% endif %}
                     </ul>
-
                     <hr>
-
                     <span class="glyphicon glyphicon-question-sign"></span>
                     <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
-
                  </div>
                 {% endif %}
             {% endif %}
 
-            {#        ======= Title =======#}
+            {# ======= Title ======= #}
             {% if not metadata_form %}
             <h2>{{ title }}</h2>
             {% else %}
@@ -194,6 +194,54 @@
                     </fieldset>
                 </form>
                 {% endif %}
+            {% endif %}
+
+            {#        ======= Subjects =======#}
+            {% if not metadata_form %}
+                {% if keywords %}
+                <div class="content-block">
+                    <h3>Subject</h3>
+
+                    <p id="keywords">{{ keywords }}</p>
+
+                    <div class="tags">
+                        <ul id="list-keywords" class="tag-list custom-well">
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="content-block">
+                    <h3>Subject</h3>
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/subject/add-metadata/" id="id-subject"
+                          method="post">
+                        {% csrf_token %}
+                        <div class="tags">
+                            <div id="add-keyword-wrapper" class="input-group">
+                                <input id="txt-keyword" type="text" class="form-control" placeholder="Keyword">
+                            <span class="input-group-btn">
+                                <a id="btn-add-keyword" class="btn btn-success" type="button">Add</a>
+                            </span>
+                            </div>
+                            <ul id="lst-tags" class="custom-well tag-list">
+                            </ul>
+                        </div>
+
+                        <fieldset>
+                            <div id="div_id_value" class="control-group">
+                                <div class="controls"><input class="form-control input-sm textInput" id="id_value"
+                                                             maxlength="500" name="value" type="text"
+                                                             style="display: none;">{{ cm.keywords_string }}</div>
+                            </div>
+                            <div style="margin-top:10px">
+                                <button type="button" class="btn btn-primary pull-right"
+                                        onclick="metadata_update_ajax_submit('id-subject'); return false;"
+                                        style="display: none;">Save changes
+                                </button>
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
             {% endif %}
 
             {#        ======= Citation =======#}
@@ -561,51 +609,6 @@
                 </div>
             </div>
 
-            {#        ======= Keywords =======#}
-            {% if not metadata_form %}
-                {% if keywords %}
-                <div class="content-block">
-                    <h3>Keywords</h3>
-
-                    <p id="keywords">{{ keywords }}</p>
-
-                    <div class="tags">
-                        <ul id="list-keywords" class="tag-list custom-well">
-                        </ul>
-                    </div>
-                </div>
-                {% endif %}
-            {% else %}
-                <h3>Keywords</h3>
-                <form action="/hsapi/_internal/{{ cm.short_id }}/subject/add-metadata/" id="id-subject"
-                      method="post">
-                    {% csrf_token %}
-                    <div class="tags">
-                        <div id="add-keyword-wrapper" class="input-group">
-                            <input id="txt-keyword" type="text" class="form-control" placeholder="Keyword">
-                        <span class="input-group-btn">
-                            <a id="btn-add-keyword" class="btn btn-success" type="button">Add</a>
-                        </span>
-                        </div>
-                        <ul id="lst-tags" class="custom-well tag-list">
-                        </ul>
-                    </div>
-
-                    <fieldset>
-                        <div id="div_id_value" class="control-group">
-                            <div class="controls"><input class="form-control input-sm textInput" id="id_value"
-                                                         maxlength="500" name="value" type="text"
-                                                         style="display: none;">{{ cm.keywords_string }}</div>
-                        </div>
-                        <div style="margin-top:10px">
-                            <button type="button" class="btn btn-primary pull-right"
-                                    onclick="metadata_update_ajax_submit('id-subject'); return false;"
-                                    style="display: none;">Save changes
-                            </button>
-                        </div>
-                    </fieldset>
-                </form>
-            {% endif %}
 
             {#        ======= Content =======#}
             <div>
