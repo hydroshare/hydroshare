@@ -12,7 +12,6 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
 from django.core import exceptions as ex
 from django.template import RequestContext
-from django.core.files.uploadedfile import UploadedFile
 from django.core import signing
 from django import forms
 
@@ -25,7 +24,7 @@ from inplaceeditform.views import _get_http_response, _get_adaptor
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, user_from_id
-from .utils import authorize
+from .utils import authorize, upload_from_irods
 from hs_core.models import ResourceFile, GenericResource, resource_processor, CoreMetaData
 
 from . import resource_rest_api
@@ -35,8 +34,6 @@ from hs_core.hydroshare import utils
 from . import utils as view_utils
 from hs_core.hydroshare import file_size_limit_for_display
 from hs_core.signals import *
-
-from django_irods.storage import IrodsStorage
 
 def short_url(request, *args, **kwargs):
     try:
@@ -72,41 +69,6 @@ def add_file_to_resource(request, shortkey, *args, **kwargs):
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
 
-    irods_fname = request.session.get('irods_add_file_name', '')
-    if irods_fname:
-        res_cls = resource.__class__
-        file_types = res_cls.get_supported_upload_file_types()
-        valid = False
-        if file_types == ".*":
-            valid = True
-        else:
-            ext = os.path.splitext(irods_fname)[1]
-            if ext == file_types:
-                valid = True
-            else:
-                for index in range(len(file_types)):
-                    if ext == file_types[index].strip():
-                        valid = True
-                        break
-        if not valid:
-            request.session['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
-            return HttpResponseRedirect(request.META['HTTP_REFERER'])
-        else:
-            user = request.session["user"]
-            password = request.session["password"]
-            port = request.session["port"]
-            host = request.session["host"]
-            zone = request.session["zone"]
-            # use iget to transfer selected data object to local as a NamedTemporaryFile
-            try:
-                irods_storage = IrodsStorage()
-                irods_storage.set_user_session(username=user, password=password, host=host, port=port, zone=zone)
-                tmpFile = irods_storage.download(irods_fname)
-                fname = os.path.basename(irods_fname.rstrip(os.sep))
-                res_files.append(UploadedFile(file=tmpFile, name=fname))
-            except Exception as ex:
-                request.session['file_validation_error'] = ex.message
-                return HttpResponseRedirect(request.META['HTTP_REFERER'])
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
                                             extract_metadata=extract_metadata)
@@ -537,12 +499,12 @@ def create_resource(request, *args, **kwargs):
         port = request.POST.get("irods-port")
         host = request.POST.get("irods-host")
         zone = request.POST.get("irods-zone")
-        # use iget to transfer selected data object to local as a NamedTemporaryFile
-        irods_storage = IrodsStorage()
-        irods_storage.set_user_session(username=user, password=password, host=host, port=port, zone=zone)
-        tmpFile = irods_storage.download(irods_fname)
-        fname = os.path.basename(irods_fname.rstrip(os.sep))
-        resource_files.append(UploadedFile(file=tmpFile, name=fname))
+        try:
+            upload_from_irods(username=user, password=password, host=host, port=port,
+                                  zone=zone, irods_fname=irods_fname, res_files=resource_files)
+        except Exception as ex:
+            context = {'resource_creation_error': ex.message}
+            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     url_key = "page_redirect_url"
 

@@ -4,6 +4,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
 from hs_core import hydroshare
+from hs_core.views.utils import authorize, upload_from_irods
+from hs_core.hydroshare import utils
 
 def search_ds(coll):
     store = {}
@@ -114,8 +116,63 @@ def upload(request):
         )
 
 def upload_add(request):
-    file_name = str(request.POST['upload'])
     # add irods file into an existing resource
-    request.session['irods_add_file_name'] = file_name
     res_id = request.POST['res_id']
-    return HttpResponseRedirect('/hsapi/_internal/{res_id}/add-file-to-resource/'.format(res_id=res_id))
+    resource, _, _ = authorize(request, res_id, edit=True, full=True, superuser=True)
+    res_files = request.FILES.getlist('files')
+    extract_metadata = request.REQUEST.get('extract-metadata', 'No')
+    extract_metadata = True if extract_metadata.lower() == 'yes' else False
+
+    irods_fname = request.POST.get('irods_file_name', '')
+    res_cls = resource.__class__
+    file_types = res_cls.get_supported_upload_file_types()
+    valid = False
+    if file_types == ".*":
+        valid = True
+    else:
+        ext = os.path.splitext(irods_fname)[1]
+        if ext == file_types:
+            valid = True
+        else:
+            for index in range(len(file_types)):
+                file_type_str = file_types[index].strip()
+                if file_type_str == ".*" or ext == file_type_str:
+                    valid = True
+                    break
+
+    if not valid:
+        request.session['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    else:
+        user = request.POST.get('irods-username')
+        password = request.POST.get("irods-password")
+        port = request.POST.get("irods-port")
+        host = request.POST.get("irods-host")
+        zone = request.POST.get("irods-zone")
+        try:
+            upload_from_irods(username=user, password=password, host=host, port=port,
+                              zone=zone, irods_fname=irods_fname, res_files=res_files)
+        except Exception as ex:
+            request.session['file_validation_error'] = ex.message
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    try:
+        utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
+                                            extract_metadata=extract_metadata)
+
+    except hydroshare.utils.ResourceFileSizeException as ex:
+        request.session['file_size_error'] = ex.message
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+        request.session['file_validation_error'] = ex.message
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    try:
+        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
+                                                   extract_metadata=extract_metadata)
+
+    except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+        request.session['file_validation_error'] = ex.message
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])

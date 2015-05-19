@@ -118,10 +118,14 @@
         var json_response_file_types = {};
         var json_response_multiple_file = {};
         var selected_file = undefined;
-
+        if (sessionStorage.signininfo) {
+            $("#sign-in-info").text(sessionStorage.signininfo);
+            $("#btn-select-irods-file").show();
+            $("#irods-sel-file").text("No file selected");
+        }
         $('#resource-type').on('change', function(){
             $('#select-file').value = '';
-            $('#select-file').attr('value','');
+            $('#select-file').attr('value', '');
             $('#irods-sel-file').text("No file selected");
 
             if(selected_file != undefined){

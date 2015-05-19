@@ -1,6 +1,23 @@
+$('#btn-signin-irods').on('click',function(){
+    if(sessionStorage.username)
+        $("#username").val(sessionStorage.username);
+    if(sessionStorage.password)
+        $("#password").val(sessionStorage.password);
+    if(sessionStorage.host)
+        $("#host").val(sessionStorage.host);
+    if(sessionStorage.port)
+        $("#port").val(sessionStorage.port);
+    if(sessionStorage.zone)
+        $("#zone").val(sessionStorage.zone);
+});
+
 $('#btn-select-irods-file').on('click',function(){
     $('#res_type').val($('#resource-type').val());
     $('#file_struct').children().remove();
+    if (sessionStorage.signininfo) {
+        $("#irods_content_label").text(sessionStorage.username);
+        $('#root_store').val(sessionStorage.datastore);
+    }
 	store = $('#root_store').val();
 	// Setting up the view tab
 	$('#file_struct').attr('name',store);
@@ -15,12 +32,12 @@ function get_store(store,parent,margin){
 	margin_left = $(parent).css('margin-left');
 	margin_left = (parseInt(margin_left.substring(0,margin_left.length-2))-10) + 10;
 	form_data = new FormData();
-	form_data.append('store',store);
-    form_data.append('user',sessionStorage.username);
-    form_data.append('password',sessionStorage.password);
-    form_data.append('zone',sessionStorage.zone);
-    form_data.append('port',sessionStorage.port);
-    form_data.append('host',sessionStorage.host);
+	form_data.append('store', store);
+    form_data.append('user', sessionStorage.username);
+    form_data.append('password', sessionStorage.password);
+    form_data.append('zone', sessionStorage.zone);
+    form_data.append('port', sessionStorage.port);
+    form_data.append('host', sessionStorage.host);
 	$.ajax({
         mode: "queue",
         url: '/irods/store/',
@@ -129,6 +146,11 @@ $("#irodsContent form").bind("keypress", function (e) {
 $('#iget_irods').on('click',function(){
 	var name = $('.selected').attr('name');
 	$('#upload_store').val(name);
+    $("#irods-username").val(sessionStorage.username)
+    $("#irods-password").val(sessionStorage.password)
+    $("#irods-host").val(sessionStorage.host)
+    $("#irods-zone").val(sessionStorage.zone)
+    $("#irods-port").val(sessionStorage.port)
 	$('#irodsContent .modal-backdrop.up-load').show();
 	$('#irodsContent .ajax-loader').show();
 });
@@ -153,24 +175,23 @@ function irods_login() {
         },
         success: function(json) {
             if(json.irods_loggedin) {
-                $("#sign-in-info").text("Signed in as " + json.user);
+                var signInStr = "Signed in as " + json.user;
+                $("#sign-in-info").text(signInStr);
                 $("#irods_content_label").text(json.user);
                 $('#root_store').val(json.datastore);
                 $("#btn-select-irods-file").show();
                 $("#irods-sel-file").text("No file selected");
+                sessionStorage.signininfo = signInStr;
+                sessionStorage.datastore = json.datastore;
                 sessionStorage.username = json.user;
                 sessionStorage.password = json.password;
                 sessionStorage.port = json.port;
                 sessionStorage.host = json.host;
                 sessionStorage.zone = json.zone;
-                $("#irods-username").text(json.user);
-                $("#irods-password").text(json.password);
-                $("#irods-zone").text(json.zone);
-                $("#irods-host").text(json.host);
-                $("#irods-port").text(json.port);
             }
             else {
                 $("#sign-in-info").text('iRODS login failed');
+                sessionStorage.signininfo ='';
                 $("#btn-select-irods-file").hide();
             }
             $('#irodsSignin').modal('hide');
@@ -202,12 +223,7 @@ function irods_upload() {
             $("#irods-sel-file").text(json.irods_file_name);
             $("#file-type-error").text(json.file_type_error);
             $('#irodsContent').modal('hide');
-            $('#irods_file_name').text(json.irods_file_name)
-            $("#irods-username").text(sessionStorage.username)
-            $("#irods-password").text(sessionStorage.password)
-            $("#irods-host").text(sessionStorage.host)
-            $("#irods-zone").text(sessionStorage.zone)
-            $("#irods-port").text(sessionStorage.port)
+            $('#irods_file_name').val(json.irods_file_name)
         },
         error: function(xhr, errmsg, err) {
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);

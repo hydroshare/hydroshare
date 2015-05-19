@@ -14,7 +14,6 @@
         <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
         <input type="hidden" id="allow-multiple-file-upload" value={{ cm.can_have_multiple_files }}>
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
-
         {% block error %}
             {%  if file_validation_error %}
                 <div class="alert alert-danger alert-dismissible" role="alert">
@@ -701,8 +700,8 @@
                             <span class="glyphicon glyphicon-plus"><span class="button-label">Sign in iRODS...</span></span>
                         </a>
 
-                        <span id="sign-in-info">{% if request.session.irods_loggedin %}Signed in as {{ request.session.user }}{% endif %}</span>
-                        <a id="btn-select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsContent" {% if not request.session.irods_loggedin %}style="display:none;"{% endif %}>
+                        <span id="sign-in-info"></span>
+                        <a id="btn-select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsContent" style="display:none;">
                             <span class="glyphicon glyphicon-plus"><span class="button-label">Add file from iRODS...</span></span>
                         </a>
                         {% if file_type_error %}
@@ -2353,6 +2352,10 @@
     }
 
     $(document).ready(function () {
+        if (sessionStorage.signininfo) {
+            $("#sign-in-info").text(sessionStorage.signininfo);
+            $("#btn-select-irods-file").show();
+        }
         var keywordString = "{% for k, v in subjects_form.initial.iteritems  %}{{ v }}{% endfor %}";
         $("#id-subject").find("#id_value").val(keywordString);
 
