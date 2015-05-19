@@ -1,5 +1,5 @@
 Cython==0.20.1post0
-Django==1.7.1
+Django==1.7.8
 Fabric==1.8.0
 Fiona==1.0.2
 GDAL==1.10.1
