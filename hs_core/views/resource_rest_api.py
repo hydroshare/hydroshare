@@ -301,6 +301,7 @@ class ResourceCreate(generics.CreateAPIView):
         resource_type = validated_request_data['resource_type']
 
         res_title = validated_request_data.get('title', 'Untitled resource')
+        keywords = validated_request_data.get('keywords', None)
 
         num_files = len(request.FILES)
         if num_files > 0:
@@ -317,7 +318,6 @@ class ResourceCreate(generics.CreateAPIView):
                                                                        page_redirect_url_key=None,
                                                                        files=files,
                                                                        metadata=None,  **kwargs)
-
         try:
             resource = hydroshare.create_resource(
                     resource_type=resource_type,
@@ -327,7 +327,7 @@ class ResourceCreate(generics.CreateAPIView):
                     view_users=validated_request_data.get('view_users', None),
                     edit_groups=validated_request_data.get('edit_groups', None),
                     view_groups=validated_request_data.get('view_groups', None),
-                    keywords=None,
+                    keywords=keywords,
                     metadata=metadata,
                     files=files,
             )
