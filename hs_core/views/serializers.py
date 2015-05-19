@@ -55,7 +55,7 @@ class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
 
 class ResourceTypesSerializer(serializers.Serializer):
     resource_type = serializers.CharField(max_length=100, required=True, validators=[lambda x: x in RESOURCE_TYPES])
-    
+
 
 class ResourceListRequestValidator(serializers.Serializer):
     creator = serializers.CharField(min_length=1, required=False, validators=[validate_user_name])

@@ -301,13 +301,21 @@ class ResourceCreate(generics.CreateAPIView):
         resource_type = validated_request_data['resource_type']
 
         res_title = validated_request_data.get('title', 'Untitled resource')
-        if len(request.FILES) > 0:
-            raise ValidationError(detail={'files': 'File upload is not allowed. Add files after the resource is created.'})
+
+        num_files = len(request.FILES)
+        if num_files > 0:
+            if num_files > 1:
+                raise ValidationError(detail={'file': 'Multiple file upload is not allowed on resource creation. Add additional files after the resource is created.'})
+            # Place files into format expected by hydroshare.utils.resource_pre_create_actions and
+            # hydroshare.create_resource, i.e. a tuple of django.core.files.uploadedfile.TemporaryUploadedFile objects.
+            files = (request.FILES['file'],)
+        else:
+            files = ()
 
         _, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
                                                                        resource_title=res_title,
                                                                        page_redirect_url_key=None,
-                                                                       files=(),
+                                                                       files=files,
                                                                        metadata=None,  **kwargs)
 
         try:
@@ -321,7 +329,7 @@ class ResourceCreate(generics.CreateAPIView):
                     view_groups=validated_request_data.get('view_groups', None),
                     keywords=None,
                     metadata=metadata,
-                    files=(),
+                    files=files,
             )
         except Exception as ex:
             error_msg = {'resource': "Resource creation failed. %s" % ex.message}
