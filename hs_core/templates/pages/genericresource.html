@@ -681,13 +681,11 @@
                     {% endif %}
                     <!-- Buttons -->
                     {% for b in cm.bags.all %}
-                        <a
-                           id="btn-download-all" type="button" class="btn btn-default" href="{{ cm.bags.first.bag.url }}">
+                        <a id="btn-download-all" type="button" class="btn btn-default" href="{{ cm.bags.first.bag.url }}">
                             <span class="glyphicon glyphicon-download-alt">
                                 <span title='Download All Content as Zipped BagIt Archive ({{ b.bag.size|filesizeformat }})' class="button-label">Download All Content as Zipped BagIt Archive ({{ b.bag.size|filesizeformat }})</span>
                             </span>
                         </a>
-
 
                     {% endfor %}
 
@@ -697,7 +695,7 @@
                             <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
                         </a>
                     {% endif %}
-                    <div class="col-lg-12"><a href="#">Learn more about the Bagit archive format</a></div>
+                    <div class="col-lg-12"><a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a></div>
                 </div>
             </div>
 
