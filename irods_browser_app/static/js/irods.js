@@ -28,9 +28,7 @@ $('#btn-select-irods-file').on('click',function(){
 	enable_settings();
 });
 
-function get_store(store,parent,margin){
-	margin_left = $(parent).css('margin-left');
-	margin_left = (parseInt(margin_left.substring(0,margin_left.length-2))-10) + 10;
+function get_store(store, parent, margin){
 	form_data = new FormData();
 	form_data.append('store', store);
     form_data.append('user', sessionStorage.username);
@@ -49,15 +47,15 @@ function get_store(store,parent,margin){
         success: function (data, status) {
             data = jQuery.parseJSON(data);
             if (data[0].length == 0 && data[1].length == 0) {
-                $(parent).append("<div class='file' style='margin-left:"+margin+"px;'> -- EMPTY --</div>");
+                $(parent).append("<div class='file' style='margin-left:" + margin + "px;'></div>");
             }
             else {
                 $.each(data[1],function(i,v) {
-                    $(parent).append("<div class='folder' id = 'irods_folder_"+v+"' name='"+store+"/"+v+"' style='margin-left:"+margin+"px;'><img src='/static/img/folder.png' width='15' height='15'>&nbsp; "+v+"</div>");
+                    $(parent).append("<div class='folder' id='irods_folder_" + v + "' name='" + store + "/" + v + "' style='margin-left:" + margin + "px;'><img src='/static/img/folder.png' width='15' height='15'>&nbsp; " + v + "</div>");
                 });
 
                 $.each(data[0],function(i,v) {
-                    $(parent).append("<div class='file' id='irods_file_"+v+"' name='"+store+"/"+v+"' style='margin-left:"+margin+"px;'><img src='/static/img/file.png' width='15' height='15'>&nbsp; "+v+"</div>")
+                    $(parent).append("<div class='file' id='irods_file_" + v + "' name='" + store + "/" + v + "' style='margin-left:" + margin + "px;'><img src='/static/img/file.png' width='15' height='15'>&nbsp; " + v + "</div>")
                     $('.file').on('click',function(e){
                         $('.file').css('background','');
                         $('.file').removeClass('selected');
@@ -71,6 +69,7 @@ function get_store(store,parent,margin){
         },
 
         error: function(status) {
+            console.log(status);
             return false;
         }
 	});
@@ -80,13 +79,12 @@ function get_store(store,parent,margin){
 function enable_settings(){
 	// Folder click settings
     $('body').on('click', '.folder' ,function() {
-		margin_left = $(this).css('margin-left');
-		margin_left = parseInt(margin_left.substring(0,margin_left.length-2)) + 10;
+		margin_left = parseInt($(this).css('margin-left')) + 10;
 		if($(this).hasClass('isOpen')) {
 			$(this).addClass('isClose');
 			$(this).removeClass('isOpen');
 			$(this).children('div').hide();
-			set_datastore($(this).attr('name'),'folder');
+			set_datastore($(this).attr('name'), 'folder');
 		}
 		else if($(this).hasClass('isClose')) {
 			$(this).addClass('isOpen');
@@ -96,9 +94,9 @@ function enable_settings(){
 		else {
 			var store = $(this).attr('name');
 			var parent = $(this)
-			get_store(store,parent,margin_left);
+			get_store(store, parent, margin_left);
 			$(this).addClass('isOpen');
-			set_datastore($(this).attr('name'),1);
+			set_datastore($(this).attr('name'), 1);
 		}
         return false;
     });
@@ -207,7 +205,6 @@ function irods_login() {
 
 $('#irodsLogin').on('submit', function(event){
     event.preventDefault();
-
     irods_login();
 });
 
@@ -235,6 +232,5 @@ function irods_upload() {
 
 $('#irodsUpload').on('submit', function(event){
     event.preventDefault();
-
     irods_upload();
 });
