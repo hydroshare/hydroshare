@@ -53,6 +53,10 @@ class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
             ), default='GenericResource')
 
 
+class ResourceTypesSerializer(serializers.Serializer):
+    resource_type = serializers.CharField(max_length=100, required=True, validators=[lambda x: x in RESOURCE_TYPES])
+    
+
 class ResourceListRequestValidator(serializers.Serializer):
     creator = serializers.CharField(min_length=1, required=False, validators=[validate_user_name])
     group = serializers.CharField(min_length=1, required=False, validators=[validate_group_name])
@@ -79,6 +83,15 @@ class ResourceListItemSerializer(serializers.Serializer):
     public = serializers.BooleanField()
     bag_url = serializers.URLField()
     science_metadata_url = serializers.URLField()
+
+
+class ResourceType(object):
+    def __init__(self, resource_type):
+        self._resource_type = resource_type
+
+    @property
+    def resource_type(self):
+        return self._resource_type
 
 
 ResourceListItem = namedtuple('ResourceListItem',

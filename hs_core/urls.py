@@ -4,6 +4,9 @@ from hs_core import views
 urlpatterns = patterns('',
 
     # resource API
+     url(r'^resourceTypes/$', views.resource_rest_api.ResourceTypes.as_view(),
+        name='list_resource_types'),
+
     url(r'^resourceList/$', views.resource_rest_api.ResourceList.as_view(),
         name='list_resources'),
 

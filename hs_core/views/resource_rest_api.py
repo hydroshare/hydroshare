@@ -13,9 +13,10 @@ from rest_framework import status, generics
 from rest_framework.exceptions import *
 
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
 from hs_core.views import utils as view_utils
 from hs_core.views import serializers
+from hs_core.views import pagination
 
 
 # Mixins
@@ -39,6 +40,63 @@ class ResourceToListItemMixin(object):
                                                           science_metadata_url=science_metadata_url)
         return resource_list_item
 
+
+
+
+class ResourceTypes(generics.ListAPIView):
+    """
+    Get a list of resource types
+
+    REST URL: hsapi/resourceTypes
+    HTTP method: GET
+
+    example return JSON format for GET /hsapi/resourceTypes:
+
+    {
+        "count": 9,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "resource_type": "GenericResource"
+            },
+            {
+                "resource_type": "RasterResource"
+            },
+            {
+                "resource_type": "RefTimeSeries"
+            },
+            {
+                "resource_type": "TimeSeriesResource"
+            },
+            {
+                "resource_type": "NetcdfResource"
+            },
+            {
+                "resource_type": "ModelProgramResource"
+            },
+            {
+                "resource_type": "ModelInstanceResource"
+            },
+            {
+                "resource_type": "ToolResource"
+            },
+            {
+                "resource_type": "SWATModelInstanceResource"
+            }
+        ]
+    }
+    """
+    pagination_class = pagination.SmallDatumPagination
+
+    def get(self, request):
+        return self.list(request)
+
+    def get_queryset(self):
+        return [serializers.ResourceType(resource_type=rtype.__name__) for rtype in get_resource_types()]
+
+    def get_serializer_class(self):
+        return serializers.ResourceTypesSerializer
 
 class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
     """
