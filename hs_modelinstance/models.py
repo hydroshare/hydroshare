@@ -77,10 +77,11 @@ class ExecutedBy(AbstractMetaDataElement):
             for key, value in kwargs.iteritems():
                 setattr(executed_by, key, value)
 
-            # todo: save foreign key fails here if obj is None.  Why???
             executed_by.save()
+
         else:
             raise ObjectDoesNotExist("No ExecutedBy element was found for the provided id:%s" % kwargs['id'])
+
 
     @classmethod
     def remove(cls, element_id):
@@ -180,11 +181,18 @@ class ModelInstanceMetaData(CoreMetaData):
                                                                    '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description,
                                                         '{%s}ModelProgramName' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_name.text = self.executed_by.model_program_fk.title
+
+            title = self.executed_by.model_program_fk.title if self.executed_by.model_program_fk else "Unknown"
+            hsterms_executed_by_name.text = title
+
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description,
                                                        '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_url.text = 'http://%s%s' % (
-                get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
+
+            url = 'http://%s%s' % (get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url()) if self.executed_by.model_program_fk else "None"
+            hsterms_executed_by_url.text = url
+
+            # hsterms_executed_by_url.text = 'http://%s%s' % (
+            #     get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
