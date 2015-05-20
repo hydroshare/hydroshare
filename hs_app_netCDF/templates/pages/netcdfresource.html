@@ -6,14 +6,13 @@
 {% block extended_metadata %}
         <div class="row">
             <div class="col-md-12">
-                <h2>Extended Metadata</h2>
                 <div>
                 {# Add the view mode html code below for resource extended meta tab #}
 
                 {% if extended_metadata_exists %}
                     {# Add the original coverage meta #}
                     {% if original_coverage %}
-                        <h4><strong>Spatial Reference:</strong></h4>
+                        <h4 ><strong>Spatial Reference:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
 
                         {% if original_coverage.projection %}
@@ -83,7 +82,7 @@
                     {# Add the Variable meta #}
                     {% if variables %}
                         {% for variable in variables %}
-                            <h4><strong>Variable:</strong></h4>
+                            <h4 style="margin-top:20px"><strong>Variable:</strong></h4>
                             <hr style=" margin-top: 0px;margin-bottom: 2px">
                             {# Required extended meta subelement for Variable #}
                             <div class="row">
