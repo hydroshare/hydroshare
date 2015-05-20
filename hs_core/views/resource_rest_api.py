@@ -42,7 +42,6 @@ class ResourceToListItemMixin(object):
 
 
 
-
 class ResourceTypes(generics.ListAPIView):
     """
     Get a list of resource types
@@ -97,6 +96,7 @@ class ResourceTypes(generics.ListAPIView):
 
     def get_serializer_class(self):
         return serializers.ResourceTypesSerializer
+
 
 class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
     """
@@ -180,6 +180,7 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
     def get_serializer_class(self):
         return serializers.ResourceListItemSerializer
 
+
 class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceToListItemMixin):
     """
     Create, read, or delete a resource
@@ -228,7 +229,6 @@ class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceTo
     @property
     def allowed_methods(self):
         return ['GET', 'POST', 'PUT', 'DELETE']
-
 
     def get(self, request, pk):
         """ Get resource summary, which includes key system metadata, as well as
