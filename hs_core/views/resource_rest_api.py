@@ -187,39 +187,24 @@ class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceTo
 
     REST URL: hsapi/resource/{pk}
     HTTP method: GET
-    :return: (on success): JSON string representing resource summary, which includes key system metadata, as well as
-    URLs to the bag and science metadata
+    :return: (on success): The resource in zipped BagIt format.
 
     REST URL: hsapi/resource/{pk}
     HTTP method: DELETE
-    :return: (on success): json string of the format: {'resource_id':pk}
+    :return: (on success): JSON string of the format: {'resource_id':pk}
 
     REST URL: hsapi/resource/{pk}
     HTTP method: PUT
-    :return: (on success): json string of the format: {'resource_id':pk}
+    :return: (on success): JSON string of the format: {'resource_id':pk}
 
     :type   str
     :param  pk: resource id
     :rtype:  JSON string for http methods DELETE and PUT, and resource file data bytes for GET
+
     :raises:
     NotFound: return JSON format: {'detail': 'No resource was found for resource id':pk}
     PermissionDenied: return JSON format: {'detail': 'You do not have permission to perform this action.'}
     ValidationError: return JSON format: {parameter-1': ['error message-1'], 'parameter-2': ['error message-2'], .. }
-
-    example return JSON format for GET /hsapi/resource/<RESOURCE_ID>:
-
-    {
-        "resource_type": resource type,
-        "resource_title": resource title,
-        "resource_id": resource id,
-        "creator": creator user name,
-        "date_created": date resource created,
-        "date_last_updated": date resource last updated,
-        "public": True or False,
-        "bag_url": link to bag file,
-        "science_metadata_url": link to science metadata
-    }
-
 
     :raises:
     ValidationError: return json format: {'parameter-1':['error message-1'], 'parameter-2': ['error message-2'], .. }
@@ -231,14 +216,12 @@ class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceTo
         return ['GET', 'POST', 'PUT', 'DELETE']
 
     def get(self, request, pk):
-        """ Get resource summary, which includes key system metadata, as well as
-            URLs to the bag and science metadata
+        """ Get resource in zipped BagIt format
         """
         view_utils.authorize(request, pk, view=True, full=True)
-        res = get_resource_by_shortkey(pk)
-        ser = self.get_serializer_class()(self.resourceToResourceListItem(res))
 
-        return Response(data=ser.data, status=status.HTTP_200_OK)
+        res = hydroshare.get_resource(pk)
+        return HttpResponseRedirect(res.bag.url)
 
     def put(self, request, pk):
         # TODO: update resource - involves overwriting a resource from the provided bag file
