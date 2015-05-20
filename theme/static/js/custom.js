@@ -78,7 +78,14 @@ $(document).ready(function() {
     var keywords = $("#keywords").text().split(",");
     var list = $("#list-keywords");
     for (var i = 0; i < keywords.length; i++){
-        list.append("<li><a class='tag'>" + keywords[i] + "</a></li>");
+        if (keywords[i]){
+           var li = $("<li><a class='tag'></a></li>");
+            li.find('a').text(keywords[i]);
+            list.append(li);
+
+        }
+//            var li = $("<li><a class='tag'></a></li>");
+
     }
     $("#keywords").remove();
 

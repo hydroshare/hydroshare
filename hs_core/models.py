@@ -625,7 +625,6 @@ class Date(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         dt = Date.objects.get(id=element_id)
-        metadata_obj = kwargs['content_object']
         if dt:
             if 'start_date' in kwargs:
                 try:
@@ -635,7 +634,7 @@ class Date(AbstractMetaDataElement):
                 if dt.type == 'created':
                     raise ValidationError("Resource creation date can't be changed")
                 elif dt.type == 'modified':
-                    dt.start_date = metadata_obj.resource.updated
+                    dt.start_date = now().isoformat()
                     dt.save()
                 elif dt.type == 'valid':
                     if 'end_date' in kwargs:
@@ -653,7 +652,7 @@ class Date(AbstractMetaDataElement):
                     dt.start_date = start_dt
                     dt.save()
             elif dt.type == 'modified':
-                dt.start_date = metadata_obj.resource.updated
+                dt.start_date = now().isoformat()
                 dt.save()
             else:
                 raise ValidationError("Date value is missing.")
@@ -1379,6 +1378,19 @@ class AbstractResource(ResourcePermissionsMixin):
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
+    def delete(self, using=None):
+        for fl in self.files.all():
+            fl.resource_file.delete()
+
+        for bag in self.bags.all():
+            bag.bag.delete()
+            bag.delete()
+
+        self.metadata.delete_all_elements()
+        self.metadata.delete()
+
+        super(AbstractResource, self).delete()
+
     # this property needs to be overriden by any specific resource type
     # that needs additional metadata elements on top of core metadata data elements
     @property
@@ -1590,7 +1602,6 @@ class CoreMetaData(models.Model):
     _rights = generic.GenericRelation(Rights)
     _type = generic.GenericRelation(Type)
     _publisher = generic.GenericRelation(Publisher)
-    _resource = generic.GenericRelation(GenericResource)
 
     @property
     def title(self):
@@ -1603,10 +1614,6 @@ class CoreMetaData(models.Model):
     @property
     def language(self):
         return self._language.all().first()
-
-    @property
-    def resource(self):
-        return self._resource.all().first()
 
     @property
     def rights(self):

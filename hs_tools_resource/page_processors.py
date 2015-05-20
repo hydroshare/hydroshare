@@ -53,34 +53,22 @@ def landing_page(request, page):
                                    element_id=version.id
                                    if version else None)
 
-        ext_md_layout = Layout(
-                                AccordionGroup('Url Base (required)',
-                                    HTML("<div class='form-group' id='url_bases'> "
+        ext_md_layout = Layout(HTML("<div class='form-group col-lg-6 col-xs-12' id='url_bases'> "
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy url_base_form %} '
                                      '</div>'),
-                                ),
-
-                                AccordionGroup('Resource Types (required)',
-                                               HTML("<div class='form-group' id='res_types'> "
+                                HTML("<div class='form-group col-lg-6 col-xs-12' id='res_types'> "
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy res_type_form %} '
                                      '</div>'),
-                                ),
-
-                                AccordionGroup('Fees (optional)',
-                                     HTML('<div class="form-group" id="fees"> '
+                                HTML('<div class="form-group col-lg-6 col-xs-12" id="fees"> '
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy fees_form %} '
                                      '</div> '),
-                                ),
-
-                                AccordionGroup('Version (optional)',
-                                     HTML('<div class="form-group" id="version"> '
+                                HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy version_form %} '
                                      '</div> '),
-                                ),
                         )
 
 

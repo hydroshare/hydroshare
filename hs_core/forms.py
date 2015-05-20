@@ -231,6 +231,14 @@ class MetaDataElementDeleteForm(forms.Form):
         self.helper.layout[2] = HTML('<a type="button" class="btn btn-danger" href=%s>Delete</a>' % self.delete_element_action)
         self.helper.form_tag = False
 
+class ExtendedMetadataForm(forms.Form):
+    def __init__(self, resource_mode='edit', extended_metadata_layout=None, *args, **kwargs):
+        super(ExtendedMetadataForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        # self.helper.form_method = 'post'
+        # self.helper.form_action = "/hsapi/_internal/create-resource/"
+        self.helper.form_tag = False
+        self.helper.layout = extended_metadata_layout
 
 class MetaDataForm(forms.Form):
     def __init__(self, resource_mode='edit', extended_metadata_layout=None, *args, **kwargs):

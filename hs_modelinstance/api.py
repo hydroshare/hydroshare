@@ -9,4 +9,5 @@ class ModelInstanceResourceType(GenericResourceResource):
         queryset = ModelInstanceResource.objects.all()
         resource_name = 'modelinstance'
 
+
 v1_api.register(ModelInstanceResourceType())

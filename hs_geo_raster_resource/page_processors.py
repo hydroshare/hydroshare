@@ -56,30 +56,25 @@ def landing_page(request, page):
             allow_edit_flag = True
             ori_coverage_form = OriginalCoverageSpatialForm(initial=ori_coverage_data_dict, res_short_id=content_model.short_id,
                                                             allow_edit = allow_edit_flag, element_id=content_model.metadata.originalCoverage.id)
-            ori_coverage_layout = AccordionGroup('Original Coverage (required)',
-                                                    HTML('<div class="form-group" id="originalcoverage"> '
+            ori_coverage_layout = HTML('<div class="form-group" id="originalcoverage"> '
                                                             '{% load crispy_forms_tags %} '
                                                             '{% crispy ori_coverage_form %} '
                                                          '</div>'),
-                                                    )
+
             ext_md_layout = Layout(
                             ori_coverage_layout,
-                            AccordionGroup('Cell Information (required)',
-                                HTML("<div class='form-group' id='CellInformation'> "
+                                HTML("<div class='form-group col-md-6 col-sm-12' id='CellInformation'> "
                                 '{% load crispy_forms_tags %} '
                                 '{% crispy cellinfo_form %} '
                                 '</div>'),
-                                ),
                             BandInfoLayoutEdit
                         )
         else:
             ext_md_layout = Layout(
-                            AccordionGroup('Cell Information (required)',
-                                HTML("<div class='form-group' id='CellInformation'> "
+                            HTML("<div class='form-group col-md-6 col-sm-12' id='CellInformation'> "
                                 '{% load crispy_forms_tags %} '
                                 '{% crispy cellinfo_form %} '
                                 '</div>'),
-                                ),
                             BandInfoLayoutEdit
                         )
 
