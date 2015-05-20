@@ -1,49 +1,52 @@
 $('#btn-signin-irods').on('click',function(){
-    if(sessionStorage.username)
-        $("#username").val(sessionStorage.username);
-    if(sessionStorage.password)
-        $("#password").val(sessionStorage.password);
-    if(sessionStorage.host)
-        $("#host").val(sessionStorage.host);
-    if(sessionStorage.port)
-        $("#port").val(sessionStorage.port);
-    if(sessionStorage.zone)
-        $("#zone").val(sessionStorage.zone);
+    if(sessionStorage.IRODS_username) {
+        $("#username").val(sessionStorage.IRODS_username);
+    }
+    if(sessionStorage.IRODS_password) {
+        $("#password").val(sessionStorage.IRODS_password);
+    }
+    if(sessionStorage.IRODS_host) {
+        $("#host").val(sessionStorage.IRODS_host);
+    }
+    if(sessionStorage.IRODS_port) {
+        $("#port").val(sessionStorage.IRODS_port);
+    }
+    if(sessionStorage.IRODS_zone) {
+        $("#zone").val(sessionStorage.IRODS_zone);
+    }
 });
 
 $('#btn-select-irods-file').on('click',function(){
     $('#res_type').val($('#resource-type').val());
     $('#file_struct').children().remove();
-    if (sessionStorage.signininfo) {
-        $("#irods_content_label").text(sessionStorage.username);
-        $('#root_store').val(sessionStorage.datastore);
+    if (sessionStorage.IRODS_signininfo) {
+        $("#irods_content_label").text(sessionStorage.IRODS_username);
+        $('#root_store').val(sessionStorage.IRODS_datastore);
     }
-	store = $('#root_store').val();
-	// Setting up the view tab
-	$('#file_struct').attr('name',store);
-	$('#irods_view_store').val(store);
-	// loading file structs
-	parent = $('#file_struct');
-	get_store(store,parent,0);
-	enable_settings();
+    var store = $('#root_store').val();
+    // Setting up the view tab
+    $('#file_struct').attr('name',store);
+    $('#irods_view_store').val(store);
+    // loading file structs
+    var parent = $('#file_struct');
+    get_store(store,parent,0);
+    enable_settings();
 });
 
 function get_store(store, parent, margin){
-	form_data = new FormData();
-	form_data.append('store', store);
-    form_data.append('user', sessionStorage.username);
-    form_data.append('password', sessionStorage.password);
-    form_data.append('zone', sessionStorage.zone);
-    form_data.append('port', sessionStorage.port);
-    form_data.append('host', sessionStorage.host);
-	$.ajax({
+    $.ajax({
         mode: "queue",
         url: '/irods/store/',
         async: true,
         type: "POST",
-        data: form_data,
-        processData: false,
-        contentType: false,
+        data: {
+            store: store,
+            user: sessionStorage.IRODS_username,
+            password: sessionStorage.IRODS_password,
+            zone: sessionStorage.IRODS_zone,
+            port: sessionStorage.IRODS_port,
+            host: sessionStorage.IRODS_host
+        },
         success: function (data, status) {
             data = jQuery.parseJSON(data);
             if (data[0].length == 0 && data[1].length == 0) {
@@ -72,64 +75,64 @@ function get_store(store, parent, margin){
             console.log(status);
             return false;
         }
-	});
-	return true;
+    });
+    return true;
 }
 
 function enable_settings(){
-	// Folder click settings
+    // Folder click settings
     $('body').on('click', '.folder' ,function() {
-		margin_left = parseInt($(this).css('margin-left')) + 10;
-		if($(this).hasClass('isOpen')) {
-			$(this).addClass('isClose');
-			$(this).removeClass('isOpen');
-			$(this).children('div').hide();
-			set_datastore($(this).attr('name'), 'folder');
-		}
-		else if($(this).hasClass('isClose')) {
-			$(this).addClass('isOpen');
-			$(this).removeClass('isClose');
-			$(this).children('div').show();
-		}
-		else {
-			var store = $(this).attr('name');
-			var parent = $(this)
-			get_store(store, parent, margin_left);
-			$(this).addClass('isOpen');
-			set_datastore($(this).attr('name'), 1);
-		}
+        var margin_left = parseInt($(this).css('margin-left')) + 10;
+        if($(this).hasClass('isOpen')) {
+            $(this).addClass('isClose');
+            $(this).removeClass('isOpen');
+            $(this).children('div').hide();
+            set_datastore($(this).attr('name'), 'folder');
+        }
+        else if($(this).hasClass('isClose')) {
+            $(this).addClass('isOpen');
+            $(this).removeClass('isClose');
+            $(this).children('div').show();
+        }
+        else {
+            var store = $(this).attr('name');
+            var parent = $(this)
+            get_store(store, parent, margin_left);
+            $(this).addClass('isOpen');
+            set_datastore($(this).attr('name'), 1);
+        }
         return false;
     });
 }
 
 function set_datastore(store,isFolder) {
-	if (!isFolder) {
-		store = $(store).attr('name');
-	}
-	$('#irods_view_store').val(store);
+    if (!isFolder) {
+        store = $(store).attr('name');
+    }
+    $('#irods_view_store').val(store);
 }
 
 // ### IRODS FUNCTION FOR VIEWING INPUT BOX UPON PRESSING RETURN ###
 $('#irods_view_store').keypress(function(e) {
     if(e.which == 13) {
-        store = $(this).val();
+        var store = $(this).val();
         if (store=='') {
-        	store = $('#root_store').val();
+            store = $('#root_store').val();
         }
-		// Setting up the view tab
-		$('#file_struct').attr('name',store);
-		$('#irods_view_store').val(store);
+        // Setting up the view tab
+        $('#file_struct').attr('name',store);
+        $('#irods_view_store').val(store);
 
-		// loading file structs
-		parent = $('#file_struct');
-		got_store = get_store(store,parent,0);
-		if (got_store) {
-			$('#file_struct').children().remove();
-			enable_settings();
-		}
-		else {
-			alert('Datastore does not exist');
-		}
+        // loading file structs
+        var parent = $('#file_struct');
+        var got_store = get_store(store,parent,0);
+        if (got_store) {
+            $('#file_struct').children().remove();
+            enable_settings();
+        }
+        else {
+            alert('Datastore does not exist');
+        }
     }
 });
 
@@ -142,15 +145,15 @@ $("#irodsContent form").bind("keypress", function (e) {
 });
 
 $('#iget_irods').on('click',function(){
-	var name = $('.selected').attr('name');
-	$('#upload_store').val(name);
-    $("#irods-username").val(sessionStorage.username)
-    $("#irods-password").val(sessionStorage.password)
-    $("#irods-host").val(sessionStorage.host)
-    $("#irods-zone").val(sessionStorage.zone)
-    $("#irods-port").val(sessionStorage.port)
-	$('#irodsContent .modal-backdrop.up-load').show();
-	$('#irodsContent .ajax-loader').show();
+    var name = $('.selected').attr('name');
+    $('#upload_store').val(name);
+    $("#irods-username").val(sessionStorage.IRODS_username)
+    $("#irods-password").val(sessionStorage.IRODS_password)
+    $("#irods-host").val(sessionStorage.IRODS_host)
+    $("#irods-zone").val(sessionStorage.IRODS_zone)
+    $("#irods-port").val(sessionStorage.IRODS_port)
+    $('#irodsContent .modal-backdrop.up-load').show();
+    $('#irodsContent .ajax-loader').show();
 });
 
 // Submit post on submit
@@ -179,17 +182,17 @@ function irods_login() {
                 $('#root_store').val(json.datastore);
                 $("#btn-select-irods-file").show();
                 $("#irods-sel-file").text("No file selected");
-                sessionStorage.signininfo = signInStr;
-                sessionStorage.datastore = json.datastore;
-                sessionStorage.username = json.user;
-                sessionStorage.password = json.password;
-                sessionStorage.port = json.port;
-                sessionStorage.host = json.host;
-                sessionStorage.zone = json.zone;
+                sessionStorage.IRODS_signininfo = signInStr;
+                sessionStorage.IRODS_datastore = json.datastore;
+                sessionStorage.IRODS_username = json.user;
+                sessionStorage.IRODS_password = json.password;
+                sessionStorage.IRODS_port = json.port;
+                sessionStorage.IRODS_host = json.host;
+                sessionStorage.IRODS_zone = json.zone;
             }
             else {
                 $("#sign-in-info").text('iRODS login failed');
-                sessionStorage.signininfo ='';
+                sessionStorage.IRODS_signininfo ='';
                 $("#btn-select-irods-file").hide();
             }
             $('#irodsSignin').modal('hide');
