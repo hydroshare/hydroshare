@@ -67,16 +67,21 @@ def login(request):
         )
 
 def store(request):
-    return_object = []
+    return_object = {}
     irods_sess = iRODSSession(user=str(request.POST['user']), password=str(request.POST['password']),
                                   zone=str(request.POST['zone']), host=str(request.POST['host']),
                                   port=int(request.POST['port']))
     datastore = str(request.POST['store'])
     coll = irods_sess.collections.get(datastore)
     store = search_ds(coll)
-    return_object.append(store['files'])
-    return_object.append(store['folder'])
-    return HttpResponse(json.dumps(return_object), status=201)
+
+    return_object['files'] = store['files']
+    return_object['folder'] = store['folder']
+
+    return HttpResponse(
+        json.dumps(return_object),
+        content_type = "application/json"
+    )
 
 def upload(request):
     if request.method == 'POST':

@@ -19,18 +19,20 @@ $('#btn-signin-irods').on('click',function(){
 $('#btn-select-irods-file').on('click',function(){
     $('#res_type').val($('#resource-type').val());
     $('#file_struct').children().remove();
+    var store = '';
     if (sessionStorage.IRODS_signininfo) {
         $("#irods_content_label").text(sessionStorage.IRODS_username);
         $('#root_store').val(sessionStorage.IRODS_datastore);
+        store = sessionStorage.IRODS_datastore;
     }
-    var store = $('#root_store').val();
+    
     // Setting up the view tab
     $('#file_struct').attr('name',store);
     $('#irods_view_store').val(store);
     // loading file structs
     var parent = $('#file_struct');
     get_store(store,parent,0);
-    enable_settings();
+    $('body').on('click', '.folder', click_folder_opr);
 });
 
 function get_store(store, parent, margin){
@@ -47,17 +49,18 @@ function get_store(store, parent, margin){
             port: sessionStorage.IRODS_port,
             host: sessionStorage.IRODS_host
         },
-        success: function (data, status) {
-            data = jQuery.parseJSON(data);
-            if (data[0].length == 0 && data[1].length == 0) {
+        success: function (json) {
+            var files = json.files;
+            var folder = json.folder;
+            if (files.length == 0 && folder.length == 0) {
                 $(parent).append("<div class='file' style='margin-left:" + margin + "px;'></div>");
             }
             else {
-                $.each(data[1],function(i,v) {
+                $.each(folder, function(i,v) {
                     $(parent).append("<div class='folder' id='irods_folder_" + v + "' name='" + store + "/" + v + "' style='margin-left:" + margin + "px;'><img src='/static/img/folder.png' width='15' height='15'>&nbsp; " + v + "</div>");
                 });
 
-                $.each(data[0],function(i,v) {
+                $.each(files, function(i,v) {
                     $(parent).append("<div class='file' id='irods_file_" + v + "' name='" + store + "/" + v + "' style='margin-left:" + margin + "px;'><img src='/static/img/file.png' width='15' height='15'>&nbsp; " + v + "</div>")
                     $('.file').on('click',function(e){
                         $('.file').css('background','');
@@ -72,17 +75,15 @@ function get_store(store, parent, margin){
         },
 
         error: function(status) {
-            console.log(status);
+            console.error(status);
             return false;
         }
     });
     return true;
 }
 
-function enable_settings(){
-    // Folder click settings
-    $('body').on('click', '.folder' ,function() {
-        var margin_left = parseInt($(this).css('margin-left')) + 10;
+function click_folder_opr() {
+    var margin_left = parseInt($(this).css('margin-left')) + 10;
         if($(this).hasClass('isOpen')) {
             $(this).addClass('isClose');
             $(this).removeClass('isOpen');
@@ -102,7 +103,6 @@ function enable_settings(){
             set_datastore($(this).attr('name'), 1);
         }
         return false;
-    });
 }
 
 function set_datastore(store,isFolder) {
@@ -128,7 +128,7 @@ $('#irods_view_store').keypress(function(e) {
         var got_store = get_store(store,parent,0);
         if (got_store) {
             $('#file_struct').children().remove();
-            enable_settings();
+            click_folder_opr();
         }
         else {
             alert('Datastore does not exist');
