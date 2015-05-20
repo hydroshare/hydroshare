@@ -302,6 +302,7 @@ class ResourceCreate(generics.CreateAPIView):
 
         res_title = validated_request_data.get('title', 'Untitled resource')
         keywords = validated_request_data.get('keywords', None)
+        abstract = validated_request_data.get('abstract', None)
 
         num_files = len(request.FILES)
         if num_files > 0:
@@ -314,10 +315,10 @@ class ResourceCreate(generics.CreateAPIView):
             files = ()
 
         _, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
-                                                                       resource_title=res_title,
-                                                                       page_redirect_url_key=None,
-                                                                       files=files,
-                                                                       metadata=None,  **kwargs)
+                                                                              resource_title=res_title,
+                                                                              page_redirect_url_key=None,
+                                                                              files=files,
+                                                                              metadata=None,  **kwargs)
         try:
             resource = hydroshare.create_resource(
                     resource_type=resource_type,
@@ -329,8 +330,10 @@ class ResourceCreate(generics.CreateAPIView):
                     view_groups=validated_request_data.get('view_groups', None),
                     keywords=keywords,
                     metadata=metadata,
-                    files=files,
+                    files=files
             )
+            if abstract:
+                resource.metadata.create_element('description', abstract=abstract)
         except Exception as ex:
             error_msg = {'resource': "Resource creation failed. %s" % ex.message}
             raise ValidationError(detail=error_msg)

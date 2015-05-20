@@ -22,6 +22,7 @@ class ResourceUpdateRequestValidator(serializers.Serializer):
     view_users = serializers.CharField(required=False)
     view_groups = serializers.CharField(required=False)
     keywords = StringListField(required=False)
+    abstract = serializers.CharField(required=False)
 
     def validate_edit_users(self, value):
         return self._validate_users(value)
