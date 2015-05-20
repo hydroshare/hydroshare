@@ -57,6 +57,18 @@ class ExecutedByFormHelper(BaseFormHelper):
         field_width = 'form-control input-sm'
         layout = Layout(
             Field('model_name', css_class=field_width),
+            HTML("""
+            <div id=progam_details_div style="display:none">
+                <table id="program_details_table" class="modelprogram">
+                <tr><td>Description: </td><td></td></tr>
+                <tr><td>Release Date: </td><td></td></tr>
+                <tr><td>Version: </td><td></td></tr>
+                <tr><td>Language: </td><td></td></tr>
+                <tr><td>Operating System: </td><td></td></tr>
+                <tr><td>Url: </td><td></td></tr>
+            </table>
+            </div>
+            """),
         )
 
         kwargs['element_name_label'] = 'Model Program used for execution'

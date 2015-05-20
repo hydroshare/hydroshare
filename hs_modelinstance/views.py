@@ -15,22 +15,26 @@ def get_model_metadata(request):
 
     # get the model program resource
     obj = ModelProgramResource.objects.filter(short_id=resource_id).first()
-    mpmeta = obj.metadata.mpmetadata.first()
-
-    # get the http protocol
-    protocol = 'https' if request.is_secure() else 'http'
-
-    # build an output dictionary which will be returned as JSON
     metadata = {}
+
     if obj is not None:
-        metadata = dict(
-            description=obj.description,
-            program_website=mpmeta.program_website,
-            date_released=str(mpmeta.date_released),
-            software_version=mpmeta.software_version,
-            software_language=mpmeta.software_language,
-            operating_sys=mpmeta.operating_sys,
-            url = protocol+"://"+request.get_host()+"/resource/"+resource_id+"/",
-        )
+        mpmeta = obj.metadata.mpmetadata.first()
+
+        # get the http protocol
+        protocol = 'https' if request.is_secure() else 'http'
+
+        # build an output dictionary which will be returned as JSON
+
+        if obj is not None:
+            metadata = dict(
+                description=obj.description,
+                program_website=mpmeta.program_website,
+                date_released=str(mpmeta.date_released),
+                software_version=mpmeta.software_version,
+                software_language=mpmeta.software_language,
+                operating_sys=mpmeta.operating_sys,
+                url = protocol+"://"+request.get_host()+"/resource/"+resource_id+"/",
+            )
+
     json_data = json.dumps(metadata)
     return HttpResponse(json_data, content_type="application/json")
