@@ -401,7 +401,7 @@ class AccessRulesUpdate(APIView):
         res.public = validated_request_data['public']
         res.save()
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
 
 
 class ScienceMetadataRetrieveUpdate(APIView):
