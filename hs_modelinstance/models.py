@@ -48,7 +48,7 @@ class ExecutedBy(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        shortid = kwargs['name']
+        shortid = kwargs['model_name']
 
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
@@ -57,7 +57,7 @@ class ExecutedBy(AbstractMetaDataElement):
         metadata_obj = kwargs['content_object']
         title = obj.title
         mp_fk = ExecutedBy.objects.create(model_program_fk=obj,
-                                          name=title,
+                                          model_name=title,
                                           content_object=metadata_obj)
 
         return mp_fk

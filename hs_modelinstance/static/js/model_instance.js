@@ -3,6 +3,9 @@
 var model_list = document.getElementById('id_model_name');
 if(model_list){
     model_list.addEventListener('change', show_model_details);
+
+    // fire the change event to force the html to update the model details table
+    show_model_details(null);
 }
 function show_model_details(e) {
 
