@@ -16,6 +16,9 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
 
+    url(r'^sysmeta/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.SystemMetadataRetrieve.as_view(),
+        name='get_system_metadata'),
+
     url(r'^scimeta/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
         name='get_update_science_metadata'),
 

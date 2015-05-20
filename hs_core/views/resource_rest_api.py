@@ -342,6 +342,52 @@ class ResourceCreate(generics.CreateAPIView):
         return Response(data=response_data,  status=status.HTTP_201_CREATED)
 
 
+class SystemMetadataRetrieve(APIView, ResourceToListItemMixin):
+    """
+    Retrieve resource science metadata
+
+    REST URL: hsapi/sysmeta/{pk}
+    HTTP method: GET
+
+    :type pk: str
+    :param pk: id of the resource
+    :return: system metadata as JSON string
+    :rtype: str
+    :raises:
+    NotFound: return JSON format: {'detail': 'No resource was found for resource id:pk'}
+    PermissionDenied: return JSON format: {'detail': 'You do not have permission to perform this action.'}
+
+    example return JSON format for GET hsapi/sysmeta/<RESOURCE_ID>:
+
+    {
+        "resource_type": resource type,
+        "resource_title": resource title,
+        "resource_id": resource id,
+        "creator": creator user name,
+        "date_created": date resource created,
+        "date_last_updated": date resource last updated,
+        "public": True or False,
+        "bag_url": link to bag file,
+        "science_metadata_url": link to science metadata
+    }
+    """
+    @property
+    def allowed_methods(self):
+        return ['GET']
+
+    def get(self, request, pk):
+        """ Get resource system metadata, as well as URLs to the bag and science metadata
+        """
+        view_utils.authorize(request, pk, view=True, full=True)
+        res = get_resource_by_shortkey(pk)
+        ser = self.get_serializer_class()(self.resourceToResourceListItem(res))
+
+        return Response(data=ser.data, status=status.HTTP_200_OK)
+
+    def get_serializer_class(self):
+        return serializers.ResourceListItemSerializer
+
+
 class ScienceMetadataRetrieveUpdate(APIView):
     """
     Retrieve resource science metadata
