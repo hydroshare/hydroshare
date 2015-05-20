@@ -4,88 +4,87 @@
 {% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
 
 {% block extended_metadata %}
-    {% if extended_metadata_exists %}
         <div class="row">
             <div class="col-md-12">
                 <h2>Extended Metadata</h2>
                 <div>
+                {# Add the view mode html code below for resource extended meta tab #}
 
-                {# Add the view mode html code below #}
+                {% if extended_metadata_exists %}
                     {# Add the original coverage meta #}
                     {% if original_coverage %}
-                        <h4><strong>Original Coverage:</strong></h4>
+                        <h4><strong>Spatial Reference:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
-                        {% if original_coverage.name %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.name}}</div>
-                            </div>
-                        {% endif %}
-
-                        {% if original_coverage.northlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>North Limit of Spatial Extent:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.northlimit }}</div>
-                            </div>
-                        {% endif %}
-
-                        {% if original_coverage.eastlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>East Limit of Spatial Extent:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.eastlimit }}</div>
-                            </div>
-                        {% endif %}
-
-                        {% if original_coverage.southlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>South Limit of Spatial Extent:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.southlimit }}</div>
-                            </div>
-                        {% endif %}
-
-                        {% if original_coverage.westlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>West Limit of Spatial Extent:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.westlimit}}</div>
-                            </div>
-                        {% endif %}
-
-                        {% if original_coverage.units %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Units of Spatial Extent:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.units}}</div>
-                            </div>
-                        {%  endif %}
 
                         {% if original_coverage.projection %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate System Defined in Dataset :</strong></div>
+                                <div class="col-sm-4"><strong>Coordinate Reference System:</strong></div>
                                 <div class="col-sm-8">{{ original_coverage.projection}}</div>
                             </div>
                         {% endif %}
 
                         {% if original_coverage.projection_string_type %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate System Text Representation Type :</strong></div>
+                                <div class="col-sm-4"><strong>Coordinate System Representation Type:</strong></div>
                                 <div class="col-sm-8">{{ original_coverage.projection_string_type}}</div>
                             </div>
                         {%  endif %}
 
                         {% if original_coverage.projection_string_text %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate System Text Representation Text:</strong></div>
+                                <div class="col-sm-4"><strong>Coordinate System Representation Text:</strong></div>
                                 <div class="col-sm-8">{{ original_coverage.projection_string_text}}</div>
                             </div>
                         {%  endif %}
 
-                        <hr>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Extent:</strong></div>
+                        </div>
+
+                        {% if original_coverage.northlimit %}
+                            <div class="row">
+                                <div class="col-sm-4" style="text-indent:40px"><strong>North:</strong></div>
+                                <div class="col-sm-8">{{ original_coverage.northlimit }}</div>
+                            </div>
+                        {% endif %}
+
+                        {% if original_coverage.eastlimit %}
+                            <div class="row">
+                                <div class="col-sm-4" style="text-indent:40px"><strong>East:</strong></div>
+                                <div class="col-sm-8">{{ original_coverage.eastlimit }}</div>
+                            </div>
+                        {% endif %}
+
+                        {% if original_coverage.southlimit %}
+                            <div class="row">
+                                <div class="col-sm-4" style="text-indent:40px"><strong>South:</strong></div>
+                                <div class="col-sm-8">{{ original_coverage.southlimit }}</div>
+                            </div>
+                        {% endif %}
+
+                        {% if original_coverage.westlimit %}
+                            <div class="row">
+                                <div class="col-sm-4" style="text-indent:40px"><strong>West:</strong></div>
+                                <div class="col-sm-8">{{ original_coverage.westlimit}}</div>
+                            </div>
+                        {% endif %}
+
+                        {% if original_coverage.units %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Extent Unit:</strong></div>
+                                <div class="col-sm-8">{{ original_coverage.units}}</div>
+                            </div>
+                        {%  endif %}
+
+
+                        </hr>
                     {% endif %}
 
                     {# Add the Variable meta #}
                     {% if variables %}
                         {% for variable in variables %}
                             <h4><strong>Variable:</strong></h4>
-                            <hr style="margin-top: 0px;margin-bottom: 2px">
+                            <hr style=" margin-top: 0px;margin-bottom: 2px">
                             {# Required extended meta subelement for Variable #}
                             <div class="row">
                                 <div class="col-sm-4"><strong>Name:</strong></div>
@@ -123,34 +122,69 @@
                                     <div class="col-sm-8">{{ variable.method }}</div>
                                 </div>
                             {% endif %}
-
+                            </hr>
                         {% endfor %}
-                    <hr>
-                    {% endif %}
 
-                {# Add ncdump info #}
+                    {% endif %} {# variable section end #}
+
+                {%  endif %}{# extended meta section end #}
+
+                {# Add the view mode html code for resource extended meta tababove #}
+                </div>
+            </div>
+        </div>
+
+
+
+    {#  Add the code of extended section on the landing page below #}
+    {% block extended_section %}
+
+        {# Add netcdf tool button  #}
+{#        {% for f in cm.files.all %}#}
+{#            {% if f.resource_file.name|slice:"-3:" == '.nc'%}#}
+{#                <td><a style="margin-left:15px" id="btn-netcdf-tools" type="button" class="btn btn-success" href="{% url "nc_tools:index" cm.short_id 'initial' %}">#}
+{#                    <span class="button-label"> NetCDF Tools</span>#}
+{#                </a></td>#}
+{#            {% endif %}#}
+{#        {% endfor %}#}
+
+
+        {# Add ncdump section #}
+        {% if cm.files.all %}
+            {# tab body for ncdump #}
+            <div id="ncdumpText">
+
                 {% for f in cm.files.all %}
                     {% if f.resource_file.name|slice:"-3:" == 'txt'%}
-                        <div>
-                        <h3>NetCDF Data Header Information</h3>
-                        <p>{{ f.resource_file.name|slice:"33:" }}</p>
-                        {% if f.resource_file.size <= 5000000 %}
-                            <textarea readonly rows="20" cols="100">{{ f.resource_file.read}}</textarea>
-                        {% else %}
-                            <textarea readonly rows="2" cols="100">The size of the netCDF header information text file is too large for loading on the page.</textarea>
+                        <div id="showNcdump">
+                            <h3 style="margin-top:40px"> NetCDF Header Info</h3>
+                            <p>{{ f.resource_file.name|slice:"33:" }}</p>
+                            {% if f.resource_file.size <= 5000000 %}
+                                <textarea readonly rows="15" style="margin-bottom:20px;border: 1px solid #ddd;width:100%">{{ f.resource_file.read}}</textarea>
+                            {% else %}
+                                <textarea readonly rows="5" style="margin-bottom:20px;border: 1px solid #ddd;width:100%">The size of the netCDF header information text file is too large for loading on the page.</textarea>
                         {% endif %}
                         </div>
+{#                    {% else %}#}
+{#                        {% if page.perms.change %}#}
+{#                            <div id="createNcdump" style="margin-bottom: 25px">#}
+{#                                <h3 style="margin-top:40px"> NetCDF Header Info</h3>#}
+{#                                <p>Click the button to create a new header info .txt file for the resource.</p>#}
+{#                                <a id="create-ncdump-btn" type="button" class="btn btn-success" href="{% url "nc_tools:create_ncdump" cm.short_id %}">#}
+{#                                    <span class="button-label"> Create header info file</span>#}
+{#                                </a>#}
+{#                            </div>#}
+{#                        {% endif %}#}
                     {% endif %}
                 {% endfor %}
 
-                {# Add the view mode html code above #}
-                </div>
-
-
-
             </div>
-        </div>
-    {%  endif %}
+        {% endif %}
+
+
+    {% endblock %} {# extended block ends here #}
+
+
 {%  endblock %}
 
 
@@ -160,6 +194,7 @@
 
 {# put resource specific js below #}
 <script type="text/javascript">
+    // original coverage meta check
     function check_ori_meta_status(){
         var form_action = $("form[id='id-originalcoverage']").attr('action');
         if (form_action.indexOf('update-metadata') > -1) {
@@ -174,9 +209,26 @@
             $("#delete-original-coverage-element-dialog").find(".modal-body").html(modal_body_text);
             $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").hide()
         }
-    }
+    };
+{#    // netcdf tool button#}
+{#    $(document).ready(function(){#}
+{#        $("#btn-netcdf-tools").insertAfter("#btn-download-all");#}
+{#    })#}
+
+{#    // netcdf ncdump button#}
+{#    $(document).ready(function(){#}
+{#        if($('#showNcdump').length !=0){#}
+{#            $('#createNcdump').hide()#}
+{#        }#}
+{#    })#}
+
+    // add ncdump text area
+    $(document).ready(function(){
+        var $ncdump_text = $('div[id="ncdumpText"]');
+        if ($ncdump_text){
+            $('div [class="tab-elements"]').after($ncdump_text);
+        }
+    })
 </script>
 
 {% endblock %}
-
-
