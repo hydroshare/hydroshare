@@ -371,6 +371,39 @@ class SystemMetadataRetrieve(APIView, ResourceToListItemMixin):
         return serializers.ResourceListItemSerializer
 
 
+class AccessRulesUpdate(APIView):
+    """
+    Set access rules for a resource
+
+    REST URL: hsapi/resource/accessRules/{pk}
+    HTTP method: PUT
+
+    :type pk: str
+    :param pk: id of the resource
+    :return: No content.  Status code will 204 (No content)
+    """
+    @property
+    def allowed_methods(self):
+        return ['PUT']
+
+    def put(self, request, pk):
+        """ Update access rules
+        """
+        if not request.user.is_authenticated():
+            raise NotAuthenticated()
+
+        access_rules_validator = serializers.AccessRulesRequestValidator(data=request.data)
+        if not access_rules_validator.is_valid():
+            raise ValidationError(detail=access_rules_validator.errors)
+
+        validated_request_data = access_rules_validator.validated_data
+        res = get_resource_by_shortkey(pk)
+        res.public = validated_request_data['public']
+        res.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class ScienceMetadataRetrieveUpdate(APIView):
     """
     Retrieve resource science metadata

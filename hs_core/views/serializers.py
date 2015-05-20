@@ -50,6 +50,7 @@ class ResourceUpdateRequestValidator(serializers.Serializer):
                 raise serializers.ValidationError("%s in not a valid group name." % value)
         return values
 
+
 class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
     resource_type = serializers.ChoiceField(
             choices=zip(
@@ -114,3 +115,8 @@ ResourceListItem = namedtuple('ResourceListItem',
 class UserAuthenticateRequestValidator(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
+
+
+class AccessRulesRequestValidator(serializers.Serializer):
+    public = serializers.BooleanField(default=False)
+
