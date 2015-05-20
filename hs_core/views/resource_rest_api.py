@@ -389,8 +389,7 @@ class AccessRulesUpdate(APIView):
     def put(self, request, pk):
         """ Update access rules
         """
-        if not request.user.is_authenticated():
-            raise NotAuthenticated()
+        view_utils.authorize(request, pk, edit=True, full=True)
 
         access_rules_validator = serializers.AccessRulesRequestValidator(data=request.data)
         if not access_rules_validator.is_valid():
