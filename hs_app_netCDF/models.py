@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 import json
 
+
 # Define original spatial coverage metadata info
 class OriginalCoverage(AbstractMetaDataElement):
     PRO_STR_TYPES = (
@@ -25,7 +26,6 @@ class OriginalCoverage(AbstractMetaDataElement):
                     'southlimit':southernmost coordinate value,
                     'westlimit':westernmost coordinate value,
                     'units:units applying to 4 limits (north, east, south & east),
-                    'name':coverage name value here (optional),
                     'projection': name of the projection (optional)}"
     """
     _value = models.CharField(max_length=1024, null=True)
@@ -51,7 +51,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                         raise ValidationError("For original coverage meta, one or more bounding box limits or 'units' is missing.")
 
                 value_dict = {k: v for k, v in kwargs['value'].iteritems()
-                              if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'name', 'projection')}
+                              if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
 
                 value_json = json.dumps(value_dict)
                 metadata_obj = kwargs['content_object']
@@ -80,9 +80,6 @@ class OriginalCoverage(AbstractMetaDataElement):
 
                 value_dict = ori_cov.value
 
-                if 'name' in kwargs['value']:
-                    value_dict['name'] = kwargs['value']['name']
-
                 for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
                     if item_name in kwargs['value']:
                         value_dict[item_name] = kwargs['value'][item_name]
@@ -106,6 +103,7 @@ class OriginalCoverage(AbstractMetaDataElement):
             ori_cov.delete()
         else:
             raise ObjectDoesNotExist("No original coverage element exists for id:%d."%element_id)
+
 
 # Define netCDF variable metadata
 class Variable(AbstractMetaDataElement):
@@ -207,9 +205,8 @@ class Variable(AbstractMetaDataElement):
     def remove(cls, element_id):
         variable = Variable.objects.get(id=element_id)
         if variable:
-            # make sure we are not deleting all coverages of a resource
-            if Variable.objects.filter(object_id=variable.object_id, content_type__pk=variable.content_type.id).count()== 1:
-                raise ValidationError("The only variable of the resource can't be deleted.")
+            # if Variable.objects.filter(object_id=variable.object_id, content_type__pk=variable.content_type.id).count()== 1:
+            #     raise ValidationError("The only variable of the resource can't be deleted.")
             variable.delete()
         else:
             raise ObjectDoesNotExist("No variable element was found for id:%d." % element_id)
@@ -275,7 +272,7 @@ class NetcdfMetaData(CoreMetaData):
     def get_required_missing_elements(self):
         missing_required_elements = super(NetcdfMetaData, self).get_required_missing_elements()
         if not self.ori_coverage.all().first():
-            missing_required_elements.append('Original Coverage')
+            missing_required_elements.append('Spatial Reference')
         if not self.variables.all().first():
             missing_required_elements.append('Variable')
         return missing_required_elements
