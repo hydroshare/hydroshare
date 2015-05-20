@@ -4,20 +4,6 @@
 {% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
 {% load staticfiles  %}
 
-
-{#{% compress css %}#}
-{#<link href="{% static "css/bootstrap.3.0.2.min.css" %}" rel="stylesheet">#}
-{#<link rel="stylesheet" type="text/css" href="{% static "css/animate.css" %}" />#}
-{#<link rel="stylesheet" type="text/css" href="{% static "css/elements.css" %}" />#}
-{#<link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_core.css" %}" />#}
-{#<link rel="stylesheet" type="text/css" href="{% static "css/hydroshare_extends.css" %}" />#}
-
-
-{#{% endcompress %}#}
-
-{#{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags inplace_edit %}#}
-
-
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
         <div class="row">
@@ -81,11 +67,5 @@
 
 {% block extra_js %}
     {{ block.super }}
-
-    {# resource specific js can go here #}
     <script src="../../static/js/model_instance.js"></script>
-{#    <script src="{% static "/js/model_instance.js" %}></script>#}
-{#    ../../static/js/model_instance.js"></script>#}
-
-
 {% endblock %}
