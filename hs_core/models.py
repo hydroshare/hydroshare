@@ -1509,7 +1509,7 @@ class AbstractResource(ResourcePermissionsMixin):
         unique_together = ("content_type", "object_id")
 
 def get_path(instance, filename):
-    return os.path.join(instance.content_object.short_id, filename)
+    return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
 
 class ResourceFile(models.Model):
     object_id = models.PositiveIntegerField()
@@ -1523,7 +1523,8 @@ class Bags(models.Model):
     content_type = models.ForeignKey(ContentType)
 
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    bag = models.FileField(upload_to='bags', max_length=500, storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage(), null=True) # actually never null
+    #bag = models.FileField(upload_to='bags', max_length=500, storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage(), null=True) # actually never null
+    bag_url = models.URLField(null=True, blank=True)
     timestamp = models.DateTimeField(default=now, db_index=True)
 
     class Meta:

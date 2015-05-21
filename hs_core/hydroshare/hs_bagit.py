@@ -1,38 +1,21 @@
 import arrow
-import bagit
-from django.core.files import File
 import os
 import shutil
-from hs_core.models import Bags, ResourceFile
 
-from mezzanine.conf import settings
-import importlib
-import zipfile
 from foresite import *
 from rdflib import URIRef, Namespace
 
-def make_zipfile(output_filename, source_dir):
-    """
-    Create a zipfile recursively from a source directory, saving the relative path of all objects.
+from mezzanine.conf import settings
 
-    Parameters:
-    :param output_filename: (str) The output filename
-    :param source_dir: (str) The source directory to zip
-    """
-    relroot = os.path.abspath(os.path.join(source_dir, os.pardir))
-    with zipfile.ZipFile(output_filename, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as zip:
-        for root, dirs, files in os.walk(source_dir):
-            # add directory (needed for empty dirs)
-            zip.write(root, os.path.relpath(root, relroot))
-            for file in files:
-                filename = os.path.join(root, file)
-                if os.path.isfile(filename): # regular files only
-                    arcname = os.path.join(os.path.relpath(root, relroot), file)
-                    zip.write(filename, arcname)
+from hs_core.models import Bags, ResourceFile
+from django_irods.storage import IrodsStorage
 
 def create_bag(resource):
     """
-    Create a bag from the current filesystem of the resource, then zip it up and add it to the resource.
+    Modified to implement the new bagit workflow. The previous workflow was to create a bag from the current filesystem
+    of the resource, then zip it up and add it to the resource. The new workflow is to delegate bagit and zip-up
+    operations to iRODS, specifically, by executing an iRODS bagit rule to create bagit file hierarchy, followed by
+    execution of an ibun command to zip up the bagit file hierarchy.
 
     Note, this procedure may take awhile.  It is highly advised that it be deferred to a Celery task.
 
@@ -43,36 +26,31 @@ def create_bag(resource):
     """
     from . import utils as hs_core_utils
     DATE_FORMAT = "YYYY-MM-DDThh:mm:ssTZD"
+    istorage=IrodsStorage()
 
     dest_prefix = getattr(settings, 'BAGIT_TEMP_LOCATION', '/tmp/hydroshare/')
     bagit_path = os.path.join(dest_prefix, resource.short_id, arrow.get(resource.updated).format("YYYY.MM.DD.HH.mm.ss"))
-    visualization_path = os.path.join(bagit_path, 'visualization')
-    contents_path = os.path.join(bagit_path, 'contents')
 
-    for d in (dest_prefix, bagit_path, visualization_path, contents_path):
+    for d in (dest_prefix, bagit_path):
         try:
             os.makedirs(d)
         except:
             shutil.rmtree(d)
             os.makedirs(d)
 
-    for f in resource.files.all():
-        rfile_name = f.resource_file.name.split('/', 1)[1] # truncate short_id directory name
-        opath = os.path.join(contents_path, rfile_name).rsplit('/', 1)[0]
-        if opath != contents_path:
-            try:
-                os.makedirs(opath)
-            except Exception as e:
-                print e
+    # create visualization directory and upload all files under it as needed in iRODS to be part of bag
+    to_file_name = '{res_id}/data/visualization/'.format(res_id=resource.short_id)
+    istorage.saveFile('', to_file_name, True)
 
-        with open(os.path.join(contents_path, rfile_name), 'w+b') as out:
-            for chunk in f.resource_file.chunks():
-                out.write(chunk)
-
-    with open(bagit_path + '/resourcemetadata.xml', 'w') as out:
+    # create resourcemetadata.xml and upload it to iRODS
+    from_file_name = '{path}/resourcemetadata.xml'.format(path=bagit_path)
+    with open(from_file_name, 'w') as out:
         out.write(resource.metadata.get_xml())
 
+    to_file_name = '{res_id}/data/resourcemetadata.xml'.format(res_id=resource.short_id)
+    istorage.saveFile(from_file_name, to_file_name, False)
 
+    # make the resource map
     current_site_url = hs_core_utils.current_site_url()
     hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url, res_id=resource.short_id)
     metadata_url = os.path.join(hs_res_url, 'resourcemetadata.xml')
@@ -128,20 +106,29 @@ def create_bag(resource):
 
     # change the namespace for the 'creator' element from 'dcterms' to 'dc'
     xml_string = remdoc.data.replace('dcterms:creator', 'dc:creator')
-    with open(bagit_path + '/resourcemap.xml', 'w') as out:
+
+    # create resourcemap.xml and upload it to iRODS
+    from_file_name = '{path}/resourcemap.xml'.format(path=bagit_path)
+    with open(from_file_name, 'w') as out:
         out.write(xml_string)
+    to_file_name = '{res_id}/data/resourcemap.xml'.format(res_id=resource.short_id)
+    istorage.saveFile(from_file_name, to_file_name, False)
 
-    bagit.make_bag(bagit_path, checksum=['md5'])
+    # call iRODS bagit rule here
+    irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
+    irods_bagit_input_path = os.path.join(irods_dest_prefix, resource.short_id)
+    istorage.runBagitRule('ruleGenerateBagIt_HS.r', "\"*BAGITDATA='{path}'\"".format(path=irods_bagit_input_path))
 
-    zf = os.path.join(dest_prefix, resource.short_id) + ".zip"
-    make_zipfile(output_filename=zf, source_dir=bagit_path)
+    # call iRODS ibun command to zip the bag
+    istorage.zipup(irods_bagit_input_path, 'bags/{res_id}.zip'.format(res_id=resource.short_id))
+
+    # link the zipped bag file in IRODS via bag_url for bag downloading
     b = Bags.objects.create(
         content_object=resource,
-        bag=File(open(zf)),
+        bag_url="/django_irods/download/?path=bags/{res_id}.zip".format(res_id=resource.short_id),
         timestamp=resource.updated
     )
 
-    os.unlink(zf)
     shutil.rmtree(bagit_path)
 
     return b

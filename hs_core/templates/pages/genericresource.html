@@ -684,7 +684,7 @@
                     {% endif %}
                     <!-- Buttons -->
                     {% for b in cm.bags.all %}
-                        <a id="btn-download-all" type="button" class="btn btn-default" href="{{ cm.bags.first.bag.url }}">
+                        <a id="btn-download-all" type="button" class="btn btn-default" href="{{ cm.bags.first.bag_url }}">
                             <span class="glyphicon glyphicon-download-alt">
                                 <span class="button-label">Download All ({{ b.bag.size|filesizeformat }})</span>
                             </span>
