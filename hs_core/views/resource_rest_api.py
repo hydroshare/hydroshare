@@ -206,9 +206,7 @@ class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceTo
     """
     pagination_class = PageNumberPagination
 
-    @property
-    def allowed_methods(self):
-        return ['GET', 'POST', 'PUT', 'DELETE']
+    allowed_methods = ('GET', 'POST', 'PUT', 'DELETE')
 
     def get(self, request, pk):
         """ Get resource in zipped BagIt format
@@ -349,9 +347,7 @@ class SystemMetadataRetrieve(APIView, ResourceToListItemMixin):
         "science_metadata_url": link to science metadata
     }
     """
-    @property
-    def allowed_methods(self):
-        return ['GET']
+    allowed_methods = ('GET',)
 
     def get(self, request, pk):
         """ Get resource system metadata, as well as URLs to the bag and science metadata
@@ -375,11 +371,9 @@ class AccessRulesUpdate(APIView):
 
     :type pk: str
     :param pk: id of the resource
-    :return: No content.  Status code will 204 (No content)
+    :return: No content.  Status code will 200 (OK)
     """
-    @property
-    def allowed_methods(self):
-        return ['PUT']
+    allowed_methods = ('PUT',)
 
     def put(self, request, pk):
         """ Update access rules
@@ -427,10 +421,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
     ValidationError: return json format: {parameter-1': ['error message-1'], 'parameter-2': ['error message-2'], .. }
     """
-
-    @property
-    def allowed_methods(self):
-        return ['GET', 'PUT']
+    allowed_methods = ('GET', 'PUT')
 
     def get(self, request, pk):
         view_utils.authorize(request, pk, view=True, edit=True, full=True)
@@ -493,10 +484,7 @@ class ResourceFileCRUD(APIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
     ValidationError: return json format: {'parameter-1':['error message-1'], 'parameter-2': ['error message-2'], .. }
     """
-
-    @property
-    def allowed_methods(self):
-        return ['GET', 'POST', 'DELETE', 'PUT']
+    allowed_methods = ('GET', 'POST', 'PUT', 'DELETE')
 
     def get(self, request, pk, filename):
         view_utils.authorize(request, pk, view=True, edit=True, full=True)
