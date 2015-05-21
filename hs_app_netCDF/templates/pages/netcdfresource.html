@@ -11,8 +11,8 @@
 
                 {% if extended_metadata_exists %}
                     {# Add the original coverage meta #}
+                    <h4 ><strong>Spatial Reference:</strong></h4>
                     {% if original_coverage %}
-                        <h4 ><strong>Spatial Reference:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
 
                         {% if original_coverage.projection %}
@@ -74,9 +74,10 @@
                                 <div class="col-sm-8">{{ original_coverage.units}}</div>
                             </div>
                         {%  endif %}
-
-
                         </hr>
+
+                    {% else %}
+                        <p>Metadata information is not provided. </p>
                     {% endif %}
 
                     {# Add the Variable meta #}
@@ -123,7 +124,9 @@
                             {% endif %}
                             </hr>
                         {% endfor %}
-
+                    {% else %}
+                        <h4 style="margin-top:20px"><strong>Variable:</strong></h4>
+                        <p> Metadata information is not provided. </p>
                     {% endif %} {# variable section end #}
 
                 {%  endif %}{# extended meta section end #}
