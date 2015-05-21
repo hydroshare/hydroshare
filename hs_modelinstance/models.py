@@ -198,3 +198,4 @@ class ModelInstanceMetaData(CoreMetaData):
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
 
+import recievers
