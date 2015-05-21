@@ -531,7 +531,7 @@ class ResourceFileCRUD(APIView):
         # to implement additional rest endpoints for file validation and extraction.
         try:
             hydroshare.utils.resource_file_add_pre_process(resource=resource, files=[resource_files[0]],
-                                                          user=request.user, extract_metadata=True)
+                                                           user=request.user, extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileSizeException, hydroshare.utils.ResourceFileValidationException, Exception) as ex:
             error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
@@ -539,7 +539,7 @@ class ResourceFileCRUD(APIView):
 
         try:
            res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource, files=[resource_files[0]],
-                                                                   user=request.user, extract_metadata=True)
+                                                                         user=request.user, extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
             error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
