@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from collections import defaultdict
 import json
 import requests
+import os
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -23,7 +24,7 @@ from inplaceeditform.views import _get_http_response, _get_adaptor
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, user_from_id
-from .utils import authorize
+from .utils import authorize, upload_from_irods
 from hs_core.models import ResourceFile, GenericResource, resource_processor, CoreMetaData
 
 from . import resource_rest_api
@@ -33,7 +34,6 @@ from hs_core.hydroshare import utils
 from . import utils as view_utils
 from hs_core.hydroshare import file_size_limit_for_display
 from hs_core.signals import *
-
 
 def short_url(request, *args, **kwargs):
     try:
@@ -392,6 +392,7 @@ def my_resources(request, page):
     # sys.path.append("/home/docker/pycharm-debug")
     # import pydevd
     # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
         res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
@@ -479,73 +480,33 @@ def add_generic_context(request, page):
 
 res_cls = ""
 resource = None
-@login_required
-def describe_resource(request, *args, **kwargs):
-    resource_type=request.POST['resource-type']
-    res_title = request.POST['title']
-    global res_cls, resource
-    resource_files=request.FILES.getlist('files')
-    valid = hydroshare.check_resource_files(resource_files)
-    if not valid:
-        context = {
-            'file_size_error' : 'The resource file is larger than the supported size limit %s. Select resource files within %s to create resource.' % (file_size_limit_for_display, file_size_limit_for_display)
-        }
-        return render_to_response('pages/resource-selection.html', context, context_instance=RequestContext(request))
-    res_cls = hydroshare.check_resource_type(resource_type)
-    # Send pre_describe_resource signal for other resource type apps to listen, extract, and add their own metadata
-    ret_responses = pre_describe_resource.send(sender=res_cls, files=resource_files, title=res_title)
-
-    create_res_context = {
-        'resource_type': resource_type,
-        'res_title': res_title,
-    }
-    page_url = 'pages/create-resource.html'
-    use_generic = True
-    for receiver, response in ret_responses:
-        if response is not None:
-            for key in response:
-                if key != 'create_resource_page_url':
-                    create_res_context[key] = response[key]
-                else:
-                    page_url = response.get('create_resource_page_url', 'pages/create-resource.html')
-                    use_generic = False
-
-    if use_generic:
-        # create barebone resource with resource_files to database model for later update since on Django 1.7, resource_files get closed automatically at the end of each request
-        owner = user_from_id(request.user)
-        resource = res_cls.objects.create(
-                user=owner,
-                creator=owner,
-                title=res_title,
-                last_changed_by=owner,
-                in_menus=[],
-                **kwargs
-        )
-        for file in resource_files:
-            ResourceFile.objects.create(content_object=resource, resource_file=file)
-
-    return render_to_response(page_url, create_res_context, context_instance=RequestContext(request))
-
 
 @login_required
 def create_resource_select_resource_type(request, *args, **kwargs):
     return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
-
-
-class CreateResourceForm(forms.Form):
-    title = forms.CharField(required=True)
-    creators = forms.CharField(required=False, min_length=0)
-    contributors = forms.CharField(required=False, min_length=0)
-    abstract = forms.CharField(required=False, min_length=0)
-    keywords = forms.CharField(required=False, min_length=0)
 
 @login_required
 def create_resource(request, *args, **kwargs):
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
 
-    url_key = "page_redirect_url"
     resource_files = request.FILES.getlist('files')
+
+    irods_fname = request.POST.get('irods_file_name')
+    if irods_fname:
+        user = request.POST.get('irods-username')
+        password = request.POST.get("irods-password")
+        port = request.POST.get("irods-port")
+        host = request.POST.get("irods-host")
+        zone = request.POST.get("irods-zone")
+        try:
+            upload_from_irods(username=user, password=password, host=host, port=port,
+                                  zone=zone, irods_fname=irods_fname, res_files=resource_files)
+        except Exception as ex:
+            context = {'resource_creation_error': ex.message}
+            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
+    url_key = "page_redirect_url"
 
     try:
         page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
@@ -573,7 +534,7 @@ def create_resource(request, *args, **kwargs):
                 title=res_title,
                 keywords=None,
                 metadata=metadata,
-                files=request.FILES.getlist('files'),
+                files=resource_files,
                 content=res_title
         )
     except Exception as ex:

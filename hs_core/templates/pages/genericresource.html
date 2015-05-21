@@ -2,6 +2,10 @@
 
 {% load geoanalytics_tags ratings_tags pages_tags mezzanine_tags comments_tags keyword_tags hydroshare_tags crispy_forms_tags inplace_edit %}
 
+{% block extra_head %}
+      <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
+{% endblock %}
+
 {% block main %}
 
     {% with page.get_content_model as cm %}
@@ -10,7 +14,6 @@
         <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
         <input type="hidden" id="allow-multiple-file-upload" value={{ cm.can_have_multiple_files }}>
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
-
         {% block error %}
             {%  if file_validation_error %}
                 <div class="alert alert-danger alert-dismissible" role="alert">
@@ -689,10 +692,24 @@
                     {% endfor %}
 
                     {% if page.perms.change %}
-                        <td><a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
+                        <a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
                                multiple="multiple">
                             <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
-                        </a></td>
+                        </a>
+                        <a id="btn-signin-irods"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsSignin">
+                            <span class="glyphicon glyphicon-plus"><span class="button-label">Sign in iRODS...</span></span>
+                        </a>
+
+                        <span id="sign-in-info"></span>
+                        <a id="btn-select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsContent" style="display:none;">
+                            <span class="glyphicon glyphicon-plus"><span class="button-label">Add file from iRODS...</span></span>
+                        </a>
+                        {% if file_type_error %}
+                          <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button id="validation-error-close" type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>
+                          </div>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
@@ -1768,6 +1785,8 @@
         </div>
         {% endfor %}
 
+            {% include "irods_signin.html" %}
+            {% include "irods_upload_add.html" %}
         {%  block modal_publish_resource %}
             <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
                  aria-labelledby="myModalLabel" aria-hidden="true">
@@ -2176,6 +2195,7 @@
     {% endwith %}
 
     {% block extra_js %}
+    <script type="text/javascript" src="{{STATIC_URL}}js/irods.js" ></script>
     <script type="text/javascript">
     function onRemoveKeyword(event){
         $($(this).closest(".tags").parent().find(".btn-primary")[0]).show();    // Show save button
@@ -2330,7 +2350,12 @@
     },duration);
         document.body.appendChild(el);
     }
+
     $(document).ready(function () {
+        if (sessionStorage.signininfo) {
+            $("#sign-in-info").text(sessionStorage.signininfo);
+            $("#btn-select-irods-file").show();
+        }
         var keywordString = "{% for k, v in subjects_form.initial.iteritems  %}{{ v }}{% endfor %}";
         $("#id-subject").find("#id_value").val(keywordString);
 
@@ -2363,28 +2388,38 @@
         if(file_types!= ".*"){
             var display_file_types = file_types.substring(0, file_types.length-2) + ').'
             $("#file-types").text("Only the listed file types can be uploaded: " + display_file_types);
+            $("#file-types-irods").text("Only the listed file types can be uploaded: " + display_file_types);
         }
         else{
            $("#file-types").text("Any file type can be uploaded.");
+           $("#file-types-irods").text("Any file type can be uploaded.");
         }
         // set if multiple file can be uploaded
         var allow_multiple_file_upload = $("#allow-multiple-file-upload").attr('value');
         if(allow_multiple_file_upload === "True"){
             $("#file-multiple").text("Multiple file upload is allowed.");
+            $("#file-multiple-irods").text("Multiple file upload is allowed.");
             $("#btn-add-file").attr('multiple', 'multiple');
             $("#add-file-input").attr('multiple', 'multiple');
         }
         else{
             $("#file-multiple").text("Only one file can be uploaded.");
+            $("#file-multiple-irods").text("Only one file can be uploaded.");
             $("#btn-add-file").removeAttr('multiple');
             $("#add-file-input").removeAttr('multiple');
             if(file_count > 0){
                 $("#btn-add-file").hide();
+                $("#btn-signin-irods").hide();
+                $("#sign-in-info").hide();
+                $("#btn-select-irods-file").hide();
             }
         }
         // hide add file button if file upload is not allowed for the resource type
         if(file_types == "()"){
             $("#btn-add-file").hide();
+            $("#btn-signin-irods").hide();
+            $("#sign-in-info").hide();
+            $("#btn-select-irods-file").hide();
         }
 
         // file upload validation when file is selected for upload
