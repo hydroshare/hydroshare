@@ -22,6 +22,12 @@ def landing_page(request, page):
 # resource type specific app needs to call this method to inject a crispy_form layout
 # object for displaying metadata UI for the extended metadata for their resource
 def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
+    file_type_error=''
+    if request:
+        file_type_error = request.session.get("file_type_error", None)
+        if file_type_error:
+            del request.session["file_type_error"]
+
     content_model = page.get_content_model()
     edit_mode = False
     file_validation_error = None
@@ -109,6 +115,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'allow_multiple_file_upload': content_model.can_have_multiple_files(),
                    'file_validation_error': file_validation_error if file_validation_error else None,
                    'relevant_tools': relevant_tools,
+                   'file_type_error': file_type_error,
                    'just_created': just_created
         }
         return context

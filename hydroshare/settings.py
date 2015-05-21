@@ -280,6 +280,7 @@ INSTALLED_APPS = (
     #"dublincore",
     "hs_core",
     "hs_metrics",
+    "irods_browser_app",
     #"hs_rhessys_inst_resource",
     "django_docker_processes",
     "hs_geo_raster_resource",
