@@ -44,6 +44,26 @@ def get_user(request):
     else:
         return request.user
 
+
+def validate_user_url(value):
+    err_message = '%s is not a valid url for hydroshare user' % value
+    if value:
+        url_parts = value.split('/')
+        if len(url_parts) != 6:
+            raise ValidationError(err_message)
+        if url_parts[3] != 'user':
+            raise ValidationError(err_message)
+
+        try:
+            user_id = int(url_parts[4])
+        except ValueError:
+            raise ValidationError(err_message)
+
+        # check the user exists for the provided user id
+        if not User.objects.filter(pk=user_id).exists():
+            raise ValidationError(err_message)
+
+
 class ResourcePermissionsMixin(Ownable):
     creator = models.ForeignKey(User,
                                 related_name='creator_of_%(app_label)s_%(class)s',
@@ -232,7 +252,7 @@ class ExternalProfileLink(models.Model):
         unique_together = ("type", "url", "object_id")
 
 class Party(AbstractMetaDataElement):
-    description = models.URLField(null=True, blank=True)
+    description = models.URLField(null=True, blank=True, validators=[validate_user_url])
     name = models.CharField(max_length=100)
     organization = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
@@ -1397,6 +1417,11 @@ class AbstractResource(ResourcePermissionsMixin):
     def metadata(self):
         md = CoreMetaData() # only this line needs to be changed when you override
         return self._get_metadata(md)
+
+    @property
+    def first_creator(self):
+        first_creator = self.metadata.creators.filter(order=1).first()
+        return first_creator
 
     def _get_metadata(self, metatdata_obj):
         md_type = ContentType.objects.get_for_model(metatdata_obj)

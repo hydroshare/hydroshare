@@ -1683,7 +1683,9 @@
                                         <div class="controls"><input
                                                 class="form-control input-sm urlinput"
                                                 id="id_creator-{{ author.order|add:"- 1" }}-description" maxlength="200"
-                                                name="creator-{{ author.order|add:"- 1" }}-description" type="url" value="{% if author.description %}{{ author.description }}{% endif %}"></div>
+                                                name="creator-{{ author.order|add:"- 1" }}-description" type="url"
+                                                value="{% if author.description %}{{ author.description }}{% endif %}"
+                                                {% if author.description %} readonly {% endif %}></div>
                                     </div>
                                     <div id="div_id_organization" class="control-group">
                                         <label class="control-label">Organization</label>
