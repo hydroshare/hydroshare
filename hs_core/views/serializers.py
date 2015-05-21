@@ -93,11 +93,7 @@ class ResourceListItemSerializer(serializers.Serializer):
 
 class ResourceType(object):
     def __init__(self, resource_type):
-        self._resource_type = resource_type
-
-    @property
-    def resource_type(self):
-        return self._resource_type
+        self.resource_type = resource_type
 
 
 ResourceListItem = namedtuple('ResourceListItem',
