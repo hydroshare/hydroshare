@@ -49,42 +49,37 @@ class ResourceTypes(generics.ListAPIView):
     REST URL: hsapi/resourceTypes
     HTTP method: GET
 
-    example return JSON format for GET /hsapi/resourceTypes:
+    example return JSON format for GET /hsapi/resourceTypes (note response will consist of only one page):
 
-    {
-        "count": 9,
-        "next": null,
-        "previous": null,
-        "results": [
-            {
-                "resource_type": "GenericResource"
-            },
-            {
-                "resource_type": "RasterResource"
-            },
-            {
-                "resource_type": "RefTimeSeries"
-            },
-            {
-                "resource_type": "TimeSeriesResource"
-            },
-            {
-                "resource_type": "NetcdfResource"
-            },
-            {
-                "resource_type": "ModelProgramResource"
-            },
-            {
-                "resource_type": "ModelInstanceResource"
-            },
-            {
-                "resource_type": "ToolResource"
-            },
-            {
-                "resource_type": "SWATModelInstanceResource"
-            }
-        ]
-    }
+    [
+        {
+            "resource_type": "GenericResource"
+        },
+        {
+            "resource_type": "RasterResource"
+        },
+        {
+            "resource_type": "RefTimeSeries"
+        },
+        {
+            "resource_type": "TimeSeriesResource"
+        },
+        {
+            "resource_type": "NetcdfResource"
+        },
+        {
+            "resource_type": "ModelProgramResource"
+        },
+        {
+            "resource_type": "ModelInstanceResource"
+        },
+        {
+            "resource_type": "ToolResource"
+        },
+        {
+            "resource_type": "SWATModelInstanceResource"
+        }
+    ]
     """
     pagination_class = pagination.SmallDatumPagination
 
