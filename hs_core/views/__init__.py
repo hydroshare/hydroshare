@@ -388,10 +388,10 @@ class FilterForm(forms.Form):
 
 @processor_for('my-resources')
 def my_resources(request, page):
-    # import sys
-    # sys.path.append("/home/docker/pycharm-debug")
-    # import pydevd
-    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('129.123.51.152', port=21000, suspend=False)
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
         res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
