@@ -1379,12 +1379,12 @@ class AbstractResource(ResourcePermissionsMixin):
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
     def delete(self, using=None):
+        from hydroshare import hs_bagit
+
         for fl in self.files.all():
             fl.resource_file.delete()
 
-        for bag in self.bags.all():
-            bag.bag.delete()
-            bag.delete()
+        hs_bagit.delete_bag(self)
 
         self.metadata.delete_all_elements()
         self.metadata.delete()

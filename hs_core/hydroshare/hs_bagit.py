@@ -10,6 +10,16 @@ from mezzanine.conf import settings
 from hs_core.models import Bags, ResourceFile
 from django_irods.storage import IrodsStorage
 
+def delete_bag(resource):
+    res_id = resource.short_id
+    istorage = IrodsStorage()
+
+    # delete resource directory first to remove all generated bag-related files for the resource
+    istorage.delete(res_id)
+
+    # delete the resource bag
+    istorage.delete('bags/{res_id}.zip'.format(res_id=res_id))
+
 def create_bag(resource):
     """
     Modified to implement the new bagit workflow. The previous workflow was to create a bag from the current filesystem
