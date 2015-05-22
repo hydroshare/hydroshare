@@ -74,5 +74,5 @@ generateBagIt {
   ### - writes to rodsLog
   msiWriteRodsLog("BagIt bag files created in place: *BAGITDATA <- *BAGITDATA",*Status);
 }
-INPUT *BAGITDATA="/hydrotest41Zone/home/hyi" 
+INPUT *BAGITDATA="/dummy/dummy/dummy" 
 OUTPUT ruleExecOut
