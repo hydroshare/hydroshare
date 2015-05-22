@@ -4,11 +4,23 @@ from hs_core import views
 urlpatterns = patterns('',
 
     # resource API
-    url(r'^resourceList/$', views.resource_rest_api.ResourceList.as_view(),
-        name='list_resource'),
+     url(r'^resourceTypes/$', views.resource_rest_api.ResourceTypes.as_view(),
+        name='list_resource_types'),
 
-    url(r'^resource/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ResourceCreateReadUpdateDelete.as_view(),
+    url(r'^resourceList/$', views.resource_rest_api.ResourceList.as_view(),
+        name='list_resources'),
+
+    url(r'^resource/$', views.resource_rest_api.ResourceCreate.as_view(),
+        name='create_resource'),
+
+    url(r'^resource/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
+
+    url(r'^resource/accessRules/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.AccessRulesUpdate.as_view(),
+        name='update_access_rules'),
+
+    url(r'^sysmeta/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.SystemMetadataRetrieve.as_view(),
+        name='get_system_metadata'),
 
     url(r'^scimeta/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
         name='get_update_science_metadata'),
