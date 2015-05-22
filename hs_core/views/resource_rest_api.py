@@ -2,7 +2,6 @@ __author__ = 'Pabitra'
 
 import os
 
-from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect
@@ -14,9 +13,10 @@ from rest_framework import status, generics
 from rest_framework.exceptions import *
 
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
 from hs_core.views import utils as view_utils
 from hs_core.views import serializers
+from hs_core.views import pagination
 
 
 # Mixins
@@ -39,6 +39,58 @@ class ResourceToListItemMixin(object):
                                                           bag_url=bag_url,
                                                           science_metadata_url=science_metadata_url)
         return resource_list_item
+
+
+
+class ResourceTypes(generics.ListAPIView):
+    """
+    Get a list of resource types
+
+    REST URL: hsapi/resourceTypes
+    HTTP method: GET
+
+    example return JSON format for GET /hsapi/resourceTypes (note response will consist of only one page):
+
+    [
+        {
+            "resource_type": "GenericResource"
+        },
+        {
+            "resource_type": "RasterResource"
+        },
+        {
+            "resource_type": "RefTimeSeries"
+        },
+        {
+            "resource_type": "TimeSeriesResource"
+        },
+        {
+            "resource_type": "NetcdfResource"
+        },
+        {
+            "resource_type": "ModelProgramResource"
+        },
+        {
+            "resource_type": "ModelInstanceResource"
+        },
+        {
+            "resource_type": "ToolResource"
+        },
+        {
+            "resource_type": "SWATModelInstanceResource"
+        }
+    ]
+    """
+    pagination_class = pagination.SmallDatumPagination
+
+    def get(self, request):
+        return self.list(request)
+
+    def get_queryset(self):
+        return [serializers.ResourceType(resource_type=rtype.__name__) for rtype in get_resource_types()]
+
+    def get_serializer_class(self):
+        return serializers.ResourceTypesSerializer
 
 
 class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
@@ -123,66 +175,46 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
     def get_serializer_class(self):
         return serializers.ResourceListItemSerializer
 
-class ResourceCreateReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceToListItemMixin):
+
+class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceToListItemMixin):
     """
     Create, read, or delete a resource
 
     REST URL: hsapi/resource/{pk}
     HTTP method: GET
-    :return: (on success): JSON string representing resource summary, which includes key system metadata, as well as
-    URLs to the bag and science metadata
+    :return: (on success): The resource in zipped BagIt format.
 
     REST URL: hsapi/resource/{pk}
     HTTP method: DELETE
-    :return: (on success): json string of the format: {'resource_id':pk}
+    :return: (on success): JSON string of the format: {'resource_id':pk}
 
     REST URL: hsapi/resource/{pk}
     HTTP method: PUT
-    :return: (on success): json string of the format: {'resource_id':pk}
+    :return: (on success): JSON string of the format: {'resource_id':pk}
 
     :type   str
     :param  pk: resource id
     :rtype:  JSON string for http methods DELETE and PUT, and resource file data bytes for GET
+
     :raises:
     NotFound: return JSON format: {'detail': 'No resource was found for resource id':pk}
     PermissionDenied: return JSON format: {'detail': 'You do not have permission to perform this action.'}
     ValidationError: return JSON format: {parameter-1': ['error message-1'], 'parameter-2': ['error message-2'], .. }
 
-    example return JSON format for GET /hsapi/resource/<RESOURCE_ID>:
-
-    {
-        "resource_type": resource type,
-        "resource_title": resource title,
-        "resource_id": resource id,
-        "creator": creator user name,
-        "date_created": date resource created,
-        "date_last_updated": date resource last updated,
-        "public": True or False,
-        "bag_url": link to bag file,
-        "science_metadata_url": link to science metadata
-    }
-
-
     :raises:
     ValidationError: return json format: {'parameter-1':['error message-1'], 'parameter-2': ['error message-2'], .. }
     """
-
     pagination_class = PageNumberPagination
 
-    @property
-    def allowed_methods(self):
-        return ['GET', 'POST', 'PUT', 'DELETE']
-
+    allowed_methods = ('GET', 'POST', 'PUT', 'DELETE')
 
     def get(self, request, pk):
-        """ Get resource summary, which includes key system metadata, as well as
-            URLs to the bag and science metadata
+        """ Get resource in zipped BagIt format
         """
         view_utils.authorize(request, pk, view=True, full=True)
-        res = get_resource_by_shortkey(pk)
-        ser = self.get_serializer_class()(self.resourceToResourceListItem(res))
 
-        return Response(data=ser.data, status=status.HTTP_200_OK)
+        res = hydroshare.get_resource(pk)
+        return HttpResponseRedirect(res.bag.url)
 
     def put(self, request, pk):
         # TODO: update resource - involves overwriting a resource from the provided bag file
@@ -194,9 +226,6 @@ class ResourceCreateReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, Reso
         # spec says we need return the id of the resource that got deleted - otherwise would have used status code 204
         # and not 200
         return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
-
-    def post(self, request):
-        return ResourceCreate().create(request)
 
     def get_serializer_class(self):
         return serializers.ResourceListItemSerializer
@@ -232,6 +261,9 @@ class ResourceCreate(generics.CreateAPIView):
     def get_serializer_class(self):
         return serializers.ResourceCreateRequestValidator
 
+    def post(self, request):
+        return self.create(request)
+
     # Override the create() method from the CreateAPIView class
     def create(self, request, *args, **kwargs):
         if not request.user.is_authenticated():
@@ -245,15 +277,24 @@ class ResourceCreate(generics.CreateAPIView):
         resource_type = validated_request_data['resource_type']
 
         res_title = validated_request_data.get('title', 'Untitled resource')
-        if len(request.FILES) > 0:
-            raise ValidationError(detail={'files': 'File upload is not allowed. Add files after the resource is created.'})
+        keywords = validated_request_data.get('keywords', None)
+        abstract = validated_request_data.get('abstract', None)
+
+        num_files = len(request.FILES)
+        if num_files > 0:
+            if num_files > 1:
+                raise ValidationError(detail={'file': 'Multiple file upload is not allowed on resource creation. Add additional files after the resource is created.'})
+            # Place files into format expected by hydroshare.utils.resource_pre_create_actions and
+            # hydroshare.create_resource, i.e. a tuple of django.core.files.uploadedfile.TemporaryUploadedFile objects.
+            files = (request.FILES['file'],)
+        else:
+            files = ()
 
         _, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
-                                                                       resource_title=res_title,
-                                                                       page_redirect_url_key=None,
-                                                                       files=(),
-                                                                       metadata=None,  **kwargs)
-
+                                                                              resource_title=res_title,
+                                                                              page_redirect_url_key=None,
+                                                                              files=files,
+                                                                              metadata=None,  **kwargs)
         try:
             resource = hydroshare.create_resource(
                     resource_type=resource_type,
@@ -263,16 +304,92 @@ class ResourceCreate(generics.CreateAPIView):
                     view_users=validated_request_data.get('view_users', None),
                     edit_groups=validated_request_data.get('edit_groups', None),
                     view_groups=validated_request_data.get('view_groups', None),
-                    keywords=None,
+                    keywords=keywords,
                     metadata=metadata,
-                    files=(),
+                    files=files
             )
+            if abstract:
+                resource.metadata.create_element('description', abstract=abstract)
         except Exception as ex:
             error_msg = {'resource': "Resource creation failed. %s" % ex.message}
             raise ValidationError(detail=error_msg)
 
         response_data = {'resource_type': resource_type, 'resource_id': resource.short_id}
         return Response(data=response_data,  status=status.HTTP_201_CREATED)
+
+
+class SystemMetadataRetrieve(APIView, ResourceToListItemMixin):
+    """
+    Retrieve resource science metadata
+
+    REST URL: hsapi/sysmeta/{pk}
+    HTTP method: GET
+
+    :type pk: str
+    :param pk: id of the resource
+    :return: system metadata as JSON string
+    :rtype: str
+    :raises:
+    NotFound: return JSON format: {'detail': 'No resource was found for resource id:pk'}
+    PermissionDenied: return JSON format: {'detail': 'You do not have permission to perform this action.'}
+
+    example return JSON format for GET hsapi/sysmeta/<RESOURCE_ID>:
+
+    {
+        "resource_type": resource type,
+        "resource_title": resource title,
+        "resource_id": resource id,
+        "creator": creator user name,
+        "date_created": date resource created,
+        "date_last_updated": date resource last updated,
+        "public": True or False,
+        "bag_url": link to bag file,
+        "science_metadata_url": link to science metadata
+    }
+    """
+    allowed_methods = ('GET',)
+
+    def get(self, request, pk):
+        """ Get resource system metadata, as well as URLs to the bag and science metadata
+        """
+        view_utils.authorize(request, pk, view=True, full=True)
+        res = get_resource_by_shortkey(pk)
+        ser = self.get_serializer_class()(self.resourceToResourceListItem(res))
+
+        return Response(data=ser.data, status=status.HTTP_200_OK)
+
+    def get_serializer_class(self):
+        return serializers.ResourceListItemSerializer
+
+
+class AccessRulesUpdate(APIView):
+    """
+    Set access rules for a resource
+
+    REST URL: hsapi/resource/accessRules/{pk}
+    HTTP method: PUT
+
+    :type pk: str
+    :param pk: id of the resource
+    :return: No content.  Status code will 200 (OK)
+    """
+    allowed_methods = ('PUT',)
+
+    def put(self, request, pk):
+        """ Update access rules
+        """
+        view_utils.authorize(request, pk, edit=True, full=True)
+
+        access_rules_validator = serializers.AccessRulesRequestValidator(data=request.data)
+        if not access_rules_validator.is_valid():
+            raise ValidationError(detail=access_rules_validator.errors)
+
+        validated_request_data = access_rules_validator.validated_data
+        res = get_resource_by_shortkey(pk)
+        res.public = validated_request_data['public']
+        res.save()
+
+        return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
 
 
 class ScienceMetadataRetrieveUpdate(APIView):
@@ -304,10 +421,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
     ValidationError: return json format: {parameter-1': ['error message-1'], 'parameter-2': ['error message-2'], .. }
     """
-
-    @property
-    def allowed_methods(self):
-        return ['GET', 'PUT']
+    allowed_methods = ('GET', 'PUT')
 
     def get(self, request, pk):
         view_utils.authorize(request, pk, view=True, edit=True, full=True)
@@ -370,10 +484,7 @@ class ResourceFileCRUD(APIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
     ValidationError: return json format: {'parameter-1':['error message-1'], 'parameter-2': ['error message-2'], .. }
     """
-
-    @property
-    def allowed_methods(self):
-        return ['GET', 'POST', 'DELETE', 'PUT']
+    allowed_methods = ('GET', 'POST', 'PUT', 'DELETE')
 
     def get(self, request, pk, filename):
         view_utils.authorize(request, pk, view=True, edit=True, full=True)
@@ -403,7 +514,7 @@ class ResourceFileCRUD(APIView):
         # to implement additional rest endpoints for file validation and extraction.
         try:
             hydroshare.utils.resource_file_add_pre_process(resource=resource, files=[resource_files[0]],
-                                                          user=request.user, extract_metadata=True)
+                                                           user=request.user, extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileSizeException, hydroshare.utils.ResourceFileValidationException, Exception) as ex:
             error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
@@ -411,7 +522,7 @@ class ResourceFileCRUD(APIView):
 
         try:
            res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource, files=[resource_files[0]],
-                                                                   user=request.user, extract_metadata=True)
+                                                                         user=request.user, extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
             error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
