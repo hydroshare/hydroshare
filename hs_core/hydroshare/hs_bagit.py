@@ -38,9 +38,12 @@ def create_bag(resource):
             shutil.rmtree(d)
             os.makedirs(d)
 
-    # create visualization directory and upload all files under it as needed in iRODS to be part of bag
-    to_file_name = '{res_id}/data/visualization/'.format(res_id=resource.short_id)
-    istorage.saveFile('', to_file_name, True)
+    # an empty visualization directory will not be put into the zipped bag file by ibun command, so creating an empty
+    # visualization directory to be put into the zip file as done by the two statements below does not work. However,
+    # if visualization directory has content to be uploaded, it will work. This is to be implemented as part of the
+    # resource model in the future. The following two statements are placeholders serving as reminder
+    # to_file_name = '{res_id}/data/visualization/'.format(res_id=resource.short_id)
+    # istorage.saveFile('', to_file_name, create_directory=True)
 
     # create resourcemetadata.xml and upload it to iRODS
     from_file_name = '{path}/resourcemetadata.xml'.format(path=bagit_path)
@@ -118,7 +121,9 @@ def create_bag(resource):
     irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
     irods_bagit_input_path = os.path.join(irods_dest_prefix, resource.short_id)
     bagit_input = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
-    istorage.runBagitRule('ruleGenerateBagIt_HS.r', bagit_input)
+    bagit_rule_file = getattr(settings, 'IRODS_BAGIT_RULE', 'hydroshare/irods/ruleGenerateBagIt_HS.r')
+
+    istorage.runBagitRule(bagit_rule_file, bagit_input)
 
     # call iRODS ibun command to zip the bag
     istorage.zipup(irods_bagit_input_path, 'bags/{res_id}.zip'.format(res_id=resource.short_id))

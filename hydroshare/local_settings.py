@@ -120,6 +120,8 @@ IRODS_ZONE = ''
 IRODS_USERNAME = ''
 IRODS_AUTH = ''
 IRODS_GLOBAL_SESSION = False
+# iRODS customized bagit rule path
+IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
 
 # iRODS proxy user configuration - reference: https://github.com/hydroshare/hydrodev-irods
 # USE_IRODS = True
