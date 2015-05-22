@@ -117,7 +117,8 @@ def create_bag(resource):
     # call iRODS bagit rule here
     irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
     irods_bagit_input_path = os.path.join(irods_dest_prefix, resource.short_id)
-    istorage.runBagitRule('ruleGenerateBagIt_HS.r', "\"*BAGITDATA='{path}'\"".format(path=irods_bagit_input_path))
+    bagit_input = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
+    istorage.runBagitRule('ruleGenerateBagIt_HS.r', bagit_input)
 
     # call iRODS ibun command to zip the bag
     istorage.zipup(irods_bagit_input_path, 'bags/{res_id}.zip'.format(res_id=resource.short_id))
