@@ -1,6 +1,7 @@
 import arrow
 import os
 import shutil
+import errno
 
 from foresite import *
 from rdflib import URIRef, Namespace
@@ -44,9 +45,12 @@ def create_bag(resource):
     for d in (dest_prefix, bagit_path):
         try:
             os.makedirs(d)
-        except:
-            shutil.rmtree(d)
-            os.makedirs(d)
+        except OSError as ex:
+            if ex.errno == errno.EEXIST:
+                shutil.rmtree(d)
+                os.makedirs(d)
+            else:
+                raise Exception(ex.message)
 
     # an empty visualization directory will not be put into the zipped bag file by ibun command, so creating an empty
     # visualization directory to be put into the zip file as done by the two statements below does not work. However,
@@ -121,10 +125,10 @@ def create_bag(resource):
     xml_string = remdoc.data.replace('dcterms:creator', 'dc:creator')
 
     # create resourcemap.xml and upload it to iRODS
-    from_file_name = '{path}/resourcemap.xml'.format(path=bagit_path)
+    from_file_name = os.path.join(bagit_path, 'resourcemap.xml')
     with open(from_file_name, 'w') as out:
         out.write(xml_string)
-    to_file_name = '{res_id}/data/resourcemap.xml'.format(res_id=resource.short_id)
+    to_file_name = os.path.join(resource.short_id, 'data', 'resourcemap.xml')
     istorage.saveFile(from_file_name, to_file_name, False)
 
     # call iRODS bagit rule here
