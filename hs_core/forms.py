@@ -499,8 +499,9 @@ class CreatorFormSetHelper(FormHelper):
 class PartyForm(ModelForm):
     def __init__(self, *args, **kwargs):
         if 'initial' in kwargs:
-            if kwargs['initial']['description']:
-                kwargs['initial']['description'] = utils.current_site_url() + kwargs['initial']['description']
+            if 'description' in kwargs['initial']:
+                if kwargs['initial']['description']:
+                    kwargs['initial']['description'] = utils.current_site_url() + kwargs['initial']['description']
         super(PartyForm, self).__init__(*args, **kwargs)
         self.profile_link_formset = None
         self.number = 0

@@ -313,7 +313,7 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
     creator_data = {}
     user_profile = get_profile(resource.creator)
     user_full_name = resource.creator.get_full_name()
-    if len(user_full_name) > 0:
+    if user_full_name:
         first_creator_name = user_full_name
     else:
         first_creator_name = resource.creator.username
