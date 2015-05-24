@@ -15,14 +15,13 @@ from mezzanine.conf import settings as s
 from mezzanine.generic.models import Keyword, AssignedKeyword
 import os.path
 from django_irods.storage import IrodsStorage
-# from dublincore.models import QualifiedDublinCoreElement
-#from dublincore import models as dc
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from languages_iso import languages as iso_languages
 from dateutil import parser
 import json
+
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -1903,6 +1902,10 @@ class CoreMetaData(models.Model):
                     field.text = str(attr)
 
     def _create_person_element(self, etree, parent_element, person):
+
+        # importing here to avoid circular import problem
+        from hydroshare.utils import current_site_url
+
         if isinstance(person, Creator):
             dc_person = etree.SubElement(parent_element, '{%s}creator' % self.NAMESPACES['dc'])
         else:
@@ -1913,7 +1916,7 @@ class CoreMetaData(models.Model):
         hsterms_name = etree.SubElement(dc_person_rdf_Description, '{%s}name' % self.NAMESPACES['hsterms'])
         hsterms_name.text = person.name
         if person.description:
-            dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], person.description)
+            dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], current_site_url() + person.description)
 
         if isinstance(person, Creator):
             hsterms_creatorOrder = etree.SubElement(dc_person_rdf_Description, '{%s}creatorOrder' % self.NAMESPACES['hsterms'])
