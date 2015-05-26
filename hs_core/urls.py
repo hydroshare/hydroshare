@@ -23,6 +23,8 @@ urlpatterns = patterns('',
 
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/add-file-to-resource/$', views.add_file_to_resource),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/(?P<element_name>[A-z]+)/add-metadata/$', views.add_metadata_element),
+    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/creator/add-metadata/(?P<user_id>[0-9]+)/$', views.add_metadata_element_creator, name='add_creator_from_user'),
+    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/contributor/add-metadata/(?P<user_id>[0-9]+)/$', views.add_metadata_element_contributor, name='add_contributor_from_user'),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/(?P<element_name>[A-z]+)/(?P<element_id>[A-z0-9]+)/update-metadata/$', views.update_metadata_element),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/(?P<element_name>[A-z]+)/(?P<element_id>[A-z0-9]+)/delete-metadata/$', views.delete_metadata_element),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/delete-resource-file/(?P<f>[0-9]+)/$', views.delete_file),
