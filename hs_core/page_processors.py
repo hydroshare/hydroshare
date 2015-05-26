@@ -4,6 +4,7 @@ from hs_core.models import GenericResource
 from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import ToolResourceType
+from django_irods.storage import IrodsStorage
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -56,7 +57,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if 'just_created' in request.session:
             del request.session['just_created']
 
-    bag_url = "/django_irods/download/?path=bags/{res_id}.zip".format(res_id=content_model.short_id)
+    istorage = IrodsStorage()
+    bag_url = istorage.url("bags/{res_id}.zip".format(res_id=content_model.short_id))
 
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
