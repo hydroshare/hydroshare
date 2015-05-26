@@ -108,34 +108,21 @@ DATABASES = {
 POSTGIS_VERSION=(2,1,1)
 
 # iRODS proxy user configuration
-USE_IRODS = False
-IRODS_ROOT = ''
-IRODS_ICOMMANDS_PATH = ''
-IRODS_HOST = ''
-IRODS_PORT = ''
-IRODS_DEFAULT_RESOURCE = ''
-IRODS_HOME_COLLECTION = ''
-IRODS_CWD = ''
-IRODS_ZONE = ''
-IRODS_USERNAME = ''
-IRODS_AUTH = ''
-IRODS_GLOBAL_SESSION = False
+USE_IRODS = True
+IRODS_ROOT = '/tmp'
+IRODS_ICOMMANDS_PATH = '/usr/bin'
+IRODS_HOST = 'hydrotest41.renci.org'
+IRODS_PORT = '1247'
+IRODS_DEFAULT_RESOURCE = 'hydrotest41Resc'
+IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
+IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
+IRODS_ZONE = 'hydrotest41Zone'
+IRODS_USERNAME = 'hsproxy'
+IRODS_AUTH = 'proxywater1'
+IRODS_GLOBAL_SESSION = True
+
 # iRODS customized bagit rule path
 IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
-
-# iRODS proxy user configuration - reference: https://github.com/hydroshare/hydrodev-irods
-# USE_IRODS = True
-# IRODS_ROOT = '/tmp'
-# IRODS_ICOMMANDS_PATH = '/usr/bin'
-# IRODS_HOST = 'HYDRODEV_IRODS_IPADDR'
-# IRODS_PORT = '1247'
-# IRODS_DEFAULT_RESOURCE = 'hydrodevResc'
-# IRODS_HOME_COLLECTION = '/hydrodevZone/home/hsproxy'
-# IRODS_CWD = '/hydrodevZone/home/hsproxy'
-# IRODS_ZONE = 'hydrodevZone'
-# IRODS_USERNAME = 'hsproxy'
-# IRODS_AUTH = 'proxywater1'
-# IRODS_GLOBAL_SESSION = True
 
 # Email configuration - localhost
 # Run from second terminal: python -m smtpd -n -c DebuggingServer localhost:1025
