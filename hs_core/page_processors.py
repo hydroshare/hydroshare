@@ -56,6 +56,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if 'just_created' in request.session:
             del request.session['just_created']
 
+    bag_url = "/django_irods/download/?path=bags/{res_id}.zip".format(res_id=content_model.short_id)
+
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
         if len(temporal_coverages) > 0:
@@ -116,7 +118,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'file_validation_error': file_validation_error if file_validation_error else None,
                    'relevant_tools': relevant_tools,
                    'file_type_error': file_type_error,
-                   'just_created': just_created
+                   'just_created': just_created,
+                   'bag_url': bag_url
         }
         return context
 
@@ -291,6 +294,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'metadata_status': metadata_status,
                'citation': content_model.get_citation(),
                'extended_metadata_layout': extended_metadata_layout,
+               'bag_url': bag_url,
                'file_validation_error': file_validation_error if file_validation_error else None
     }
 

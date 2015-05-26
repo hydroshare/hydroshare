@@ -145,7 +145,6 @@ def create_bag(resource):
     # link the zipped bag file in IRODS via bag_url for bag downloading
     b = Bags.objects.create(
         content_object=resource,
-        bag_url="/django_irods/download/?path=bags/{res_id}.zip".format(res_id=resource.short_id),
         timestamp=resource.updated
     )
 
