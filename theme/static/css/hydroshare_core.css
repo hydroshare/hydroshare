@@ -1406,7 +1406,7 @@ body > .container{
     word-break:break-word;
 }
 
-#btn-download-all, #btn-add-file{
+#btn-download-all, #btn-add-file, #btn-signin-irods, #btn-select-irods-file {
     margin-bottom:5px;
     max-width:100%;
 }

@@ -223,7 +223,6 @@ class ToolMetaData(CoreMetaData):
     fees = generic.GenericRelation(Fee)
     # should be only one Version metadata element
     versions = generic.GenericRelation(ToolVersion)
-    _tool_resource = generic.GenericRelation(ToolResource)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -235,11 +234,6 @@ class ToolMetaData(CoreMetaData):
         elements.append('Fee')
         elements.append('ToolVersion')
         return elements
-
-    # want to be able to access a the resource as an attribute
-    @property
-    def resource(self):
-        return self._tool_resource.all().first()
 
     def get_xml(self):
         from lxml import etree
