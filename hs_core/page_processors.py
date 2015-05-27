@@ -4,6 +4,7 @@ from hs_core.models import GenericResource
 from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import ToolResourceType
+from django_irods.storage import IrodsStorage
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -55,6 +56,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         just_created = request.session.get('just_created', False)
         if 'just_created' in request.session:
             del request.session['just_created']
+
+    istorage = IrodsStorage()
+    bag_url = istorage.url("bags/{res_id}.zip".format(res_id=content_model.short_id))
 
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
@@ -116,7 +120,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'file_validation_error': file_validation_error if file_validation_error else None,
                    'relevant_tools': relevant_tools,
                    'file_type_error': file_type_error,
-                   'just_created': just_created
+                   'just_created': just_created,
+                   'bag_url': bag_url
         }
         return context
 
@@ -291,6 +296,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'metadata_status': metadata_status,
                'citation': content_model.get_citation(),
                'extended_metadata_layout': extended_metadata_layout,
+               'bag_url': bag_url,
                'file_validation_error': file_validation_error if file_validation_error else None
     }
 
