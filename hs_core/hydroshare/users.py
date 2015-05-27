@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.core import signing
 
-from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject
+from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject, Description, Title
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
 
 
@@ -665,7 +665,21 @@ def get_resource_list(creator=None,
             flt = flt.filter(public=True)
 
         if full_text_search:
-            flt = flt.search(full_text_search)
+            fts_qs = flt.search(full_text_search)
+            description_matching = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+            title_matching = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
+
+            if description_matching:
+                desc_qs = flt.filter(object_id__in=description_matching)
+            else:
+                desc_qs = t.objects.none()
+
+            if title_matching:
+                title_qs = flt.filter(object_id__in=title_matching)
+            else:
+                title_qs = t.objects.none()
+
+            flt = fts_qs.distinct() | desc_qs.distinct() | title_qs.distinct()
 
         queries[t] = flt
 
