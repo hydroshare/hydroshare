@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 
 from ga_resources.utils import get_user, json_or_jsonp
-from hs_core.models import GenericResource, Party, Contributor, Creator
+from hs_core.models import GenericResource, Party, Contributor, Creator, Subject
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_types
 
@@ -72,6 +72,17 @@ def autocomplete(request):
             'id': owner.username,
             'value': name,
         })
+
+    subjects = Subject.objects.filter(value__istartswith=term)
+    for subject in subjects:
+        if ('subject', subject.value) not in seen:
+            seen.add(('subject', subject.value))
+            resp.append({
+                'label': 'Subject',
+                'type': 'subject',
+                'id': subject.value,
+                'value': subject.value,
+            })
 
     # resources = get_resource_list(
     #     full_text_search=term,

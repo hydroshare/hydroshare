@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.core import signing
 
-from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator
+from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
 
 
@@ -528,7 +528,6 @@ def get_resource_list(creator=None,
         group=None, user=None, owner=None,
         from_date=None, to_date=None,
         start=None, count=None,
-        keywords=None,
         full_text_search=None,
         published=False,
         edit_permission=False,
@@ -536,6 +535,7 @@ def get_resource_list(creator=None,
         type=None,
         author=None,
         contributor=None,
+        subject=None,
 ):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
@@ -570,12 +570,12 @@ def get_resource_list(creator=None,
         to_date = datetime object
         start = int
         count = int
-        keywords = list of keywords
+        subject = list of subject
         type = list of resource type names, used for filtering
     """
     from django.db.models import Q
 
-    if not any((creator, group, user, owner, from_date, to_date, start, count, keywords, full_text_search, public, type)):
+    if not any((creator, group, user, owner, from_date, to_date, start, count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
     resource_types = get_resource_types()
@@ -652,8 +652,10 @@ def get_resource_list(creator=None,
         elif to_date:
             queries[t].append(Q(created__lte=to_date))
 
-        #if keywords:
-        #    queries[t].append(Q(keywords__title__in=keywords))
+        if subject:
+            subjects = Subject.objects.filter(value__in=subject)
+            queries[t].append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
+
 
         flt = t.objects.all()
         for q in queries[t]:
@@ -666,10 +668,6 @@ def get_resource_list(creator=None,
             flt = flt.search(full_text_search)
 
         queries[t] = flt
-
-        if keywords:
-            for k in keywords:
-                queries[t] = flt.filter(keywords_string__contains=k)
 
         qcnt = 0
         if queries[t]:

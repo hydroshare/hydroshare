@@ -405,13 +405,12 @@ def my_resources(request, page):
             startno = 0
         start = startno or 0
         from_date = frm.cleaned_data['from_date'] or None
-        keywords = [k.strip() for k in request.REQUEST['keywords'].split(',')] if request.REQUEST.get('keywords', None) else None
         words = request.REQUEST.get('text', None)
         public = not request.user.is_authenticated()
 
         search_items = dict(
             (item_type, [t.strip() for t in request.REQUEST.getlist(item_type)])
-            for item_type in ("type", "author", "contributor")
+            for item_type in ("type", "author", "contributor", "subject")
         )
 
         # TODO ten separate SQL queries for basically the same data
@@ -422,7 +421,6 @@ def my_resources(request, page):
             published=published,
             edit_permission=edit_permission,
             from_date=from_date,
-            keywords=keywords,
             full_text_search=words,
             public=public,
             **search_items
