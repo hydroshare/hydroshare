@@ -140,7 +140,7 @@
 
                 // Find existing search and populate the search field
                 $input.val("");
-                $.each(["type", "author", "contributor"], function(){
+                $.each(["type", "author", "contributor", "owner"], function(){
                     if (urlParams[this]) {
                         for (var i=0; i < urlParams[this].length; i++) {
                             self.addItem(this, urlParams[this][i], urlParams[this][i]);

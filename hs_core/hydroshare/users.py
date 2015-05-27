@@ -634,10 +634,14 @@ def get_resource_list(creator=None,
             if user:
                 user = user_from_id(user)
                 if owner:
-                    owner = user_from_id(owner)
-                    queries[t].append(Q(owners=owner))
-                    if user != owner:
-                        public = True
+                    try:
+                        owner = user_from_id(owner, raise404=False)
+                    except User.DoesNotExist:
+                        queries[t].append(Q(owners__isnull=True))
+                    else:
+                        queries[t].append(Q(owners=owner))
+                        if user != owner:
+                            public = True
                 else:
                     queries[t].append(Q(edit_users=user) | Q(view_users=user) | Q(owners=user) | Q(public=True))
 

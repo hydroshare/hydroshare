@@ -380,7 +380,7 @@ class FilterForm(forms.Form):
     start = forms.IntegerField(required=False)
     published = forms.BooleanField(required=False)
     edit_permission = forms.BooleanField(required=False)
-    creator = forms.ModelChoiceField(queryset=User.objects.all(), required=False)
+    owner = forms.CharField(required=False)
     user = forms.ModelChoiceField(queryset=User.objects.all(), required=False)
     from_date = forms.DateTimeField(required=False)
 
@@ -396,7 +396,7 @@ def my_resources(request, page):
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
         res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
-        owner = frm.cleaned_data['creator'] or None
+        owner = frm.cleaned_data['owner'] or None
         user = frm.cleaned_data['user'] or (request.user if request.user.is_authenticated() else None)
         edit_permission = frm.cleaned_data['edit_permission'] or False
         published = frm.cleaned_data['published'] or False

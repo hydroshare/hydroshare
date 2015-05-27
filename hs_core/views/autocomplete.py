@@ -1,3 +1,5 @@
+from django.contrib.auth.models import User, Group
+
 from ga_resources.utils import get_user, json_or_jsonp
 from hs_core.models import GenericResource, Party, Contributor, Creator
 from hs_core.hydroshare import get_resource_list
@@ -53,6 +55,23 @@ def autocomplete(request):
                             'id': getattr(party, filter_type, 'id'),
                             'value': party.name,
                         })
+
+    owners = User.objects.filter(username__istartswith=term)
+    for owner in owners:
+        if owner.first_name and owner.last_name:
+            name = "%s %s (%s)" % (owner.first_name, owner.last_name, owner.username)
+        elif owner.first_name:
+            name = "%s (%s)" % (owner.first_name, owner.username)
+        elif owner.last_name:
+            name = "%s (%s)" % (owner.last_name, owner.username)
+        else:
+            name = owner.username
+        resp.append({
+            'label': 'Owner',
+            'type': 'owner',
+            'id': owner.username,
+            'value': name,
+        })
 
     # resources = get_resource_list(
     #     full_text_search=term,

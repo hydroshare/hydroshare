@@ -69,7 +69,7 @@ def get_resource_by_doi(doi, or_404=True):
         raise ObjectDoesNotExist(doi)
 
 
-def user_from_id(user):
+def user_from_id(user, raise404=True):
     if isinstance(user, User):
         return user
 
@@ -82,9 +82,15 @@ def user_from_id(user):
             try:
                 tgt = User.objects.get(pk=int(user))
             except ValueError:
-                raise Http404('User not found')
+                if raise404:
+                    raise Http404('User not found')
+                else:
+                    raise User.DoesNotExist
             except ObjectDoesNotExist:
-                raise Http404('User not found')
+                if raise404:
+                    raise Http404('User not found')
+                else:
+                    raise
     return tgt
 
 
@@ -344,4 +350,3 @@ def resource_file_add_process(resource, files, user, extract_metadata=False, **k
 
     resource_modified(resource, user)
     return resource_file_objects
-
