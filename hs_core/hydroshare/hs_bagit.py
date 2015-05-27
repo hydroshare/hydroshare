@@ -65,7 +65,7 @@ def create_bag(resource):
         out.write(resource.metadata.get_xml())
 
     to_file_name = '{res_id}/data/resourcemetadata.xml'.format(res_id=resource.short_id)
-    istorage.saveFile(from_file_name, to_file_name, False)
+    istorage.saveFile(from_file_name, to_file_name, True)
 
     # make the resource map
     current_site_url = hs_core_utils.current_site_url()
