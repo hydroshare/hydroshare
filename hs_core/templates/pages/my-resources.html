@@ -140,7 +140,7 @@
 
                 // Find existing search and populate the search field
                 $input.val("");
-                $.each(["type", "author"], function(){
+                $.each(["type", "author", "contributor"], function(){
                     if (urlParams[this]) {
                         for (var i=0; i < urlParams[this].length; i++) {
                             self.addItem(this, urlParams[this][i], urlParams[this][i]);
@@ -217,7 +217,7 @@
                     default: // While Typing ...
                         var self = this;
                         var text = this.$input.val();
-                        var termPos = text.search(/\w+:\w+ $/);
+                        var termPos = text.search(/\w+:[\w\-_@\.]+ $/);
                         if (termPos >= 0) {
                             var remaining = text.slice(0, termPos);
                             var term = text.slice(termPos);
@@ -226,7 +226,8 @@
                             this.$input.val(remaining);
                             this.addItem(term_parts[0], term_parts[1]);
                         } else {
-                            var current = text.slice(text.search(/\w+$/));
+                            var current = text.slice(text.search(/[\w\-_@\.]+$/));
+                            console.log(current);
                             this.searchForTerm(current).then(this.showOptions.bind(this));
                         }
                 }

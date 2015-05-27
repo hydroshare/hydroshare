@@ -535,6 +535,7 @@ def get_resource_list(creator=None,
         public=False,
         type=None,
         author=None,
+        contributor=None,
 ):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
@@ -600,6 +601,18 @@ def get_resource_list(creator=None,
             # if t is GenericResource:
             #     assert False, t.objects.all().values_list('object_id', flat=True)
             queries[t].append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
+
+        if contributor:
+            contributor_parties = (
+                #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
+                (Contributor.objects.filter(email__in=contributor) | Contributor.objects.filter(name__in=contributor))
+            )
+            # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
+            # assert author_parties, Creator.objects.all().values_list('name', flat=True)
+            # assert False, author_parties.values_list('id', flat=True)
+            # if t is GenericResource:
+            #     assert False, t.objects.all().values_list('object_id', flat=True)
+            queries[t].append(Q(object_id__in=contributor_parties.values_list('object_id', flat=True)))
 
         if edit_permission:
             if group:

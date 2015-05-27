@@ -411,7 +411,7 @@ def my_resources(request, page):
 
         search_items = dict(
             (item_type, [t.strip() for t in request.REQUEST.getlist(item_type)])
-            for item_type in ("type", "author")
+            for item_type in ("type", "author", "contributor")
         )
 
         # TODO ten separate SQL queries for basically the same data

@@ -32,19 +32,27 @@ def autocomplete(request):
             return 'Author'
         else:
             return None
+    seen = set()
+    filter_types = {
+        'name': 'name__istartswith',
+        'email': 'email__iexact',
+    }
     for model in (Creator, Contributor):
-        for party in model.objects.filter(name__istartswith=term) | model.objects.filter(email__istartswith=term):
-            party_type = get_party_type(party)
-            if party_type:
-                name = model.__name__
-                if model is Creator:
-                    name = "Author"
-                resp.append({
-                    'label': name,
-                    'type': 'party',
-                    'id': party.email or party.name,
-                    'value': party.name,
-                })
+        for filter_type in filter_types:
+            for party in model.objects.filter(**{filter_types[filter_type]: term}):
+                party_type = get_party_type(party)
+                if party_type:
+                    name = model.__name__
+                    if model is Creator:
+                        name = "Author"
+                    if (name, party.name) not in seen:
+                        seen.add((name, party.name))
+                        resp.append({
+                            'label': name,
+                            'type': 'party',
+                            'id': getattr(party, filter_type, 'id'),
+                            'value': party.name,
+                        })
 
     # resources = get_resource_list(
     #     full_text_search=term,
