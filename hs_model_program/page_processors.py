@@ -18,27 +18,27 @@ def landing_page(request, page):
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
                                                    extended_metadata_layout=None)
         extended_metadata_exists = False
-        if content_model.metadata.mpmetadata.all():
+        if content_model.metadata.program:
             extended_metadata_exists = True
 
         context['extended_metadata_exists'] = extended_metadata_exists
-        context['mpmetadata'] = content_model.metadata.mpmetadata.all().first()
+        context['mpmetadata'] = content_model.metadata.program
 
 
     else:
-
-        output_form = mp_form(files=content_model.files, instance=content_model.metadata.mpmetadata.all().first(),
+        output_form = mp_form(files=content_model.files, instance=content_model.metadata.program,
                               res_short_id=content_model.short_id,
-                              element_id=content_model.metadata.mpmetadata.all().first().id if content_model.metadata.mpmetadata.all().first() else None)
+                              element_id=content_model.metadata.program.id if content_model.metadata.program else None)
 
         ext_md_layout = Layout(
-            AccordionGroup('Model Program Extended Metadata',
-                           HTML("<div class='form-group' id='extended_metadata'> "
+                        HTML("<div class='form-group col-lg-4 col-xs-12' id='site'> "
                                 '{% load crispy_forms_tags %} '
                                 '{% crispy output_form %} '
-                                '</div>'),
-                           ),
-        )
+                             '</div>'),
+                )
+
+
+
 
 
         # get the context from hs_core
