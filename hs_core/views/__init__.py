@@ -408,7 +408,11 @@ def my_resources(request, page):
         keywords = [k.strip() for k in request.REQUEST['keywords'].split(',')] if request.REQUEST.get('keywords', None) else None
         words = request.REQUEST.get('text', None)
         public = not request.user.is_authenticated()
-        types = [t.strip() for t in request.REQUEST.getlist('type')]
+
+        search_items = dict(
+            (item_type, [t.strip() for t in request.REQUEST.getlist(item_type)])
+            for item_type in ("type", "author")
+        )
 
         # TODO ten separate SQL queries for basically the same data
         res = set()
@@ -421,7 +425,7 @@ def my_resources(request, page):
             keywords=keywords,
             full_text_search=words,
             public=public,
-            types=types
+            **search_items
         ).values():
             res = res.union(lst)
         total_res_cnt = len(res)

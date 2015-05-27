@@ -2,10 +2,11 @@ import json
 
 from django.core.exceptions import MultipleObjectsReturned
 from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.core import signing
 
-from hs_core.models import GroupOwnership
+from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
 
 
@@ -531,7 +532,9 @@ def get_resource_list(creator=None,
         full_text_search=None,
         published=False,
         edit_permission=False,
-        public=False, types=None
+        public=False,
+        type=None,
+        author=None,
 ):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
@@ -567,24 +570,36 @@ def get_resource_list(creator=None,
         start = int
         count = int
         keywords = list of keywords
-        types = list of resource type names, used for filtering
+        type = list of resource type names, used for filtering
     """
     from django.db.models import Q
 
-    if not any((creator, group, user, owner, from_date, to_date, start, count, keywords, full_text_search, public, types)):
+    if not any((creator, group, user, owner, from_date, to_date, start, count, keywords, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
     resource_types = get_resource_types()
 
     # filtering based on resource type.
-    if types:
-        queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in types)
+    if type:
+        queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in type)
     else:
         queries = dict((el, []) for el in resource_types)
 
     for t, q in queries.items():
         if published:
             queries[t].append(Q(doi__isnull=False))
+
+        if author:
+            author_parties = (
+                #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
+                (Creator.objects.filter(email__in=author) | Creator.objects.filter(name__in=author))
+            )
+            # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
+            # assert author_parties, Creator.objects.all().values_list('name', flat=True)
+            # assert False, author_parties.values_list('id', flat=True)
+            # if t is GenericResource:
+            #     assert False, t.objects.all().values_list('object_id', flat=True)
+            queries[t].append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
 
         if edit_permission:
             if group:

@@ -140,11 +140,13 @@
 
                 // Find existing search and populate the search field
                 $input.val("");
-                if (typeof urlParams.type !== "undefined") {
-                    for (var i=0; i < urlParams.type.length; i++) {
-                        this.addItem("type", urlParams.type[i], urlParams.type[i]);
+                $.each(["type", "author"], function(){
+                    if (urlParams[this]) {
+                        for (var i=0; i < urlParams[this].length; i++) {
+                            self.addItem(this, urlParams[this][i], urlParams[this][i]);
+                        }
                     }
-                }
+                });
                 $input.val(urlParams.text[0]);
                 $input.focus();
 
@@ -197,9 +199,7 @@
 
                             for (var i=0; i < items.length; i++) {
                                 var item = items[i];
-                                if (item.type == "type") {
-                                    qs += "&type=" + item.id;
-                                }
+                                qs += "&" + item.type.toLowerCase() + "=" + item.id;
                             }
                             qs += "&text=" + textsearch;
                             window.location.search = qs;
