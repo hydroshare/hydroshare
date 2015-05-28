@@ -43,7 +43,12 @@
                         <td><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></td>
                         {# <th><i class="text-warning fa {% if starred %}fa-star{% else %}fa-star-o{% endif %}"></i></th>  #}
                         <td>{{ res|resource_type }}</td>
-                        <td>{{ res.user|contact|safe }}</td>
+                        {% if res.first_creator.description %}
+                            <td><a href="{{ res.first_creator.description }}">{{ res.first_creator.name  }}</a></td>
+                        {% else %}
+                            <td>{{ res.first_creator.name }}</td>
+                        {% endif %}
+
                         <td>{{ res.updated|date }}, {{ res.updated|time }}</td>
                     </tr>
                 {% endfor %}

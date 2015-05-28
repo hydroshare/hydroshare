@@ -310,15 +310,21 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
     metadata.append({'date': {'type': 'created', 'start_date': resource.created}})
     metadata.append({'date': {'type': 'modified', 'start_date': resource.updated}})
 
-    if resource.creator.first_name:
-        first_creator_name = "{first_name} {last_name}".format(first_name=resource.creator.first_name,
-                                                                   last_name=resource.creator.last_name)
+    creator_data = {}
+    user_profile = get_profile(resource.creator)
+    user_full_name = resource.creator.get_full_name()
+    if user_full_name:
+        first_creator_name = user_full_name
     else:
         first_creator_name = resource.creator.username
 
-    first_creator_email = resource.creator.email
+    creator_data['name'] = first_creator_name
+    creator_data['email'] = resource.creator.email
+    creator_data['description'] = '/user/{uid}/'.format(uid=resource.creator.pk)
+    creator_data['phone'] = user_profile.phone_1
+    creator_data['organization'] = user_profile.organization
 
-    metadata.append({'creator': {'name': first_creator_name, 'email': first_creator_email, 'order': 1}})
+    metadata.append({'creator': creator_data})
 
 
 def resource_file_add_pre_process(resource, files, user, extract_metadata=False, **kwargs):
