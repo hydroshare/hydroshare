@@ -9680,7 +9680,6 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 17	django_docker_processes	0001_initial	2015-05-15 20:42:05.22799+00
 18	hs_model_program	0001_initial	2015-05-15 20:42:31.546003+00
 19	hs_modelinstance	0001_initial	2015-05-15 20:42:32.769538+00
-20	hs_model_program	0002_auto_20150528_1906	2015-05-28 19:06:09.612929+00
 \.
 
 
@@ -9688,7 +9687,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 20, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 19, true);
 
 
 --
