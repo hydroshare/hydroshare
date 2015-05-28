@@ -58,7 +58,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session['just_created']
 
     istorage = IrodsStorage()
-    bag_url = istorage.url("bags/{res_id}.zip".format(res_id=content_model.short_id))
+    bag_url = istorage.url(content_model.short_id)
 
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
