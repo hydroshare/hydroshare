@@ -17,19 +17,17 @@ class OriginalCoverageFormHelper(BaseFormHelper):
         # The layout below orders how each filed from the Form will be displayed in the frontend
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('name', css_class=field_width),
+                        Field('projection', css_class=field_width),
+                        Field('projection_string_type', css_class=field_width),
+                        Field('projection_string_text', css_class=field_width),
                         Field('northlimit', css_class=field_width),
                         Field('eastlimit', css_class=field_width),
                         Field('southlimit', css_class=field_width),
                         Field('westlimit', css_class=field_width),
                         Field('units', css_class=field_width),
-                        Field('projection', css_class=field_width),
-                        Field('projection_string_type', css_class=field_width),
-                        Field('projection_string_text', css_class=field_width),
-
                  )
 
-        super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Spatial Reference',*args, **kwargs)
 
 
 class OriginalCoverageForm(forms.Form):
@@ -40,15 +38,14 @@ class OriginalCoverageForm(forms.Form):
         ('Proj4 String', 'Proj4 String')
     )
 
-    name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
-    projection = forms.CharField(max_length=100, required=False, label='Coordinate System Defined in Dataset ')
-    northlimit = forms.DecimalField(label='North Limit of Spatial Extent', widget=forms.TextInput())
-    eastlimit = forms.DecimalField(label='East Limit of Spatial Extent', widget=forms.TextInput())
-    southlimit = forms.DecimalField(label='South Limit of Spatial Extent', widget=forms.TextInput())
-    westlimit = forms.DecimalField(label='West Limit of Spatial Extent', widget=forms.TextInput())
-    units = forms.CharField(max_length=50, label='Units of Spatial Extent')
-    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, label='Coordinate System Text Representation Type', required=False)
-    projection_string_text = forms.CharField(max_length=1000, label='Coordinate System Text Representation Text', required=False, widget=forms.Textarea())
+    projection = forms.CharField(max_length=100, required=False, label='Coordinate Reference System')
+    northlimit = forms.DecimalField(label='North Extent', widget=forms.TextInput())
+    eastlimit = forms.DecimalField(label='East Extent', widget=forms.TextInput())
+    southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput())
+    westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput())
+    units = forms.CharField(max_length=50, label='Extent Unit')
+    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, label='Coordinate Reference System Representation Type', required=False)
+    projection_string_text = forms.CharField(max_length=1000, label='Coordinate Reference System Representation Text', required=False, widget=forms.Textarea())
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(OriginalCoverageForm, self).__init__(*args, **kwargs)
@@ -94,10 +91,6 @@ class OriginalCoverageForm(forms.Form):
             if len(temp_cleaned_data['projection']) == 0:
                 del temp_cleaned_data['projection']
 
-        if 'name' in temp_cleaned_data:
-            if len(temp_cleaned_data['name']) == 0:
-                del temp_cleaned_data['name']
-
         if 'projection_string_type' in temp_cleaned_data:
             del temp_cleaned_data['projection_string_type']
 
@@ -114,8 +107,6 @@ class OriginalCoverageForm(forms.Form):
             del self.cleaned_data['southlimit']
         if 'westlimit' in self.cleaned_data:
             del self.cleaned_data['westlimit']
-        if 'name' in self.cleaned_data:
-            del self.cleaned_data['name']
         if 'units' in self.cleaned_data:
             del self.cleaned_data['units']
         if 'projection' in self.cleaned_data:

@@ -2,7 +2,7 @@
 
 {% extends "pages/genericresource.html" %}
 {% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
-{#{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags inplace_edit %}#}
+{% load staticfiles  %}
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
@@ -25,7 +25,7 @@
                 {% endif %}
             </div>
             <div>
-                {% if executed_by.name %}
+                {% if executed_by.model_name %}
                     <h4><strong>Executed By:</strong></h4>
                     <hr style="margin-top: 0px;margin-bottom: 2px">
                     <div class="row">
@@ -56,14 +56,16 @@
 
                 {% endif %}
             </div>
+
         </div>
     {% endif %}
 {% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static "css/model_instance.css" %}" />
+{% endblock %}
+
 {% block extra_js %}
     {{ block.super }}
-
-    {# resource specific js can go here #}
     <script src="../../static/js/model_instance.js"></script>
-
-
 {% endblock %}

@@ -7,9 +7,11 @@ from django.contrib.sites.models import get_current_site
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
+
 from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_model_program.models import ModelProgramResource
 from hs_core.signals import *
+from hs_core.hydroshare import utils
 
 
 # extended metadata elements for Model Instance resource type
@@ -48,7 +50,7 @@ class ExecutedBy(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        shortid = kwargs['name']
+        shortid = kwargs['model_name']
 
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
@@ -57,7 +59,7 @@ class ExecutedBy(AbstractMetaDataElement):
         metadata_obj = kwargs['content_object']
         title = obj.title
         mp_fk = ExecutedBy.objects.create(model_program_fk=obj,
-                                          name=title,
+                                          model_name=title,
                                           content_object=metadata_obj)
 
         return mp_fk
@@ -77,10 +79,11 @@ class ExecutedBy(AbstractMetaDataElement):
             for key, value in kwargs.iteritems():
                 setattr(executed_by, key, value)
 
-            # todo: save foreign key fails here if obj is None.  Why???
             executed_by.save()
+
         else:
             raise ObjectDoesNotExist("No ExecutedBy element was found for the provided id:%s" % kwargs['id'])
+
 
     @classmethod
     def remove(cls, element_id):
@@ -155,6 +158,7 @@ class ModelInstanceMetaData(CoreMetaData):
 
     def get_xml(self, pretty_print=True):
         from lxml import etree
+
         # get the xml string representation of the core metadata elements
         xml_string = super(ModelInstanceMetaData, self).get_xml(pretty_print=False)
 
@@ -180,13 +184,17 @@ class ModelInstanceMetaData(CoreMetaData):
                                                                    '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description,
                                                         '{%s}ModelProgramName' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_name.text = self.executed_by.model_program_fk.title
+
+            title = self.executed_by.model_program_fk.title if self.executed_by.model_program_fk else "Unknown"
+            hsterms_executed_by_name.text = title
+
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description,
                                                        '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_url.text = 'http://%s%s' % (
-                get_current_site(None).domain, self.executed_by.model_program_fk.get_absolute_url())
+
+            url = '%s%s' % (utils.current_site_url(), self.executed_by.model_program_fk.get_absolute_url()) if self.executed_by.model_program_fk else "None"
+
+            hsterms_executed_by_url.text = url
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
-
 
 import receivers
