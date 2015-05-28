@@ -78,24 +78,17 @@ class ExecutedByFormHelper(BaseFormHelper):
 
 class ExecutedByForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        # pop owner from kwargs so that it isn't passed into parent classes (below)
-        owner = kwargs.pop('owner')
-
         super(ExecutedByForm, self).__init__(*args, **kwargs)
         self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy')
 
-        mp_resource = users.get_resource_list(user=owner, types=['ModelProgramResource'])
+        # get all model program resources
+        mp_resource = users.get_resource_list(types=['ModelProgramResource'])
 
-        # change above line to this once issue #262 is merged into develop
-        # mp_resource = users.get_resource_list(types=['ModelProgramResource'])
-
-
-        # CHOICES = tuple([('Unknown', 'Unknown')] + [(r.short_id, r.title) for r in mp_resource.values()[0]])
+        # set model programs resources in choice list
         CHOICES = (('Unknown', 'Unknown'),) + tuple((r.short_id, r.title) for r in mp_resource.values()[0])
 
         # Set the choice lists as the file names in the content model
         self.fields['model_name'].choices = CHOICES
-
 
     class Meta:
         model = ExecutedBy
