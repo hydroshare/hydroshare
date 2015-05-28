@@ -84,7 +84,6 @@ def create_bag(resource):
 
     #Set properties of the aggregation
     a._dc.title = resource.title
-    a._dcterms.created = arrow.get(resource.updated).format(DATE_FORMAT)
     a._dcterms.type = resource._meta.object_name
     a._citoterms.isDocumentedBy = metadata_url
     a._ore.isDescribedBy = res_map_url
@@ -102,8 +101,8 @@ def create_bag(resource):
     resFiles = []
     for n, f in enumerate(files):
         filename = os.path.basename(f.resource_file.name)
-        resFiles.append(AggregatedResource(os.path.join('{hs_url}/resource/{res_id}/data/contents'.format(
-            hs_url=current_site_url, res_id=resource.short_id))))
+        resFiles.append(AggregatedResource(os.path.join('{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+            hs_url=current_site_url, res_id=resource.short_id, file_name=filename))))
 
         resFiles[n]._ore.isAggregatedBy = ag_url
         resFiles[n]._dc.format = hs_core_utils.get_file_mime_type(filename)
