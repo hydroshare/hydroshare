@@ -1,7 +1,6 @@
 __author__ = 'tonycastronova'
 
 from django.http import HttpResponse
-from collections import OrderedDict
 from hs_model_program.models import ModelProgramResource
 import json
 
@@ -24,7 +23,6 @@ def get_model_metadata(request):
         protocol = 'https' if request.is_secure() else 'http'
 
         # build an output dictionary which will be returned as JSON
-
         if obj is not None:
             metadata = dict(
                 description=obj.description,
