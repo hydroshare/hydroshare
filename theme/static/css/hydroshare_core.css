@@ -1066,7 +1066,7 @@ a[data-toggle='tab']{
     /*0 1px 1px rgba(100,100,100,0.3);*/
 }
 #id_user-wrapper{
-    width: calc(100% - 97px);
+    width: calc(100% - 98px);
     padding: 1px;
     border: 1px solid #CCC;
     height: 60px;
@@ -1408,7 +1408,16 @@ body > .container{
 
 #btn-download-all, #btn-add-file, #btn-signin-irods, #btn-select-irods-file {
     margin-bottom:5px;
+    max-width:100%;
 }
+
+#btn-download-all span {
+    text-overflow: ellipsis;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+
 
 div#sharing-status {
     height: 34px;

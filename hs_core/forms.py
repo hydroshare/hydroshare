@@ -11,7 +11,7 @@ from django.contrib.admin.widgets import *
 from django.forms.extras.widgets import SelectDateWidget
 from django.utils.safestring import mark_safe
 from functools import partial, wraps
-
+from hydroshare import utils
 
 class HorizontalRadioRenderer(forms.RadioSelect.renderer):
     def render(self):
@@ -498,11 +498,14 @@ class CreatorFormSetHelper(FormHelper):
 
 class PartyForm(ModelForm):
     def __init__(self, *args, **kwargs):
+        if 'initial' in kwargs:
+            if 'description' in kwargs['initial']:
+                if kwargs['initial']['description']:
+                    kwargs['initial']['description'] = utils.current_site_url() + kwargs['initial']['description']
         super(PartyForm, self).__init__(*args, **kwargs)
         self.profile_link_formset = None
         self.number = 0
-
-
+        
     class Meta:
         model = Party
         # fields that will be displayed are specified here - but not necessarily in the same order
@@ -510,6 +513,7 @@ class PartyForm(ModelForm):
 
         # TODO: field labels and widgets types to be specified
         labels = {'description': 'HydroShare User Identifier (URL)'}
+
 
 class CreatorForm(PartyForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
@@ -550,13 +554,20 @@ class CreatorForm(PartyForm):
 
 
 class PartyValidationForm(forms.Form):
-    description = forms.URLField(required=False)
+    description = forms.URLField(required=False, validators=[validate_user_url])
     name = forms.CharField(max_length=100)
     organization = forms.CharField(max_length=200, required=False)
     email = forms.EmailField(required=False)
     address = forms.CharField(max_length=250, required=False)
     phone = forms.CharField(max_length=25, required=False)
     homepage = forms.URLField(required=False)
+
+    def clean_description(self):
+        user_absolute_url = self.cleaned_data['description']
+        if user_absolute_url:
+            url_parts = user_absolute_url.split('/')
+            return '/user/{user_id}/'.format(user_id=url_parts[4])
+        return user_absolute_url
 
     def clean(self):
         cleaned_data = super(PartyValidationForm, self).clean()

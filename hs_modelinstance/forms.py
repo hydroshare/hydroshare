@@ -57,6 +57,18 @@ class ExecutedByFormHelper(BaseFormHelper):
         field_width = 'form-control input-sm'
         layout = Layout(
             Field('model_name', css_class=field_width),
+            HTML("""
+            <div id=progam_details_div style="display:none">
+                <table id="program_details_table" class="modelprogram">
+                <tr><td>Description: </td><td></td></tr>
+                <tr><td>Release Date: </td><td></td></tr>
+                <tr><td>Version: </td><td></td></tr>
+                <tr><td>Language: </td><td></td></tr>
+                <tr><td>Operating System: </td><td></td></tr>
+                <tr><td>Url: </td><td></td></tr>
+            </table>
+            </div>
+            """),
         )
 
         kwargs['element_name_label'] = 'Model Program used for execution'
@@ -66,24 +78,17 @@ class ExecutedByFormHelper(BaseFormHelper):
 
 class ExecutedByForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        # pop owner from kwargs so that it isn't passed into parent classes (below)
-        owner = kwargs.pop('owner')
-
         super(ExecutedByForm, self).__init__(*args, **kwargs)
         self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy')
 
-        mp_resource = users.get_resource_list(user=owner, types=['ModelProgramResource'])
+        # get all model program resources
+        mp_resource = users.get_resource_list(types=['ModelProgramResource'])
 
-        # change above line to this once issue #262 is merged into develop
-        # mp_resource = users.get_resource_list(types=['ModelProgramResource'])
-
-
-        # CHOICES = tuple([('Unknown', 'Unknown')] + [(r.short_id, r.title) for r in mp_resource.values()[0]])
+        # set model programs resources in choice list
         CHOICES = (('Unknown', 'Unknown'),) + tuple((r.short_id, r.title) for r in mp_resource.values()[0])
 
         # Set the choice lists as the file names in the content model
         self.fields['model_name'].choices = CHOICES
-
 
     class Meta:
         model = ExecutedBy

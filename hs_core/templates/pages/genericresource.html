@@ -14,6 +14,7 @@
         <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
         <input type="hidden" id="allow-multiple-file-upload" value={{ cm.can_have_multiple_files }}>
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
+
         {% block error %}
             {%  if file_validation_error %}
                 <div class="alert alert-danger alert-dismissible" role="alert">
@@ -689,7 +690,7 @@
                     {% for b in cm.bags.all %}
                         <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag_url }}">
                             <span class="glyphicon glyphicon-download-alt">
-                                <span class="button-label">Download All</span>
+                                <span title='Download All Content as Zipped BagIt Archive ({{ b.bag.size|filesizeformat }})' class="button-label">Download All Content as Zipped BagIt Archive ({{ b.bag.size|filesizeformat }})</span>
                             </span>
                         </a>
                     {% endfor %}
@@ -714,6 +715,7 @@
                           </div>
                         {% endif %}
                     {% endif %}
+                    <div class="col-lg-12"><a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a></div>
                 </div>
             </div>
 
@@ -1589,7 +1591,9 @@
                                         <div class="controls"><input
                                                 class="form-control input-sm urlinput"
                                                 id="id_contributor-{{ contributor.order|add:"- 1" }}-description" maxlength="200"
-                                                name="contributor-{{ contributor.order|add:"- 1" }}-description" type="url" value="{% if contributor.description %}{{ contributor.description }}{% endif %}"></div>
+                                                name="contributor-{{ contributor.order|add:"- 1" }}-description" type="url"
+                                                value="{% if contributor.description %}{{ contributor.description }}{% endif %}"
+                                                {% if contributor.description %} readonly {% endif %}></div>
                                     </div>
                                     <div id="div_id_organization" class="control-group">
                                         <label class="control-label">Organization</label>
@@ -1703,7 +1707,9 @@
                                         <div class="controls"><input
                                                 class="form-control input-sm urlinput"
                                                 id="id_creator-{{ author.order|add:"- 1" }}-description" maxlength="200"
-                                                name="creator-{{ author.order|add:"- 1" }}-description" type="url" value="{% if author.description %}{{ author.description }}{% endif %}"></div>
+                                                name="creator-{{ author.order|add:"- 1" }}-description" type="url"
+                                                value="{% if author.description %}{{ author.description }}{% endif %}"
+                                                {% if author.description %} readonly {% endif %}></div>
                                     </div>
                                     <div id="div_id_organization" class="control-group">
                                         <label class="control-label">Organization</label>
