@@ -27,9 +27,7 @@ def landing_page(request, page):
                                             res_short_id=content_model.short_id,
                                             element_id=content_model.metadata.model_output.id if content_model.metadata.model_output else None)
 
-        owner = content_model.metadata.creators.all().first().name
         executed_by_form = ExecutedByForm(instance=content_model.metadata.executed_by,
-                                          owner=owner,  # todo: remove this line when issue #262 is merged into develop
                                           res_short_id=content_model.short_id,
                                           element_id=content_model.metadata.executed_by.id if content_model.metadata.executed_by else None)
 
