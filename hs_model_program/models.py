@@ -85,9 +85,8 @@ class MpMetadata(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        # metadata = MpMetadata.objects.get(id=element_id)
-        # metadata.delete()
-        raise ValidationError("Site element of a resource can't be deleted.")
+        metadata = MpMetadata.objects.get(id=element_id)
+        metadata.delete()
 
 
 class ModelProgramResource(Page, AbstractResource):
@@ -99,17 +98,17 @@ class ModelProgramResource(Page, AbstractResource):
         md = ModelProgramMetaData()
         return self._get_metadata(md)
 
-    # def can_add(self, request):
-    #     return AbstractResource.can_add(self, request)
-    #
-    # def can_change(self, request):
-    #     return AbstractResource.can_change(self, request)
-    #
-    # def can_delete(self, request):
-    #     return AbstractResource.can_delete(self, request)
-    #
-    # def can_view(self, request):
-    #     return AbstractResource.can_view(self, request)
+    def can_add(self, request):
+        return AbstractResource.can_add(self, request)
+
+    def can_change(self, request):
+        return AbstractResource.can_change(self, request)
+
+    def can_delete(self, request):
+        return AbstractResource.can_delete(self, request)
+
+    def can_view(self, request):
+        return AbstractResource.can_view(self, request)
 
 
 processor_for(ModelProgramResource)(resource_processor)
@@ -166,7 +165,7 @@ class ModelProgramMetaData(CoreMetaData):
                   'user_manual',
                   'theoretical_manual',
                   'source_code']
-        # model_program_object = self.mpmetadata.all().first()
+
         model_program_object = self.program
         self.add_metadata_element_to_xml(container, model_program_object, fields)
 

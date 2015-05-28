@@ -30,6 +30,7 @@ class mp_form_helper(BaseFormHelper):
 
 class mp_form(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        # pop files from kwargs, else metadata will fail to load in edit mode
         files = kwargs.pop('files')
         super(mp_form, self).__init__(*args, **kwargs)
         self.helper = mp_form_helper(allow_edit, res_short_id, element_id, element_name='MpMetadata')
