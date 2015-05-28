@@ -16,6 +16,8 @@ from .utils import authorize, validate_json
 from django.views.generic import View
 from django.core import exceptions
 
+from django_irods.storage import IrodsStorage
+
 
 class ResourceCRUD(View):
     """
@@ -177,7 +179,9 @@ class ResourceCRUD(View):
     def get_resource(self, pk):
         authorize(self.request, pk, view=True)
 
-        return HttpResponseRedirect(hydroshare.get_resource(pk).bag.url)
+        istorage = IrodsStorage()
+        bag_url = hydroshare.utils.current_site_url() + istorage.url(pk)
+        return HttpResponseRedirect(bag_url)
 
     def update_resource(self, pk):
         authorize(self.request, pk, edit=True)
