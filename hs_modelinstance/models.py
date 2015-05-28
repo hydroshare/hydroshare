@@ -11,7 +11,7 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_model_program.models import ModelProgramResource
 from hs_core.signals import *
-
+from hs_core.hydroshare import utils
 
 
 # extended metadata elements for Model Instance resource type
@@ -191,8 +191,8 @@ class ModelInstanceMetaData(CoreMetaData):
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description,
                                                        '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
 
-            url = 'http://%s%s' % (get_current_site(None).domain,
-                                   self.executed_by.model_program_fk.get_absolute_url()) if self.executed_by.model_program_fk else "None"
+            url = '%s%s' % (utils.current_site_url(), self.executed_by.model_program_fk.get_absolute_url()) if self.executed_by.model_program_fk else "None"
+
             hsterms_executed_by_url.text = url
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
