@@ -428,9 +428,12 @@ def get_nc_grid_mapping_projection_import_string(nc_dataset):
         if hasattr(nc_grid_mapping_variable, 'standard_parallel'):
             if nc_grid_mapping_projection_name in standard_parallel_types:
                 str_value = str(nc_grid_mapping_variable.standard_parallel).strip('[]').split()
-                num_value = sorted([float(x) for x in str_value])
-                if num_value.__len__() <= 2:
-                    proj_info_list.extend(['lat_{0}={1}'.format(i+1, j) for i, j in enumerate(num_value)])
+                try:
+                    num_value = sorted([float(x) for x in str_value])
+                    if num_value.__len__() <= 2:
+                        proj_info_list.extend(['lat_{0}={1}'.format(i+1, j) for i, j in enumerate(num_value)])
+                except:
+                    pass
             else:
                 proj_info_list.append('{0}={1}'.format('+lat_ts', nc_grid_mapping_variable.standard_parallel))
 
