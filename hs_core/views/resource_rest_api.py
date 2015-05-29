@@ -12,8 +12,6 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.exceptions import *
 
-from django_irods.storage import IrodsStorage
-
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
