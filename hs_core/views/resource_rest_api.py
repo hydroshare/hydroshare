@@ -148,14 +148,19 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
         if not resource_list_request_validator.is_valid():
             raise ValidationError(detail=resource_list_request_validator.errors)
 
+        # Debugging support
+        import sys
+        sys.path.append("/home/docker/pycharm-debug")
+        import pydevd
+        pydevd.settrace('selimnairb.dyndns.org', port=21000, suspend=False)
+
+
         filter_parms = resource_list_request_validator.validated_data
         filter_parms['user'] = (self.request.user if self.request.user.is_authenticated() else None)
-        if len(filter_parms['types']) == 0:
-            filter_parms['types'] = None
+        if len(filter_parms['type']) == 0:
+            filter_parms['type'] = None
 
         filter_parms['public'] = not self.request.user.is_authenticated()
-
-        filter_parms['keywords'] = None
 
         filtered_res_list = []
 
