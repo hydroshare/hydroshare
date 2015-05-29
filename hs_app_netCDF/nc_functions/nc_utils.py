@@ -49,6 +49,7 @@ def get_nc_variable(nc_file_name, nc_variable_name):
 
     return nc_variable
 
+
 def get_nc_variable_original_meta(nc_dataset, nc_variable_name):
     """
     (object, string)-> OrderedDict
@@ -379,140 +380,61 @@ def get_nc_grid_mapping_projection_import_string(nc_dataset):
     Return: the netCDF grid mapping proj4 string used for creating projection object with pyproj.Proj()
     Reference: Cf convention for grid mapping projection
     """
+
     # get the proj name, proj variable
     nc_grid_mapping_projection_name = get_nc_grid_mapping_projection_name(nc_dataset)
-    nc_grid_mapping_projection_import_string = ''
     nc_grid_mapping_variable = get_nc_grid_mapping_variable(nc_dataset)
 
-    # get the proj info from cf convention
-    albers_conical_equal_area = OrderedDict([
-        ('+proj=', 'aea'),
-        ('+lat_1=', 'standard_parallel'),
-        ('+lat_0=', 'latitude_of_projection_origin'),
-        ('+lon_0=', 'longitude_of_central_meridian'),
-        ('+x_0=', 'false_easting'),
-        ('+y_0=','false_northing'),
-    ])
-    azimuthal_equidistant = OrderedDict([
-        ('+proj=', 'aeqd'),
-        ('+lat_0=', 'latitude_of_projection_origin'),
-        ('+lon_0=', 'longitude_of_projection_origin'),
-        ('+x_0=', 'false_easting'),
-        ('+y_0=','false_northing'),
-    ])
-    lambert_azimuthal_equal_area = OrderedDict([
-        ('+proj=', 'laea'),
-        ('+lat_0=', 'latitude_of_projection_origin'),
-        ('+lon_0=', 'longitude_of_projection_origin'),
-        ('+x_0=', 'false_easting'),
-        ('+y_0=', 'false_northing'),
-    ])
-    lambert_conformal_conic = OrderedDict([
-        ('+proj=', 'lcc'),
-        ('+lat_1=', 'standard_parallel'),
-        ('+lat_0=', 'latitude_of_projection_origin'),
-        ('+lon_0=', 'longitude_of_central_meridian'),
-        ('+x_0=', 'false_easting'),
-        ('+y_0=', 'false_northing'),
-    ])  # tested with real nc file
-
-    lambert_cylindrical_equal_area =OrderedDict([
-        ('+proj=', 'cea'),
-        ('+lat_ts=', 'scale_factor_at_projection_origin'),
-        ('+lat_ts=', 'standard_parallel'),
-        ('+lon_0=', 'longitude_of_projection_origin'),
-        ('+x_0=', 'false_easting'),
-        ('+y_0=', 'false_northing'),
-    ])
-    mercator = OrderedDict([
-        ('+proj=', 'merc'),
-        ('+k_0=', 'scale_factor_at_projection_origin'),
-        ('+lat_ts=', 'standard_parallel'),
-        ('+lon_0=', 'longitude_of_projection_origin'),
-        ('+x_0=', 'false_easting'),
-        ('+y_0=', 'false_northing'),
-    ])
-    orthographic = OrderedDict([
-        ('+proj=', 'ortho'),
-        ('+lat_0=', 'latitude_of_projection_origin'),
-        ('+lon_0=', 'longitude_of_projection_origin'),
-        ('+x_0=', 'false_easting'),
-        ('+y_0=', 'false_northing'),
-    ])
-    polar_stereographic = OrderedDict([
-        ('+proj=', 'stere'),
-        ('+k_0=', 'scale_factor_at_projection_origin'),
-        ('+lat_ts=', 'standard_parallel'),
-        ('+lat_0=', 'latitude_of_projection_origin'),
-        ('+lon_0=', 'straight_vertical_longitude_from_pole'),
-        ('+x_0=', 'false_easting'),
-        ('+y_0=', 'false_northing'),
-    ])
-    #rotated_latitude_longitude = {}
-    stereographic = OrderedDict([
-        ('+proj=', 'stere'),
-        ('+lat_0=', 'latitude_of_projection_origin'),
-        ('+lon_0=', 'longitude_of_projection_origin'),
-        ('+x_0=', 'false_easting'),
-        ('+y_0=', 'false_northing'),
-    ])
-    transverse_mercator = OrderedDict([
-        ('+proj=', 'tmerc'),
-        ('+k_0=', 'scale_factor_at_projection_origin'),
-        ('+lat_0=', 'latitude_of_projection_origin'),
-        ('+lon_0=', 'longitude_of_projection_origin'),
-        ('+x_0=', 'false_easting'),
-        ('+y_0=', 'false_northing'),
-    ])
-    vertical_perspective = OrderedDict([
-        ('+proj=', 'geos'),
-        ('+h=', 'perspective_point_height'),
-        ('+lon_0=', 'longitude_of_projection_origin'),
-        ('+x_0=', 'false_easting'),
-        ('+y_0=', 'false_northing'),
-    ])
-
-    cf_convention_proj_info = {
-        'albers_conical_equal_area': albers_conical_equal_area,
-        'azimuthal_equidistant': azimuthal_equidistant,
-        'lambert_azimuthal_equal_area': lambert_azimuthal_equal_area,
-        'lambert_conformal_conic': lambert_conformal_conic,
-        'lambert_cylindrical_equal_area': lambert_cylindrical_equal_area,
-        'mercator': mercator,
-        'orthographic': orthographic,
-        'polar_stereographic': polar_stereographic,
-        #'rotated_latitude_longitude': rotated_latitude_longitude,
-        'stereographic': stereographic,
-        'transverse_mercator': transverse_mercator,
-        'vertical_perspective': vertical_perspective
+    proj_names = {
+        'albers_conical_equal_area': 'aea',
+        'azimuthal_equidistant': 'aeqd',
+        'lambert_azimuthal_equal_area': 'laea',
+        'lambert_conformal_conic': 'lcc', # tested with prcp.nc
+        'lambert_cylindrical_equal_area': 'cea',
+        'mercator': 'merc',
+        'orthographic': 'ortho',
+        'polar_stereographic': 'stere',
+        'stereographic': 'stere',
+        'transverse_mercator': 'tmerc',# test with swe.nc
+        'vertical_perspective': 'geos',
     }
 
-    # get the projection import string
-    for proj_name, proj_para_dict in cf_convention_proj_info.items():
-        if re.match(proj_name, nc_grid_mapping_projection_name, re.I):
-            proj4_string = ''
-            for para_name, para_value in proj_para_dict.items():
-                if para_name == '+proj=':
-                    proj4_string = proj4_string + '+proj=' + para_value
-                elif hasattr(nc_grid_mapping_variable, para_value):
-                    if para_name == '+lat_1=':
-                        value = str(nc_grid_mapping_variable.standard_parallel).strip('[]').split()
-                        if len(value) == 1:
-                            proj4_string = proj4_string + ' +lat_1='+value[0]
-                        elif len(value) == 2:
-                            a = float(value[0])
-                            b = float(value[1])
-                            proj4_string = proj4_string + ' +lat_1='+str(min(a, b))+' +lat_2='+str(max(a, b))
-                    else:
-                        proj4_string = proj4_string + ' ' + para_name + str(getattr(nc_grid_mapping_variable, para_value))
-                else:
-                    proj4_string = ''
+    proj_paras = {
+        '+y_0': 'false_northing',
+        '+x_0': 'false_easting',
+        '+k_0': 'scale_factor_at_projection_origin,scale_factor_at_central_meridian',
+        '+lat_0': 'latitude_of_projection_origin',
+        '+lon_0': 'longitude_of_projection_origin,longitude_of_central_meridian,straight_vertical_longitude_from_pole',
+        '+h': 'perspective_point_height'
+    }
+
+    standard_parallel_types = ['albers_conical_equal_area', 'lambert_conformal_conic']
+
+    # create the projection import string
+    proj_info_list = []
+
+    if nc_grid_mapping_projection_name in proj_names .keys():
+        # add projection name
+        proj_info_list.append('+proj={0}'.format(proj_names[nc_grid_mapping_projection_name]))
+
+        # add basic parameters
+        for proj4_para, cf_para in proj_paras.items():
+            for para in cf_para.split(','):
+                if hasattr(nc_grid_mapping_variable, para):
+                    proj_info_list.append('{0}={1}'.format(proj4_para, getattr(nc_grid_mapping_variable, para)))
                     break
 
-            if proj4_string != '':
-                nc_grid_mapping_projection_import_string = proj4_string
+        # add standard parallel para
+        if hasattr(nc_grid_mapping_variable, 'standard_parallel'):
+            if nc_grid_mapping_projection_name in standard_parallel_types:
+                str_value = str(nc_grid_mapping_variable.standard_parallel).strip('[]').split()
+                num_value = sorted([float(x) for x in str_value])
+                if num_value.__len__() <= 2:
+                    proj_info_list.extend(['lat_{0}={1}'.format(i+1, j) for i, j in enumerate(num_value)])
+            else:
+                proj_info_list.append('{0}={1}'.format('+lat_ts', nc_grid_mapping_variable.standard_parallel))
 
-            break
+    nc_grid_mapping_projection_import_string = ' '.join(proj_info_list)
 
     return nc_grid_mapping_projection_import_string
 
