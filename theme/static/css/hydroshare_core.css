@@ -1411,6 +1411,10 @@ body > .container{
     max-width:100%;
 }
 
+#btn-download-all > span {
+    height:16px;
+}
+
 #btn-download-all span {
     text-overflow: ellipsis;
     max-width: 100%;
