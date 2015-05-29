@@ -1378,6 +1378,19 @@ class AbstractResource(ResourcePermissionsMixin):
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
+    @classmethod
+    def bag_url(cls, resource_id):
+        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
+        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
+
+        bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
+                                                           resource_id=resource_id,
+                                                           postfix=bagit_postfix)
+        istorage = IrodsStorage()
+        bag_url = istorage.url(bag_path)
+
+        return bag_url
+
     def delete(self, using=None):
         from hydroshare import hs_bagit
 
