@@ -18,6 +18,8 @@ from django.core import exceptions
 
 from django_irods.storage import IrodsStorage
 
+from hs_core.models import AbstractResource
+
 
 class ResourceCRUD(View):
     """
@@ -178,9 +180,8 @@ class ResourceCRUD(View):
 
     def get_resource(self, pk):
         authorize(self.request, pk, view=True)
-
-        istorage = IrodsStorage()
-        bag_url = hydroshare.utils.current_site_url() + istorage.url(pk)
+        
+        bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(pk)
         return HttpResponseRedirect(bag_url)
 
     def update_resource(self, pk):
