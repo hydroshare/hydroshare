@@ -15,11 +15,14 @@ from django.template import RequestContext
 from django.core import signing
 from django import forms
 
+from rest_framework.decorators import api_view
+
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
 import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
+from django_irods.storage import IrodsStorage
 
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
@@ -208,6 +211,15 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+@api_view(['GET'])
+def file_download_url_mapper(request, shortkey, filename):
+    """ maps the file URIs in resourcemap document to django_irods download view function"""
+
+    authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
+    irods_file_path = '/'.join(request.path.split('/')[2:-1])
+    istorage = IrodsStorage()
+    file_download_url = istorage.url(irods_file_path)
+    return HttpResponseRedirect(file_download_url)
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
