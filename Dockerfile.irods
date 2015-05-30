@@ -4,8 +4,8 @@ WORKDIR /home/docker
 
 # Install iRODS packages
 RUN apt-get install -y libssl0.9.8 libfuse2
-RUN curl ftp://ftp.renci.org/pub/irods/preview/version_001_commit_85bd9ec7131ff3563779902d10abf6b0646cd132/ubuntu14/irods-runtime-4.1.0-64bit.deb -o irods-runtime-4.1.0-64bit.deb
-RUN curl ftp://ftp.renci.org/pub/irods/preview/version_001_commit_85bd9ec7131ff3563779902d10abf6b0646cd132/ubuntu14/irods-icommands-4.1.0-64bit.deb -o irods-icommands-4.1.0-64bit.deb
+RUN curl ftp://ftp.renci.org/pub/irods/releases/4.1.0/ubuntu14/irods-runtime-4.1.0-ubuntu14-x86_64.deb -o irods-runtime-4.1.0-64bit.deb
+RUN curl ftp://ftp.renci.org/pub/irods/releases/4.1.0/ubuntu14/irods-icommands-4.1.0-ubuntu14-x86_64.deb -o irods-icommands-4.1.0-64bit.deb
 RUN sudo dpkg -i irods-runtime-4.1.0-64bit.deb irods-icommands-4.1.0-64bit.deb
 RUN sudo apt-get -f install
 RUN pip install -e git+https://github.com/iPlantCollaborativeOpenSource/python-irodsclient.git@master#egg=python-irodsclient
