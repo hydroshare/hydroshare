@@ -13,21 +13,20 @@ from rest_framework import status, generics
 from rest_framework.exceptions import *
 
 from hs_core import hydroshare
+from hs_core.models import AbstractResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
 from hs_core.views import utils as view_utils
 from hs_core.views import serializers
 from hs_core.views import pagination
 
-
 # Mixins
 class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
-        resource_bag = hydroshare.get_resource(r.short_id)
         creator_name = r.creator.username
 
         public = True if r.public else False
 
-        bag_url = hydroshare.utils.current_site_url() + resource_bag.bag.url
+        bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(r.short_id)
         science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
         resource_list_item = serializers.ResourceListItem(resource_type=r.__class__.__name__,
                                                           resource_id=r.short_id,
@@ -151,12 +150,10 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
 
         filter_parms = resource_list_request_validator.validated_data
         filter_parms['user'] = (self.request.user if self.request.user.is_authenticated() else None)
-        if len(filter_parms['types']) == 0:
-            filter_parms['types'] = None
+        if len(filter_parms['type']) == 0:
+            filter_parms['type'] = None
 
         filter_parms['public'] = not self.request.user.is_authenticated()
-
-        filter_parms['keywords'] = None
 
         filtered_res_list = []
 
@@ -213,8 +210,8 @@ class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceTo
         """
         view_utils.authorize(request, pk, view=True, full=True)
 
-        res = hydroshare.get_resource(pk)
-        return HttpResponseRedirect(res.bag.url)
+        bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(pk)
+        return HttpResponseRedirect(bag_url)
 
     def put(self, request, pk):
         # TODO: update resource - involves overwriting a resource from the provided bag file
