@@ -12,81 +12,75 @@ from hs_core.signals import *
 
 
 class MpMetadata(AbstractMetaDataElement):
+    term = "MpMetadata"
+
     # version
-    software_version = models.CharField(verbose_name='Version ', null=True, blank=True, default='1.0', max_length=255,
+    software_version = models.CharField(verbose_name='Version ', null=True, blank=True, max_length=255, default='',
                                         help_text='The software version of the model')
 
     # program language
-    software_language = models.CharField(verbose_name="Language", null=True, blank=True, default='', max_length=100,
+    software_language = models.CharField(verbose_name="Language", null=True, blank=True, max_length=100,default='',
                                          help_text="The programming language(s) that the model was written in")
 
     # operating system
-    operating_sys = models.CharField(verbose_name='Operating System', null=True, blank=True, default='unknown',
+    operating_sys = models.CharField(verbose_name='Operating System', null=True, blank=True,default='',
                                      max_length=255, help_text='Compatible operating systems')
 
     # release date
-    date_released = models.DateTimeField(verbose_name='Release Date', null=True, blank=True, default=dt.datetime.now(),
+    date_released = models.DateTimeField(verbose_name='Release Date', null=True, blank=True,
                                          help_text='The date of the software release (m/d/Y H:M)')
 
     # web page
-    program_website = models.CharField(verbose_name='Website', null=True, blank=True, default=None, max_length=255,
+    program_website = models.CharField(verbose_name='Website', null=True, blank=True, max_length=255,default='',
                                        help_text='A URL providing addition information about the software')
 
     # repository
-    software_repo = models.CharField(verbose_name='Software Repository', null=True, blank=True, default=None,
+    software_repo = models.CharField(verbose_name='Software Repository', null=True, blank=True,default='',
                                      max_length=255,
                                      help_text='A URL for the source code repository (e.g. git, mecurial, svn)')
 
     # release notes
-    release_notes = models.CharField(verbose_name="Release Notes", null=True, blank=True, default="", max_length=400,
+    release_notes = models.CharField(verbose_name="Release Notes", null=True, blank=True, max_length=400,default='',
                                      help_text="Notes about the software release (e.g. bug fixes, new functionality)",
                                      choices=(('-', '    '),))
 
     # user manual
-    user_manual = models.CharField(verbose_name='User Manual', name='user_manual', null=True, blank=True, default=None,
+    user_manual = models.CharField(verbose_name='User Manual', name='user_manual', null=True, blank=True,default='',
                                    max_length=400,
                                    help_text='User manual for the model program (e.g. .doc, .md, .rtf, .pdf',
                                    choices=(('-', '    '),))
 
     # theoretical manual
-    theoretical_manual = models.CharField(verbose_name='Theoretical Manual', name='theoretical_manual', null=True,
-                                          blank=True, default=None, max_length=400,
+    theoretical_manual = models.CharField(verbose_name='Theoretical Manual', name='theoretical_manual', null=True,default='',
+                                          blank=True, max_length=400,
                                           help_text='Theoretical manual for the model program (e.g. .doc, .md, .rtf, .pdf',
                                           choices=(('-', '    '),))
 
     # source code
-    source_code = models.CharField(verbose_name='Source Code', name='source_code', default=None, null=True, blank=True,
+    source_code = models.CharField(verbose_name='Source Code', name='source_code', null=True, blank=True,default='',
                                    max_length=400,
                                    help_text='Archive of the  source code for the model (e.g. .zip, .tar)',
                                    choices=(('-', '    '),))
+    def __unicode__(self):
+        self.software_version
 
+    class Meta:
+        # site element is not repeatable
+        unique_together = ("content_type", "object_id")
 
     @classmethod
     def create(cls, **kwargs):
-        # todo: add validation
-
-        mpmetadata = MpMetadata.objects.create(**kwargs)
-
-        return mpmetadata
-
+        return MpMetadata.objects.create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         metadata = MpMetadata.objects.get(id=element_id)
-
-        # todo: validate
-
-        metadata.software_version = kwargs['software_version']
-        metadata.software_language = kwargs['software_language']
-        metadata.operating_sys = kwargs['operating_sys']
-        metadata.date_released = kwargs['date_released']
-        metadata.program_website = kwargs['program_website']
-        metadata.software_repo = kwargs['software_repo']
-        metadata.release_notes = kwargs['release_notes']
-        metadata.user_manual = kwargs['user_manual']
-        metadata.theoretical_manual = kwargs['theoretical_manual']
-        metadata.source_code = kwargs['source_code']
-        metadata.save()
+        if metadata:
+            for key, value in kwargs.iteritems():
+                setattr(metadata, key, value)
+            metadata.save()
+        else:
+            raise ObjectDoesNotExist("No Site element was found for the provided id:%s" % kwargs['id'])
 
 
     @classmethod
@@ -96,7 +90,8 @@ class MpMetadata(AbstractMetaDataElement):
 
 
 class ModelProgramResource(Page, AbstractResource):
-    term = 'ModelProgramInformation'
+    class Meta:
+        verbose_name = 'Model Program Resource'
 
     @property
     def metadata(self):
@@ -115,23 +110,37 @@ class ModelProgramResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
-    class Meta:
-        verbose_name = 'Model Program Resource'
-
 
 processor_for(ModelProgramResource)(resource_processor)
 
 
 class ModelProgramMetaData(CoreMetaData):
-    mpmetadata = generic.GenericRelation(MpMetadata)
+    _mpmetadata = generic.GenericRelation(MpMetadata)
+
+    @property
+    def program(self):
+        return self._mpmetadata.all().first()
 
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
         elements = super(ModelProgramMetaData, cls).get_supported_element_names()
         # add the name of any additional element to the list
-        elements.append('mpmetadata')
+        elements.append('MpMetadata')
         return elements
+
+    def has_all_required_elements(self):
+        if not super(ModelProgramMetaData, self).has_all_required_elements():
+            return False
+        if not self.program:
+            return False
+        return True
+
+    def get_required_missing_elements(self):
+        missing_required_elements = super(ModelProgramMetaData, self).get_required_missing_elements()
+        if not self.program:
+            missing_required_elements.append('MpMetadata')
+        return missing_required_elements
 
     def get_xml(self):
         from lxml import etree
@@ -156,7 +165,8 @@ class ModelProgramMetaData(CoreMetaData):
                   'user_manual',
                   'theoretical_manual',
                   'source_code']
-        model_program_object = self.mpmetadata.all().first()
+
+        model_program_object = self.program
         self.add_metadata_element_to_xml(container, model_program_object, fields)
 
         xml_string = etree.tostring(RDF_ROOT, pretty_print=True)
@@ -164,7 +174,7 @@ class ModelProgramMetaData(CoreMetaData):
         return xml_string
 
 
-import recievers
+import receivers
 
 
 

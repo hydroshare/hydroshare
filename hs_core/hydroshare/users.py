@@ -2,10 +2,11 @@ import json
 
 from django.core.exceptions import MultipleObjectsReturned
 from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.core import signing
 
-from hs_core.models import GroupOwnership
+from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject, Description, Title
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
 
 
@@ -527,11 +528,14 @@ def get_resource_list(creator=None,
         group=None, user=None, owner=None,
         from_date=None, to_date=None,
         start=None, count=None,
-        keywords=None,
         full_text_search=None,
         published=False,
         edit_permission=False,
-        public=False, types=None
+        public=False,
+        type=None,
+        author=None,
+        contributor=None,
+        subject=None,
 ):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
@@ -566,25 +570,49 @@ def get_resource_list(creator=None,
         to_date = datetime object
         start = int
         count = int
-        keywords = list of keywords
-        types = list of resource type names, used for filtering
+        subject = list of subject
+        type = list of resource type names, used for filtering
     """
     from django.db.models import Q
 
-    if not any((creator, group, user, owner, from_date, to_date, start, count, keywords, full_text_search, public, types)):
+    if not any((creator, group, user, owner, from_date, to_date, start, count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
     resource_types = get_resource_types()
 
     # filtering based on resource type.
-    if types:
-        queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in types)
+    if type:
+        queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in type)
     else:
         queries = dict((el, []) for el in resource_types)
 
     for t, q in queries.items():
         if published:
             queries[t].append(Q(doi__isnull=False))
+
+        if author:
+            author_parties = (
+                #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
+                (Creator.objects.filter(email__in=author) | Creator.objects.filter(name__in=author))
+            )
+            # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
+            # assert author_parties, Creator.objects.all().values_list('name', flat=True)
+            # assert False, author_parties.values_list('id', flat=True)
+            # if t is GenericResource:
+            #     assert False, t.objects.all().values_list('object_id', flat=True)
+            queries[t].append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
+
+        if contributor:
+            contributor_parties = (
+                #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
+                (Contributor.objects.filter(email__in=contributor) | Contributor.objects.filter(name__in=contributor))
+            )
+            # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
+            # assert author_parties, Creator.objects.all().values_list('name', flat=True)
+            # assert False, author_parties.values_list('id', flat=True)
+            # if t is GenericResource:
+            #     assert False, t.objects.all().values_list('object_id', flat=True)
+            queries[t].append(Q(object_id__in=contributor_parties.values_list('object_id', flat=True)))
 
         if edit_permission:
             if group:
@@ -606,10 +634,14 @@ def get_resource_list(creator=None,
             if user:
                 user = user_from_id(user)
                 if owner:
-                    owner = user_from_id(owner)
-                    queries[t].append(Q(owners=owner))
-                    if user != owner:
-                        public = True
+                    try:
+                        owner = user_from_id(owner, raise404=False)
+                    except User.DoesNotExist:
+                        queries[t].append(Q(owners__isnull=True))
+                    else:
+                        queries[t].append(Q(owners=owner))
+                        if user != owner:
+                            public = True
                 else:
                     queries[t].append(Q(edit_users=user) | Q(view_users=user) | Q(owners=user) | Q(public=True))
 
@@ -620,8 +652,10 @@ def get_resource_list(creator=None,
         elif to_date:
             queries[t].append(Q(created__lte=to_date))
 
-        #if keywords:
-        #    queries[t].append(Q(keywords__title__in=keywords))
+        if subject:
+            subjects = Subject.objects.filter(value__in=subject)
+            queries[t].append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
+
 
         flt = t.objects.all()
         for q in queries[t]:
@@ -631,13 +665,23 @@ def get_resource_list(creator=None,
             flt = flt.filter(public=True)
 
         if full_text_search:
-            flt = flt.search(full_text_search)
+            fts_qs = flt.search(full_text_search)
+            description_matching = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+            title_matching = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
+
+            if description_matching:
+                desc_qs = flt.filter(object_id__in=description_matching)
+            else:
+                desc_qs = t.objects.none()
+
+            if title_matching:
+                title_qs = flt.filter(object_id__in=title_matching)
+            else:
+                title_qs = t.objects.none()
+
+            flt = fts_qs.distinct() | desc_qs.distinct() | title_qs.distinct()
 
         queries[t] = flt
-
-        if keywords:
-            for k in keywords:
-                queries[t] = flt.filter(keywords_string__contains=k)
 
         qcnt = 0
         if queries[t]:

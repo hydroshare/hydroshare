@@ -380,7 +380,7 @@ class FilterForm(forms.Form):
     start = forms.IntegerField(required=False)
     published = forms.BooleanField(required=False)
     edit_permission = forms.BooleanField(required=False)
-    creator = forms.ModelChoiceField(queryset=User.objects.all(), required=False)
+    owner = forms.CharField(required=False)
     user = forms.ModelChoiceField(queryset=User.objects.all(), required=False)
     from_date = forms.DateTimeField(required=False)
 
@@ -396,7 +396,7 @@ def my_resources(request, page):
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
         res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
-        owner = frm.cleaned_data['creator'] or None
+        owner = frm.cleaned_data['owner'] or None
         user = frm.cleaned_data['user'] or (request.user if request.user.is_authenticated() else None)
         edit_permission = frm.cleaned_data['edit_permission'] or False
         published = frm.cleaned_data['published'] or False
@@ -405,10 +405,13 @@ def my_resources(request, page):
             startno = 0
         start = startno or 0
         from_date = frm.cleaned_data['from_date'] or None
-        keywords = [k.strip() for k in request.REQUEST['keywords'].split(',')] if request.REQUEST.get('keywords', None) else None
         words = request.REQUEST.get('text', None)
         public = not request.user.is_authenticated()
-        types = [t.strip() for t in request.REQUEST.getlist('type')]
+
+        search_items = dict(
+            (item_type, [t.strip() for t in request.REQUEST.getlist(item_type)])
+            for item_type in ("type", "author", "contributor", "subject")
+        )
 
         # TODO ten separate SQL queries for basically the same data
         res = set()
@@ -418,10 +421,9 @@ def my_resources(request, page):
             published=published,
             edit_permission=edit_permission,
             from_date=from_date,
-            keywords=keywords,
             full_text_search=words,
             public=public,
-            types=types
+            **search_items
         ).values():
             res = res.union(lst)
         total_res_cnt = len(res)
