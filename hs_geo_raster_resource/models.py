@@ -297,18 +297,23 @@ class RasterMetaData(CoreMetaData):
             return False
         if not self.bandInformation:
             return False
-        if not self.originalCoverage:
+        # if not self.originalCoverage:
+        #     return False
+        if not self.coverages.all().filter(type='box').first():
             return False
         return True
 
     def get_required_missing_elements(self):
         missing_required_elements = super(RasterMetaData, self).get_required_missing_elements()
+        if not self.coverages.all().filter(type='box').first():
+            missing_required_elements.append('Spatial Coverage: Box')
         if not self.cellInformation:
-            missing_required_elements.append('CellInformation')
+            missing_required_elements.append('Cell Information')
         if not self.bandInformation:
-            missing_required_elements.append('BandInformation')
-        if not self.originalCoverage:
-            missing_required_elements.append('OriginalCoverage')
+            missing_required_elements.append('Band Information')
+        # if not self.originalCoverage:
+        #     missing_required_elements.append('Spatial Reference')
+
         return missing_required_elements
 
     def get_xml(self):
