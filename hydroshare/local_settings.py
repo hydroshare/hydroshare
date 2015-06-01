@@ -123,6 +123,8 @@ IRODS_GLOBAL_SESSION = True
 
 # iRODS customized bagit rule path
 IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
+IRODS_BAGIT_PATH = 'bags'
+IRODS_BAGIT_POSTFIX = 'zip'
 
 # Email configuration - localhost
 # Run from second terminal: python -m smtpd -n -c DebuggingServer localhost:1025

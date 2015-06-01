@@ -1,6 +1,6 @@
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import GenericResource
+from hs_core.models import GenericResource, AbstractResource
 from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import ToolResourceType
@@ -57,8 +57,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if 'just_created' in request.session:
             del request.session['just_created']
 
-    istorage = IrodsStorage()
-    bag_url = istorage.url("bags/{res_id}.zip".format(res_id=content_model.short_id))
+    bag_url = AbstractResource.bag_url(content_model.short_id)
 
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')

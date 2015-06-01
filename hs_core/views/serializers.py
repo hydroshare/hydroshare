@@ -76,7 +76,7 @@ class ResourceListRequestValidator(serializers.Serializer):
     full_text_search = serializers.CharField(required=False)
     edit_permission = serializers.BooleanField(required=False, default=False)
     published = serializers.BooleanField(required=False, default=False)
-    types = serializers.MultipleChoiceField(choices=RESOURCE_TYPES, required=False, default=None)
+    type = serializers.MultipleChoiceField(choices=RESOURCE_TYPES, required=False, default=None)
 
 
 class ResourceListItemSerializer(serializers.Serializer):
