@@ -21,15 +21,18 @@ class ModelOutput(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        return ModelOutput.objects.create(**kwargs)
+        if not 'includes_output' in kwargs:
+            raise ValidationError("ModelOutput includesOutput is missing.")
+        metadata_obj = kwargs['content_object']
+        return ModelOutput.objects.create(includes_output=kwargs['includes_output'], content_object=metadata_obj)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         model_output = ModelOutput.objects.get(id=element_id)
         if model_output:
             for key, value in kwargs.iteritems():
-                setattr(model_output, key, value)
-
+                if key in 'includes_output':
+                    setattr(model_output, key, value)
             model_output.save()
         else:
             raise ObjectDoesNotExist("No ModelOutput element was found for the provided id:%s" % kwargs['id'])
@@ -169,7 +172,7 @@ class ModelInstanceMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         if self.model_output:
-            hsterms_model_output = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
+            hsterms_model_output = etree.SubElement(container, '{%s}ModelOutput' % self.NAMESPACES['hsterms'])
             hsterms_model_output_rdf_Description = etree.SubElement(hsterms_model_output,
                                                                     '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_model_output_value = etree.SubElement(hsterms_model_output_rdf_Description,
@@ -179,7 +182,7 @@ class ModelInstanceMetaData(CoreMetaData):
             else:
                 hsterms_model_output_value.text = "No"
         if self.executed_by:
-            hsterms_executed_by = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
+            hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by,
                                                                    '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description,
