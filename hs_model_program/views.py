@@ -17,8 +17,8 @@ def get_model_metadata(request):
     metadata = {}
 
     if obj is not None:
-        mpmeta = obj.metadata.mpmetadata.first()
-
+        # mpmeta = obj.metadata.mpmetadata.first()
+        mpmeta = obj.metadata.program
         # get the http protocol
         protocol = 'https' if request.is_secure() else 'http'
 
