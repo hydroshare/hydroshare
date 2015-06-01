@@ -82,7 +82,7 @@ class ExecutedByForm(ModelForm):
         self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy')
 
         # get all model program resources
-        mp_resource = users.get_resource_list(types=['ModelProgramResource'])
+        mp_resource = users.get_resource_list(type=['ModelProgramResource'])
 
         # set model programs resources in choice list
         CHOICES = (('Unknown', 'Unknown'),) + tuple((r.short_id, r.title) for r in mp_resource.values()[0])
