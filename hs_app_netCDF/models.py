@@ -1,12 +1,13 @@
-from django.contrib.contenttypes import generic
+import json
 from django.db import models
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.contrib.contenttypes import generic
 from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
 from hs_core.models import AbstractResource
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-import json
+
 
 
 # Define original spatial coverage metadata info
@@ -205,8 +206,8 @@ class Variable(AbstractMetaDataElement):
     def remove(cls, element_id):
         variable = Variable.objects.get(id=element_id)
         if variable:
-            # if Variable.objects.filter(object_id=variable.object_id, content_type__pk=variable.content_type.id).count()== 1:
-            #     raise ValidationError("The only variable of the resource can't be deleted.")
+            if Variable.objects.filter(object_id=variable.object_id, content_type__pk=variable.content_type.id).count()== 1:
+                raise ValidationError("The only variable of the resource can't be deleted.")
             variable.delete()
         else:
             raise ObjectDoesNotExist("No variable element was found for id:%d." % element_id)
@@ -246,6 +247,7 @@ class NetcdfResource(Page, AbstractResource):
 
 processor_for(NetcdfResource)(resource_processor)
 
+
 # define the netcdf metadata
 class NetcdfMetaData(CoreMetaData):
     variables = generic.GenericRelation(Variable)
@@ -271,8 +273,8 @@ class NetcdfMetaData(CoreMetaData):
 
     def get_required_missing_elements(self):
         missing_required_elements = super(NetcdfMetaData, self).get_required_missing_elements()
-        if not self.ori_coverage.all().first():
-            missing_required_elements.append('Spatial Reference')
+        # if not self.ori_coverage.all().first():
+        #     missing_required_elements.append('Spatial Reference')
         if not self.variables.all().first():
             missing_required_elements.append('Variable')
         return missing_required_elements
@@ -290,57 +292,62 @@ class NetcdfMetaData(CoreMetaData):
 
         # inject netcdf resource specific metadata element 'variable' to container element
         for variable in self.variables.all():
-            hsterms_variable = etree.SubElement(container, '{%s}netcdfVariable' % self.NAMESPACES['hsterms'])
-            hsterms_variable_rdf_Description = etree.SubElement(hsterms_variable, '{%s}Description' % self.NAMESPACES['rdf'])
-
-            hsterms_name = etree.SubElement(hsterms_variable_rdf_Description, '{%s}name' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = variable.name
-
-            hsterms_unit = etree.SubElement(hsterms_variable_rdf_Description, '{%s}unit' % self.NAMESPACES['hsterms'])
-            hsterms_unit.text = variable.unit
-
-            hsterms_type = etree.SubElement(hsterms_variable_rdf_Description, '{%s}type' % self.NAMESPACES['hsterms'])
-            hsterms_type.text = variable.type
-
-            hsterms_shape = etree.SubElement(hsterms_variable_rdf_Description, '{%s}shape' % self.NAMESPACES['hsterms'])
-            hsterms_shape.text = variable.shape
-
-            if variable.descriptive_name:
-                hsterms_descriptive_name = etree.SubElement(hsterms_variable_rdf_Description,'{%s}descriptiveName' % self.NAMESPACES['hsterms'])
-                hsterms_descriptive_name.text = variable.descriptive_name
-
-            if variable.method:
-                hsterms_method = etree.SubElement(hsterms_variable_rdf_Description, '{%s}method' % self.NAMESPACES['hsterms'])
-                hsterms_method.text = variable.method
-
-            if variable.missing_value:
-                hsterms_missing_value = etree.SubElement(hsterms_variable_rdf_Description, '{%s}missingValue' % self.NAMESPACES['hsterms'])
-                hsterms_missing_value.text = variable.missing_value
+            md_fields = {
+                "md_element": "netcdfVariable",
+                "name": "name",
+                "unit": "unit",
+                "type": "type",
+                "shape": "shape",
+                "descriptive_name": "longName",
+                "method": "comment"
+            }  # element name : name in xml
+            self.add_metadata_element_to_xml(container, variable, md_fields)
 
         if self.ori_coverage.all().first():
-            hsterms_ori_cov = etree.SubElement(container, '{%s}originalCoverage' % self.NAMESPACES['hsterms'])
+            hsterms_ori_cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
             hsterms_ori_cov_rdf_Description = etree.SubElement(hsterms_ori_cov, '{%s}Description' % self.NAMESPACES['rdf'])
             ori_cov_obj = self.ori_coverage.all().first()
 
+            # add extent info
             if ori_cov_obj.value:
-                cov_box = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                cov_box = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; unit=%s' \
                         %(ori_cov_obj.value['northlimit'], ori_cov_obj.value['eastlimit'],
-                          ori_cov_obj.value['southlimit'], ori_cov_obj.value['westlimit'],ori_cov_obj.value['units'])
-                if 'projection' in ori_cov_obj.value:
-                    cov_box= cov_box + '; projection=%s' % ori_cov_obj.value['projection']
+                          ori_cov_obj.value['southlimit'], ori_cov_obj.value['westlimit'], ori_cov_obj.value['units'])
 
-                hsterms_ori_cov_box = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}boundingBox' % self.NAMESPACES['hsterms'])
+                hsterms_ori_cov_box = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}extent' % self.NAMESPACES['hsterms'])
                 hsterms_ori_cov_box.text = cov_box
 
-            # write projection string type and text info
-            if ori_cov_obj.projection_string_text:
-                if ori_cov_obj.projection_string_type:
-                    hsterms_ori_cov_projection_type = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}projectionStringType' % self.NAMESPACES['hsterms'])
-                    hsterms_ori_cov_projection_type.text = ori_cov_obj.projection_string_type
-                hsterms_ori_cov_projection_text = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}projectionStringText' % self.NAMESPACES['hsterms'])
-                hsterms_ori_cov_projection_text.text = ori_cov_obj.projection_string_text
+            # add crs info
+            if ori_cov_obj.value.get('projection'):
+                hsterms_ori_cov_projection_name = etree.SubElement(hsterms_ori_cov_rdf_Description,
+                                                                   '{%s}crsName' % self.NAMESPACES['hsterms'])
+                hsterms_ori_cov_projection_name.text = ori_cov_obj.value['projection']
 
+            if ori_cov_obj.projection_string_text:
+                hsterms_ori_cov_projection_text = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}crsRepresentationText' % self.NAMESPACES['hsterms'])
+                hsterms_ori_cov_projection_text.text = ori_cov_obj.projection_string_text
+                if ori_cov_obj.projection_string_type:
+                    hsterms_ori_cov_projection_type = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}crsRepresentationType' % self.NAMESPACES['hsterms'])
+                    hsterms_ori_cov_projection_type.text = ori_cov_obj.projection_string_type
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
+
+    def add_metadata_element_to_xml(self, root, md_element, md_fields):
+        from lxml import etree
+        element_name = md_fields.get('md_element') if md_fields.get('md_element') else md_element.term
+
+        hsterms_newElem = etree.SubElement(root,
+                                           "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'],
+                                                                          new_element=element_name))
+        hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
+                                                    "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
+        for md_field in md_fields.keys():
+            if hasattr(md_element, md_field):
+                attr = getattr(md_element, md_field)
+                if attr:
+                    field = etree.SubElement(hsterms_newElem_rdf_Desc,
+                                             "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
+                                                                      field=md_fields[md_field]))
+                    field.text = str(attr)
 
 import receivers  # never delete this otherwise non of the receiver function will work
