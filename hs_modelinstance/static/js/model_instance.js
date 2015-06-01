@@ -22,13 +22,13 @@ function show_model_details(e) {
             // if the data is empty, hide the table
             if (Object.keys(data).length == 0){
                 // set the visibility of the table element
-                table = document.getElementById('progam_details_div');
+                table = document.getElementById('program_details_div');
                 table.style.display = 'none';
             }
             // if the data is not empty, populate the model details table
             else {
                 // set the visibility of the table element
-                table_div = document.getElementById('progam_details_div');
+                table_div = document.getElementById('program_details_div');
                 table_div.style.display = 'block';
 
                 // create and ordered list of keys to access input data

@@ -8,16 +8,10 @@
     {% if extended_metadata_exists %}
         <div class="row">
             <div class="col-md-12">
-                <h2>Extended Metadata</h2>
-
                 {# Add the view mode html code below #}
                 <div>
                     {% if mpmetadata %}
-                        {#                        {% for m in mpmetadata %}#}
-                        {#                            <h4><strong>Variable:</strong></h4>#}
-                        <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                        {# Required extended meta subelement for Variable #}
-
+                        <hr>
 
                         <div class="row">
                             <div class="col-sm-4"><strong>Software Version:</strong></div>
@@ -40,7 +34,7 @@
 
                         <div class="row">
                             <div class="col-sm-4"><strong>Date Released:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.date_released |date:"SHORT_DATETIME_FORMAT" }}</div>
+                            <div class="col-sm-8">{{ mpmetadata.date_released |date:"SHORT_DATE_FORMAT" }}</div>
                         </div>
                         <div class="row">
                             <div class="col-sm-4"><strong>Website:</strong></div>
@@ -66,15 +60,9 @@
                             <div class="col-sm-8">{{ mpmetadata.source_code }}</div>
                         </div>
 
-
-
-
-                        {#                        {% endfor %}#}
                         <hr>
                     {% endif %}
                 </div>
-                {# Add the view mode html code above #}
-
 
             </div>
         </div>
