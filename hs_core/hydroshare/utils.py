@@ -140,7 +140,7 @@ def serialize_system_metadata(res):
     return json.dumps(resd)
 
 
-def resource_modified(resource, by_user=None):
+def resource_modified(resource, by_user=None, overwrite_bag=True):
     resource.last_changed_by = by_user
 
     resource.updated = now().isoformat()
@@ -148,6 +148,13 @@ def resource_modified(resource, by_user=None):
     if resource.metadata.dates.all().filter(type='modified'):
         res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
         resource.metadata.update_element('date', res_modified_date.id)
+
+    if overwrite_bag:
+        for bag in resource.bags.all():
+            try:
+                bag.delete()
+            except:
+                pass
 
     hs_bagit.create_bag(resource)
 
