@@ -206,8 +206,8 @@ class Variable(AbstractMetaDataElement):
     def remove(cls, element_id):
         variable = Variable.objects.get(id=element_id)
         if variable:
-            # if Variable.objects.filter(object_id=variable.object_id, content_type__pk=variable.content_type.id).count()== 1:
-            #     raise ValidationError("The only variable of the resource can't be deleted.")
+            if Variable.objects.filter(object_id=variable.object_id, content_type__pk=variable.content_type.id).count()== 1:
+                raise ValidationError("The only variable of the resource can't be deleted.")
             variable.delete()
         else:
             raise ObjectDoesNotExist("No variable element was found for id:%d." % element_id)
@@ -273,8 +273,8 @@ class NetcdfMetaData(CoreMetaData):
 
     def get_required_missing_elements(self):
         missing_required_elements = super(NetcdfMetaData, self).get_required_missing_elements()
-        if not self.ori_coverage.all().first():
-            missing_required_elements.append('Spatial Reference')
+        # if not self.ori_coverage.all().first():
+        #     missing_required_elements.append('Spatial Reference')
         if not self.variables.all().first():
             missing_required_elements.append('Variable')
         return missing_required_elements
