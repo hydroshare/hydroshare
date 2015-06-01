@@ -31,8 +31,7 @@ class ModelOutput(AbstractMetaDataElement):
         model_output = ModelOutput.objects.get(id=element_id)
         if model_output:
             for key, value in kwargs.iteritems():
-                if key in 'includes_output':
-                    setattr(model_output, key, value)
+                setattr(model_output, key, value)
             model_output.save()
         else:
             raise ObjectDoesNotExist("No ModelOutput element was found for the provided id:%s" % kwargs['id'])
