@@ -1520,7 +1520,10 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @property
     def can_be_public(self):
-        return True
+        if self.metadata.has_all_required_elements():
+            return True
+
+        return False
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -1584,12 +1587,6 @@ class GenericResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
-    @property
-    def can_be_public(self):
-        if self.metadata.has_all_required_elements():
-            return True
-
-        return False
 
     @classmethod
     def get_supported_upload_file_types(cls):
