@@ -263,20 +263,25 @@ class NetcdfMetaData(CoreMetaData):
         return elements
 
     def has_all_required_elements(self):
-        if not super(NetcdfMetaData, self).has_all_required_elements():
+        if not super(NetcdfMetaData, self).has_all_required_elements():  # check required meta
             return False
         if not self.variables.all():
             return False
-        if not self.ori_coverage.all().first():
+        # if not self.ori_coverage.all().first():
+        #     return False
+        if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
             return False
         return True
 
-    def get_required_missing_elements(self):
+    def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(NetcdfMetaData, self).get_required_missing_elements()
         # if not self.ori_coverage.all().first():
         #     missing_required_elements.append('Spatial Reference')
+        if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
+            missing_required_elements.append('Spatial Coverage')
         if not self.variables.all().first():
             missing_required_elements.append('Variable')
+
         return missing_required_elements
 
     def get_xml(self):
