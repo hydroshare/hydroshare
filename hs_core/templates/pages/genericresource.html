@@ -1526,7 +1526,6 @@
                                             <select class="form-control input-sm select" id="id_relation-{{ forloop.counter0 }}-type" name="relation-{{ forloop.counter0 }}-type">
                                                 <option value="">---------</option>
                                                 <option value="isPartOf" {% if relation.type == "isPartOf" %} selected="selected" {% endif %}>Part Of</option>
-                                                <option value="isExecutedBy" {% if relation.type == "isExecutedBy" %}selected="selected"{% endif %}>Executed By</option>
                                                 <option value="isCreatedBy" {% if relation.type == "isCreatedBy" %}selected="selected"{% endif %}>Created By</option>
                                                 <option value="isVersionOf" {% if relation.type == "isVersionOf" %}selected="selected"{% endif %}>Version Of</option>
                                                 <option value="isDataFor" {% if relation.type == "isDataFor" %}selected="selected"{% endif %}>Data For</option>
@@ -1891,7 +1890,6 @@
                                                                       name="type">
                                             <option value="" selected="selected">---------</option>
                                             <option value="isPartOf">Part Of</option>
-                                            <option value="isExecutedBy">Executed By</option>
                                             <option value="isCreatedBy">Created By</option>
                                             <option value="isVersionOf">Version Of</option>
                                             <option value="isDataFor">Data For</option>
