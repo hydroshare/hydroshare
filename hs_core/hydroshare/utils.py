@@ -152,11 +152,6 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     if overwrite_bag:
         for bag in resource.bags.all():
             try:
-                bag.bag.delete()
-            except:
-                pass
-
-            try:
                 bag.delete()
             except:
                 pass
