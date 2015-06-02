@@ -45,8 +45,12 @@
 
                             <div class="col-sm-4"><strong>Resource URL</strong></div>
 
-                            <div class="col-sm-8"><a id="permalink"
-                                                     href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/">http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
+                            <div class="col-sm-8">
+                                {% if request.is_secure %}
+                                    <a id="permalink" href="https://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/" target="_blank">https://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
+                                {% else %}
+                                    <a id="permalink" href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/" target="_blank">http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
+                                {% endif %}
                             </div>
 
                     </div>
