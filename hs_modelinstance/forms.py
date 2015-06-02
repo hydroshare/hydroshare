@@ -54,7 +54,7 @@ class ExecutedByFormHelper(BaseFormHelper):
         layout = Layout(
             MetadataField('model_name'),
             HTML("""
-            <div id=progam_details_div style="display:none">
+            <div id=program_details_div style="display:none">
                 <table id="program_details_table" class="modelprogram">
                 <tr><td>Description: </td><td></td></tr>
                 <tr><td>Release Date: </td><td></td></tr>

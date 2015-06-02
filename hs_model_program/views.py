@@ -3,6 +3,7 @@ __author__ = 'tonycastronova'
 from django.http import HttpResponse
 from hs_model_program.models import ModelProgramResource
 import json
+import datetime
 
 def get_model_metadata(request):
 
@@ -17,17 +18,22 @@ def get_model_metadata(request):
     metadata = {}
 
     if obj is not None:
-        mpmeta = obj.metadata.mpmetadata.first()
+        mpmeta = obj.metadata.program
 
         # get the http protocol
         protocol = 'https' if request.is_secure() else 'http'
+
+        if mpmeta.date_released:
+            dt = datetime.datetime.strftime(mpmeta.date_released,'%m/%d/%Y')
+        else:
+            dt = ''
 
         # build an output dictionary which will be returned as JSON
         if obj is not None:
             metadata = dict(
                 description=obj.description,
                 program_website=mpmeta.program_website,
-                date_released=str(mpmeta.date_released),
+                date_released=dt,
                 software_version=mpmeta.software_version,
                 software_language=mpmeta.software_language,
                 operating_sys=mpmeta.operating_sys,
