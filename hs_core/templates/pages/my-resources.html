@@ -10,7 +10,7 @@
     <div class="row">
         <div class="col-lg-2" id="folders">
             <ul class="nav nav-stacked">
-                <li><a href="?owner={{ user.username }}">Owned by me</a></li>
+                <li><a href="?owner={{ user.username }}&edit_permission=true">Owned by me</a></li>
                 <li><a href="?user={{ user.pk }}&edit_permission=true">Editable by me</a></li>
                 {% if user.pk %}
                     <li><a href="?user={{ user.pk }}">Viewable by me</a></li>
