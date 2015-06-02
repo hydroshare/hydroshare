@@ -115,6 +115,10 @@ class ModelInstanceResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # all file types are supported
+        return ('.*')
 
 processor_for(ModelInstanceResource)(resource_processor)
 
