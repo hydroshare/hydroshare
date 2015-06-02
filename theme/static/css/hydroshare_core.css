@@ -1731,7 +1731,7 @@ span.name-label{
 }
 
 .resource-search input {
-	padding-left: 5px;
+    padding: 0px 5px;
 	width: 100%;
 	position: absolute;
 	height: 100%;
