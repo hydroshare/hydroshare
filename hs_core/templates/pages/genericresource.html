@@ -14,7 +14,6 @@
         <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
         <input type="hidden" id="allow-multiple-file-upload" value={{ cm.can_have_multiple_files }}>
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
-        <input type="hidden" id="resource_id" value={{ cm.short_id }}>
 
         {% block error %}
             {%  if file_validation_error %}
