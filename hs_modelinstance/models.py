@@ -158,8 +158,8 @@ class ModelInstanceMetaData(CoreMetaData):
         missing_required_elements = super(ModelInstanceMetaData, self).get_required_missing_elements()
         if not self.model_output:
             missing_required_elements.append('ModelOutput')
-        if not self.executed_by:
-            missing_required_elements.append('ExecutedBy')
+        # if not self.executed_by:
+        #     missing_required_elements.append('ExecutedBy')
         return missing_required_elements
 
     def get_xml(self, pretty_print=True):

@@ -38,7 +38,7 @@
 
     <ul>
     <li>Files you upload here will be grouped together into a "Resource"</li>
-    <li>File size is limited to 4 GB per file</li>
+    <li>File size is limited to 10 GB per file</li>
     </ul>
 
 <form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-resource/do/">
@@ -50,8 +50,8 @@
                 <option value="GenericResource">Generic</option>
                 <option value="RasterResource">Geographic Raster</option>
                 <option value="RefTimeSeries">HIS Referenced Time Series</option>
-                <option value="ModelInstanceResource">Model Instance</option>
                 <option value="ModelProgramResource">Model Program</option>
+                <option value="ModelInstanceResource">Model Instance</option>
 {#                <option value="SWATModelInstanceResource">SWAT Model Instance</option>#}
                 <option value="NetcdfResource">Multidimensional (NetCDF)</option>
                 <option value="TimeSeriesResource">Time Series</option>
