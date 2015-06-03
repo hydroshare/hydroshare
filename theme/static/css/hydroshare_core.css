@@ -1731,11 +1731,10 @@ span.name-label{
 }
 
 .resource-search input {
-	margin: 3px 0px;
+    padding: 0 5px;
 	width: 100%;
 	position: absolute;
-	top: 0px;
-	height: 35px;
+	height: 100%;
 	border: none;
 	background: transparent;
 }
