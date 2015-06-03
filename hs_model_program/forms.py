@@ -10,7 +10,7 @@ from hs_model_program.models import MpMetadata
 from hs_core.forms import BaseFormHelper
 
 class mp_form_helper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
 
         field_width = 'form-control input-sm'
         layout = Layout(
@@ -25,7 +25,7 @@ class mp_form_helper(BaseFormHelper):
             Field('theoretical_manual', css_class=field_width),
             Field('source_code', css_class=field_width),
         )
-        super(mp_form_helper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(mp_form_helper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='  ',  *args, **kwargs)
 
 
 class mp_form(ModelForm):

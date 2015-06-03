@@ -115,6 +115,10 @@ class ModelInstanceResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # all file types are supported
+        return ('.*')
 
 processor_for(ModelInstanceResource)(resource_processor)
 
@@ -187,7 +191,7 @@ class ModelInstanceMetaData(CoreMetaData):
             hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description,
                                                         '{%s}ModelProgramName' % self.NAMESPACES['hsterms'])
 
-            title = self.executed_by.model_program_fk.title if self.executed_by.model_program_fk else "Unknown"
+            title = self.executed_by.model_program_fk.title if self.executed_by.model_program_fk else "Unspecified"
             hsterms_executed_by_name.text = title
 
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description,
