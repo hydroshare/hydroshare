@@ -125,34 +125,6 @@ def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
-def add_metadata_element_creator(request, shortkey, user_id, *args, **kwargs):
-    """ adds a creator metadata element using data from an existing hydroshare user """
-    return _add_metadata_element_creator_or_contributor(request, shortkey, user_id, 'creator')
-
-
-def add_metadata_element_contributor(request, shortkey, user_id, *args, **kwargs):
-    """ adds a contributor metadata element using data from an existing hydroshare user """
-    return _add_metadata_element_creator_or_contributor(request, shortkey, user_id, 'contributor')
-
-
-def _add_metadata_element_creator_or_contributor(request, shortkey, user_id, element_name):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-
-    if element_name != 'creator' and element_name != 'contributor':
-        raise ValueError("element_name must be either creator or contributor")
-
-    # check the user_id is valid
-    try:
-        user = User.objects.get(id=user_id)
-    except ObjectDoesNotExist:
-        # TODO: use django message system to show error
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-    party_data_dict = utils.get_party_data_from_user(user)
-    res.metadata.create_element(element_name, **party_data_dict)
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 

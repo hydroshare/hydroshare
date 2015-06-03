@@ -2013,13 +2013,6 @@
                         <div class="modal-body">
                             {% csrf_token %}
                             <div class="form-group">
-                               <div>
-                                    <a type="button" id="add-user-as-creator"
-                                            class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                        class="button-label">Add selected user as author</span></a>
-                                   {{ add_owner_user_form.user }}
-                                </div>
-                                <hr>
                                 {% csrf_token %}
                                 <fieldset>
                                     <div id="div_id_name" class="control-group">
@@ -2099,13 +2092,6 @@
                         <div class="modal-body">
                             {% csrf_token %}
                             <div class="form-group">
-                                 <div>
-                                    <a type="button" id="add-user-as-contributor"
-                                            class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                        class="button-label">Add selected user as contributor</span></a>
-                                    {{ add_owner_user_form.user }}
-                                </div>
-                                <hr>
                                 {% csrf_token %}
                                 <fieldset>
                                     <div id="div_id_name" class="control-group">
@@ -2402,39 +2388,6 @@
             if(e.which == 13) {
                 onAddKeyword();
             }
-        });
-
-        var resource_id = $("#resource_id").attr("value");
-
-        // for tracking when a user is selected in add creator/contributor model form
-        $(".deck").bind("DOMNodeInserted",function(){
-            var user_id = $(this).find(".hilight").attr('data-value');
-
-            // find the closest anchor element id
-            var anchor_id = $(this).closest(".form-group").find("a").attr('id');
-
-            if("add-user-as-creator" === anchor_id){
-                var url = "/hsapi/_internal/" + resource_id + "/creator/add-metadata/" + user_id + "/";
-            }
-            else{
-                var url = "/hsapi/_internal/" + resource_id + "/contributor/add-metadata/" + user_id + "/";
-            }
-
-            $("#" + anchor_id).attr('href', url);
-
-            // disable all other input fields as well as the save changes button
-            $(this).closest(".form-group").find("input").attr('disabled', 'disabled');
-            $(this).closest(".modal-content").find(".btn-primary").attr('disabled', 'disabled')
-        });
-
-        // for tracking when a user is removed form selection in add creator/contributor modal form
-        $(".deck").bind("DOMNodeRemoved",function(){
-            var anchor_id = $(this).closest(".form-group").find("a").attr('id');
-            $("#" + anchor_id).removeAttr('href');
-
-            // enable all other input fields as well as the save changes button
-            $(this).closest(".form-group").find("input").removeAttr('disabled');
-            $(this).closest(".modal-content").find(".btn-primary").removeAttr('disabled');
         });
 
         // hide add file button if necessary
