@@ -7,3 +7,4 @@
 /static
 .idea/
 celeryd.pid
+hydroshare/local_settings.py

@@ -16,6 +16,8 @@ from .utils import authorize, validate_json
 from django.views.generic import View
 from django.core import exceptions
 
+from hs_core.models import AbstractResource
+
 
 class ResourceCRUD(View):
     """
@@ -176,8 +178,9 @@ class ResourceCRUD(View):
 
     def get_resource(self, pk):
         authorize(self.request, pk, view=True)
-
-        return HttpResponseRedirect(hydroshare.get_resource(pk).bag.url)
+        
+        bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(pk)
+        return HttpResponseRedirect(bag_url)
 
     def update_resource(self, pk):
         authorize(self.request, pk, edit=True)
@@ -563,7 +566,7 @@ class GetRevisions(View):
     def get_revisions(self, pk):
         authorize(self.request, pk, view=True)
 
-        js = {arrow.get(bag.timestamp).isoformat(): bag.bag.url for bag in hydroshare.get_revisions(pk) }
+        js = {arrow.get(bag.timestamp).isoformat(): hydroshare.utils.current_site_url() + AbstractResource.bag_url(pk) for bag in hydroshare.get_revisions(pk) }
         return json_or_jsonp(self.request, js)
 
 

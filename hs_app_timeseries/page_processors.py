@@ -47,40 +47,30 @@ def landing_page(request, page):
                                                       element_id=content_model.metadata.time_series_result.id
                                                       if content_model.metadata.time_series_result else None)
         ext_md_layout = Layout(
-                                AccordionGroup('Site (required)',
-                                    HTML("<div class='form-group' id='site'> "
+                                HTML("<div class='form-group col-lg-4 col-xs-12' id='site'> "
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy site_form %} '
                                      '</div>'),
-                                ),
 
-                                AccordionGroup('Variable (required)',
-                                     HTML('<div class="form-group" id="variable"> '
+                                HTML('<div class="form-group col-lg-4 col-xs-12" id="variable"> '
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy variable_form %} '
                                      '</div> '),
-                                ),
 
-                                AccordionGroup('Method (required)',
-                                     HTML('<div class="form-group" id="method"> '
+                                HTML('<div class="form-group col-lg-4 col-xs-12" id="method"> '
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy method_form %} '
                                      '</div> '),
-                                ),
 
-                                AccordionGroup('Processing Level (required)',
-                                     HTML('<div class="form-group" id="processinglevel"> '
+                                HTML('<div class="form-group col-lg-4 col-xs-12" id="processinglevel"> '
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy processing_level_form %} '
                                      '</div> '),
-                                ),
 
-                                AccordionGroup('Time Series Result (required)',
-                                     HTML('<div class="form-group" id="timeseriesresult"> '
+                                HTML('<div class="form-group col-lg-4 col-xs-12" id="timeseriesresult"> '
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy timeseries_result_form %} '
                                      '</div> '),
-                                ),
                         )
 
 

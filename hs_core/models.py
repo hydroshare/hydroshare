@@ -15,14 +15,13 @@ from mezzanine.conf import settings as s
 from mezzanine.generic.models import Keyword, AssignedKeyword
 import os.path
 from django_irods.storage import IrodsStorage
-# from dublincore.models import QualifiedDublinCoreElement
-#from dublincore import models as dc
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from languages_iso import languages as iso_languages
 from dateutil import parser
 import json
+
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -43,6 +42,26 @@ def get_user(request):
         return User.objects.get(pk=request.user.pk)
     else:
         return request.user
+
+
+def validate_user_url(value):
+    err_message = '%s is not a valid url for hydroshare user' % value
+    if value:
+        url_parts = value.split('/')
+        if len(url_parts) != 6:
+            raise ValidationError(err_message)
+        if url_parts[3] != 'user':
+            raise ValidationError(err_message)
+
+        try:
+            user_id = int(url_parts[4])
+        except ValueError:
+            raise ValidationError(err_message)
+
+        # check the user exists for the provided user id
+        if not User.objects.filter(pk=user_id).exists():
+            raise ValidationError(err_message)
+
 
 class ResourcePermissionsMixin(Ownable):
     creator = models.ForeignKey(User,
@@ -232,7 +251,7 @@ class ExternalProfileLink(models.Model):
         unique_together = ("type", "url", "object_id")
 
 class Party(AbstractMetaDataElement):
-    description = models.URLField(null=True, blank=True)
+    description = models.URLField(null=True, blank=True, validators=[validate_user_url])
     name = models.CharField(max_length=100)
     organization = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
@@ -625,7 +644,6 @@ class Date(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         dt = Date.objects.get(id=element_id)
-        metadata_obj = kwargs['content_object']
         if dt:
             if 'start_date' in kwargs:
                 try:
@@ -635,7 +653,7 @@ class Date(AbstractMetaDataElement):
                 if dt.type == 'created':
                     raise ValidationError("Resource creation date can't be changed")
                 elif dt.type == 'modified':
-                    dt.start_date = metadata_obj.resource.updated
+                    dt.start_date = now().isoformat()
                     dt.save()
                 elif dt.type == 'valid':
                     if 'end_date' in kwargs:
@@ -653,7 +671,7 @@ class Date(AbstractMetaDataElement):
                     dt.start_date = start_dt
                     dt.save()
             elif dt.type == 'modified':
-                dt.start_date = metadata_obj.resource.updated
+                dt.start_date = now().isoformat()
                 dt.save()
             else:
                 raise ValidationError("Date value is missing.")
@@ -1379,12 +1397,43 @@ class AbstractResource(ResourcePermissionsMixin):
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
+    @classmethod
+    def bag_url(cls, resource_id):
+        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
+        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
+
+        bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
+                                                           resource_id=resource_id,
+                                                           postfix=bagit_postfix)
+        istorage = IrodsStorage()
+        bag_url = istorage.url(bag_path)
+
+        return bag_url
+
+    def delete(self, using=None):
+        from hydroshare import hs_bagit
+
+        for fl in self.files.all():
+            fl.resource_file.delete()
+
+        hs_bagit.delete_bag(self)
+
+        self.metadata.delete_all_elements()
+        self.metadata.delete()
+
+        super(AbstractResource, self).delete()
+
     # this property needs to be overriden by any specific resource type
     # that needs additional metadata elements on top of core metadata data elements
     @property
     def metadata(self):
         md = CoreMetaData() # only this line needs to be changed when you override
         return self._get_metadata(md)
+
+    @property
+    def first_creator(self):
+        first_creator = self.metadata.creators.filter(order=1).first()
+        return first_creator
 
     def _get_metadata(self, metatdata_obj):
         md_type = ContentType.objects.get_for_model(metatdata_obj)
@@ -1471,7 +1520,10 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @property
     def can_be_public(self):
-        return True
+        if self.metadata.has_all_required_elements():
+            return True
+
+        return False
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -1497,7 +1549,7 @@ class AbstractResource(ResourcePermissionsMixin):
         unique_together = ("content_type", "object_id")
 
 def get_path(instance, filename):
-    return os.path.join(instance.content_object.short_id, filename)
+    return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
 
 class ResourceFile(models.Model):
     object_id = models.PositiveIntegerField()
@@ -1511,7 +1563,6 @@ class Bags(models.Model):
     content_type = models.ForeignKey(ContentType)
 
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    bag = models.FileField(upload_to='bags', max_length=500, storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage(), null=True) # actually never null
     timestamp = models.DateTimeField(default=now, db_index=True)
 
     class Meta:
@@ -1536,12 +1587,6 @@ class GenericResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
-    @property
-    def can_be_public(self):
-        if self.metadata.has_all_required_elements():
-            return True
-
-        return False
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -1590,7 +1635,6 @@ class CoreMetaData(models.Model):
     _rights = generic.GenericRelation(Rights)
     _type = generic.GenericRelation(Type)
     _publisher = generic.GenericRelation(Publisher)
-    _resource = generic.GenericRelation(GenericResource)
 
     @property
     def title(self):
@@ -1603,10 +1647,6 @@ class CoreMetaData(models.Model):
     @property
     def language(self):
         return self._language.all().first()
-
-    @property
-    def resource(self):
-        return self._resource.all().first()
 
     @property
     def rights(self):
@@ -1871,6 +1911,10 @@ class CoreMetaData(models.Model):
                     field.text = str(attr)
 
     def _create_person_element(self, etree, parent_element, person):
+
+        # importing here to avoid circular import problem
+        from hydroshare.utils import current_site_url
+
         if isinstance(person, Creator):
             dc_person = etree.SubElement(parent_element, '{%s}creator' % self.NAMESPACES['dc'])
         else:
@@ -1881,7 +1925,7 @@ class CoreMetaData(models.Model):
         hsterms_name = etree.SubElement(dc_person_rdf_Description, '{%s}name' % self.NAMESPACES['hsterms'])
         hsterms_name.text = person.name
         if person.description:
-            dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], person.description)
+            dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], current_site_url() + person.description)
 
         if isinstance(person, Creator):
             hsterms_creatorOrder = etree.SubElement(dc_person_rdf_Description, '{%s}creatorOrder' % self.NAMESPACES['hsterms'])

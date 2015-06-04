@@ -64,9 +64,9 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
                  ('eastlimit', 'NA'),
                  ('westlimit', 'NA')
             ])
-            # add core metadata coverage - box
-            box = {'coverage': {'type': 'box', 'value': spatial_coverage_info}}
-            metadata.append(box)
+            # # add core metadata coverage - box
+            # box = {'coverage': {'type': 'box', 'value': spatial_coverage_info}}
+            # metadata.append(box)
 
             # Save extended meta to metadata variable
             ori_cov = {'OriginalCoverage': {'value': spatial_coverage_info }}

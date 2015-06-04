@@ -9,50 +9,49 @@
             <div class="col-md-12">
                 <div>
                     {% if originalCoverage %}
-                        <h4><strong>Original Spatial Coverage:</strong></h4>
+                        <h4><strong>Spatial Reference:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
-                        {% if originalCoverage.name %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.name}}</div>
-                            </div>
-                        {% endif %}
                         {% if originalCoverage.projection %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate System/Geographic Projection:</strong></div>
+                                <div class="col-sm-4"><strong>Coordinate Reference System:</strong></div>
                                 <div class="col-sm-8">{{ originalCoverage.projection}}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.northlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>North Latitude:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.northlimit }}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.eastlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>East Longitude:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.eastlimit }}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.southlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>South Latitude:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.southlimit }}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.westlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>West Longitude:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.westlimit}}</div>
                             </div>
                         {% endif %}
                         {% if originalCoverage.units %}
                             <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                <div class="col-sm-4"><strong>Coordinate Reference System Unit:</strong></div>
                                 <div class="col-sm-8">{{ originalCoverage.units}}</div>
                             </div>
                         {%  endif %}
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Extent:</strong></div>
+                        </div>
+                        {% if originalCoverage.northlimit %}
+                            <div class="row">
+                                <div class="col-sm-4" style="text-indent:40px"><strong>North</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.northlimit }}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.westlimit %}
+                            <div class="row">
+                                <div class="col-sm-4" style="text-indent:40px"><strong>West</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.westlimit}}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.southlimit %}
+                            <div class="row">
+                                <div class="col-sm-4" style="text-indent:40px"><strong>South</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.southlimit }}</div>
+                            </div>
+                        {% endif %}
+                        {% if originalCoverage.eastlimit %}
+                            <div class="row">
+                                <div class="col-sm-4"style="text-indent:40px"><strong>East</strong></div>
+                                <div class="col-sm-8">{{ originalCoverage.eastlimit }}</div>
+                            </div>
+                        {% endif %}
+
+
                     <hr>
                     {% endif %}
                 </div>
@@ -76,10 +75,6 @@
                         <div class="row">
                             <div class="col-sm-4"><strong>CellSizeYValue:</strong></div>
                             <div class="col-sm-8">{{ cellInformation.cellSizeYValue }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>CellSizeUnit:</strong></div>
-                            <div class="col-sm-8">{{ cellInformation.cellSizeUnit }}</div>
                         </div>
                         <div class="row">
                             <div class="col-sm-4"><strong>CellDataType:</strong></div>
