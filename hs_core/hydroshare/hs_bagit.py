@@ -12,6 +12,7 @@ from hs_core.models import Bags, ResourceFile
 from django_irods.storage import IrodsStorage
 
 def delete_bag(resource):
+
     res_id = resource.short_id
     istorage = IrodsStorage()
 
@@ -21,20 +22,14 @@ def delete_bag(resource):
     # delete the resource bag
     istorage.delete('bags/{res_id}.zip'.format(res_id=res_id))
 
-def create_bag(resource):
-    """
-    Modified to implement the new bagit workflow. The previous workflow was to create a bag from the current filesystem
-    of the resource, then zip it up and add it to the resource. The new workflow is to delegate bagit and zip-up
-    operations to iRODS, specifically, by executing an iRODS bagit rule to create bagit file hierarchy, followed by
-    execution of an ibun command to zip up the bagit file hierarchy.
+    # delete the bags table
+    for bag in resource.bags.all():
+        try:
+            bag.delete()
+        except Exception as ex:
+            raise Exception(ex.message)
 
-    Note, this procedure may take awhile.  It is highly advised that it be deferred to a Celery task.
-
-    Parameters:
-    :param resource: (subclass of AbstractResource) A resource to create a bag for.
-
-    :return: the hs_core.models.Bags instance associated with the new bag.
-    """
+def create_bag_files(resource):
     from . import utils as hs_core_utils
     DATE_FORMAT = "YYYY-MM-DDThh:mm:ssTZD"
     istorage=IrodsStorage()
@@ -130,23 +125,47 @@ def create_bag(resource):
     to_file_name = os.path.join(resource.short_id, 'data', 'resourcemap.xml')
     istorage.saveFile(from_file_name, to_file_name, False)
 
+    shutil.rmtree(bagit_path)
+
+    return istorage
+
+def create_bag_by_irods(resource_id, istorage = None):
+    if not istorage:
+        istorage = IrodsStorage()
     # call iRODS bagit rule here
     irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
-    irods_bagit_input_path = os.path.join(irods_dest_prefix, resource.short_id)
+    irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
     bagit_input = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
     bagit_rule_file = getattr(settings, 'IRODS_BAGIT_RULE', 'hydroshare/irods/ruleGenerateBagIt_HS.r')
 
     istorage.runBagitRule(bagit_rule_file, bagit_input)
 
     # call iRODS ibun command to zip the bag
-    istorage.zipup(irods_bagit_input_path, 'bags/{res_id}.zip'.format(res_id=resource.short_id))
+    istorage.zipup(irods_bagit_input_path, 'bags/{res_id}.zip'.format(res_id=resource_id))
+
+def create_bag(resource):
+    """
+    Modified to implement the new bagit workflow. The previous workflow was to create a bag from the current filesystem
+    of the resource, then zip it up and add it to the resource. The new workflow is to delegate bagit and zip-up
+    operations to iRODS, specifically, by executing an iRODS bagit rule to create bagit file hierarchy, followed by
+    execution of an ibun command to zip up the bagit file hierarchy.
+
+    Note, this procedure may take awhile.  It is highly advised that it be deferred to a Celery task.
+
+    Parameters:
+    :param resource: (subclass of AbstractResource) A resource to create a bag for.
+
+    :return: the hs_core.models.Bags instance associated with the new bag.
+    """
+
+    istorage = create_bag_files(resource)
+
+    create_bag_by_irods(resource.short_id, istorage)
 
     # link the zipped bag file in IRODS via bag_url for bag downloading
     b = Bags.objects.create(
         content_object=resource,
         timestamp=resource.updated
     )
-
-    shutil.rmtree(bagit_path)
 
     return b

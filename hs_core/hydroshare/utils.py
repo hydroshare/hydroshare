@@ -149,15 +149,7 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
         res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
         resource.metadata.update_element('date', res_modified_date.id)
 
-    if overwrite_bag:
-        for bag in resource.bags.all():
-            try:
-                bag.delete()
-            except:
-                pass
-
-    hs_bagit.create_bag(resource)
-
+    hs_bagit.create_bag_files(resource)
 
 # def _get_user_info(user):
 #     from hs_core.api import UserResource
