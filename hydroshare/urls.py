@@ -48,9 +48,12 @@ if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += patterns('',
     url('^hsapi/', include('hs_core.urls')),
+    url('', include('hs_core.resourcemap_urls')),
     url('^hsapi/', include('ref_ts.urls')),
+    url('^irods/', include('irods_browser_app.urls')),
     #url('^hs_party/', include('hs_party.urls')),
     url('^hs_metrics/', include('hs_metrics.urls')),
+    url('^hsapi/', include('hs_model_program.urls')),
 )
 
 if settings.DEBUG is False:   #if DEBUG is True it will be served automatically

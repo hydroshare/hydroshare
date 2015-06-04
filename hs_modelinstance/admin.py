@@ -1,6 +1,5 @@
-#from mezzanine.pages.admin import PageAdmin
-#from django.contrib.gis import admin
+from mezzanine.pages.admin import PageAdmin
 from django.contrib import admin
 from .models import *
 
-admin.site.register(ModelInstanceResource)
+admin.site.register(ModelInstanceResource, PageAdmin)

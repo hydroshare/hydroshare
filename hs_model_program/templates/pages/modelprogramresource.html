@@ -1,4 +1,4 @@
-{# This template is used as the landing page for NetCDF Resource #}
+{# This template is used as the landing page for Model Program resource #}
 
 {% extends "pages/genericresource.html" %}
 {% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
@@ -8,82 +8,70 @@
     {% if extended_metadata_exists %}
         <div class="row">
             <div class="col-md-12">
-                <h2>Extended Metadata</h2>
-
                 {# Add the view mode html code below #}
                 <div>
                     {% if mpmetadata %}
-{#                        {% for m in mpmetadata %}#}
-{#                            <h4><strong>Variable:</strong></h4>#}
-                            <hr style="border-color: dodgerblue; margin-top: 0px;margin-bottom: 2px">
-                            {# Required extended meta subelement for Variable #}
+                        <hr>
 
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Software Version:</strong></div>
+                            <div class="col-sm-8">{{ mpmetadata.software_version }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Software Languages:</strong></div>
+                            <div class="col-sm-8">{{ mpmetadata.software_language }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Software Repository:</strong></div>
+                            <div class="col-sm-8">{{ mpmetadata.software_repo }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Operating System:</strong></div>
+                            <div class="col-sm-8">{{ mpmetadata.operating_sys }}</div>
+                        </div>
 
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Software Version:</strong></div>
-                                <div class="col-sm-8">{{ mpmetadata.software_version }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Sofware Languages:</strong></div>
-                                <div class="col-sm-8">{{ mpmetadata.software_language }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Software Repository:</strong></div>
-                                <div class="col-sm-8">{{ mpmetadata.software_repo }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Operating System:</strong></div>
-                                <div class="col-sm-8">{{ mpmetadata.operating_sys }}</div>
-                            </div>
+                        <hr>
 
-                            <hr>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Date Released:</strong></div>
+                            <div class="col-sm-8">{{ mpmetadata.date_released |date:"SHORT_DATE_FORMAT" }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Website:</strong></div>
+                            <div class="col-sm-8">{{ mpmetadata.program_website }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Release Notes:</strong></div>
+                            <div class="col-sm-8">{{ mpmetadata.release_notes }}</div>
+                        </div>
 
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Date Released:</strong></div>
-                                <div class="col-sm-8">{{ mpmetadata.date_released |date:"SHORT_DATETIME_FORMAT" }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Website:</strong></div>
-                                <div class="col-sm-8">{{ mpmetadata.program_website }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Release Notes:</strong></div>
-                                <div class="col-sm-8">{{ mpmetadata.release_notes }}</div>
-                            </div>
+                        <hr>
 
-                            <hr>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>User Manual:</strong></div>
+                            <div class="col-sm-8">{{ mpmetadata.user_manual }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Theoretical Manual:</strong></div>
+                            <div class="col-sm-8">{{ mpmetadata.theoretical_manual }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Source Code:</strong></div>
+                            <div class="col-sm-8">{{ mpmetadata.source_code }}</div>
+                        </div>
 
-                            <div class="row">
-                                <div class="col-sm-4"><strong>User Manual:</strong></div>
-                                <div class="col-sm-8">{{ mpmetadata.user_manual }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Theoretical Manual:</strong></div>
-                                <div class="col-sm-8">{{ mpmetadata.theoretical_manual }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Source Code:</strong></div>
-                                <div class="col-sm-8">{{ mpmetadata.source_code }}</div>
-                            </div>
-
-
-
-
-{#                        {% endfor %}#}
-                    <hr>
+                        <hr>
                     {% endif %}
                 </div>
-                {# Add the view mode html code above #}
 
-
-                </div>
             </div>
-    {%  endif %}
-{%  endblock %}
+        </div>
+    {% endif %}
+{% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
 
     {# resource specific js can go here #}
 
-{%  endblock %}
+{% endblock %}

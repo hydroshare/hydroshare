@@ -2,9 +2,9 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-from django.conf import settings
+import django_irods.storage
 import django.utils.timezone
-import django.core.files.storage
+from django.conf import settings
 import hs_core.models
 
 
@@ -23,7 +23,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('bag', models.FileField(storage=django.core.files.storage.FileSystemStorage(), max_length=500, null=True, upload_to=b'bags')),
                 ('timestamp', models.DateTimeField(default=django.utils.timezone.now, db_index=True)),
                 ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
             ],
@@ -37,7 +36,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('description', models.URLField(null=True, blank=True)),
+                ('description', models.URLField(blank=True, null=True, validators=[hs_core.models.validate_user_url])),
                 ('name', models.CharField(max_length=100)),
                 ('organization', models.CharField(max_length=200, null=True, blank=True)),
                 ('email', models.EmailField(max_length=75, null=True, blank=True)),
@@ -79,7 +78,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('description', models.URLField(null=True, blank=True)),
+                ('description', models.URLField(blank=True, null=True, validators=[hs_core.models.validate_user_url])),
                 ('name', models.CharField(max_length=100)),
                 ('organization', models.CharField(max_length=200, null=True, blank=True)),
                 ('email', models.EmailField(max_length=75, null=True, blank=True)),
@@ -152,6 +151,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('page_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='pages.Page')),
                 ('comments_count', models.IntegerField(default=0, editable=False)),
+                ('rating_count', models.IntegerField(default=0, editable=False)),
+                ('rating_sum', models.IntegerField(default=0, editable=False)),
+                ('rating_average', models.FloatField(default=0, editable=False)),
                 ('public', models.BooleanField(default=True, help_text=b'If this is true, the resource is viewable and downloadable by anyone')),
                 ('frozen', models.BooleanField(default=False, help_text=b'If this is true, the resource should not be modified')),
                 ('do_not_distribute', models.BooleanField(default=False, help_text=b'If this is true, the resource owner has to designate viewers')),
@@ -163,17 +165,17 @@ class Migration(migrations.Migration):
                 ('object_id', models.PositiveIntegerField(null=True, blank=True)),
                 ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
                 ('creator', models.ForeignKey(related_name='creator_of_hs_core_genericresource', to=settings.AUTH_USER_MODEL, help_text=b'This is the person who first uploaded the resource')),
-                ('edit_groups', models.ManyToManyField(help_text=b'This is the set of Hydroshare Groups who can edit the resource', related_name='group_editable_hs_core_genericresource', null=True, to='auth.Group', blank=True)),
+                ('edit_groups', models.ManyToManyField(help_text=b'This is the set of Hydroshare Groups who can edit the resource', related_name='group_editable_hs_core_genericresource', null=True, to=b'auth.Group', blank=True)),
                 ('edit_users', models.ManyToManyField(help_text=b'This is the set of Hydroshare Users who can edit the resource', related_name='user_editable_hs_core_genericresource', null=True, to=settings.AUTH_USER_MODEL, blank=True)),
                 ('last_changed_by', models.ForeignKey(related_name='last_changed_hs_core_genericresource', to=settings.AUTH_USER_MODEL, help_text=b'The person who last changed the resource', null=True)),
-                ('owners', models.ManyToManyField(help_text=b'The person who uploaded the resource', related_name='owns_hs_core_genericresource', to=settings.AUTH_USER_MODEL)),
+                ('owners', models.ManyToManyField(help_text=b'The person who has total ownership of the resource', related_name='owns_hs_core_genericresource', to=settings.AUTH_USER_MODEL)),
                 ('user', models.ForeignKey(related_name='genericresources', verbose_name='Author', to=settings.AUTH_USER_MODEL)),
-                ('view_groups', models.ManyToManyField(help_text=b'This is the set of Hydroshare Groups who can view the resource', related_name='group_viewable_hs_core_genericresource', null=True, to='auth.Group', blank=True)),
+                ('view_groups', models.ManyToManyField(help_text=b'This is the set of Hydroshare Groups who can view the resource', related_name='group_viewable_hs_core_genericresource', null=True, to=b'auth.Group', blank=True)),
                 ('view_users', models.ManyToManyField(help_text=b'This is the set of Hydroshare Users who can view the resource', related_name='user_viewable_hs_core_genericresource', null=True, to=settings.AUTH_USER_MODEL, blank=True)),
             ],
             options={
                 'ordering': ('_order',),
-                'verbose_name': 'Generic Hydroshare Resource',
+                'verbose_name': 'Generic',
             },
             bases=('pages.page', models.Model),
         ),
@@ -247,7 +249,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('resource_file', models.FileField(storage=django.core.files.storage.FileSystemStorage(), max_length=500, upload_to=hs_core.models.get_path)),
+                ('resource_file', models.FileField(storage=django_irods.storage.IrodsStorage(), max_length=500, upload_to=hs_core.models.get_path)),
                 ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
             ],
             options={

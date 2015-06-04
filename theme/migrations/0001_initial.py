@@ -92,7 +92,7 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(help_text=b'e.g. Assistant Professor, Program Director, Adjunct Professor, Software Developer.', max_length=1024, null=True, blank=True)),
                 ('profession', models.CharField(default=b'Student', max_length=1024, null=True, help_text=b'e.g. Student, Researcher, Research Faculty, Research Staff, Project Manager, Teacher, Research Assistant.', blank=True)),
                 ('subject_areas', models.CharField(help_text=b'A comma-separated list of subject areas you are interested in researching. e.g. "Computer Science, Hydrology, Water Management"', max_length=1024, null=True, blank=True)),
-                ('organization', models.CharField(help_text=b'The name of the organization you work for.', max_length=1024, null=True)),
+                ('organization', models.CharField(help_text=b'The name of the organization you work for.', max_length=1024, null=True, blank=True)),
                 ('organization_type', models.CharField(blank=True, max_length=1024, null=True, choices=[(b'Higher Education', b'Higher Education'), (b'Research', b'Research'), (b'Government', b'Government'), (b'Commercial', b'Commercial'), (b'Primary Education', b'Primary Education'), (b'Secondary Education', b'Secondary Education')])),
                 ('phone_1', models.CharField(max_length=1024, null=True, blank=True)),
                 ('phone_1_type', models.CharField(blank=True, max_length=1024, null=True, choices=[(b'Home', b'Home'), (b'Work', b'Work'), (b'Mobile', b'Mobile')])),
