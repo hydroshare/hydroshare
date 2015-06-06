@@ -260,7 +260,9 @@ class SWATModelParameters(AbstractMetaDataElement):
 
 class ModelInput(AbstractMetaDataElement):
     term = 'ModelInput'
+    warm_up_period = models.CharField(max_length=100, null=True, blank=True, verbose_name='Warm-up period in years')
     rainfall_time_step = models.CharField(max_length=100, null=True, blank=True)
+    routing_time_step = models.CharField(max_length=100, null=True, blank=True)
     simulation_time_step = models.CharField(max_length=100, null=True, blank=True)
     watershed_area = models.CharField(max_length=100, null=True, blank=True, verbose_name='Waterhsed area in square kilometers')
     number_of_subbasins = models.CharField(max_length=100, null=True, blank=True)
@@ -278,10 +280,14 @@ class ModelInput(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
+        if not 'warm_up_period' in kwargs:
+            raise ValidationError("ModelInput warm-upPeriod is missing.")
         if not 'rainfall_time_step' in kwargs:
             raise ValidationError("ModelInput rainfallTimeStep is missing.")
+        if not 'routing_time_step' in kwargs:
+            raise ValidationError("ModelInput routingTimeStep is missing.")
         if not 'simulation_time_step' in kwargs:
-            raise ValidationError("ModelInput simualtionTimeStep is missing.")
+            raise ValidationError("ModelInput simulationTimeStep is missing.")
         if not 'watershed_area' in kwargs:
             raise ValidationError("ModelInput watershedArea is missing.")
         if not 'number_of_subbasins' in kwargs:
@@ -303,7 +309,9 @@ class ModelInput(AbstractMetaDataElement):
         if not 'soil_data_source_URL' in kwargs:
             raise ValidationError("ModelInput soilDataSourceURL is missing.")
         metadata_obj = kwargs['content_object']
-        return ModelInput.objects.create(rainfall_time_step=kwargs['rainfall_time_step'],
+        return ModelInput.objects.create(warm_up_period=kwargs['warm_up_period'],
+                                             rainfall_time_step=kwargs['rainfall_time_step'],
+                                             routing_time_step=kwargs['routing_time_step'],
                                              simulation_time_step=kwargs['simulation_time_step'],
                                              watershed_area=kwargs['watershed_area'],
                                              number_of_subbasins=kwargs['number_of_subbasins'],
@@ -322,7 +330,7 @@ class ModelInput(AbstractMetaDataElement):
         model_input = ModelInput.objects.get(id=element_id)
         if model_input:
             for key, value in kwargs.iteritems():
-                if key in ('rainfall_time_step', 'simulation_time_step', 'watershed_area','number_of_subbasins',
+                if key in ('warm_up_period', 'rainfall_time_step', 'routing_time_step', 'simulation_time_step', 'watershed_area','number_of_subbasins',
                            'number_of_HRUs', 'DEM_resolution', 'DEM_source_name', 'DEM_source_URL',
                            'landUse_data_source_name', 'landUse_data_source_URL', 'soil_data_source_name', 'soil_data_source_URL'):
                     setattr(model_input, key, value)
@@ -529,8 +537,12 @@ class SWATModelInstanceMetaData(CoreMetaData):
         if self.model_input:
             hsterms_model_input = etree.SubElement(container, '{%s}ModelInput' % self.NAMESPACES['hsterms'])
             hsterms_model_input_rdf_Description = etree.SubElement(hsterms_model_input, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_model_input_warm_up_period = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}warm-upPeriod' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_warm_up_period.text = self.model_input.warm_up_period
             hsterms_model_input_rainfall_time_step = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}rainfallTimeStep' % self.NAMESPACES['hsterms'])
             hsterms_model_input_rainfall_time_step.text = self.model_input.rainfall_time_step
+            hsterms_model_input_routing_time_step = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}routingTimeStep' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_routing_time_step.text = self.model_input.routing_time_step
             hsterms_model_input_simulation_time_step = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}simulationTimeStep' % self.NAMESPACES['hsterms'])
             hsterms_model_input_simulation_time_step.text = self.model_input.simulation_time_step
             hsterms_model_input_watershed_area = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}watershedArea' % self.NAMESPACES['hsterms'])

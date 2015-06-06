@@ -216,7 +216,9 @@ class ModelInputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
+                        MetadataField('warm_up_period'),
                         MetadataField('rainfall_time_step'),
+                        MetadataField('routing_time_step'),
                         MetadataField('simulation_time_step'),
                         MetadataField('watershed_area'),
                         MetadataField('number_of_subbasins'),
@@ -239,7 +241,9 @@ class ModelInputForm(ModelForm):
 
     class Meta:
         model = ModelInput
-        fields = ('rainfall_time_step',
+        fields = ('warm_up_period',
+                  'rainfall_time_step',
+                  'routing_time_step',
                   'simulation_time_step',
                   'watershed_area',
                   'number_of_subbasins',
@@ -254,7 +258,9 @@ class ModelInputForm(ModelForm):
 
 
 class ModelInputValidationForm(forms.Form):
+    warm_up_period = forms.CharField(max_length=100, required=False)
     rainfall_time_step = forms.CharField(max_length=100, required=False)
+    routing_time_step = forms.CharField(max_length=100, required=False)
     simulation_time_step = forms.CharField(max_length=100, required=False)
     watershed_area = forms.CharField(max_length=100, required=False)
     number_of_subbasins = forms.CharField(max_length=100, required=False)
