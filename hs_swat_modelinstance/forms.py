@@ -83,7 +83,7 @@ class ModelObjectiveForm(ModelForm):
     objective_choices = (('Hydrology', 'Hydrology'),
                                    ('Water quality', 'Water quality'), ('BMPs', 'BMPs'),
                                    ('Climate / Landuse Change', 'Climate / Landuse Change'),)
-    swat_model_objective = forms.MultipleChoiceField(choices=objective_choices)
+    swat_model_objective = forms.MultipleChoiceField(choices=objective_choices, widget=forms.CheckboxSelectMultiple(attrs={'style': 'width:auto;margin-top:-5px'}))
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelObjectiveForm, self).__init__(*args, **kwargs)
         self.helper = ModelObjectiveFormHelper(allow_edit, res_short_id, element_id, element_name='ModelObjective')

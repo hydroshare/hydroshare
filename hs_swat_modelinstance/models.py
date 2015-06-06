@@ -477,7 +477,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_objective = etree.SubElement(container, '{%s}ModelObjective' % self.NAMESPACES['hsterms'])
             hsterms_model_objective_rdf_Description = etree.SubElement(hsterms_model_objective, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_model_objective_swat_model_objective = etree.SubElement(hsterms_model_objective_rdf_Description, '{%s}ModelObjective' % self.NAMESPACES['hsterms'])
-            hsterms_model_objective_swat_model_objective.text = self.model_objective.swat_model_objective
+            hsterms_model_objective_swat_model_objective.text = self.model_objective.swat_model_objective.replace('[', '').replace(']', '').replace("u'", '').replace("',", ',').replace("'", '')
             hsterms_model_objective_other_objectives = etree.SubElement(hsterms_model_objective_rdf_Description, '{%s}otherObjectives' % self.NAMESPACES['hsterms'])
             hsterms_model_objective_other_objectives.text = self.model_objective.other_objectives
         if self.simulation_type:
