@@ -80,13 +80,13 @@ class ModelObjectiveFormHelper(BaseFormHelper):
         super(ModelObjectiveFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 class ModelObjectiveForm(ModelForm):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        objective_choices = (('Choose an objective', 'Choose an objective'), ('Hydrology', 'Hydrology'),
+    objective_choices = (('Hydrology', 'Hydrology'),
                                    ('Water quality', 'Water quality'), ('BMPs', 'BMPs'),
-                                   ('Climate / Landuse Change', 'Climate / Landuse Change'), ('Other', 'Other'),)
+                                   ('Climate / Landuse Change', 'Climate / Landuse Change'),)
+    swat_model_objective = forms.MultipleChoiceField(choices=objective_choices)
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelObjectiveForm, self).__init__(*args, **kwargs)
         self.helper = ModelObjectiveFormHelper(allow_edit, res_short_id, element_id, element_name='ModelObjective')
-        self.fields['swat_model_objective'].choices = objective_choices
 
     class Meta:
         model = ModelObjective
@@ -95,7 +95,10 @@ class ModelObjectiveForm(ModelForm):
 
 
 class ModelObjectiveValidationForm(forms.Form):
-    swat_model_objective = forms.CharField(max_length=100, required=False)
+    objective_choices = (('Hydrology', 'Hydrology'),
+                                   ('Water quality', 'Water quality'), ('BMPs', 'BMPs'),
+                                   ('Climate / Landuse Change', 'Climate / Landuse Change'),)
+    swat_model_objective = forms.MultipleChoiceField(choices=objective_choices, required=False)
     other_objectives = forms.CharField(max_length=200, required=False)
 
 class simulationTypeFormHelper(BaseFormHelper):
