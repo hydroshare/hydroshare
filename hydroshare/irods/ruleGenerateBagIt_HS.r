@@ -25,7 +25,7 @@ generateBagIt {
   ### - writes bagit.txt to NEWBAGITROOT/bagit.txt
   writeLine("stdout","BagIt-Version: 0.96");
   writeLine("stdout","Tag-File-Character-Encoding: UTF-8");
-  msiDataObjCreate("*BAGITDATA" ++ "/bagit.txt","forceFlag=",*FD);
+  msiDataObjCreate("*BAGITDATA" ++ "/bagit.txt","destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=",*FD);
   msiDataObjWrite(*FD,"stdout",*WLEN);
   msiDataObjClose(*FD,*Status);
   msiFreeBuffer("stdout");
@@ -54,7 +54,7 @@ generateBagIt {
   }
 
   ### - writes payload manifest to BAGITDATA/manifest-md5.txt
-  msiDataObjCreate("*BAGITDATA" ++ "/manifest-md5.txt","forceFlag=",*FD);
+  msiDataObjCreate("*BAGITDATA" ++ "/manifest-md5.txt","destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=",*FD);
   msiDataObjWrite(*FD,"stdout",*WLEN);
   msiDataObjClose(*FD,*Status);
   msiFreeBuffer("stdout");
@@ -66,7 +66,7 @@ generateBagIt {
   writeString("stdout","manifest-md5.txt    ");
   msiDataObjChksum("*BAGITDATA" ++ "/manifest-md5.txt","forceChksum",*CHKSUM);
   writeLine("stdout",*CHKSUM);
-  msiDataObjCreate("*BAGITDATA" ++ "/tagmanifest-md5.txt","forceFlag=",*FD);
+  msiDataObjCreate("*BAGITDATA" ++ "/tagmanifest-md5.txt","destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=",*FD);
   msiDataObjWrite(*FD,"stdout",*WLEN);
   msiDataObjClose(*FD,*Status);
   msiFreeBuffer("stdout");
@@ -74,5 +74,5 @@ generateBagIt {
   ### - writes to rodsLog
   msiWriteRodsLog("BagIt bag files created in place: *BAGITDATA <- *BAGITDATA",*Status);
 }
-INPUT *BAGITDATA="/dummy/dummy/dummy" 
+INPUT *BAGITDATA="/hydrotest41Zone/home/hyi", *DESTRESC="demoResc"
 OUTPUT ruleExecOut
