@@ -7,12 +7,6 @@ from hs_swat_modelinstance.forms import *
 @receiver(pre_create_resource, sender=SWATModelInstanceResource)
 def swatmodelinstance_pre_create_resource(sender, **kwargs):
     metadata = kwargs['metadata']
-    swatmodelparameters = {'swatmodelparameters': {'has_crop_rotation': False, 'has_title_drainage': False,
-                                                   'has_point_source': False, 'has_fertilizer': False,
-                                                   'has_tillage_operation': False, 'has_inlet_of_draining_watershed': False,
-                                                   'has_irrigation_operation': False, 'other_parameters': ''}}
-    metadata.append(swatmodelparameters)
-
     modeloutput = {'modeloutput': {'includes_output': False}}
     metadata.append(modeloutput)
 
