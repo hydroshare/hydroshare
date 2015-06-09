@@ -164,13 +164,7 @@ class SWATModelParametersFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        MetadataField('has_crop_rotation'),
-                        MetadataField('has_title_drainage'),
-                        MetadataField('has_point_source'),
-                        MetadataField('has_fertilizer'),
-                        MetadataField('has_tillage_operation'),
-                        MetadataField('has_inlet_of_draining_watershed'),
-                        MetadataField('has_irrigation_operation'),
+                        MetadataField('model_parameters'),
                         MetadataField('other_parameters'),
                  )
         kwargs['element_name_label'] = 'SWAT model used parameters'
@@ -178,16 +172,12 @@ class SWATModelParametersFormHelper(BaseFormHelper):
 
 
 class SWATModelParametersForm(ModelForm):
-    choices = ((True, 'Yes'), (False, 'No'))
-    style= 'width:auto;margin-top:-5px'
-    has_crop_rotation = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
-    has_title_drainage = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
-    has_point_source = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
-    has_fertilizer = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
-    has_tillage_operation = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
-    has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
-    has_irrigation_operation = forms.TypedChoiceField(choices=choices, widget=forms.RadioSelect(attrs={'style': style}))
-
+    parameters_choices = (('Crop rotation', 'Crop rotation'), ('Tile drainage', 'Tile drainage'),
+                         ('Point source', 'Point source'), ('Fertilizer', 'Fertilizer'),
+                         ('Tillage operation', 'Tillage operation'),
+                         ('Inlet of draining watershed', 'Inlet of draining watershed'),
+                         ('Irrigation operation', 'Irrigation operation'),)
+    model_parameters = forms.MultipleChoiceField(choices=parameters_choices, widget=forms.CheckboxSelectMultiple(attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(SWATModelParametersForm, self).__init__(*args, **kwargs)
@@ -195,24 +185,16 @@ class SWATModelParametersForm(ModelForm):
 
     class Meta:
         model = SWATModelParameters
-        fields = ('has_crop_rotation',
-                  'has_title_drainage',
-                  'has_point_source',
-                  'has_fertilizer',
-                  'has_tillage_operation',
-                  'has_inlet_of_draining_watershed',
-                  'has_irrigation_operation',
+        fields = ('model_parameters',
                   'other_parameters',)
 
 class SWATModelParametersValidationForm(forms.Form):
-    choices = ((True, 'Yes'), (False, 'No'))
-    has_crop_rotation = forms.TypedChoiceField(choices=choices, required=False)
-    has_title_drainage = forms.TypedChoiceField(choices=choices, required=False)
-    has_point_source = forms.TypedChoiceField(choices=choices, required=False)
-    has_fertilizer = forms.TypedChoiceField(choices=choices, required=False)
-    has_tillage_operation = forms.TypedChoiceField(choices=choices, required=False)
-    has_inlet_of_draining_watershed = forms.TypedChoiceField(choices=choices, required=False)
-    has_irrigation_operation = forms.TypedChoiceField(choices=choices, required=False)
+    parameters_choices = (('Crop rotation', 'Crop rotation'), ('Tile drainage', 'Tile drainage'),
+                         ('Point source', 'Point source'), ('Fertilizer', 'Fertilizer'),
+                         ('Tillage operation', 'Tillage operation'),
+                         ('Inlet of draining watershed', 'Inlet of draining watershed'),
+                         ('Irrigation operation', 'Irrigation operation'),)
+    model_parameters = forms.MultipleChoiceField(choices=parameters_choices,required=False)
     other_parameters = forms.CharField(max_length=200, required=False)
 
 class ModelInputFormHelper(BaseFormHelper):
