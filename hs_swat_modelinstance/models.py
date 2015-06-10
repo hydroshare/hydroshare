@@ -79,11 +79,11 @@ class ModelObjective(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        if 'swat_model_objective' in kwargs:
-            if not kwargs['swat_model_objective'] in ['Hydrology', 'Water quality', 'BMPs', 'Climate / Landuse Change', 'Other']:
-                raise ValidationError('Invalid swat_model_objective:%s' % kwargs['type'])
-        else:
-            raise ValidationError("swat_model_objective is missing.")
+        #if 'swat_model_objective' in kwargs:
+         #   if not kwargs['swat_model_objective'] in ['Hydrology', 'Water quality', 'BMPs', 'Climate / Landuse Change', 'Other']:
+        #        raise ValidationError('Invalid swat_model_objective:%s' % kwargs['type'])
+       # else:
+       #     raise ValidationError("swat_model_objective is missing.")
         if not 'other_objectives' in kwargs:
             raise ValidationError("modelObjective other_objectives is missing.")
         metadata_obj = kwargs['content_object']
@@ -195,13 +195,13 @@ class SWATModelParameters(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        if 'model_parameters' in kwargs:
-            if not kwargs['model_parameters'] in ['Crop rotation', 'Tile drainage',
-                                                  'Point source', 'Fertilizer', 'Tillage operation',
-                                                  'Inlet of draining watershed', 'Irrigation operation']:
-                raise ValidationError('Invalid Model Parameters:%s' % kwargs['type'])
-        else:
-            raise ValidationError("Model Parameters is missing.")
+        #if 'model_parameters' in kwargs:
+        #    if not kwargs['model_parameters'] in ['Crop rotation', 'Tile drainage',
+         #                                         'Point source', 'Fertilizer', 'Tillage operation',
+        #                                          'Inlet of draining watershed', 'Irrigation operation']:
+        #        raise ValidationError('Invalid Model Parameters:%s' % kwargs['type'])
+        #else:
+         #   raise ValidationError("Model Parameters is missing.")
         if not 'other_parameters' in kwargs:
             raise ValidationError("SWATModelParameters other_parameters is missing.")
 
