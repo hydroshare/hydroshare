@@ -148,9 +148,6 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                 is_add_success = True
                 resource_modified(res, request.user)
 
-    if is_add_success:
-        request.session['bag_modified'] = True
-
     if request.is_ajax():
         if is_add_success:
             if res.metadata.has_all_required_elements():
@@ -200,9 +197,6 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 resource_modified(res, request.user)
                 is_update_success = True
 
-    if is_update_success:
-        request.session['bag_modified'] = True
-
     if request.is_ajax():
         if is_update_success:
             if res.metadata.has_all_required_elements():
@@ -233,7 +227,6 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
     res.metadata.delete_element(element_name, element_id)
     resource_modified(res, request.user)
     request.session['resource-mode'] = 'edit'
-    request.session['bag_modified'] = True
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -259,7 +252,6 @@ def publish(request, shortkey, *args, **kwargs):
     res.doi = "to be assigned"
     res.save()
     resource_modified(res, request.user)
-    request.session['bag_modified'] = True
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -571,7 +563,7 @@ def create_resource(request, *args, **kwargs):
 
     # go to resource landing page
     request.session['just_created'] = True
-    request.session['bag_modified'] = False
+
     return HttpResponseRedirect(resource.get_absolute_url())
 
 

@@ -2,6 +2,7 @@ import arrow
 import os
 import shutil
 import errno
+from time import sleep
 
 from foresite import *
 from rdflib import URIRef, Namespace
@@ -12,15 +13,24 @@ from hs_core.models import Bags, ResourceFile
 from django_irods.storage import IrodsStorage
 
 def delete_bag(resource):
+    """
+    delete the resource bag
 
+    Parameters:
+    :param resource: the resource to delete the bag for.
+    :return: none
+    """
     res_id = resource.short_id
     istorage = IrodsStorage()
 
     # delete resource directory first to remove all generated bag-related files for the resource
     istorage.delete(res_id)
 
-    # delete the resource bag
-    istorage.delete('bags/{res_id}.zip'.format(res_id=res_id))
+    # the resource bag may not exist due to on-demand bagging
+    bagname = 'bags/{res_id}.zip'.format(res_id=res_id)
+    if istorage.exists(bagname):
+        # delete the resource bag
+        istorage.delete(bagname)
 
     # delete the bags table
     for bag in resource.bags.all():
@@ -30,6 +40,15 @@ def delete_bag(resource):
             raise Exception(ex.message)
 
 def create_bag_files(resource):
+    """
+    create and update all files needed by bagit operation that is conducted on iRODS server; no bagit operation
+    is performed, only files that will be included in the bag are created or updated.
+
+    Parameters:
+    :param resource: A resource whose files will be created or updated to be included in the resource bag.
+
+    :return: istorage, an IrodsStorage object,that will be used by subsequent operation to create a bag on demand as needed.
+    """
     from . import utils as hs_core_utils
     DATE_FORMAT = "YYYY-MM-DDThh:mm:ssTZD"
     istorage=IrodsStorage()
@@ -130,8 +149,29 @@ def create_bag_files(resource):
     return istorage
 
 def create_bag_by_irods(resource_id, istorage = None):
+    """
+    create a resource bag on iRODS side by running the bagit rule followed by ibun zipping operation
+
+    Parameters:
+    :param resource_id: the resource uuid that is used to look for the resource to create the bag for.
+           istorage: IrodsStorage object that is used to call irods bagit rule operation and zipping up operation
+
+    :return: none
+    """
     if not istorage:
         istorage = IrodsStorage()
+
+    # make sure bag is not locked by another request before creating a bag to resolve potential race condition
+    bag_lock = istorage.getAVU(resource_id, "bag_lock")
+
+    if bag_lock:
+        while bag_lock == "true":
+            sleep(5) # delay for 5 seconds before checking bag_lock AVU from iRODS again
+            bag_lock = istorage.getAVU(resource_id, "bag_lock")
+
+    # lock the bag so it will not be updated by another request while the bag is being created
+    istorage.setAVU(resource_id, "bag_lock", "true")
+
     # call iRODS bagit rule here
     irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
     irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
@@ -143,6 +183,9 @@ def create_bag_by_irods(resource_id, istorage = None):
 
     # call iRODS ibun command to zip the bag
     istorage.zipup(irods_bagit_input_path, 'bags/{res_id}.zip'.format(res_id=resource_id))
+
+    # release the lock so other requests can update the bag
+    istorage.setAVU(resource_id, "bag_lock", "false")
 
 def create_bag(resource):
     """
@@ -161,7 +204,8 @@ def create_bag(resource):
 
     istorage = create_bag_files(resource)
 
-    create_bag_by_irods(resource.short_id, istorage)
+    # set bag_modified-true AVU pair for on-demand bagging.to indicate the resource bag needs to be created when user clicks on download button
+    istorage.setAVU(resource.short_id, "bag_modified", "true")
 
     # link the zipped bag file in IRODS via bag_url for bag downloading
     b = Bags.objects.create(
