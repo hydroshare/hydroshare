@@ -77,18 +77,18 @@
             </div>
         </div>
         <script>
-            $( document ).ready(function() {
-                console.log('test');
-                $.ajax({
-                    type: "GET",
-                    url: '/hsapi/_internal/{{ short_id }}/update-files/',
-                    success: function (data, xhr, status) {
-                    },
-                    error: function(){
-                    }
-                });
-
-           });
+{#            $( document ).ready(function() {#}
+{#                console.log('test');#}
+{#                $.ajax({#}
+{#                    type: "GET",#}
+{#                    url: '/hsapi/_internal/{{ short_id }}/update-files/',#}
+{#                    success: function (data, xhr, status) {#}
+{#                    },#}
+{#                    error: function(){#}
+{#                    }#}
+{#                });#}
+{##}
+{#           });#}
         </script>
     {%  endif %}
 {%  endblock %}
@@ -98,97 +98,4 @@
 {% endblock %}
 
 
-{##}
-{#    {% if page.perms.delete %}#}
-{#    <a class="btn btn-primary" href="/admin/pages/page/{{ page.pk }}" id="switch-to-static" data-toggle="tooltip" data-placement="top"#}
-{#       title="This converts the most up to date data, and converts the resource to a non referenced time series">Switch to Static</a>#}
-{#    <button class="btn btn-danger" id="delete"  data-toggle="modal" data-target="#delete-resource-dialog">Delete</button>#}
-{#    {% endif %}#}
-{#</div>#}
-{##}
-{#<div class="row">#}
-{#    <div class="col-md-12">{# <img src="/placeholder.png"></div> #}
-{##}
-{#        <table class="table">#}
-{#            <tr><th>Resource Type</th><td>{{ resource_type }}</td></tr>#}
-{#            <tr><th>URL (type: '{{ reference_type|upper }}')</th><td>{{ url }}</tr>#}
-{#            {% if site_name %}<tr><th>Site</th><td>{{ site_name }}</td></tr>{% endif %}#}
-{#            {% if site_code %}<tr><th>Site Code</th><td>{{ site_code }}</td></tr>{% endif %}#}
-{#            {% if variable_name %}<tr><th>Variable</th><td>{{ variable_name }}</td></tr>{% endif %}#}
-{#            {% if variable_code %}<tr><th>Variable Code</th><td>{{ variable_code }}</td></tr>{% endif %}#}
-{#            <tr><th>Owner</th><td>{{ cm.user|contact|safe }}</td></tr>#}
-{#            <tr><th>Added on</th><td>{{ cm.created|date }}</td></tr>#}
-{#            <tr><th>Start Date</th><td>{{ cm.start_date }}</td></tr>#}
-{#            <tr><th>Last updated by</th><td>{% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>#}
-{#            <tr><th>Updated on</th><td>{{ cm.updated|date }}</td></tr>#}
-{#            <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>#}
-{#            <tr><th>Permalink</th><td><a id="permalink" href="http://{{ request.get_host }}/r/{{ cm.short_id }}/">http://{{ request.get_host }}/r/{{ cm.short_id }}/</a></td></tr>#}
-{#        </table>#}
-{##}
-{#    </div>#}
-{#</div>#}
-}
-{#    <script src=" {% static "ref_ts/d3/d3.min.js" %}"></script>#}
-{#    <script src=" {% static "ref_ts/datepicker/js/bootstrap-datepicker.js" %}"></script>#}
-{#    <script src=" {% static "ref_ts/visualization/js/visualization.js" %}"></script>#}
-{#    <script type="text/javascript">#}
-{#    $(function() {#}
-{#        function compare(a,b) {#}
-{#            if (a.x < b.x)#}
-{#                return -1;#}
-{#            if (a.x > b.x)#}
-{#                return 1;#}
-{#            return 0;#}
-{#        }#}
-{#        function humanFileSize(bytes) {#}
-{#            var thresh = 1024;#}
-{#            if(bytes < thresh) return bytes + ' B';#}
-{#            var units = ['kB','MB','GB','TB','PB','EB','ZB','YB'];#}
-{#            var u = -1;#}
-{#            do {#}
-{#                bytes /= thresh;#}
-{#                ++u;#}
-{#            } while(bytes >= thresh);#}
-{#            return bytes.toFixed(1)+' '+units[u];#}
-{#        }#}
-{#        function endsWith(str, suffix) {#}
-{#            return str.indexOf(suffix, str.length - suffix.length) !== -1;#}
-{#        }#}
-{#        function updateFiles() {#}
-{#             $.ajax({#}
-{#                 type:"GET",#}
-{#                 url:'/hsapi/_internal/{{ short_id }}/update-files/',#}
-{#                 success:function (data, xhr, status) {#}
-{#                     $('#downloads').html("<tr><td>"+ data.csv_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.csv_link + "'>Download(Updated)</td></tr><tr><td>"+ data.wml1_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.wml1_link + "'>Download(Updated)</td></tr><tr><td>"+ data.wml2_name +"</td><td><a class='btn btn-primary btn-block' href=" + data.wml2_link + "'>Download(Updated)</td></tr><td></td><td><div class='btn-group'><a type='button' class='btn btn-primary' href='{{ bag.bag.url }}'>Export all</a><button type='button' class='btn btn-primary dropdown-toggle' data-toggle='dropdown'><span class='caret'></span><span class='sr-only'>Toggle Dropdown</span></button><ul class='dropdown-menu' role='menu'><li><a href='" + data.bag_url + "' style='color:black;'>" + data.bag_time + " (latest)</a></li>{% for b in first_4_bags %}<li><a href='{{ b.bag.url }}' style='color:black;'>{{ b.timestamp|date }}, {{ b.timestamp|time }} ({{ b.bag.size|filesizeformat }})</a></li>{% endfor %}</ul></div></td></tr>");#}
-{#            },#}
-{#                 error:function(data){#}
-{#                     console.log('error', data);#}
-{#                 }#}
-{#        });#}
-{#        }#}
-{#    function update_links(csv_name, csv_link, csv_size, wml1_name, wml1_link, wml1_size, wml2_name, wml2_link, wml2_size){#}
-{#            $('#csv-name').html(csv_name);#}
-{#            $('#csv-link').html('Download (' + humanFileSize(csv_size) +')');#}
-{#            document.getElementById('csv-link').href = csv_link;#}
-{#            if (wml1_name != ""){#}
-{#                 $('#xml-name').html(wml1_name);#}
-{#                 $('#xml-link').html('Download (' + humanFileSize(wml1_size) +')');#}
-{#                 document.getElementById('xml-link').href = wml1_link;#}
-{#                 var xml_text = "<td>" + wml2_name + "</td>" + "<td><a class='btn btn-primary btn-block' href=" + wml2_link + ">Download (" + humanFileSize(wml2_size) + ")</a></td>";#}
-{#                 $('#xml2').html(xml_text);#}
-{#                        }#}
-{#            else{#}
-{#                 $('#xml-name').html(wml2_name);#}
-{#                 $('#xml-link').html('Download (' + humanFileSize(wml2_size) +')');#}
-{#                 document.getElementById('xml-link').href = wml2_link;#}
-{#            }#}
-{#                 $('#downloads').show();#}
-{#        }#}
-{#        updateFiles();#}
-{#        $('#graph-area').hide();#}
-{#        $('#loading').hide();#}
-{#        $('#switch-to-static').tooltip({animation: true, delay: { show: 500, hide: 100 }});#}
-{#    });#}
-{#    </script>#}
-{#{% endwith %}#}
-{#{% endblock %}#}
+

@@ -18,7 +18,9 @@ from StringIO import StringIO
 from hs_core.hydroshare.hs_bagit import create_bag
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
-
+import tempfile
+from django.core.files.uploadedfile import UploadedFile
+import shutil
 
 def get_version(root):
     wml_version = None
@@ -359,7 +361,7 @@ def map_waterml(xml_doc):
         values = ts['values']
     elif not version:
         return False
-
+#called by view: create_ref_time_series
 #performs getValues call and returns (through parsing fxns) time series and parsed data from response
 def time_series_from_service(service_url, soap_or_rest, **kwargs):
     """
@@ -416,14 +418,16 @@ due to incorrect formatting in the web service format.")
     root = etree.XML(response)
     wml_version = get_version(root)
     if wml_version == '1':
-        return parse_1_0_and_1_1(root)
+        ts = parse_1_0_and_1_1(root)
     elif wml_version == '2.0':
-        return parse_2_0(root)
+        ts = parse_2_0(root)
     else:
         raise Http404()
+    ts['root'] = root #add root to ts
+    return ts
 
 #creates vis and returns open file
-def create_vis(path, varcode, site_code, data, xlab, variable_name, units, noDataValue):
+def create_vis(path, site_name, data, xlab, variable_name, units, noDataValue):
     loc = AutoDateLocator()
     fmt = AutoDateFormatter(loc)
     fmt.scaled[365.0] = '%y'
@@ -458,34 +462,26 @@ def create_vis(path, varcode, site_code, data, xlab, variable_name, units, noDat
     ax.autoscale_view()
 
     ax.grid(True)
-    vis_name = 'visualization-'+site_code+'-'+varcode+'.png'
-    vis_path = path+vis_name
+    vis_name = 'visualization-'+site_name+'-'+variable_name+'.png'
+    vis_path = path + "/" + vis_name
     savefig(vis_path, bbox_inches='tight')
     vis_file = open(vis_path, 'r')
+    vis_file = UploadedFile(file=vis_file,name=vis_name)
     return vis_file
-
+#called by generate_files
 #gets time series, creates the metadata terms, creates the files and returns them
-def make_files(shortkey, reference_type, url, data_site_code, variable_code, title):
+def make_files(res, tempdir, ts):
 
-    ts, csv_link, csv_size, xml_link, xml_size = {}, '', '', '', ''
-    if reference_type == 'rest':
-
-        ts = time_series_from_service(url, reference_type)
-
-    else:
-        ts = time_series_from_service(url,
-                                      reference_type,
-                                      site_name_or_code=data_site_code,
-                                      variable_code=variable_code)
+    site_name = res.metadata.sites.all()[0].name
+    var_name = res.metadata.variables.all()[0].name
+    title = res.title
 
     vals = ts['values']
     for_graph = ts['for_graph']
     units = ts['units']
-    variable_name = ts['variable_name']
     noDataValue = ts.get('noDataValue', None)
-    vis_file = create_vis("", variable_code, data_site_code, for_graph, 'Date', variable_name, units, noDataValue)
+    vis_file = create_vis(tempdir, site_name, for_graph, 'Date', var_name, units, noDataValue)
     version = ts['wml_version']
-    d = datetime.today()
     file_base = title.replace(" ", "")
     csv_name = '{0}.{1}'.format(file_base, 'csv')
     if version == '1':
@@ -499,61 +495,68 @@ def make_files(shortkey, reference_type, url, data_site_code, variable_code, tit
     for k, v in od_vals.items():
         t = (k, v)
         for_csv.append(t)
-    with open(csv_name, 'wb') as csv_file:
+    csv_name_full_path = tempdir + "/" + csv_name
+    with open(csv_name_full_path, 'wb') as csv_file:
         w = csv.writer(csv_file)
         w.writerow([title])
         var = '{0}({1})'.format(ts['variable_name'], ts['units'])
         w.writerow(['time', var])
         for r in for_csv:
             w.writerow(r)
-    with open(xml_name, 'wb') as xml_file:
+    csv_file = open(csv_name_full_path, 'r')
+    csv_file = UploadedFile(file=csv_file,name=csv_name)
+
+    xml_name_full_path = tempdir + "/" + xml_name
+    with open(xml_name_full_path, 'wb') as xml_file:
         xml_file.write(ts['time_series'])
-    csv_file = open(csv_name, 'r')
-    files = []
+
     if version == '1' or version == '1.0':
-        wml1_file = open(xml_name, 'r')
-        wml2_file = transform_file(reference_type, url, data_site_code, variable_code, title)
+        wml1_file = open(xml_name_full_path, 'r')
+        wml1_file = UploadedFile(file=wml1_file,name=xml_name)
+        wml2_file = transform_file(ts, title, tempdir)
         files = [csv_file, wml1_file, wml2_file, vis_file]
         return files
     if version == '2' or version == '2.0':
-        wml2_file = open(xml_name, 'r')
+        wml2_file = open(xml_name_full_path, 'r')
+        wml2_file = UploadedFile(file=wml2_file,name=xml_name)
         files = [csv_file, wml2_file, vis_file]
         return files
 
+#called by view: create_ref_time_series, update_files
 #this fxn creates the calls the make files fxn and adds the files as resource files
-def generate_files(shortkey):
+def generate_files(shortkey, ts):
     res = hydroshare.get_resource_by_shortkey(shortkey)
-    files = make_files(res.short_id,
-                       res.metadata.referenceURLs.all()[0].type,
-                       res.metadata.referenceURLs.all()[0].value,
-                       res.metadata.sites.all()[0].code,
-                       res.metadata.variables.all()[0].code,
-                       res.title)
-    if len(res.files.all()) > 0:
-        for existing_file in res.files.all():
-            existing_file.resource_file.delete()
-    if len(res.bags.all()) > 0:
-        for b in res.bags.all():
-            b.delete()
-    for f in files:
-        hydroshare.add_resource_files(res.short_id, f)
-        os.remove(f.name)
-    for fl in res.files.all():
-        if fl.resource_file:
-            pass
+
+    if ts is None: #called by update_files in view
+        if res.metadata.referenceURLs.all()[0].type == 'rest':
+            ts = time_series_from_service(res.metadata.referenceURLs.all()[0].value, res.metadata.referenceURLs.all()[0].type)
         else:
-            fl.delete()
-    create_bag(res)
+            ts = time_series_from_service(res.metadata.referenceURLs.all()[0].value,
+                                      res.metadata.referenceURLs.all()[0].type,
+                                      site_name_or_code=res.metadata.sites.all()[0].code,
+                                      variable_code=res.metadata.variables.all()[0].code)
+    tempdir = None
+    try:
+        tempdir = tempfile.mkdtemp()
+        files = make_files(res, tempdir, ts)
+        if len(res.files.all()) > 0:
+            for existing_file in res.files.all():
+                existing_file.resource_file.delete()
+        if len(res.bags.all()) > 0:
+            for b in res.bags.all():
+                b.delete()
+        hydroshare.add_resource_files(res.short_id, *files)
+        b = create_bag(res)
+    except Exception as e:
+        raise e
+    finally:
+        if tempdir is not None:
+           shutil.rmtree(tempdir)
 
 #transforms wml1.1 to wml2.0
-def transform_file(reference_type, url, data_site_code, variable_code, title):
-    if reference_type == 'soap':
-        client = Client(url)
-        response = client.service.GetValues(':'+data_site_code, ':'+variable_code, '', '', '')
-    elif reference_type == 'rest':
-        r = requests.get(url)
-        response = r.content
-    waterml_1 = etree.XML(response)
+def transform_file(ts, title, tempdir):
+
+    waterml_1 = ts['root']
     wml_string = etree.tostring(waterml_1)
     s = StringIO(wml_string)
     dom = etree.parse(s)
@@ -562,11 +565,14 @@ def transform_file(reference_type, url, data_site_code, variable_code, title):
     xslt = etree.parse(xsl_location)
     transform = etree.XSLT(xslt)
     newdom = transform(dom)
-    d = datetime.today()
     xml_name = '{0}-{1}'.format(title.replace(" ", ""), 'wml_2_0.xml')
-    with open(xml_name, 'wb') as f:
+    xml_2_full_path = tempdir + "/" + xml_name
+
+    with open(xml_2_full_path, 'wb') as f:
         f.write(newdom)
-    xml_file = open(xml_name, 'r')
+
+    xml_file = open(xml_2_full_path, 'r')
+    xml_file = UploadedFile(file=xml_file, name=xml_name)
     return xml_file
 
 
