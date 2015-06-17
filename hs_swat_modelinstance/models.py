@@ -66,39 +66,66 @@ class ExecutedBy(AbstractMetaDataElement):
         raise ValidationError("ExecutedBy element of a resource can't be deleted.")
 
 
+class ModelObjectiveChoices(models.Model):
+    description = models.CharField(max_length=300)
+
+    def __unicode__(self):
+        self.description
 
 class ModelObjective(AbstractMetaDataElement):
     term = 'ModelObjective'
-    objective_choices = (('Hydrology', 'Hydrology'), ('Water quality', 'Water quality'),
-                         ('BMPs', 'BMPs'), ('Climate / Landuse Change', 'Climate / Landuse Change'), ('Other', 'Other'))
-    swat_model_objective = models.CharField(max_length=100, choices=objective_choices)
+    swat_model_objectives = models.ManyToManyField(ModelObjectiveChoices, null=True, blank=True)
     other_objectives = models.CharField(max_length=200, null=True, blank=True)
 
     def __unicode__(self):
         self.other_objectives
 
+    def get_swat_model_objectives(self):
+        return ', '.join([objective.description for objective in self.swat_model_objectives.all()])
+
     @classmethod
     def create(cls, **kwargs):
-        if 'swat_model_objective' in kwargs:
-            if not kwargs['swat_model_objective'] in ['Hydrology', 'Water quality', 'BMPs', 'Climate / Landuse Change', 'Other']:
-                raise ValidationError('Invalid swat_model_objective:%s' % kwargs['type'])
+        if 'swat_model_objectives' in kwargs:
+            cls._validate_swat_model_objectives(kwargs['swat_model_objectives'])
         else:
-            raise ValidationError("swat_model_objective is missing.")
+            raise ValidationError("swat_model_objectives is missing.")
         if not 'other_objectives' in kwargs:
             raise ValidationError("modelObjective other_objectives is missing.")
+
         metadata_obj = kwargs['content_object']
-        return ModelObjective.objects.create(swat_model_objective=kwargs['swat_model_objective'],
-                                             other_objectives=kwargs['other_objectives'],
-                                             content_object=metadata_obj)
+        model_objective = ModelObjective.objects.create(other_objectives=kwargs['other_objectives'],
+                                                        content_object=metadata_obj)
+        for swat_objective in kwargs['swat_model_objectives']:
+            qs = ModelObjectiveChoices.objects.filter(description__iexact=swat_objective)
+            if qs.exists():
+                model_objective.swat_model_objectives.add(qs[0])
+            else:
+                model_objective.swat_model_objectives.create(description=swat_objective)
+
+        return model_objective
 
     @classmethod
     def update(cls, element_id, **kwargs):
         model_objective = ModelObjective.objects.get(id=element_id)
         if model_objective:
-            for key, value in kwargs.iteritems():
-                if key in ('swat_model_objective', 'other_objectives'):
-                    setattr(model_objective, key, value)
+            if 'swat_model_objectives' in kwargs:
+                cls._validate_swat_model_objectives(kwargs['swat_model_objectives'])
+                model_objective.swat_model_objectives.all().delete()
+                for swat_objective in kwargs['swat_model_objectives']:
+                    qs = ModelObjectiveChoices.objects.filter(description__iexact=swat_objective)
+                    if qs.exists():
+                        model_objective.swat_model_objectives.add(qs[0])
+                    else:
+                        model_objective.swat_model_objectives.create(description=swat_objective)
+
+            if 'other_objectives' in kwargs:
+                model_objective.other_objectives = kwargs['other_objectives']
+
             model_objective.save()
+
+            # delete model_objective metadata element if it has no data
+            if len(model_objective.swat_model_objectives.all()) == 0 and len(model_objective.other_objectives) == 0:
+                model_objective.delete()
         else:
             raise ObjectDoesNotExist("No ModelObjective element was found for the provided id:%s" % kwargs['id'])
 
@@ -106,6 +133,13 @@ class ModelObjective(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("ModelObjective element of a resource can't be deleted.")
 
+    @classmethod
+    def _validate_swat_model_objectives(cls, objectives):
+        for swat_objective in objectives:
+            if swat_objective not in ['Hydrology', 'Water quality', 'BMPs', 'Climate / Landuse Change', 'Other']:
+                raise ValidationError('Invalid swat_model_objectives:%s' % objectives)
+
+# TODO: change the class name to: SimulationType
 class simulationType(AbstractMetaDataElement):
     term = 'simulationType'
     type_choices = (('Normal Simulation', 'Normal Simulation'), ('Sensitivity Analysis', 'Sensitivity Analysis'),
@@ -357,7 +391,7 @@ class SWATModelInstanceResource(Page, AbstractResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # all file types are supported
-        return ('.*')
+        return ('.*',)
 
     @classmethod
     def can_have_multiple_files(cls):
@@ -477,7 +511,8 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_objective = etree.SubElement(container, '{%s}ModelObjective' % self.NAMESPACES['hsterms'])
             hsterms_model_objective_rdf_Description = etree.SubElement(hsterms_model_objective, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_model_objective_swat_model_objective = etree.SubElement(hsterms_model_objective_rdf_Description, '{%s}ModelObjective' % self.NAMESPACES['hsterms'])
-            hsterms_model_objective_swat_model_objective.text = self.model_objective.swat_model_objective.replace('[', '').replace(']', '').replace("u'", '').replace("',", ',').replace("'", '')
+            #hsterms_model_objective_swat_model_objective.text = self.model_objective.swat_model_objective.replace('[', '').replace(']', '').replace("u'", '').replace("',", ',').replace("'", '')
+            hsterms_model_objective_swat_model_objective.text = ', '.join([objective.description for objective in self.model_objective.swat_model_objectives.all()])
             hsterms_model_objective_other_objectives = etree.SubElement(hsterms_model_objective_rdf_Description, '{%s}otherObjectives' % self.NAMESPACES['hsterms'])
             hsterms_model_objective_other_objectives.text = self.model_objective.other_objectives
         if self.simulation_type:

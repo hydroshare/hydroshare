@@ -7,6 +7,14 @@ from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
 
+
+model_objective_choices = (
+                            ('Hydrology', 'Hydrology'),
+                            ('Water quality', 'Water quality'),
+                            ('BMPs', 'BMPs'),
+                            ('Climate / Landuse Change', 'Climate / Landuse Change'),
+                          )
+
 class MetadataField(layout.Field):
           def __init__(self, *args, **kwargs):
               kwargs['css_class'] = 'form-control input-sm'
@@ -73,33 +81,42 @@ class ModelObjectiveFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        MetadataField('swat_model_objective'),
+                        MetadataField('swat_model_objectives'),
                         MetadataField('other_objectives'),
                  )
         kwargs['element_name_label'] = 'Model objective'
         super(ModelObjectiveFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 class ModelObjectiveForm(ModelForm):
-    objective_choices = (('Hydrology', 'Hydrology'),
-                                   ('Water quality', 'Water quality'), ('BMPs', 'BMPs'),
-                                   ('Climate / Landuse Change', 'Climate / Landuse Change'),)
-    swat_model_objective = forms.MultipleChoiceField(choices=objective_choices, widget=forms.CheckboxSelectMultiple(attrs={'style': 'width:auto;margin-top:-5px'}))
+    swat_model_objectives = forms.MultipleChoiceField(choices=model_objective_choices,
+                                                      widget=forms.CheckboxSelectMultiple(
+                                                          attrs={'style': 'width:auto;margin-top:-5px'}))
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelObjectiveForm, self).__init__(*args, **kwargs)
         self.helper = ModelObjectiveFormHelper(allow_edit, res_short_id, element_id, element_name='ModelObjective')
+        if self.instance:
+            try:
+                # for some reason the following line raises TypeError exception if there are no swat_model_objectives
+                # associated with the instance of ModelObjective - thus using try ... except
+                swat_model_objectives = self.instance.swat_model_objectives.all()
+                if len(swat_model_objectives) > 0:
+                    self.fields['swat_model_objectives'].initial = [objective.description for objective in
+                                                                    swat_model_objectives]
+                else:
+                    self.fields['swat_model_objectives'].initial = []
+            except TypeError:
+                self.fields['swat_model_objectives'].initial = []
 
     class Meta:
         model = ModelObjective
-        fields = ('swat_model_objective',
-                  'other_objectives',)
+        fields = ('other_objectives',)
 
 
 class ModelObjectiveValidationForm(forms.Form):
-    objective_choices = (('Hydrology', 'Hydrology'),
-                                   ('Water quality', 'Water quality'), ('BMPs', 'BMPs'),
-                                   ('Climate / Landuse Change', 'Climate / Landuse Change'),)
-    swat_model_objective = forms.MultipleChoiceField(choices=objective_choices, required=False)
+    swat_model_objectives = forms.MultipleChoiceField(choices=model_objective_choices, required=False)
     other_objectives = forms.CharField(max_length=200, required=False)
+
 
 class simulationTypeFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
@@ -110,6 +127,7 @@ class simulationTypeFormHelper(BaseFormHelper):
                  )
         kwargs['element_name_label'] = 'Simulation type'
         super(simulationTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
 
 class simulationTypeForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):

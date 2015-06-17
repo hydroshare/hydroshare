@@ -41,8 +41,8 @@
                         <h4><strong>Model Objective:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            <div class="col-sm-4"><strong>SWAT model objective:</strong></div>
-                            <div class="col-sm-8">{{ model_objective.swat_model_objective }}</div>
+                            <div class="col-sm-4"><strong>SWAT model objectives:</strong></div>
+                            <div class="col-sm-8">{{ model_objective.get_swat_model_objectives }}</div>
                             {% if model_objective.other_objectives %}
                                 <div class="col-sm-4"><strong>SWAT model other objectives:</strong></div>
                                 <div class="col-sm-8">{{ model_objective.other_objectives }}</div>
