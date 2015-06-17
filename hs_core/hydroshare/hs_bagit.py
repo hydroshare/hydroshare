@@ -34,10 +34,7 @@ def delete_bag(resource):
 
     # delete the bags table
     for bag in resource.bags.all():
-        try:
-            bag.delete()
-        except Exception as ex:
-            raise Exception(ex.message)
+        bag.delete()
 
 def create_bag_files(resource):
     """
