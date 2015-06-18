@@ -401,214 +401,163 @@
                     <p>Your research group(s) have been given specific permission to view this resource.</p>
                 {% endif %}
 
-                {% if page.perms.change %}
-                    <div class="panel panel-default panel-faq">
-                    <div class="panel-heading">
-                        <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
-                            <h4 class="panel-title">
-                                Manage access
-                                <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
-                            </h4>
+                    {% if page.perms.change %}
+                        <a type="button" class="btn btn-default" data-toggle="modal" data-target="#manage-access">
+                            <span class="glyphicon glyphicon-lock"><span class="button-label"> Manage access</span></span>
                         </a>
-                    </div>
-                    <div id="faq-cat-1-sub-1" class="panel-collapse collapse" style="height: auto;">
-                        <div class="panel-body">
-                            <div class="col-md-4">
-                                <div class="custom-well">
-                                    <h5 class="access-panel-title"><strong>Users with full read/write permissions on this resource</strong></h5>
+                        {#======= Manage access modal window begins =======#}
+                        <div class="modal fade" id="manage-access">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal"
+                                                aria-hidden="true">&times;</button>
+                                        <h4 class="modal-title">Manage access</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Who has access</p>
 
-                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                          method="POST">
-                                        {% csrf_token %}
-                                        <select name="designees" id="owners-select" multiple class="form-control"
-                                                size="{{ owners.count }}">
-                                            {% for u in owners %}
-                                                <option value="{{ u.pk }}" selected>{{ u|best_name }}
-                                                    ({{ u.username }})
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                        <input name="t" value="owners" type="hidden"/>
-                                        <button type="submit"
-                                                class="btn btn-update-list pull-left btn-default glyphicon"><span
-                                                class="button-label">&nbspUpdate access list</span></button>
-                                                <span data-toggle="tooltip" data-placement="auto"
-                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                                    </form>
-                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                          method="POST" style="padding-top:0.3em">
-                                        {% csrf_token %}
-                                        <div class="form-group">
-                                            <button type="submit"
-                                                    class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                                    class="button-label">&nbspAdd user</span></button>
-                                            {{ add_owner_user_form.user }}
-                                            <input name="t" value="add_owner" type="hidden"/>
+                                        <div class="access-table-container">
+                                            <table id="access-table" class="table">
+                                                <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <div class="user-scope">
+                                                            <span class="user-name">Mauriel Ramírez (you)</span>
+                                                            <br>
+                                                            <span class="user-username-content">mauriel133</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="user-roles">
+                                                    <span class="dropdown role-dropdown">
+                                                        <span class="dropdown-toggle"
+                                                              id="roles-menu" data-toggle="dropdown"
+                                                              aria-haspopup="true" aria-expanded="true">
+                                                            Can edit
+                                                            <span class="caret"></span>
+                                                        </span>
+                                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                                            <li><a href="#">Can view</a></li>
+                                                            <li><a href="#"><b>Can edit</b></a></li>
+                                                            <li><a href="#">Is owner</a></li>
+                                                        </ul>
+                                                    </span>
+                                                    </td>
+                                                    <td class="user-actions"><span
+                                                            class="glyphicon glyphicon-remove"></span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="user-scope">
+                                                            <span class="user-name">Person1</span>
+                                                            <br>
+                                                            <span class="user-username-content">personusername1</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="user-roles">
+                                                    <span class="dropdown role-dropdown">
+                                                        <span class="dropdown-toggle"
+                                                              id="roles-menu" data-toggle="dropdown"
+                                                              aria-haspopup="true" aria-expanded="true">
+                                                            Can edit
+                                                            <span class="caret"></span>
+                                                        </span>
+                                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                                            <li><a href="#">Can view</a></li>
+                                                            <li><a href="#"><b>Can edit</b></a></li>
+                                                            <li><a href="#">Is owner</a></li>
+                                                        </ul>
+                                                    </span>
+                                                    </td>
+                                                    <td class="user-actions"><span
+                                                            class="glyphicon glyphicon-remove"></span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="user-scope">
+                                                            <span class="user-name">Person2</span>
+                                                            <br>
+                                                            <span class="user-username-content">personusername2</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="user-roles">
+                                                    <span class="dropdown role-dropdown">
+                                                        <span class="dropdown-toggle"
+                                                              id="roles-menu" data-toggle="dropdown"
+                                                              aria-haspopup="true" aria-expanded="true">
+                                                            Can edit
+                                                            <span class="caret"></span>
+                                                        </span>
+                                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                                            <li><a href="#">Can view</a></li>
+                                                            <li><a href="#"><b>Can edit</b></a></li>
+                                                            <li><a href="#">Is owner</a></li>
+                                                        </ul>
+                                                    </span>
+                                                    </td>
+                                                    <td class="user-actions"><span
+                                                            class="glyphicon glyphicon-remove"></span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="user-scope">
+                                                            <span class="user-name">Person3</span>
+                                                            <br>
+                                                            <span class="user-username-content">personusername3</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="user-roles">
+                                                    <span class="dropdown role-dropdown">
+                                                        <span class="dropdown-toggle"
+                                                              id="roles-menu" data-toggle="dropdown"
+                                                              aria-haspopup="true" aria-expanded="true">
+                                                            Can edit
+                                                            <span class="caret"></span>
+                                                        </span>
+                                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                                            <li><a href="#">Can view</a></li>
+                                                            <li><a href="#"><b>Can edit</b></a></li>
+                                                            <li><a href="#">Is owner</a></li>
+                                                        </ul>
+                                                    </span>
+                                                    </td>
+                                                    <td class="user-actions"><span
+                                                            class="glyphicon glyphicon-remove"></span></td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
-                                    </form>
-                                </div>
-                            </div>
+                                        <div class="custom-well">
+                                            <p>Invite people:</p>
 
-                            <div class="col-md-4">
-                                <div class="custom-well">
-                                    <h5 class="access-panel-title"><strong>Users who can edit the content of this resource</strong></h5>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control"
+                                                       placeholder="Enter names or username"
+                                                       aria-describedby="basic-addon2">
 
-                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                          method="POST">
-                                        {% csrf_token %}
-                                        <select name="designees" id="edit_users-select" multiple
-                                                class="form-control" size="{{ edit_users.count }}">
-                                            {% for u in edit_users %}
-                                                <option value="{{ u.pk }}" selected>{{ u|best_name }}
-                                                    ({{ u.username }})
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                        <input name="t" value="edit_users" type="hidden"/>
-                                        <button type="submit"
-                                                class="btn btn-update-list pull-left btn-default glyphicon"><span
-                                                class="button-label">&nbspUpdate access list</span></button>
-                                                <span data-toggle="tooltip" data-placement="auto"
-                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                                    </form>
-                                    <form class="form-inline"
-                                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                          method="POST" style="padding-top:0.3em">
-                                        {% csrf_token %}
-                                        <div class="form-group">
-                                            <button type="submit"
-                                                    class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                                    class="button-label">&nbspAdd user</span></button>
-                                            {{ add_edit_user_form.user }}
-                                            <input name="t" value="add_edit_user" type="hidden"/>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-
-{#                            <div class="col-md-4">#}
-{#                                <div class="custom-well">#}
-{#                                    <h5 class="access-panel-title"><strong>Research groups that can edit the content of this resource</strong>#}
-{#                                    </h5>#}
-{##}
-{#                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
-{#                                          method="POST">#}
-{#                                        {% csrf_token %}#}
-{#                                        <select name="designees" id="edit_groups-select" multiple#}
-{#                                                class="form-control" size="{{ edit_groups.count }}">#}
-{#                                            {% for u in edit_groups %}#}
-{#                                                <option value="{{ u.pk }}"#}
-{#                                                        {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>#}
-{#                                            {% endfor %}#}
-{#                                        </select>#}
-{#                                        <input name="t" value="edit_groups" type="hidden"/>#}
-{#                                        <button type="submit"#}
-{#                                                class="btn btn-update-list pull-left btn-default glyphicon"><span#}
-{#                                                class="button-label">&nbspUpdate access list</span></button>#}
-{#                                                <span data-toggle="tooltip" data-placement="auto"#}
-{#                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
-{#                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
-{#                                    </form>#}
-{#                                    <form class="form-inline"#}
-{#                                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
-{#                                          method="POST" style="padding-top:0.3em">#}
-{#                                        {% csrf_token %}#}
-{#                                        <div class="form-group">#}
-{##}
-{##}
-{#                                            <button type="submit"#}
-{#                                                    class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus"><span#}
-{#                                                    class="button-label">&nbspAdd group</span></button>#}
-{#                                            {{ add_edit_group_form.user }}#}
-{#                                            <input name="t" value="add_edit_group" type="hidden"/>#}
-{#                                        </div>#}
-{#                                    </form>#}
-{#                                </div>#}
-{#                            </div>#}
-
-                            {% if not cm.public %}
-                                <div class="col-md-4">
-                                    <div class="custom-well">
-                                        <h5 class="access-panel-title"><strong>Users who can view and download the resource</strong></h5>
-
-                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <select name="designees" id="view_users-select" multiple
-                                                    class="form-control" size="{{ view_users.count }}">
-                                                {% for u in view_users %}
-                                                    <option value="{{ u.pk }}"
-                                                            {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                            <input name="t" value="view_users" type="hidden"/>
-                                            <button type="submit"
-                                                    class="btn btn-update-list pull-left btn-default glyphicon">
-                                                <span class="button-label">&nbspUpdate access list</span></button>
-                                                    <span data-toggle="tooltip" data-placement="auto"
-                                                          title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                                          class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                                        </form>
-                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                              method="POST" style="padding-top:0.3em">
-                                            {% csrf_token %}
-                                            <div class="form-group">
-                                                <button type="submit"
-                                                        class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                                        class="button-label">&nbspAdd user</span></button>
-                                                {{ add_view_user_form.user }}
-                                                <input name="t" value="add_view_user" type="hidden"/>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-default dropdown-toggle" type="button"
+                                                            id="dropdownMenu1" data-toggle="dropdown"
+                                                            aria-haspopup="true" aria-expanded="true">
+                                                        Can view
+                                                        <span class="caret"></span>
+                                                    </button>
+                                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                                                        <li><a href="#">Can view</a></li>
+                                                        <li><a href="#">Can edit</a></li>
+                                                        <li><a href="#">Is owner</a></li>
+                                                    </ul>
+                                                </div>
                                             </div>
-                                        </form>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <a type="button" data-dismiss="modal" class="btn btn-primary">Done</a>
                                     </div>
                                 </div>
-
-{#                                <div class="col-md-4">#}
-{#                                    <div class="custom-well">#}
-{#                                        <h5 class="access-panel-title"><strong>Research groups that can view and download the resource</strong>#}
-{#                                        </h5>#}
-{##}
-{#                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
-{#                                              method="POST">#}
-{#                                            {% csrf_token %}#}
-{#                                            <select name="designees" id="view_groups-select" multiple#}
-{#                                                    class="form-control" size="{{ view_groups.count }}">#}
-{#                                                {% for u in view_groups %}#}
-{#                                                    <option value="{{ u.pk }}"#}
-{#                                                            {% if u in view_groups %}selected{% endif %}>{{ u }}</option>#}
-{#                                                {% endfor %}#}
-{#                                            </select>#}
-{#                                            <input name="t" value="view_groups" type="hidden"/>#}
-{#                                            <button type="submit"#}
-{#                                                    class="btn btn-update-list pull-left btn-default glyphicon">#}
-{#                                                <span class="button-label">&nbspUpdate access list</span></button>#}
-{#                                                    <span data-toggle="tooltip" data-placement="auto"#}
-{#                                                          title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
-{#                                                          class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
-{#                                        </form>#}
-{#                                        <form class="form-inline"#}
-{#                                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
-{#                                              method="POST" style="padding-top:0.3em">#}
-{#                                            {% csrf_token %}#}
-{#                                            <div class="form-group">#}
-{#                                                <button type="submit"#}
-{#                                                        class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus">#}
-{#                                                    <span class="button-label">&nbspAdd group</span></button>#}
-{#                                                {{ add_view_group_form.user }}#}
-{#                                                <input name="t" value="add_view_group" type="hidden"/>#}
-{#                                            </div>#}
-{#                                        </form>#}
-{#                                    </div>#}
-{#                                </div>#}
-                            {% endif %}
+                            </div>
                         </div>
-                    </div>
-                    </div>
-                    <div>
-
-                    </div>
+                        {#======= Manage access modal  window ends =======#}
                 {% endif %}
                 </div>
             </div>
