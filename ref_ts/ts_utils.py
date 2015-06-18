@@ -79,7 +79,6 @@ def sites_from_soap(wsdl_url, locations='[:]'):
     except:
         return "Parsing error: The Data in the WSDL Url '{0}' was not correctly formatted \
 according to the WaterOneFlow standard given at 'http://his.cuahsi.org/wofws.html#waterml'.".format(wsdl_url)
-    # ret = dict(zip(site_names, site_codes))
     sites = sorted(sites)
     return sites
 
@@ -132,7 +131,7 @@ def site_info_from_soap(wsdl_url, **kwargs):
 according to the WaterOneFlow standard given at 'http://his.cuahsi.org/wofws.html#waterml'.".format(wsdl_url)
 
 def time_to_int(t):
-    # if time format looks like '2014-07-22T10:45:00.000'
+    ''' if time format looks like '2014-07-22T10:45:00.000' '''
     try:
         ret = int(datetime.strptime(unicode(t), '%Y-%m-%dT%H:%M:%S.%f').strftime('%s'))
     except ValueError:
@@ -159,7 +158,6 @@ def time_to_int(t):
     return ret
 
 def parse_1_0_and_1_1(root):
-    # try:
         time_series_response_present = False
         if 'timeSeriesResponse' in root.tag:
             time_series_response_present = True
@@ -256,11 +254,8 @@ def parse_1_0_and_1_1(root):
                     'method': method}
         else:
             return "Parsing error: The waterml document doesn't appear to be a WaterML 1.0/1.1 time series"
-    # except:
-    #     return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
 
 def parse_2_0(root):
-    #try:
         if 'Collection' in root.tag:
             ts = etree.tostring(root)
             keys = []
@@ -344,9 +339,6 @@ def parse_2_0(root):
                     'QClevel': QClevel,
                     'method': method,
                     'sample_medium': sample_medium}
-    #         return "Parsing error: The waterml document doesn't appear to be a WaterML 2.0 time series"
-    # except:
-    #     return "Parsing error: The Data in the Url, or in the request, was not correctly formatted."
 
 def map_waterml(xml_doc):
     root = etree.XML(xml_doc)
@@ -361,10 +353,10 @@ def map_waterml(xml_doc):
         values = ts['values']
     elif not version:
         return False
-#called by view: create_ref_time_series
-#performs getValues call and returns (through parsing fxns) time series and parsed data from response
+
 def time_series_from_service(service_url, soap_or_rest, **kwargs):
-    """
+    """ performs getValues call and returns (through parsing fxns) time series and parsed data from response
+    called by view: create_ref_time_series
     keyword arguments are given by CAUHSI WOF standard :
     site_name_or_code = location
     variable
@@ -426,8 +418,9 @@ due to incorrect formatting in the web service format.")
     ts['root'] = root #add root to ts
     return ts
 
-#creates vis and returns open file
+
 def create_vis(path, site_name, data, xlab, variable_name, units, noDataValue):
+    '''creates vis and returns open file'''
     loc = AutoDateLocator()
     fmt = AutoDateFormatter(loc)
     fmt.scaled[365.0] = '%y'
@@ -468,10 +461,11 @@ def create_vis(path, site_name, data, xlab, variable_name, units, noDataValue):
     vis_file = open(vis_path, 'r')
     vis_file = UploadedFile(file=vis_file,name=vis_name)
     return vis_file
-#called by generate_files
-#gets time series, creates the metadata terms, creates the files and returns them
-def make_files(res, tempdir, ts):
 
+def make_files(res, tempdir, ts):
+    '''gets time series, creates the metadata terms, creates the files and returns them
+    called by generate_files
+    '''
     site_name = res.metadata.sites.all()[0].name
     var_name = res.metadata.variables.all()[0].name
     title = res.title
@@ -522,9 +516,13 @@ def make_files(res, tempdir, ts):
         files = [csv_file, wml2_file, vis_file]
         return files
 
-#called by view: create_ref_time_series, update_files
-#this fxn creates the calls the make files fxn and adds the files as resource files
 def generate_files(shortkey, ts):
+    ''' creates the calls the make files fxn and adds the files as resource files
+
+    called by view: create_ref_time_series, update_files
+    :param shortkey: res shortkey
+    :param ts: parsed time series dict
+    '''
     res = hydroshare.get_resource_by_shortkey(shortkey)
 
     if ts is None: #called by update_files in view
@@ -539,23 +537,16 @@ def generate_files(shortkey, ts):
     try:
         tempdir = tempfile.mkdtemp()
         files = make_files(res, tempdir, ts)
-        if len(res.files.all()) > 0:
-            for existing_file in res.files.all():
-                existing_file.resource_file.delete()
-        if len(res.bags.all()) > 0:
-            for b in res.bags.all():
-                b.delete()
         hydroshare.add_resource_files(res.short_id, *files)
-        b = create_bag(res)
     except Exception as e:
         raise e
     finally:
         if tempdir is not None:
            shutil.rmtree(tempdir)
 
-#transforms wml1.1 to wml2.0
+#
 def transform_file(ts, title, tempdir):
-
+    ''' transforms wml1.1 to wml2.0 '''
     waterml_1 = ts['root']
     wml_string = etree.tostring(waterml_1)
     s = StringIO(wml_string)
