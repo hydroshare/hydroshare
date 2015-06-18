@@ -24,6 +24,7 @@
             {%  endif %}
         {% endblock %}
 
+            {# ======= Missing fields notification =======#}
             {% if not metadata_form and page.perms.change %}
                 {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
                     <div class="alert alert-success alert-dismissible" role="alert">
