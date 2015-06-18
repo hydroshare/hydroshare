@@ -14,7 +14,7 @@
         <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
         <input type="hidden" id="allow-multiple-file-upload" value={{ cm.can_have_multiple_files }}>
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
-        <img id="ajax-wait" width='100' height='100' src="{{STATIC_URL}}img/ajax-loader.gif" align='center' style="position:absolute;z-index:100000;top:40%;left:50%;display: none;">
+
         {% block error %}
             {%  if file_validation_error %}
                 <div class="alert alert-danger alert-dismissible" role="alert">
@@ -24,7 +24,6 @@
             {%  endif %}
         {% endblock %}
 
-            {#  ======= Missing fields notification =======#}
             {% if not metadata_form and page.perms.change %}
                 {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
                     <div class="alert alert-success alert-dismissible" role="alert">
@@ -688,11 +687,11 @@
                     {% endif %}
                     <!-- Buttons -->
                     {% for b in cm.bags.all %}
-                        <button id="btn-download-all" type="button" class="btn btn-default" onclick="download_bag_ajax('{{ bag_url }}');">
+                        <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag_url }}">
                             <span class="glyphicon glyphicon-download-alt">
                                 <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
                             </span>
-                        </button>
+                        </a>
                     {% endfor %}
 
                     {% if page.perms.change %}
@@ -2256,22 +2255,6 @@
         }
 
         $("#id-subject").find("#id_value").val(keywords);
-    }
-
-    function download_bag_ajax(url) {
-        $('#ajax-wait').show();
-        $.ajax({
-            url: url,
-            type: "GET",
-            success: function(result) {
-                $('#ajax-wait').hide();
-                window.location = url;
-            },
-            error: function(xhr, errmsg, err) {
-                console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
-                $('#ajax-wait').hide();
-            }
-        });
     }
 
     function metadata_update_ajax_submit(form_id){
