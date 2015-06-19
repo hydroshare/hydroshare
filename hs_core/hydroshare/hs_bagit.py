@@ -158,17 +158,6 @@ def create_bag_by_irods(resource_id, istorage = None):
     if not istorage:
         istorage = IrodsStorage()
 
-    # make sure bag is not locked by another request before creating a bag to resolve potential race condition
-    bag_lock = istorage.getAVU(resource_id, "bag_lock")
-
-    if bag_lock:
-        while bag_lock == "true":
-            sleep(5) # delay for 5 seconds before checking bag_lock AVU from iRODS again
-            bag_lock = istorage.getAVU(resource_id, "bag_lock")
-
-    # lock the bag so it will not be updated by another request while the bag is being created
-    istorage.setAVU(resource_id, "bag_lock", "true")
-
     # call iRODS bagit rule here
     irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
     irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
@@ -180,9 +169,6 @@ def create_bag_by_irods(resource_id, istorage = None):
 
     # call iRODS ibun command to zip the bag
     istorage.zipup(irods_bagit_input_path, 'bags/{res_id}.zip'.format(res_id=resource_id))
-
-    # release the lock so other requests can update the bag
-    istorage.setAVU(resource_id, "bag_lock", "false")
 
 def create_bag(resource):
     """

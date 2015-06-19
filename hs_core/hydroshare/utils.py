@@ -149,7 +149,8 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
         res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
         resource.metadata.update_element('date', res_modified_date.id)
 
-    create_bag_files(resource)
+    if overwrite_bag:
+        create_bag_files(resource)
 
     istorage = IrodsStorage()
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
