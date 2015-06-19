@@ -2,7 +2,6 @@ import arrow
 import os
 import shutil
 import errno
-from time import sleep
 
 from foresite import *
 from rdflib import URIRef, Namespace
@@ -11,6 +10,7 @@ from mezzanine.conf import settings
 
 from hs_core.models import Bags, ResourceFile
 from django_irods.storage import IrodsStorage
+from django_irods.icommands import SessionException
 
 def delete_bag(resource):
     """
@@ -158,17 +158,24 @@ def create_bag_by_irods(resource_id, istorage = None):
     if not istorage:
         istorage = IrodsStorage()
 
-    # call iRODS bagit rule here
-    irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
-    irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
-    bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
-    bagit_input_resource = "*DESTRESC='{def_res}'".format(def_res=settings.IRODS_DEFAULT_RESOURCE)
-    bagit_rule_file = getattr(settings, 'IRODS_BAGIT_RULE', 'hydroshare/irods/ruleGenerateBagIt_HS.r')
+    # only proceed when the resource is not deleted potentially by another request when being downloaded
+    if istorage.exists(resource_id):
+        # call iRODS bagit rule here
+        irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
+        irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
+        bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
+        bagit_input_resource = "*DESTRESC='{def_res}'".format(def_res=settings.IRODS_DEFAULT_RESOURCE)
+        bagit_rule_file = getattr(settings, 'IRODS_BAGIT_RULE', 'hydroshare/irods/ruleGenerateBagIt_HS.r')
 
-    istorage.runBagitRule(bagit_rule_file, bagit_input_path, bagit_input_resource)
-
-    # call iRODS ibun command to zip the bag
-    istorage.zipup(irods_bagit_input_path, 'bags/{res_id}.zip'.format(res_id=resource_id))
+        try:
+            # call iRODS run and ibun command to create and zip the bag,
+            # ignore SessionException for now as a workaround which could be raised
+            # from potential race conditions when multiple ibun commands try to create the same zip file or
+            # the very same resource gets deleted by another request when being downloaded
+            istorage.runBagitRule(bagit_rule_file, bagit_input_path, bagit_input_resource)
+            istorage.zipup(irods_bagit_input_path, 'bags/{res_id}.zip'.format(res_id=resource_id))
+        except SessionException:
+            pass
 
 def create_bag(resource):
     """
