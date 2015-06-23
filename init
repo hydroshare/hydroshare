@@ -10,4 +10,5 @@ echo "made sure postgis was enabled on PostgreSQL"
 #python manage.py migrate mezzanine.pages
 #python manage.py migrate
 /usr/sbin/sshd
-python manage.py runserver 0.0.0.0:8000
+#python manage.py runserver 0.0.0.0:8000
+uwsgi --socket :8001 --ini uwsgi.ini
