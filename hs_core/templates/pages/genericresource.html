@@ -24,7 +24,7 @@
             {%  endif %}
         {% endblock %}
 
-            {#  ======= Missing fields notification =======#}
+            {# ======= Missing fields notification =======#}
             {% if not metadata_form and page.perms.change %}
                 {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
                     <div class="alert alert-success alert-dismissible" role="alert">
@@ -1416,6 +1416,9 @@
             </div>
             </div>
         <!-- ==== Tabs end ==== -->
+        <div class="rating">
+            {% rating_for cm %}
+        </div>
         {% comments_for cm %}
         {#                #}
         {# dialogs follow #}
@@ -2264,7 +2267,7 @@
             $alert_error = '<div class="alert alert-danger" id="error-alert"> \
                 <button type="button" class="close" data-dismiss="alert">x</button> \
                 <strong>Error! </strong> \
-                Metadata updated failed.\
+                Metadata failed to update.\
             </div>'
             $form=$('#' + form_id);
             var datastring = $form.serialize();

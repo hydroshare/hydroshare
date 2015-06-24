@@ -563,6 +563,7 @@ def create_resource(request, *args, **kwargs):
 
     # go to resource landing page
     request.session['just_created'] = True
+
     return HttpResponseRedirect(resource.get_absolute_url())
 
 

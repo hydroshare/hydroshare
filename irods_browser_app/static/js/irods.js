@@ -34,6 +34,7 @@ $('#btn-signin-irods').on('click',function(){
 $('#btn-select-irods-file').on('click',function(){
     $('#res_type').val($('#resource-type').val());
     $('#file_struct').children().remove();
+    $('.ajax-loader').hide();
     var store = '';
     if (sessionStorage.IRODS_signininfo) {
         $("#irods_content_label").text(sessionStorage.IRODS_username);
