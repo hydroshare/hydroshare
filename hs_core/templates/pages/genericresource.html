@@ -24,7 +24,7 @@
             {%  endif %}
         {% endblock %}
 
-            {#  ======= Missing fields notification =======#}
+            {# ======= Missing fields notification =======#}
             {% if not metadata_form and page.perms.change %}
                 {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
                     <div class="alert alert-success alert-dismissible" role="alert">
@@ -415,7 +415,7 @@
                         <div class="panel-body">
                             <div class="col-md-4">
                                 <div class="custom-well">
-                                    <h5 class="access-panel-title"><strong>Users with full read/write permissions on this resource</strong></h5>
+                                    <h5 class="access-panel-title"><strong>Owners with full permissions to do anything on this resource</strong></h5>
 
                                     <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
                                           method="POST">
@@ -1416,6 +1416,9 @@
             </div>
             </div>
         <!-- ==== Tabs end ==== -->
+        <div class="rating">
+            {% rating_for cm %}
+        </div>
         {% comments_for cm %}
         {#                #}
         {# dialogs follow #}
@@ -2264,7 +2267,7 @@
             $alert_error = '<div class="alert alert-danger" id="error-alert"> \
                 <button type="button" class="close" data-dismiss="alert">x</button> \
                 <strong>Error! </strong> \
-                Metadata updated failed.\
+                Metadata failed to update.\
             </div>'
             $form=$('#' + form_id);
             var datastring = $form.serialize();

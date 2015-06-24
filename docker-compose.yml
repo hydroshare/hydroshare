@@ -1,9 +1,9 @@
 postgis:
   image: mjstealey/postgresql
 redis:
-  image: redis:2.8.19
+  image: redis:2.8
 rabbitmq: 
-  image: rabbitmq:3.4.4
+  image: rabbitmq:3.5
 hydroshare:
   build: .
   environment:
