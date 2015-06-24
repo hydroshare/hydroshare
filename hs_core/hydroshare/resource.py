@@ -10,7 +10,7 @@ from hs_core.hydroshare import hs_bagit
 from hs_core.hydroshare.utils import get_resource_types
 from hs_core.models import ResourceFile
 from hs_core import signals
-from . import utils
+from hs_core.hydroshare import utils
 
 file_size_limit = 10*(1024 ** 3)
 file_size_limit_for_display = '10G'

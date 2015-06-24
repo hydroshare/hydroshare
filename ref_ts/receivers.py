@@ -13,6 +13,4 @@ def ref_time_series_describe_resource_trigger(sender, **kwargs):
         page_url_dict[url_key] = "pages/create-ref-time-series.html"
         global title
         title = kwargs['title']
-
-
-
+        
