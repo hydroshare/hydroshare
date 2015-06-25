@@ -23,9 +23,20 @@ def landing_page(request, page):
 
 # resource type specific app needs to call this method to inject a crispy_form layout
 # object for displaying metadata UI for the extended metadata for their resource
-# TODO: fix hand-coded user permissions
-# TODO: someone tell me what these ~280 lines do?
 def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
+    """
+    :param page: which page to get the template context for
+    :param user: the user who is viewing the page
+    :param resource_edit: True if and only if the page should render in edit mode
+    :param extended_metadata_layout: layout information used to build an ExtendedMetadataForm
+    :param request: the Django request associated with the page load
+    :return: the basic template context (a python dict) used to render a resource page. can and should be extended
+                by page/resource-specific page_processors
+
+
+    TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
+                - split into two functions: get_readonly_page_context(...) and get_editable_page_context(...)
+    """
     file_type_error=''
     if request:
         file_type_error = request.session.get("file_type_error", None)
@@ -35,8 +46,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     content_model = page.get_content_model()
     edit_mode = False
     file_validation_error = None
-    # should not be implemented manually. defer to can_edit, can_view, etc
-    # should be: if page.can_change():
+    # TODO: fix hand-coded user permissions. should be something like: `if page.can_change():`
     if user.username == 'admin' or \
                     content_model.creator == user or \
                     user in (content_model.owners.all() | content_model.edit_users.all()):
@@ -308,6 +318,25 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
 
 def check_resource_mode(request):
+    """
+    Determines whether the `request` represents an attempt to edit a resource. A request is considered an attempt
+    to edit if any of the following conditions are met:
+        1. the HTTP verb is not "GET"
+        2. the HTTP verb is "GET" and the 'resource-mode' property is set to 'edit'
+
+    This function erases the 'resource-mode' property of `request.session` if it exists.
+
+    TODO:
+        1. simplify this function by:
+            a) no side effects (dont remove 'resource-mode')
+            b) the 2 conditions can be expressed in one line:
+                    return request.method != "GET" :keyword or request.session.get('resource-mode', None) == 'edit'
+        2. rename this function to better express its return value:
+            - perhaps requests_edit_mode(request)
+
+    :param request: the `request` for a resource
+    :return: True if the request represents an attempt to edit a resource, and False otherwise.
+    """
     if request.method == "GET":
         resource_mode = request.session.get('resource-mode', None)
         if resource_mode == 'edit':

@@ -9,9 +9,18 @@ from hs_core.views import *
 @processor_for(TimeSeriesResource)
 # TODO: problematic permissions
 def landing_page(request, page):
+    """
+        A typical Mezzanine page processor.
+
+        TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
+                - split into two helper functions: readonly_landing_page(...) and editable_landing_page(...)
+    """
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
+
+    # view depends on whether the resource is being edited
     if not edit_resource:
+        # READONLY
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None, request=request)
         extended_metadata_exists = False
@@ -29,6 +38,9 @@ def landing_page(request, page):
         context['processing_level'] = content_model.metadata.processing_level
         context['timeseries_result'] = content_model.metadata.time_series_result
     else:
+        # EDIT MODE
+
+        # add some forms
         site_form = SiteForm(instance=content_model.metadata.site, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.site.id if content_model.metadata.site else None)
 
@@ -78,6 +90,7 @@ def landing_page(request, page):
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
 
+        # customize base context
         context['resource_type'] = 'Time Series Resource'
         context['site_form'] = site_form
         context['variable_form'] = variable_form
@@ -86,6 +99,7 @@ def landing_page(request, page):
         context['timeseries_result_form'] = timeseries_result_form
 
 
+    # TODO: can we refactor to make it impossible to skip adding the generic context
     hs_core_context = add_generic_context(request, page)
     context.update(hs_core_context)
     return context
