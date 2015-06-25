@@ -7,6 +7,7 @@ from hs_core import page_processors
 from hs_core.views import *
 
 @processor_for(TimeSeriesResource)
+# TODO: problematic permissions
 def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)

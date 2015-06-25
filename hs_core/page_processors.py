@@ -8,6 +8,7 @@ from django_irods.storage import IrodsStorage
 
 @processor_for(GenericResource)
 def landing_page(request, page):
+    # TODO: this if/else is an exact copy of the function 'check_resource_mode', defined below
     if request.method == "GET":
         resource_mode = request.session.get('resource-mode', None)
         if resource_mode == 'edit':
@@ -22,6 +23,8 @@ def landing_page(request, page):
 
 # resource type specific app needs to call this method to inject a crispy_form layout
 # object for displaying metadata UI for the extended metadata for their resource
+# TODO: fix hand-coded user permissions
+# TODO: someone tell me what these ~280 lines do?
 def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
     file_type_error=''
     if request:
@@ -32,6 +35,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     content_model = page.get_content_model()
     edit_mode = False
     file_validation_error = None
+    # should not be implemented manually. defer to can_edit, can_view, etc
+    # should be: if page.can_change():
     if user.username == 'admin' or \
                     content_model.creator == user or \
                     user in (content_model.owners.all() | content_model.edit_users.all()):
