@@ -9,6 +9,7 @@ echo "*** RUN SCRIPT run-nginx.sh ***"
 HS_NGINX_IMG='hs-nginx'
 HS_NGINX='web-nginx'
 HS_CNAME='hydroshare_hydroshare_1'
+HS_CERTS_DIR='/home/'${USER}'/hs-certs'
 
 # build hs-nginx if it doesn't exist
 CHECK_NGINX_IMAGE=`docker images | tr -s ' ' | cut -d ' ' -f 1 | grep ${HS_NGINX_IMG}`
@@ -26,7 +27,8 @@ if [[ -z "${CHECK_NGINX_CID}" ]]; then
     echo "*** docker run ${HS_NGINX_IMG} as ${HS_NGINX} ***"
     docker run -d --name ${HS_NGINX} \
         --link ${HYDROSHARE_CID}:hydroshare \
-        -p 80:80 \
+        -p 80:80 -p 443:443 \
+        --volume ${HS_CERTS_DIR}:/hs-certs \
         --volumes-from ${HYDROSHARE_CID} \
         -ti ${HS_NGINX_IMG};
 else
