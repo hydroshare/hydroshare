@@ -69,16 +69,20 @@ echo "*** drop existing database ***"
 docker exec $CID dropdb -U postgres -h postgis postgres
 echo "*** create new database ***"
 docker exec $CID createdb -U postgres -h postgis postgres --encoding UNICODE --template=template0
+docker exec $CID createdb -U postgres -h postgis HSAccess --encoding UNICODE --template=template0
 echo "*** create POSTGIS extension ***"
 docker exec $CID psql -U postgres -h postgis -w -c 'create extension postgis;'
 if [ $1 ];
     then
         echo "*** load database with contents of ${1} ***"
-        docker exec $CID psql -U postgres -h postgis -f ${1};
+        docker exec $CID psql -U postgres -d postgres -h postgis -f ${1};
     else
         echo "*** load database with contents of pg.development.sql ***"
-        docker exec $CID psql -U postgres -h postgis -f pg.development.sql;
+        docker exec $CID psql -U postgres -d postgres -h postgis -f pg.development.sql;
 fi
+
+docker exec $CID psql -U postgres -d HSAccess -h postgis -f pg.hsaccess.sql;
+
 echo "*** mangae.py collectstatic ***"
 docker exec $CID python manage.py collectstatic -v0 --noinput
 echo "*** manage.py makemigrations ***"

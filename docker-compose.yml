@@ -15,6 +15,10 @@ hydroshare:
     POSTGIS_DB: postgres
     POSTGIS_USER: postgres
     PGPASSWORD: postgres
+    HS_ACCESS_DB: HSAccess
+    HS_ACCESS_USERNAME: postgres
+    HS_ACCESS_PASSWORD: postgres
+    HS_ACCESS_HOST: postgis
   volumes:
     # Use when NOT sharing the entire host hydroshare directory
     #- "media:/home/docker/hydroshare/hydroshare/static/media"
@@ -41,6 +45,10 @@ defaultworker:
     POSTGIS_PASSWORD: postgres
     POSTGIS_DB: postgres
     PGPASSWORD: postgres
+    HS_ACCESS_DB: HSAccess
+    HS_ACCESS_USERNAME: postgres
+    HS_ACCESS_PASSWORD: postgres
+    HS_ACCESS_HOST: postgis
     C_FORCE_ROOT: 1
   volumes_from:
     - hydroshare
@@ -61,6 +69,10 @@ dockerworker:
     POSTGIS_PASSWORD: postgres
     POSTGIS_DB: postgres
     PGPASSWORD: postgres
+    HS_ACCESS_DB: HSAccess
+    HS_ACCESS_USERNAME: postgres
+    HS_ACCESS_PASSWORD: postgres
+    HS_ACCESS_HOST: postgis
     C_FORCE_ROOT: 1
   volumes_from:
     - hydroshare

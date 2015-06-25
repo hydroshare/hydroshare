@@ -14,6 +14,7 @@ from django.core import exceptions as ex
 from django.template import RequestContext
 from django.core import signing
 from django import forms
+from django.db import DatabaseError, OperationalError
 
 from rest_framework.decorators import api_view
 
@@ -28,7 +29,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, user_from_id
 from .utils import authorize, upload_from_irods
-from hs_core.models import ResourceFile, GenericResource, resource_processor, CoreMetaData
+from hs_core.models import ResourceFile, GenericResource, AbstractResource, resource_processor, CoreMetaData
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -37,6 +38,7 @@ from hs_core.hydroshare import utils
 from . import utils as view_utils
 from hs_core.hydroshare import file_size_limit_for_display
 from hs_core.signals import *
+from hs_core import HSAlib
 
 def short_url(request, *args, **kwargs):
     try:
@@ -55,6 +57,20 @@ def verify(request, *args, **kwargs):
             u.is_active=True
             u.save()
             u.groups.add(Group.objects.get(name="Hydroshare Author"))
+
+        # register the user in HSAccess db accordingly
+        try:
+            ha_obj = AbstractResource.SetHSAccessConnection('admin')
+        except HSAlib.HSAIntegrityException:
+            # unable to connect to the database
+            raise DatabaseError("unable to connect to the database HSAccess.")
+
+        try:
+            ha_obj.assert_user(str(u.username), 'HydroShare User')
+        except HSAlib.HSAUsageException:
+            # unable to connect to the database
+            raise OperationalError("login %s cannot be inserted into HSAccess database." % u.username)
+
         from django.contrib.auth import login
         u.backend = settings.AUTHENTICATION_BACKENDS[0]
         login(request, u)
@@ -188,6 +204,20 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 if element_name == 'title':
                     res.title = res.metadata.title.value
                     res.save()
+
+                    # update title in HSAccess Database for hydroshare access control
+                    try:
+                        ha_obj = AbstractResource.SetHSAccessConnection(str(request.user.username))
+                    except HSAlib.HSAIntegrityException:
+                        # unable to connect to the database
+                        raise DatabaseError("unable to connect to the database HSAccess.")
+
+                    try:
+                        homedir = res.short_id
+                        ha_obj.assert_resource(resource_path=homedir, resource_title=res.title, resource_uuid=res.short_id)
+                    except HSAlib.HSAUsageException:
+                        raise OperationalError("the resource %s cannot be inserted into HSAccess database." % resource.short_id)
+
                     if res.public:
                         if not res.can_be_public:
                             res.public = False
@@ -241,6 +271,15 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
     res.delete()
+
+    # delete resource from HSAccess database
+    try:
+        ha_obj = AbstractResource.SetHSAccessConnection(request.user.username)
+        ha_obj.retract_resource(shortkey)
+    except HSAlib.HSAIntegrityException, HSAlib.HSAUsageException:
+        # unable to connect to the database
+        raise DatabaseError("unable to delete the resource from HSAccess database.")
+
     return HttpResponseRedirect('/my-resources/')
 
 
@@ -277,34 +316,57 @@ def change_permissions(request, shortkey, *args, **kwargs):
         res.view_users = User.objects.in_bulk(values)
     elif t == 'view_groups':
         res.view_groups = Group.objects.in_bulk(values)
-    elif t == 'add_view_user':
-        frm = AddUserForm(data=request.POST)
-        if frm.is_valid():
-            res.view_users.add(frm.cleaned_data['user'])
-    elif t == 'add_edit_user':
-        frm = AddUserForm(data=request.POST)
-        if frm.is_valid():
-            res.edit_users.add(frm.cleaned_data['user'])
     elif t == 'add_view_group':
         frm = AddGroupForm(data=request.POST)
         if frm.is_valid():
             res.view_groups.add(frm.cleaned_data['group'])
-    elif t == 'add_view_group':
+    elif t == 'add_edit_group':
         frm = AddGroupForm(data=request.POST)
         if frm.is_valid():
             res.edit_groups.add(frm.cleaned_data['group'])
-    elif t == 'add_owner':
-        frm = AddUserForm(data=request.POST)
-        if frm.is_valid():
-            res.owners.add(frm.cleaned_data['user'])
-    elif t == 'make_public':
-        #if res.metadata.has_all_required_elements():
-        if res.can_be_public:
-            res.public = True
-            res.save()
-    elif t == 'make_private':
-        res.public = False
-        res.save()
+    else:
+        # change permissions in HSAccess Database for hydroshare access control
+        try:
+            ha_obj = AbstractResource.SetHSAccessConnection(str(request.user.username))
+        except HSAlib.HSAIntegrityException:
+            # unable to connect to the database
+            raise DatabaseError("unable to connect to the database HSAccess.")
+
+        try:
+            if t == 'add_view_user':
+                frm = AddUserForm(data=request.POST)
+                if frm.is_valid():
+                    res.view_users.add(frm.cleaned_data['user'])
+                    new_user = frm.cleaned_data['user']
+                    new_uuid = ha_obj.get_user_uuid_from_login(str(new_user.username))
+                    ha_obj.share_resource_with_user(res.short_id, new_uuid, 'ro')
+            elif t == 'add_edit_user':
+                frm = AddUserForm(data=request.POST)
+                if frm.is_valid():
+                    res.edit_users.add(frm.cleaned_data['user'])
+                    new_user = frm.cleaned_data['user']
+                    new_uuid = ha_obj.get_user_uuid_from_login(str(new_user.username))
+                    ha_obj.share_resource_with_user(res.short_id, new_uuid, 'rw')
+            elif t == 'add_owner':
+                frm = AddUserForm(data=request.POST)
+                if frm.is_valid():
+                    res.owners.add(frm.cleaned_data['user'])
+                    new_user = frm.cleaned_data['user']
+                    new_uuid = ha_obj.get_user_uuid_from_login(str(new_user.username))
+                    ha_obj.share_resource_with_user(res.short_id, new_uuid, 'own')
+            elif t == 'make_public':
+                #if res.metadata.has_all_required_elements():
+                if res.can_be_public:
+                    res.public = True
+                    ha_obj.make_resource_public(res.short_id)
+                    res.save()
+            elif t == 'make_private':
+                res.public = False
+                ha_obj.make_resource_not_public(res.short_id)
+                res.save()
+        except HSAlib.HSAUsageException:
+            # unable to connect to the database
+            raise OperationalError("the resource %s cannot be shared." % res.short_id)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -555,6 +617,19 @@ def create_resource(request, *args, **kwargs):
     except Exception as ex:
         context = {'resource_creation_error': ex.message }
         return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
+    # register new resource and set up privileges in HSAccess Database for hydroshare access control
+    try:
+        ha_obj = AbstractResource.SetHSAccessConnection(str(request.user.username))
+    except HSAlib.HSAIntegrityException:
+        # unable to connect to the database
+        raise DatabaseError("unable to connect to the database HSAccess.")
+
+    try:
+        homedir = resource.short_id
+        ha_obj.assert_resource(resource_path=homedir, resource_title=res_title, resource_uuid=resource.short_id)
+    except HSAlib.HSAUsageException:
+        raise OperationalError("the resource %s cannot be inserted into HSAccess database." % resource.short_id)
 
     try:
         utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)

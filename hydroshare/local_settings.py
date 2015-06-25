@@ -132,6 +132,13 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'localhost'
 EMAIL_PORT = 1025
 
+# HSAccess database connection configuration
+HS_ACCESS_DB = os.environ.get('HS_ACCESS_DB')
+HS_ACCESS_USERNAME = os.environ.get('HS_ACCESS_USERNAME')
+HS_ACCESS_PASSWORD = os.environ.get('HS_ACCESS_PASSWORD')
+HS_ACCESS_HOST = os.environ.get('HS_ACCESS_HOST', 'localhost')
+HS_ACCESS_PORT = '5432'
+
 # Email configuration - gmail - reference: https://github.com/hydroshare/hydroshare/wiki/hydroshare_email_using_gmail
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST_USER = 'YOUR_GMAIL_ACCOUNT@gmail.com'

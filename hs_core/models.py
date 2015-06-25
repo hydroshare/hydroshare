@@ -1,3 +1,9 @@
+from uuid import uuid4
+import os.path
+from languages_iso import languages as iso_languages
+from dateutil import parser
+import json
+
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
@@ -6,22 +12,19 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django import forms
 from django.utils.timezone import now
-from mezzanine.pages.models import Page, RichText
-from mezzanine.pages.page_processors import processor_for
-from uuid import uuid4
-from mezzanine.core.models import Ownable
-from mezzanine.generic.fields import CommentsField, RatingField
-from mezzanine.conf import settings as s
-from mezzanine.generic.models import Keyword, AssignedKeyword
-import os.path
 from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from languages_iso import languages as iso_languages
-from dateutil import parser
-import json
 
+from mezzanine.pages.models import Page, RichText
+from mezzanine.pages.page_processors import processor_for
+from mezzanine.core.models import Ownable
+from mezzanine.generic.fields import CommentsField, RatingField
+from mezzanine.conf import settings as s
+from mezzanine.generic.models import Keyword, AssignedKeyword
+
+from hs_core import HSAlib
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -121,60 +124,6 @@ class ResourcePermissionsMixin(Ownable):
     @property
     def permissions_store(self):
         return s.PERMISSIONS_DB
-
-    def can_add(self, request):
-        return self.can_change(request)
-
-    def can_delete(self, request):
-        user = get_user(request)
-        if user.is_authenticated():
-            if user.is_superuser or self.owners.filter(pk=user.pk).exists():
-                return True
-            else:
-                return False
-        else:
-            return False
-
-
-    def can_change(self, request):
-        user = get_user(request)
-
-        if user.is_authenticated():
-            if user.is_superuser:
-                return True
-            elif self.owners.filter(pk=user.pk).exists():
-                return True
-            elif self.edit_users.filter(pk=user.pk).exists():
-                return True
-            elif self.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                return True
-            else:
-                return False
-        else:
-            return False
-
-    def can_view(self, request):
-        user = get_user(request)
-
-        if self.public:
-            return True
-        if user.is_authenticated():
-            if user.is_superuser:
-                return True
-            elif self.owners.filter(pk=user.pk).exists():
-                return True
-            elif self.edit_users.filter(pk=user.pk).exists():
-                return True
-            elif self.view_users.filter(pk=user.pk).exists():
-                return True
-            elif self.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                return True
-            elif self.view_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                return True
-            else:
-                return False
-        else:
-            return False
 
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
@@ -1371,6 +1320,70 @@ class AbstractResource(ResourcePermissionsMixin):
         class MyResourceContentType(pages.Page, hs_core.AbstractResource):
             ...
     """
+
+    # set up HSAccess connection and check its API for user-over-resource permissions
+    hsaccess_conn = None
+    hsaccess_username = None
+
+    @classmethod
+    def SetHSAccessConnection(cls, username):
+        if not cls.hsaccess_conn or cls.hsaccess_username != username:
+            cls.hsaccess_conn = HSAlib.HSAccess(username, 'unused', settings.HS_ACCESS_DB, settings.HS_ACCESS_USERNAME,
+                                             settings.HS_ACCESS_PASSWORD, settings.HS_ACCESS_HOST, settings.HS_ACCESS_PORT)
+            cls.hsaccess_username = username
+
+        return cls.hsaccess_conn
+
+    def can_add(self, request):
+        return self.can_change(request)
+
+    def can_delete(self, request):
+        user = get_user(request)
+        if user.is_authenticated():
+            if user.is_superuser:
+                return True
+            else:
+                try:
+                    ha_obj = AbstractResource.SetHSAccessConnection(str(user.username))
+                    return ha_obj.resource_is_owned(self.short_id)
+                except HSAlib.HSAIntegrityException:
+                    return False
+        else:
+            return False
+
+
+    def can_change(self, request):
+        user = get_user(request)
+
+        if user.is_authenticated():
+            if user.is_superuser:
+                return True
+            else:
+                try:
+                    ha_obj = AbstractResource.SetHSAccessConnection(str(user.username))
+                    return ha_obj.resource_is_readwrite(self.short_id)
+                except HSAlib.HSAIntegrityException:
+                    return False
+        else:
+            return False
+
+    def can_view(self, request):
+        user = get_user(request)
+
+        if self.public:
+            return True
+        if user.is_authenticated():
+            if user.is_superuser:
+                return True
+            else:
+                try:
+                    ha_obj = AbstractResource.SetHSAccessConnection(str(user.username))
+                    return ha_obj.resource_is_readable(self.short_id)
+                except HSAlib.HSAIntegrityException:
+                    return False
+        else:
+            return False
+
     content = models.TextField() # the field added for use by Django inplace editing
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
