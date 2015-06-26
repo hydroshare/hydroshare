@@ -3,13 +3,46 @@
 # run-nginx.sh
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
-echo "*** RUN SCRIPT run-nginx.sh ***"
+### Configuration Variables ###
+HS_PATH='/home/hydro/hydroshare'
 
-# configuration variables
+### SSL Configuration Variables ###
+FQDN_OR_IP='localhost'
+SSL_CERT_FILE='hydrodev-vb.example.org.cert'
+SSL_KEY_FILE='hydrodev-vb.example.org.key'
+HS_SSL_DIR='/home/'${USER}'/hs-certs'
+
+### nginx Configuration Variables ###
+HS_NGINX_DIR='/home/hydro/hydroshare/nginx'
 HS_NGINX_IMG='hs-nginx'
 HS_NGINX='web-nginx'
 HS_CNAME='hydroshare_hydroshare_1'
-HS_CERTS_DIR='/home/'${USER}'/hs-certs'
+
+echo "*** RUN SCRIPT run-nginx.sh ***"
+
+# check for --clean flag
+if [[ ${1} = '--clean' ]]; then
+    echo "*** remove and rebuild IMG: ${HS_NGINX_IMG} and CONTAINER: ${HS_NGINX} ***"
+    docker stop ${HS_NGINX}
+    docker rm ${HS_NGINX}
+    docker rmi ${HS_NGINX_IMG};
+fi
+
+# create hs-certs directory if it doesn't exist
+if [[ ! -d ${HS_SSL_DIR} ]]; then
+    echo "*** creating directory: ${HS_SSL_DIR} ***"
+    mkdir ${HS_SSL_DIR};
+fi
+
+# copy ssl cert and ssl key to hs-certs directory
+yes | cp -rf ${SSL_CERT_FILE} ${HS_SSL_DIR}
+yes | cp -rf ${SSL_KEY_FILE} ${HS_SSL_DIR}
+
+# create hs-nginx.conf file
+yes | cp -rf ${HS_NGINX_DIR}/hydroshare-ssl-nginx.conf ${HS_NGINX_DIR}/hs-nginx.conf
+sed -i 's/FQDN_OR_IP/'${FQDN_OR_IP}'/g' ${HS_NGINX_DIR}/hs-nginx.conf
+sed -i 's/SSL_CERT_FILE/'${SSL_CERT_FILE}'/g' ${HS_NGINX_DIR}/hs-nginx.conf
+sed -i 's/SSL_KEY_FILE/'${SSL_KEY_FILE}'/g' ${HS_NGINX_DIR}/hs-nginx.conf
 
 # build hs-nginx if it doesn't exist
 CHECK_NGINX_IMAGE=`docker images | tr -s ' ' | cut -d ' ' -f 1 | grep ${HS_NGINX_IMG}`
@@ -28,7 +61,7 @@ if [[ -z "${CHECK_NGINX_CID}" ]]; then
     docker run -d --name ${HS_NGINX} \
         --link ${HYDROSHARE_CID}:hydroshare \
         -p 80:80 -p 443:443 \
-        --volume ${HS_CERTS_DIR}:/hs-certs \
+        --volume ${HS_SSL_DIR}:/hs-certs \
         --volumes-from ${HYDROSHARE_CID} \
         -ti ${HS_NGINX_IMG};
 else
@@ -43,3 +76,6 @@ else
         docker start ${HS_NGINX};
     fi
 fi
+
+echo "*** FINISHED SCRIPT deploy-hs-nginx.sh ***"
+exit;
