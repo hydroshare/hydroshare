@@ -1,15 +1,30 @@
 # Create your views here.
+from json import dumps
+
 from django.contrib.auth.models import User
 from django.views.generic import TemplateView
-from hs_core.hydroshare import get_resource_types
-from mezzanine.generic.views import initial_validation
 from django.http import HttpResponse
+from django.contrib.messages import info, error
+from django.shortcuts import get_object_or_404, redirect
+from django.utils.translation import ugettext_lazy as _
+from django.shortcuts import redirect
+from django.contrib.auth import (authenticate, login as auth_login)
+from django.db import DatabaseError, OperationalError
+
+from mezzanine.generic.views import initial_validation
+from mezzanine.utils.views import render, set_cookie, is_spam
+from mezzanine.utils.cache import add_cache_bypass
+from mezzanine.conf import settings
+from mezzanine.utils.email import send_verification_mail, send_approve_mail
+from mezzanine.utils.urls import login_redirect, next_url
+from mezzanine.utils.views import render
+
+from hs_core.hydroshare import get_resource_types
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm
-from mezzanine.utils.views import render, set_cookie, is_spam
-from django.shortcuts import redirect
-from mezzanine.utils.cache import add_cache_bypass
-from json import dumps
+from .forms import SignupForm
+from hs_core.models import AbstractResource
+from hs_core import HSAlib
 
 class UserProfileView(TemplateView):
     template_name='accounts/profile.html'
@@ -94,18 +109,6 @@ def rating(request):
         set_cookie(response, "mezzanine-rating", ratings)
     return response
 
-
-from mezzanine.conf import settings
-from django.contrib.messages import info, error
-from django.shortcuts import get_object_or_404, redirect
-from django.utils.translation import ugettext_lazy as _
-
-from mezzanine.utils.email import send_verification_mail, send_approve_mail
-from mezzanine.utils.urls import login_redirect, next_url
-from mezzanine.utils.views import render
-
-from .forms import SignupForm
-
 def signup(request, template="accounts/account_signup.html"):
     """
     Signup form.
@@ -129,3 +132,35 @@ def signup(request, template="accounts/account_signup.html"):
             return login_redirect(request)
     context = {"form": form, "title": _("Sign up")}
     return render(request, template, context)
+
+def signup_verify(request, uidb36=None, token=None):
+    """
+    View for the link in the verification email sent to a new user
+    when they create an account and ``ACCOUNTS_VERIFICATION_REQUIRED``
+    is set to ``True``. Activates the user and logs them in,
+    redirecting to the URL they tried to access when signing up.
+    """
+    user = authenticate(uidb36=uidb36, token=token, is_active=False)
+    if user is not None:
+        user.is_active = True
+        user.save()
+
+        # register the user in HSAccess db accordingly
+        try:
+            ha_obj = AbstractResource.SetHSAccessConnection('admin')
+        except HSAlib.HSAIntegrityException:
+            # unable to connect to the database
+            raise DatabaseError("unable to connect to the database HSAccess.")
+
+        try:
+            ha_obj.assert_user(str(user.username), 'HydroShare User')
+        except HSAlib.HSAUsageException:
+            # unable to connect to the database
+            raise OperationalError("login %s cannot be inserted into HSAccess database." % u.username)
+
+        auth_login(request, user)
+        info(request, _("Successfully signed up"))
+        return login_redirect(request)
+    else:
+        error(request, _("The link you clicked is no longer valid."))
+        return redirect("/")

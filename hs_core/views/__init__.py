@@ -58,19 +58,6 @@ def verify(request, *args, **kwargs):
             u.save()
             u.groups.add(Group.objects.get(name="Hydroshare Author"))
 
-        # register the user in HSAccess db accordingly
-        try:
-            ha_obj = AbstractResource.SetHSAccessConnection('admin')
-        except HSAlib.HSAIntegrityException:
-            # unable to connect to the database
-            raise DatabaseError("unable to connect to the database HSAccess.")
-
-        try:
-            ha_obj.assert_user(str(u.username), 'HydroShare User')
-        except HSAlib.HSAUsageException:
-            # unable to connect to the database
-            raise OperationalError("login %s cannot be inserted into HSAccess database." % u.username)
-
         from django.contrib.auth import login
         u.backend = settings.AUTHENTICATION_BACKENDS[0]
         login(request, u)
