@@ -67,6 +67,7 @@ echo "*** load clean pg.development.sql database from the running hydroshare con
 CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
 echo "*** drop existing database ***"
 docker exec $CID dropdb -U postgres -h postgis postgres
+docker exec $CID dropdb -U postgres -h postgis HSAccess
 echo "*** create new database ***"
 docker exec $CID createdb -U postgres -h postgis postgres --encoding UNICODE --template=template0
 docker exec $CID createdb -U postgres -h postgis HSAccess --encoding UNICODE --template=template0
