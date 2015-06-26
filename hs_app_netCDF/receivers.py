@@ -87,6 +87,16 @@ def netcdf_pre_create_resource(sender, **kwargs):
                     box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
                     metadata.append(box)
 
+                # add rights
+                if res_dublin_core_meta.get('rights'):
+                    raw_info = res_dublin_core_meta.get('rights')
+                    import re
+                    b = re.search("(?P<url>https?://[^\s]+)", raw_info)
+                    url = b.group('url') if b else ''
+                    statement = raw_info.replace(url, '') if url else raw_info
+                    rights = {'rights': {'statement': statement, 'url': url}}
+                    metadata.append(rights)
+
                 # Save extended meta to metadata variable
                 for var_name, var_meta in res_type_specific_meta.items():
                     meta_info = {}
