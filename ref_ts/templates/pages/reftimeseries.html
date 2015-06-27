@@ -4,9 +4,9 @@
 
 {% block download_list %}
 <div>
- <a id="btn-download-all" type="button" class="btn btn-default" href="{{ res_id }}">
+ <a id="btn-download-all" type="button" class="btn btn-default" href="{{ download_files_url }}">
                             <span class="glyphicon glyphicon-download-alt">
-                                <span title='Download All Time Series Data' class="button-label">Download All Time Series Data</span>
+                                <span title='Download HIS Time Series Data' class="button-label">Download HIS Time Series Data</span>
                             </span>
                         </a>
 
@@ -26,6 +26,7 @@
                         </div>
                         <div class="row">
                             <div class="col-sm-4"><strong>Type:</strong></div>
+                            <div class="col-sm-8">{{ referenceURL.type }}</div>
                             <div class="col-sm-8">{{ referenceURL.type }}</div>
                         </div>
                     <hr style="border:0">

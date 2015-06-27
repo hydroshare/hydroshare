@@ -419,7 +419,7 @@ due to incorrect formatting in the web service format.")
     return ts
 
 
-def create_vis(path, site_name, data, xlab, variable_name, units, noDataValue):
+def create_vis(path, site_name, data, xlab, variable_name, units, noDataValue, predefined_name=None):
     '''creates vis and returns open file'''
     loc = AutoDateLocator()
     fmt = AutoDateFormatter(loc)
@@ -455,12 +455,14 @@ def create_vis(path, site_name, data, xlab, variable_name, units, noDataValue):
     ax.autoscale_view()
 
     ax.grid(True)
-    vis_name = 'visualization-'+site_name+'-'+variable_name+'.png'
-    vis_name.replace(" ","")
+    if predefined_name is None:
+        vis_name = 'visualization-'+site_name+'-'+variable_name+'.png'
+        vis_name = vis_name.replace(" ","_")
+    else:
+        vis_name = predefined_name
     vis_path = path + "/" + vis_name
     savefig(vis_path, bbox_inches='tight')
     vis_file = open(vis_path, 'rb')
-    #vis_file = UploadedFile(file=vis_file,name=vis_name)
     return {"fname":vis_name,"fhandle":vis_file}
 
 def make_files(res, tempdir, ts):
@@ -477,7 +479,7 @@ def make_files(res, tempdir, ts):
     noDataValue = ts.get('noDataValue', None)
     vis_file = create_vis(tempdir, site_name, for_graph, 'Date', var_name, units, noDataValue)
     version = ts['wml_version']
-    file_base = title.replace(" ", "")
+    file_base = title.replace(" ", "_")
     csv_name = '{0}.{1}'.format(file_base, 'csv')
     if version == '1':
         xml_end = 'wml_1'
@@ -550,7 +552,7 @@ def transform_file(ts, title, tempdir):
     xslt = etree.parse(xsl_location)
     transform = etree.XSLT(xslt)
     newdom = transform(dom)
-    xml_name = '{0}-{1}'.format(title.replace(" ", ""), 'wml_2_0.xml')
+    xml_name = '{0}-{1}'.format(title.replace(" ", "_"), 'wml_2_0.xml')
     xml_2_full_path = tempdir + "/" + xml_name
 
     with open(xml_2_full_path, 'wb') as f:

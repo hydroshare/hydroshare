@@ -70,6 +70,7 @@ class GetTSValuesForm(forms.Form):
     variable = forms.CharField(min_length=0, required=False)
 
 ts = None
+preview_name = "prview.png"
 def time_series_from_service(request):
     f = GetTSValuesForm(request.GET)
     if f.is_valid():
@@ -82,7 +83,6 @@ def time_series_from_service(request):
         if ref_type == 'rest':
             ts = ts_utils.time_series_from_service(url, ref_type)
             site = ts.get('site_code')
-            variable = ts.get('variable_code')
         else:
             ts = ts_utils.time_series_from_service(url, ref_type, site_name_or_code=site, variable_code=variable)
         for_graph = ts['for_graph']
@@ -91,18 +91,33 @@ def time_series_from_service(request):
         noDataValue = ts.get('noDataValue', None)
         ts['url'] = url
         ts['ref_type'] = ref_type
-        vis_fn_fh_dict = ts_utils.create_vis("theme/static/img/", site, for_graph, 'Date', variable_name, units, noDataValue)
+        try:
+            tempdir = tempfile.mkdtemp()
+            vis_fn_fh_dict = ts_utils.create_vis(tempdir, site, for_graph, 'Date', variable_name, units, noDataValue,predefined_name=preview_name)
+            vis_fn_fh_dict["fhandle"].close()
+            tempdir_last_six_chars = tempdir[-6:]
+            preview_url = "/hsapi/_internal/refts/preview-figure/%s/" % (tempdir_last_six_chars)
+            return json_or_jsonp(request,{'preview_url': preview_url})
+        except Exception as e:
+            if tempdir is not None:
+               shutil.rmtree(tempdir)
+            raise e
 
-        response = HttpResponse()
+def preview_figure (request, preview_code, *args, **kwargs):
+
+    response = HttpResponse()
+    try:
+        tempdir_base_path = tempfile.gettempdir()
+        tempdir_preview = tempdir_base_path + "/" + "tmp" + preview_code
+        preview_full_path = tempdir_preview + "/" + preview_name
+        preview_fhandle = open(preview_full_path,'rb')
         response.content_type = "image/png";
-        response.write(str(vis_fn_fh_dict["fhandle"].read()))
-        vis_fn_fh_dict["fhandle"].close()
-        for file_name in os.listdir("theme/static/img"):
-            if 'visualization' in file_name:
-                os.remove("theme/static/img/"+file_name)
+        response.write(str(preview_fhandle.read()))
+        preview_fhandle["fhandle"].close()
+        shutil.rmtree(tempdir_preview)
         return response
-        #return json_or_jsonp(request, {'vis_file_name': vis_file_name})
-
+    except Exception as e:
+        return response
 
 class VerifyRestUrlForm(forms.Form):
     url = forms.URLField()
@@ -135,7 +150,6 @@ def create_ref_time_series(request, *args, **kwargs):
     reference_type = ts['ref_type']
     frm = CreateRefTimeSeriesForm(request.POST)
     if frm.is_valid():
-        site_name, site_code, variable_name, variable_code = None, None, None, None
         metadata = frm.cleaned_data.get('metadata')
         metadata = ast.literal_eval(metadata)
         res = hydroshare.create_resource(
@@ -180,14 +194,10 @@ def create_ref_time_series(request, *args, **kwargs):
             code=ts['variable_code'],
             sample_medium=ts.get('sample_medium', 'unknown')
         )
-
-        #ts_utils.generate_files(res.short_id,ts)
-
-        # for file_name in os.listdir("theme/static/img"):
-        #     if 'visualization' in file_name:
-        #         # open(file_name, 'w')
-        #         os.remove("theme/static/img/"+file_name)
-
+        #release global var
+        global ts
+        if ts is not None:
+            ts = None
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeries)
@@ -249,8 +259,9 @@ def download_files(request, shortkey, *args, **kwargs):
             fn_fh_dic_item['fhandle'].close()
         archive.close()
 
+        res = hydroshare.get_resource_by_shortkey(shortkey)
         response = HttpResponse(in_memory_zip.getvalue(), content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename=test.zip'
+        response['Content-Disposition'] = 'attachment; filename="' + res.title.replace(" ","_") + '.zip"'
         response['Content-Length'] = len(in_memory_zip.getvalue())
 
         return response
@@ -259,10 +270,10 @@ def download_files(request, shortkey, *args, **kwargs):
     finally:
         if tempdir is not None:
            shutil.rmtree(tempdir)
-
-
-
-
+        #release global var
+        global ts
+        if ts is not None:
+            ts = None
 
     # status_code = 200
     # return json_or_jsonp(request, status_code)  # successfully generated new files
