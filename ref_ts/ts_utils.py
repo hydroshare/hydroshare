@@ -456,11 +456,12 @@ def create_vis(path, site_name, data, xlab, variable_name, units, noDataValue):
 
     ax.grid(True)
     vis_name = 'visualization-'+site_name+'-'+variable_name+'.png'
+    vis_name.replace(" ","")
     vis_path = path + "/" + vis_name
     savefig(vis_path, bbox_inches='tight')
-    vis_file = open(vis_path, 'r')
-    vis_file = UploadedFile(file=vis_file,name=vis_name)
-    return vis_file
+    vis_file = open(vis_path, 'rb')
+    #vis_file = UploadedFile(file=vis_file,name=vis_name)
+    return {"fname":vis_name,"fhandle":vis_file}
 
 def make_files(res, tempdir, ts):
     '''gets time series, creates the metadata terms, creates the files and returns them
@@ -497,26 +498,26 @@ def make_files(res, tempdir, ts):
         w.writerow(['time', var])
         for r in for_csv:
             w.writerow(r)
-    csv_file = open(csv_name_full_path, 'r')
-    csv_file = UploadedFile(file=csv_file,name=csv_name)
+    csv_file = {"fname":csv_name, "fhandle":open(csv_name_full_path, 'r')}
+    #csv_file = UploadedFile(file=csv_file,name=csv_name)
 
     xml_name_full_path = tempdir + "/" + xml_name
     with open(xml_name_full_path, 'wb') as xml_file:
         xml_file.write(ts['time_series'])
 
     if version == '1' or version == '1.0':
-        wml1_file = open(xml_name_full_path, 'r')
-        wml1_file = UploadedFile(file=wml1_file,name=xml_name)
+        wml1_file = {"fname": xml_name, "fhandle":open(xml_name_full_path, 'r')}
+        #wml1_file = UploadedFile(file=wml1_file,name=xml_name)
         wml2_file = transform_file(ts, title, tempdir)
         files = [csv_file, wml1_file, wml2_file, vis_file]
         return files
     if version == '2' or version == '2.0':
-        wml2_file = open(xml_name_full_path, 'r')
-        wml2_file = UploadedFile(file=wml2_file,name=xml_name)
+        wml2_file = {"fname":xml_name, "fhandle":open(xml_name_full_path, 'r')}
+        #wml2_file = UploadedFile(file=wml2_file,name=xml_name)
         files = [csv_file, wml2_file, vis_file]
         return files
 
-def generate_files(shortkey, ts):
+def generate_files(shortkey, ts, tempdir):
     ''' creates the calls the make files fxn and adds the files as resource files
 
     called by view: create_ref_time_series, update_files
@@ -525,24 +526,17 @@ def generate_files(shortkey, ts):
     '''
     res = hydroshare.get_resource_by_shortkey(shortkey)
 
-    if ts is None: #called by update_files in view
-        if res.metadata.referenceURLs.all()[0].type == 'rest':
-            ts = time_series_from_service(res.metadata.referenceURLs.all()[0].value, res.metadata.referenceURLs.all()[0].type)
-        else:
-            ts = time_series_from_service(res.metadata.referenceURLs.all()[0].value,
-                                      res.metadata.referenceURLs.all()[0].type,
-                                      site_name_or_code=res.metadata.sites.all()[0].code,
-                                      variable_code=res.metadata.variables.all()[0].code)
-    tempdir = None
-    try:
-        tempdir = tempfile.mkdtemp()
-        files = make_files(res, tempdir, ts)
-        hydroshare.add_resource_files(res.short_id, *files)
-    except Exception as e:
-        raise e
-    finally:
-        if tempdir is not None:
-           shutil.rmtree(tempdir)
+    if res.metadata.referenceURLs.all()[0].type == 'rest':
+        ts = time_series_from_service(res.metadata.referenceURLs.all()[0].value, res.metadata.referenceURLs.all()[0].type)
+    else:
+        ts = time_series_from_service(res.metadata.referenceURLs.all()[0].value,
+                                  res.metadata.referenceURLs.all()[0].type,
+                                  site_name_or_code=res.metadata.sites.all()[0].code,
+                                  variable_code=res.metadata.variables.all()[0].code)
+
+    files = make_files(res, tempdir, ts)
+    return files
+
 
 #
 def transform_file(ts, title, tempdir):
@@ -563,7 +557,8 @@ def transform_file(ts, title, tempdir):
         f.write(newdom)
 
     xml_file = open(xml_2_full_path, 'r')
-    xml_file = UploadedFile(file=xml_file, name=xml_name)
-    return xml_file
+    #xml_file = UploadedFile(file=xml_file, name=xml_name)
+
+    return {"fname":xml_name, "fhandle": xml_file}
 
 

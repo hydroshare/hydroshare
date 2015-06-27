@@ -280,34 +280,18 @@
                     n = full_variable.indexOf(':');
                     variable = full_variable.substr(n+2);
                 }
-                $.ajax({
-                    type:"GET",
-                    url:'/hsapi/_internal/time-series-from-service/',
-                    data: {ref_type: ref_type,
-                        service_url: service_url,
-                        site: site,
-                        variable: variable},
-                    success: function(data, xhr, status){
-                        var vis_file_name = data['vis_file_name'];
-                        $('#preview-div').html('<img src="{{ STATIC_URL }}img/'+vis_file_name+'" id="preview-graph" class="col-sm-offset-2"/>');
-                        $('#preview-div').show();
-                        var b = $('#submit');
-                        b.removeClass('disabled');
-                        $('#loading-1').hide();
-                        $('#url').append($("<option></option>")
-                                .attr("value",service_url)
-                                .text(service_url));
-                        $('#url').val(service_url);
-                    },
-                    error: function(data, stuff){
-                        $('#url-input').removeClass("has-success");
-                        $('#fail-notice').show();
-                        console.log(data);
-                        console.log(stuff);
-                        $('#preview-div').hide();
-                        $('#loading-1').hide();
-                    }
-                })
+{#                Look at method 1: http://stackoverflow.com/questions/10802312/display-png-image-as-response-to-jquery-ajax-request#}
+                var img_url='/hsapi/_internal/time-series-from-service/?ref_type='+ref_type+'&site='+site+'&variable='+variable+'&service_url='+service_url
+                $('#preview-div').html('<img src="'+img_url+'" id="preview-graph" class="col-sm-offset-2"/>')
+                $('#preview-div').show();
+
+                var b = $('#submit');
+                b.removeClass('disabled');
+                $('#loading-1').hide();
+                $('#url').append($("<option></option>")
+                        .attr("value",service_url)
+                        .text(service_url));
+                $('#url').val(service_url);
             }
 
             $('#variable').change(function(){

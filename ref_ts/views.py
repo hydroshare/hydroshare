@@ -18,6 +18,10 @@ from django.utils.timezone import now
 import os
 from hs_core.signals import post_create_resource
 import ast
+from django.http import HttpResponse
+import os, tempfile, zipfile
+from django.core.servers.basehttp import FileWrapper
+import shutil
 
 def get_his_urls(request):
     service_url = 'http://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'
@@ -87,9 +91,17 @@ def time_series_from_service(request):
         noDataValue = ts.get('noDataValue', None)
         ts['url'] = url
         ts['ref_type'] = ref_type
-        vis_file = ts_utils.create_vis("theme/static/img/", site, for_graph, 'Date', variable_name, units, noDataValue)
-        vis_file_name = os.path.basename(vis_file.name)
-        return json_or_jsonp(request, {'vis_file_name': vis_file_name})
+        vis_fn_fh_dict = ts_utils.create_vis("theme/static/img/", site, for_graph, 'Date', variable_name, units, noDataValue)
+
+        response = HttpResponse()
+        response.content_type = "image/png";
+        response.write(str(vis_fn_fh_dict["fhandle"].read()))
+        vis_fn_fh_dict["fhandle"].close()
+        for file_name in os.listdir("theme/static/img"):
+            if 'visualization' in file_name:
+                os.remove("theme/static/img/"+file_name)
+        return response
+        #return json_or_jsonp(request, {'vis_file_name': vis_file_name})
 
 
 class VerifyRestUrlForm(forms.Form):
@@ -169,12 +181,12 @@ def create_ref_time_series(request, *args, **kwargs):
             sample_medium=ts.get('sample_medium', 'unknown')
         )
 
-        ts_utils.generate_files(res.short_id,ts)
+        #ts_utils.generate_files(res.short_id,ts)
 
-        for file_name in os.listdir("theme/static/img"):
-            if 'visualization' in file_name:
-                # open(file_name, 'w')
-                os.remove("theme/static/img/"+file_name)
+        # for file_name in os.listdir("theme/static/img"):
+        #     if 'visualization' in file_name:
+        #         # open(file_name, 'w')
+        #         os.remove("theme/static/img/"+file_name)
 
         return HttpResponseRedirect(res.get_absolute_url())
 
@@ -217,3 +229,40 @@ def update_files(request, shortkey, *args, **kwargs):
     ts_utils.generate_files(shortkey, ts=None)
     status_code = 200
     return json_or_jsonp(request, status_code)  # successfully generated new files
+
+
+def download_files(request, shortkey, *args, **kwargs):
+    try:
+        from cStringIO import StringIO
+    except ImportError:
+        from io import BytesIO as StringIO
+
+    tempdir = None
+    try:
+        tempdir = tempfile.mkdtemp()
+
+        fn_fh_dic_arr = ts_utils.generate_files(shortkey, None, tempdir)
+        in_memory_zip = StringIO()
+        archive = zipfile.ZipFile(in_memory_zip, 'w', zipfile.ZIP_DEFLATED)
+        for fn_fh_dic_item in fn_fh_dic_arr:
+            archive.writestr(fn_fh_dic_item['fname'], fn_fh_dic_item['fhandle'].read())
+            fn_fh_dic_item['fhandle'].close()
+        archive.close()
+
+        response = HttpResponse(in_memory_zip.getvalue(), content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename=test.zip'
+        response['Content-Length'] = len(in_memory_zip.getvalue())
+
+        return response
+    except Exception as e:
+        raise e
+    finally:
+        if tempdir is not None:
+           shutil.rmtree(tempdir)
+
+
+
+
+
+    # status_code = 200
+    # return json_or_jsonp(request, status_code)  # successfully generated new files

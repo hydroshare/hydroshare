@@ -613,7 +613,7 @@
                 </div>
             </div>
 
-
+{% block download_list %}
             {#        ======= Content =======#}
             <div>
                 <h3>Content</h3>
@@ -694,7 +694,7 @@
                             </span>
                         </a>
                     {% endfor %}
-
+{% endblock download_list %}
                     {% if page.perms.change %}
                         <a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
                                multiple="multiple">

@@ -2,6 +2,16 @@
 {% extends "pages/genericresource.html" %}
 {#{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}#}
 
+{% block download_list %}
+<div>
+ <a id="btn-download-all" type="button" class="btn btn-default" href="{{ res_id }}">
+                            <span class="glyphicon glyphicon-download-alt">
+                                <span title='Download All Time Series Data' class="button-label">Download All Time Series Data</span>
+                            </span>
+                        </a>
+
+</div>
+{% endblock download_list %}
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
         <div class="row">
