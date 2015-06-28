@@ -1,26 +1,17 @@
 from __future__ import absolute_import
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User, Group
-from django.utils.timezone import now
 from django import forms
 from django.http import HttpResponseRedirect, HttpResponseNotFound
 from mezzanine.pages.page_processors import processor_for
 from ga_resources.utils import json_or_jsonp
 from hs_core import hydroshare, page_processors
-from hs_core.hydroshare.hs_bagit import create_bag
-from hs_core.models import ResourceFile
 from . import ts_utils
 from .models import RefTimeSeries
 import requests
 from lxml import etree
-import datetime
-from django.utils.timezone import now
-import os
-from hs_core.signals import post_create_resource
 import ast
 from django.http import HttpResponse
-import os, tempfile, zipfile
-from django.core.servers.basehttp import FileWrapper
+import tempfile, zipfile
 import shutil
 
 def get_his_urls(request):
@@ -274,6 +265,3 @@ def download_files(request, shortkey, *args, **kwargs):
         global ts
         if ts is not None:
             ts = None
-
-    # status_code = 200
-    # return json_or_jsonp(request, status_code)  # successfully generated new files

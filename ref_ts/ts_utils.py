@@ -3,7 +3,6 @@ from suds.transport import TransportError
 from suds.client import Client
 from lxml import etree
 from django.http import Http404
-from .models import RefTimeSeries
 from xml.sax._exceptions import SAXParseException
 from datetime import datetime
 from matplotlib.pyplot import savefig
@@ -15,12 +14,8 @@ import csv
 import collections
 import os
 from StringIO import StringIO
-from hs_core.hydroshare.hs_bagit import create_bag
 from hs_core import hydroshare
-from hs_core.models import ResourceFile
-import tempfile
-from django.core.files.uploadedfile import UploadedFile
-import shutil
+
 
 def get_version(root):
     wml_version = None
@@ -501,21 +496,17 @@ def make_files(res, tempdir, ts):
         for r in for_csv:
             w.writerow(r)
     csv_file = {"fname":csv_name, "fhandle":open(csv_name_full_path, 'r')}
-    #csv_file = UploadedFile(file=csv_file,name=csv_name)
-
     xml_name_full_path = tempdir + "/" + xml_name
     with open(xml_name_full_path, 'wb') as xml_file:
         xml_file.write(ts['time_series'])
 
     if version == '1' or version == '1.0':
         wml1_file = {"fname": xml_name, "fhandle":open(xml_name_full_path, 'r')}
-        #wml1_file = UploadedFile(file=wml1_file,name=xml_name)
         wml2_file = transform_file(ts, title, tempdir)
         files = [csv_file, wml1_file, wml2_file, vis_file]
         return files
     if version == '2' or version == '2.0':
         wml2_file = {"fname":xml_name, "fhandle":open(xml_name_full_path, 'r')}
-        #wml2_file = UploadedFile(file=wml2_file,name=xml_name)
         files = [csv_file, wml2_file, vis_file]
         return files
 
@@ -559,8 +550,6 @@ def transform_file(ts, title, tempdir):
         f.write(newdom)
 
     xml_file = open(xml_2_full_path, 'r')
-    #xml_file = UploadedFile(file=xml_file, name=xml_name)
 
     return {"fname":xml_name, "fhandle": xml_file}
-
 

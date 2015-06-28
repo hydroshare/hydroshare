@@ -3,14 +3,18 @@
 {#{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}#}
 
 {% block download_list %}
-<div>
- <a id="btn-download-all" type="button" class="btn btn-default" href="{{ download_files_url }}">
-                            <span class="glyphicon glyphicon-download-alt">
-                                <span title='Download HIS Time Series Data' class="button-label">Download HIS Time Series Data</span>
-                            </span>
-                        </a>
 
+<div>
+    <h3>Content</h3>
+    <div class="custom-well">
+      <a id="btn-download-all" type="button" class="btn btn-default" href="{{ download_files_url }}">
+        <span class="glyphicon glyphicon-download-alt">
+          <span title='Download HIS Time Series Data' class="button-label">Download HIS Time Series Data</span>
+        </span>
+     </a>
+    </div>
 </div>
+
 {% endblock download_list %}
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
