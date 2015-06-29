@@ -15,6 +15,16 @@ model_objective_choices = (
                             ('Climate / Landuse Change', 'Climate / Landuse Change'),
                           )
 
+parameters_choices = (
+                        ('Crop rotation', 'Crop rotation'),
+                        ('Tile drainage', 'Tile drainage'),
+                        ('Point source', 'Point source'),
+                        ('Fertilizer', 'Fertilizer'),
+                        ('Tillage operation', 'Tillage operation'),
+                        ('Inlet of draining watershed', 'Inlet of draining watershed'),
+                        ('Irrigation operation', 'Irrigation operation'),
+                      )
+
 class MetadataField(layout.Field):
           def __init__(self, *args, **kwargs):
               kwargs['css_class'] = 'form-control input-sm'
@@ -190,28 +200,28 @@ class SWATModelParametersFormHelper(BaseFormHelper):
 
 
 class SWATModelParametersForm(ModelForm):
-    parameters_choices = (('Crop rotation', 'Crop rotation'), ('Tile drainage', 'Tile drainage'),
-                         ('Point source', 'Point source'), ('Fertilizer', 'Fertilizer'),
-                         ('Tillage operation', 'Tillage operation'),
-                         ('Inlet of draining watershed', 'Inlet of draining watershed'),
-                         ('Irrigation operation', 'Irrigation operation'),)
-    model_parameters = forms.MultipleChoiceField(choices=parameters_choices, widget=forms.CheckboxSelectMultiple(attrs={'style': 'width:auto;margin-top:-5px'}))
+    model_parameters = forms.MultipleChoiceField(choices=parameters_choices,
+                                                 widget=forms.CheckboxSelectMultiple(
+                                                     attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(SWATModelParametersForm, self).__init__(*args, **kwargs)
         self.helper = SWATModelParametersFormHelper(allow_edit, res_short_id, element_id, element_name='SWATModelParameters')
-
+        if self.instance:
+            try:
+                model_parameters = self.instance.model_parameters.all()
+                if len(model_parameters) > 0:
+                    self.fields['model_parameters'].initial = [parameter.description for parameter in
+                                                                    model_parameters]
+                else:
+                    self.fields['model_parameters'].initial = []
+            except TypeError:
+                self.fields['model_parameters'].initial = []
     class Meta:
         model = SWATModelParameters
-        fields = ('model_parameters',
-                  'other_parameters',)
+        fields = ('other_parameters',)
 
 class SWATModelParametersValidationForm(forms.Form):
-    parameters_choices = (('Crop rotation', 'Crop rotation'), ('Tile drainage', 'Tile drainage'),
-                         ('Point source', 'Point source'), ('Fertilizer', 'Fertilizer'),
-                         ('Tillage operation', 'Tillage operation'),
-                         ('Inlet of draining watershed', 'Inlet of draining watershed'),
-                         ('Irrigation operation', 'Irrigation operation'),)
     model_parameters = forms.MultipleChoiceField(choices=parameters_choices,required=False)
     other_parameters = forms.CharField(max_length=200, required=False)
 

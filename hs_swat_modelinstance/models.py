@@ -214,50 +214,80 @@ class ModelMethods(AbstractMetaDataElement):
         raise ValidationError("ModelMethods element of a resource can't be deleted.")
 
 
+class ModelParametersChoices(models.Model):
+    description = models.CharField(max_length=300)
+
+    def __unicode__(self):
+        self.description
+
 class SWATModelParameters(AbstractMetaDataElement):
     term = 'SWATModelParameters'
-    parameters_choices = (('Crop rotation', 'Crop rotation'), ('Tile drainage', 'Tile drainage'),
-                         ('Point source', 'Point source'), ('Fertilizer', 'Fertilizer'),
-                         ('Tillage operation', 'Tillage operation'),
-                         ('Inlet of draining watershed', 'Inlet of draining watershed'),
-                         ('Irrigation operation', 'Irrigation operation'))
-    model_parameters = models.CharField(max_length=100, choices=parameters_choices, null=True)
+    model_parameters = models.ManyToManyField(ModelParametersChoices, null=True, blank=True)
     other_parameters = models.CharField(max_length=200, null=True, blank=True)
 
     def __unicode__(self):
         self.other_parameters
 
+    def get_swat_model_parameters(self):
+        return ', '.join([parameter.description for parameter in self.model_parameters.all()])
+
     @classmethod
     def create(cls, **kwargs):
-        #if 'model_parameters' in kwargs:
-        #    if not kwargs['model_parameters'] in ['Crop rotation', 'Tile drainage',
-         #                                         'Point source', 'Fertilizer', 'Tillage operation',
-        #                                          'Inlet of draining watershed', 'Irrigation operation']:
-        #        raise ValidationError('Invalid Model Parameters:%s' % kwargs['type'])
-        #else:
-         #   raise ValidationError("Model Parameters is missing.")
+        if 'model_parameters' in kwargs:
+            cls._validate_swat_model_parameters(kwargs['model_parameters'])
+        else:
+            raise ValidationError("model_parameters is missing.")
         if not 'other_parameters' in kwargs:
             raise ValidationError("SWATModelParameters other_parameters is missing.")
 
         metadata_obj = kwargs['content_object']
-        return SWATModelParameters.objects.create(model_parameters=kwargs['model_parameters'],
-                                                  other_parameters=kwargs['other_parameters'],
+        swat_model_parameters = SWATModelParameters.objects.create(other_parameters=kwargs['other_parameters'],
                                                   content_object=metadata_obj)
+
+        for swat_parameter in kwargs['model_parameters']:
+            qs = ModelParametersChoices.objects.filter(description__iexact=swat_parameter)
+            if qs.exists():
+                swat_model_parameters.model_parameters.add(qs[0])
+            else:
+                swat_model_parameters.model_parameters.create(description=swat_parameter)
+
+        return swat_model_parameters
 
     @classmethod
     def update(cls, element_id, **kwargs):
         swat_model_parameters = SWATModelParameters.objects.get(id=element_id)
         if swat_model_parameters:
-            for key, value in kwargs.iteritems():
-                if key in ('model_parameters', 'other_parameters'):
-                    setattr(swat_model_parameters, key, value)
+            if 'model_parameters' in kwargs:
+                cls._validate_swat_model_parameters(kwargs['model_parameters'])
+                swat_model_parameters.model_parameters.all().delete()
+                for swat_parameter in kwargs['model_parameters']:
+                    qs = ModelParametersChoices.objects.filter(description__iexact=swat_parameter)
+                    if qs.exists():
+                        swat_model_parameters.model_parameters.add(qs[0])
+                    else:
+                        swat_model_parameters.model_parameters.create(description=swat_parameter)
+
+            if 'other_parameters' in kwargs:
+                swat_model_parameters.other_parameters = kwargs['other_parameters']
+
             swat_model_parameters.save()
+
+            # delete model_parameters metadata element if it has no data
+            if len(swat_model_parameters.model_parameters.all()) == 0 and len(swat_model_parameters.other_parameters) == 0:
+                swat_model_parameters.delete()
         else:
             raise ObjectDoesNotExist("No SWATModelParameters element was found for the provided id:%s" % kwargs['id'])
+
 
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("SWATModelParameters element of a resource can't be deleted.")
+
+    @classmethod
+    def _validate_swat_model_parameters(cls, parameters):
+        for swat_parameters in parameters:
+            if swat_parameters not in ['Crop rotation', 'Tile drainage', 'Point source', 'Fertilizer', 'Tillage operation', 'Inlet of draining watershed', 'Irrigation operation']:
+                raise ValidationError('Invalid swat_model_parameters:%s' % parameters)
 
 class ModelInput(AbstractMetaDataElement):
     term = 'ModelInput'
@@ -500,7 +530,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_swat_model_parameters = etree.SubElement(container, '{%s}SWATModelParameters' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_rdf_Description = etree.SubElement(hsterms_swat_model_parameters, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_swat_model_parameters_model_parameters = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}ModelParameters' % self.NAMESPACES['hsterms'])
-            hsterms_swat_model_parameters_model_parameters.text = self.swat_model_parameters.model_parameters
+            hsterms_swat_model_parameters_model_parameters.text = ', '.join([parameter.description for parameter in self.swat_model_parameters.model_parameters.all()])
             hsterms_swat_model_parameters_other_parameters = etree.SubElement(hsterms_swat_model_parameters_rdf_Description, '{%s}otherParameters' % self.NAMESPACES['hsterms'])
             hsterms_swat_model_parameters_other_parameters.text = self.swat_model_parameters.other_parameters
         if self.model_input:

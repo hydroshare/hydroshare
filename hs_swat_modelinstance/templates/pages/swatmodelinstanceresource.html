@@ -89,7 +89,7 @@
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Model parameters:</strong></div>
-                            <div class="col-sm-8">{{ swat_model_parameters.model_parameters }}</div>
+                            <div class="col-sm-8">{{ swat_model_parameters.get_swat_model_parameters }}, {{ swat_model_parameters.other_parameters }} </div>
                             {% if swat_model_parameters.other_parameters %}
                                 <div class="col-sm-4"><strong>Other parameters:</strong></div>
                                 <div class="col-sm-8">{{ swat_model_parameters.other_parameters }}</div>
