@@ -9,10 +9,10 @@ Users: `Admin, Test`
 - `Test` is an arbitrary non-superuser user
 
 Future users:
-	- `FakeAdmin` is a normal user whose username is 'admin'
+- `FakeAdmin` is a normal user whose username is 'admin'
 
 Resources Types: `GENERIC`
-	- we use only generic resources for now to limit the manual labor
+- we use only generic resources for now to limit the manual labor
 
 Permissions: `NONE, VIEW, EDIT, OWN`
 - `VIEW` allows another user READONLY access
@@ -86,3 +86,25 @@ Test & Admin:
 
 -- as expected: can view, edit, and delete
 
+## Conclusions
+
+* Permissions:
+The existing implementation of the permissions model works mostly as expected.
+I could not get it to commit the ultimate failure of letting a user mutate a 
+resource without adequate permissions. However, the user (with some form 
+trickery) can view pages they should not, even if they cannot make any changes
+once there. 
+
+Specific changes:
+1. Server should respond with a 404 when asking for a resource that the user
+does not have permission to see, so as not to leak info about the existence
+of the resource
+2. Server should not respond with a 500 when a user attempts to save changes
+they are not authorized to make. Instead, send a 403 (forbidden) or 404. 
+
+* Admin Username:
+Usernames must be unique, so as long as the DB comes configured with a user
+with username = 'admin', then normal users will not be able to create a user
+that can masquerade as the superuser. However, this is pretty flimsy, and 
+reimplementing access control such that it does not manually inspect the 
+username would be more robust.
