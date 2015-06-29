@@ -28,7 +28,9 @@ Actions:
 6. `DELETE` resource
 
 For each pair of (permissions X actions) we evaluate whether a user with the
-given permissions can perform the given action. 
+given permissions can perform the given action.
+
+We also consider the case of a user whose username is 'Admin'. 
 
 ## Test Results
 
@@ -56,8 +58,8 @@ Test & Admin:
 5. NO
 6. N/A
 
--- as expected: can see resource, but cant see edit buttons so cant (easily) load 
-		edit page or delete the resource
+-- as expected: can see resource, but cant see edit buttons so cant (easily)
+		load edit page or delete the resource
 
 -- NB: injecting a form to load the page in edit mode results in the edit page
 	loading, but saving changes results in a 500 (internal server error)
