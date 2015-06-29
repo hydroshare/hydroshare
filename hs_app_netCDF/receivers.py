@@ -1,11 +1,12 @@
-from django.dispatch import receiver
-from hs_core.signals import *
-from hs_app_netCDF.models import NetcdfResource, NetcdfMetaData, Variable
-from hs_app_netCDF.forms import *
-from hs_core import hydroshare
-from hs_core.hydroshare.resource import ResourceFile
+import re
 import os
-from hs_core.hydroshare import utils
+
+from django.dispatch import receiver
+
+from hs_core.signals import *
+from hs_core.hydroshare.resource import ResourceFile
+from hs_app_netCDF.forms import *
+
 
 
 # receiver used to extract metadata after user click on "create resource"
@@ -90,7 +91,6 @@ def netcdf_pre_create_resource(sender, **kwargs):
                 # add rights
                 if res_dublin_core_meta.get('rights'):
                     raw_info = res_dublin_core_meta.get('rights')
-                    import re
                     b = re.search("(?P<url>https?://[^\s]+)", raw_info)
                     url = b.group('url') if b else ''
                     statement = raw_info.replace(url, '') if url else raw_info
