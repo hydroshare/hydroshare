@@ -4,30 +4,28 @@
 
 ## Overview
 
-Users: Admin, Test
-	- Admin is actually an admin, i.e. superuser
-	- Test is an arbitrary non-superuser user
+Users: `Admin, Test`
+- `Admin` is actually an admin, i.e. superuser
+- `Test` is an arbitrary non-superuser user
 
 Future users:
-	- FakeAdmin is a normal user whose username is 'admin'
+	- `FakeAdmin` is a normal user whose username is 'admin'
 
-Resources Types: GENERIC
+Resources Types: `GENERIC`
 	- we use only generic resources for now to limit the manual labor
 
-Permissions: NONE, VIEW, EDIT, OWN
-	- VIEW allows another user READONLY access
-	- EDIT lets another user make changes to the content/metadata
-	- OWN lets another user delete the resource
+Permissions: `NONE, VIEW, EDIT, OWN`
+- `VIEW` allows another user READONLY access
+- `EDIT` lets another user make changes to the content/metadata
+- `OWN` lets another user delete the resource
 
 Actions:
-	1. VIEW resource page
-
-	2. VIEW edit button
-	3. VIEW edit page (load page in edit_mode)
-	4. COMMIT EDITS in the edit page
-
-	5. VIEW delete button
-	6. DELETE resource
+1. `VIEW` resource page
+2. `VIEW` edit button
+3. `VIEW` edit page (load page in edit_mode)
+4. `COMMIT EDITS` in the edit page
+5. `VIEW` delete button
+6. `DELETE` resource
 
 For each pair of (permissions X actions) we evaluate whether a user with the
 given permissions can perform the given action. 
