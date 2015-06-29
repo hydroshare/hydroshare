@@ -82,7 +82,9 @@ if [ $1 ];
         docker exec $CID psql -U postgres -d postgres -h postgis -f pg.development.sql;
 fi
 
+echo "*** load HSAccess database with contents of pg.hsaccess.sql ***"
 docker exec $CID psql -U postgres -d HSAccess -h postgis -f pg.hsaccess.sql;
+echo "*** after loading HSAccess database ***"
 
 echo "*** mangae.py collectstatic ***"
 docker exec $CID python manage.py collectstatic -v0 --noinput
