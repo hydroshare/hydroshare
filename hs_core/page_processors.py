@@ -46,7 +46,12 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     content_model = page.get_content_model()
     edit_mode = False
     file_validation_error = None
-    # TODO: fix hand-coded user permissions. should be something like: `if page.can_change():`
+    # TODO: fix hand-coded user permissions. should be something like: `edit_mode = page.can_change()`
+    # Problems with this implementation:
+    #   1. does not check if user is in a group that has edit permissions
+    #   2. checks username directly (what if i make a new acc with uname = 'admin')
+    #   3. does not check user.is_superuser (which is probably what the 'admin' username check should be)
+    #   4. does not check if the user is authenticated at all (user.is_authenticated())
     if user.username == 'admin' or \
                     content_model.creator == user or \
                     user in (content_model.owners.all() | content_model.edit_users.all()):
@@ -93,7 +98,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             spatial_coverage_data_dict['name'] = spatial_coverage.value.get('name', None)
             spatial_coverage_data_dict['units'] = spatial_coverage.value['units']
             spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
-            spatial_coverage_data_dict['projection'] = spatial_coverage.value.get('projection', None)
+            spatial_coverage_data_dict['projection'] = +spatial_coverage.value.get('projection', None)
             spatial_coverage_data_dict['type'] = spatial_coverage.type
             if spatial_coverage.type == 'point':
                 spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
