@@ -34,9 +34,8 @@ given permissions can perform the given action.
 
 ## Test Results
 
-======================
-with NO permissions:
-===========
+#### with NO permissions:
+
 Test & Admin:
 1. NO
 2. N/A
@@ -49,9 +48,7 @@ Test & Admin:
 		Error should probably be 'Unknown Resource' to not divulge the
 		existence of the resource
 
-======================
-with VIEW permissions:
-===========
+#### with VIEW permissions:
 
 Test & Admin:
 1. YES 
@@ -67,9 +64,7 @@ Test & Admin:
 -- NB: injecting a form to load the page in edit mode results in the edit page
 	loading, but saving changes results in a 500 (internal server error)
 
-======================
-with EDIT permissions:
-===========
+#### with EDIT permissions:
 
 Test & Admin:
 1. YES
@@ -81,9 +76,7 @@ Test & Admin:
 
 -- as expected: can view & edit, but cant see delete button
 
-======================
-with OWN permissions:
-===========
+#### with OWN permissions:
 
 Test & Admin:
 1. YES 
