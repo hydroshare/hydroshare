@@ -110,3 +110,11 @@ with username = 'admin', then normal users will not be able to create a user
 that can masquerade as the superuser. However, this is pretty flimsy, and 
 reimplementing access control such that it does not manually inspect the 
 username would be more robust.
+
+* Changing Ownership
+The existing implementation compares the user making the request to the user
+who created the resource, and if equal grants access. However, while this seems
+to lead to a security hole wherein the creator could lose access to a resource
+but still be listed as the creator does not occur. In testing, trying to view
+a resource which the user had originally created but then been removed from
+ownership resulted in a 403, which makes sense.
