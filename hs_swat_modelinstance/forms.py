@@ -25,6 +25,19 @@ parameters_choices = (
                         ('Irrigation operation', 'Irrigation operation'),
                       )
 
+type_choices = (
+                    ('Choose a type', 'Choose a type'),
+                    ('Normal Simulation', 'Normal Simulation'),
+                    ('Sensitivity Analysis', 'Sensitivity Analysis'),
+                    ('Auto-Calibration', 'Auto-Calibration'),
+                )
+
+rainfall_type_choices = (('Daily', 'Daily'), ('Sub-hourly', 'Sub-hourly'),)
+
+routing_type_choices = (('Daily', 'Daily'), ('Hourly', 'Hourly'),)
+
+simulation_type_choices = (('Annual', 'Annual'), ('Monthly', 'Monthly'), ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
+
 class MetadataField(layout.Field):
           def __init__(self, *args, **kwargs):
               kwargs['css_class'] = 'form-control input-sm'
@@ -141,10 +154,6 @@ class simulationTypeFormHelper(BaseFormHelper):
 
 class simulationTypeForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        type_choices = (('Choose a type', 'Choose a type'),
-                                   ('Normal Simulation', 'Normal Simulation'),
-                                   ('Sensitivity Analysis', 'Sensitivity Analysis'),
-                                   ('Auto-Calibration', 'Auto-Calibration'),)
         super(simulationTypeForm, self).__init__(*args, **kwargs)
         self.helper = simulationTypeFormHelper(allow_edit, res_short_id, element_id, element_name='simulationType')
         self.fields['simulation_type_name'].choices = type_choices
@@ -230,9 +239,12 @@ class ModelInputFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
                         MetadataField('warm_up_period'),
-                        MetadataField('rainfall_time_step'),
-                        MetadataField('routing_time_step'),
-                        MetadataField('simulation_time_step'),
+                        MetadataField('rainfall_time_step_type'),
+                        MetadataField('rainfall_time_step_value'),
+                        MetadataField('routing_time_step_type'),
+                        MetadataField('routing_time_step_value'),
+                        MetadataField('simulation_time_step_type'),
+                        MetadataField('simulation_time_step_value'),
                         MetadataField('watershed_area'),
                         MetadataField('number_of_subbasins'),
                         MetadataField('number_of_HRUs'),
@@ -251,13 +263,19 @@ class ModelInputForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelInputForm, self).__init__(*args, **kwargs)
         self.helper = ModelInputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelInput')
+        self.fields['rainfall_time_step_type'].choices = rainfall_type_choices
+        self.fields['routing_time_step_type'].choices = routing_type_choices
+        self.fields['simulation_time_step_type'].choices = simulation_type_choices
 
     class Meta:
         model = ModelInput
         fields = ('warm_up_period',
-                  'rainfall_time_step',
-                  'routing_time_step',
-                  'simulation_time_step',
+                  'rainfall_time_step_type',
+                  'rainfall_time_step_value',
+                  'routing_time_step_type',
+                  'routing_time_step_value',
+                  'simulation_time_step_type',
+                  'simulation_time_step_value',
                   'watershed_area',
                   'number_of_subbasins',
                   'number_of_HRUs',
@@ -272,9 +290,12 @@ class ModelInputForm(ModelForm):
 
 class ModelInputValidationForm(forms.Form):
     warm_up_period = forms.CharField(max_length=100, required=False)
-    rainfall_time_step = forms.CharField(max_length=100, required=False)
-    routing_time_step = forms.CharField(max_length=100, required=False)
-    simulation_time_step = forms.CharField(max_length=100, required=False)
+    rainfall_time_step_type = forms.CharField(max_length=100, required=False)
+    rainfall_time_step_value = forms.CharField(max_length=100, required=False)
+    routing_time_step_type = forms.CharField(max_length=100, required=False)
+    routing_time_step_value = forms.CharField(max_length=100, required=False)
+    simulation_time_step_type = forms.CharField(max_length=100, required=False)
+    simulation_time_step_value = forms.CharField(max_length=100, required=False)
     watershed_area = forms.CharField(max_length=100, required=False)
     number_of_subbasins = forms.CharField(max_length=100, required=False)
     number_of_HRUs = forms.CharField(max_length=100, required=False)

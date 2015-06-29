@@ -107,17 +107,23 @@
                                 <div class="col-sm-4"><strong>Warm-up period in years:</strong></div>
                                 <div class="col-sm-8">{{ model_input.warm_up_period }}</div>
                             {% endif %}
-                            {% if model_input.rainfall_time_step %}
-                                <div class="col-sm-4"><strong>Rainfall time step:</strong></div>
-                                <div class="col-sm-8">{{ model_input.rainfall_time_step }}</div>
+                            {% if model_input.rainfall_time_step_type %}
+                                <div class="col-sm-4"><strong>Rainfall time step type:</strong></div>
+                                <div class="col-sm-8">{{ model_input.rainfall_time_step_type }}</div>
+                                <div class="col-sm-4"><strong>Rainfall time step value:</strong></div>
+                                <div class="col-sm-8">{{ model_input.rainfall_time_step_value }}</div>
                             {% endif %}
-                            {% if model_input.routing_time_step %}
-                                <div class="col-sm-4"><strong>Routing time step:</strong></div>
-                                <div class="col-sm-8">{{ model_input.routing_time_step }}</div>
+                            {% if model_input.routing_time_step_type %}
+                                <div class="col-sm-4"><strong>Routing time step type:</strong></div>
+                                <div class="col-sm-8">{{ model_input.routing_time_step_type }}</div>
+                                <div class="col-sm-4"><strong>Routing time step value:</strong></div>
+                                <div class="col-sm-8">{{ model_input.routing_time_step_value }}</div>
                             {% endif %}
-                            {% if model_input.simulation_time_step %}
-                                <div class="col-sm-4"><strong>Simulation time step:</strong></div>
-                                <div class="col-sm-8">{{ model_input.simulation_time_step }}</div>
+                            {% if model_input.simulation_time_step_type %}
+                                <div class="col-sm-4"><strong>Simulation time step type:</strong></div>
+                                <div class="col-sm-8">{{ model_input.simulation_time_step_type }}</div>
+                                <div class="col-sm-4"><strong>Simulation time step value:</strong></div>
+                                <div class="col-sm-8">{{ model_input.simulation_time_step_value }}</div>
                             {% endif %}
                             {% if model_input.watershed_area %}
                                 <div class="col-sm-4"><strong>Watershed area in square kilometers:</strong></div>

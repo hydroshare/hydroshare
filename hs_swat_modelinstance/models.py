@@ -291,10 +291,17 @@ class SWATModelParameters(AbstractMetaDataElement):
 
 class ModelInput(AbstractMetaDataElement):
     term = 'ModelInput'
+    rainfall_type_choices = (('Daily', 'Daily'), ('Sub-hourly', 'Sub-hourly'),)
+    routing_type_choices = (('Daily', 'Daily'), ('Hourly', 'Hourly'),)
+    simulation_type_choices = (('Annual', 'Annual'), ('Monthly', 'Monthly'), ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
+
     warm_up_period = models.CharField(max_length=100, null=True, blank=True, verbose_name='Warm-up period in years')
-    rainfall_time_step = models.CharField(max_length=100, null=True, blank=True)
-    routing_time_step = models.CharField(max_length=100, null=True, blank=True)
-    simulation_time_step = models.CharField(max_length=100, null=True, blank=True)
+    rainfall_time_step_type = models.CharField(max_length=100, choices=rainfall_type_choices, null=True, blank=True)
+    rainfall_time_step_value = models.CharField(max_length=100, null=True, blank=True)
+    routing_time_step_type = models.CharField(max_length=100, choices=routing_type_choices, null=True, blank=True)
+    routing_time_step_value = models.CharField(max_length=100, null=True, blank=True)
+    simulation_time_step_type = models.CharField(max_length=100,choices=simulation_type_choices, null=True, blank=True)
+    simulation_time_step_value = models.CharField(max_length=100, null=True, blank=True)
     watershed_area = models.CharField(max_length=100, null=True, blank=True, verbose_name='Waterhsed area in square kilometers')
     number_of_subbasins = models.CharField(max_length=100, null=True, blank=True)
     number_of_HRUs = models.CharField(max_length=100, null=True, blank=True)
@@ -313,12 +320,18 @@ class ModelInput(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if not 'warm_up_period' in kwargs:
             raise ValidationError("ModelInput warm-upPeriod is missing.")
-        if not 'rainfall_time_step' in kwargs:
-            raise ValidationError("ModelInput rainfallTimeStep is missing.")
-        if not 'routing_time_step' in kwargs:
-            raise ValidationError("ModelInput routingTimeStep is missing.")
-        if not 'simulation_time_step' in kwargs:
-            raise ValidationError("ModelInput simulationTimeStep is missing.")
+        if not 'rainfall_time_step_type' in kwargs:
+            raise ValidationError("ModelInput rainfallTimeStepType is missing.")
+        if not 'rainfall_time_step_value' in kwargs:
+            raise ValidationError("ModelInput rainfallTimeStepValue is missing.")
+        if not 'routing_time_step_type' in kwargs:
+            raise ValidationError("ModelInput routingTimeStepType is missing.")
+        if not 'routing_time_step_value' in kwargs:
+            raise ValidationError("ModelInput routingTimeStepValue is missing.")
+        if not 'simulation_time_step_type' in kwargs:
+            raise ValidationError("ModelInput simulationTimeStepType is missing.")
+        if not 'simulation_time_step_value' in kwargs:
+            raise ValidationError("ModelInput simulationTimeStepValue is missing.")
         if not 'watershed_area' in kwargs:
             raise ValidationError("ModelInput watershedArea is missing.")
         if not 'number_of_subbasins' in kwargs:
@@ -341,9 +354,12 @@ class ModelInput(AbstractMetaDataElement):
             raise ValidationError("ModelInput soilDataSourceURL is missing.")
         metadata_obj = kwargs['content_object']
         return ModelInput.objects.create(warm_up_period=kwargs['warm_up_period'],
-                                             rainfall_time_step=kwargs['rainfall_time_step'],
-                                             routing_time_step=kwargs['routing_time_step'],
-                                             simulation_time_step=kwargs['simulation_time_step'],
+                                             rainfall_time_step_type=kwargs['rainfall_time_step_type'],
+                                             rainfall_time_step_value=kwargs['rainfall_time_step_value'],
+                                             routing_time_step_type=kwargs['routing_time_step_type'],
+                                             routing_time_step_value=kwargs['routing_time_step_value'],
+                                             simulation_time_step_type=kwargs['simulation_time_step_type'],
+                                             simulation_time_step_value=kwargs['simulation_time_step_value'],
                                              watershed_area=kwargs['watershed_area'],
                                              number_of_subbasins=kwargs['number_of_subbasins'],
                                              number_of_HRUs=kwargs['number_of_HRUs'],
@@ -361,7 +377,9 @@ class ModelInput(AbstractMetaDataElement):
         model_input = ModelInput.objects.get(id=element_id)
         if model_input:
             for key, value in kwargs.iteritems():
-                if key in ('warm_up_period', 'rainfall_time_step', 'routing_time_step', 'simulation_time_step', 'watershed_area','number_of_subbasins',
+                if key in ('warm_up_period', 'rainfall_time_step_type', 'rainfall_time_step_value',
+                           'routing_time_step_type', 'routing_time_step_value', 'simulation_time_step_type', 'simulation_time_step_value',
+                           'watershed_area','number_of_subbasins',
                            'number_of_HRUs', 'DEM_resolution', 'DEM_source_name', 'DEM_source_URL',
                            'landUse_data_source_name', 'landUse_data_source_URL', 'soil_data_source_name', 'soil_data_source_URL'):
                     setattr(model_input, key, value)
@@ -536,22 +554,30 @@ class SWATModelInstanceMetaData(CoreMetaData):
         if self.model_input:
             hsterms_model_input = etree.SubElement(container, '{%s}ModelInput' % self.NAMESPACES['hsterms'])
             hsterms_model_input_rdf_Description = etree.SubElement(hsterms_model_input, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_model_input_warm_up_period = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}warm-upPeriod' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_warm_up_period.text = self.model_input.warm_up_period
-            hsterms_model_input_rainfall_time_step = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}rainfallTimeStep' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_rainfall_time_step.text = self.model_input.rainfall_time_step
-            hsterms_model_input_routing_time_step = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}routingTimeStep' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_routing_time_step.text = self.model_input.routing_time_step
-            hsterms_model_input_simulation_time_step = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}simulationTimeStep' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_simulation_time_step.text = self.model_input.simulation_time_step
+            hsterms_model_input_warm_up_period_type = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}warm-upPeriodType' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_warm_up_period_type.text = 'Year'
+            hsterms_model_input_warm_up_period_value = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}warm-upPeriodValue' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_warm_up_period_value.text = self.model_input.warm_up_period
+            hsterms_model_input_rainfall_time_step_type = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}rainfallTimeStepType' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_rainfall_time_step_type.text = self.model_input.rainfall_time_step_type
+            hsterms_model_input_rainfall_time_step_value = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}rainfallTimeStepValue' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_rainfall_time_step_value.text = self.model_input.rainfall_time_step_value
+            hsterms_model_input_routing_time_step_type = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}routingTimeStepType' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_routing_time_step_type.text = self.model_input.routing_time_step_type
+            hsterms_model_input_routing_time_step_value = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}routingTimeStepValue' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_routing_time_step_value.text = self.model_input.routing_time_step_value
+            hsterms_model_input_simulation_time_step_type = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}simulationTimeStepType' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_simulation_time_step_type.text = self.model_input.simulation_time_step_type
+            hsterms_model_input_simulation_time_step_value = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}simulationTimeStepValue' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_simulation_time_step_value.text = self.model_input.simulation_time_step_value
             hsterms_model_input_watershed_area = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}watershedArea' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_watershed_area.text = self.model_input.watershed_area+ ' km2'
+            hsterms_model_input_watershed_area.text = self.model_input.watershed_area
             hsterms_model_input_number_of_subbasins = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}numberOfSubbasins' % self.NAMESPACES['hsterms'])
             hsterms_model_input_number_of_subbasins.text = self.model_input.number_of_subbasins
             hsterms_model_input_number_of_HRUs = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}numberOfHRUs' % self.NAMESPACES['hsterms'])
             hsterms_model_input_number_of_HRUs.text = self.model_input.number_of_HRUs
             hsterms_model_input_DEM_resolution = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMResolution' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_DEM_resolution.text = self.model_input.DEM_resolution + ' m'
+            hsterms_model_input_DEM_resolution.text = self.model_input.DEM_resolution
             hsterms_model_input_DEM_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMSourceName' % self.NAMESPACES['hsterms'])
             hsterms_model_input_DEM_source_name.text = self.model_input.DEM_source_name
             hsterms_model_input_DEM_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMSourceURL' % self.NAMESPACES['hsterms'])
