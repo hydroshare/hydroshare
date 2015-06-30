@@ -32,11 +32,11 @@ type_choices = (
                     ('Auto-Calibration', 'Auto-Calibration'),
                 )
 
-rainfall_type_choices = (('Daily', 'Daily'), ('Sub-hourly', 'Sub-hourly'),)
+rainfall_type_choices = (('Choose a type', 'Choose a type'), ('Daily', 'Daily'), ('Sub-hourly', 'Sub-hourly'),)
 
-routing_type_choices = (('Daily', 'Daily'), ('Hourly', 'Hourly'),)
+routing_type_choices = (('Choose a type', 'Choose a type'), ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
 
-simulation_type_choices = (('Annual', 'Annual'), ('Monthly', 'Monthly'), ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
+simulation_type_choices = (('Choose a type', 'Choose a type'), ('Annual', 'Annual'), ('Monthly', 'Monthly'), ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
 
 class MetadataField(layout.Field):
           def __init__(self, *args, **kwargs):
@@ -107,7 +107,7 @@ class ModelObjectiveFormHelper(BaseFormHelper):
                         MetadataField('swat_model_objectives'),
                         MetadataField('other_objectives'),
                  )
-        kwargs['element_name_label'] = 'Model objective'
+        kwargs['element_name_label'] = 'Model Objective'
         super(ModelObjectiveFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 class ModelObjectiveForm(ModelForm):
@@ -120,8 +120,6 @@ class ModelObjectiveForm(ModelForm):
         self.helper = ModelObjectiveFormHelper(allow_edit, res_short_id, element_id, element_name='ModelObjective')
         if self.instance:
             try:
-                # for some reason the following line raises TypeError exception if there are no swat_model_objectives
-                # associated with the instance of ModelObjective - thus using try ... except
                 swat_model_objectives = self.instance.swat_model_objectives.all()
                 if len(swat_model_objectives) > 0:
                     self.fields['swat_model_objectives'].initial = [objective.description for objective in
@@ -141,33 +139,33 @@ class ModelObjectiveValidationForm(forms.Form):
     other_objectives = forms.CharField(max_length=200, required=False)
 
 
-class simulationTypeFormHelper(BaseFormHelper):
+class SimulationTypeFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
                         MetadataField('simulation_type_name'),
                  )
-        kwargs['element_name_label'] = 'Simulation type'
-        super(simulationTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        kwargs['element_name_label'] = 'Simulation Type'
+        super(SimulationTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 
-class simulationTypeForm(ModelForm):
+class SimulationTypeForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        super(simulationTypeForm, self).__init__(*args, **kwargs)
-        self.helper = simulationTypeFormHelper(allow_edit, res_short_id, element_id, element_name='simulationType')
+        super(SimulationTypeForm, self).__init__(*args, **kwargs)
+        self.helper = SimulationTypeFormHelper(allow_edit, res_short_id, element_id, element_name='SimulationType')
         self.fields['simulation_type_name'].choices = type_choices
 
     class Meta:
-        model = simulationType
+        model = SimulationType
         fields = ('simulation_type_name',)
 
 
-class simulationTypeValidationForm(forms.Form):
+class SimulationTypeValidationForm(forms.Form):
     simulation_type_name = forms.CharField(max_length=100, required=False)
 
 
-class ModelMethodsFormHelper(BaseFormHelper):
+class ModelMethodFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
@@ -176,27 +174,27 @@ class ModelMethodsFormHelper(BaseFormHelper):
                         MetadataField('flow_routing_method'),
                         MetadataField('PET_estimation_method'),
                  )
-        kwargs['element_name_label'] = 'Model Methods'
-        super(ModelMethodsFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        kwargs['element_name_label'] = 'Model Method'
+        super(ModelMethodFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
-class ModelMethodsForm(ModelForm):
+class ModelMethodForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        super(ModelMethodsForm, self).__init__(*args, **kwargs)
-        self.helper = ModelMethodsFormHelper(allow_edit, res_short_id, element_id, element_name='ModelMethods')
+        super(ModelMethodForm, self).__init__(*args, **kwargs)
+        self.helper = ModelMethodFormHelper(allow_edit, res_short_id, element_id, element_name='ModelMethod')
 
     class Meta:
-        model = ModelMethods
+        model = ModelMethod
         fields = ('runoff_calculation_method',
                   'flow_routing_method',
                   'PET_estimation_method',)
 
 
-class ModelMethodsValidationForm(forms.Form):
+class ModelMethodValidationForm(forms.Form):
     runoff_calculation_method = forms.CharField(max_length=200, required=False)
     flow_routing_method = forms.CharField(max_length=200, required=False)
     PET_estimation_method = forms.CharField(max_length=200, required=False)
 
-class SWATModelParametersFormHelper(BaseFormHelper):
+class ModelParameterFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
@@ -204,18 +202,18 @@ class SWATModelParametersFormHelper(BaseFormHelper):
                         MetadataField('model_parameters'),
                         MetadataField('other_parameters'),
                  )
-        kwargs['element_name_label'] = 'SWAT model used parameters'
-        super(SWATModelParametersFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        kwargs['element_name_label'] = 'Model Parameter'
+        super(ModelParameterFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 
-class SWATModelParametersForm(ModelForm):
+class ModelParameterForm(ModelForm):
     model_parameters = forms.MultipleChoiceField(choices=parameters_choices,
                                                  widget=forms.CheckboxSelectMultiple(
                                                      attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        super(SWATModelParametersForm, self).__init__(*args, **kwargs)
-        self.helper = SWATModelParametersFormHelper(allow_edit, res_short_id, element_id, element_name='SWATModelParameters')
+        super(ModelParameterForm, self).__init__(*args, **kwargs)
+        self.helper = ModelParameterFormHelper(allow_edit, res_short_id, element_id, element_name='ModelParameter')
         if self.instance:
             try:
                 model_parameters = self.instance.model_parameters.all()
@@ -227,10 +225,10 @@ class SWATModelParametersForm(ModelForm):
             except TypeError:
                 self.fields['model_parameters'].initial = []
     class Meta:
-        model = SWATModelParameters
+        model = ModelParameter
         fields = ('other_parameters',)
 
-class SWATModelParametersValidationForm(forms.Form):
+class ModelParameterValidationForm(forms.Form):
     model_parameters = forms.MultipleChoiceField(choices=parameters_choices,required=False)
     other_parameters = forms.CharField(max_length=200, required=False)
 

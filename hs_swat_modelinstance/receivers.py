@@ -29,11 +29,11 @@ def _process_metadata_update_create(**kwargs):
     elif element_name == 'modelobjective':
         element_form = ModelObjectiveValidationForm(request.POST)
     elif element_name == 'simulationtype':
-        element_form = simulationTypeValidationForm(request.POST)
-    elif element_name == 'modelmethods':
-        element_form = ModelMethodsValidationForm(request.POST)
-    elif element_name == 'swatmodelparameters':
-        element_form = SWATModelParametersValidationForm(request.POST)
+        element_form = SimulationTypeValidationForm(request.POST)
+    elif element_name == 'modelmethod':
+        element_form = ModelMethodValidationForm(request.POST)
+    elif element_name == 'modelparameter':
+        element_form = ModelParameterValidationForm(request.POST)
     elif element_name == 'modelinput':
         element_form = ModelInputValidationForm(request.POST)
 
