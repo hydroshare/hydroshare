@@ -420,7 +420,7 @@
                                         <div class="access-table-container">
                                             <table id="access-table" class="table">
                                                 <tbody>
-                                                {# Owners#}
+                                                {# Owners with full permissions to do anything on this resource #}
                                                 <form id="owners_form" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
                                                 {% csrf_token %}
                                                     {% for u in owners %}
@@ -1378,6 +1378,9 @@
             </div>
             </div>
         <!-- ==== Tabs end ==== -->
+        <div class="rating">
+            {% rating_for cm %}
+        </div>
         {% comments_for cm %}
         {#                #}
         {# dialogs follow #}
