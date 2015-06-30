@@ -16,8 +16,8 @@ from mezzanine.conf import settings
 
 from hs_core.signals import *
 from hs_core.models import AbstractResource
-from . import hs_bagit
-
+from hs_core.hydroshare.hs_bagit import create_bag_files
+from django_irods.storage import IrodsStorage
 
 class ResourceFileSizeException(Exception):
     pass
@@ -150,14 +150,12 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
         resource.metadata.update_element('date', res_modified_date.id)
 
     if overwrite_bag:
-        for bag in resource.bags.all():
-            try:
-                bag.delete()
-            except:
-                pass
+        create_bag_files(resource)
 
-    hs_bagit.create_bag(resource)
-
+    istorage = IrodsStorage()
+    # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
+    # the resource is modified for on-demand bagging.
+    istorage.setAVU(resource.short_id, "bag_modified", "true")
 
 # def _get_user_info(user):
 #     from hs_core.api import UserResource
