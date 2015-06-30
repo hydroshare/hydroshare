@@ -1066,32 +1066,31 @@ a[data-toggle='tab']{
     /*0 1px 1px rgba(100,100,100,0.3);*/
 }
 #id_user-wrapper{
-    width: calc(100% - 98px);
-    padding: 1px;
-    border: 1px solid #CCC;
-    height: 60px;
-    margin-top: 1px;
-    margin-left: -1px;
-    -webkit-border-radius: 3px;
-    -webkit-border-top-left-radius: 0px;
-    -webkit-border-bottom-left-radius: 0px;
-    -moz-border-radius: 3px;
-    -moz-border-radius-topleft: 0px;
-    -moz-border-radius-bottomleft: 0px;
-    border-radius: 3px;
-    border-top-left-radius: 0px;
-    border-bottom-left-radius: 0px;
+	width: 60%;
+	padding: 1px;
+	border: 1px solid #CCC;
+	height: 34px;
+	float: left;
+	-webkit-border-radius: 3px;
+	-webkit-border-top-left-radius: 0;
+	-webkit-border-bottom-left-radius: 0;
+	-moz-border-radius: 3px;
+	-moz-border-radius-topleft: 0;
+	-moz-border-radius-bottomleft: 0;
+	border-radius: 0;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
 }
 
 #permission-panel #id_user-autocomplete{
     width: 100%;
     height: 100%;
     border: 0;
-    padding: 0px 4px;
+    padding: 0 4px;
 }
 
 #permission-panel .panel-body{
-    padding: 15px 0px;
+    padding: 15px 0;
 }
 
 span.hilight {
@@ -1312,16 +1311,10 @@ body > .container{
 }
 
 .btn-add-access{
-    -webkit-border-radius: 0px;
-    -webkit-border-top-left-radius: 3px;
-    -webkit-border-bottom-left-radius: 3px;
-    -moz-border-radius: 0px;
-    -moz-border-radius-topleft: 3px;
-    -moz-border-radius-bottomleft: 3px;
-    border-radius: 0px;
-    border-top-left-radius: 3px;
-    border-bottom-left-radius: 3px;
-    height:60px;
+	height: 34px;
+	top: 0;
+	border-radius: 0;
+	margin: 0 2px;
 }
 
 .access-panel-title{
@@ -1832,14 +1825,16 @@ td.user-actions > span:hover {
     width: 70%;
 }
 
-#manage-access .custom-well > .input-group > .dropdown {
-    width: 30%;
+#manage-access form > div.dropdown {
     display:inline;
     border-radius:0;
+	float: left;
+	margin-left: 2px;
 }
 
-#manage-access .custom-well > .input-group > .dropdown > button{
+#roles_list{
     border-radius: 0;
+	width: 100px;
 }
 
 div.access-table-container {

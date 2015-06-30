@@ -420,110 +420,114 @@
                                         <div class="access-table-container">
                                             <table id="access-table" class="table">
                                                 <tbody>
-                                                <tr>
-                                                    <td>
-                                                        <div class="user-scope">
-                                                            <span class="user-name">Mauriel Ramírez (you)</span>
-                                                            <br>
-                                                            <span class="user-username-content">mauriel133</span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="user-roles">
-                                                    <span class="dropdown role-dropdown">
-                                                        <span class="dropdown-toggle"
-                                                              id="roles-menu" data-toggle="dropdown"
-                                                              aria-haspopup="true" aria-expanded="true">
-                                                            Can edit
-                                                            <span class="caret"></span>
-                                                        </span>
-                                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                                                            <li><a href="#">Can view</a></li>
-                                                            <li><a href="#"><b>Can edit</b></a></li>
-                                                            <li><a href="#">Is owner</a></li>
-                                                        </ul>
-                                                    </span>
-                                                    </td>
-                                                    <td class="user-actions"><span
-                                                            class="glyphicon glyphicon-remove"></span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        <div class="user-scope">
-                                                            <span class="user-name">Person1</span>
-                                                            <br>
-                                                            <span class="user-username-content">personusername1</span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="user-roles">
-                                                    <span class="dropdown role-dropdown">
-                                                        <span class="dropdown-toggle"
-                                                              id="roles-menu" data-toggle="dropdown"
-                                                              aria-haspopup="true" aria-expanded="true">
-                                                            Can edit
-                                                            <span class="caret"></span>
-                                                        </span>
-                                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                                                            <li><a href="#">Can view</a></li>
-                                                            <li><a href="#"><b>Can edit</b></a></li>
-                                                            <li><a href="#">Is owner</a></li>
-                                                        </ul>
-                                                    </span>
-                                                    </td>
-                                                    <td class="user-actions"><span
-                                                            class="glyphicon glyphicon-remove"></span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        <div class="user-scope">
-                                                            <span class="user-name">Person2</span>
-                                                            <br>
-                                                            <span class="user-username-content">personusername2</span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="user-roles">
-                                                    <span class="dropdown role-dropdown">
-                                                        <span class="dropdown-toggle"
-                                                              id="roles-menu" data-toggle="dropdown"
-                                                              aria-haspopup="true" aria-expanded="true">
-                                                            Can edit
-                                                            <span class="caret"></span>
-                                                        </span>
-                                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                                                            <li><a href="#">Can view</a></li>
-                                                            <li><a href="#"><b>Can edit</b></a></li>
-                                                            <li><a href="#">Is owner</a></li>
-                                                        </ul>
-                                                    </span>
-                                                    </td>
-                                                    <td class="user-actions"><span
-                                                            class="glyphicon glyphicon-remove"></span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        <div class="user-scope">
-                                                            <span class="user-name">Person3</span>
-                                                            <br>
-                                                            <span class="user-username-content">personusername3</span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="user-roles">
-                                                    <span class="dropdown role-dropdown">
-                                                        <span class="dropdown-toggle"
-                                                              id="roles-menu" data-toggle="dropdown"
-                                                              aria-haspopup="true" aria-expanded="true">
-                                                            Can edit
-                                                            <span class="caret"></span>
-                                                        </span>
-                                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                                                            <li><a href="#">Can view</a></li>
-                                                            <li><a href="#"><b>Can edit</b></a></li>
-                                                            <li><a href="#">Is owner</a></li>
-                                                        </ul>
-                                                    </span>
-                                                    </td>
-                                                    <td class="user-actions"><span
-                                                            class="glyphicon glyphicon-remove"></span></td>
-                                                </tr>
+                                                {# Owners#}
+                                                <form id="owners_form" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
+                                                {% csrf_token %}
+                                                    {% for u in owners %}
+                                                    <tr>
+                                                        <td>
+                                                            <div class="user-scope">
+                                                                <span value="{{ u.pk }}" class="user-name">{{ u|best_name }}</span>
+                                                                <br>
+                                                                <span class="user-username-content">{{ u.username }}</span>
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="user-roles">
+                                                            <span class="dropdown role-dropdown">
+                                                                <span class="dropdown-toggle"
+                                                                      id="roles-menu" data-toggle="dropdown"
+                                                                      aria-haspopup="true" aria-expanded="true">
+                                                                    Is owner
+                                                                    <span class="caret"></span>
+                                                                </span>
+                                                                <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                                                    <li><a href="#">Can view</a></li>
+                                                                    <li><a href="#">Can edit</a></li>
+                                                                    <li><a href="#"><b>Is owner</b></a></li>
+                                                                </ul>
+                                                            </span>
+                                                        </td>
+
+                                                        <td class="user-actions"><span
+                                                                class="glyphicon glyphicon-remove"></span></td>
+                                                    </tr>
+
+                                                {% endfor %}
+                                                </form>
+
+
+                                                {# Users who can edit the content of this resource #}
+                                                <form id="edit_users_form" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                          method="POST">
+                                                {% csrf_token %}
+                                                    {% for u in edit_users %}
+                                                    <tr>
+                                                        <td>
+                                                            <div class="user-scope">
+                                                                <span value="{{ u.pk }}" class="user-name">{{ u|best_name }}</span>
+                                                                <br>
+                                                                <span class="user-username-content">{{ u.username }}</span>
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="user-roles">
+                                                            <span class="dropdown role-dropdown">
+                                                                <span class="dropdown-toggle"
+                                                                      id="roles-menu" data-toggle="dropdown"
+                                                                      aria-haspopup="true" aria-expanded="true">
+                                                                    Can edit
+                                                                    <span class="caret"></span>
+                                                                </span>
+                                                                <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                                                    <li><a href="#">Can view</a></li>
+                                                                    <li><a href="#"><b>Can edit</b></a></li>
+                                                                    <li><a href="#">Is owner</a></li>
+                                                                </ul>
+                                                            </span>
+                                                        </td>
+
+                                                        <td class="user-actions"><span
+                                                                class="glyphicon glyphicon-remove"></span></td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </form>
+
+                                                {# Users who can view the content of this resource #}
+                                                <form id="view_users_form" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                          method="POST">
+                                                {% csrf_token %}
+                                                {% for u in view_users %}
+                                                    <tr>
+                                                        <td>
+                                                            <div class="user-scope">
+                                                                <span value="{{ u.pk }}" class="user-name">{{ u|best_name }}</span>
+                                                                <br>
+                                                                <span class="user-username-content">{{ u.username }}</span>
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="user-roles">
+                                                            <span class="dropdown role-dropdown">
+                                                                <span class="dropdown-toggle"
+                                                                      id="roles-menu" data-toggle="dropdown"
+                                                                      aria-haspopup="true" aria-expanded="true">
+                                                                    Can view
+                                                                    <span class="caret"></span>
+                                                                </span>
+                                                                <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                                                    <li><a href="#">Can view</a></li>
+                                                                    <li><a href="#">Can edit</a></li>
+                                                                    <li><a href="#"><b>Is owner</b></a></li>
+                                                                </ul>
+                                                            </span>
+                                                        </td>
+
+                                                        <td class="user-actions"><span
+                                                                class="glyphicon glyphicon-remove"></span></td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </form>
                                                 </tbody>
                                             </table>
                                         </div>
@@ -531,26 +535,36 @@
                                             <p>Invite people:</p>
 
                                             <div class="input-group">
-                                                <input type="text" class="form-control"
-                                                       placeholder="Enter names or username"
-                                                       aria-describedby="basic-addon2">
+                                                <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/">
+                                                    {% csrf_token %}
+
+                                                {{ add_edit_user_form.user }}
 
                                                 <div class="dropdown">
                                                     <button class="btn btn-default dropdown-toggle" type="button"
-                                                            id="dropdownMenu1" data-toggle="dropdown"
+                                                            id="roles_list" data-toggle="dropdown"
                                                             aria-haspopup="true" aria-expanded="true">
-                                                        Can view
+                                                        <span id="selected_role">Can view</span>
                                                         <span class="caret"></span>
                                                     </button>
-                                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                                                        <li><a href="#">Can view</a></li>
-                                                        <li><a href="#">Can edit</a></li>
-                                                        <li><a href="#">Is owner</a></li>
+
+                                                    <ul id="lstRoles" class="dropdown-menu" aria-labelledby="roles_list">
+                                                        <li><a data-role="add_view_user" href="#">Can view</a></li>
+                                                        <li><a data-role="add_edit_user" href="#">Can edit</a></li>
+                                                        <li><a data-role="add_owner" href="#">Is owner</a></li>
                                                     </ul>
                                                 </div>
+
+                                                <button type="submit"
+                                                    class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
+                                                    class="button-label">&nbspAdd</span></button>
+
+                                                <input name="t" value="add_view_user" type="hidden"/>
+                                                </form>
                                             </div>
                                         </div>
                                     </div>
+
                                     <div class="modal-footer">
                                         <a type="button" data-dismiss="modal" class="btn btn-primary">Done</a>
                                     </div>
@@ -561,7 +575,6 @@
                 {% endif %}
                 </div>
             </div>
-
 
             {#        ======= Content =======#}
             <div>
@@ -2153,6 +2166,13 @@
     {% block extra_js %}
     <script type="text/javascript" src="{{STATIC_URL}}js/irods.js" ></script>
     <script type="text/javascript">
+
+    function onRoleSelect(event){
+        var el = $(event.target);
+        $("#selected_role").text(el.text());
+        $('#manage-access form > input[name="t"]')[0].setAttribute("value", el[0].getAttribute("data-role"));
+    }
+
     function onRemoveKeyword(event){
         $($(this).closest(".tags").parent().find(".btn-primary")[0]).show();    // Show save button
         $(event.target).closest(".tag").remove();
@@ -2327,6 +2347,7 @@
             }
         }
 
+        // Bind events for subject elements
         $(".icon-remove").click(onRemoveKeyword);
         $("#btn-add-keyword").click(onAddKeyword);
         $("#txt-keyword").keyup(function(e){
@@ -2335,6 +2356,8 @@
                 onAddKeyword();
             }
         });
+
+        $("#lstRoles > li").click(onRoleSelect);
 
         // hide add file button if necessary
         var file_count = $("#file-count").attr('value');
