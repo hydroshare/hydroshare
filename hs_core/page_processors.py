@@ -44,18 +44,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session["file_type_error"]
 
     content_model = page.get_content_model()
-    edit_mode = False
     file_validation_error = None
-    # TODO: fix hand-coded user permissions. should be something like: `edit_mode = page.can_change()`
-    # Problems with this implementation:
-    #   1. does not check if user is in a group that has edit permissions
-    #   2. checks username directly (what if i make a new acc with uname = 'admin')
-    #   3. does not check user.is_superuser (which is probably what the 'admin' username check should be)
-    #   4. does not check if the user is authenticated at all (user.is_authenticated())
-    if user.username == 'admin' or \
-                    content_model.creator == user or \
-                    user in (content_model.owners.all() | content_model.edit_users.all()):
-        edit_mode = True
 
     metadata_status = _get_metadata_status(content_model)
 
@@ -79,6 +68,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     bag_url = AbstractResource.bag_url(content_model.short_id)
 
+    # user requested the resource in READONLY mode
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
         if len(temporal_coverages) > 0:
@@ -144,26 +134,31 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         }
         return context
 
-    # resource in edit mode
-    add_creator_modal_form = CreatorForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
-    add_contributor_modal_form = ContributorForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
-    add_relation_modal_form = RelationForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
-    add_source_modal_form = SourceForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
+    # user requested the resource in EDIT MODE
 
-    title_form = TitleForm(instance=content_model.metadata.title, allow_edit=edit_mode, res_short_id=content_model.short_id,
+    # whether the user has permission to change the model
+    can_change = content_model.can_change(request)
+
+    add_creator_modal_form = CreatorForm(allow_edit=can_change, res_short_id=content_model.short_id)
+    add_contributor_modal_form = ContributorForm(allow_edit=can_change, res_short_id=content_model.short_id)
+    add_relation_modal_form = RelationForm(allow_edit=can_change, res_short_id=content_model.short_id)
+    add_source_modal_form = SourceForm(allow_edit=can_change, res_short_id=content_model.short_id)
+
+    title_form = TitleForm(instance=content_model.metadata.title, allow_edit=can_change, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.title.id if content_model.metadata.title else None)
 
     keywords = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
-    subjects_form = SubjectsForm(initial={'value': keywords}, allow_edit=edit_mode, res_short_id=content_model.short_id,
+    subjects_form = SubjectsForm(initial={'value': keywords}, allow_edit=can_change, res_short_id=content_model.short_id,
                              element_id=None)
 
-    abstract_form = AbstractForm(instance=content_model.metadata.description, allow_edit=edit_mode, res_short_id=content_model.short_id,
+    abstract_form = AbstractForm(instance=content_model.metadata.description, allow_edit=can_change, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.description.id if content_model.metadata.description else None)
 
-    CreatorFormSetEdit = formset_factory(wraps(CreatorForm)(partial(CreatorForm, allow_edit=edit_mode)), formset=BaseCreatorFormSet, extra=0)
+    CreatorFormSetEdit = formset_factory(wraps(CreatorForm)(partial(CreatorForm, allow_edit=can_change)), formset=BaseCreatorFormSet, extra=0)
 
     creator_formset = CreatorFormSetEdit(initial=content_model.metadata.creators.all().values(), prefix='creator')
     index = 0
+    # TODO: dont track index manually. use enumerate, or zip
     creators = content_model.metadata.creators.all()
     ProfileLinksFormSetEdit = formset_factory(ProfileLinksForm, formset=BaseProfileLinkFormSet, extra=0)
 
@@ -179,11 +174,12 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         creator_form.number = creator_form.initial['id']
         index += 1
 
-    ContributorFormSetEdit = formset_factory(wraps(ContributorForm)(partial(ContributorForm, allow_edit=edit_mode)), formset=BaseContributorFormSet, extra=0)
+    ContributorFormSetEdit = formset_factory(wraps(ContributorForm)(partial(ContributorForm, allow_edit=can_change)), formset=BaseContributorFormSet, extra=0)
     contributor_formset = ContributorFormSetEdit(initial=content_model.metadata.contributors.all().values(), prefix='contributor')
 
     contributors = content_model.metadata.contributors.all()
     index = 0
+    # TODO: dont track index manually. use enumerate, or zip
     for contributor_form in contributor_formset.forms:
         contributor_form.action = "/hsapi/_internal/%s/contributor/%s/update-metadata/" % (content_model.short_id, contributor_form.initial['id'])
         contributor_form.profile_link_formset = ProfileLinksFormSetEdit(initial=contributors[index].external_links.all().values('type', 'url'), prefix='contributor_links-%s' % index)
@@ -196,7 +192,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         contributor_form.number = contributor_form.initial['id']
         index += 1
 
-    RelationFormSetEdit = formset_factory(wraps(RelationForm)(partial(RelationForm, allow_edit=edit_mode)), formset=BaseFormSet, extra=0)
+    RelationFormSetEdit = formset_factory(wraps(RelationForm)(partial(RelationForm, allow_edit=can_change)), formset=BaseFormSet, extra=0)
     relation_formset = RelationFormSetEdit(initial=content_model.metadata.relations.all().values(), prefix='relation')
 
     for relation_form in relation_formset.forms:
@@ -204,7 +200,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         relation_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'relation', relation_form.initial['id'])
         relation_form.number = relation_form.initial['id']
 
-    SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm, allow_edit=edit_mode)), formset=BaseFormSet, extra=0)
+    SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm, allow_edit=can_change)), formset=BaseFormSet, extra=0)
     source_formset = SourceFormSetEdit(initial=content_model.metadata.sources.all().values(), prefix='source')
 
     # IdentifierFormSetEdit = formset_factory(IdentifierForm, formset=BaseFormSet, extra=0)
@@ -219,12 +215,12 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         source_form.number = source_form.initial['id']
 
     rights_form = RightsForm(instance=content_model.metadata.rights,
-                             allow_edit=edit_mode,
+                             allow_edit=can_change,
                              res_short_id=content_model.short_id,
                              element_id=content_model.metadata.rights.id if content_model.metadata.rights else None)
 
     language_form = LanguageForm(instance=content_model.metadata.language,
-                                 allow_edit=edit_mode,
+                                 allow_edit=can_change,
                                  res_short_id=content_model.short_id,
                                  element_id=content_model.metadata.language.id if content_model.metadata.language
                                  else None)
@@ -252,7 +248,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         temporal_coverage = None
 
     coverage_temporal_form = CoverageTemporalForm(initial= temporal_coverage_data_dict,
-                                                  allow_edit=edit_mode,
+                                                  allow_edit=can_change,
                                                   res_short_id=content_model.short_id,
                                                   element_id=temporal_coverage.id if temporal_coverage else None)
 
@@ -281,14 +277,14 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         spatial_coverage = None
 
     coverage_spatial_form = CoverageSpatialForm(initial=spatial_coverage_data_dict,
-                                                allow_edit=edit_mode,
+                                                allow_edit=can_change,
                                                 res_short_id=content_model.short_id,
                                                 element_id=spatial_coverage.id if spatial_coverage else None)
 
     # metadata_form = MetaDataForm(resource_mode='edit' if edit_mode else 'view',
     #                              extended_metadata_layout=extended_metadata_layout)
 
-    metadata_form = ExtendedMetadataForm(resource_mode='edit' if edit_mode else 'view',
+    metadata_form = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
                                  extended_metadata_layout=extended_metadata_layout)
 
     context = {'metadata_form': metadata_form,
