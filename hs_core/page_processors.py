@@ -88,7 +88,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             spatial_coverage_data_dict['name'] = spatial_coverage.value.get('name', None)
             spatial_coverage_data_dict['units'] = spatial_coverage.value['units']
             spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
-            spatial_coverage_data_dict['projection'] = +spatial_coverage.value.get('projection', None)
+            spatial_coverage_data_dict['projection'] = spatial_coverage.value.get('projection', None)
             spatial_coverage_data_dict['type'] = spatial_coverage.type
             if spatial_coverage.type == 'point':
                 spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
