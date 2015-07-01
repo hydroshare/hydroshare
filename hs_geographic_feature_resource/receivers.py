@@ -9,7 +9,7 @@ import tempfile
 import shutil
 import os
 from hs_geographic_feature_resource.parse_lib import *
-
+from hs_geographic_feature_resource.forms import OriginalCoverageForm
 def is_shapefiles(files):
 #check if uploaded files are valid shapefiles (shp, shx, dbf)
     shp, shx, dbf = False , False, False
@@ -79,6 +79,7 @@ def geofeature_pre_create_resource(sender, **kwargs):
             shutil.rmtree(tmp_dir)
             temp_dir = None
 
+# This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_create, sender=GeographicFeatureResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
     request = kwargs['request']
@@ -90,4 +91,21 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
+        return {'is_valid': False, 'element_data_dict': None}
+
+# This handler is executed only when a metadata element is added as part of editing a resource
+@receiver(pre_metadata_element_update, sender=GeographicFeatureResource)
+def metadata_element_pre_update_handler(sender, **kwargs):
+    element_name = kwargs['element_name'].lower()
+    element_id = kwargs['element_id']
+    request = kwargs['request']
+
+
+    if element_name == 'originalcoverage':
+        element_form = OriginalCoverageForm(data=request.POST)
+
+    if element_form.is_valid():
+        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+    else:
+        # TODO: need to return form errors
         return {'is_valid': False, 'element_data_dict': None}

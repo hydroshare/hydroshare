@@ -105,13 +105,15 @@ def parse_shp(file_path):
         shp_metadata_dict["wgs84_extent_dict"]["northlimit"]=left_upper_point.GetY()
         shp_metadata_dict["wgs84_extent_dict"]["eastlimit"]=right_lower_point.GetX()
         shp_metadata_dict["wgs84_extent_dict"]["southlimit"]=right_lower_point.GetY()
+        shp_metadata_dict["wgs84_extent_dict"]["projection"]="WGS 84 EPSG:4326"
+        shp_metadata_dict["wgs84_extent_dict"]["units"]="Decimal degrees"
     else:
         shp_metadata_dict["wgs84_extent_dict"]["westlimit"]=UNKNOWN_STR
         shp_metadata_dict["wgs84_extent_dict"]["northlimit"]=UNKNOWN_STR
         shp_metadata_dict["wgs84_extent_dict"]["eastlimit"]=UNKNOWN_STR
         shp_metadata_dict["wgs84_extent_dict"]["southlimit"]=UNKNOWN_STR
-    shp_metadata_dict["wgs84_extent_dict"]["projection"]=UNKNOWN_STR
-    shp_metadata_dict["wgs84_extent_dict"]["units"]=UNKNOWN_STR
+        shp_metadata_dict["wgs84_extent_dict"]["projection"]=UNKNOWN_STR
+        shp_metadata_dict["wgs84_extent_dict"]["units"]=UNKNOWN_STR
 
     print left_upper_point.ExportToWkt()
     print right_lower_point.ExportToWkt()
