@@ -13,7 +13,7 @@ class TestGetResourceByShortkeyAPI(TestCase):
         GenericResource.objects.all().delete()
         pass
 
-
+    @unittest.skip
     def test_get_resource_by_shortkey(self):
         # create a user to be used for creating the resource
         user_creator = hydroshare.create_account(

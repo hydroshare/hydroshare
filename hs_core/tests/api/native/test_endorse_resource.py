@@ -15,6 +15,7 @@ class TestEndorseResourceAPI(TestCase):
         Rating.objects.all().delete()
         pass
 
+    @unittest.skip
     def test_endorse_resource(self):
         # create a user to be used for creating the resource
         user_creator = hydroshare.create_account(

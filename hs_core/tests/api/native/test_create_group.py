@@ -28,6 +28,7 @@ class TestCreateGroupAPI(TestCase):
         # test we don't have any group ownership at this point
         self.assertEqual(GroupOwnership.objects.all().count(), 0)
 
+    @unittest.skip
     def test_create_group_one_member_no_owner(self):
         # create a user to be used for creating the resource
         user_member_1 = hydroshare.create_account(
@@ -71,6 +72,7 @@ class TestCreateGroupAPI(TestCase):
         # test we don't have any group ownership at this point
         self.assertEqual(GroupOwnership.objects.all().count(), 0)
 
+    @unittest.skip
     def test_create_group_two_members_no_owner(self):
         # create a user to be used for creating the resource
         user_member_1 = hydroshare.create_account(
@@ -119,6 +121,7 @@ class TestCreateGroupAPI(TestCase):
         # test we don't have any group ownership at this point
         self.assertEqual(GroupOwnership.objects.all().count(), 0)
 
+    @unittest.skip
     def test_create_group_no_member_one_owner(self):
         user_owner_1 = hydroshare.create_account(
             'owner_1@usu.edu',
@@ -149,6 +152,7 @@ class TestCreateGroupAPI(TestCase):
         # test the group ownership has the correct owner
         self.assertEqual(group_ownership[0].owner, user_owner_1)
 
+    @unittest.skip
     def test_create_group_no_member_two_owners(self):
 
         user_owner_1 = hydroshare.create_account(
@@ -201,6 +205,7 @@ class TestCreateGroupAPI(TestCase):
                       msg= '%s is not one of the group owner.' % user_owner_2
         )
 
+    @unittest.skip
     def test_create_group_two_members_two_owners(self):
         user_member_1 = hydroshare.create_account(
             'member_1@usu.edu',

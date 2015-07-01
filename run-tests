@@ -1,3 +1,5 @@
 #!/bin/bash
 
-fig run -rm hydroshare python manage.py test $1
+pip install coverage
+coverage run manage.py test $1
+coverage report

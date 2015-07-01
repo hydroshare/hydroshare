@@ -15,6 +15,7 @@ class TestCommentOnResourceAPI(TestCase):
         ThreadedComment.objects.all().delete()
         pass
 
+    @unittest.skip
     def test_comment_on_resource(self):
         # create a user to be used for creating the resource
         user_creator = hydroshare.create_account(

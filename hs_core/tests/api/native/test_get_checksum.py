@@ -32,6 +32,7 @@ class TestGetChecksum(TestCase):
         User.objects.all().delete()
         GenericResource.objects.all().delete()
 
+    @unittest.skip
     def test_get_checksum(self):
         self.assertRaises(
             NotImplementedError,
