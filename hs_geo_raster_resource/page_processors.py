@@ -10,6 +10,7 @@ from functools import partial, wraps
 
 # page processor to populate raster resource specific metadata into my-resources template page
 @processor_for(RasterResource)
+# TODO: problematic permissions
 def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
