@@ -35,10 +35,25 @@ def landing_page(request, page):
             ori_cov_dict['southlimit'] = ori_cov_obj.extent['southlimit']
             ori_cov_dict['westlimit'] = ori_cov_obj.extent['westlimit']
             ori_cov_dict['projection_string'] = ori_cov_obj.projection_string
+            ori_cov_dict['projection_name'] = ori_cov_obj.projection_name
+            ori_cov_dict['datum'] = ori_cov_obj.datum
+            ori_cov_dict['unit'] = ori_cov_obj.unit
 
             context['original_coverage'] = ori_cov_dict
         else:
             context['original_coverage'] = None
+
+        field_info_list= content_model.metadata.fieldinformation.all()
+        field_info_list_context=[]
+        for field_info in field_info_list:
+            field_info_dict_item={}
+            field_info_dict_item["fieldName"]=field_info.fieldName
+            field_info_dict_item["fieldType"]=field_info.fieldType
+            field_info_dict_item["fieldTypeCode"]=field_info.fieldTypeCode
+            field_info_dict_item["fieldWidth"]=field_info.fieldWidth
+            field_info_dict_item["fieldPrecision"]=field_info.fieldPrecision
+            field_info_list_context.append(field_info_dict_item)
+        context['field_information'] = field_info_list_context
 
     else: # editing mode
 
@@ -47,6 +62,9 @@ def landing_page(request, page):
         ori_coverage_data_dict = {}
         if ori_cov_obj:
             ori_coverage_data_dict['projection_string'] = ori_cov_obj.projection_string
+            ori_coverage_data_dict['projection_name'] = ori_cov_obj.projection_name
+            ori_coverage_data_dict['datum'] = ori_cov_obj.datum
+            ori_coverage_data_dict['unit'] = ori_cov_obj.unit
             ori_coverage_data_dict['northlimit'] = ori_cov_obj.extent['northlimit']
             ori_coverage_data_dict['eastlimit'] = ori_cov_obj.extent['eastlimit']
             ori_coverage_data_dict['southlimit'] = ori_cov_obj.extent['southlimit']

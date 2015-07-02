@@ -4,9 +4,13 @@ from osgeo import ogr, osr
 UNKNOWN_STR="unkown"
 
 def parse_shp(file_path):
-# shp_metadata_dict["origin_projection"]: original projection string
+# shp_metadata_dict["origin_projection_string"]: original projection string
+# shp_metadata_dict["origin_projection_name"]: origin_projection_name
+# shp_metadata_dict["origin_datum"]: origin_datum
+# shp_metadata_dict["origin_unit"]: origin_unit
+
 # shp_metadata_dict["field_meta_dict"]["field_list"]: list [fieldname1, fieldname2...]
-# shp_metadata_dict["field_meta_dict"][filed_attr_dic]: dict {"filedname": dict{"fieldName":fieldName, "fieldTypeCode":fieldTypeCode, "fieldType":fieldType, "fieldWidth:fieldWidth, "fieldPrecision:fieldPrecision"} }
+# shp_metadata_dict["field_meta_dict"]["field_attr_dic"]: dict {"fieldname": dict{"fieldName":fieldName, "fieldTypeCode":fieldTypeCode, "fieldType":fieldType, "fieldWidth:fieldWidth, "fieldPrecision:fieldPrecision"} }
 # shp_metadata_dict["feature_count"]: feature count
 # shp_metadata_dict["geometry_type"]: geometry_type
 # shp_metadata_dict["origin_extent_dict"]: dict{"west": east, "north":north, "east":east, "south":south}
@@ -23,7 +27,23 @@ def parse_shp(file_path):
     # get spatialRef from layer
     spatialRef_from_layer = layer.GetSpatialRef()
     print spatialRef_from_layer
-    shp_metadata_dict["origin_projection"] =  str(spatialRef_from_layer) if spatialRef_from_layer is not None else UNKNOWN_STR
+
+    if spatialRef_from_layer is not None:
+        shp_metadata_dict["origin_projection_string"] =  str(spatialRef_from_layer)
+
+        prj_name = spatialRef_from_layer.GetAttrValue('projcs')
+
+        if prj_name is None:
+            prj_name = spatialRef_from_layer.GetAttrValue('geogcs')
+        shp_metadata_dict["origin_projection_name"] = prj_name
+
+        shp_metadata_dict["origin_datum"] =  spatialRef_from_layer.GetAttrValue('datum')
+        shp_metadata_dict["origin_unit"] = spatialRef_from_layer.GetAttrValue('unit')
+    else:
+        shp_metadata_dict["origin_projection_string"] =  UNKNOWN_STR
+        shp_metadata_dict["origin_projection_name"] = UNKNOWN_STR
+        shp_metadata_dict["origin_datum"] =  UNKNOWN_STR
+        shp_metadata_dict["origin_unit"] = UNKNOWN_STR
 
     field_list=[]
     filed_attr_dic={}

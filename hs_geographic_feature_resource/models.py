@@ -24,6 +24,9 @@ class OriginalCoverage(AbstractMetaDataElement):
     """
     _extent = models.CharField(max_length=1024)
     projection_string = models.TextField(max_length=1024, null=True, blank=True)
+    projection_name = models.TextField(max_length=1024, null=True, blank=True)
+    datum = models.TextField(max_length=1024, null=True, blank=True)
+    unit = models.TextField(max_length=1024, null=True, blank=True)
 
     class Meta:
         # OriginalCoverage element is not repeatable
@@ -52,7 +55,7 @@ class OriginalCoverage(AbstractMetaDataElement):
 
                 # # update projection string info
                 for key, value in kwargs.iteritems():
-                    if key in ('projection_string'):
+                    if key in ('projection_string','projection_name','datum','unit'):
                         setattr(ori_cov, key, value)
                         ori_cov.save()
 
@@ -83,7 +86,7 @@ class OriginalCoverage(AbstractMetaDataElement):
 
             # # update projection string info
             for key, value in kwargs.iteritems():
-                if key in ('projection_string'):
+                if key in ('projection_string','projection_name','datum','unit'):
                     setattr(ori_cov, key, value)
                     ori_cov.save()
         else:
@@ -98,16 +101,16 @@ class OriginalCoverage(AbstractMetaDataElement):
             raise ObjectDoesNotExist("No original coverage element exists for id:%d."%element_id)
 
 
-class FieldInfomation(AbstractMetaDataElement):
-    term = 'FieldInfomation'
+class FieldInformation(AbstractMetaDataElement):
+    term = 'FieldInformation'
     # required fields
     # has to call the field name rather than bandName, which seems to be enforced by the AbstractMetaDataElement;
     # otherwise, got an error indicating required "name" field does not exist
     fieldName = models.CharField(max_length=50)
-    fieldTypeCode = models.CharField(max_length=50)
     fieldType = models.CharField(max_length=50)
-    fieldWidth = models.IntegerField()
-    fileldPrecision = models.IntegerField()
+    fieldTypeCode = models.CharField(max_length=50, null=True)
+    fieldWidth = models.IntegerField(null=True)
+    fieldPrecision = models.IntegerField(null=True)
 
     def __unicode__(self):
         self.fieldName
@@ -115,42 +118,30 @@ class FieldInfomation(AbstractMetaDataElement):
     def create(cls, **kwargs):
         # Check the required fields and create new BandInformation meta instance
         if 'fieldName' in kwargs:
-            # check if the variable metadata already exists
+            
+            if not 'fieldType' in kwargs:
+                raise ValidationError("fieldType of FieldInformation is missing.")
+            
+            # check if the variable metadalta already exists
             metadata_obj = kwargs['content_object']
-            # metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            # band_info = BandInformation.objects.filter(name__iexact=kwargs['name'], object_id=metadata_obj.id,
-            #                                            content_type=metadata_type).first()
-            # if band_info:
-            #     raise ValidationError('BandInformation name:%s already exists' % kwargs['name'])
+
+            field_info = FieldInformation.objects.create(fieldName = kwargs['fieldName'], fieldType=kwargs['fieldType'],content_object=metadata_obj,)
+
+            # # update projection string info
+            for key, value in kwargs.iteritems():
+                if key in ('fieldTypeCode', 'fieldWidth', 'fieldPrecision'):
+                    setattr(field_info, key, value)
+                    field_info.save()
+
+            return field_info
+
         else:
-            raise ValidationError("fieldName of FieldInfomation is missing.")
-
-        if not 'variableName' in kwargs:
-            raise ValidationError("BandInformation variableName is missing.")
-
-        if not 'variableUnit' in kwargs:
-            raise ValidationError("BandInformation variableUnit is missing.")
-
-        filed_info = FieldInfomation.objects.create(fieldName=kwargs['fieldName'], fieldTypeCode=kwargs['fieldTypeCode'],
-                                                   fieldType=kwargs['fieldType'], fieldWidth=kwargs['fieldWidth'],
-                                                   fileldPrecision=kwargs['fieldPrecision'],
-                                                    content_object=metadata_obj)
-
-        filed_info.save()
-        return filed_info
+            raise ValidationError("fieldName of FieldInformation is missing.")
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        field_info = FieldInfomation.objects.get(id=element_id)
-        if field_info:
-            # if 'name' in kwargs:
-            #     if band_info.name != kwargs['name']:
-            #         # check to make sure this new name not already exists
-            #         if BandInformation.objects.filter(name_iexact=kwargs['name'], object_id=band_info.object_id,
-            #                                           content_type__pk=band_info.content_type.id).count()> 0:
-            #             raise ValidationError('BandInformation name:%s already exists.' % kwargs['name'])
-            #
-            #     band_info.name = kwargs['name']
+        field_info = FieldInformation.objects.get(id=element_id)
+        if field_info:            
 
             for key, value in kwargs.iteritems():
                 if key in ('fieldName', 'fieldTypeCode', 'fieldType', 'fieldWidth', 'fieldPrecision'):
@@ -158,11 +149,11 @@ class FieldInfomation(AbstractMetaDataElement):
 
             field_info.save()
         else:
-            raise ObjectDoesNotExist("No FieldInfomation element can be found for the provided id:%s" % kwargs['id'])
+            raise ObjectDoesNotExist("No FieldInformation element can be found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("FieldInfomation element of the geographic feature resource cannot be deleted.")
+        raise ValidationError("FieldInformation element of the geographic feature resource cannot be deleted.")
 
 
 
@@ -204,7 +195,7 @@ processor_for(GeographicFeatureResource)(resource_processor)
 
 # define the GeographicFeatureMetaData metadata
 class GeographicFeatureMetaData(CoreMetaData):
-    field_info = generic.GenericRelation(FieldInfomation)
+    fieldinformation = generic.GenericRelation(FieldInformation)
     originalcoverage = generic.GenericRelation(OriginalCoverage)
 
     @classmethod
@@ -212,7 +203,7 @@ class GeographicFeatureMetaData(CoreMetaData):
         # get the names of all core metadata elements
         elements = super(GeographicFeatureMetaData, cls).get_supported_element_names()
         # add the name of any additional element to the list
-        elements.append('FieldInfomation')
+        elements.append('FieldInformation')
         elements.append('OriginalCoverage')
         return elements
 
@@ -233,7 +224,7 @@ class GeographicFeatureMetaData(CoreMetaData):
             missing_required_elements.append('Spatial Reference')
 
         # if not self.field_info.all().first():
-        #     missing_required_elements.append('FieldInfomation')
+        #     missing_required_elements.append('FieldInformation')
 
         return missing_required_elements
 

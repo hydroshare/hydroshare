@@ -64,9 +64,20 @@ def geofeature_pre_create_resource(sender, **kwargs):
 
                     #original extent
                     original_coverage_dict ={}
-                    original_coverage_dict["originalcoverage"]={"extent":parsed_md_dict["origin_extent_dict"],"projection_string":parsed_md_dict["origin_projection"]}
+                    original_coverage_dict["originalcoverage"]={"extent":parsed_md_dict["origin_extent_dict"],
+                                                                "projection_string":parsed_md_dict["origin_projection_string"],
+                                                                "projection_name":parsed_md_dict["origin_projection_name"],
+                                                                "datum":parsed_md_dict["origin_datum"],
+                                                                "unit":parsed_md_dict["origin_unit"]
+                                                                }
                     metadata.append(original_coverage_dict)
 
+                    field_name_list=parsed_md_dict["field_meta_dict"]['field_list']
+
+                    for field_name in field_name_list:
+                        field_info_dict_item={}
+                        field_info_dict_item['fieldinformation']=parsed_md_dict["field_meta_dict"]["field_attr_dict"][field_name]
+                        metadata.append(field_info_dict_item)
                 except:
                     res_dublin_core_meta = {}
                     res_type_specific_meta = {}

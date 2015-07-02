@@ -18,6 +18,18 @@
                         {% if original_coverage.projection_string %}
                             <div class="row">
                                 <div class="col-sm-4"><strong>Coordinate Reference System:</strong></div>
+                                <div class="col-sm-8">{{ original_coverage.projection_name}}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Datum:</strong></div>
+                                <div class="col-sm-8">{{ original_coverage.datum}}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Unit:</strong></div>
+                                <div class="col-sm-8">{{ original_coverage.unit}}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Coordinate String:</strong></div>
                                 <div class="col-sm-8">{{ original_coverage.projection_string}}</div>
                             </div>
                         {% endif %}
@@ -59,6 +71,31 @@
                     {% else %}
                         <p>Metadata information is not provided. </p>
                     {% endif %}
+
+
+                    <h4 ><strong>Field Information:</strong></h4>
+                    {% if field_information %}
+
+                             <table>
+                             <tr class="row">
+                                 <th >Name</th><th class="col-sm-2">Type</th> <th class="col-sm-2">Width</th> <th class="col-sm-2">Precision</th>
+                             </tr>
+                            {%for field_item in field_information %}
+                            <tr class="row">
+                            <td class="col-sm-2">{{field_item.fieldName}}</td>
+                            <td>{{field_item.fieldType}}</td>
+                            <td>{{field_item.fieldWidth}}</td>
+                            <td>{{field_item.fieldPrecision}}</td>
+                            </tr>
+                            {% endfor %}
+                            </table>
+
+                    {% else %}
+                        <p> Metadata information is not provided. </p>
+                    {% endif %} {# variable section end #}
+
+
+
 
                     {# Add the Variable meta #}
                     {% if variables %}
