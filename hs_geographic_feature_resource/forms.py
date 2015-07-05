@@ -4,6 +4,7 @@ from django import forms
 from hs_core.forms import BaseFormHelper
 from crispy_forms.layout import Layout, Field
 import copy
+import json
 
 class OriginalCoverageFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
@@ -30,10 +31,10 @@ class OriginalCoverageForm(forms.Form):
     datum = forms.CharField(max_length=1024, required=False, label='Datum')
     unit = forms.CharField(max_length=1024, required=False, label='Unit')
 
-    northlimit = forms.DecimalField(label='North Extent', widget=forms.TextInput())
-    eastlimit = forms.DecimalField(label='East Extent', widget=forms.TextInput())
-    southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput())
-    westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput())
+    northlimit = forms.FloatField(label='North Extent', widget=forms.TextInput())
+    eastlimit = forms.FloatField(label='East Extent', widget=forms.TextInput())
+    southlimit = forms.FloatField(label='South Extent', widget=forms.TextInput())
+    westlimit = forms.FloatField(label='West Extent', widget=forms.TextInput())
 
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
@@ -59,41 +60,34 @@ class OriginalCoverageForm(forms.Form):
     def clean(self):
         # modify the form's cleaned_data dictionary
         super(OriginalCoverageForm, self).clean()
-        temp_cleaned_data = copy.deepcopy(self.cleaned_data)
+
         is_form_errors = False
-        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
-            limit_data = temp_cleaned_data.get(limit, None)
-            if not limit_data:
-                self._errors[limit] = ["Data for %s is missing" % limit]
+        extent={}
+        for bound in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+            if self.cleaned_data.get(bound, None):
+                v=self.cleaned_data[bound]
+                if isinstance(v, float):
+                    extent[bound]=self.cleaned_data[bound]
+                else:
+                    self._errors[bound] = ["Data for %s is not float" % bound]
+                    is_form_errors = True
+                    break
+            else:
+                self._errors[bound] = ["Data for %s is missing" % bound]
                 is_form_errors = True
-                del self.cleaned_data[limit]
+                break
 
-        if is_form_errors:
-            return self.cleaned_data
-
-        temp_cleaned_data['northlimit'] = str(temp_cleaned_data['northlimit'])
-        temp_cleaned_data['eastlimit'] = str(temp_cleaned_data['eastlimit'])
-        temp_cleaned_data['southlimit'] = str(temp_cleaned_data['southlimit'])
-        temp_cleaned_data['westlimit'] = str(temp_cleaned_data['westlimit'])
-
-        if 'projection_string' in temp_cleaned_data:
-            if len(temp_cleaned_data['projection_string']) == 0:
-                del temp_cleaned_data['projection_string']
-
-        self.cleaned_data['value'] = copy.deepcopy(temp_cleaned_data)
-
-        if 'northlimit' in self.cleaned_data:
-            del self.cleaned_data['northlimit']
-        if 'eastlimit' in self.cleaned_data:
-            del self.cleaned_data['eastlimit']
-        if 'southlimit' in self.cleaned_data:
-            del self.cleaned_data['southlimit']
-        if 'westlimit' in self.cleaned_data:
-            del self.cleaned_data['westlimit']
-
+        if not is_form_errors:
+           self.cleaned_data["extent"] = extent
 
         return self.cleaned_data
 
+
+class OriginalCoverageValidationForm(forms.Form):
+    northlimit = forms.FloatField(required=True)
+    eastlimit = forms.FloatField(required=True)
+    southlimit = forms.FloatField(required=True)
+    westlimit = forms.FloatField(required=True)
 
 
 class FieldInformationFormHelper(BaseFormHelper):

@@ -101,17 +101,13 @@ def parse_shp(file_path):
     left_upper_point.AddPoint(layer_extent[0], layer_extent[3]) #left-upper
     right_lower_point = ogr.Geometry(ogr.wkbPoint)
     right_lower_point.AddPoint(layer_extent[1], layer_extent[2]) #right-lower
+
+    #source map always has extent, even projection is unknown
     shp_metadata_dict["origin_extent_dict"]={}
-    if source is not None:
-        shp_metadata_dict["origin_extent_dict"]["westlimit"]=layer_extent[0]
-        shp_metadata_dict["origin_extent_dict"]["northlimit"]=layer_extent[3]
-        shp_metadata_dict["origin_extent_dict"]["eastlimit"]=layer_extent[1]
-        shp_metadata_dict["origin_extent_dict"]["southlimit"]=layer_extent[2]
-    else:
-        shp_metadata_dict["origin_extent_dict"]["westlimit"]=UNKNOWN_STR
-        shp_metadata_dict["origin_extent_dict"]["northlimit"]=UNKNOWN_STR
-        shp_metadata_dict["origin_extent_dict"]["eastlimit"]=UNKNOWN_STR
-        shp_metadata_dict["origin_extent_dict"]["southlimit"]=UNKNOWN_STR
+    shp_metadata_dict["origin_extent_dict"]["westlimit"]=layer_extent[0]
+    shp_metadata_dict["origin_extent_dict"]["northlimit"]=layer_extent[3]
+    shp_metadata_dict["origin_extent_dict"]["eastlimit"]=layer_extent[1]
+    shp_metadata_dict["origin_extent_dict"]["southlimit"]=layer_extent[2]
 
     #reproject to WGS84
     shp_metadata_dict["wgs84_extent_dict"]={}
