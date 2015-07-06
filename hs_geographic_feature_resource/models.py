@@ -26,9 +26,9 @@ class OriginalCoverage(AbstractMetaDataElement):
     _extent = models.CharField(max_length=1024, null=False, blank=False)
     #eg., prj string
     projection_string = models.TextField(max_length=1024, null=True, blank=True)
-    projection_name = models.TextField(max_length=128, null=True, blank=True)
-    datum = models.TextField(max_length=128, null=True, blank=True)
-    unit = models.TextField(max_length=128, null=True, blank=True)
+    projection_name = models.TextField(max_length=256, null=True, blank=True)
+    datum = models.TextField(max_length=256, null=True, blank=True)
+    unit = models.TextField(max_length=256, null=True, blank=True)
 
     class Meta:
         # OriginalCoverage element is not repeatable
@@ -210,7 +210,7 @@ class GeographicFeatureResource(Page, AbstractResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # 3 file types are supported
-        return (".shp", ".shx", ".dbf", ".prj")
+        return (".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg")
 
     @classmethod
     def can_have_multiple_files(cls):
@@ -218,7 +218,9 @@ class GeographicFeatureResource(Page, AbstractResource):
         return True
 
     def can_add(self, request):
-        return AbstractResource.can_add(self, request)
+        #return AbstractResource.can_add(self, request)
+        #what does this attribute mean?
+        return False
 
     def can_change(self, request):
         return AbstractResource.can_change(self, request)
@@ -257,6 +259,8 @@ class GeographicFeatureMetaData(CoreMetaData):
             return False
         if not self.originalcoverage.all().first():
             return False
+        if not self.geometryinformation.all().first():
+            return False
         if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
             return False
         return True
@@ -265,7 +269,8 @@ class GeographicFeatureMetaData(CoreMetaData):
         missing_required_elements = super(GeographicFeatureMetaData, self).get_required_missing_elements()
         if not self.originalcoverage.all().first():
             missing_required_elements.append('Spatial Reference')
-
+        if not self.geometryinformation.all().first():
+            missing_required_elements.append('Geometry Infomation')
         # if not self.field_info.all().first():
         #     missing_required_elements.append('FieldInformation')
 
@@ -282,19 +287,6 @@ class GeographicFeatureMetaData(CoreMetaData):
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
-        # # inject netcdf resource specific metadata element 'variable' to container element
-        # for variable in self.variables.all():
-        #     md_fields = {
-        #         "md_element": "netcdfVariable",
-        #         "name": "name",
-        #         "unit": "unit",
-        #         "type": "type",
-        #         "shape": "shape",
-        #         "descriptive_name": "longName",
-        #         "method": "comment"
-        #     }  # element name : name in xml
-        #     self.add_metadata_element_to_xml(container, variable, md_fields)
-
         if self.originalcoverage.all().first():
             hsterms_ori_cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
             hsterms_ori_cov_rdf_Description = etree.SubElement(hsterms_ori_cov, '{%s}Description' % self.NAMESPACES['rdf'])
@@ -307,16 +299,40 @@ class GeographicFeatureMetaData(CoreMetaData):
                           ori_cov_obj.extent['southlimit'], ori_cov_obj.extent['westlimit'])
 
                 hsterms_ori_cov_box = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}extent' % self.NAMESPACES['hsterms'])
-                hsterms_ori_cov_box.text = cov_box
-
-
+                hsterms_ori_cov_box.text = str(cov_box)
             if ori_cov_obj.projection_string:
                 hsterms_ori_cov_projection = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}crsRepresentationText' % self.NAMESPACES['hsterms'])
-                hsterms_ori_cov_projection.text = ori_cov_obj.projection_string
+                hsterms_ori_cov_projection.text = str(ori_cov_obj.projection_string)
 
+
+        hsterms_geom_info = etree.SubElement(container, '{%s}geometryInfomation' % self.NAMESPACES['hsterms'])
+        hsterms_geom_info_rdf_Description = etree.SubElement(hsterms_geom_info, '{%s}Description' % self.NAMESPACES['rdf'])
+        geom_info_obj = self.geometryinformation.all().first()
+        if geom_info_obj:
+            hsterms_geom_info_geom_type = etree.SubElement(hsterms_geom_info_rdf_Description, '{%s}geomtryType' % self.NAMESPACES['hsterms'])
+            hsterms_geom_info_geom_type.text = str(geom_info_obj.geometryType)
+            hsterms_geom_info_fea_count = etree.SubElement(hsterms_geom_info_rdf_Description, '{%s}featureCount' % self.NAMESPACES['hsterms'])
+            hsterms_geom_info_fea_count.text = str(geom_info_obj.featureCount)
+
+        hsterms_field_info = etree.SubElement(container, '{%s}fieldInfomation' % self.NAMESPACES['hsterms'])
+        field_info_obj_list = self.fieldinformation.all()
+        if field_info_obj_list:
+            for field in field_info_obj_list:
+                hsterms_field_info_rdf_Description = etree.SubElement(hsterms_field_info, '{%s}Description' % self.NAMESPACES['rdf'])
+                hsterms_field_info_fieldName = etree.SubElement(hsterms_field_info_rdf_Description, '{%s}fieldName' % self.NAMESPACES['hsterms'])
+                hsterms_field_info_fieldName.text = str(field.fieldName)
+                hsterms_field_info_fieldType = etree.SubElement(hsterms_field_info_rdf_Description, '{%s}fieldType' % self.NAMESPACES['hsterms'])
+                hsterms_field_info_fieldType.text = str(field.fieldType)
+                hsterms_field_info_fieldTypeCode = etree.SubElement(hsterms_field_info_rdf_Description, '{%s}fieldTypeCode' % self.NAMESPACES['hsterms'])
+                hsterms_field_info_fieldTypeCode.text = str(field.fieldTypeCode)
+                hsterms_field_info_fieldWidth = etree.SubElement(hsterms_field_info_rdf_Description, '{%s}fieldWidth' % self.NAMESPACES['hsterms'])
+                hsterms_field_info_fieldWidth.text = str(field.fieldWidth)
+                hsterms_field_info_fieldPrecision = etree.SubElement(hsterms_field_info_rdf_Description, '{%s}fieldPrecision' % self.NAMESPACES['hsterms'])
+                hsterms_field_info_fieldPrecision.text = str(field.fieldPrecision)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
+    # What does this func do?
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
         from lxml import etree
         element_name = md_fields.get('md_element') if md_fields.get('md_element') else md_element.term

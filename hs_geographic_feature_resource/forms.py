@@ -26,10 +26,10 @@ class OriginalCoverageFormHelper(BaseFormHelper):
 
 
 class OriginalCoverageForm(forms.Form):
-    projection_string = forms.CharField(max_length=1024, required=False, label='Coordinate String')
-    projection_name = forms.CharField(max_length=1024, required=False, label='Coordinate Reference System')
-    datum = forms.CharField(max_length=1024, required=False, label='Datum')
-    unit = forms.CharField(max_length=1024, required=False, label='Unit')
+    projection_string = forms.CharField(max_length=2048, required=False, label='Coordinate String', widget=forms.Textarea())
+    projection_name = forms.CharField(max_length=256, required=False, label='Coordinate Reference System')
+    datum = forms.CharField(max_length=256, required=False, label='Datum')
+    unit = forms.CharField(max_length=256, required=False, label='Unit')
 
     northlimit = forms.FloatField(label='North Extent', widget=forms.TextInput())
     eastlimit = forms.FloatField(label='East Extent', widget=forms.TextInput())
@@ -88,6 +88,10 @@ class OriginalCoverageValidationForm(forms.Form):
     eastlimit = forms.FloatField(required=True)
     southlimit = forms.FloatField(required=True)
     westlimit = forms.FloatField(required=True)
+    projection_string = forms.CharField(max_length=1024, required=False)
+    projection_name = forms.CharField(max_length=256, required=False)
+    datum = forms.CharField(max_length=256, required=False)
+    unit = forms.CharField(max_length=256, required=False)
 
 
 class FieldInformationFormHelper(BaseFormHelper):
