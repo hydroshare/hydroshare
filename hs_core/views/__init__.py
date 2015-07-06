@@ -35,7 +35,6 @@ from . import user_rest_api
 
 from hs_core.hydroshare import utils
 from . import utils as view_utils
-from hs_core.hydroshare import file_size_limit_for_display
 from hs_core.signals import *
 
 def short_url(request, *args, **kwargs):
@@ -517,6 +516,9 @@ def create_resource(request, *args, **kwargs):
         try:
             upload_from_irods(username=user, password=password, host=host, port=port,
                                   zone=zone, irods_fname=irods_fname, res_files=resource_files)
+        except utils.ResourceFileSizeException as ex:
+            context = {'file_size_error': ex.message}
+            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
         except Exception as ex:
             context = {'resource_creation_error': ex.message}
             return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))

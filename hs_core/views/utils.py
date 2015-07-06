@@ -13,6 +13,8 @@ from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type
 from hs_core.models import AbstractMetaDataElement, GenericResource
 from hs_core.signals import pre_metadata_element_create
+from hs_core.hydroshare import file_size_limit
+from hs_core.hydroshare.utils import raise_file_size_exception
 from django_irods.storage import IrodsStorage
 from irods.exception import iRODSException
 
@@ -21,9 +23,12 @@ def upload_from_irods(username, password, host, port, zone, irods_fname, res_fil
     try:
         irods_storage = IrodsStorage()
         irods_storage.set_user_session(username=username, password=password, host=host, port=port, zone=zone)
+        size = irods_storage.size(irods_fname)
+        if size > file_size_limit:
+            raise_file_size_exception()
         tmpFile = irods_storage.download(irods_fname)
         fname = os.path.basename(irods_fname.rstrip(os.sep))
-        res_files.append(UploadedFile(file=tmpFile, name=fname))
+        res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
     except Exception as ex:
         raise iRODSException(ex.message)
 
