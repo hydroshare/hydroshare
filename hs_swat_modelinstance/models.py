@@ -405,7 +405,7 @@ class SWATModelInstanceResource(Page, AbstractResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # all file types are supported
-        return ('.*',)
+        return ('.*')
 
     @classmethod
     def can_have_multiple_files(cls):
