@@ -112,7 +112,7 @@ def get_original_coverage_info(raster_dataset):
         log.exception(ex.message)
         gt = None
 
-    if gt:
+    if gt and proj_wkt:  # only get the bounding box when the projection is defined
         cols = raster_dataset.RasterXSize
         rows = raster_dataset.RasterYSize
         xarr = [0, cols]
@@ -162,7 +162,10 @@ def get_wgs84_coverage_info(raster_dataset):
         log.exception(ex.message)
         proj = None
 
-    if proj:
+    wgs84_coverage_info = OrderedDict()
+    original_coverage_info = get_original_coverage_info(raster_dataset)
+
+    if proj and ('NA' not in original_coverage_info.values()):
         original_cs = osr.SpatialReference()
         original_cs.ImportFromWkt(proj)
 
@@ -171,7 +174,6 @@ def get_wgs84_coverage_info(raster_dataset):
         wgs84_cs.ImportFromEPSG(4326)
 
         # get original bounding box info
-        original_coverage_info = get_original_coverage_info(raster_dataset)
         original_northlimit = original_coverage_info['northlimit']
         original_southlimit = original_coverage_info['southlimit']
         original_westlimit = original_coverage_info['westlimit']
@@ -192,25 +194,8 @@ def get_wgs84_coverage_info(raster_dataset):
                 ('units','Decimal degrees'),
                 ('projection', 'WGS 84 EPSG:4326')
             ])
-            return wgs84_coverage_info
-        else:
-            return OrderedDict([
-                    ('northlimit', 'NA'),
-                    ('southlimit', 'NA'),
-                    ('eastlimit', 'NA'),
-                    ('westlimit', 'NA'),
-                    ('units','Decimal degrees'),
-                    ('projection', 'WGS 84 EPSG:4326')
-                ])
-    else:
-        return OrderedDict([
-                    ('northlimit', 'NA'),
-                    ('southlimit', 'NA'),
-                    ('eastlimit', 'NA'),
-                    ('westlimit', 'NA'),
-                    ('units','Decimal degrees'),
-                    ('projection', 'WGS 84 EPSG:4326')
-                ])
+
+    return wgs84_coverage_info
 
 def get_cell_and_band_info(raster_dataset):
     """
