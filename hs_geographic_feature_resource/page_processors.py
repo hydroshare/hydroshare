@@ -27,6 +27,16 @@ def landing_page(request, page):
         # context['variables'] = content_model.metadata.variables.all() # the variables is the field name from NetCDFMetaData model
         #
         # add the original coverage context
+        geom_info_for_view={}
+        geom_info = content_model.metadata.geometryinformation.all().first()
+        if geom_info:
+            geom_info_for_view['geometryType'] = geom_info.geometryType
+            geom_info_for_view['featureCount'] = geom_info.featureCount
+            context['geometry_information'] = geom_info_for_view
+        else:
+            context['geometry_information'] = None
+
+
         ori_cov_dict = {}
         ori_cov_obj = content_model.metadata.originalcoverage.all().first()
         if ori_cov_obj:
@@ -57,6 +67,25 @@ def landing_page(request, page):
 
     else: # editing mode
 
+
+        geom_info_for_view={}
+        geom_info = content_model.metadata.geometryinformation.all().first()
+        if geom_info:
+            geom_info_for_view['geometryType'] = geom_info.geometryType
+            geom_info_for_view['featureCount'] = geom_info.featureCount
+        else:
+            geom_info_for_view = None
+
+        geom_information_form = GeometryInformationForm(initial=geom_info_for_view,
+                                                        res_short_id=content_model.short_id,
+                                                        allow_edit=edit_resource,
+                                                        element_id=geom_info.id if geom_info else None)
+        geom_information_layout = HTML('<div class="form-group col-lg-6 col-xs-12" id="geometryinformation"> '
+                                   '{% load crispy_forms_tags %} '
+                                   '{% crispy geom_information_form %} '
+                                   '</div>')
+
+
         # origina coverage_form
         ori_cov_obj = content_model.metadata.originalcoverage.all().first()
         ori_coverage_data_dict = {}
@@ -70,7 +99,7 @@ def landing_page(request, page):
             ori_coverage_data_dict['southlimit'] = ori_cov_obj.extent['southlimit']
             ori_coverage_data_dict['westlimit'] = ori_cov_obj.extent['westlimit']
         else:
-            ori_cov_obj = None
+            ori_coverage_data_dict = None
 
         ori_coverage_form = OriginalCoverageForm(initial=ori_coverage_data_dict,
                                                         res_short_id=content_model.short_id,
@@ -83,10 +112,13 @@ def landing_page(request, page):
 
         # update context
         ext_md_layout = Layout(
+                                geom_information_layout,
                                 ori_coverage_layout,
                                 )
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
         context['ori_coverage_form'] = ori_coverage_form
+        context['geom_information_form'] = geom_information_form
+
 
     hs_core_context = add_generic_context(request, page)
     context.update(hs_core_context)

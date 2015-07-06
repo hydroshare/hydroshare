@@ -10,7 +10,32 @@
                 {# Add the view mode html code below for resource extended meta tab #}
 
                 {% if extended_metadata_exists %}
-                    {# Add the original coverage meta #}
+
+                     {# Add the geometry information meta #}
+                    <h4 ><strong>Geometry Information:</strong></h4>
+                    {% if geometry_information %}
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+
+                        {% if geometry_information.geometryType %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Geometry Type:</strong></div>
+                                <div class="col-sm-8">{{ geometry_information.geometryType}}</div>
+                            </div>
+                        {% endif %}
+
+                         {% if geometry_information.featureCount %}
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Feature Count:</strong></div>
+                                <div class="col-sm-8">{{ geometry_information.featureCount}}</div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <p>Geometry information is not provided. </p>
+                    {% endif %}
+
+
+
+                     {# Add the original coverage meta #}
                     <h4 ><strong>Spatial Reference:</strong></h4>
                     {% if original_coverage %}
                         <hr style="margin-top: 0px;margin-bottom: 2px">
@@ -73,9 +98,10 @@
                     {% endif %}
 
 
+                    {# Add the Field Information meta #}
                     <h4 ><strong>Field Information:</strong></h4>
                     {% if field_information %}
-
+                    <hr style="margin-top: 0px;margin-bottom: 2px">
                              <table>
                              <tr class="row">
                                  <th >Name</th><th class="col-sm-2">Type</th> <th class="col-sm-2">Width</th> <th class="col-sm-2">Precision</th>
@@ -94,57 +120,6 @@
                         <p> Metadata information is not provided. </p>
                     {% endif %} {# variable section end #}
 
-
-
-
-                    {# Add the Variable meta #}
-                    {% if variables %}
-                        {% for variable in variables %}
-                            <h4 style="margin-top:20px"><strong>Variable:</strong></h4>
-                            <hr style=" margin-top: 0px;margin-bottom: 2px">
-                            {# Required extended meta subelement for Variable #}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Name:</strong></div>
-                                <div class="col-sm-8">{{ variable.name }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Unit:</strong></div>
-                                <div class="col-sm-8">{{ variable.unit }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Type:</strong></div>
-                                <div class="col-sm-8">{{ variable.type }}</div>
-                            </div>
-                            <div class="row">
-                                    <div class="col-sm-4"><strong>Shape:</strong></div>
-                                    <div class="col-sm-8">{{ variable.shape }}</div>
-                            </div>
-
-                            {# Optional extended meta subelement for Variable #}
-                            {% if variable.descriptive_name %}
-                                <div class="row">
-                                    <div class="col-sm-4"><strong>Long Name:</strong></div>
-                                    <div class="col-sm-8">{{ variable.descriptive_name }}</div>
-                                </div>
-                            {% endif %}
-                            {% if variable.missing_value %}
-                                <div class="row">
-                                    <div class="col-sm-4"><strong>Missing Value:</strong></div>
-                                    <div class="col-sm-8">{{ variable.missing_value }}</div>
-                                </div>
-                            {% endif %}
-                            {% if variable.method %}
-                                <div class="row">
-                                    <div class="col-sm-4"><strong>Comment:</strong></div>
-                                    <div class="col-sm-8">{{ variable.method }}</div>
-                                </div>
-                            {% endif %}
-                            </hr>
-                        {% endfor %}
-                    {% else %}
-                        <h4 style="margin-top:20px"><strong>Variable:</strong></h4>
-                        <p> Metadata information is not provided. </p>
-                    {% endif %} {# variable section end #}
 
                 {%  endif %}{# extended meta section end #}
 

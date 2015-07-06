@@ -72,12 +72,18 @@ def geofeature_pre_create_resource(sender, **kwargs):
                                                                 }
                     metadata.append(original_coverage_dict)
 
+                    #field
                     field_name_list=parsed_md_dict["field_meta_dict"]['field_list']
-
                     for field_name in field_name_list:
                         field_info_dict_item={}
                         field_info_dict_item['fieldinformation']=parsed_md_dict["field_meta_dict"]["field_attr_dict"][field_name]
                         metadata.append(field_info_dict_item)
+
+                    #geometry
+                    geometryinformation={"featureCount":parsed_md_dict["feature_count"],"geometryType":parsed_md_dict["geometry_type"]}
+                    metadata.append({"geometryinformation": geometryinformation})
+
+
                 except:
                     res_dublin_core_meta = {}
                     res_type_specific_meta = {}
@@ -98,21 +104,16 @@ def metadata_element_pre_create_handler(sender, **kwargs):
 
     if element_name == 'originalcoverage':
         element_form = OriginalCoverageValidationForm(data=request.POST)
+    elif element_name == 'fieldinformation':
+        element_form = FieldInformationValidationForm(data=request.POST)
+    elif element_name == 'geometryinformation':
+        element_form = GeometryInformationValidationForm(data=request.POST)
+
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
         return {'is_valid': False, 'element_data_dict': None}
 
-    # request = kwargs['request']
-    # element_name = kwargs['element_name']
-    #
-    # if element_name == 'originalcoverage':
-    #     element_form = OriginalCoverageForm(data=request.POST)
-    #
-    # if element_form.is_valid():
-    #     return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
-    # else:
-    #     return {'is_valid': False, 'element_data_dict': None}
 
 # This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_update, sender=GeographicFeatureResource)
@@ -122,6 +123,11 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 
     if element_name == 'originalcoverage':
         element_form = OriginalCoverageValidationForm(data=request.POST)
+    elif element_name == 'fieldinformation':
+        element_form = FieldInformationValidationForm(data=request.POST)
+    elif element_name == 'geometryinformation':
+        element_form = GeometryInformationValidationForm(data=request.POST)
+
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:

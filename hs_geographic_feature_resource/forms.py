@@ -105,8 +105,8 @@ class FieldInformationFormHelper(BaseFormHelper):
 
 class FieldInformationForm(forms.Form):
     fieldName = forms.CharField(max_length=50, label='Field Name')
-    fieldType = forms.CharField(max_length=50, label='Field Type', widget=forms.TextInput())
-    fieldTypeCode = forms.CharField(max_length=50, label='Field Type Code', widget=forms.TextInput())
+    fieldType = forms.CharField(max_length=50, label='Field Type')
+    fieldTypeCode = forms.CharField(max_length=50, label='Field Type Code')
     fieldWidth = forms.DecimalField(label='Field Width', widget=forms.TextInput())
     fieldPrecision = forms.DecimalField(label='Field Precision', widget=forms.TextInput())
 
@@ -173,3 +173,74 @@ class FieldInformationForm(forms.Form):
 
 
         return self.cleaned_data
+
+class FieldInformationValidationForm(forms.Form):
+    fieldName = forms.CharField(required=True, max_length=50)
+    fieldType = forms.CharField(required=True, max_length=50)
+    fieldTypeCode = forms.CharField(required=False, max_length=50,)
+    fieldWidth = forms.DecimalField(required=False)
+    fieldPrecision = forms.DecimalField(required=False)
+
+
+class GeometryInformationFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+                        Field('geometryType', css_class=field_width),
+                        Field('featureCount', css_class=field_width),
+                        )
+
+        super(GeometryInformationFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Geometry Information', *args, **kwargs)
+
+
+class GeometryInformationForm(forms.Form):
+    geometryType = forms.CharField(max_length=128, required=True, label='Geometry Type')
+    featureCount = forms.IntegerField(label='Feature Count', required=True, widget=forms.TextInput())
+
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(GeometryInformationForm, self).__init__(*args, **kwargs)
+        self.helper = GeometryInformationFormHelper(allow_edit, res_short_id, element_id, element_name='GeometryInformation')
+        self.delete_modal_form = None
+        self.number = 0
+        self.delete_modal_form = None
+        self.allow_edit = allow_edit
+        self.errors.clear()
+
+        if not allow_edit:
+            for field in self.fields.values():
+                field.widget.attrs['readonly'] = True
+                field.widget.attrs['style'] = "background-color:white;"
+        # enabling all element fields for editing
+        # else:
+        #     self.fields['projection'].widget.attrs['readonly'] = True
+        #     self.fields['projection'].widget.attrs['style'] = "background-color:white;"
+        #     self.fields['units'].widget.attrs['readonly'] = True
+        #     self.fields['units'].widget.attrs['style'] = "background-color:white;"
+
+    def clean(self):
+        # modify the form's cleaned_data dictionary
+        super(GeometryInformationForm, self).clean()
+
+        is_form_errors = False
+        out={}
+        for ele in ('geometryType', 'featureCount'):
+            if self.cleaned_data.get(ele, None):
+                v=self.cleaned_data[ele]
+                out[ele]=self.cleaned_data[ele]
+            else:
+                self._errors[ele] = ["Data for %s is missing" % ele]
+                is_form_errors = True
+                break
+
+        if not is_form_errors:
+            self.cleaned_data["geometryType"] = out["geometryType"]
+            self.cleaned_data["featureCount"] = out["featureCount"]
+
+        return self.cleaned_data
+
+
+class GeometryInformationValidationForm(forms.Form):
+    featureCount = forms.IntegerField(required=True)
+    geometryType = forms.CharField(max_length=128, required=True)
