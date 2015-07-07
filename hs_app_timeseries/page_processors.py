@@ -88,7 +88,7 @@ def landing_page(request, page):
 
 
         # get the context from hs_core
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
 
         # customize base context
         context['resource_type'] = 'Time Series Resource'
