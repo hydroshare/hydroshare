@@ -26,6 +26,7 @@ import os
 #
 # To create a new resource, use these two super-classes.
 #
+# TODO: doesnt have a page_processors.py????
 class InstResource(Page, AbstractResource):
     class Meta:
         verbose_name = 'RHESSys Instance Resource'
