@@ -182,7 +182,7 @@ def create_ref_time_series(request, *args, **kwargs):
 def add_dublin_core(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
-    context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None)
+    context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None, request=request)
     extended_metadata_exists = False
     if content_model.metadata.sites.all().first() or \
             content_model.metadata.variables.all().first() or \
