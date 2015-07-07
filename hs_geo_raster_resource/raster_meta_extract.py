@@ -220,6 +220,8 @@ def get_cell_and_band_info(raster_dataset):
                 cell_size_unit = 'meter'
         else:
             cell_size_unit = 'NA'
+            cell_size_x_value = 0  # if there is no projection info, the cell x and y size is set as 0.
+            cell_size_y_value = 0
 
         # get band count, cell no data value, cell data type
         band_count = raster_dataset.RasterCount
