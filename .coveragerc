@@ -4,5 +4,10 @@ omit =
    django_docker_processes/*
    django_irods/*
    dublincore/*
+   ga_ows/*
+   ga_resources/*
+   jquery_ui/*
+   */python-irodsclient/*
+   */pysqlite2/*
    */tests/*
    */migrations/*

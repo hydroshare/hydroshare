@@ -1,4 +1,7 @@
 __author__ = 'Pabitra'
+
+import unittest
+
 from django.test import TestCase
 from django.contrib.auth.models import User
 from mezzanine.generic.models import Rating, ThreadedComment

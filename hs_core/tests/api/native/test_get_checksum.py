@@ -2,6 +2,7 @@ __author__ = 'Tian Gan'
 
 ## unit test for get_checksum() from resource.py
 
+import unittest
 
 from django.test import TestCase
 from django.contrib.auth.models import User, Group

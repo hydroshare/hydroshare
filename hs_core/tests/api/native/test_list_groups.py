@@ -5,6 +5,8 @@ Tastypie API tests for list_groups
 comments-
 
 """
+import unittest
+
 from tastypie.test import ResourceTestCase, TestApiClient
 from tastypie.serializers import Serializer
 from django.contrib.auth.models import Group, User

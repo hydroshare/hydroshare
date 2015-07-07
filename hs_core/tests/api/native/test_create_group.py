@@ -1,4 +1,7 @@
 __author__ = 'Pabitra'
+
+import unittest
+
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
 from hs_core.models import GroupOwnership
@@ -14,6 +17,7 @@ class TestCreateGroupAPI(TestCase):
         Group.objects.all().delete()
         pass
 
+    @unittest.skip
     def test_create_group_no_member_no_owner(self):
         group_name = 'Test Group'
         test_group = hydroshare.create_group(group_name)
