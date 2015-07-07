@@ -642,7 +642,6 @@ ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_edit_groups DROP 
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_view_groups DROP CONSTRAINT hs_modelinstance_modelinstanc_modelinstanceresource_id_gro_key1;
 ALTER TABLE ONLY public.hs_modelinstance_executedby DROP CONSTRAINT hs_modelinstance_executedby_pkey;
 ALTER TABLE ONLY public.hs_model_program_mpmetadata DROP CONSTRAINT hs_model_program_mpmetadata_pkey;
-ALTER TABLE ONLY public.hs_model_program_mpmetadata DROP CONSTRAINT hs_model_program_mpmetada_content_type_id_6d7804f108cda18d_uniq;
 ALTER TABLE ONLY public.hs_model_program_modelprogramresource_view_users DROP CONSTRAINT hs_model_program_modelprogramresource_view_users_pkey;
 ALTER TABLE ONLY public.hs_model_program_modelprogramresource_view_groups DROP CONSTRAINT hs_model_program_modelprogramresource_view_groups_pkey;
 ALTER TABLE ONLY public.hs_model_program_modelprogramresource DROP CONSTRAINT hs_model_program_modelprogramresource_pkey;
@@ -9681,8 +9680,6 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 17	django_docker_processes	0001_initial	2015-05-15 20:42:05.22799+00
 18	hs_model_program	0001_initial	2015-05-15 20:42:31.546003+00
 19	hs_modelinstance	0001_initial	2015-05-15 20:42:32.769538+00
-20	hs_model_program	0002_auto_20150527_1944	2015-06-26 18:55:03.038896+00
-21	hs_swat_modelinstance	0001_initial	2015-06-26 18:58:19.023392+00
 \.
 
 
@@ -9690,7 +9687,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 21, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 19, true);
 
 
 --
@@ -9714,8 +9711,6 @@ SELECT pg_catalog.setval('django_redirect_id_seq', 1, false);
 
 COPY django_session (session_key, session_data, expire_date) FROM stdin;
 flxpn3hii2goadcoy7adra8bxyt1vph8	Zjk0NzMwNTU0OWExODViN2ZhZmJlOTc3NzZhZTFkOTI3YmM2MmIyNzp7Il9hdXRoX3VzZXJfaGFzaCI6IjVmNTUxYjkxYzM4MmU2NTJiMDI3YjA5ZGUxMzc0NjhlYTFhMzk4NzEiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJtZXp6YW5pbmUuY29yZS5hdXRoX2JhY2tlbmRzLk1lenphbmluZUJhY2tlbmQiLCJfYXV0aF91c2VyX2lkIjoxfQ==	2015-05-29 20:14:27.011195+00
-rs391fcr96eeg1d4ju0pnn1zzur8ynhy	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-07-10 18:56:58.097448+00
-5a6bs2zh3z4wyjx15ah1skh234yx1ftq	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-07-10 18:56:58.105578+00
 \.
 
 
@@ -13220,14 +13215,6 @@ ALTER TABLE ONLY hs_model_program_modelprogramresource_view_groups
 
 ALTER TABLE ONLY hs_model_program_modelprogramresource_view_users
     ADD CONSTRAINT hs_model_program_modelprogramresource_view_users_pkey PRIMARY KEY (id);
-
-
---
--- Name: hs_model_program_mpmetada_content_type_id_6d7804f108cda18d_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY hs_model_program_mpmetadata
-    ADD CONSTRAINT hs_model_program_mpmetada_content_type_id_6d7804f108cda18d_uniq UNIQUE (content_type_id, object_id);
 
 
 --
