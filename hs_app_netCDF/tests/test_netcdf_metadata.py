@@ -1,5 +1,7 @@
 __author__ = 'pabitra'
 
+import unittest
+
 from unittest import TestCase
 from django.contrib.contenttypes.models import ContentType
 from hs_core.hydroshare import utils, users, resource
@@ -61,6 +63,7 @@ class TestNetCDFMetadata(TestCase):
         Language.objects.all().delete()
         Variable.objects.all().delete()
 
+    @unittest.skip
     def test_netcdf_metadata(self):
         # add a type element
         resource.create_metadata_element(self.resNetCDF.short_id, 'type', url="http://hydroshare.org/netcdf")

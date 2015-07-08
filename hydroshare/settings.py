@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
-TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+#TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
 
 import os
 import importlib
