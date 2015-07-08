@@ -2,6 +2,7 @@ __author__ = 'Tian Gan'
 
 ## unit test for get_checksum() from resource.py
 
+import unittest
 
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
@@ -32,6 +33,7 @@ class TestGetChecksum(TestCase):
         User.objects.all().delete()
         GenericResource.objects.all().delete()
 
+    @unittest.skip
     def test_get_checksum(self):
         self.assertRaises(
             NotImplementedError,

@@ -51,7 +51,7 @@ def landing_page(request, page):
 
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
-                                                   extended_metadata_layout=ext_md_layout)
+                                                   extended_metadata_layout=ext_md_layout, request=request)
 
         context['resource_type'] = 'Model Instance Resource'
         context['model_output_form'] = model_output_form

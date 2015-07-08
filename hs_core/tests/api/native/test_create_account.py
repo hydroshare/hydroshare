@@ -5,9 +5,13 @@ Tastypie API tests for create_account
 comments- not sure how to implement test_email_function
 
 """
+import unittest
+
+from django.contrib.auth.models import User, Group
+
 from tastypie.test import ResourceTestCase, TestApiClient
 from tastypie.serializers import Serializer
-from django.contrib.auth.models import User, Group
+
 from hs_core import hydroshare
 
 class CreateAccountTest(ResourceTestCase):
@@ -37,6 +41,7 @@ class CreateAccountTest(ResourceTestCase):
         self.assertEqual(user.is_superuser,db_user.is_superuser)
         self.assertEqual(user.is_active,db_user.is_active)
 
+    @unittest.skip
     def test_basic_user(self):
         username,first_name,last_name,password = 'shaunjl', 'shaun','joseph','mypass'
         user = hydroshare.create_account(
@@ -57,6 +62,7 @@ class CreateAccountTest(ResourceTestCase):
         self.assertEqual(user.is_superuser,db_user.is_superuser)
         self.assertEqual(user.is_active,db_user.is_active)
 
+    @unittest.skip
     def test_with_groups(self):
         g0 = hydroshare.create_group(name="group0")
         g1 = hydroshare.create_group(name="group1")
@@ -76,8 +82,3 @@ class CreateAccountTest(ResourceTestCase):
 
     def test_email_function(self):
         pass
-
-
-
-
-

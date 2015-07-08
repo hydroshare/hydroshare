@@ -12,6 +12,8 @@ __author__ = 'Tian Gan'
 #  u'last_login': u'2014-05-28T21:58:31.324975', u'resource_uri': u'/api/v1/user/1/', u'id': 1,
 #  u'date_joined': u'2014-05-28T21:58:31.324975'}
 
+import unittest
+
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
 from hs_core import hydroshare
@@ -41,6 +43,7 @@ class TestGetUserInfo(TestCase):
         User.objects.all().delete()
         Group.objects.all().delete()
 
+    @unittest.skip
     def test_get_user_info_by_obj(self):
         user_info = hydroshare.get_user_info(self.user)
         # print serializers.serialize('json', User.objects.all())
@@ -78,7 +81,7 @@ class TestGetUserInfo(TestCase):
         #     [self.group.name],
         #     msg='user group info is not correct'
         # )
-
+    @unittest.skip
     def test_get_user_info_by_pk(self):
         try:
             user_info = hydroshare.get_user_info(self.user.pk)

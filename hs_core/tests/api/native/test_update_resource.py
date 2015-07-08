@@ -1,5 +1,7 @@
 __author__ = 'Pabitra'
 
+import unittest
+
 from unittest import TestCase
 from hs_core.hydroshare import resource, get_resource_by_shortkey
 from hs_core.hydroshare import users
@@ -42,6 +44,7 @@ class TestUpdateResource(TestCase):
         Group.objects.all().delete()
         GenericResource.objects.all().delete()
 
+    @unittest.skip
     def test_update_resource_with_metadata(self):
         # add these new metadata elements
         metadata_dict = [
