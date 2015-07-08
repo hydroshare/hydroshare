@@ -2,15 +2,23 @@ import arrow
 import os
 import shutil
 import errno
+import tempfile
+import mimetypes
+import zipfile
 
 from foresite import *
 from rdflib import URIRef, Namespace
+import bagit
 
 from mezzanine.conf import settings
 
 from hs_core.models import Bags, ResourceFile
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
+
+
+class HsBagitException(Exception):
+    pass
 
 def delete_bag(resource):
     """
@@ -204,3 +212,39 @@ def create_bag(resource):
     )
 
     return b
+
+
+def read_bag(bag_path):
+    """
+
+    :param bag_path:
+    :return:
+    """
+    #import pdb; pdb.set_trace()
+    tmpdir = None
+    unpacked_bag_path = None
+
+    try:
+        if not os.path.exists(bag_path):
+            raise HsBagitException('Bag does not exist')
+        if os.path.isdir(bag_path):
+            unpacked_bag_path = bag_path
+        else:
+            mtype = mimetypes.guess_type(bag_path)
+            if mtype[0] != 'application/zip':
+                msg = "Expected bag to have MIME type application/zip, but it has {0} instead.".format(mtype[0])
+                raise HsBagitException(msg)
+            tmpdir = tempfile.mkdtemp()
+            zfile = zipfile.ZipFile(bag_path)
+            zroot = zfile.namelist()[0].split(os.sep)[0]
+            zfile.extractall(tmpdir)
+            unpacked_bag_path = os.path.join(tmpdir, zroot)
+
+        bag = bagit.Bag(unpacked_bag_path)
+        if not bag.is_valid():
+            msg = "Bag is not valid"
+            raise HsBagitException(msg)
+
+    finally:
+        if tmpdir:
+            shutil.rmtree(tmpdir)
