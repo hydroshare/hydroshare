@@ -36,23 +36,23 @@
                     {% endif %}
                     <hr style="border:0">
                 </div>
-                <div>
-                    {% if fees %}
-                        <h4><strong>Fees:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        {% for fee in fees %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Description</strong></div>
-                                <div class="col-sm-8">{{ fee.description }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Amount</strong></div>
-                                <div class="col-sm-8">{{ fee.value }}</div>
-                            </div>
-                        {% endfor %}
-                    <hr style="border:0">
-                    {% endif %}
-                </div>
+{#                <div>#}
+{#                    {% if fees %}#}
+{#                        <h4><strong>Fees:</strong></h4>#}
+{#                        <hr style="margin-top: 0px;margin-bottom: 2px">#}
+{#                        {% for fee in fees %}#}
+{#                            <div class="row">#}
+{#                                <div class="col-sm-4"><strong>Description</strong></div>#}
+{#                                <div class="col-sm-8">{{ fee.description }}</div>#}
+{#                            </div>#}
+{#                            <div class="row">#}
+{#                                <div class="col-sm-4"><strong>Amount</strong></div>#}
+{#                                <div class="col-sm-8">{{ fee.value }}</div>#}
+{#                            </div>#}
+{#                        {% endfor %}#}
+{#                    <hr style="border:0">#}
+{#                    {% endif %}#}
+{#                </div>#}
                 <div>
                     {% if version %}
                         <h4><strong>Version:</strong></h4>

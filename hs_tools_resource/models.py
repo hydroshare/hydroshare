@@ -60,7 +60,7 @@ processor_for(ToolResource)(resource_processor)
 class RequestUrlBase(AbstractMetaDataElement):
     term = 'Request Url Base'
     value = models.CharField(null=True, max_length="500") # whatever the user gives us- format is "http://www.example.com/{resource-info}"
-
+    resShortID = models.CharField(max_length=100, default="UNKNOWN")
 
     @classmethod
     def create(cls, **kwargs):
@@ -72,6 +72,12 @@ class RequestUrlBase(AbstractMetaDataElement):
                 if url_base:
                     raise ValidationError('There can only be one Request Url Base')
                 url_base = RequestUrlBase.objects.create(value=kwargs['value'], content_object=content_object)
+
+                # check for the optional fields and save them to the BandInformation metadata
+                for key, value in kwargs.iteritems():
+                    if key in ('resShortID'):
+                        setattr(url_base, key, value)
+                url_base.save()
                 return url_base
             else:
                 raise ValidationError('Metadata instance for which Request Url Base element to be created is missing.')
@@ -85,6 +91,7 @@ class RequestUrlBase(AbstractMetaDataElement):
         if url_base:
             if 'value' in kwargs:
                 url_base.value = kwargs['value']
+                url_base.resShortID = kwargs['resShortID']
                 url_base.save()
             else:
                 raise ValidationError('Value of Request Url Base is missing')
@@ -137,42 +144,42 @@ class ToolResourceType(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No Resource Type element was found for id:%d." % element_id)
 
-class Fee(AbstractMetaDataElement):
-    term = 'Fee'
-    description = models.TextField()
-    value = models.DecimalField(max_digits=10, decimal_places=2)
-
-    @classmethod
-    def create(cls, **kwargs):
-        if 'content_object' in kwargs:
-            metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            fee = Fee.objects.create(value=kwargs.get('value'),
-                                     description=kwargs.get('description'),
-                                     content_object=metadata_obj)
-            return fee
-        else:
-            raise ValidationError('metadata object is missing from inputs')
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        fee = Fee.objects.get(id=element_id)
-        if fee:
-            if 'value' in kwargs:
-                fee.value = kwargs['value']
-            if 'description' in kwargs:
-                fee.description = kwargs['description']
-            fee.save()
-        else:
-            raise ObjectDoesNotExist("No Fee element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        fee = Fee.objects.get(id=element_id)
-        if fee:
-            fee.delete()
-        else:
-            raise ObjectDoesNotExist("No Fee element was found for id:%d." % element_id)
+# class Fee(AbstractMetaDataElement):
+#     term = 'Fee'
+#     description = models.TextField()
+#     value = models.DecimalField(max_digits=10, decimal_places=2)
+#
+#     @classmethod
+#     def create(cls, **kwargs):
+#         if 'content_object' in kwargs:
+#             metadata_obj = kwargs['content_object']
+#             metadata_type = ContentType.objects.get_for_model(metadata_obj)
+#             fee = Fee.objects.create(value=kwargs.get('value'),
+#                                      description=kwargs.get('description'),
+#                                      content_object=metadata_obj)
+#             return fee
+#         else:
+#             raise ValidationError('metadata object is missing from inputs')
+#
+#     @classmethod
+#     def update(cls, element_id, **kwargs):
+#         fee = Fee.objects.get(id=element_id)
+#         if fee:
+#             if 'value' in kwargs:
+#                 fee.value = kwargs['value']
+#             if 'description' in kwargs:
+#                 fee.description = kwargs['description']
+#             fee.save()
+#         else:
+#             raise ObjectDoesNotExist("No Fee element was found for the provided id:%s" % kwargs['id'])
+#
+#     @classmethod
+#     def remove(cls, element_id):
+#         fee = Fee.objects.get(id=element_id)
+#         if fee:
+#             fee.delete()
+#         else:
+#             raise ObjectDoesNotExist("No Fee element was found for id:%d." % element_id)
 
 
 class ToolVersion(AbstractMetaDataElement):
@@ -220,7 +227,7 @@ class ToolMetaData(CoreMetaData):
     # should be only one Request Url Base metadata element
     url_bases = generic.GenericRelation(RequestUrlBase)
     res_types = generic.GenericRelation(ToolResourceType)
-    fees = generic.GenericRelation(Fee)
+    #fees = generic.GenericRelation(Fee)
     # should be only one Version metadata element
     versions = generic.GenericRelation(ToolVersion)
 
@@ -231,7 +238,7 @@ class ToolMetaData(CoreMetaData):
         # add the name of any additional element to the list
         elements.append('RequestUrlBase')   # needs to match the class name
         elements.append('ToolResourceType')
-        elements.append('Fee')
+        #elements.append('Fee')
         elements.append('ToolVersion')
         return elements
 
@@ -259,13 +266,13 @@ class ToolMetaData(CoreMetaData):
             hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}type' % self.NAMESPACES['hsterms'])
             hsterms_name.text = type.tool_res_type
 
-        for fee in self.fees.all():
-            hsterms_method = etree.SubElement(container, '{%s}Fee' % self.NAMESPACES['hsterms'])
-            hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = unicode(fee.value)
-            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}description' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = fee.description
+        # for fee in self.fees.all():
+        #     hsterms_method = etree.SubElement(container, '{%s}Fee' % self.NAMESPACES['hsterms'])
+        #     hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
+        #     hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
+        #     hsterms_name.text = unicode(fee.value)
+        #     hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}description' % self.NAMESPACES['hsterms'])
+        #     hsterms_name.text = fee.description
 
         for v in self.versions.all():
             hsterms_method = etree.SubElement(container, '{%s}ToolVersion' % self.NAMESPACES['hsterms'])

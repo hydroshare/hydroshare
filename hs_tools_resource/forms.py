@@ -1,4 +1,4 @@
-__author__ = 'Shaun'
+__author__ = 'Drew, Jeff & Shaun'
 from django.forms import ModelForm, BaseFormSet
 from django import forms
 from django.forms.models import formset_factory
@@ -17,6 +17,7 @@ class UrlBaseFormHelper(BaseFormHelper):
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('value', css_class=field_width),
+                        Field('resShortID', type="hidden"),
                  )
 
         super(UrlBaseFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -30,7 +31,7 @@ class UrlBaseForm(ModelForm):
 
     class Meta:
         model = RequestUrlBase
-        fields = ['value']
+        fields = ['value','resShortID']
         exclude = ['content_object']
 
 
@@ -73,49 +74,49 @@ class ResTypeValidationForm(forms.Form):
     tool_res_type = forms.Field()
 
 
-class FeeFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
-        field_width = 'form-control input-sm'
-        # change the fields name here
-        layout = Layout(
-                     Field('description', css_class=field_width),
-                     Field('value', css_class=field_width),
-                )
-
-        super(FeeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
-
-
-class FeeForm(ModelForm):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        super(FeeForm, self).__init__(*args, **kwargs)
-        self.helper = FeeFormHelper(allow_edit, res_short_id, element_id, element_name='Fee')
-        self.delete_modal_form = None
-        self.number = 0
-        self.allow_edit = allow_edit
-        if res_short_id:
-            self.action = "/hsapi/_internal/%s/fee/add-metadata/" % res_short_id
-        else:
-            self.action = ""
-
-    @property
-    def form_id(self):
-        form_id = 'id_fee_%s' % self.number
-        return form_id
-
-    @property
-    def form_id_button(self):
-        form_id = 'id_fee_%s' % self.number
-        return "'" + form_id + "'"
-
-    class Meta:
-        model = Fee
-        fields = ['description', 'value']
-        exclude = ['content_object']
+# class FeeFormHelper(BaseFormHelper):
+#     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
+#         field_width = 'form-control input-sm'
+#         # change the fields name here
+#         layout = Layout(
+#                      Field('description', css_class=field_width),
+#                      Field('value', css_class=field_width),
+#                 )
+#
+#         super(FeeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 
-class FeeValidationForm(forms.Form):
-    description = forms.CharField(min_length="0")
-    value = forms.DecimalField(max_digits=10, decimal_places=2)
+# class FeeForm(ModelForm):
+#     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+#         super(FeeForm, self).__init__(*args, **kwargs)
+#         self.helper = FeeFormHelper(allow_edit, res_short_id, element_id, element_name='Fee')
+#         self.delete_modal_form = None
+#         self.number = 0
+#         self.allow_edit = allow_edit
+#         if res_short_id:
+#             self.action = "/hsapi/_internal/%s/fee/add-metadata/" % res_short_id
+#         else:
+#             self.action = ""
+#
+#     @property
+#     def form_id(self):
+#         form_id = 'id_fee_%s' % self.number
+#         return form_id
+#
+#     @property
+#     def form_id_button(self):
+#         form_id = 'id_fee_%s' % self.number
+#         return "'" + form_id + "'"
+#
+#     class Meta:
+#         model = Fee
+#         fields = ['description', 'value']
+#         exclude = ['content_object']
+
+
+# class FeeValidationForm(forms.Form):
+#     description = forms.CharField(min_length="0")
+#     value = forms.DecimalField(max_digits=10, decimal_places=2)
 
 
 # class BaseFeeFormSet(BaseFormSet):
@@ -135,60 +136,60 @@ class FeeValidationForm(forms.Form):
 #FeeFormSet = formset_factory(FeeForm, formset=BaseFeeFormSet, extra=0)
 
 
-ModalDialogLayoutAddFee = Layout(
-                            HTML('<div class="modal fade" id="add-fee-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
-                                    '<div class="modal-dialog">'
-                                        '<div class="modal-content">'
-                                            '<form action="{{ add_fee_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
-                                            '{% csrf_token %} '
-                                            '<input name="resource-mode" type="hidden" value="edit"/>'
-                                            '<div class="modal-header">'
-                                                '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
-                                                '<h4 class="modal-title" id="myModalLabel">Add Fee</h4>'
-                                            '</div>'
-                                            '<div class="modal-body">'
-                                                '{% csrf_token %}'
-                                                '<div class="form-group">'
-                                                    '{% load crispy_forms_tags %} '
-                                                    '{% crispy add_fee_modal_form %} '
-                                                '</div>'
-                                            '</div>'
-                                            '<div class="modal-footer">'
-                                                '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
-                                                '<button type="submit" class="btn btn-primary">Save changes</button>'
-                                            '</div>'
-                                            '</form>'
-                                        '</div>'
-                                    '</div>'
-                                '</div>'
-                            )
-                        )
-
-FeeLayoutEdit = Layout(
-                            HTML('{% load crispy_forms_tags %} '
-                                 '{% for form in fee_formset.forms %} '
-                                     '<div class="item form-group"> '
-                                     '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
-                                     '{% crispy form %} '
-                                    '<div class="row" style="margin-top:10px">'
-                                        '<div class="col-md-10">'
-                                            '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-fee-element-dialog_{{ form.number }}" value="Delete Fee">'
-                                        '</div>' #change
-                                        '<div class="col-md-2">'
-                                            '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'  # change
-                                        '</div>'
-                                    '</div>'
-                                    '{% crispy form.delete_modal_form %} '
-                                    '</form> '
-                                    '</div> '
-                                '{% endfor %}'
-                            ),
-                            HTML('<div style="margin-top:10px">'
-                                 '<p><a id="add-fee" class="btn btn-success" data-toggle="modal" data-target="#add-fee-dialog">'
-                                 '<i class="fa fa-plus"></i>Add another Fee</a>'
-                                 '</div>'
-                            ),
-                    )
+# ModalDialogLayoutAddFee = Layout(
+#                             HTML('<div class="modal fade" id="add-fee-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
+#                                     '<div class="modal-dialog">'
+#                                         '<div class="modal-content">'
+#                                             '<form action="{{ add_fee_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
+#                                             '{% csrf_token %} '
+#                                             '<input name="resource-mode" type="hidden" value="edit"/>'
+#                                             '<div class="modal-header">'
+#                                                 '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
+#                                                 '<h4 class="modal-title" id="myModalLabel">Add Fee</h4>'
+#                                             '</div>'
+#                                             '<div class="modal-body">'
+#                                                 '{% csrf_token %}'
+#                                                 '<div class="form-group">'
+#                                                     '{% load crispy_forms_tags %} '
+#                                                     '{% crispy add_fee_modal_form %} '
+#                                                 '</div>'
+#                                             '</div>'
+#                                             '<div class="modal-footer">'
+#                                                 '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
+#                                                 '<button type="submit" class="btn btn-primary">Save changes</button>'
+#                                             '</div>'
+#                                             '</form>'
+#                                         '</div>'
+#                                     '</div>'
+#                                 '</div>'
+#                             )
+#                         )
+#
+# FeeLayoutEdit = Layout(
+#                             HTML('{% load crispy_forms_tags %} '
+#                                  '{% for form in fee_formset.forms %} '
+#                                      '<div class="item form-group"> '
+#                                      '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
+#                                      '{% crispy form %} '
+#                                     '<div class="row" style="margin-top:10px">'
+#                                         '<div class="col-md-10">'
+#                                             '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-fee-element-dialog_{{ form.number }}" value="Delete Fee">'
+#                                         '</div>' #change
+#                                         '<div class="col-md-2">'
+#                                             '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'  # change
+#                                         '</div>'
+#                                     '</div>'
+#                                     '{% crispy form.delete_modal_form %} '
+#                                     '</form> '
+#                                     '</div> '
+#                                 '{% endfor %}'
+#                             ),
+#                             HTML('<div style="margin-top:10px">'
+#                                  '<p><a id="add-fee" class="btn btn-success" data-toggle="modal" data-target="#add-fee-dialog">'
+#                                  '<i class="fa fa-plus"></i>Add another Fee</a>'
+#                                  '</div>'
+#                             ),
+#                     )
 
 
 class VersionFormHelper(BaseFormHelper):

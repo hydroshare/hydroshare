@@ -5,10 +5,10 @@ from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import ToolResourceType
 from django_irods.storage import IrodsStorage
+from hs_core import hydroshare
 
 @processor_for(GenericResource)
 def landing_page(request, page):
-    # TODO: this if/else is an exact copy of the function 'check_resource_mode', defined below
     if request.method == "GET":
         resource_mode = request.session.get('resource-mode', None)
         if resource_mode == 'edit':
@@ -24,19 +24,6 @@ def landing_page(request, page):
 # resource type specific app needs to call this method to inject a crispy_form layout
 # object for displaying metadata UI for the extended metadata for their resource
 def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
-    """
-    :param page: which page to get the template context for
-    :param user: the user who is viewing the page
-    :param resource_edit: True if and only if the page should render in edit mode
-    :param extended_metadata_layout: layout information used to build an ExtendedMetadataForm
-    :param request: the Django request associated with the page load
-    :return: the basic template context (a python dict) used to render a resource page. can and should be extended
-                by page/resource-specific page_processors
-
-
-    TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
-                - split into two functions: get_readonly_page_context(...) and get_editable_page_context(...)
-    """
     file_type_error=''
     if request:
         file_type_error = request.session.get("file_type_error", None)
@@ -44,18 +31,32 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session["file_type_error"]
 
     content_model = page.get_content_model()
+    edit_mode = False
     file_validation_error = None
+    if user.username == 'admin' or \
+                    content_model.creator == user or \
+                    user in (content_model.owners.all() | content_model.edit_users.all()):
+        edit_mode = True
 
     metadata_status = _get_metadata_status(content_model)
 
     relevant_tools = []
     for res_type in ToolResourceType.objects.all():
         if str(content_model.content_model).lower() in str(res_type.tool_res_type).lower():
-            url = res_type.content_object.url_bases.first()
-            if url:
-                tl = {'title': res_type.content_object.title,
-                      'url': "{}{}{}".format(url.value, "/?res_id=", content_model.short_id)}
-                relevant_tools.append(tl)
+            url_obj = res_type.content_object.url_bases.first()
+            tool_res_obj = hydroshare.get_resource_by_shortkey(url_obj.resShortID)
+            tool_edit_mode = False
+            if tool_res_obj.public or user.username == 'admin' or \
+                    tool_res_obj.creator == user or \
+                    user in (tool_res_obj.owners.all() | tool_res_obj.edit_users.all() | tool_res_obj.view_users.all()):
+                tool_edit_mode = True
+            tool_url = url_obj.value
+            if tool_res_obj:
+                if tool_res_obj.public or tool_edit_mode:
+                    u=user.username if len(user.username)>0 else "anonymous"
+                    tl = {'title': res_type.content_object.title,
+                          'url': "{0}{1}{2}{3}{4}".format(tool_url, "/?res_id=", content_model.short_id,"&u=",u)}
+                    relevant_tools.append(tl)
 
 
     just_created = False
@@ -68,7 +69,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     bag_url = AbstractResource.bag_url(content_model.short_id)
 
-    # user requested the resource in READONLY mode
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
         if len(temporal_coverages) > 0:
@@ -134,31 +134,26 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         }
         return context
 
-    # user requested the resource in EDIT MODE
+    # resource in edit mode
+    add_creator_modal_form = CreatorForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
+    add_contributor_modal_form = ContributorForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
+    add_relation_modal_form = RelationForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
+    add_source_modal_form = SourceForm(allow_edit=edit_mode, res_short_id=content_model.short_id)
 
-    # whether the user has permission to change the model
-    can_change = content_model.can_change(request)
-
-    add_creator_modal_form = CreatorForm(allow_edit=can_change, res_short_id=content_model.short_id)
-    add_contributor_modal_form = ContributorForm(allow_edit=can_change, res_short_id=content_model.short_id)
-    add_relation_modal_form = RelationForm(allow_edit=can_change, res_short_id=content_model.short_id)
-    add_source_modal_form = SourceForm(allow_edit=can_change, res_short_id=content_model.short_id)
-
-    title_form = TitleForm(instance=content_model.metadata.title, allow_edit=can_change, res_short_id=content_model.short_id,
+    title_form = TitleForm(instance=content_model.metadata.title, allow_edit=edit_mode, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.title.id if content_model.metadata.title else None)
 
     keywords = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
-    subjects_form = SubjectsForm(initial={'value': keywords}, allow_edit=can_change, res_short_id=content_model.short_id,
+    subjects_form = SubjectsForm(initial={'value': keywords}, allow_edit=edit_mode, res_short_id=content_model.short_id,
                              element_id=None)
 
-    abstract_form = AbstractForm(instance=content_model.metadata.description, allow_edit=can_change, res_short_id=content_model.short_id,
+    abstract_form = AbstractForm(instance=content_model.metadata.description, allow_edit=edit_mode, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.description.id if content_model.metadata.description else None)
 
-    CreatorFormSetEdit = formset_factory(wraps(CreatorForm)(partial(CreatorForm, allow_edit=can_change)), formset=BaseCreatorFormSet, extra=0)
+    CreatorFormSetEdit = formset_factory(wraps(CreatorForm)(partial(CreatorForm, allow_edit=edit_mode)), formset=BaseCreatorFormSet, extra=0)
 
     creator_formset = CreatorFormSetEdit(initial=content_model.metadata.creators.all().values(), prefix='creator')
     index = 0
-    # TODO: dont track index manually. use enumerate, or zip
     creators = content_model.metadata.creators.all()
     ProfileLinksFormSetEdit = formset_factory(ProfileLinksForm, formset=BaseProfileLinkFormSet, extra=0)
 
@@ -174,12 +169,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         creator_form.number = creator_form.initial['id']
         index += 1
 
-    ContributorFormSetEdit = formset_factory(wraps(ContributorForm)(partial(ContributorForm, allow_edit=can_change)), formset=BaseContributorFormSet, extra=0)
+    ContributorFormSetEdit = formset_factory(wraps(ContributorForm)(partial(ContributorForm, allow_edit=edit_mode)), formset=BaseContributorFormSet, extra=0)
     contributor_formset = ContributorFormSetEdit(initial=content_model.metadata.contributors.all().values(), prefix='contributor')
 
     contributors = content_model.metadata.contributors.all()
     index = 0
-    # TODO: dont track index manually. use enumerate, or zip
     for contributor_form in contributor_formset.forms:
         contributor_form.action = "/hsapi/_internal/%s/contributor/%s/update-metadata/" % (content_model.short_id, contributor_form.initial['id'])
         contributor_form.profile_link_formset = ProfileLinksFormSetEdit(initial=contributors[index].external_links.all().values('type', 'url'), prefix='contributor_links-%s' % index)
@@ -192,7 +186,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         contributor_form.number = contributor_form.initial['id']
         index += 1
 
-    RelationFormSetEdit = formset_factory(wraps(RelationForm)(partial(RelationForm, allow_edit=can_change)), formset=BaseFormSet, extra=0)
+    RelationFormSetEdit = formset_factory(wraps(RelationForm)(partial(RelationForm, allow_edit=edit_mode)), formset=BaseFormSet, extra=0)
     relation_formset = RelationFormSetEdit(initial=content_model.metadata.relations.all().values(), prefix='relation')
 
     for relation_form in relation_formset.forms:
@@ -200,7 +194,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         relation_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'relation', relation_form.initial['id'])
         relation_form.number = relation_form.initial['id']
 
-    SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm, allow_edit=can_change)), formset=BaseFormSet, extra=0)
+    SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm, allow_edit=edit_mode)), formset=BaseFormSet, extra=0)
     source_formset = SourceFormSetEdit(initial=content_model.metadata.sources.all().values(), prefix='source')
 
     # IdentifierFormSetEdit = formset_factory(IdentifierForm, formset=BaseFormSet, extra=0)
@@ -215,12 +209,12 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         source_form.number = source_form.initial['id']
 
     rights_form = RightsForm(instance=content_model.metadata.rights,
-                             allow_edit=can_change,
+                             allow_edit=edit_mode,
                              res_short_id=content_model.short_id,
                              element_id=content_model.metadata.rights.id if content_model.metadata.rights else None)
 
     language_form = LanguageForm(instance=content_model.metadata.language,
-                                 allow_edit=can_change,
+                                 allow_edit=edit_mode,
                                  res_short_id=content_model.short_id,
                                  element_id=content_model.metadata.language.id if content_model.metadata.language
                                  else None)
@@ -248,7 +242,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         temporal_coverage = None
 
     coverage_temporal_form = CoverageTemporalForm(initial= temporal_coverage_data_dict,
-                                                  allow_edit=can_change,
+                                                  allow_edit=edit_mode,
                                                   res_short_id=content_model.short_id,
                                                   element_id=temporal_coverage.id if temporal_coverage else None)
 
@@ -277,14 +271,14 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         spatial_coverage = None
 
     coverage_spatial_form = CoverageSpatialForm(initial=spatial_coverage_data_dict,
-                                                allow_edit=can_change,
+                                                allow_edit=edit_mode,
                                                 res_short_id=content_model.short_id,
                                                 element_id=spatial_coverage.id if spatial_coverage else None)
 
     # metadata_form = MetaDataForm(resource_mode='edit' if edit_mode else 'view',
     #                              extended_metadata_layout=extended_metadata_layout)
 
-    metadata_form = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
+    metadata_form = ExtendedMetadataForm(resource_mode='edit' if edit_mode else 'view',
                                  extended_metadata_layout=extended_metadata_layout)
 
     context = {'metadata_form': metadata_form,
@@ -319,25 +313,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
 
 def check_resource_mode(request):
-    """
-    Determines whether the `request` represents an attempt to edit a resource. A request is considered an attempt
-    to edit if any of the following conditions are met:
-        1. the HTTP verb is not "GET"
-        2. the HTTP verb is "GET" and the 'resource-mode' property is set to 'edit'
-
-    This function erases the 'resource-mode' property of `request.session` if it exists.
-
-    TODO:
-        1. simplify this function by:
-            a) no side effects (dont remove 'resource-mode')
-            b) the 2 conditions can be expressed in one line:
-                    return request.method != "GET" :keyword or request.session.get('resource-mode', None) == 'edit'
-        2. rename this function to better express its return value:
-            - perhaps requests_edit_mode(request)
-
-    :param request: the `request` for a resource
-    :return: True if the request represents an attempt to edit a resource, and False otherwise.
-    """
     if request.method == "GET":
         resource_mode = request.session.get('resource-mode', None)
         if resource_mode == 'edit':
