@@ -220,6 +220,7 @@ class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceTo
     def delete(self, request, pk):
         view_utils.authorize(request, pk, full=True)
         hydroshare.delete_resource(pk)
+
         # spec says we need return the id of the resource that got deleted - otherwise would have used status code 204
         # and not 200
         return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
@@ -382,6 +383,8 @@ class AccessRulesUpdate(APIView):
             raise ValidationError(detail=access_rules_validator.errors)
 
         validated_request_data = access_rules_validator.validated_data
+
+        # TODO: STOP VIOLATING INTERFACES. use update_resources(...) to change permissions
         res = get_resource_by_shortkey(pk)
         res.public = validated_request_data['public']
         res.save()

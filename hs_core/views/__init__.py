@@ -207,6 +207,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
                     if res.public:
                         if not res.can_be_public:
+                            # TODO: sync this change to HSAccess
                             res.public = False
                             res.save()
                             is_redirect = True
@@ -272,6 +273,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
 def publish(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    # TODO: remove uses of `edit_users` and `edit_groups`
     res.edit_users = []
     res.edit_groups = []
     res.published_and_frozen = True
@@ -293,14 +295,20 @@ def change_permissions(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
     t = request.POST['t']
     values = [int(k) for k in request.POST.getlist('designees', [])]
+
+    # TODO: remove these uses of permissions variables
     if t == 'owners':
         res.owners = User.objects.in_bulk(values)
+    # TODO: remove edit_users
     elif t == 'edit_users':
         res.edit_users = User.objects.in_bulk(values)
+    # TODO: remove edit_groups
     elif t == 'edit_groups':
         res.edit_groups = Group.objects.in_bulk(values)
+    # TODO: remove view_users
     elif t == 'view_users':
         res.view_users = User.objects.in_bulk(values)
+    # TODO: remove view_groups
     elif t == 'view_groups':
         res.view_groups = Group.objects.in_bulk(values)
     elif t == 'add_view_group':
@@ -319,41 +327,41 @@ def change_permissions(request, shortkey, *args, **kwargs):
             # unable to connect to the database
             raise DatabaseError("unable to connect to the database HSAccess.")
 
-        try:
-            if t == 'add_view_user':
-                frm = AddUserForm(data=request.POST)
-                if frm.is_valid():
-                    res.view_users.add(frm.cleaned_data['user'])
-                    new_user = frm.cleaned_data['user']
-                    new_uuid = ha_obj.get_user_uuid_from_login(str(new_user.username))
-                    ha_obj.share_resource_with_user(res.short_id, new_uuid, 'ro')
-            elif t == 'add_edit_user':
-                frm = AddUserForm(data=request.POST)
-                if frm.is_valid():
-                    res.edit_users.add(frm.cleaned_data['user'])
-                    new_user = frm.cleaned_data['user']
-                    new_uuid = ha_obj.get_user_uuid_from_login(str(new_user.username))
-                    ha_obj.share_resource_with_user(res.short_id, new_uuid, 'rw')
-            elif t == 'add_owner':
-                frm = AddUserForm(data=request.POST)
-                if frm.is_valid():
-                    res.owners.add(frm.cleaned_data['user'])
-                    new_user = frm.cleaned_data['user']
-                    new_uuid = ha_obj.get_user_uuid_from_login(str(new_user.username))
-                    ha_obj.share_resource_with_user(res.short_id, new_uuid, 'own')
-            elif t == 'make_public':
-                #if res.metadata.has_all_required_elements():
-                if res.can_be_public:
-                    res.public = True
-                    ha_obj.make_resource_public(res.short_id)
-                    res.save()
-            elif t == 'make_private':
-                res.public = False
-                ha_obj.make_resource_not_public(res.short_id)
+        # try:
+        if t == 'add_view_user':
+            frm = AddUserForm(data=request.POST)
+            if frm.is_valid():
+                res.view_users.add(frm.cleaned_data['user'])
+                new_user = frm.cleaned_data['user']
+                new_uuid = ha_obj.get_user_uuid_from_login(str(new_user.username))
+                ha_obj.share_resource_with_user(res.short_id, new_uuid, 'ro')
+        elif t == 'add_edit_user':
+            frm = AddUserForm(data=request.POST)
+            if frm.is_valid():
+                res.edit_users.add(frm.cleaned_data['user'])
+                new_user = frm.cleaned_data['user']
+                new_uuid = ha_obj.get_user_uuid_from_login(str(new_user.username))
+                ha_obj.share_resource_with_user(res.short_id, new_uuid, 'rw')
+        elif t == 'add_owner':
+            frm = AddUserForm(data=request.POST)
+            if frm.is_valid():
+                res.owners.add(frm.cleaned_data['user'])
+                new_user = frm.cleaned_data['user']
+                new_uuid = ha_obj.get_user_uuid_from_login(str(new_user.username))
+                ha_obj.share_resource_with_user(res.short_id, new_uuid, 'own')
+        elif t == 'make_public':
+            #if res.metadata.has_all_required_elements():
+            if res.can_be_public:
+                res.public = True
+                ha_obj.make_resource_public(res.short_id)
                 res.save()
-        except HSAlib.HSAUsageException:
+        elif t == 'make_private':
+            res.public = False
+            ha_obj.make_resource_not_public(res.short_id)
+            res.save()
+        # except HSAlib.HSAUsageException:
             # unable to connect to the database
-            raise OperationalError("the resource %s cannot be shared." % res.short_id)
+            # raise OperationalError("the resource %s cannot be shared." % res.short_id)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -514,6 +522,7 @@ def my_resources(request, page):
             'ct': total_res_cnt,
         }
 
+# TODO: does this function even need to export ['view_users', 'view_groups', ...]
 @processor_for(GenericResource)
 def add_generic_context(request, page):
 
@@ -531,9 +540,13 @@ def add_generic_context(request, page):
         'users': User.objects.all(),
         'groups': Group.objects.all(),
         'owners': set(cm.owners.all()),
+        # TODO: remove view_users
         'view_users': set(cm.view_users.all()),
+        # TODO: remove view_groups
         'view_groups': set(cm.view_groups.all()),
+        # TODO: remove edit_users
         'edit_users': set(cm.edit_users.all()),
+        # TODO: remove edit_groups
         'edit_groups': set(cm.edit_groups.all()),
         'add_owner_user_form': AddUserForm(),
         'add_view_user_form': AddUserForm(),

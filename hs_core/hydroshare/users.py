@@ -5,9 +5,11 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.core import signing
+from django.db import DatabaseError, OperationalError
 
-from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject, Description, Title
+from hs_core.models import GroupOwnership, GenericResource, AbstractResource, Party, Contributor, Creator, Subject, Description, Title
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
+from hs_core import HSAlib
 
 
 def set_resource_owner(pk, user):
@@ -99,16 +101,20 @@ def set_access_rules(pk, user=None, group=None, access=None, allow=False):
     elif access == EDIT:
         if user:
             if allow:
+                # TODO: remove edit_users
                 if not res.edit_users.filter(pk=user.pk).exists():
                     res.edit_users.add(user)
             else:
+                # TODO: remove edit_users
                 if res.edit_users.filter(pk=user.pk).exists():
                     res.edit_users.filter(pk=user.pk).delete()
         elif group:
             if allow:
+                # TODO: remove edit_groups
                 if not res.edit_groups.filter(pk=group.pk).exists():
                     res.edit_groups.add(group)
             else:
+                # TODO: remove edit_groups
                 if res.edit_groups.filter(pk=group.pk).exists():
                     res.edit_groups.filter(pk=group.pk).delete()
         else:
@@ -116,16 +122,20 @@ def set_access_rules(pk, user=None, group=None, access=None, allow=False):
     elif access == VIEW:
         if user:
             if allow:
+                # TODO: remove view_users
                 if not res.view_users.filter(pk=user.pk).exists():
                     res.view_users.add(user)
             else:
+                # TODO: remove view_users
                 if res.view_users.filter(pk=user.pk).exists():
                     res.view_users.filter(pk=user.pk).delete()
         elif group:
             if allow:
+                # TODO: remove view_groups
                 if not res.view_groups.filter(pk=group.pk).exists():
                     res.view_groups.add(group)
             else:
+                # TODO: remove view_groups
                 if res.view_groups.filter(pk=group.pk).exists():
                     res.view_groups.filter(pk=group.pk).delete()
         else:
@@ -149,6 +159,9 @@ def create_account(
         Exceptions.InvalidContent - The content of the user object is invalid
         Exception.ServiceFailure - The service is unable to process the request
 
+    NB: the parameter `groups` is ignored.
+    TODO: remove `groups` as parameter
+
     """
 
     from django.contrib.auth.models import User, Group
@@ -163,9 +176,19 @@ def create_account(
     #    iaccount = account.IrodsAccount()
     #    iaccount.create(username)
     #    iaccount.setPassward(username, password)
+#
 
-    groups = groups if groups else Group.objects.all()
-    groups = Group.objects.in_bulk(*groups) if groups and isinstance(groups[0], int) else groups
+    try:
+        ha_obj = AbstractResource.SetHSAccessConnection(str(username))
+    except HSAlib.HSAIntegrityException:
+        # unable to connect to the database
+        raise DatabaseError("unable to connect to the database HSAccess.")
+
+    try:
+        # name is present for debugging.
+        ha_obj.assert_user(username, first_name + " " + last_name, user_active=False, user_admin=superuser, user_uuid=None)
+    except HSAlib.HSAUsageException:
+        raise OperationalError("could not create user")
 
     if superuser:
         u = User.objects.create_superuser(
@@ -188,7 +211,10 @@ def create_account(
         u.is_active=False
     u.save()
 
-    u.groups = groups
+    # THIS IS WRONG. Calling create_acc w/ `groups = None` makes the new user a member of every group.
+    # groups = groups if groups else Group.objects.all()
+    # groups = Group.objects.in_bulk(*groups) if groups and isinstance(groups[0], int) else groups
+    # u.groups = groups
 
     return u
 
@@ -230,6 +256,19 @@ def update_account(user, **kwargs):
                   if isinstance(g, basestring) else g
                   for g in groups))[0]
 
+        # put the groups in HSAccess
+        try:
+            ha_obj = AbstractResource.SetHSAccessConnection(str(user.username))
+        except HSAlib.HSAIntegrityException:
+            # unable to connect to the database
+            raise DatabaseError("unable to connect to the database HSAccess.")
+
+        try:
+            for group in groups:
+                ha_obj.share_group_with_user(group.name, user.username, "ro")
+        except Exception as ex:
+            raise DatabaseError("cannot share group with user: " + ex)
+
     if 'password' in kwargs:
         user.set_password(kwargs['password'])
 
@@ -252,10 +291,13 @@ def update_account(user, **kwargs):
     user_update = dict()
     update_keys = filter(lambda x: hasattr(user, str(x)), kwargs.keys())
     for key in update_keys:
-            user_update[key] = kwargs[key]
+        user_update[key] = kwargs[key]
     for k, v in user_update.items():
         setattr(user, k, v)
     user.save()
+
+    # We do not update the other user properties in HSAccess because
+    # the ID is the only property we really care about and it cannot change.
 
     user.groups = groups
     return user.username

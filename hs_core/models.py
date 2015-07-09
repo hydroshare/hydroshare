@@ -77,10 +77,12 @@ class ResourcePermissionsMixin(Ownable):
         default=True
     )
 
+    # TODO: remove 'owners' property?
     owners = models.ManyToManyField(User,
                                     related_name='owns_%(app_label)s_%(class)s',
                                     help_text='The person who has total ownership of the resource'
     )
+
     frozen = models.BooleanField(
         help_text='If this is true, the resource should not be modified',
         default=False
@@ -98,6 +100,7 @@ class ResourcePermissionsMixin(Ownable):
         default=False
     )
 
+    # TODO: remove these properties (view_users, view_groups, edit_users, edit_groups)
     view_users = models.ManyToManyField(User,
                                         related_name='user_viewable_%(app_label)s_%(class)s',
                                         help_text='This is the set of Hydroshare Users who can view the resource',
@@ -125,6 +128,7 @@ class ResourcePermissionsMixin(Ownable):
     def permissions_store(self):
         return s.PERMISSIONS_DB
 
+# TODO: since PagePermissionsMixin is in GA, and GA should die, CAN WE REMOVE THIS ENTIRE FUNCTION?
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
 def page_permissions_page_processor(request, page):
@@ -132,11 +136,21 @@ def page_permissions_page_processor(request, page):
     user = get_user(request)
 
     return {
+        # TODO: remove edit_groups?
         "edit_groups": set(page.edit_groups.all()),
+
+        # TODO: remove view_groups?
         "view_groups": set(page.view_groups.all()),
+
+        # TODO: remove edit_users?
         "edit_users": set(page.edit_users.all()),
+
+        # TODO: remove view_users?
         "view_users": set(page.view_users.all()),
+
         "owners": set(page.owners.all()),
+
+        # TODO: oh god why is this implemented by hand??
         "can_edit": (user in set(page.edit_users.all())) \
                     or (len(set(page.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
     }
@@ -2025,6 +2039,7 @@ class CoreMetaData(models.Model):
         allowed_elements = [el.lower() for el in self.get_supported_element_names()]
         return element_name.lower() in allowed_elements
 
+# TODO: is this dead code?
 def resource_processor(request, page):
     extra = page_permissions_page_processor(request, page)
     extra['res'] = page.get_content_model()

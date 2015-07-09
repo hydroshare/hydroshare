@@ -27,6 +27,7 @@ def upload_from_irods(username, password, host, port, zone, irods_fname, res_fil
     except Exception as ex:
         raise iRODSException(ex.message)
 
+# TODO: how is this function used? what exactly do edit, view, full, and superuser mean?
 def authorize(request, res_id, edit=False, view=False, full=False, superuser=False, raises_exception=True):
     """
     Authorizes the user making this request for the OR of the parameters.  If the user has ANY permission set to True in
@@ -38,14 +39,27 @@ def authorize(request, res_id, edit=False, view=False, full=False, superuser=Fal
     except ObjectDoesNotExist:
         raise NotFound(detail="No resource was found for resource id:%s" % res_id)
 
-    has_edit = res.edit_users.filter(pk=user.pk).exists()
-    has_view = res.view_users.filter(pk=user.pk).exists()
-    has_full = res.owners.filter(pk=user.pk).exists()
+    # compare action requested w/ user's permissions
+    can_edit = edit and res.can_change(request)
+    can_view = view and res.can_view(request)
+    is_owner = full and res.owners.filter(pk=user.pk).exists()
+    is_super = superuser and user.is_superuser
 
-    authorized = (edit and has_edit) or \
-                 (view and (has_view or res.public)) or \
-                 (full and has_full) or \
-                 (superuser and user.is_superuser)
+    print "authorizing a request !!!!"
+
+    # the request is authorized if the user has
+    # permissions to perform the action requested
+    authorized = is_super or is_owner or can_view or can_edit
+
+    # has_edit = res.edit_users.filter(pk=user.pk).exists()
+    # has_view = res.view_users.filter(pk=user.pk).exists()
+    # has_full = res.owners.filter(pk=user.pk).exists()
+
+    # TODO: dont reimplement this logic?
+    # authorized = (edit and can_edit) or \
+    #              (view and (can_view or res.public)) or \
+    #              (full and is_owner) or \
+    #              (superuser and user.is_superuser)
 
     if raises_exception and not authorized:
         raise PermissionDenied()

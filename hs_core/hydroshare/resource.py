@@ -378,7 +378,9 @@ def create_resource(
         if edit_users:
             for user in edit_users:
                 user = utils.user_from_id(user)
+                # TODO: remove edit_users
                 resource.edit_users.add(user)
+                # TODO: remove view_users
                 resource.view_users.add(user)
         if view_users:
             for user in view_users:
@@ -388,11 +390,14 @@ def create_resource(
         if edit_groups:
             for group in edit_groups:
                 group = utils.group_from_id(group)
+                # TODO: remove edit_groups
                 resource.edit_groups.add(group)
+                # TODO: remove view_groups
                 resource.view_groups.add(group)
         if view_groups:
             for group in view_groups:
                 group = utils.group_from_id(group)
+                # TODO: remove view_groups
                 resource.view_groups.add(group)
 
         if keywords:
@@ -478,29 +483,39 @@ def update_resource(
         resource.owners.add(owner)
 
     if edit_users:
+        # TODO: remove edit_users
         resource.edit_users.clear()
         for user in edit_users:
             user = utils.user_from_id(user)
+            # TODO remove edit_users
             resource.edit_users.add(user)
+            # TODO: remove view_users
             resource.view_users.add(user)
 
     if view_users:
+        # TODO: remove view_users
         resource.view_users.clear()
         for user in view_users:
             user = utils.user_from_id(user)
+            # TODO: remove view_users
             resource.view_users.add(user)
 
     if edit_groups:
+        # TODO: remove edit_groups
         resource.edit_groups.clear()
         for group in edit_groups:
             group = utils.group_from_id(group)
             resource.edit_groups.add(group)
+            # TODO: remove view_groups
             resource.view_groups.add(group)
 
+    # WTF: why does checking view_groups lead to mutating edit_groups?
     if view_groups:
+        # TODO: remove edit_groups
         resource.edit_groups.clear()
         for group in view_groups:
             group = utils.group_from_id(group)
+            # TODO: remove view_groups
             resource.view_groups.add(group)
 
     if keywords:
