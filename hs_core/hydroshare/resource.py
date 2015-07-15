@@ -509,7 +509,7 @@ def update_resource(
             # TODO: remove view_groups
             resource.view_groups.add(group)
 
-    # WTF: why does checking view_groups lead to mutating edit_groups?
+    # FIXME: why does checking view_groups lead to mutating edit_groups & view_groups?
     if view_groups:
         # TODO: remove edit_groups
         resource.edit_groups.clear()
