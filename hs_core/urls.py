@@ -1,12 +1,15 @@
 from django.conf.urls import patterns, url
 from hs_core import views
 
-# 'appears sin-free' = EXCLUSIVELY uses the hydroshare module to update resource/persmission/etc state
+#
+# 'sinless' = EXCLUSIVELY uses the hydroshare module to update resource/persmission/etc state
+#
+
 urlpatterns = patterns('',
 
     # resource API
 
-    # appears sin-free
+    # sinless
     url(r'^resourceTypes/$', views.resource_rest_api.ResourceTypes.as_view(),
         name='list_resource_types'),
     url(r'^resourceList/$', views.resource_rest_api.ResourceList.as_view(),
@@ -17,10 +20,11 @@ urlpatterns = patterns('',
         name='get_update_delete_resource'),
 
     # SINFUL! directly manipulates `res.public`
+    # changes needed: mirror updates to HSAccess
     url(r'^resource/accessRules/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.AccessRulesUpdate.as_view(),
         name='update_access_rules'),
 
-    # appears sin-free
+    # sinless
     url(r'^sysmeta/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.SystemMetadataRetrieve.as_view(),
         name='get_system_metadata'),
     url(r'^scimeta/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
@@ -32,7 +36,7 @@ urlpatterns = patterns('',
 
     # internal API
 
-    # sin-free
+    # sinless
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/add-file-to-resource/$', views.add_file_to_resource),
 
     # **** directly manipulates metadata, but thats probably OK by HSAccess
@@ -40,7 +44,7 @@ urlpatterns = patterns('',
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/(?P<element_name>[A-z]+)/(?P<element_id>[A-z0-9]+)/update-metadata/$', views.update_metadata_element),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/(?P<element_name>[A-z]+)/(?P<element_id>[A-z0-9]+)/delete-metadata/$', views.delete_metadata_element),
 
-    # HSAccess does not care about resource files
+    # sinless
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/delete-resource-file/(?P<f>[0-9]+)/$', views.delete_file),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/delete-resource/$', views.delete_resource),
 
@@ -51,7 +55,7 @@ urlpatterns = patterns('',
     # N/A
     url(r'^_internal/verify_captcha/$', views.verify_captcha),
 
-    # **** SINFUL! manipulates BAD resource properties
+    # **** SINFUL! directly manipulates res.public
     # changes needed: mirror updates to HSAccess
     url(r'^_internal/publish/$', views.publish),
 
