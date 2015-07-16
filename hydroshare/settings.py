@@ -5,7 +5,7 @@ TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
 import os
 import importlib
 
-local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
+local_settings_module = os.environ.get('LOCAL_SETTINGS', 'local_settings')
 
 ######################
 # MEZZANINE SETTINGS #
@@ -258,6 +258,7 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "inplaceeditform",
+    "django_jenkins",
     "django_nose",
     "django_irods",
     "theme",
@@ -424,3 +425,19 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     )
 }
+JENKINS_TASKS = (
+    'django_jenkins.tasks.run_pep8',
+    'django_jenkins.tasks.run_pyflakes',
+    #'django_jenkins.tasks.run_jslint',
+    #'django_jenkins.tasks.run_csslint',
+    #'django_jenkins.tasks.run_sloccount',
+    'django_jenkins.tasks.with_coverage',
+    #'django_jenkins.tasks.django_tests',
+)
+
+PROJECT_APPS = ("hs_core", "hs_app_netCDF", "hs_app_timeseries",
+                "hs_geo_raster_resource", "hs_model_program",
+                "hs_modelinstance", "hs_metrics", "hs_swat_modelinstance",
+                "hs_tools_resource", "hs_rhessys_inst_resource", "ref_ts")
+
+#JENKINS_TEST_RUNNER='django_jenkins.nose_runner.CINoseTestSuiteRunner'
