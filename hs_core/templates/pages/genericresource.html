@@ -157,7 +157,7 @@
                 {% if abstract %}
                     <div class="content-block">
                         <h3>Abstract</h3>
-                        <span class="abstract">{{ abstract }}</span>
+                        <span class="abstract">{{ abstract|linebreaks }}</span>
                     </div>
                 {% endif %}
             {% else %}
@@ -170,7 +170,7 @@
                         <div id="div_id_abstract" class="control-group">
                             <div class="controls"><textarea class="form-control input-sm textarea" cols="40"
                                                             id="id_abstract" name="abstract"
-                                                            rows="10">{{ cm.metadata.description }}</textarea></div>
+                                                            rows="10">{{ cm.metadata.description|linebreaks }}</textarea></div>
                         </div>
                         <div style="margin-top:10px">
                             <button type="button" class="btn btn-primary pull-right"
