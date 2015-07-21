@@ -110,15 +110,39 @@ def landing_page(request, page):
                                    '{% crispy ori_coverage_form %} '
                                    '</div>')
 
+
+
+        # field_info_list= content_model.metadata.fieldinformation.all()
+        # field_info_list_context=[]
+        # for field_info in field_info_list:
+        #     field_info_dict_item={}
+        #     field_info_dict_item["fieldName"]=field_info.fieldName
+        #     field_info_dict_item["fieldType"]=field_info.fieldType
+        #     field_info_dict_item["fieldTypeCode"]=field_info.fieldTypeCode
+        #     field_info_dict_item["fieldWidth"]=field_info.fieldWidth
+        #     field_info_dict_item["fieldPrecision"]=field_info.fieldPrecision
+        #     field_info_list_context.append(field_info_dict_item)
+        # #context['field_information'] = field_info_list_context
+        # field_info_list_form = FieldInformationForm(initial=field_info_list_context,
+        #                                                 res_short_id=content_model.short_id,
+        #                                                 allow_edit=edit_resource,
+        #                                                 element_id=field_info_list.id if field_info_list else None)
+        #
+        # field_info_list_layout = HTML('<div class="form-group col-lg-6 col-xs-12" id="fieldinformation"> '
+        #                            '{% load crispy_forms_tags %} '
+        #                            '{% crispy field_info_list_form %} '
+        #                            '</div>')
         # update context
         ext_md_layout = Layout(
                                 geom_information_layout,
                                 ori_coverage_layout,
+                                #field_info_list_layout,
+
                                 )
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
         context['ori_coverage_form'] = ori_coverage_form
         context['geom_information_form'] = geom_information_form
-
+        #context['field_info_list_form'] = field_info_list_form
 
     hs_core_context = add_generic_context(request, page)
     context.update(hs_core_context)

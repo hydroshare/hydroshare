@@ -210,7 +210,7 @@ class GeographicFeatureResource(Page, AbstractResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # 3 file types are supported
-        return (".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg")
+        return (".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg",)
 
     @classmethod
     def can_have_multiple_files(cls):
@@ -218,9 +218,7 @@ class GeographicFeatureResource(Page, AbstractResource):
         return True
 
     def can_add(self, request):
-        #return AbstractResource.can_add(self, request)
-        #what does this attribute mean?
-        return False
+        return AbstractResource.can_add(self, request)
 
     def can_change(self, request):
         return AbstractResource.can_change(self, request)
@@ -255,7 +253,7 @@ class GeographicFeatureMetaData(CoreMetaData):
     def has_all_required_elements(self):
         if not super(GeographicFeatureMetaData, self).has_all_required_elements():  # check required meta
             return False
-        if not self.field_info.all():
+        if not self.fieldinformation.all():
             return False
         if not self.originalcoverage.all().first():
             return False

@@ -2,7 +2,7 @@ __author__ = 'drew'
 
 from django import forms
 from hs_core.forms import BaseFormHelper
-from crispy_forms.layout import Layout, Field
+from crispy_forms.layout import Layout, Field, HTML
 import copy
 import json
 
@@ -100,11 +100,28 @@ class FieldInformationFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('fieldName', css_class=field_width),
-                        Field('fieldType', css_class=field_width),
-                        )
+                       HTML(
+                        '<h4 ><strong>Field Information:</strong></h4>'
+                        '<hr style="margin-top: 0px;margin-bottom: 2px">'
+                        '<table>'
+                            '<tr class="row">'
+                                 '<th >Name</th><th class="col-sm-2">Type</th> <th class="col-sm-2">Width</th> <th class="col-sm-2">Precision</th>'
+                            '</tr>'
+                            '{%for field_item in field_information %}'
+                            'tr class="row">'
+                            '<td class="col-sm-2">{{field_item.fieldName}}</td>'
+                            '<td>{{field_item.fieldType}}</td>'
+                            '<td>{{field_item.fieldWidth}}</td>'
+                            '<td>{{field_item.fieldPrecision}}</td>'
+                            '</tr>'
+                            '{% endfor %}'
+                        '</table>'
 
-        super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Spatial Reference', *args, **kwargs)
+
+                        )
+                    )
+
+        super(FieldInformationFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Field Information', *args, **kwargs)
 
 
 class FieldInformationForm(forms.Form):
