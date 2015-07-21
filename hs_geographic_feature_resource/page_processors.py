@@ -23,9 +23,6 @@ def landing_page(request, page):
 
         context['extended_metadata_exists'] = extended_metadata_exists
 
-        # # add the variables context
-        # context['variables'] = content_model.metadata.variables.all() # the variables is the field name from NetCDFMetaData model
-        #
         # add the original coverage context
         geom_info_for_view={}
         geom_info = content_model.metadata.geometryinformation.all().first()
@@ -40,10 +37,10 @@ def landing_page(request, page):
         ori_cov_dict = {}
         ori_cov_obj = content_model.metadata.originalcoverage.all().first()
         if ori_cov_obj:
-            ori_cov_dict['northlimit'] = ori_cov_obj.extent['northlimit']
-            ori_cov_dict['eastlimit'] = ori_cov_obj.extent['eastlimit']
-            ori_cov_dict['southlimit'] = ori_cov_obj.extent['southlimit']
-            ori_cov_dict['westlimit'] = ori_cov_obj.extent['westlimit']
+            ori_cov_dict['northlimit'] = ori_cov_obj.northlimit
+            ori_cov_dict['eastlimit'] = ori_cov_obj.eastlimit
+            ori_cov_dict['southlimit'] = ori_cov_obj.southlimit
+            ori_cov_dict['westlimit'] = ori_cov_obj.westlimit
             ori_cov_dict['projection_string'] = ori_cov_obj.projection_string
             ori_cov_dict['projection_name'] = ori_cov_obj.projection_name
             ori_cov_dict['datum'] = ori_cov_obj.datum
@@ -66,7 +63,6 @@ def landing_page(request, page):
         context['field_information'] = field_info_list_context
 
     else: # editing mode
-
 
         geom_info_for_view={}
         geom_info = content_model.metadata.geometryinformation.all().first()
@@ -94,10 +90,10 @@ def landing_page(request, page):
             ori_coverage_data_dict['projection_name'] = ori_cov_obj.projection_name
             ori_coverage_data_dict['datum'] = ori_cov_obj.datum
             ori_coverage_data_dict['unit'] = ori_cov_obj.unit
-            ori_coverage_data_dict['northlimit'] = ori_cov_obj.extent['northlimit']
-            ori_coverage_data_dict['eastlimit'] = ori_cov_obj.extent['eastlimit']
-            ori_coverage_data_dict['southlimit'] = ori_cov_obj.extent['southlimit']
-            ori_coverage_data_dict['westlimit'] = ori_cov_obj.extent['westlimit']
+            ori_coverage_data_dict['northlimit'] = ori_cov_obj.northlimit
+            ori_coverage_data_dict['eastlimit'] = ori_cov_obj.eastlimit
+            ori_coverage_data_dict['southlimit'] = ori_cov_obj.southlimit
+            ori_coverage_data_dict['westlimit'] = ori_cov_obj.westlimit
         else:
             ori_coverage_data_dict = None
 

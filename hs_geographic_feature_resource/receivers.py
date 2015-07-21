@@ -64,7 +64,10 @@ def geofeature_pre_create_resource(sender, **kwargs):
 
                     #original extent
                     original_coverage_dict ={}
-                    original_coverage_dict["originalcoverage"]={"extent":parsed_md_dict["origin_extent_dict"],
+                    original_coverage_dict["originalcoverage"]={"northlimit":parsed_md_dict["origin_extent_dict"]["northlimit"],
+                                                                "southlimit":parsed_md_dict["origin_extent_dict"]["southlimit"],
+                                                                "westlimit":parsed_md_dict["origin_extent_dict"]["westlimit"],
+                                                                "eastlimit":parsed_md_dict["origin_extent_dict"]["eastlimit"],
                                                                 "projection_string":parsed_md_dict["origin_projection_string"],
                                                                 "projection_name":parsed_md_dict["origin_projection_name"],
                                                                 "datum":parsed_md_dict["origin_datum"],
