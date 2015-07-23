@@ -133,7 +133,11 @@ class FieldInformation(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("FieldInformation element of the geographic feature resource cannot be deleted.")
+        field_info = FieldInformation.objects.get(id=element_id)
+        if field_info:
+            field_info.delete()
+        else:
+            raise ValidationError("FieldInformation element of the geographic feature resource cannot be deleted: %d."%element_id)
 
 
 class GeometryInformation(AbstractMetaDataElement):
@@ -175,7 +179,12 @@ class GeometryInformation(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("GeometryInformation element of the geographic feature resource cannot be deleted.")
+        geom_info = GeometryInformation.objects.get(id=element_id)
+        if geom_info:
+            geom_info.delete()
+        else:
+            raise ObjectDoesNotExist("GeometryInformation element of the geographic feature resource cannot be deleted: %d."%element_id)
+
 
 # Define the netCDF resource
 class GeographicFeatureResource(Page, AbstractResource):

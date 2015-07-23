@@ -11,8 +11,6 @@ from hs_geographic_feature_resource.models import *
 
 from django.contrib.auth.models import Group, User
 from hs_core import hydroshare
-from dateutil import parser
-from lxml import etree
 
 
 class TestGeoFeatureMetadata(TestCase):
@@ -61,8 +59,12 @@ class TestGeoFeatureMetadata(TestCase):
         Language.objects.all().delete()
         #remove res specific model objs here
         #Variable.objects.all().delete()
+        OriginalCoverage.objects.all().delete()
+        GeometryInformation.objects.all().delete()
+        FieldInformation.objects.all().delete()
 
-    def test_geo_feature_metadata(self):
+
+    def test_geo_feature_basic_metadata(self):
         # add a type element
         resource.create_metadata_element(self.resGeoFeature.short_id, 'type', url="http://hydroshare.org/geographicfeature")
 
@@ -87,7 +89,7 @@ class TestGeoFeatureMetadata(TestCase):
                                          researcherID=cr_res_id,
                                          researchGateID=cr_res_gate_id)
 
-        # add another creator with only the name
+        # # add another creator with only the name
         resource.create_metadata_element(self.resGeoFeature.short_id,'creator', name='Creator B')
 
         #test adding a contributor with all sub_elements
@@ -121,6 +123,9 @@ class TestGeoFeatureMetadata(TestCase):
 
         # add a point type coverage
         value_dict = {'name':'Name for box coverage', 'northlimit':'1', 'eastlimit':'2', 'southlimit':'3', 'westlimit':'4'}
+
+        value_dict["projection"]="WGS 84 EPSG:4326"
+        value_dict["units"]="Decimal degrees"
         resource.create_metadata_element(self.resGeoFeature.short_id,'coverage', type='box', value=value_dict)
 
         # add date of type 'valid'
@@ -132,18 +137,19 @@ class TestGeoFeatureMetadata(TestCase):
 
 
         # add a language element
-        resource.create_metadata_element(self.resGeoFeature.short_id,'language', code='eng')
+        #resource.create_metadata_element(self.resGeoFeature.short_id,'language', code='eng')
 
-        # add 'Publisher' element
-        original_file_name = 'original.txt'
-        original_file = open(original_file_name, 'w')
-        original_file.write("original text")
-        original_file.close()
+        # # add 'Publisher' element
+        # original_file_name = 'original.txt'
+        # original_file = open(original_file_name, 'w')
+        # original_file.write("original text")
+        # original_file.close()
+        #
+        # original_file = open(original_file_name, 'r')
+        # # add the file to the resource
+        # hydroshare.add_resource_files(self.resGeoFeature.short_id, original_file)
 
-        original_file = open(original_file_name, 'r')
-        # add the file to the resource
-        hydroshare.add_resource_files(self.resGeoFeature.short_id, original_file)
-        resource.create_metadata_element(self.resGeoFeature.short_id,'publisher', name="HydroShare", url="http://hydroshare.org")
+        # resource.create_metadata_element(self.resGeoFeature.short_id,'publisher', name="HydroShare", url="http://hydroshare.org")
 
         # add a relation element of uri type
         resource.create_metadata_element(self.resGeoFeature.short_id,'relation', type='isPartOf',
@@ -157,9 +163,9 @@ class TestGeoFeatureMetadata(TestCase):
         # add a source element of uri type
         resource.create_metadata_element(self.resGeoFeature.short_id,'source', derived_from='http://hydroshare.org/resource/0002')
 
-        # add a rights element
-        resource.create_metadata_element(self.resGeoFeature.short_id,'rights', statement='This is the rights statement for this resource',
-                                         url='http://rights.ord/001')
+        # # add a rights element
+        # resource.create_metadata_element(self.resGeoFeature.short_id,'rights', statement='This is the rights statement for this resource',
+        #                                  url='http://rights.ord/001')
 
         # add a subject element
         resource.create_metadata_element(self.resGeoFeature.short_id,'subject', value='sub-1')
@@ -167,9 +173,116 @@ class TestGeoFeatureMetadata(TestCase):
         # add another subject element
         resource.create_metadata_element(self.resGeoFeature.short_id,'subject', value='sub-2')
 
-        # add a netcdf specific element (variable)
-        resource.create_metadata_element(self.resGeoFeature.short_id,'variable', name='temp', unit='deg C', type='float', shape='shape_unknown')
 
-        print self.resGeoFeature.metadata.get_xml()
+        # originalcoverage
+        #no OriginalCoverage obj
+        self.assertEqual (len(OriginalCoverage.objects.all()), 0)
 
-        print(bad)
+        #create OriginalCoverage obj without a required para: southlimit
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.resGeoFeature.short_id,'originalcoverage', northlimit='1',  eastlimit='2',  southlimit='3'))
+
+        #no OriginalCoverage obj
+        self.assertEqual (len(OriginalCoverage.objects.all()), 0)
+
+        #create 1 OriginalCoverage obj with required para
+        resource.create_metadata_element(self.resGeoFeature.short_id,'originalcoverage', northlimit='1',  eastlimit='2',  southlimit='3',  westlimit='4')
+        self.assertEqual (len(OriginalCoverage.objects.all()), 1)
+
+        #may not create any more OriginalCoverage
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.resGeoFeature.short_id,'originalcoverage', northlimit='1',  eastlimit='2',  southlimit='3',  westlimit='4'))
+
+        self.assertEqual (len(OriginalCoverage.objects.all()), 1)
+        #update existing meta
+        resource.update_metadata_element(self.resGeoFeature.short_id,'originalcoverage', element_id=OriginalCoverage.objects.first().object_id, northlimit='11',  eastlimit='22',  southlimit='33',  westlimit='44', projection_string='projection_string1', projection_name='projection_name1', datum='datum1', unit='unit1')
+        self.assertEqual(OriginalCoverage.objects.first().unit,'unit1')
+
+        #delete OriginalCoverage obj
+        resource.delete_metadata_element(self.resGeoFeature.short_id,'originalcoverage', element_id=OriginalCoverage.objects.first().object_id)
+        self.assertEqual (len(OriginalCoverage.objects.all()), 0)
+
+
+
+        #GeometryInformation
+        #no GeometryInformation obj
+        self.assertEqual (len(GeometryInformation.objects.all()), 0)
+
+        #create GeometryInformation obj without a required para: geometryType
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.resGeoFeature.short_id,'GeometryInformation', featureCount='1'))
+
+        #no GeometryInformation obj
+        self.assertEqual (len(GeometryInformation.objects.all()), 0)
+
+        #create 1 GeometryInformation obj with required para
+        resource.create_metadata_element(self.resGeoFeature.short_id,'GeometryInformation', featureCount='1', geometryType='Polygon_test')
+        self.assertEqual (len(GeometryInformation.objects.all()), 1)
+
+        #may not create any more GeometryInformation
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.resGeoFeature.short_id,'GeometryInformation', featureCount='1', geometryType='Polygon_test'))
+
+        #update existing meta
+        resource.update_metadata_element(self.resGeoFeature.short_id,'GeometryInformation', element_id=GeometryInformation.objects.first().object_id,
+                                         featureCount='2', geometryType='Point_test')
+        self.assertEqual(GeometryInformation.objects.first().geometryType, 'Point_test')
+        self.assertEqual(GeometryInformation.objects.first().featureCount, 2)
+
+        #delete GeometryInformation obj
+        resource.delete_metadata_element(self.resGeoFeature.short_id, 'GeometryInformation', element_id=GeometryInformation.objects.first().object_id)
+        self.assertEqual (len(GeometryInformation.objects.all()), 0)
+
+
+        #FieldInformation
+        #no FieldInformation obj
+        self.assertEqual (len(FieldInformation.objects.all()), 0)
+
+        #create FieldInformation obj without a required para: geometryType
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.resGeoFeature.short_id,'FieldInformation', fieldName='fieldName0'))
+
+        #no FieldInformation obj
+        self.assertEqual (len(FieldInformation.objects.all()), 0)
+
+        #create 1 FieldInformation obj with required para
+        resource.create_metadata_element(self.resGeoFeature.short_id,'FieldInformation', fieldName='fieldName1', fieldType='fieldType1')
+        self.assertEqual (len(FieldInformation.objects.all()), 1)
+
+        resource.create_metadata_element(self.resGeoFeature.short_id,'FieldInformation', fieldName='fieldName2', fieldType='fieldType2')
+        self.assertEqual (len(FieldInformation.objects.all()), 2)
+
+        #update existing meta
+        field_info_obj_list = FieldInformation.objects.filter(fieldName='fieldName1')
+        self.assertEqual(len(field_info_obj_list), 1)
+        field_1_ele_id_old=field_info_obj_list[0].object_id
+        resource.update_metadata_element(self.resGeoFeature.short_id,'FieldInformation', element_id=field_1_ele_id_old,
+                                          fieldName='fieldName1_new', fieldType='fieldType1_new')
+
+        field_info_obj_list = FieldInformation.objects.filter(fieldName='fieldName1_new')
+        self.assertEqual(len(field_info_obj_list), 1)
+        field_1_ele_id_new=field_info_obj_list[0].object_id
+        # ele_id should not change
+        self.assertEqual(field_1_ele_id_new, field_1_ele_id_old)
+        # old value is gone
+        field_info_obj_list = FieldInformation.objects.filter(fieldName='fieldName1')
+        self.assertEqual(len(field_info_obj_list), 0)
+
+
+        field_info_obj_list = FieldInformation.objects.filter(fieldName='fieldName2')
+        self.assertEqual(len(field_info_obj_list), 1)
+        field_2_ele_id_old=field_info_obj_list[0].object_id
+
+        self.assertEqual (len(FieldInformation.objects.all()), 2)
+
+        #delete FieldInformation obj
+        resource.delete_metadata_element(self.resGeoFeature.short_id, 'FieldInformation', element_id=field_1_ele_id_old)
+        self.assertEqual (len(FieldInformation.objects.all()), 1)
+
+        field_info_obj_list = FieldInformation.objects.filter(fieldName='fieldName1_new')
+        self.assertEqual(len(field_info_obj_list), 0)
+
+        field_info_obj_list = FieldInformation.objects.filter(fieldName='fieldName2')
+        self.assertEqual(len(field_info_obj_list), 1)
+
+        # resource.delete_metadata_element(self.resGeoFeature.short_id, 'FieldInformation', element_id=field_2_ele_id_old)
+        # self.assertEqual (len(FieldInformation.objects.all()), 2)
+
+
+
+
