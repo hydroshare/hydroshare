@@ -8,7 +8,7 @@ from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 from lxml import etree
-from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import AbstractResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 
 
 
@@ -392,6 +392,7 @@ class ModelInput(AbstractMetaDataElement):
 
 #SWAT Model Instance Resource type
 class SWATModelInstanceResource(Page, AbstractResource):
+    objects = ResourceManager()
 
     class Meta:
         verbose_name = 'SWAT Model Instance Resource'

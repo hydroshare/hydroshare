@@ -15,7 +15,7 @@ from django.core.serializers import get_serializer
 from mezzanine.conf import settings
 
 from hs_core.signals import *
-from hs_core.models import AbstractResource
+from hs_core.models import AbstractResource, ResourceManager, BaseResource
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from django_irods.storage import IrodsStorage
 
@@ -26,15 +26,11 @@ class ResourceFileSizeException(Exception):
 class ResourceFileValidationException(Exception):
     pass
 
-cached_resource_types = None
 
 def get_resource_types():
-    global cached_resource_types
-    #cached_resource_types = filter(lambda x: issubclass(x, AbstractResource), get_models()) if\
-    #    not cached_resource_types else cached_resource_types
-    cached_resource_types = filter(lambda x: issubclass(x, AbstractResource), get_models())
+    resource_types = [x for x in get_models() if issubclass(x, AbstractResource) and x != BaseResource]
 
-    return cached_resource_types
+    return resource_types
 
 
 def get_resource_instance(app, model_name, pk, or_404=True):

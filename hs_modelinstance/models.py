@@ -8,7 +8,7 @@ from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import AbstractResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_model_program.models import ModelProgramResource
 from hs_core.signals import *
 from hs_core.hydroshare import utils
@@ -94,6 +94,8 @@ class ExecutedBy(AbstractMetaDataElement):
 
 # Model Instance Resource type
 class ModelInstanceResource(Page, AbstractResource):
+    objects = ResourceManager()
+
     class Meta:
         verbose_name = 'Model Instance Resource'
 

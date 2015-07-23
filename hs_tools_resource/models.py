@@ -1,9 +1,11 @@
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.contrib.contenttypes import generic
-from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
-from hs_core import hydroshare
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.contrib.contenttypes.models import ContentType
+
+from hs_core.models import AbstractResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement, GenericResource, ResourceManager
+from hs_core import hydroshare
+
 from mezzanine.pages.models import Page
 from mezzanine.pages.page_processors import processor_for
 
@@ -12,15 +14,17 @@ from mezzanine.pages.page_processors import processor_for
 #     for res in hydroshare.get_resource_types():
 #         names.append(res.__name__)
 #
-#         
-        
+#
+
 #
 # To create a new resource, use these two super-classes.
 #
 class ToolResource(Page, AbstractResource):
+    objects = ResourceManager()
 
     class Meta:
-        verbose_name = 'Tool Resource'
+        verbose_name = 'Old Tool Resource'
+        db_table = "hs_tools_resource_toolresource"
 
     def extra_capabilities(self):
         return None
@@ -52,6 +56,14 @@ class ToolResource(Page, AbstractResource):
         # resource can't have any files
         return False
 
+
+# class ToolResource(GenericResource):
+#
+#     objects = ResourceManager('ToolResource')
+#
+#     class Meta:
+#         proxy = True
+#         verbose_name = 'Old Tool Resource'
 
 
 processor_for(ToolResource)(resource_processor)

@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.contrib.contenttypes import generic
 from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
-from hs_core.models import AbstractResource
+from hs_core.models import AbstractResource, ResourceManager, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 
 
@@ -214,6 +214,7 @@ class Variable(AbstractMetaDataElement):
 
 # Define the netCDF resource
 class NetcdfResource(Page, AbstractResource):
+    objects = ResourceManager()
 
     @property
     def metadata(self):

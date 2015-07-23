@@ -6,7 +6,7 @@ from django.db import models
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
-from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import AbstractResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 
 
 # define extended metadata elements for Time Series resource type
@@ -192,6 +192,8 @@ class TimeSeriesResult(AbstractMetaDataElement):
 #
 
 class TimeSeriesResource(Page, AbstractResource):
+    objects = ResourceManager()
+    
     class Meta:
         verbose_name = 'Time Series'
 

@@ -48,13 +48,10 @@ class TestGetResource(TestCase):
         res = resource.get_resource(self.pid).content_object
 
         self.assertTrue(res is not None)
-        self.assertTrue(type(res) == GenericResource, type(res))
+        self.assertEqual(res.resource_type, 'GenericResource')
+        self.assertTrue(isinstance(res, GenericResource), type(res))
         self.assertTrue(res.title == 'My Test Resource')
         self.assertTrue(res.created.strftime('%m/%d/%Y %H:%M') == res.updated.strftime('%m/%d/%Y %H:%M') )
         self.assertTrue(res.created.strftime('%m/%d/%Y') == dt.datetime.today().strftime('%m/%d/%Y'))
         self.assertTrue(res.user == self.user)
         self.assertTrue(res.short_id is not None, 'Short ID has not been created!')
-
-
-
-

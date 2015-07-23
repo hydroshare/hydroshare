@@ -11,6 +11,7 @@ from mezzanine.pages.page_processors import processor_for
 from uuid import uuid4
 from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
+from mezzanine.generic.fields import KeywordsField
 from mezzanine.conf import settings as s
 from mezzanine.generic.models import Keyword, AssignedKeyword
 import os.path
@@ -1358,6 +1359,26 @@ class Rights(AbstractMetaDataElement):
 def short_id():
     return uuid4().hex
 
+
+from mezzanine.pages.managers import PageManager
+class ResourceManager(PageManager):
+
+    def __init__(self, resource_type=None, *args, **kwargs):
+        self.resource_type = resource_type
+        super(ResourceManager, self).__init__(*args, **kwargs)
+
+    def create(self, *args, **kwargs):
+        if self.resource_type is None:
+            kwargs.pop('resource_type')
+        return super(ResourceManager, self).create(*args, **kwargs)
+
+    def get_queryset(self):
+        qs = super(ResourceManager, self).get_queryset()
+        if self.resource_type:
+            qs = qs.filter(resource_type=self.resource_type)
+        return qs
+
+
 class AbstractResource(ResourcePermissionsMixin):
     """
     All hydroshare objects inherit from this mixin.  It defines things that must
@@ -1371,6 +1392,7 @@ class AbstractResource(ResourcePermissionsMixin):
         class MyResourceContentType(pages.Page, hs_core.AbstractResource):
             ...
     """
+
     content = models.TextField() # the field added for use by Django inplace editing
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
@@ -1383,8 +1405,8 @@ class AbstractResource(ResourcePermissionsMixin):
     #     help_text='The dublin core metadata of the resource'
     # )
 
-    files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource')
-    bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource')
+    files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource', for_concrete_model=False)
+    bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource', for_concrete_model=False)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
@@ -1396,6 +1418,8 @@ class AbstractResource(ResourcePermissionsMixin):
     object_id = models.PositiveIntegerField(null=True, blank=True)
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
+
+    #keywords = KeywordsField(verbose_name="Keywords", for_concrete_model=False)
 
     @classmethod
     def bag_url(cls, resource_id):
@@ -1562,7 +1586,7 @@ class Bags(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
 
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = generic.GenericForeignKey('content_type', 'object_id', for_concrete_model=False)
     timestamp = models.DateTimeField(default=now, db_index=True)
 
     class Meta:
@@ -1570,10 +1594,13 @@ class Bags(models.Model):
 
 
 # remove RichText parent class from the parameters for Django inplace editing to work; otherwise, get internal edit error when saving changes
-class GenericResource(Page, AbstractResource):
+class BaseResource(Page, AbstractResource):
+
+    resource_type = models.CharField(max_length=50, default="GenericResource")
 
     class Meta:
         verbose_name = 'Generic'
+        db_table = 'hs_core_genericresource'
 
     def can_add(self, request):
         return AbstractResource.can_add(self, request)
@@ -1600,6 +1627,13 @@ class GenericResource(Page, AbstractResource):
     @classmethod
     def can_have_files(cls):
         return True
+
+
+class GenericResource(BaseResource):
+    objects = ResourceManager('GenericResource')
+
+    class Meta:
+        proxy = True
 
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):

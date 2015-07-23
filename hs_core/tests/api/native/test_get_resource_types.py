@@ -4,7 +4,7 @@ import unittest
 
 from django.test import TestCase
 from hs_core import hydroshare
-from hs_core.models import AbstractResource
+from hs_core.models import AbstractResource, ResourceManager
 from hs_core.hydroshare import resource, users
 from django.contrib.auth.models import User, Group
 

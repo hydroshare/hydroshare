@@ -3,7 +3,7 @@ from django.contrib.auth.models import User, Group
 from django.db import models
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
-from hs_core.models import AbstractResource, resource_processor
+from hs_core.models import AbstractResource, ResourceManager, resource_processor
 from django_docker_processes import signals
 from django_docker_processes.models import DockerProcess
 from django_docker_processes.models import DockerProfile
@@ -28,6 +28,8 @@ import os
 #
 # TODO: doesnt have a page_processors.py????
 class InstResource(Page, AbstractResource):
+    objects = ResourceManager()
+    
     class Meta:
         verbose_name = 'RHESSys Instance Resource'
     name = models.CharField(max_length=50)

@@ -4,11 +4,13 @@ import os
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
+from django.db import transaction
+
 from mezzanine.generic.models import Keyword, AssignedKeyword
 
 from hs_core.hydroshare import hs_bagit
 from hs_core.hydroshare.utils import get_resource_types
-from hs_core.models import ResourceFile
+from hs_core.models import ResourceFile, BaseResource
 from hs_core import signals
 from hs_core.hydroshare import utils
 
@@ -346,12 +348,13 @@ def create_resource(
 
     :return: a new resource which is an instance of resource_type.
     """
-    try:
+    with transaction.atomic():
         cls = check_resource_type(resource_type)
         owner = utils.user_from_id(owner)
 
         # create the resource
         resource = cls.objects.create(
+            resource_type=resource_type,
             user=owner,
             creator=owner,
             title=title,
@@ -395,12 +398,14 @@ def create_resource(
                 group = utils.group_from_id(group)
                 resource.view_groups.add(group)
 
-        if keywords:
-            ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
-            ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
-
-            for k in ks:
-                AssignedKeyword.objects.create(content_object=resource, keyword=k)
+        # TODO: Fix or drop
+        # if keywords:
+        #     ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
+        #     ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
+        #
+        #     for k in ks:
+        #         br = BaseResource.objects.get(id=resource.id)
+        #         AssignedKeyword.objects.create(content_object=br, keyword=k)
 
         # prepare default metadata
         utils.prepare_resource_default_metadata(resource=resource, metadata=metadata, res_title=title)
@@ -416,11 +421,6 @@ def create_resource(
             resource.metadata.create_element('subject', value=akw.keyword.title)
 
         hs_bagit.create_bag(resource)
-
-    except Exception as ex:
-        if resource:
-            resource.delete()
-        raise Exception(ex.message)
 
     return resource
 

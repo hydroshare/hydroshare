@@ -1,7 +1,7 @@
 from django.contrib.contenttypes import generic
 from django.db import models
 from mezzanine.pages.models import Page
-from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import AbstractResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from mezzanine.pages.page_processors import processor_for
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -228,6 +228,8 @@ class CellInformation(AbstractMetaDataElement):
 # To create a new resource, use these two super-classes.
 #
 class RasterResource(Page, AbstractResource):
+    objects = ResourceManager()
+    
     class Meta:
         verbose_name = 'Geographic Raster'
 

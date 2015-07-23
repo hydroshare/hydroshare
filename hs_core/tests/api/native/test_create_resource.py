@@ -5,7 +5,7 @@ import unittest
 from unittest import TestCase
 from hs_core.hydroshare import resource, get_resource_by_shortkey
 from hs_core.hydroshare import users
-from hs_core.models import GenericResource
+from hs_core.models import GenericResource, BaseResource, Bags
 from django.contrib.auth.models import User, Group
 import datetime as dt
 
@@ -45,19 +45,19 @@ class TestCreateResource(TestCase):
             'My Test Resource'
             )
 
-
-
         pid = new_res.short_id
 
         # get the resource by pid
         res = get_resource_by_shortkey(pid)
-        self.assertTrue(type(res) == GenericResource, type(res))
+        self.assertEqual(res.resource_type, 'GenericResource')
+        self.assertTrue(isinstance(res, GenericResource), type(res))
         self.assertTrue(res.title == 'My Test Resource')
         self.assertTrue(res.created.strftime('%m/%d/%Y %H:%M') == res.updated.strftime('%m/%d/%Y %H:%M') )
         self.assertTrue(res.created.strftime('%m/%d/%Y') == dt.datetime.today().strftime('%m/%d/%Y'))
         self.assertTrue(res.creator == self.user)
         self.assertTrue(res.short_id is not None, 'Short ID has not been created!')
-        self.assertTrue(res.bags.exists(), 'Bagit has not been created!')
+        self.assertEqual(1, Bags.objects.filter(object_id=res.id).count())
+        self.assertTrue(res.bags.exists(), Bags.objects.filter(object_id=res.id)[0].content_type)
 
 
     # authored by: Pabitra
@@ -137,5 +137,3 @@ class TestCreateResource(TestCase):
                       msg="Subject element with value of %s does not exist." % 'sub-1')
         self.assertIn('sub-2', [sub.value for sub in res.metadata.subjects.all()],
                       msg="Subject element with value of %s does not exist." % 'sub-1')
-
-
