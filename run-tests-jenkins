@@ -1,4 +1,4 @@
 #!/bin/bash
 
 coverage run manage.py test $1
-coverage report
+coverage html
