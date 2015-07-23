@@ -13,7 +13,6 @@ from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.generic.fields import KeywordsField
 from mezzanine.conf import settings as s
-from mezzanine.generic.models import Keyword, AssignedKeyword
 import os.path
 from django_irods.storage import IrodsStorage
 from django.conf import settings
