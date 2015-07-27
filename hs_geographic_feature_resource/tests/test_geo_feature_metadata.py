@@ -62,6 +62,7 @@ class TestGeoFeatureMetadata(TestCase):
         OriginalCoverage.objects.all().delete()
         GeometryInformation.objects.all().delete()
         FieldInformation.objects.all().delete()
+        OriginalFileInfo.objects.all().delete()
 
 
     def test_geo_feature_basic_metadata(self):
@@ -172,6 +173,38 @@ class TestGeoFeatureMetadata(TestCase):
 
         # add another subject element
         resource.create_metadata_element(self.resGeoFeature.short_id,'subject', value='sub-2')
+
+
+        # originalfileinfo
+        #no originalfileinfo obj
+        self.assertEqual (len(OriginalFileInfo.objects.all()), 0)
+
+        #create originalfileinfo obj without a required para: southlimit
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.resGeoFeature.short_id,'OriginalFileInfo', fileType='SHP'))
+
+        # #create originalfileinfo obj without a predefined keywords
+        # self.assertRaises(Exception, lambda: resource.create_metadata_element(self.resGeoFeature.short_id,'OriginalFileInfo', fileType='MY_SHP', fileCount=3, baseFilename="baseFilename"))
+
+        #no originalfileinfo obj
+        self.assertEqual (len(OriginalFileInfo.objects.all()), 0)
+
+        #create 1 originalfileinfo obj with required para
+        resource.create_metadata_element(self.resGeoFeature.short_id,'OriginalFileInfo', fileType='SHP', fileCount=3, baseFilename="baseFilename")
+        self.assertEqual (len(OriginalFileInfo.objects.all()), 1)
+
+        #may not create any more OriginalFileInfo
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.resGeoFeature.short_id,'OriginalFileInfo', fileType='ZSHP', fileCount=5, baseFilename="baseFilename2"))
+
+        self.assertEqual (len(OriginalFileInfo.objects.all()), 1)
+        #update existing meta
+        resource.update_metadata_element(self.resGeoFeature.short_id,'OriginalFileInfo', element_id=OriginalFileInfo.objects.first().object_id, fileType='KML', fileCount=8, baseFilename="baseFilename3")
+        self.assertEqual(OriginalFileInfo.objects.first().fileType,'KML')
+        self.assertEqual(OriginalFileInfo.objects.first().fileCount,8)
+        self.assertEqual(OriginalFileInfo.objects.first().baseFilename,'baseFilename3')
+
+        #delete OriginalCoverage obj
+        resource.delete_metadata_element(self.resGeoFeature.short_id,'OriginalFileInfo', element_id=OriginalFileInfo.objects.first().object_id)
+        self.assertEqual (len(OriginalFileInfo.objects.all()), 0)
 
 
         # originalcoverage

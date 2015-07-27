@@ -9,19 +9,79 @@ from django.contrib.contenttypes import generic
 
 # Create your models here.
 
+
+class OriginalFileInfo(AbstractMetaDataElement):
+
+    term = 'OriginalFileInfo'
+
+    fileTypeEnum=(  (None, 'Unknown'),
+                    ("SHP", "ESRI Shapefiles"),
+                    ("ZSHP", "Zipped ESRI Shapefiles"),
+                    ("KML", "KML"),
+                    ("KMZ", "KMZ"),
+                    ("GML", "GML"),
+                    ("SQLITE", "SQLite")
+                 )
+    fileType=models.TextField(max_length=128, choices=fileTypeEnum, default=None)
+    baseFilename=models.TextField(max_length=256, null=False, blank=False)
+    fileCount=models.IntegerField(null=False, blank=False, default=0)
+
+    filenameString = models.TextField(max_length=2048, null=True, blank=True)
+
+    class Meta:
+        # OriginalFileInfo element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def create(cls, **kwargs):
+
+        for limit in ['fileType', 'baseFilename', 'fileCount']:
+            if not limit in kwargs:
+                raise ValidationError("For OriginalFileInfo meta, one or more attribute is missing.")
+
+        metadata_obj = kwargs['content_object']
+        ori_file_info = OriginalFileInfo.objects.create(fileType=kwargs['fileType'], baseFilename=kwargs['baseFilename'],
+                                                  fileCount=kwargs['fileCount'],
+                                                 content_object=metadata_obj,)
+        # save filenameString info
+        for key, value in kwargs.iteritems():
+            if key in ('filenameString'):
+                setattr(ori_file_info, key, value)
+                ori_file_info.save()
+
+        return ori_file_info
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        ori_file_info = OriginalFileInfo.objects.get(id=element_id)
+        if ori_file_info:
+            ori_file_info.fileType = kwargs['fileType']
+            ori_file_info.baseFilename = kwargs['baseFilename']
+            ori_file_info.fileCount = kwargs['fileCount']
+            ori_file_info.save()
+
+            # save filenameString info
+            for key, value in kwargs.iteritems():
+                if key in ('filenameString'):
+                    setattr(ori_file_info, key, value)
+                    ori_file_info.save()
+        else:
+            raise ObjectDoesNotExist("No OriginalFileInfo was found for the provided id: %d" % element_id)
+
+    @classmethod
+    def remove(cls, element_id):
+        ori_file_info = OriginalFileInfo.objects.get(id=element_id)
+        if ori_file_info:
+            ori_file_info.delete()
+        else:
+            raise ObjectDoesNotExist("No OriginalFileInfo element exists for id: %d."%element_id)
+
 #
 # Define original spatial coverage metadata info
 class OriginalCoverage(AbstractMetaDataElement):
 
     term = 'OriginalCoverage'
-    """
-    _value field stores a json string. The content of the json as box coverage info
-         _value = "{'northlimit':northenmost coordinate value,
-                    'eastlimit':easternmost coordinate value,
-                    'southlimit':southernmost coordinate value,
-                    'westlimit':westernmost coordinate value,
-                   }"
-    """
+
     #original extent
     #_extent = models.CharField(max_length=1024, null=False, blank=False)
     northlimit = models.FloatField(null=False, blank=False)
@@ -227,6 +287,7 @@ class GeographicFeatureMetaData(CoreMetaData):
     geometryinformation = generic.GenericRelation(GeometryInformation)
     fieldinformation = generic.GenericRelation(FieldInformation)
     originalcoverage = generic.GenericRelation(OriginalCoverage)
+    originalfileinfo = generic.GenericRelation(OriginalFileInfo)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -236,10 +297,13 @@ class GeographicFeatureMetaData(CoreMetaData):
         elements.append('FieldInformation')
         elements.append('OriginalCoverage')
         elements.append('GeometryInformation')
+        elements.append('OriginalFileInfo')
         return elements
 
     def has_all_required_elements(self):
         if not super(GeographicFeatureMetaData, self).has_all_required_elements():  # check required meta
+            return False
+        if not self.originalfileinfo.all().first():
             return False
         if not self.fieldinformation.all().first():
             return False
@@ -257,6 +321,8 @@ class GeographicFeatureMetaData(CoreMetaData):
             missing_required_elements.append('Spatial Reference')
         if not self.geometryinformation.all().first():
             missing_required_elements.append('Geometry Infomation')
+        if not self.originalfileinfo.all().first():
+            missing_required_elements.append('Original File Information')
         # if not self.field_info.all().first():
         #     missing_required_elements.append('FieldInformation')
 
@@ -289,6 +355,19 @@ class GeographicFeatureMetaData(CoreMetaData):
             if ori_cov_obj.projection_string:
                 hsterms_ori_cov_projection = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}crsRepresentationText' % self.NAMESPACES['hsterms'])
                 hsterms_ori_cov_projection.text = str(ori_cov_obj.projection_string)
+
+        hsterms_ori_file_info = etree.SubElement(container, '{%s}originalFileInfo' % self.NAMESPACES['hsterms'])
+        hsterms_ori_file_info_rdf_Description = etree.SubElement(hsterms_ori_file_info, '{%s}Description' % self.NAMESPACES['rdf'])
+        ori_file_info = self.originalfileinfo.all().first()
+        if ori_file_info:
+            hsterms_ori_file_info_file_type = etree.SubElement(hsterms_ori_file_info_rdf_Description, '{%s}fileType' % self.NAMESPACES['hsterms'])
+            hsterms_ori_file_info_file_type.text = str(ori_file_info.fileType)
+            hsterms_ori_file_info_file_count = etree.SubElement(hsterms_ori_file_info_rdf_Description, '{%s}fileCount' % self.NAMESPACES['hsterms'])
+            hsterms_ori_file_info_file_count.text = str(ori_file_info.fileCount)
+            hsterms_ori_file_info_filename_string = etree.SubElement(hsterms_ori_file_info_rdf_Description, '{%s}filenameString' % self.NAMESPACES['hsterms'])
+            hsterms_ori_file_info_filename_string.text = str(ori_file_info.filenameString)
+            hsterms_ori_file_info_base_filename = etree.SubElement(hsterms_ori_file_info_rdf_Description, '{%s}baseFilename' % self.NAMESPACES['hsterms'])
+            hsterms_ori_file_info_base_filename.text = str(ori_file_info.baseFilename)
 
 
         hsterms_geom_info = etree.SubElement(container, '{%s}geometryInformation' % self.NAMESPACES['hsterms'])

@@ -10,7 +10,7 @@ import shutil
 import os
 from hs_geographic_feature_resource.parse_lib import *
 from hs_geographic_feature_resource.forms import *
-import zipfile
+import zipfile, json
 
 def is_shapefiles(files):
 #check if uploaded files are valid shapefiles (shp, shx, dbf)
@@ -77,6 +77,10 @@ def geofeature_pre_create_resource(sender, **kwargs):
         res_titile_fn = res_title.replace(" ", "_")
         tmp_dir = None
         uploaded_file_type = None
+        baseFilename=None
+        uploadedFileCount=0
+        uploadedFilenameString=None
+
         if files:
             if is_shapefiles(files):
                 uploaded_file_type = "shp"
@@ -86,10 +90,19 @@ def geofeature_pre_create_resource(sender, **kwargs):
                 for file in files:
                     source = file.file.name
                     fileName, fileExtension = os.path.splitext(file.name)
-                    target = tmp_dir + "/" + res_titile_fn + fileExtension
+                    #target = tmp_dir + "/" + res_titile_fn + fileExtension
+                    target = tmp_dir + "/" + fileName + fileExtension
                     shutil.copy(source, target)
 
-                shp_full_path = tmp_dir + "/" + res_titile_fn + ".shp"
+                #shp_full_path = tmp_dir + "/" + res_titile_fn + ".shp"
+                shp_full_path = tmp_dir + "/" + fileName + ".shp"
+                baseFilename=fileName
+                uploadedFileCount=len(files)
+                uploadedFilenameString_dict={}
+                for i in range(len(files)):
+                    uploadedFilenameString_dict[str(i)]=files[i].name
+                uploadedFilenameString = json.dumps(uploadedFilenameString_dict)
+
             elif is_zipped_shapefiles(files):
                 uploaded_file_type = "zipped_shp"
                 tmp_dir=tempfile.mkdtemp()
@@ -98,23 +111,40 @@ def geofeature_pre_create_resource(sender, **kwargs):
                 fn_list = zf.namelist()
                 zf.extractall(path=tmp_dir)
                 zf.close()
-                files_list_for_meta=[]
                 from django.core.files.uploadedfile import UploadedFile
                 del files[:]
                 for old_fn in fn_list:
                     source = tmp_dir + '/' +old_fn
                     fileName, fileExtension = os.path.splitext(old_fn)
-                    target = tmp_dir + "/" + res_titile_fn + fileExtension
-                    shutil.copy(source, target)
-                    files.append(UploadedFile(file=open(target, 'r'), name=res_titile_fn + fileExtension))
+                    #target = tmp_dir + "/" + res_titile_fn + fileExtension
+                    target = tmp_dir + "/" + fileName + fileExtension
+                    #shutil.copy(source, target)
+                    #files.append(UploadedFile(file=open(target, 'r'), name=res_titile_fn + fileExtension))
+                    files.append(UploadedFile(file=open(target, 'r'), name=fileName + fileExtension))
 
-                shp_full_path = tmp_dir + "/" + res_titile_fn + ".shp"
+                #shp_full_path = tmp_dir + "/" + res_titile_fn + ".shp"
+                shp_full_path = tmp_dir + "/" + fileName + ".shp"
+                baseFilename = fileName
+                uploadedFileCount=len(fn_list)
+                uploadedFilenameString_dict={}
+                for i in range(len(fn_list)):
+                    uploadedFilenameString_dict[str(i)]=fn_list[i]
+                uploadedFilenameString = json.dumps(uploadedFilenameString_dict)
+
             else:
                 validate_files_dict['are_files_valid'] = False
                 validate_files_dict['message'] = 'Please upload valid file(s).'
 
             if uploaded_file_type == "shp" or uploaded_file_type == "zipped_shp":
                 try:
+
+                    #fileTypeInfo_dict
+                    originalFileInfo_dict={}
+                    originalFileInfo_dict["fileType"]="SHP" if uploaded_file_type == "shp" else "ZSHP"
+                    originalFileInfo_dict["baseFilename"] = baseFilename
+                    originalFileInfo_dict["fileCount"]= uploadedFileCount
+                    originalFileInfo_dict["filenameString"]=uploadedFilenameString
+                    metadata.append({"OriginalFileInfo": originalFileInfo_dict})
 
                     # wgs84 extent
                     parsed_md_dict = parse_shp(shp_full_path)
@@ -144,6 +174,7 @@ def geofeature_pre_create_resource(sender, **kwargs):
                     #geometry
                     geometryinformation={"featureCount":parsed_md_dict["feature_count"],"geometryType":parsed_md_dict["geometry_type"]}
                     metadata.append({"geometryinformation": geometryinformation})
+
 
 
                 except:
