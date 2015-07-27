@@ -247,7 +247,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     if len(files) > 0:
         check_file_dict_for_error(file_validation_dict)
 
-    return page_url_dict, resource_title,  metadata
+    return page_url_dict, resource_title,  metadata, files
 
 
 def resource_post_create_actions(resource, user, metadata,  **kwargs):

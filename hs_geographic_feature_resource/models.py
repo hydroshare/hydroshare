@@ -186,7 +186,7 @@ class GeometryInformation(AbstractMetaDataElement):
             raise ObjectDoesNotExist("GeometryInformation element of the geographic feature resource cannot be deleted: %d."%element_id)
 
 
-# Define the netCDF resource
+# Define the Geographic Feature
 class GeographicFeatureResource(Page, AbstractResource):
 
     @property
@@ -198,11 +198,11 @@ class GeographicFeatureResource(Page, AbstractResource):
     def get_supported_upload_file_types(cls):
     # See Shapefile format: http://webhelp.esri.com/arcgisdesktop/9.2/index.cfm?TopicName=Shapefile_file_extensions
     # 3 file types are supported
-        return (".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg",)
+        return (".zip", ".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg",)
 
     @classmethod
     def can_have_multiple_files(cls):
-        # can have only 1 file or more
+        # can have more than one files
         return True
 
     def can_add(self, request):
@@ -218,7 +218,7 @@ class GeographicFeatureResource(Page, AbstractResource):
         return AbstractResource.can_view(self, request)
 
     class Meta:
-            verbose_name = 'Geographic Feature (Vector)'
+            verbose_name = 'Geographic Feature (ESRI Shapefiles)'
 
 processor_for(GeographicFeatureResource)(resource_processor)
 

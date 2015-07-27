@@ -10,23 +10,57 @@ import shutil
 import os
 from hs_geographic_feature_resource.parse_lib import *
 from hs_geographic_feature_resource.forms import *
+import zipfile
+
 def is_shapefiles(files):
 #check if uploaded files are valid shapefiles (shp, shx, dbf)
-    shp, shx, dbf = False , False, False
+    fn_list=[]
     for file in files:
-        if ".shp" in file.name:
-            shp=True
-        elif ".shx" in file.name:
-            shx=True
-        elif ".dbf" in file.name:
-            dbf=True
+        fn_list.append(file.name)
+    return check_fn_for_shp(fn_list)
 
-    if shp & shx & dbf:
+
+def check_fn_for_shp(files):
+#check a list of filenames contains valid shapefiles (shp, shx, dbf)
+    shp, shx, dbf = False , False, False
+    all_have_same_filename = False
+    shp_filename, shx_filename, dbf_filename =None, None, None
+    if len(files) >= 3: # at least have 3 files: shp, shx, dbf
+        for file in files:
+            fileName, fileExtension = os.path.splitext(file)
+            if ".shp" == fileExtension:
+                shp_filename = fileName
+                shp=True
+            elif ".shx" == fileExtension:
+                shx_filename = fileName
+                shx=True
+            elif ".dbf" == fileExtension:
+                dbf_filename = fileName
+                dbf=True
+
+        if shp_filename == shx_filename and shp_filename == dbf_filename:
+            all_have_same_filename = True
+
+    if shp & shx & dbf & all_have_same_filename:
         return True
     else:
         return False
 
+
+def is_zipped_shapefiles(files):
+#check if the uploaded zip files contains valid shapefiles (shp, shx, dbf)
+    if(len(files) == 1) and '.zip' in files[0].name:
+        zipfile_path=files[0].file.name
+        if zipfile.is_zipfile(zipfile_path):
+            zf = zipfile.ZipFile(zipfile_path, 'r')
+            content_fn_list = zf.namelist()
+            return check_fn_for_shp(content_fn_list)
+    return False
+
+
+
 def is_spatialite(files):
+# check for sqlite
     for file in files:
         if ".sqlite" in file.name:
             return True
@@ -42,9 +76,10 @@ def geofeature_pre_create_resource(sender, **kwargs):
         res_title = kwargs['title']
         res_titile_fn = res_title.replace(" ", "_")
         tmp_dir = None
-
+        uploaded_file_type = None
         if files:
             if is_shapefiles(files):
+                uploaded_file_type = "shp"
                 #create a temp foler and copy shapefiles
                 tmp_dir=tempfile.mkdtemp()
                 files_list_for_extract_metadata = []
@@ -52,9 +87,33 @@ def geofeature_pre_create_resource(sender, **kwargs):
                     source = file.file.name
                     fileName, fileExtension = os.path.splitext(file.name)
                     target = tmp_dir + "/" + res_titile_fn + fileExtension
-                    shutil.copy(source,target)
+                    shutil.copy(source, target)
 
                 shp_full_path = tmp_dir + "/" + res_titile_fn + ".shp"
+            elif is_zipped_shapefiles(files):
+                uploaded_file_type = "zipped_shp"
+                tmp_dir=tempfile.mkdtemp()
+                zipfile_path=files[0].file.name
+                zf = zipfile.ZipFile(zipfile_path, 'r')
+                fn_list = zf.namelist()
+                zf.extractall(path=tmp_dir)
+                zf.close()
+                files_list_for_meta=[]
+                from django.core.files.uploadedfile import UploadedFile
+                del files[:]
+                for old_fn in fn_list:
+                    source = tmp_dir + '/' +old_fn
+                    fileName, fileExtension = os.path.splitext(old_fn)
+                    target = tmp_dir + "/" + res_titile_fn + fileExtension
+                    shutil.copy(source, target)
+                    files.append(UploadedFile(file=open(target, 'r'), name=res_titile_fn + fileExtension))
+
+                shp_full_path = tmp_dir + "/" + res_titile_fn + ".shp"
+            else:
+                validate_files_dict['are_files_valid'] = False
+                validate_files_dict['message'] = 'Please upload valid file(s).'
+
+            if uploaded_file_type == "shp" or uploaded_file_type == "zipped_shp":
                 try:
 
                     # wgs84 extent
