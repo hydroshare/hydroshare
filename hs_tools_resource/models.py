@@ -19,7 +19,7 @@ from mezzanine.pages.page_processors import processor_for
 #
 # To create a new resource, use these two super-classes.
 #
-class ToolResource(Page, AbstractResource):
+class OldToolResource(Page, AbstractResource):
     objects = ResourceManager()
 
     class Meta:
@@ -57,13 +57,31 @@ class ToolResource(Page, AbstractResource):
         return False
 
 
-# class ToolResource(GenericResource):
-#
-#     objects = ResourceManager('ToolResource')
-#
-#     class Meta:
-#         proxy = True
-#         verbose_name = 'Old Tool Resource'
+class ToolResource(GenericResource):
+
+    objects = ResourceManager('ToolResource')
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Old Tool Resource'
+
+    def extra_capabilities(self):
+        return None
+
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # no file types are supported
+        return ()
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        # resource can't have any files
+        return False
+
+    @property
+    def metadata(self):
+        md = ToolMetaData()
+        return self._get_metadata(md)
 
 
 processor_for(ToolResource)(resource_processor)
