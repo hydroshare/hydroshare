@@ -1368,7 +1368,7 @@ class ResourceManager(PageManager):
 
     def create(self, *args, **kwargs):
         if self.resource_type is None:
-            kwargs.pop('resource_type')
+            kwargs.pop('resource_type', None)
         return super(ResourceManager, self).create(*args, **kwargs)
 
     def get_queryset(self):

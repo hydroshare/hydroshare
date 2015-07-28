@@ -56,6 +56,9 @@ class OldToolResource(Page, AbstractResource):
         # resource can't have any files
         return False
 
+    def copy_to_new_model(self):
+        pass
+
 
 class ToolResource(GenericResource):
 

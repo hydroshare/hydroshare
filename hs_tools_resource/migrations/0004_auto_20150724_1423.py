@@ -8,6 +8,9 @@ def migrate_to_baseresource(apps, schema_editor):
     BaseResource = apps.get_model('hs_core', 'BaseResource')
     OldToolResource = apps.get_model('hs_tools_resource', 'OldToolResource')
 
+def migrate_from_baseresource(apps, schema_editor):
+    BaseResource = apps.get_model('hs_core', 'BaseResource')
+    OldToolResource = apps.get_model('hs_tools_resource', 'OldToolResource')
 
 class Migration(migrations.Migration):
 
@@ -17,5 +20,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_to_baseresource),
+        migrations.RunPython(migrate_to_baseresource, migrate_from_baseresource),
     ]
