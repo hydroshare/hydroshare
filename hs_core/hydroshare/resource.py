@@ -699,7 +699,10 @@ def delete_resource_file(pk, filename_or_id, user):
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if filter_condition(f):
             # send signal
-            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource)
+            file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
+            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource, validate_files=file_validation_dict)
+            from hs_core.hydroshare.utils import check_file_dict_for_error
+            check_file_dict_for_error(file_validation_dict)
 
             file_name = f.resource_file.name
             f.resource_file.delete()

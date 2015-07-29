@@ -232,7 +232,12 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    hydroshare.delete_resource_file(shortkey, f, user)
+    try:
+        hydroshare.delete_resource_file(shortkey, f, user)
+
+    except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+        request.session['file_validation_error'] = ex.message
+
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 

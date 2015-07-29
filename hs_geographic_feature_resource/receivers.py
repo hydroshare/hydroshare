@@ -11,6 +11,7 @@ import os
 from hs_geographic_feature_resource.parse_lib import *
 from hs_geographic_feature_resource.forms import *
 import zipfile, json
+from hs_core.hydroshare.resource import ResourceFile
 
 def is_shapefiles(files):
 #check if uploaded files are valid shapefiles (shp, shx, dbf)
@@ -21,6 +22,7 @@ def is_shapefiles(files):
 
 
 def check_fn_for_shp(files):
+#used by is_shapefiles
 #check a list of filenames contains valid shapefiles (shp, shx, dbf)
     shp, shx, dbf = False , False, False
     all_have_same_filename = False
@@ -89,7 +91,7 @@ def geofeature_pre_create_resource(sender, **kwargs):
                 files_list_for_extract_metadata = []
                 for file in files:
                     source = file.file.name
-                    fileName, fileExtension = os.path.splitext(file.name)
+                    fileName, fileExtension = os.path.splitext(file.name.lower())
                     #target = tmp_dir + "/" + res_titile_fn + fileExtension
                     target = tmp_dir + "/" + fileName + fileExtension
                     shutil.copy(source, target)
@@ -100,7 +102,7 @@ def geofeature_pre_create_resource(sender, **kwargs):
                 uploadedFileCount=len(files)
                 uploadedFilenameString_dict={}
                 for i in range(len(files)):
-                    uploadedFilenameString_dict[str(i)]=files[i].name
+                    uploadedFilenameString_dict[files[i].name]=str(i)
                 uploadedFilenameString = json.dumps(uploadedFilenameString_dict)
 
             elif is_zipped_shapefiles(files):
@@ -225,3 +227,133 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
         return {'is_valid': False, 'element_data_dict': None}
+
+
+@receiver(pre_delete_file_from_resource, sender=GeographicFeatureResource)
+def geofeature_pre_delete_file_from_resource(sender, **kwargs):
+    if sender is GeographicFeatureResource:
+        res_obj = kwargs['resource']
+        del_file = kwargs['file']
+        validate_files_dict = kwargs['validate_files']
+        one_file_removed=True
+        ori_file_info=res_obj.metadata.originalfileinfo.all().first()
+        if ori_file_info.fileType == "SHP" or ori_file_info.fileType=="ZSHP":
+            del_f_fullname=del_file.resource_file.name.lower()
+            del_f_fullname= del_f_fullname[del_f_fullname.rfind('/')+1:]
+            del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
+            if del_f_ext in [".shp", ".shx", ".dbf"]:
+                #error_message = " The shp, shx or dbf files can not be removed."
+                validate_files_dict['are_files_valid'] = False
+                validate_files_dict['message'] = " The shp, shx or dbf files can not be removed."
+                one_file_removed=False
+                #raise ResourceFileValidationException(error_message)
+            elif del_f_ext == ".prj":
+                originalcoverage_obj=res_obj.metadata.originalcoverage.all().first()
+                res_obj.metadata.update_element('OriginalCoverage', element_id=originalcoverage_obj.object_id, projection_string=UNKNOWN_STR, projection_name =UNKNOWN_STR, datum =UNKNOWN_STR, unit =UNKNOWN_STR)
+
+                wgs84_extent_dict={}
+                wgs84_extent_dict["westlimit"]=UNKNOWN_STR
+                wgs84_extent_dict["northlimit"]=UNKNOWN_STR
+                wgs84_extent_dict["eastlimit"]=UNKNOWN_STR
+                wgs84_extent_dict["southlimit"]=UNKNOWN_STR
+                wgs84_extent_dict["projection"]=UNKNOWN_STR
+                wgs84_extent_dict["units"]=UNKNOWN_STR
+                coverage_obj=res_obj.metadata.coverages.all().first()
+                res_obj.metadata.update_element('coverage', element_id=coverage_obj.object_id, type='box', value=wgs84_extent_dict)
+            if one_file_removed:
+                ori_fn_dict=json.loads(ori_file_info.filenameString)
+                if del_f_fullname in ori_fn_dict:
+                    del ori_fn_dict[del_f_fullname]
+                    res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.object_id,filenameString=json.dumps(ori_fn_dict))
+
+    pass
+
+@receiver(pre_add_files_to_resource, sender=GeographicFeatureResource)
+def geofeature_pre_add_files_to_resource(sender, **kwargs):
+    if sender is GeographicFeatureResource:
+        res_obj = kwargs['resource']
+        files = kwargs['files']
+        validate_files_dict = kwargs['validate_files']
+        ori_file_info=res_obj.metadata.originalfileinfo.all().first()
+        crt_f_str=ori_file_info.filenameString.lower()
+        some_new_files_added=True
+        # res_file_list=ResourceFile.objects.filter(object_id=res_obj.id)
+        # for res_f in res_file_list:
+        #     n=res_f.resource_file.name
+
+        #for crt_f
+        for f in files:
+            new_f_fullname=f.name.lower()
+            new_f_name, new_f_ext=os.path.splitext(new_f_fullname)
+
+            if new_f_ext in  [".shp", ".shx", ".dbf"]:
+                validate_files_dict['are_files_valid'] = False
+                validate_files_dict['message'] = "No more shp, shx, dbf files can be uploaded."
+                some_new_files_added=False
+                break
+            elif new_f_name!=ori_file_info.baseFilename:
+                validate_files_dict['are_files_valid'] = False
+                validate_files_dict['message'] = "At least one filename does not match this shapefiles resource."
+                some_new_files_added=False
+                break
+            elif crt_f_str.find(new_f_fullname)!=-1:
+                validate_files_dict['are_files_valid'] = False
+                validate_files_dict['message'] = "At least one file already exits."
+                some_new_files_added=False
+                break
+        if some_new_files_added:
+            for f in files:
+                new_f_fullname=f.name.lower()
+                ori_fn_dict=json.loads(ori_file_info.filenameString)
+                ori_fn_dict[new_f_fullname]="new"
+            res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.object_id,filenameString=json.dumps(ori_fn_dict))
+
+
+
+
+        #if ori_file_info.fileType=="SHP" or ori_file_info.fileType=="ZSHP":
+
+
+    pass
+
+@receiver(post_add_files_to_resource, sender=GeographicFeatureResource)
+def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
+    tmp_dir=None
+
+    resource = kwargs['resource']
+    validate_files_dict = kwargs['validate_files']
+    user = kwargs['user']
+
+    res_file_list = resource.files.all() if resource.files.all() else None
+    if res_file_list:
+        tmp_dir=tempfile.mkdtemp()
+        for res_f in res_file_list:
+            source = res_f.resource_file.file.name
+            f_fullname=res_f.resource_file.name.lower()
+            f_fullname= f_fullname[f_fullname.rfind('/')+1:]
+
+            fileName, fileExtension = os.path.splitext(f_fullname)
+            target = tmp_dir + "/" + fileName + fileExtension
+            shutil.copy(source, target)
+        shp_full_path = tmp_dir + "/" + fileName + ".shp"
+        parsed_md_dict = parse_shp(shp_full_path)
+
+        originalcoverage_obj=resource.metadata.originalcoverage.all().first()
+        resource.metadata.update_element('OriginalCoverage', element_id=originalcoverage_obj.object_id,
+                                         projection_string=parsed_md_dict["origin_projection_string"],
+                                         projection_name =parsed_md_dict["origin_projection_name"],
+                                         datum =parsed_md_dict["origin_datum"],
+                                         unit =parsed_md_dict["origin_unit"])
+        coverage_obj=resource.metadata.coverages.all().first()
+        resource.metadata.update_element('coverage', element_id=coverage_obj.object_id,
+                                         type='box',
+                                         value=parsed_md_dict["wgs84_extent_dict"])
+
+        if tmp_dir is not None:
+            shutil.rmtree(tmp_dir)
+            temp_dir = None
+        pass
+
+@receiver(post_create_resource, sender=GeographicFeatureResource)
+def geofeature_post_create_resource_handler(sender, **kwargs):
+    pass

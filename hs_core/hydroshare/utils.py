@@ -205,6 +205,7 @@ def get_file_mime_type(file_name):
 def check_file_dict_for_error(file_validation_dict):
     if 'are_files_valid' in file_validation_dict:
         if not file_validation_dict['are_files_valid']:
+
             error_message = file_validation_dict.get('message', "Uploaded file(s) failed validation.")
             raise ResourceFileValidationException(error_message)
 

@@ -55,14 +55,14 @@ class OriginalFileInfo(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         ori_file_info = OriginalFileInfo.objects.get(id=element_id)
         if ori_file_info:
-            ori_file_info.fileType = kwargs['fileType']
-            ori_file_info.baseFilename = kwargs['baseFilename']
-            ori_file_info.fileCount = kwargs['fileCount']
-            ori_file_info.save()
+            # ori_file_info.fileType = kwargs['fileType']
+            # ori_file_info.baseFilename = kwargs['baseFilename']
+            # ori_file_info.fileCount = kwargs['fileCount']
+            # ori_file_info.save()
 
             # save filenameString info
             for key, value in kwargs.iteritems():
-                if key in ('filenameString'):
+                if key in ('fileType', 'baseFilename', 'fileCount', 'filenameString'):
                     setattr(ori_file_info, key, value)
                     ori_file_info.save()
         else:
@@ -128,15 +128,15 @@ class OriginalCoverage(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         ori_cov = OriginalCoverage.objects.get(id=element_id)
         if ori_cov:
-            ori_cov.northlimit = kwargs['northlimit']
-            ori_cov.southlimit = kwargs['southlimit']
-            ori_cov.eastlimit = kwargs['eastlimit']
-            ori_cov.westlimit = kwargs['westlimit']
-            ori_cov.save()
+            # ori_cov.northlimit = kwargs['northlimit']
+            # ori_cov.southlimit = kwargs['southlimit']
+            # ori_cov.eastlimit = kwargs['eastlimit']
+            # ori_cov.westlimit = kwargs['westlimit']
+            # ori_cov.save()
 
             # # update projection string info
             for key, value in kwargs.iteritems():
-                if key in ('projection_string','projection_name','datum','unit'):
+                if key in ('projection_string','projection_name','datum','unit', 'northlimit', 'southlimit', 'eastlimit', 'westlimit'):
                     setattr(ori_cov, key, value)
                     ori_cov.save()
         else:
@@ -167,8 +167,7 @@ class FieldInformation(AbstractMetaDataElement):
         if 'fieldName' in kwargs:
             if not 'fieldType' in kwargs:
                 raise ValidationError("fieldType of FieldInformation is missing.")
-            
-            # check if the variable metadalta already exists
+
             metadata_obj = kwargs['content_object']
             field_info = FieldInformation.objects.create(fieldName = kwargs['fieldName'], fieldType=kwargs['fieldType'],content_object=metadata_obj,)
 
@@ -219,7 +218,6 @@ class GeometryInformation(AbstractMetaDataElement):
             if not 'featureCount' in kwargs:
                 raise ValidationError("featureCount of GeometryInformation is missing.")
 
-            # check if the variable metadalta already exists
             metadata_obj = kwargs['content_object']
             geom_info = GeometryInformation.objects.create(geometryType = kwargs['geometryType'], featureCount=kwargs['featureCount'],content_object=metadata_obj,)
             return geom_info
@@ -320,7 +318,7 @@ class GeographicFeatureMetaData(CoreMetaData):
         if not self.originalcoverage.all().first():
             missing_required_elements.append('Spatial Reference')
         if not self.geometryinformation.all().first():
-            missing_required_elements.append('Geometry Infomation')
+            missing_required_elements.append('Geometry Information')
         if not self.originalfileinfo.all().first():
             missing_required_elements.append('Original File Information')
         # if not self.field_info.all().first():
