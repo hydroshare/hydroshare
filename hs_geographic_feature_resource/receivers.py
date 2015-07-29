@@ -130,7 +130,7 @@ def geofeature_pre_create_resource(sender, **kwargs):
                 uploadedFileCount=len(fn_list)
                 uploadedFilenameString_dict={}
                 for i in range(len(fn_list)):
-                    uploadedFilenameString_dict[str(i)]=fn_list[i]
+                    uploadedFilenameString_dict[fn_list[i]]=str(i)
                 uploadedFilenameString = json.dumps(uploadedFilenameString_dict)
 
             else:
