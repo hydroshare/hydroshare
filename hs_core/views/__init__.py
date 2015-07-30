@@ -1,8 +1,6 @@
 from __future__ import absolute_import
-from collections import defaultdict
 import json
 import requests
-import os
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -26,9 +24,9 @@ from django_irods.storage import IrodsStorage
 
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, user_from_id
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods
-from hs_core.models import ResourceFile, GenericResource, resource_processor, CoreMetaData
+from hs_core.models import GenericResource, resource_processor, CoreMetaData
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -491,9 +489,6 @@ def add_generic_context(request, page):
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
     }
-
-res_cls = ""
-resource = None
 
 @login_required
 def create_resource_select_resource_type(request, *args, **kwargs):
