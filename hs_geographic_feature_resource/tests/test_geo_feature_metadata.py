@@ -197,13 +197,13 @@ class TestGeoFeatureMetadata(TestCase):
 
         self.assertEqual (len(OriginalFileInfo.objects.all()), 1)
         #update existing meta
-        resource.update_metadata_element(self.resGeoFeature.short_id,'OriginalFileInfo', element_id=OriginalFileInfo.objects.first().object_id, fileType='KML', fileCount=8, baseFilename="baseFilename3")
+        resource.update_metadata_element(self.resGeoFeature.short_id,'OriginalFileInfo', element_id=OriginalFileInfo.objects.first().id, fileType='KML', fileCount=8, baseFilename="baseFilename3")
         self.assertEqual(OriginalFileInfo.objects.first().fileType,'KML')
         self.assertEqual(OriginalFileInfo.objects.first().fileCount,8)
         self.assertEqual(OriginalFileInfo.objects.first().baseFilename,'baseFilename3')
 
         #delete OriginalCoverage obj
-        resource.delete_metadata_element(self.resGeoFeature.short_id,'OriginalFileInfo', element_id=OriginalFileInfo.objects.first().object_id)
+        resource.delete_metadata_element(self.resGeoFeature.short_id,'OriginalFileInfo', element_id=OriginalFileInfo.objects.first().id)
         self.assertEqual (len(OriginalFileInfo.objects.all()), 0)
 
 
@@ -226,11 +226,11 @@ class TestGeoFeatureMetadata(TestCase):
 
         self.assertEqual (len(OriginalCoverage.objects.all()), 1)
         #update existing meta
-        resource.update_metadata_element(self.resGeoFeature.short_id,'originalcoverage', element_id=OriginalCoverage.objects.first().object_id, northlimit='11',  eastlimit='22',  southlimit='33',  westlimit='44', projection_string='projection_string1', projection_name='projection_name1', datum='datum1', unit='unit1')
+        resource.update_metadata_element(self.resGeoFeature.short_id,'originalcoverage', element_id=OriginalCoverage.objects.first().id, northlimit='11',  eastlimit='22',  southlimit='33',  westlimit='44', projection_string='projection_string1', projection_name='projection_name1', datum='datum1', unit='unit1')
         self.assertEqual(OriginalCoverage.objects.first().unit,'unit1')
 
         #delete OriginalCoverage obj
-        resource.delete_metadata_element(self.resGeoFeature.short_id,'originalcoverage', element_id=OriginalCoverage.objects.first().object_id)
+        resource.delete_metadata_element(self.resGeoFeature.short_id,'originalcoverage', element_id=OriginalCoverage.objects.first().id)
         self.assertEqual (len(OriginalCoverage.objects.all()), 0)
 
 
@@ -253,13 +253,13 @@ class TestGeoFeatureMetadata(TestCase):
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.resGeoFeature.short_id,'GeometryInformation', featureCount='1', geometryType='Polygon_test'))
 
         #update existing meta
-        resource.update_metadata_element(self.resGeoFeature.short_id,'GeometryInformation', element_id=GeometryInformation.objects.first().object_id,
+        resource.update_metadata_element(self.resGeoFeature.short_id,'GeometryInformation', element_id=GeometryInformation.objects.first().id,
                                          featureCount='2', geometryType='Point_test')
         self.assertEqual(GeometryInformation.objects.first().geometryType, 'Point_test')
         self.assertEqual(GeometryInformation.objects.first().featureCount, 2)
 
         #delete GeometryInformation obj
-        resource.delete_metadata_element(self.resGeoFeature.short_id, 'GeometryInformation', element_id=GeometryInformation.objects.first().object_id)
+        resource.delete_metadata_element(self.resGeoFeature.short_id, 'GeometryInformation', element_id=GeometryInformation.objects.first().id)
         self.assertEqual (len(GeometryInformation.objects.all()), 0)
 
 
@@ -283,13 +283,13 @@ class TestGeoFeatureMetadata(TestCase):
         #update existing meta
         field_info_obj_list = FieldInformation.objects.filter(fieldName='fieldName1')
         self.assertEqual(len(field_info_obj_list), 1)
-        field_1_ele_id_old=field_info_obj_list[0].object_id
+        field_1_ele_id_old=field_info_obj_list[0].id
         resource.update_metadata_element(self.resGeoFeature.short_id,'FieldInformation', element_id=field_1_ele_id_old,
                                           fieldName='fieldName1_new', fieldType='fieldType1_new')
 
         field_info_obj_list = FieldInformation.objects.filter(fieldName='fieldName1_new')
         self.assertEqual(len(field_info_obj_list), 1)
-        field_1_ele_id_new=field_info_obj_list[0].object_id
+        field_1_ele_id_new=field_info_obj_list[0].id
         # ele_id should not change
         self.assertEqual(field_1_ele_id_new, field_1_ele_id_old)
         # old value is gone
@@ -299,7 +299,7 @@ class TestGeoFeatureMetadata(TestCase):
 
         field_info_obj_list = FieldInformation.objects.filter(fieldName='fieldName2')
         self.assertEqual(len(field_info_obj_list), 1)
-        field_2_ele_id_old=field_info_obj_list[0].object_id
+        field_2_ele_id_old=field_info_obj_list[0].id
 
         self.assertEqual (len(FieldInformation.objects.all()), 2)
 
@@ -313,8 +313,8 @@ class TestGeoFeatureMetadata(TestCase):
         field_info_obj_list = FieldInformation.objects.filter(fieldName='fieldName2')
         self.assertEqual(len(field_info_obj_list), 1)
 
-        # resource.delete_metadata_element(self.resGeoFeature.short_id, 'FieldInformation', element_id=field_2_ele_id_old)
-        # self.assertEqual (len(FieldInformation.objects.all()), 2)
+        resource.delete_metadata_element(self.resGeoFeature.short_id, 'FieldInformation', element_id=field_2_ele_id_old)
+        self.assertEqual (len(FieldInformation.objects.all()), 0)
 
 
 

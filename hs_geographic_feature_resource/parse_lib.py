@@ -1,7 +1,7 @@
 __author__ = 'drew'
 
 from osgeo import ogr, osr
-UNKNOWN_STR="unkown"
+UNKNOWN_STR="unknown"
 
 def parse_shp(file_path):
 # shp_metadata_dict["origin_projection_string"]: original projection string

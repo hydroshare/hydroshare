@@ -249,7 +249,7 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
                 #raise ResourceFileValidationException(error_message)
             elif del_f_ext == ".prj":
                 originalcoverage_obj=res_obj.metadata.originalcoverage.all().first()
-                res_obj.metadata.update_element('OriginalCoverage', element_id=originalcoverage_obj.object_id, projection_string=UNKNOWN_STR, projection_name =UNKNOWN_STR, datum =UNKNOWN_STR, unit =UNKNOWN_STR)
+                res_obj.metadata.update_element('OriginalCoverage', element_id=originalcoverage_obj.id, projection_string=UNKNOWN_STR, projection_name =UNKNOWN_STR, datum =UNKNOWN_STR, unit =UNKNOWN_STR)
 
                 wgs84_extent_dict={}
                 wgs84_extent_dict["westlimit"]=UNKNOWN_STR
@@ -259,12 +259,12 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
                 wgs84_extent_dict["projection"]=UNKNOWN_STR
                 wgs84_extent_dict["units"]=UNKNOWN_STR
                 coverage_obj=res_obj.metadata.coverages.all().first()
-                res_obj.metadata.update_element('coverage', element_id=coverage_obj.object_id, type='box', value=wgs84_extent_dict)
+                res_obj.metadata.update_element('coverage', element_id=coverage_obj.id, type='box', value=wgs84_extent_dict)
             if one_file_removed:
                 ori_fn_dict=json.loads(ori_file_info.filenameString)
                 if del_f_fullname in ori_fn_dict:
                     del ori_fn_dict[del_f_fullname]
-                    res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.object_id,filenameString=json.dumps(ori_fn_dict))
+                    res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.id,filenameString=json.dumps(ori_fn_dict))
 
     pass
 
@@ -306,7 +306,7 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                 new_f_fullname=f.name.lower()
                 ori_fn_dict=json.loads(ori_file_info.filenameString)
                 ori_fn_dict[new_f_fullname]="new"
-            res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.object_id,filenameString=json.dumps(ori_fn_dict))
+            res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.id,filenameString=json.dumps(ori_fn_dict))
 
 
 
@@ -339,13 +339,13 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
         parsed_md_dict = parse_shp(shp_full_path)
 
         originalcoverage_obj=resource.metadata.originalcoverage.all().first()
-        resource.metadata.update_element('OriginalCoverage', element_id=originalcoverage_obj.object_id,
+        resource.metadata.update_element('OriginalCoverage', element_id=originalcoverage_obj.id,
                                          projection_string=parsed_md_dict["origin_projection_string"],
                                          projection_name =parsed_md_dict["origin_projection_name"],
                                          datum =parsed_md_dict["origin_datum"],
                                          unit =parsed_md_dict["origin_unit"])
         coverage_obj=resource.metadata.coverages.all().first()
-        resource.metadata.update_element('coverage', element_id=coverage_obj.object_id,
+        resource.metadata.update_element('coverage', element_id=coverage_obj.id,
                                          type='box',
                                          value=parsed_md_dict["wgs84_extent_dict"])
 

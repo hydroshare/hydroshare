@@ -135,7 +135,7 @@ def landing_page(request, page):
                                 #field_info_list_layout,
 
                                 )
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
         context['ori_coverage_form'] = ori_coverage_form
         context['geom_information_form'] = geom_information_form
         #context['field_info_list_form'] = field_info_list_form
