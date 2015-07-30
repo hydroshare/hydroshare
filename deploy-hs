@@ -61,7 +61,7 @@ else
     echo "*** bring up all docker containers as defined in docker-compose.yml ***"
     docker-compose up -d;
 fi
-
+sleep 5s
 # load pg.development.sql into postgis database
 echo "*** load clean pg.development.sql database from the running hydroshare container ***"
 CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
