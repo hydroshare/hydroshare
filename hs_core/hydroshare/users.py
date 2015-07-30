@@ -261,32 +261,6 @@ def update_account(user, **kwargs):
     return user.username
 
 
-
-
-def get_user_info(user):
-    """
-    Get the information about a user identified by userID. This would be their profile information, groups they belong.
-
-    REST URL:  GET /accounts/{userID}
-
-    Parameters: userID - ID of the existing user to be modified
-
-    Returns: An object containing the details for the user
-
-    Return Type: user
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.NotFound - The user identified by userID does not exist
-    Exception.ServiceFailure - The service is unable to process the request
-    """
-    from hs_core.api import UserResource
-
-    ur = UserResource()
-    ur_bundle = ur.build_bundle(obj=user)
-    return json.loads(ur.serialize(None, ur.full_dehydrate(ur_bundle), 'application/json'))
-
-
 def list_users(query=None, status=None, start=None, count=None):
     """
     List the users that match search criteria.

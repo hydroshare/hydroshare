@@ -41,11 +41,11 @@
                         <h4><strong>Model Objective:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            <div class="col-sm-4"><strong>SWAT model objective:</strong></div>
-                            <div class="col-sm-8">{{ model_objective.swat_model_objective }}</div>
+                            <div class="col-sm-4"><strong>SWAT model objectives:</strong></div>
                             {% if model_objective.other_objectives %}
-                                <div class="col-sm-4"><strong>SWAT model other objectives:</strong></div>
-                                <div class="col-sm-8">{{ model_objective.other_objectives }}</div>
+                                <div class="col-sm-8">{{ model_objective.get_swat_model_objectives }}, {{ model_objective.other_objectives }}</div>
+                            {% else %}
+                                <div class="col-sm-8">{{ model_objective.get_swat_model_objectives }}</div>
                             {% endif %}
                         </div>
                     <hr style="border:0">
@@ -63,76 +63,37 @@
                     {% endif %}
                 </div>
                 <div>
-                    {% if model_methods %}
-                        <h4><strong>Model Methods:</strong></h4>
+                    {% if model_method %}
+                        <h4><strong>Model Method:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            {% if model_methods.runoff_calculation_method %}
+                            {% if model_method.runoff_calculation_method %}
                                 <div class="col-sm-4"><strong>Runoff calculation method:</strong></div>
-                                <div class="col-sm-8">{{ model_methods.runoff_calculation_method }}</div>
+                                <div class="col-sm-8">{{ model_method.runoff_calculation_method }}</div>
                             {% endif %}
-                            {% if model_methods.flow_routing_method %}
+                            {% if model_method.flow_routing_method %}
                                 <div class="col-sm-4"><strong>Flow routing method:</strong></div>
-                                <div class="col-sm-8">{{ model_methods.flow_routing_method }}</div>
+                                <div class="col-sm-8">{{ model_method.flow_routing_method }}</div>
                             {% endif %}
-                            {% if model_methods.PET_estimation_method %}
+                            {% if model_method.PET_estimation_method %}
                                 <div class="col-sm-4"><strong>PET estimation method:</strong></div>
-                                <div class="col-sm-8">{{ model_methods.PET_estimation_method }}</div>
+                                <div class="col-sm-8">{{ model_method.PET_estimation_method }}</div>
                             {% endif %}
                         </div>
                     <hr style="border:0">
                     {% endif %}
                 </div>
                 <div>
-                    {% if swat_model_parameters %}
-                        <h4><strong>SWAT model used parameters:</strong></h4>
+                    {% if model_parameter %}
+                        <h4><strong>Model Parameter:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            <div class="col-sm-4"><strong>Has crop rotation?</strong></div>
-                            {% if swat_model_parameters.has_crop_rotation %}
-                                <div class="col-sm-8">Yes</div>
+                            <div class="col-sm-4"><strong>SWAT model used parameters:</strong></div>
+
+                            {% if model_parameter.other_parameters %}
+                                <div class="col-sm-8">{{ model_parameter.get_swat_model_parameters }}, {{ model_parameter.other_parameters }} </div>
                             {% else %}
-                                <div class="col-sm-8">No</div>
-                            {% endif %}
-                            <div class="col-sm-4"><strong>Has title drainage?</strong></div>
-                            {% if swat_model_parameters.has_title_drainage %}
-                                <div class="col-sm-8">Yes</div>
-                            {% else %}
-                                <div class="col-sm-8">No</div>
-                            {% endif %}
-                            <div class="col-sm-4"><strong>Has point resource?</strong></div>
-                            {% if swat_model_parameters.has_point_source %}
-                                <div class="col-sm-8">Yes</div>
-                            {% else %}
-                                <div class="col-sm-8">No</div>
-                            {% endif %}
-                            <div class="col-sm-4"><strong>Has fertilizer?</strong></div>
-                            {% if swat_model_parameters.has_fertilizer %}
-                                <div class="col-sm-8">Yes</div>
-                            {% else %}
-                                <div class="col-sm-8">No</div>
-                            {% endif %}
-                            <div class="col-sm-4"><strong>Has tillage operation?</strong></div>
-                            {% if swat_model_parameters.has_tillage_operation %}
-                                <div class="col-sm-8">Yes</div>
-                            {% else %}
-                                <div class="col-sm-8">No</div>
-                            {% endif %}
-                            <div class="col-sm-4"><strong>Has inlet of draining watershed?</strong></div>
-                            {% if swat_model_parameters.has_inlet_of_draining_watershed %}
-                                <div class="col-sm-8">Yes</div>
-                            {% else %}
-                                <div class="col-sm-8">No</div>
-                            {% endif %}
-                            <div class="col-sm-4"><strong>Has irrigation operation?</strong></div>
-                            {% if swat_model_parameters.has_irrigation_operation %}
-                                <div class="col-sm-8">Yes</div>
-                            {% else %}
-                                <div class="col-sm-8">No</div>
-                            {% endif %}
-                            {% if swat_model_parameters.other_parameters %}
-                                <div class="col-sm-4"><strong>Other parameters:</strong></div>
-                                <div class="col-sm-8">{{ swat_model_parameters.other_parameters }}</div>
+                                <div class="col-sm-8">{{ model_parameter.get_swat_model_parameters }}</div>{#
                             {% endif %}
                         </div>
                     <hr style="border:0">
@@ -143,13 +104,33 @@
                         <h4><strong>Model Input:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            {% if model_input.rainfall_time_step %}
-                                <div class="col-sm-4"><strong>Rainfall time step:</strong></div>
-                                <div class="col-sm-8">{{ model_input.rainfall_time_step }}</div>
+                            {% if model_input.warm_up_period %}
+                                <div class="col-sm-4"><strong>Warm-up period in years:</strong></div>
+                                <div class="col-sm-8">{{ model_input.warm_up_period }}</div>
                             {% endif %}
-                            {% if model_input.simulation_time_step %}
-                                <div class="col-sm-4"><strong>Simulation time step:</strong></div>
-                                <div class="col-sm-8">{{ model_input.simulation_time_step }}</div>
+                            {% if model_input.rainfall_time_step_type %}
+                                <div class="col-sm-4"><strong>Rainfall time step type:</strong></div>
+                                <div class="col-sm-8">{{ model_input.rainfall_time_step_type }}</div>
+                            {% endif %}
+                            {% if model_input.rainfall_time_step_value %}
+                                <div class="col-sm-4"><strong>Rainfall time step value:</strong></div>
+                                <div class="col-sm-8">{{ model_input.rainfall_time_step_value }}</div>
+                            {% endif %}
+                            {% if model_input.routing_time_step_type %}
+                                <div class="col-sm-4"><strong>Routing time step type:</strong></div>
+                                <div class="col-sm-8">{{ model_input.routing_time_step_type }}</div>
+                            {% endif %}
+                            {% if model_input.routing_time_step_value %}
+                                <div class="col-sm-4"><strong>Routing time step value:</strong></div>
+                                <div class="col-sm-8">{{ model_input.routing_time_step_value }}</div>
+                            {% endif %}
+                            {% if model_input.simulation_time_step_type %}
+                                <div class="col-sm-4"><strong>Simulation time step type:</strong></div>
+                                <div class="col-sm-8">{{ model_input.simulation_time_step_type }}</div>
+                            {% endif %}
+                            {% if model_input.simulation_time_step_value %}
+                                <div class="col-sm-4"><strong>Simulation time step value:</strong></div>
+                                <div class="col-sm-8">{{ model_input.simulation_time_step_value }}</div>
                             {% endif %}
                             {% if model_input.watershed_area %}
                                 <div class="col-sm-4"><strong>Watershed area in square kilometers:</strong></div>

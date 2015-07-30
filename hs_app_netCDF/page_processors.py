@@ -113,7 +113,7 @@ def landing_page(request, page):
 
         )
 
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
         context['variable_formset'] = variable_formset
         context['add_variable_modal_form'] = add_variable_modal_form
         context['original_coverage_form'] = ori_cov_form

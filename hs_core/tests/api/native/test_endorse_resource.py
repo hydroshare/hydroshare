@@ -1,4 +1,7 @@
 __author__ = 'Pabitra'
+
+import unittest
+
 from django.test import TestCase
 from django.contrib.auth.models import User
 from mezzanine.generic.models import Rating
@@ -15,6 +18,7 @@ class TestEndorseResourceAPI(TestCase):
         Rating.objects.all().delete()
         pass
 
+    @unittest.skip
     def test_endorse_resource(self):
         # create a user to be used for creating the resource
         user_creator = hydroshare.create_account(
