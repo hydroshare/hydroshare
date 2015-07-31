@@ -37,6 +37,7 @@ class TestMigrations(TransactionTestCase):
         self.setUpBetweenMigrations()
 
         # Run the migration to test
+        executor.loader.build_graph()
         executor.migrate(self.migrate_to)
 
 
@@ -63,6 +64,6 @@ class TestToolBaseMigrations(TestMigrations):
         )
 
     def test_test(self):
-        new_tool_res = self.tool_res.copy_to_new_model()
-
-        self.assertTrue(isinstance(new_tool_res, ToolResource), new_tool_res.__class__.__name__)
+        #new_tool_res = self.tool_res.copy_to_new_model()
+        new_tool_res = self.new_apps.get_model('hs_tools_resource', 'ToolResource').objects.all()[0]
+        self.assertEqual('ToolResource', new_tool_res.resource_type)

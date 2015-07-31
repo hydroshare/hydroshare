@@ -59,9 +59,11 @@ class OldToolResource(Page, AbstractResource):
     def copy_to_new_model(self):
         res = ToolResource()
 
+        # Copy regular fields
         for field in self._meta.fields:
             value = getattr(self, field.name, None)
             setattr(res, field.name, value)
+        res.resource_type = 'ToolResource'
         res.save()
 
         for vfield in self._meta.virtual_fields:
