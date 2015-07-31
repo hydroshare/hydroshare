@@ -57,7 +57,22 @@ class OldToolResource(Page, AbstractResource):
         return False
 
     def copy_to_new_model(self):
-        pass
+        res = ToolResource()
+
+        for field in self._meta.fields:
+            value = getattr(self, field.name, None)
+            setattr(res, field.name, value)
+        res.save()
+
+        for vfield in self._meta.virtual_fields:
+            f = getattr(self, vfield.name)
+            if f:
+                relations = f.all()
+                for relation in relations:
+                    relation.content_object = res
+                    relation.save()
+
+        return res
 
 
 class ToolResource(GenericResource):
