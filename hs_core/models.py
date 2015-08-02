@@ -23,6 +23,7 @@ from dateutil import parser
 import json
 
 
+# ALVA: This should use OneToOne rather than ForeignKey
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
     owner = models.ForeignKey(User)
