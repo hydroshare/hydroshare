@@ -575,6 +575,10 @@ def get_file(request, *args, **kwargs):
 
 processor_for(GenericResource)(resource_processor)
 
+
+def get_metadata_terms_page(request, *args, **kwargs):
+    return render(request, 'pages/metadata_terms.html')
+
 @processor_for('resources')
 def resource_listing_processor(request, page):
     owned_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
