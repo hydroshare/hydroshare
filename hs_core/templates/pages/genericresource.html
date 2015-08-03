@@ -473,21 +473,8 @@
                                     <p>Who has access</p>
 
                                     <div class="access-table-container">
-                                        <form id="owners_form"
-                                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                              method="POST">
-                                            {% csrf_token %}
 
-                                            <select type="hidden" name="designees" multiple class="form-control designee-select"
-                                                                    size="{{ owners.count }}" style="display:none">
-                                                {% for u in owners %}
-                                                    <option value="{{ u.pk }}" selected>{{ u|best_name }}
-                                                        ({{ u.username }})
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
-
-                                            <table class="table access-table">
+                                        <table class="table access-table">
                                                 <tbody>
                                                 {# Owners with full permissions to do anything on this resource #}
 
@@ -510,37 +497,40 @@
                                                                     <span class="caret"></span>
                                                                 </span>
                                                                 <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                                                                    <li><a>Can view</a></li>
-                                                                    <li><a>Can edit</a></li>
-                                                                    <li><a><b>Is owner</b></a></li>
+                                                                    <li><form id="share-view-{{ u.pk }}" action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/view/{{ u.pk }}"
+                                                                            method="POST">
+                                                                        {% csrf_token %}
+                                                                        <a>Can view</a></form>
+                                                                    </li>
+                                                                    <li><form id="share-edit-{{ u.pk }}" action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/edit/{{ u.pk }}"
+                                                                            method="POST">
+                                                                        {% csrf_token %}
+                                                                        <a>Can edit</a></form>
+                                                                    </li>
+                                                                    <li><form id="share-owner-{{ u.pk }}" action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/owner/{{ u.pk }}"
+                                                                            method="POST">
+                                                                        {% csrf_token %}
+                                                                        <a>Is owner</a></form>
+                                                                    </li>
                                                                 </ul>
                                                             </span>
                                                         </td>
 
-                                                        <td class="user-actions"><span data-pk="{{ u.pk }}"
-                                                                class="glyphicon glyphicon-remove btn-remove-row"></span></td>
-
+                                                        <td class="user-actions">
+                                                            <form action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with/{{ u.pk }}"
+                                                                method="POST">
+                                                                {% csrf_token %}
+                                                                <span class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                                            </form>
+                                                        </td>
                                                     </tr>
                                                 {% endfor %}
                                                 <input name="t" value="owners" type="hidden"/>
                                                 </tbody>
-                                            </table>
-                                        </form>
+                                        </table>
 
                                         {# Users who can edit the content of this resource #}
-                                        <form id="edit_users_form"
-                                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <select type="hidden" name="designees" multiple
-                                                    class="form-control designee-select"
-                                                    size="{{ edit_users.count }}" style="display:none">
-                                                {% for u in edit_users %}
-                                                <option value="{{ u.pk }}" selected>{{ u|best_name }}
-                                                    ({{ u.username }})
-                                                </option>
-                                            {% endfor %}
-                                            </select>
+
                                             <table class="table access-table">
                                                 <tbody>
 
@@ -560,43 +550,43 @@
                                                                 <span class="dropdown-toggle"
                                                                       id="roles-menu" data-toggle="dropdown"
                                                                       aria-haspopup="true" aria-expanded="true">
+                                                                    {% csrf_token %}
                                                                     Can edit
-                                                                    <span class="caret"></span>
                                                                 </span>
                                                                 <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                                                                    <li><a>Can view</a></li>
-                                                                    <li><a><b>Can edit</b></a></li>
-                                                                    <li><a>Is owner</a></li>
+                                                                    <li><form id="share-view-{{ u.pk }}" action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/view/{{ u.pk }}"
+                                                                            method="POST">
+                                                                        {% csrf_token %}
+                                                                        <a>Can view</a></form>
+                                                                    </li>
+                                                                    <li><form id="share-edit-{{ u.pk }}" action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/edit/{{ u.pk }}"
+                                                                            method="POST">
+                                                                        {% csrf_token %}
+                                                                        <a>Can edit</a></form>
+                                                                    </li>
+                                                                    <li><form id="share-owner-{{ u.pk }}" action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/owner/{{ u.pk }}"
+                                                                            method="POST">
+                                                                        {% csrf_token %}
+                                                                        <a>Is owner</a></form>
+                                                                    </li>
                                                                 </ul>
                                                             </span>
                                                         </td>
-
-                                                        <td class="user-actions"><span data-pk="{{ u.pk }}"
-                                                                class="glyphicon glyphicon-remove btn-remove-row"></span></td>
+                                                        <td class="user-actions">
+                                                            <form action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with/{{ u.pk }}"
+                                                                method="POST">
+                                                                {% csrf_token %}
+                                                                <span class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                                            </form>
+                                                        </td>
                                                     </tr>
                                                 {% endfor %}
-
-                                                <input name="t" value="edit_users" type="hidden"/>
-
                                                 </tbody>
                                             </table>
-                                            <button onclick="update_access_ajax_submit(); return false;" style="display: none"></button>
-                                        </form>
+
 
                                         {# Users who can view the content of this resource #}
-                                        <form id="view_users_form"
-                                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <select type="hidden" name="designees" multiple
-                                                    class="form-control designee-select"
-                                                    size="{{ view_users.count }}" style="display:none">
-                                                {% for u in view_users  %}
-                                                    <option value="{{ u.pk }}" selected>{{ u|best_name }}
-                                                        ({{ u.username }})
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
+
                                             <table class="table access-table">
                                                 <tbody>
                                                 {% for u in view_users %}
@@ -611,37 +601,51 @@
                                                         </td>
 
                                                         <td class="user-roles">
-                                                                <span class="dropdown role-dropdown">
-                                                                    <span class="dropdown-toggle"
-                                                                          id="roles-menu" data-toggle="dropdown"
-                                                                          aria-haspopup="true" aria-expanded="true">
-                                                                        Can view
-                                                                        <span class="caret"></span>
-                                                                    </span>
-                                                                    <ul class="dropdown-menu"
-                                                                        aria-labelledby="roles-menu">
-                                                                        <li><a>Can view</a></li>
-                                                                        <li><a>Can edit</a></li>
-                                                                        <li><a><b>Is owner</b></a></li>
-                                                                    </ul>
+                                                            <span class="dropdown role-dropdown">
+                                                                <span class="dropdown-toggle"
+                                                                      id="roles-menu" data-toggle="dropdown"
+                                                                      aria-haspopup="true" aria-expanded="true">
+                                                                    Can view
+                                                                    <span class="caret"></span>
                                                                 </span>
+                                                                <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                                                    <li><form id="share-view-{{ u.pk }}" action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/view/{{ u.pk }}"
+                                                                            method="POST">
+                                                                        {% csrf_token %}
+                                                                        <a>Can view</a></form>
+                                                                    </li>
+                                                                    <li><form id="share-edit-{{ u.pk }}" action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/edit/{{ u.pk }}"
+                                                                            method="POST">
+                                                                        {% csrf_token %}
+                                                                        <a>Can edit</a></form>
+                                                                    </li>
+                                                                    <li><form id="share-owner-{{ u.pk }}" action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/owner/{{ u.pk }}"
+                                                                            method="POST">
+                                                                        {% csrf_token %}
+                                                                        <a>Is owner</a></form>
+                                                                    </li>
+                                                                </ul>
+                                                            </span>
                                                         </td>
 
-                                                        <td class="user-actions"><span data-pk="{{ u.pk }}"
-                                                                class="glyphicon glyphicon-remove btn-remove-row"></span></td>
+                                                        <td class="user-actions">
+                                                            <form action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with/{{ u.pk }}"
+                                                                method="POST">
+                                                                {% csrf_token %}
+                                                                <span class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                                            </form>
+                                                        </td>
                                                     </tr>
                                                 {% endfor %}
-                                                <input name="t" value="view_users" type="hidden"/>
                                                 </tbody>
                                             </table>
-                                        <button onclick="update_access_ajax_submit(); return false;" style="display: none"></button>
-                                        </form>
                                     </div>
+
                                     <div class="custom-well">
                                         <p>Invite people:</p>
 
                                         <div class="input-group">
-                                            <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                            <form id="add-access-form" action="/hsapi/_internal/{{ cm.short_id }}/share-resource-width/"
                                                   method="POST">
                                                 {% csrf_token %}
 
@@ -657,18 +661,15 @@
 
                                                     <ul id="lstRoles" class="dropdown-menu"
                                                         aria-labelledby="roles_list">
-                                                        <li><a data-role="add_view_user" href="#">Can view</a></li>
-                                                        <li><a data-role="add_edit_user" href="#">Can edit</a></li>
-                                                        <li><a data-role="add_owner" href="#">Is owner</a></li>
+                                                        <li><a data-role="view" href="#">Can view</a></li>
+                                                        <li><a data-role="edit" href="#">Can edit</a></li>
+                                                        <li><a data-role="owner" href="#">Is owner</a></li>
                                                     </ul>
                                                 </div>
 
-                                                <button onclick="update_access_ajax_submit(); return false;"
+                                                <button onclick="share_resource_ajax_submit('add-access-form', '', ''); return false;"
                                                         class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
                                                         class="button-label">&nbspAdd</span></button>
-
-                                                <input name="t" value="add_view_user" type="hidden"/>
-
                                             </form>
                                         </div>
                                     </div>
@@ -2461,20 +2462,44 @@
             function onRoleSelect(event) {
                 var el = $(event.target);
                 $("#selected_role").text(el.text());
-                $('#manage-access form > input[name="t"]')[0].setAttribute("value", el[0].getAttribute("data-role"));
             }
 
             function onRowRemove(event){
-                var formID = $(event.target).closest("form").attr("id");
                 var el = $(event.target);
                 var pk = el[0].getAttribute("data-pk");
-                el.closest("form").find("select option[value='" + pk + "']").removeAttr("selected");
-                el.closest("form").find("button[type='submit']").click();
                 el.closest("tr").remove();
 
-{#                var formID = $(event.target).closest("form").attr("id");#}
+                var form = $(event.target).closest("form");
+                form.submit();
 
-                update_access_ajax_submit(event, formID);
+{#               update_access_ajax_submit(event, formID);#}
+            }
+
+            function share_resource_ajax_submit(form_id){
+                $form = $('#' + form_id);
+                var datastring = $form.serialize();
+                var share_with = $("#id_user-deck > .hilight").getAttribute("data-value");
+                var access_type = "";
+
+                //todo: Extract and pass access type from dropdown
+
+                $.ajax({
+                    type: "POST",
+                    url: $form.attr('action') + "/" + access_type + "/" + share_with,
+                    dataType: 'html',
+                    data: datastring,
+                    success: function (result) {
+                        var json_response = JSON.parse(result);
+                        if (json_response.status === 'success') {
+                                console.log("Success!");
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        console.log("Error!")
+                    }
+                });
+                //don't submit the form
+                return false;
             }
 
             function onRemoveKeyword(event) {
@@ -2528,49 +2553,17 @@
                 $("#id-subject").find("#id_value").val(keywords);
             }
 
-            function update_access_ajax_submit(e, formID){
-                $alert_success = '<div class="alert alert-success" id="success-alert"> \
-                <button type="button" class="close" data-dismiss="alert">x</button> \
-                <strong>Success! </strong> \
-                Access has been updated.\
-            </div>'
-                $alert_error = '<div class="alert alert-danger" id="error-alert"> \
-                <button type="button" class="close" data-dismiss="alert">x</button> \
-                <strong>Error! </strong> \
-                Access update failed.\
-            </div>'
-                console.log(formID);
-{#                $form = $("#" + formID);#}
-{#                var datastring = $form.serialize();#}
-{#                $.ajax({#}
-{#                    type: "POST",#}
-{#                    url: $form.attr('action'),#}
-{#                    dataType: 'html',#}
-{#                    data: datastring,#}
-{#                    success: function (result) {#}
-{#                        if (json_response.status === 'success') {#}
-{#                                console.log("Success!");#}
-{#                        }#}
-{#                    },#}
-{#                    error: function (XMLHttpRequest, textStatus, errorThrown) {#}
-{#                        console.log("Error!")#}
-{#                    }#}
-{#                });#}
-{#                //don't submit the form#}
-{#                return false;#}
-            }
-
             function metadata_update_ajax_submit(form_id) {
                 $alert_success = '<div class="alert alert-success" id="success-alert"> \
-                <button type="button" class="close" data-dismiss="alert">x</button> \
-                <strong>Success! </strong> \
-                Metadata updated.\
-            </div>';
+                    <button type="button" class="close" data-dismiss="alert">x</button> \
+                    <strong>Success! </strong> \
+                    Metadata updated.\
+                </div>';
                 $alert_error = '<div class="alert alert-danger" id="error-alert"> \
-                <button type="button" class="close" data-dismiss="alert">x</button> \
-                <strong>Error! </strong> \
-                Metadata updated failed.\
-            </div>';
+                    <button type="button" class="close" data-dismiss="alert">x</button> \
+                    <strong>Error! </strong> \
+                    Metadata updated failed.\
+                </div>';
                 $form = $('#' + form_id);
                 var datastring = $form.serialize();
                 $.ajax({
