@@ -1,5 +1,5 @@
 ### docker-compose variables ###
-HS_SHARED_VOLUME: /home/hydro/github/hydroshare:/home/docker/hydroshare
+HS_SHARED_VOLUME: /home/hydro/github/hydroshare
 
 ### Local Configuration Variables ###
 HS_PATH: /home/hydro/github/hydroshare
@@ -16,7 +16,7 @@ HS_NGINX: web-nginx
 HS_CNAME: hydroshare_hydroshare_1
 
 ### SSL Configuration Variables ###
-FQDN_OR_IP: localhost
+FQDN_OR_IP: 192.168.59.103
 SSL_CERT_DIR: /home/hydro/github/hydroshare/nginx/cert-files
 SSL_CERT_FILE: hydrodev-vb.example.org.cert
 SSL_KEY_FILE: hydrodev-vb.example.org.key

@@ -3,6 +3,8 @@
 # deploy-hs.sh
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
+echo "*** RUN SCRIPT deploy-hs.sh ***"
+
 ### Load Configuration Variables ###
 CONFIG_DIRECTORY='/home/hydro/github/hydroshare/nginx/config-files'
 CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
@@ -13,6 +15,7 @@ sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" $CONFIG_FILE > $CONFIG_DIRECTORY/hydro
 sed -i 's/#.*$//' $CONFIG_DIRECTORY/hydroshare-config.sh
 sed -i '/^\s*$/d' $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat $CONFIG_DIRECTORY/hydroshare-config.sh)
+export $CONFIG_DIRECTORY
 
 ### Additional Variables ###
 HTTP_RECAPTCHA='http://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
@@ -20,23 +23,9 @@ HTTPS_RECAPTCHA='https://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
 DEV_SERVER='python manage.py runserver 0.0.0.0:8000'
 PROD_SERVER='uwsgi --socket :8001 --ini uwsgi.ini'
 
-#HS_SHARED_VOLUME=/home/hydro/github/hydroshare:/home/docker/hydroshare
-#HS_PATH=/home/hydro/github/hydroshare
-#HOST_SSL_DIR=/home/hydro/hs-certs
-#USE_NGINX=True
-#USE_SSL=True
-#HS_NGINX_DIR=/home/hydro/github/hydroshare/nginx
-#HS_NGINX_IMG=hs-nginx
-#HS_NGINX=web-nginx
-#HS_CNAME=hydroshare_hydroshare_1
-#FQDN_OR_IP=localhost
-#SSL_CERT_DIR=/home/hydro/github/hydroshare/nginx/cert-files
-#SSL_CERT_FILE=hydrodev-vb.example.org.cert
-#SSL_KEY_FILE=hydrodev-vb.example.org.key
-
-echo "*** RUN SCRIPT deploy-hs.sh ***"
-
 ### Pre-flight Configuration ###
+yes | cp -rf ${HS_PATH}/docker-compose.template ${HS_PATH}/docker-compose.yml
+sed -i 's!HS_SHARED_VOLUME!'${HS_SHARED_VOLUME}'!g' ${HS_PATH}/docker-compose.yml
 if [ "${USE_NGINX,,}" = true ]; then
     echo "*** Using nginx: USE_NGINX = ${USE_NGINX} ***"
     # generate nginx configuration file
@@ -67,13 +56,55 @@ else
     sed -i 's/'"${PROD_SERVER}"'/'"${DEV_SERVER}"'/g' ${HS_PATH}/init;
 fi
 
-
-
-# TODO
 ### Deploy HydroShare ###
-# Use old deploy-hs for now
 cd $HS_PATH
-./deploy-hs $1
+# if database parameter passed in, check to make sure it exists
+if [ $1 ]; then
+    echo "*** checking for existance of ${1} ***"
+    if [ -e $1 ]; then
+        echo "*** using database ${1} ***"
+        HS_DATABASE=${1};
+    else
+        echo "*** WARNING: ${1} not found - exiting deploy_hs.sh ***"
+        exit;
+    fi
+else
+    echo "*** using database pg.development.sql ***"
+    HS_DATABASE='pg.development.sql';
+fi
+# get submodules
+echo "*** get git submodules ***"
+git submodule init && git submodule update
+# build docker containers
+echo "*** build docker containers as defined in docker-compose.yml ***"
+docker-compose build
+# bring up all docker containers
+echo "*** bring up all docker containers as defined in docker-compose.yml ***"
+docker-compose up -d
+# allow containers to start
+echo "*** allow containers to start up ***"
+for pc in $(seq 6 -1 1); do
+    echo -ne "$pc ...\033[0K\r"
+    sleep 1
+done
+echo
+# load database into postgis container
+echo "*** load clean pg.development.sql database from the running hydroshare container ***"
+CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
+echo "*** drop existing database ***"
+docker exec $CID dropdb -U postgres -h postgis postgres
+echo "*** create new database ***"
+docker exec $CID createdb -U postgres -h postgis postgres --encoding UNICODE --template=template0
+echo "*** create POSTGIS extension ***"
+docker exec $CID psql -U postgres -h postgis -w -c 'create extension postgis;'
+echo "*** load database with contents of ${HS_DATABASE} ***"
+docker exec $CID psql -U postgres -h postgis -f ${HS_DATABASE}
+echo "*** mangae.py collectstatic ***"
+docker exec $CID python manage.py collectstatic -v0 --noinput
+#echo "*** manage.py makemigrations ***"
+#docker exec $CID python manage.py makemigrations
+echo "*** manage.py migrate ***"
+docker exec $CID python manage.py migrate
 cd $HOME_DIR
 
 ### Deploy nginx ###
@@ -82,7 +113,5 @@ if [ "${USE_NGINX,,}" = true ]; then
     ./run-nginx.sh --clean
     cd $HOME_DIR;
 fi
-
-### Load Database ###
 
 echo echo "*** FINISHED SCRIPT deploy-hs.sh ***"

@@ -3,41 +3,10 @@
 # run-nginx.sh
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
+echo "*** RUN SCRIPT run-nginx.sh ***"
+
 ### Load Configuration Variables ###
 CONFIG_DIRECTORY='/home/hydro/github/hydroshare/nginx/config-files'
-CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
-HOME_DIR=${PWD}
-
-#### Configuration Variables ###
-#HS_PATH='/home/hydro/hydroshare'
-#
-#### SSL Configuration Variables ###
-#FQDN_OR_IP='localhost'
-#SSL_CERT_FILE='hydrodev-vb.example.org.cert'
-#SSL_KEY_FILE='hydrodev-vb.example.org.key'
-#HOST_SSL_DIR='/home/'${USER}'/hs-certs'
-#
-#### nginx Configuration Variables ###
-#HS_NGINX_DIR='/home/hydro/hydroshare/nginx'
-#HS_NGINX_IMG='hs-nginx'
-#HS_NGINX='web-nginx'
-#HS_CNAME='hydroshare_hydroshare_1'
-
-#HS_SHARED_VOLUME=/home/hydro/github/hydroshare:/home/docker/hydroshare
-#HS_PATH=/home/hydro/github/hydroshare
-#HOST_SSL_DIR=/home/hydro/hs-certs
-#USE_NGINX=True
-#USE_SSL=True
-#HS_NGINX_DIR=/home/hydro/github/hydroshare/nginx
-#HS_NGINX_IMG=hs-nginx
-#HS_NGINX=web-nginx
-#HS_CNAME=hydroshare_hydroshare_1
-#FQDN_OR_IP=localhost
-#SSL_CERT_DIR=/home/hydro/github/hydroshare/nginx/cert-files
-#SSL_CERT_FILE=hydrodev-vb.example.org.cert
-#SSL_KEY_FILE=hydrodev-vb.example.org.key
-
-echo "*** RUN SCRIPT run-nginx.sh ***"
 
 # check for --clean flag
 if [[ ${1} = '--clean' ]]; then
@@ -46,17 +15,6 @@ if [[ ${1} = '--clean' ]]; then
     docker rm ${HS_NGINX}
     docker rmi ${HS_NGINX_IMG};
 fi
-
-## create hs-certs directory if it doesn't exist
-#if [[ ! -d ${HOST_SSL_DIR} ]]; then
-#    echo "*** creating directory: ${HOST_SSL_DIR} ***"
-#    mkdir ${HOST_SSL_DIR};
-#fi
-#
-## copy ssl cert and ssl key to hs-certs directory
-#yes | cp -rf ${SSL_CERT_FILE} ${HOST_SSL_DIR}
-#yes | cp -rf ${SSL_KEY_FILE} ${HOST_SSL_DIR}
-env | grep HS
 
 # create hs-nginx.conf file
 if [ "${USE_SSL,,}" = true ]; then
