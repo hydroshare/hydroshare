@@ -16,7 +16,7 @@ def landing_page(request, page):
 
     if not edit_resource:
         # get the context from hs_core
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None, request=request)
         extended_metadata_exists = False
         if content_model.metadata.url_bases.first() or \
                 content_model.metadata.res_types.first():
@@ -78,7 +78,7 @@ def landing_page(request, page):
 
 
         # get the context from hs_core
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
 
         res_type_names = []
         for res_type_class in get_resource_types():

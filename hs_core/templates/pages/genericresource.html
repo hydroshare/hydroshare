@@ -758,7 +758,8 @@
                             {% endif %}
                         {% endif %}
                     {% endif %}
-                    {% if relevant_tools or metadata_form %}
+{#                    {% if relevant_tools or metadata_form %}#}
+                    {% if relevant_tools %}
                         <li class="col-xs-2 col-md-2">
                             <a href="#relevantTools" data-toggle="tab">
                                 <span class="glyphicon glyphicon-wrench"></span>
@@ -1399,7 +1400,8 @@
                 {%  endif %}
             {%  endif %}
                 <!-- ========= RELEVANT TOOLS TAB ========= -->
-            {% if relevant_tools or metadata_form %}
+{#            {% if relevant_tools or metadata_form %}#}
+            {% if relevant_tools %}
                 <div class="tab-pane" id="relevantTools">
                 {% if not metadata_form %}
                     {% for tool in relevant_tools %}

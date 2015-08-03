@@ -40,23 +40,26 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     metadata_status = _get_metadata_status(content_model)
 
-    relevant_tools = []
-    for res_type in ToolResourceType.objects.all():
-        if str(content_model.content_model).lower() in str(res_type.tool_res_type).lower():
-            url_obj = res_type.content_object.url_bases.first()
-            tool_res_obj = hydroshare.get_resource_by_shortkey(url_obj.resShortID)
-            tool_edit_mode = False
-            if tool_res_obj.public or user.username == 'admin' or \
-                    tool_res_obj.creator == user or \
-                    user in (tool_res_obj.owners.all() | tool_res_obj.edit_users.all() | tool_res_obj.view_users.all()):
-                tool_edit_mode = True
-            tool_url = url_obj.value
-            if tool_res_obj:
-                if tool_res_obj.public or tool_edit_mode:
-                    u=user.username if len(user.username)>0 else "anonymous"
-                    tl = {'title': res_type.content_object.title,
-                          'url': "{0}{1}{2}{3}{4}".format(tool_url, "/?res_id=", content_model.short_id,"&u=",u)}
-                    relevant_tools.append(tl)
+    relevant_tools=None
+
+    if not resource_edit:
+            relevant_tools = []
+            for res_type in ToolResourceType.objects.all():
+                if str(content_model.content_model).lower() in str(res_type.tool_res_type).lower():
+                    url_obj = res_type.content_object.url_bases.first()
+                    tool_res_obj = hydroshare.get_resource_by_shortkey(url_obj.resShortID)
+                    tool_edit_mode = False
+                    if tool_res_obj.public or user.username == 'admin' or \
+                            tool_res_obj.creator == user or \
+                            user in (tool_res_obj.owners.all() | tool_res_obj.edit_users.all() | tool_res_obj.view_users.all()):
+                        tool_edit_mode = True
+                    tool_url = url_obj.value
+                    if tool_res_obj:
+                        if tool_res_obj.public or tool_edit_mode:
+                            u=user.username if len(user.username)>0 else "anonymous"
+                            tl = {'title': res_type.content_object.title,
+                                  'url': "{0}{1}{2}{3}{4}{5}".format(tool_url, "/?res_id=", content_model.short_id,"&usr=",u, "&src=hs")}
+                            relevant_tools.append(tl)
 
 
     just_created = False
@@ -127,7 +130,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'supported_file_types': content_model.get_supported_upload_file_types(),
                    'allow_multiple_file_upload': content_model.can_have_multiple_files(),
                    'file_validation_error': file_validation_error if file_validation_error else None,
-                   'relevant_tools': relevant_tools,
+                   'relevant_tools': relevant_tools if not resource_edit else None,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
                    'bag_url': bag_url
