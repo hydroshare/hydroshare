@@ -5,75 +5,148 @@
 
 {% block main %}
 {% with u.userprofile as profile %}
-<div class="row">
-<div class="col-md-3">
-    <h2>Profile information</h2>
 
-    {% if profile.picture %}
-        <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>
-    {% endif %}
+        <div class="row">
+            <div class="col-sm-3">
+                {% if profile.picture %}
+                    <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>
+                {% endif %}
+            </div>
+            <div class="col-sm-9">
+                <h2><b>{{ u.first_name }} {{ u.last_name }}</b></h2>
+                <h4 class="text-muted">{% if profile.organization %}{{ profile.organization }}{% endif %} |
+                    {% if profile.title %}{{ profile.title }}{% endif %}</h4>
+                {% if profile.subject_areas %}
+                    <p><span class="text-muted">Subject Areas</span>: {{ profile.subject_areas }}</p>
+                {% endif %}
+            </div>
+        </div>
 
-    <ul class="list-unstyled">
-        <li><strong>Name:</strong> {{ u.first_name }} {{ u.last_name }}</li>
-
-        {% if profile.public %}
-            {% if profile.title %}
-            <li><strong>Title</strong> {{ profile.title }}</li>
-            {% endif %}
-
-            {% if profile.profession %}
-            <li><strong>Profession:</strong> {{ profile.profession }}</li>
-            {% endif %}
-
-            {% if profile.subject_areas %}
-            <li><strong>Subject areas:</strong> {{ profile.subject_areas }}</li>
-            {% endif %}
-
-            {% if profile.organization %}
-            <li><strong>Organization:</strong> {{ profile.organization }}</li>
-            {% endif %}
-
-            {% if profile.organization_type %}
-            <li><strong>Organization Type:</strong> {{ profile.organization_type }}</li>
-            {% endif %}
-
-            {% if profile.phone_1 %}
-            <li><strong>Phone 1:</strong> {{ profile.phone_1 }} {{ profile.phone_1_type }}</li>
-            {% endif %}
-
-            {% if profile.phone_2 %}
-            <li><strong>Phone 2:</strong> {{ profile.phone_2 }} {{ profile.phone_2_type }}</li>
-            {% endif %}
-
-            {% if u.email %}
-            <li><strong>Email:</strong> <a href="mailto:{{ u.email }}">Send email to {{ u.first_name }}</a></li>
-            {% endif %}
-            {% if profile.cv %}
-            <li><a href="{{ profile.cv.url }}">Download a curriculum vitae</a></li>
-            {% endif %}
-        {% else %}
-            <li>User has chosen to make their profile information private.</li>
-        {% endif %}
-    </ul>
-
-
-</div>
-
-<div class="col-md-5 text-justify">
-<h2>About {{ u.first_name }}</h2>{{ profile.details }}</div>
-
-<div class="col-md-4">
-<h2>Resources</h2>
-    <ul class="nav nav-stacked">
-    {% for res in resources %}
-        <li><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></li>
-    {% empty %}
-        <li>This user has no Resources, yet.</li>
-    {% endfor %}
-    </ul>
-</div>
-</div>
+        <div class="row">
+                <!-- tabs left -->
+            <div id="about-section">
+            <div class="about-header col-sm-12">
+                <h3>About</h3>
+            </div>
+            <div class="col-sm-12">
+                <div class="tabbable tabs-left">
+                    <ul class="nav nav-tabs col-sm-3">
+                        <li class="active"><a href="#tab-affiliations" data-toggle="tab">Affiliations</a></li>
+                        <li><a href="#tab-contributions" data-toggle="tab">Contributions</a></li>
+                        <li><a href="#tab-contact" data-toggle="tab">Contact</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tab-affiliations">
+                            <div class="row pull-left affiliation-row">
+                                <div class="col-sm-3">
+                                    <a href="http://www.usu.edu/" target="_blank"><img class="img-responsive"
+                                         src="http://www.usu.edu/prm/identity/logos/vertical-blue.jpg"
+                                         alt="USU logo"></a>
+                                </div>
+                                <div class="col-sm-9">
+                                    <a href="http://www.usu.edu/" target="_blank"><h3>Utah State University</h3></a>
+                                    <h5 class="text-muted">8200 Old Main Hill, Logan, UT, 84322</h5>
+                                    <h5 class="text-muted">Civil and Environmental Engineering | Professor</h5>
+                                </div>
+                            </div>
+                            <div class="row pull-left affiliation-row">
+                                <div class="col-sm-3">
+                                    <a href="http://uwrl.usu.edu/" target="_blank"><img class="img-responsive"
+                                         src="http://uwrl.usu.edu/sites/default/files/uwrllogo.gif"
+                                         alt="UWRL logo"></a>
+                                </div>
+                                <div class="col-sm-9">
+                                    <a href="http://www.usu.edu/" target="_blank"><h3>Utah Water Research Laboratory</h3></a>
+                                    <h5 class="text-muted">1600 Canyon Road, Logan, UT, 84321</h5>
+                                    <h5 class="text-muted">Software Programming and Research Support | Web Developer</h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tab-contributions">
+                            Contributions Content
+                        </div>
+                        <div class="tab-pane" id="tab-contact">
+                            Contact Content
+                        </div>
+                    </div>
+                </div>
+                <!-- /tabs -->
+            </div>
+            </div>
+        </div>
 
 
+
+{#    #}
+{#<div class="row">#}
+{#<div class="col-md-3">#}
+{#    <h2>Profile information</h2>#}
+{##}
+{#    {% if profile.picture %}#}
+{#        <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>#}
+{#    {% endif %}#}
+{##}
+{#    <ul class="list-unstyled">#}
+{#        <li><strong>Name:</strong> {{ u.first_name }} {{ u.last_name }}</li>#}
+{##}
+{#        {% if profile.public %}#}
+{#            {% if profile.title %}#}
+{#            <li><strong>Title</strong> {{ profile.title }}</li>#}
+{#            {% endif %}#}
+{##}
+{#            {% if profile.profession %}#}
+{#            <li><strong>Profession:</strong> {{ profile.profession }}</li>#}
+{#            {% endif %}#}
+{##}
+{#            {% if profile.subject_areas %}#}
+{#            <li><strong>Subject areas:</strong> {{ profile.subject_areas }}</li>#}
+{#            {% endif %}#}
+{##}
+{#            {% if profile.organization %}#}
+{#            <li><strong>Organization:</strong> {{ profile.organization }}</li>#}
+{#            {% endif %}#}
+{##}
+{#            {% if profile.organization_type %}#}
+{#            <li><strong>Organization Type:</strong> {{ profile.organization_type }}</li>#}
+{#            {% endif %}#}
+{##}
+{#            {% if profile.phone_1 %}#}
+{#            <li><strong>Phone 1:</strong> {{ profile.phone_1 }} {{ profile.phone_1_type }}</li>#}
+{#            {% endif %}#}
+{##}
+{#            {% if profile.phone_2 %}#}
+{#            <li><strong>Phone 2:</strong> {{ profile.phone_2 }} {{ profile.phone_2_type }}</li>#}
+{#            {% endif %}#}
+{##}
+{#            {% if u.email %}#}
+{#            <li><strong>Email:</strong> <a href="mailto:{{ u.email }}">Send email to {{ u.first_name }}</a></li>#}
+{#            {% endif %}#}
+{#            {% if profile.cv %}#}
+{#            <li><a href="{{ profile.cv.url }}">Download a curriculum vitae</a></li>#}
+{#            {% endif %}#}
+{#        {% else %}#}
+{#            <li>User has chosen to make their profile information private.</li>#}
+{#        {% endif %}#}
+{#    </ul>#}
+{##}
+{##}
+{#</div>#}
+{##}
+{#<div class="col-md-5 text-justify">#}
+{#<h2>About {{ u.first_name }}</h2>{{ profile.details }}</div>#}
+{##}
+{#<div class="col-md-4">#}
+{#<h2>Resources</h2>#}
+{#    <ul class="nav nav-stacked">#}
+{#    {% for res in resources %}#}
+{#        <li><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></li>#}
+{#    {% empty %}#}
+{#        <li>This user has no Resources, yet.</li>#}
+{#    {% endfor %}#}
+{#    </ul>#}
+{#</div>#}
+{#</div>#}
+{##}
+{##}
 {% endwith %}
 {% endblock %}

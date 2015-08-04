@@ -1788,3 +1788,135 @@ ul.resource-search-options {
 	background-color: #aab;
 	color: white;
 }
+
+/* custom inclusion of right, left and below tabs */
+
+.tabs-below > .nav-tabs,
+.tabs-right > .nav-tabs,
+.tabs-left > .nav-tabs {
+  border-bottom: 0;
+}
+
+.tab-content > .tab-pane,
+.pill-content > .pill-pane {
+  display: none;
+}
+
+.tab-content > .active,
+.pill-content > .active {
+  display: block;
+}
+
+.tabs-below > .nav-tabs {
+
+}
+
+.tabs-below > .nav-tabs > li {
+  margin-top: -1px;
+  margin-bottom: 0;
+}
+
+.tabs-below > .nav-tabs > li > a {
+
+}
+
+.tabs-below > .nav-tabs > li > a:hover,
+.tabs-below > .nav-tabs > li > a:focus {
+
+}
+
+.tabs-below > .nav-tabs > .active > a,
+.tabs-below > .nav-tabs > .active > a:hover,
+.tabs-below > .nav-tabs > .active > a:focus {
+
+}
+
+.tabs-left > .nav-tabs > li,
+.tabs-right > .nav-tabs > li {
+  float: none;
+}
+
+.tabs-left > .nav-tabs > li > a,
+.tabs-right > .nav-tabs > li > a {
+  min-width: 74px;
+  margin-right: 0;
+  margin-bottom: 3px;
+}
+
+.tabs-left > .nav-tabs {
+  float: left;
+  margin-right: 19px;
+}
+
+.tabs-left > .nav-tabs > li > a {
+  margin-right: -1px;
+
+}
+
+.tabs-left > .nav-tabs > li > a:hover,
+.tabs-left > .nav-tabs > li > a:focus {
+
+}
+
+.tabs-left > .nav-tabs .active > a,
+.tabs-left > .nav-tabs .active > a:hover,
+.tabs-left > .nav-tabs .active > a:focus {
+
+}
+
+.tabs-right > .nav-tabs {
+  float: right;
+  margin-left: 19px;
+
+}
+
+.tabs-right > .nav-tabs > li > a {
+
+}
+
+.tabs-right > .nav-tabs > li > a:hover,
+.tabs-right > .nav-tabs > li > a:focus {
+
+}
+
+.tabs-right > .nav-tabs .active > a,
+.tabs-right > .nav-tabs .active > a:hover,
+.tabs-right > .nav-tabs .active > a:focus {
+
+}
+
+/*			User profile revamp css			*/
+#about-section {
+	border: 1px solid #ddd;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	margin: 15px;
+}
+
+div.about-header {
+	border-bottom: 1px solid #ddd;
+	margin-top: -10px;
+}
+
+#about-section .nav-tabs > li > a {
+	background:none;
+	border: 0;
+}
+
+#about-section .nav-tabs {
+	margin: 0;
+}
+
+#about-section .tab-content {
+	margin-left: 25%;
+	border-left: 1px solid #ddd;
+	min-height: 300px;
+	overflow: hidden;
+}
+
+.affiliation-row {
+	border-bottom: 1px solid #ddd;
+  	margin-left: 10px;
+	padding: 10px 0;
+}
