@@ -33,13 +33,50 @@
     <div>[TODO:Describe reference time series resource type here]</div>
     <div>[TODO:Describe reference time series resource type metadata terms here]</div>
 
-    <h3>NetCDF Resource Type Description</h3>
-    <div>[TODO:Describe NetCDF resource type here]</div>
-    <div>[TODO:Describe NetCDF resource type metadata terms here]</div>
+    <h3>Multidimensional (NetCDF) Resource Type Description</h3>
+    <p>Multidimensional space-time data is one of the major data types used for hydrological modeling. For example, the
+        precipitation or surface air temperature data that have two dimensions in space and one dimension in time.
+        As <a href='http://www.unidata.ucar.edu/software/netcdf/' >Network Common Data Form</a> (NetCDF)
+        is widely used in hydrological and other geoscience modeling because it contains self-describing metadata and
+        supports the creation of array-oriented datasets which may include three spatial dimensions, a time dimension
+        and other user defined dimensions , we choose NetCDF as the file format to support the sharing of
+        the multidimensional space-time data in HydroShare.
+    </p>
+    <p> Currently, we define the multidimensional (NetCDF) resource such that it includes only one NetCDF file with
+        ".nc" extension. Any multidimensional space-time data supported by the NetCDF format will be valid for input as
+        a multidimensional (NetCDF) resource in HydroShare. To describe the multidimensional space-time data in NetCDF format,
+        we will use the following entities:
+        <ul>
+            <li><strong>Spatial Reference:</strong> The coordinate reference system and spatial extent information
+                defined in the NetCDF file.</li>
+            <li><strong>Variable:</strong> The variables defined in the NetCDF file representing the multidimensional space-time
+                data.</li>
+        </ul>
+    </p>
 
-    <h3>Geo Raster Resource Type Description</h3>
-    <div>[TODO:Describe geo raster resource type here]</div>
-    <div>[TODO:Describe geo raster resource type metadata terms here]</div>
+
+    <h3>Geographic Raster Resource Type Description</h3>
+    <p> Geographic raster data are commonly used for representing and managing imagry, digital elevation, and other phenomena
+        which is widely used in hydrological research. The raster can have a single or multiple bands (or layers) of data.
+        A band is represented by a single matrix of cell organized into rows and columns where each contains a value
+        representing information. We choose the <a href="http://trac.osgeo.org/geotiff/">GeoTIFF</a> file format to represent the
+        geographic raster data in HydroShare. The GeoTIFF refers to TIFF files which have geographic data embeded as
+        tags within the TIFF file. The geographic data can then be used to position the image in the correct location and
+        geometry on the screen of a geographic information display.
+    </p>
+    <p> Currently, we define the geographic raster resource such that it includes only one geographic raster in GeoTIFF format which includes a
+        single or multiple bands. Any raster data in GeoTIFF format will be valid for input as
+        a geographic raster resource in HydroShare. To describe the geographic raster data, we will use the following entities:
+        <ul>
+            <li><strong>Spatial Reference:</strong> The coordinate reference system and spatial extent information
+                defined in GeoTIFF file.</li>
+            <li>
+                <strong>Band Information:</strong>The information to describe the  phenomenon represented in each band of the geographic raster data.</li>
+            <li>
+                <strong>Cell Information:</strong>The information to describe the cell attributes of the band.</li>
+
+        </ul>
+    </p>
 
     <h3>Model Program Resource Type Description</h3>
     <div>[TODO:Describe model program resource type here]</div>
