@@ -6,7 +6,7 @@
 echo "*** RUN SCRIPT run-nginx.sh ***"
 
 ### Load Configuration Variables ###
-CONFIG_DIRECTORY='/home/hydro/github/hydroshare/nginx/config-files'
+CONFIG_DIRECTORY='./config-files'
 
 # check for --clean flag
 if [[ ${1} = '--clean' ]]; then

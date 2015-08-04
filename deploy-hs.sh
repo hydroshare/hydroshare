@@ -6,7 +6,7 @@
 echo "*** RUN SCRIPT deploy-hs.sh ***"
 
 ### Load Configuration Variables ###
-CONFIG_DIRECTORY='/home/hydro/github/hydroshare/nginx/config-files'
+CONFIG_DIRECTORY='./config'
 CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
 HOME_DIR=${PWD}
 
@@ -15,13 +15,33 @@ sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" $CONFIG_FILE > $CONFIG_DIRECTORY/hydro
 sed -i 's/#.*$//' $CONFIG_DIRECTORY/hydroshare-config.sh
 sed -i '/^\s*$/d' $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat $CONFIG_DIRECTORY/hydroshare-config.sh)
-export $CONFIG_DIRECTORY
 
 ### Additional Variables ###
 HTTP_RECAPTCHA='http://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
 HTTPS_RECAPTCHA='https://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
 DEV_SERVER='python manage.py runserver 0.0.0.0:8000'
 PROD_SERVER='uwsgi --socket :8001 --ini uwsgi.ini'
+DOCKER_CONTAINER_NAMES=(hydroshare_hydroshare_1 hydroshare_dockerworker_1 hydroshare_defaultworker_1 hydroshare_rabbitmq_1 hydroshare_redis_1 hydroshare_postgis_1)
+DOCKER_IMAGE_NAMES=(hydroshare_hydroshare hydroshare_dockerworker hydroshare_defaultworker)
+
+### Clean up from previous install prior to new deploy ###
+if [ "${USE_CLEAN,,}" = true ]; then
+    echo "*** STOP: all running hydroshare docker containers  ***"
+    for f in "${DOCKER_CONTAINER_NAMES[@]}"; do
+        docker stop $f;
+    done
+    sleep 1s
+    echo "*** REMOVE: all hydroshare docker containers  ***"
+    for f in "${DOCKER_CONTAINER_NAMES[@]}"; do
+        docker rm -fv $f;
+    done
+    sleep 1s
+    echo "*** REMOVE: all hydroshare docker images  ***"
+    for f in "${DOCKER_IMAGE_NAMES[@]}"; do
+        docker rmi -f $f;
+    done
+    sleep 1s
+fi
 
 ### Pre-flight Configuration ###
 yes | cp -rf ${HS_PATH}/docker-compose.template ${HS_PATH}/docker-compose.yml
@@ -82,8 +102,8 @@ docker-compose build
 echo "*** bring up all docker containers as defined in docker-compose.yml ***"
 docker-compose up -d
 # allow containers to start
-echo "*** allow containers to start up ***"
-for pc in $(seq 6 -1 1); do
+echo "*** allowing containers to start up ***"
+for pc in $(seq 10 -1 1); do
     echo -ne "$pc ...\033[0K\r"
     sleep 1
 done
