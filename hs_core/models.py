@@ -1615,9 +1615,6 @@ class CoreMetaData(models.Model):
                   'dcterms':"http://purl.org/dc/terms/",
                   'hsterms': "http://hydroshare.org/terms/"}
 
-    DATE_FORMAT = "YYYY-MM-DDThh:mm:ssTZD"
-    #HYDROSHARE_URL = 'http://%s' % _domain
-
     id = models.AutoField(primary_key=True)
 
     _description = generic.GenericRelation(Description)    # resource abstract
@@ -1744,7 +1741,7 @@ class CoreMetaData(models.Model):
 
     def get_xml(self, pretty_print=True):
         from lxml import etree
-        import arrow
+
         RDF_ROOT = etree.Element('{%s}RDF' % self.NAMESPACES['rdf'], nsmap=self.NAMESPACES)
         # create the Description element -this is not exactly a dc element
         rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' % self.NAMESPACES['rdf'])
@@ -1784,8 +1781,10 @@ class CoreMetaData(models.Model):
             dc_coverage_dcterms = etree.SubElement(dc_coverage, cov_dcterm % self.NAMESPACES['dcterms'])
             rdf_coverage_value = etree.SubElement(dc_coverage_dcterms, '{%s}value' % self.NAMESPACES['rdf'])
             if coverage.type == 'period':
-                cov_value = 'start=%s; end=%s; scheme=W3C-DTF' % (arrow.get(coverage.value['start'].format(self.DATE_FORMAT)),
-                                                          arrow.get(coverage.value['end'].format(self.DATE_FORMAT)))
+                start_date = parser.parse(coverage.value['start'])
+                end_date = parser.parse(coverage.value['end'])
+                cov_value = 'start=%s; end=%s; scheme=W3C-DTF' % (start_date.isoformat(), end_date.isoformat())
+
                 if 'name' in coverage.value:
                     cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
 
@@ -1825,12 +1824,12 @@ class CoreMetaData(models.Model):
             dc_date_dcterms = etree.SubElement(dc_date, dc_term % self.NAMESPACES['dcterms'])
             rdf_date_value = etree.SubElement(dc_date_dcterms, '{%s}value' % self.NAMESPACES['rdf'])
             if dt.type != 'valid':
-                rdf_date_value.text = arrow.get(dt.start_date).format(self.DATE_FORMAT)
+                rdf_date_value.text = dt.start_date.isoformat()
             else:
                 if dt.end_date:
-                    rdf_date_value.text = "start=%s; end=%s" % (arrow.get(dt.start_date).format(self.DATE_FORMAT), arrow.get(dt.end_date).format(self.DATE_FORMAT))
+                    rdf_date_value.text = "start=%s; end=%s" % (dt.start_date.isoformat(), dt.end_date.isoformat())
                 else:
-                    rdf_date_value.text = arrow.get(dt.start_date).format(self.DATE_FORMAT)
+                    rdf_date_value.text = dt.start_date.isoformat()
 
         for fmt in self.formats.all():
             dc_format = etree.SubElement(rdf_Description, '{%s}format' % self.NAMESPACES['dc'])
