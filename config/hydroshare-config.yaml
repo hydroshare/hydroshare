@@ -4,7 +4,6 @@ HOST_SSL_DIR: /home/hydro/hs-certs
 HS_DATABASE: pg.development.sql
 
 ### Deployment Options ###
-USE_CLEAN: true
 USE_NGINX: false
 USE_SSL: false
 
