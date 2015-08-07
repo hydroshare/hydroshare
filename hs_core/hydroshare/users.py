@@ -6,7 +6,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.core import signing
 
-from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject, Description, Title
+from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject, Description, Title, \
+    UserAccess, PrivilegeCodes
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
 
 
@@ -189,6 +190,9 @@ def create_account(
     u.save()
 
     u.groups = groups
+
+    user_access = UserAccess(user=u, admin=False)
+    user_access.save()
 
     return u
 
@@ -595,7 +599,12 @@ def get_resource_list(creator=None,
 
             if user:
                 user = user_from_id(user)
-                queries[t].append(Q(edit_users=user) | Q(owners=user))
+                queries[t].append(Q(raccess__r2urp__privilege__lte=PrivilegeCodes.CHANGE,
+                                    raccess__r2urp__user=user.uaccess) |
+                                  Q(raccess__r2urp__privilege__lte=PrivilegeCodes.OWNER,
+                                    raccess__r2urp__user=user.uaccess)
+                                  )
+
         else:
             if creator:
                 creator = user_from_id(creator)
@@ -603,7 +612,11 @@ def get_resource_list(creator=None,
 
             if group:
                 group = group_from_id(group)
-                queries[t].append(Q(edit_groups=group) | Q(view_groups=group))
+                queries[t].append(Q(raccess__r2grp__privilege__lte=PrivilegeCodes.CHANGE,
+                                    raccess__r2grp__group=group.gaccess) |
+                                  Q(raccess__r2grp__privilege__lte=PrivilegeCodes.VIEW,
+                                    raccess__r2grp__group=group.gaccess)
+                                  )
 
             if user:
                 user = user_from_id(user)
@@ -611,13 +624,22 @@ def get_resource_list(creator=None,
                     try:
                         owner = user_from_id(owner, raise404=False)
                     except User.DoesNotExist:
-                        queries[t].append(Q(owners__isnull=True))
+                        pass
                     else:
-                        queries[t].append(Q(owners=owner))
+                        queries[t].append(Q(raccess__r2urp__privilege__lte=PrivilegeCodes.OWNER,
+                                            raccess__r2urp__user=owner.uaccess))
+
                         if user != owner:
                             public = True
                 else:
-                    queries[t].append(Q(edit_users=user) | Q(view_users=user) | Q(owners=user) | Q(public=True))
+                    queries[t].append(Q(raccess__r2urp__privilege__lte=PrivilegeCodes.CHANGE,
+                                        raccess__r2urp__user=user.uaccess) |
+                                      Q(raccess__r2urp__privilege__lte=PrivilegeCodes.VIEW,
+                                        raccess__r2urp__user=user.uaccess) |
+                                      Q(raccess__r2urp__privilege__lte=PrivilegeCodes.OWNER,
+                                        raccess__r2urp__user=user.uaccess) |
+                                      Q(raccess__public=True)
+                                      )
 
         if from_date and to_date:
             queries[t].append(Q(created__range=(from_date, to_date)))
@@ -636,7 +658,7 @@ def get_resource_list(creator=None,
             flt = flt.filter(q)
 
         if public:
-            flt = flt.filter(public=True)
+            flt = flt.filter(raccess__public=True)
 
         if full_text_search:
             fts_qs = flt.search(full_text_search)

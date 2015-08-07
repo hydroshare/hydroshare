@@ -129,13 +129,12 @@ class ResourcePermissionsMixin(Ownable):
     def can_delete(self, request):
         user = get_user(request)
         if user.is_authenticated():
-            if user.is_superuser or self.owners.filter(pk=user.pk).exists():
+            if user.is_superuser or self.raccess.owners.filter(pk=user.pk).exists():
                 return True
             else:
                 return False
         else:
             return False
-
 
     def can_change(self, request):
         user = get_user(request)
@@ -143,11 +142,11 @@ class ResourcePermissionsMixin(Ownable):
         if user.is_authenticated():
             if user.is_superuser:
                 return True
-            elif self.owners.filter(pk=user.pk).exists():
+            elif self.raccess.owners.filter(pk=user.pk).exists():
                 return True
-            elif self.edit_users.filter(pk=user.pk).exists():
+            elif self.raccess.edit_users.filter(pk=user.pk).exists():
                 return True
-            elif self.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
+            elif self.raccess.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
                 return True
             else:
                 return False
@@ -162,21 +161,20 @@ class ResourcePermissionsMixin(Ownable):
         if user.is_authenticated():
             if user.is_superuser:
                 return True
-            elif self.owners.filter(pk=user.pk).exists():
+            elif self.raccess.owners.filter(pk=user.pk).exists():
                 return True
-            elif self.edit_users.filter(pk=user.pk).exists():
+            elif self.raccess.edit_users.filter(pk=user.pk).exists():
                 return True
-            elif self.view_users.filter(pk=user.pk).exists():
+            elif self.raccess.view_users.filter(pk=user.pk).exists():
                 return True
-            elif self.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
+            elif self.raccess.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
                 return True
-            elif self.view_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
+            elif self.raccess.view_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
                 return True
             else:
                 return False
         else:
             return False
-
 
 ######################################
 ######################################
@@ -1474,7 +1472,7 @@ class UserAccess(models.Model):
         :return: Resource object
         """
         # create a resource object (by some means)
-        r = Resource(title=this_title)
+        r = GenericResource(title=this_title)
         r.save()
         # Bind to access object by reference
         a = ResourceAccess(resource=r)
@@ -1493,7 +1491,7 @@ class UserAccess(models.Model):
         :param this_resource: Resource to delete.
         :return: None
         """
-        if not isinstance(this_resource, Resource): 
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess 
 
@@ -1517,7 +1515,7 @@ class UserAccess(models.Model):
 
         :return: List of discoverable resource objects
         """
-        return Resource.objects.filter(Q(raccess__discoverable=True) | Q(raccess__public=True))
+        return GenericResource.objects.filter(Q(raccess__discoverable=True) | Q(raccess__public=True))
 
     @staticmethod
     def get_public_resources():
@@ -1526,7 +1524,7 @@ class UserAccess(models.Model):
 
         :return: List of public resource objects.
         """
-        return Resource.objects.filter(raccess__public=True)
+        return GenericResource.objects.filter(raccess__public=True)
 
     ##########################################
     # held and owned resources
@@ -1538,7 +1536,7 @@ class UserAccess(models.Model):
 
         :return: List of resource objects accessible (in any form) to user.
         """
-        return Resource.objects.filter(Q(raccess__holding_users=self) | Q(raccess__holding_groups__members=self))
+        return GenericResource.objects.filter(Q(raccess__holding_users=self) | Q(raccess__holding_groups__members=self))
 
     def get_number_of_held_resources(self):
         """
@@ -1559,8 +1557,8 @@ class UserAccess(models.Model):
         # OLD:      .values_list('resource_id', flat=True).distinct()
         # OLD:  return Resource.objects.filter(raccess__pk__in=ids)
         # OLD:  According to the docs, the above is compiled into one query rather than two
-        return Resource.objects.filter(raccess__r2urp__user=self,
-                                       raccess__r2urp__privilege=PrivilegeCodes.OWNER).distinct()
+        return GenericResource.objects.filter(raccess__r2urp__user=self,
+                                              raccess__r2urp__privilege=PrivilegeCodes.OWNER).distinct()
 
 
     def get_number_of_owned_resources(self):
@@ -1592,7 +1590,7 @@ class UserAccess(models.Model):
         privilege. It is thus necessary to check that one can change something
         explicitly, using UserAccess.can_change_resource()
         """
-        if not isinstance(this_resource, Resource): 
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess 
 
@@ -1623,7 +1621,7 @@ class UserAccess(models.Model):
         would return two types depending upon conditions -- Boolean for simple queries and
         QuerySet for complex queries.
         """
-        if not isinstance(this_resource, Resource): 
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess 
 
@@ -1654,7 +1652,7 @@ class UserAccess(models.Model):
 
         This is not enforced. It is up to the programmer to obey this restriction.
         """
-        if not isinstance(this_resource, Resource): 
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess 
 
@@ -1669,7 +1667,7 @@ class UserAccess(models.Model):
 
         Note that one can view resources that are public, that one does not own.
         """
-        if not isinstance(this_resource, Resource): 
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess 
 
@@ -1698,7 +1696,7 @@ class UserAccess(models.Model):
         :param this_resource: Resource to check.
         :return: True if user can delete the resource.
         """
-        if not isinstance(this_resource, Resource): 
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess 
 
@@ -1720,7 +1718,7 @@ class UserAccess(models.Model):
         One can share with self, which can only downgrade privilege.
         """
         # translate into ResourceAccess object
-        if not isinstance(this_resource, Resource):
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1768,7 +1766,7 @@ class UserAccess(models.Model):
         This function returns False exactly when share_resource_with_group will raise
         an exception if called.
         """
-        if not isinstance(this_resource, Resource):
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1796,7 +1794,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Grantee is not a group")
         access_group = this_group.gaccess
 
-        if not isinstance(this_resource, Resource):
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1898,7 +1896,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Grantee is not a user")
         access_user = this_user.uaccess
 
-        if not isinstance(this_resource, Resource):
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1990,7 +1988,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Grantee is not a user")
         access_user = this_user.uaccess
 
-        if not isinstance(this_resource, Resource):
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -2081,7 +2079,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Grantee is not a user")
         access_user = this_user.uaccess
 
-        if not isinstance(this_resource, Resource):
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -2184,7 +2182,7 @@ class UserAccess(models.Model):
         """
 
         # check for user error
-        if not isinstance(this_resource, Resource):
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -2228,7 +2226,7 @@ class UserAccess(models.Model):
     def __handle_unshare_resource_with_group(self, this_resource, this_group, command=CommandCodes.CHECK):
         # first check for usage error
 
-        if not isinstance(this_resource, Resource):
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -2310,7 +2308,7 @@ class UserAccess(models.Model):
         :param this_resource: resource to check.
         :return: list of users granted access by self.
         """
-        if not isinstance(this_resource, Resource):
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -2374,7 +2372,7 @@ class UserAccess(models.Model):
         # b) self is resource owner: everyone.
         # c) self is beneficiary: self only
 
-        if not isinstance(this_resource, Resource):
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -2408,7 +2406,7 @@ class UserAccess(models.Model):
             3. User owns the group -- *not implemented*
             4. User is an administrator
         """
-        if not isinstance(this_resource, Resource):
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -2434,7 +2432,7 @@ class UserAccess(models.Model):
 
         This is a list of groups for which unshare_resource_with_group will work for this user.
         """
-        if not isinstance(this_resource, Resource):
+        if not isinstance(this_resource, GenericResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -2521,7 +2519,7 @@ class GroupAccess(models.Model):
 
         :return: List of resource objects held by group.
         """
-        return Resource.objects.filter(raccess__holding_groups=self)
+        return GenericResource.objects.filter(raccess__holding_groups=self)
 
     def get_number_of_held_resources(self):
         """
@@ -2949,17 +2947,17 @@ class ResourceAccess(models.Model):
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
 def page_permissions_page_processor(request, page):
-    page = page.get_content_model()
+    cm = page.get_content_model()
     user = get_user(request)
 
     return {
-        "edit_groups": set(page.edit_groups.all()),
-        "view_groups": set(page.view_groups.all()),
-        "edit_users": set(page.edit_users.all()),
-        "view_users": set(page.view_users.all()),
-        "owners": set(page.owners.all()),
-        "can_edit": (user in set(page.edit_users.all())) \
-                    or (len(set(page.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
+        "edit_groups": set(cm.raccess.edit_groups.all()),
+        "view_groups": set(cm.raccess.view_groups.all()),
+        "edit_users": set(cm.raccess.edit_users.all()),
+        "view_users": set(cm.raccess.view_users.all()),
+        "owners": set(cm.raccess.owners.all()),
+        "can_edit": (user in set(cm.raccess.edit_users.all())) \
+                    or (len(set(cm.raccess.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
     }
 
 class AbstractMetaDataElement(models.Model):
@@ -4190,6 +4188,11 @@ class AbstractResource(ResourcePermissionsMixin):
 
         self.metadata.delete_all_elements()
         self.metadata.delete()
+
+        access_resource = self.raccess
+        UserResourcePrivilege.objects.filter(resource=access_resource).delete()
+        GroupResourcePrivilege.objects.filter(resource=access_resource).delete()
+        access_resource.delete()
 
         super(AbstractResource, self).delete()
 

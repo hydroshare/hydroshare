@@ -43,12 +43,12 @@ def authorize(request, res_id, edit=False, view=False, full=False, superuser=Fal
     except ObjectDoesNotExist:
         raise NotFound(detail="No resource was found for resource id:%s" % res_id)
 
-    has_edit = res.edit_users.filter(pk=user.pk).exists()
-    has_view = res.view_users.filter(pk=user.pk).exists()
-    has_full = res.owners.filter(pk=user.pk).exists()
+    has_edit = res.raccess.edit_users.filter(pk=user.pk).exists()
+    has_view = res.raccess.view_users.filter(pk=user.pk).exists()
+    has_full = res.raccess.owners.filter(pk=user.pk).exists()
 
     authorized = (edit and has_edit) or \
-                 (view and (has_view or res.public)) or \
+                 (view and (has_view or res.raccess.public)) or \
                  (full and has_full) or \
                  (superuser and user.is_superuser)
 

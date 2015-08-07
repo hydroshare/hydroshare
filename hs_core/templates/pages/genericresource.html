@@ -264,7 +264,7 @@
                         <form id="form-sharing" class="pull-left"
                               action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
                             {% csrf_token %}
-                            {% if cm.public %}
+                            {% if cm.raccess.public %}
                                 <input name="t" type="hidden" value="make_private"/>
                                 <div class="btn-group" role="group" aria-label="...">
                                     <button id="btn-public" data-toggle="tooltip" data-placement="auto"
@@ -291,7 +291,7 @@
                             {% endif %}
                         </form>
                     {% else %}
-                        {% if cm.public %}
+                        {% if cm.raccess.public %}
                             <strong>&nbspPublic</strong>
                         {% else %}
                             <strong>&nbspPrivate</strong>
@@ -528,7 +528,7 @@
 {#                                </div>#}
 {#                            </div>#}
 
-                            {% if not cm.public %}
+                            {% if not cm.raccess.public %}
                                 <div class="col-md-4">
                                     <div class="custom-well">
                                         <h5 class="access-panel-title"><strong>Users who can view and download the resource</strong></h5>

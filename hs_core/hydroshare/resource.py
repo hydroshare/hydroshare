@@ -8,7 +8,7 @@ from mezzanine.generic.models import Keyword, AssignedKeyword
 
 from hs_core.hydroshare import hs_bagit
 from hs_core.hydroshare.utils import get_resource_types
-from hs_core.models import ResourceFile
+from hs_core.models import ResourceFile, ResourceAccess, PrivilegeCodes, UserResourcePrivilege
 from hs_core import signals
 from hs_core.hydroshare import utils
 
@@ -369,31 +369,30 @@ def create_resource(
 
         add_resource_files(resource.short_id, *files)
 
-        if 'owner' in kwargs:
-            owner = utils.user_from_id(kwargs['owner'])
-            resource.owners.add(owner)
-
-        resource.owners.add(owner)
+        resource_access = ResourceAccess(resource=resource)
+        resource_access.save()
+        UserResourcePrivilege(resource=resource_access, grantor=owner.uaccess, user=owner.uaccess,
+                              privilege=PrivilegeCodes.OWNER).save()
 
         if edit_users:
             for user in edit_users:
                 user = utils.user_from_id(user)
-                resource.edit_users.add(user)
-                resource.view_users.add(user)
+                owner.uaccess.share_resource_with_user(resource, user, PrivilegeCodes.CHANGE)
+
         if view_users:
             for user in view_users:
                 user = utils.user_from_id(user)
-                resource.view_users.add(user)
+                owner.uaccess.share_resource_with_user(resource, user, PrivilegeCodes.VIEW)
 
         if edit_groups:
             for group in edit_groups:
                 group = utils.group_from_id(group)
-                resource.edit_groups.add(group)
-                resource.view_groups.add(group)
+                owner.uaccess.share_resource_with_group(resource, group, PrivilegeCodes.CHANGE)
+
         if view_groups:
             for group in view_groups:
                 group = utils.group_from_id(group)
-                resource.view_groups.add(group)
+                owner.uaccess.share_resource_with_group(resource, group, PrivilegeCodes.VIEW)
 
         if keywords:
             ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
@@ -751,12 +750,11 @@ def publish_resource(pk):
     Note:  This is different than just giving public access to a resource via access control rul
     """
     resource = utils.get_resource_by_shortkey(pk)
-    resource.published_and_frozen = True
-    resource.frozen = True
-    resource.edit_users = []
-    resource.edit_groups = []
+    resource.raccess.published = True
+    resource.raccess.immutable = True
+    resource.raccess.save()
+    resource.doi = "to be assigned"
     resource.save()
-
 
 
 def resolve_doi(doi):

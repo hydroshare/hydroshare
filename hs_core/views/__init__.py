@@ -26,7 +26,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods
-from hs_core.models import GenericResource, resource_processor, CoreMetaData
+from hs_core.models import GenericResource, resource_processor, CoreMetaData, PrivilegeCodes, HSAccessException
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -243,11 +243,8 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
 def publish(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    res.edit_users = []
-    res.edit_groups = []
-    res.published_and_frozen = True
-    res.doi = "to be assigned"
-    res.save()
+
+    hydroshare.publish_resource(shortkey)
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -261,27 +258,61 @@ def change_permissions(request, shortkey, *args, **kwargs):
         group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
 
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
     t = request.POST['t']
     values = [int(k) for k in request.POST.getlist('designees', [])]
     if t == 'owners':
-        res.owners = User.objects.in_bulk(values)
+        owners_to_keep = User.objects.in_bulk(values).values()
+        for owner in res.raccess.edit_users.all():
+            if owner not in owners_to_keep:
+                try:
+                    user.uaccess.unshare_resource_with_user(res, owner)
+                except HSAccessException:
+                    #TODO: propogate this error to the user interface and leave the loop
+                    pass
+
     elif t == 'edit_users':
-        res.edit_users = User.objects.in_bulk(values)
+        edit_users_to_keep = User.objects.in_bulk(values).values()
+        for edit_user in res.raccess.edit_users.all():
+            if edit_user not in edit_users_to_keep:
+                try:
+                    user.uaccess.unshare_resource_with_user(res, edit_user)
+                except HSAccessException:
+                    #TODO: propogate this error to the user interface and leave the loop
+                    pass
+
     elif t == 'edit_groups':
         res.edit_groups = Group.objects.in_bulk(values)
     elif t == 'view_users':
-        res.view_users = User.objects.in_bulk(values)
+        view_users_to_keep = User.objects.in_bulk(values).values()
+        for view_user in res.raccess.view_users.all():
+            if view_user not in view_users_to_keep:
+                try:
+                    user.uaccess.unshare_resource_with_user(res, view_user)
+                except HSAccessException:
+                    #TODO: propogate this error to the user interface and leave the loop
+                    pass
+
     elif t == 'view_groups':
         res.view_groups = Group.objects.in_bulk(values)
     elif t == 'add_view_user':
         frm = AddUserForm(data=request.POST)
         if frm.is_valid():
-            res.view_users.add(frm.cleaned_data['user'])
+            try:
+                user.uaccess.share_resource_with_user(res, frm.cleaned_data['user'], PrivilegeCodes.VIEW)
+            except HSAccessException:
+                #TODO: propogate this error to the user interface
+                pass
+
     elif t == 'add_edit_user':
         frm = AddUserForm(data=request.POST)
         if frm.is_valid():
-            res.edit_users.add(frm.cleaned_data['user'])
+            try:
+                user.uaccess.share_resource_with_user(res, frm.cleaned_data['user'], PrivilegeCodes.CHANGE)
+            except HSAccessException:
+                #TODO: propogate this error to the user interface
+                pass
+
     elif t == 'add_view_group':
         frm = AddGroupForm(data=request.POST)
         if frm.is_valid():
@@ -293,15 +324,20 @@ def change_permissions(request, shortkey, *args, **kwargs):
     elif t == 'add_owner':
         frm = AddUserForm(data=request.POST)
         if frm.is_valid():
-            res.owners.add(frm.cleaned_data['user'])
+            try:
+                user.uaccess.share_resource_with_user(res, frm.cleaned_data['user'], PrivilegeCodes.OWNER)
+            except HSAccessException:
+                #TODO: propogate this error to the user interface
+                pass
+
     elif t == 'make_public':
-        #if res.metadata.has_all_required_elements():
         if res.can_be_public:
-            res.public = True
-            res.save()
+            res.raccess.public = True
+            res.raccess.save()
+
     elif t == 'make_private':
-        res.public = False
-        res.save()
+        res.raccess.public = False
+        res.raccess.save()
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -423,11 +459,15 @@ def my_resources(request, page):
             for item_type in ("type", "author", "contributor", "subject")
         )
 
+        # TODO: Restricting resource listing to GenericResource as no other resource type is currently aware of
+        # Alva's access control objects - this needs be removed after resource model refactoring
+        search_items['type'] = ['GenericResource']
+
         # TODO ten separate SQL queries for basically the same data
         res = set()
         for lst in get_resource_list(
             user=user,
-            owner= owner,
+            owner=owner,
             published=published,
             edit_permission=edit_permission,
             from_date=from_date,
@@ -479,10 +519,10 @@ def add_generic_context(request, page):
         'users': User.objects.all(),
         'groups': Group.objects.all(),
         'owners': set(cm.owners.all()),
-        'view_users': set(cm.view_users.all()),
-        'view_groups': set(cm.view_groups.all()),
-        'edit_users': set(cm.edit_users.all()),
-        'edit_groups': set(cm.edit_groups.all()),
+        'view_users': set(cm.raccess.view_users.all()),
+        'view_groups': set(cm.raccess.view_groups.all()),
+        'edit_users': set(cm.raccess.edit_users.all()),
+        'edit_groups': set(cm.raccess.edit_groups.all()),
         'add_owner_user_form': AddUserForm(),
         'add_view_user_form': AddUserForm(),
         'add_edit_user_form': AddUserForm(),
