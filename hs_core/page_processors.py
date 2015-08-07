@@ -44,6 +44,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session["file_type_error"]
 
     content_model = page.get_content_model()
+    assert content_model, page.content_model
     file_validation_error = None
 
     metadata_status = _get_metadata_status(content_model)

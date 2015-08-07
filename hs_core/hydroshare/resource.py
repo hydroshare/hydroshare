@@ -362,6 +362,7 @@ def create_resource(
         )
 
         # by default make resource private
+        resource.content_model = "baseresource"
         resource.public = False
         resource.save()
 
