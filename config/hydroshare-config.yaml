@@ -1,9 +1,7 @@
-### docker-compose variables ###
-HS_SHARED_VOLUME: /home/hydro/hydroshare
-
 ### Local Configuration Variables ###
 HS_PATH: /home/hydro/hydroshare
 HOST_SSL_DIR: /home/hydro/hs-certs
+HS_DATABASE: pg.development.sql
 
 ### Deployment Options ###
 USE_CLEAN: true
@@ -11,13 +9,10 @@ USE_NGINX: false
 USE_SSL: false
 
 ### nginx Configuration Variables ###
-HS_NGINX_DIR: /home/hydro/hydroshare/nginx
-HS_NGINX_IMG: hs-nginx
-HS_NGINX: web-nginx
-HS_CNAME: hydroshare_hydroshare_1
+FQDN_OR_IP: localhost
+NGINX_DIR: /home/hydro/hydroshare/nginx
 
 ### SSL Configuration Variables ###
-FQDN_OR_IP: localhost
 SSL_CERT_DIR: /home/hydro/hydroshare/nginx/cert-files
 SSL_CERT_FILE: hydrodev-vb.example.org.cert
 SSL_KEY_FILE: hydrodev-vb.example.org.key
