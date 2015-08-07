@@ -8,3 +8,5 @@
 .idea/
 celeryd.pid
 hydroshare/local_settings.py
+nginx/config-files/hs-nginx.conf
+config/hydroshare-config.sh
