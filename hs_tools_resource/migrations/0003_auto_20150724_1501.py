@@ -19,14 +19,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameModel("ToolResource", "OldToolResource"),
+        migrations.DeleteModel("ToolResource"),
         migrations.CreateModel(
             name='ToolResource',
             fields=[
             ],
             options={
                 'ordering': ('_order',),
-                'verbose_name': 'Old Tool Resource',
+                'verbose_name': 'Tool Resource',
                 'proxy': True,
             },
             bases=('hs_core.genericresource',),

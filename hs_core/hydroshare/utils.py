@@ -28,7 +28,11 @@ class ResourceFileValidationException(Exception):
 
 
 def get_resource_types():
-    resource_types = [x for x in get_models() if issubclass(x, AbstractResource) and x != BaseResource]
+    resource_types = []
+    for model in get_models():
+        if issubclass(model, AbstractResource) and model != BaseResource:
+            if not getattr(model, 'archived_model', False):
+                resource_types.append(model)
     return resource_types
 
 

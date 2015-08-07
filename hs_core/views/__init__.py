@@ -539,19 +539,18 @@ def create_resource(request, *args, **kwargs):
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
 
-    try:
-        resource = hydroshare.create_resource(
-                resource_type=request.POST['resource-type'],
-                owner=request.user,
-                title=res_title,
-                keywords=None,
-                metadata=metadata,
-                files=resource_files,
-                content=res_title
-        )
-    except Exception as ex:
-        context = {'resource_creation_error': ex.message }
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+    # try:
+    resource = hydroshare.create_resource(
+            resource_type=request.POST['resource-type'],
+            owner=request.user,
+            title=res_title,
+            metadata=metadata,
+            files=resource_files,
+            content=res_title
+    )
+    # except Exception as ex:
+    #     context = {'resource_creation_error': ex.message }
+    #     return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     try:
         utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)

@@ -9,81 +9,13 @@ from hs_core import hydroshare
 from mezzanine.pages.models import Page
 from mezzanine.pages.page_processors import processor_for
 
-# def get_resource_names():
-#     names = []
-#     for res in hydroshare.get_resource_types():
-#         names.append(res.__name__)
-#
-#
-
-#
-# To create a new resource, use these two super-classes.
-#
-class OldToolResource(Page, AbstractResource):
-    objects = ResourceManager()
-
-    class Meta:
-        verbose_name = 'Old Tool Resource'
-        db_table = "hs_tools_resource_toolresource"
-
-    def extra_capabilities(self):
-        return None
-
-    @property
-    def metadata(self):
-        md = ToolMetaData()
-        return self._get_metadata(md)
-
-    def can_add(self, request):
-        return AbstractResource.can_add(self, request)
-
-    def can_change(self, request):
-        return AbstractResource.can_change(self, request)
-
-    def can_delete(self, request):
-        return AbstractResource.can_delete(self, request)
-
-    def can_view(self, request):
-        return AbstractResource.can_view(self, request)
-
-    @classmethod
-    def get_supported_upload_file_types(cls):
-        # no file types are supported
-        return ()
-
-    @classmethod
-    def can_have_multiple_files(cls):
-        # resource can't have any files
-        return False
-
-    def copy_to_new_model(self):
-        res = ToolResource()
-
-        # Copy regular fields
-        for field in self._meta.fields:
-            value = getattr(self, field.name, None)
-            setattr(res, field.name, value)
-        res.resource_type = 'ToolResource'
-        res.save()
-
-        for vfield in self._meta.virtual_fields:
-            f = getattr(self, vfield.name)
-            if f:
-                relations = f.all()
-                for relation in relations:
-                    relation.content_object = res
-                    relation.save()
-
-        return res
-
 
 class ToolResource(GenericResource):
-
     objects = ResourceManager('ToolResource')
 
     class Meta:
         proxy = True
-        verbose_name = 'Old Tool Resource'
+        verbose_name = 'Tool Resource'
 
     def extra_capabilities(self):
         return None
