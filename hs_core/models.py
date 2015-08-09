@@ -156,7 +156,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_view(self, request):
         user = get_user(request)
 
-        if self.public:
+        if self.raccess.public:
             return True
         if user.is_authenticated():
             if user.is_superuser:
@@ -2948,16 +2948,25 @@ class ResourceAccess(models.Model):
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
 def page_permissions_page_processor(request, page):
     cm = page.get_content_model()
-    user = get_user(request)
+    can_change_resource_flags = False
+    if request.user.is_authenticated():
+        if request.user.uaccess.can_change_resource_flags(cm):
+            can_change_resource_flags = True
+
+    owners = set(cm.raccess.owners.all())
+    editors = set(cm.raccess.edit_users.all()) - owners
+    viewers = set(cm.raccess.view_users.all()) - editors - owners
 
     return {
+        'resource_type': cm._meta.verbose_name,
+        'bag': cm.bags.first(),
+        'groups': Group.objects.all(),
         "edit_groups": set(cm.raccess.edit_groups.all()),
         "view_groups": set(cm.raccess.view_groups.all()),
-        "edit_users": set(cm.raccess.edit_users.all()),
-        "view_users": set(cm.raccess.view_users.all()),
-        "owners": set(cm.raccess.owners.all()),
-        "can_edit": (user in set(cm.raccess.edit_users.all())) \
-                    or (len(set(cm.raccess.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
+        "edit_users": editors,
+        "view_users": viewers,
+        "owners": owners,
+        "can_change_resource_flags": can_change_resource_flags
     }
 
 class AbstractMetaDataElement(models.Model):
@@ -4784,10 +4793,9 @@ class CoreMetaData(models.Model):
         allowed_elements = [el.lower() for el in self.get_supported_element_names()]
         return element_name.lower() in allowed_elements
 
+
 def resource_processor(request, page):
     extra = page_permissions_page_processor(request, page)
-    extra['res'] = page.get_content_model()
-    #extra['dc'] = { m.term_name : m.content for m in extra['res'].dublin_metadata.all() }
     return extra
 
 

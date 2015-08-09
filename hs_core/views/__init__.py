@@ -332,12 +332,14 @@ def change_permissions(request, shortkey, *args, **kwargs):
 
     elif t == 'make_public':
         if res.can_be_public:
-            res.raccess.public = True
-            res.raccess.save()
+            if user.uaccess.can_change_resource_flags(res):
+                res.raccess.public = True
+                res.raccess.save()
 
     elif t == 'make_private':
-        res.raccess.public = False
-        res.raccess.save()
+        if user.uaccess.can_change_resource_flags(res):
+            res.raccess.public = False
+            res.raccess.save()
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -508,21 +510,12 @@ def add_generic_context(request, page):
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
+
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
-    cm = page.get_content_model()
 
     return {
-        'resource_type': cm._meta.verbose_name,
-        'bag': cm.bags.first(),
-        'users': User.objects.all(),
-        'groups': Group.objects.all(),
-        'owners': set(cm.owners.all()),
-        'view_users': set(cm.raccess.view_users.all()),
-        'view_groups': set(cm.raccess.view_groups.all()),
-        'edit_users': set(cm.raccess.edit_users.all()),
-        'edit_groups': set(cm.raccess.edit_groups.all()),
         'add_owner_user_form': AddUserForm(),
         'add_view_user_form': AddUserForm(),
         'add_edit_user_form': AddUserForm(),
