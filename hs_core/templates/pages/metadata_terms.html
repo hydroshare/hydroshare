@@ -122,6 +122,48 @@
     <div>[TODO:Describe model instance resource type here]</div>
     <div>[TODO:Describe model instance resource type metadata terms here]</div>
 
+    <h3>SWAT Model Instance Resource Type Description</h3>
+    <p>
+        <ul>
+            <li><strong>hsterms:ModelObjective:</strong>The objective of building this Model Instance resource. This objective could be one or more of the following control vocabularies:
+                Hydrology, Water quality, BMPs, and Climate / Landuse Change. Also the user can add any other objectives.</li>
+            <li><strong>hsterms:SimulationType:</strong>The type of the simulation used in the SWAT Model Instance resource type. This simulation type could be one of the following controlled
+                vocabularies: Normal Simulation, Sensitivity Analysis, and Auto-Calibration.</li>
+            <li><strong>hsterms:ModelInput:</strong>HydroShare Class that includes all the metadata elements related to SWAT Model Instance resource input files</li>
+                <ul>
+                    <li><strong>hsterms:ModelInput / hsterms:warm-upPeriodType:</strong>The SWAT Model warm-up period type. Always is year.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:warm-upPeriodValue:</strong>The SWAT Model warm-up period value in years.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:rainfallTimeStepType:</strong>The time step type used within the rainfall data in the SWAT Model Instance resource type input files.
+                        This metadata element has control vocabularies: Daily, and Sub-hourly.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:rainfallTimeStepValue:</strong>The time step value used within the rainfall data in the SWAT Model Instance resource type input files.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:routingTimeStepType:</strong>The time step type used within the model routing in the SWAT Model Instance resource type input files.
+                        This metadata element has control vocabularies: Daily, and Hourly.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:routingTimeStepValue:</strong>The time step value used within the model routing in the SWAT Model Instance resource type input files.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:simulationTimeStepType:</strong>The time step type used for simulating the SWAT Model Instance resource type. This metadata element
+                        has control vocabularies: Annual, Monthly, Daily, and Hourly.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:simulationTimeStepValue:</strong>The time step value used for simulating the SWAT Model Instance resource type.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:watershedArea:</strong>The watershed area in Km&sup2 in the SWAT Model Instance resource type input files.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:numberOfSubbasins:</strong>The number of the subbasin within the watershed in the SWAT Model Instance resource type input files.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:numberOfHRUs:</strong>The number of the Hydrologic Response Units within the watershed in the SWAT Model Instance resource type input files.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:DEMResolution:</strong>The resolution of the Digital Elevation Model in meters in the SWAT Model Instance resouce type input files.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:DEMSourceName:</strong>The source name for the Digitial Elevation Model data.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:DEMSourceURL:</strong>The source URL for the Digital Elevation Model data if exist.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:landUseDataSourceName:</strong>The source name for the Landuse data.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:landUseDataSourceURL:</strong>The source URL for the Landuse data if exist.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:soilDataSourceName:</strong>The source name for Soil data.</li>
+                    <li><strong>hsterms:ModelInput / hsterms:soilDataSourceURL:</strong>The source URL for Soil data if exist.</li>
+                </ul>
+            <li><strong>hsterms:ModelMethod:</strong>HydroShare class that includes all the metadata elements related to SWAT model methods used in the SWAT Model Instance resource type.</li>
+                <ul>
+                    <li><strong>hsterms:ModeMethod / hsterms:runoffCalculationMethod:</strong>The runoff calculation method used in the SWAT Model Instance resource type input files.</li>
+                    <li><strong>hsterms:ModelMethod / hsterms:flowRoutingMethod:</strong>The flow routing method used in the SWAT Model Instance resource type input files.</li>
+                    <li><strong>hsterms:ModelMethod / hsterms:PETEstimationMethod:</strong>The Potential EvapoTranspiration estimation method used in the SWAT Instance resource type input files.</li>
+                </ul>
+            <li><strong>hsterms:ModelParameter:</strong>The parameters used in the model. For SWAT model, there are  control vocabularies: Crop rotation, Title drainage , Point source, Fertilizer,
+                Tilage operation, Inlet of draining watershed, Irrigation operation. Also the user can add any other parameters.</li>
+        </ul>
+    </p>
+
     <h3>Tools Resource Type Description</h3>
     <div>[TODO:Describe tools resource type here]</div>
     <div>[TODO:Describe tools resource type metadata terms here]</div>
