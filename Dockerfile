@@ -35,6 +35,7 @@ RUN rm irods-icommands-4.1.0-64bit.deb
 
 # Install test coverage module
 RUN pip install coverage
+RUN pip install django-oauth-toolkit django-cors-headers
 
 WORKDIR /home/docker/hydroshare
 

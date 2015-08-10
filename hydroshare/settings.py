@@ -250,6 +250,8 @@ INPLACE_SAVE_URL = '/hsapi/save_inline/'
 INSTALLED_APPS = (
     "django.contrib.admin",
     "django.contrib.auth",
+    "oauth2_provider",
+    "corsheaders",
     "django.contrib.contenttypes",
     "django.contrib.redirects",
     "django.contrib.sessions",
@@ -320,6 +322,7 @@ MIDDLEWARE_CLASSES = (
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -340,6 +343,13 @@ MIDDLEWARE_CLASSES = (
 # at the moment we are using custom forks of them.
 PACKAGE_NAME_FILEBROWSER = "filebrowser_safe"
 PACKAGE_NAME_GRAPPELLI = "grappelli_safe"
+
+#########################
+#  CORS/OAUTH SETTINGS  #
+#########################
+
+# TODO: change this to the actual origins we wish to support
+CORS_ORIGIN_ALLOW_ALL = True
 
 #########################
 # OPTIONAL APPLICATIONS #
