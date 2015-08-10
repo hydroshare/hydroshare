@@ -4,18 +4,18 @@
 # HydroShare Control Script
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
-### Load Configuration Variables ###
+### Local Config ###
 CONFIG_DIRECTORY='./config'
 CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
 HOME_DIR=${PWD}
 
-# read hydroshare-config.yaml into environment
+# Read hydroshare-config.yaml into environment
 sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" $CONFIG_FILE > $CONFIG_DIRECTORY/hydroshare-config.sh
 sed -i 's/#.*$//' $CONFIG_DIRECTORY/hydroshare-config.sh
 sed -i '/^\s*$/d' $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat $CONFIG_DIRECTORY/hydroshare-config.sh)
 
-### Variables ###
+### Docker Variables ###
 HS_DOCKER_CONTAINERS=(hydroshare_hydroshare_1 hydroshare_dockerworker_1 hydroshare_defaultworker_1 )
 HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_dockerworker hydroshare_defaultworker)
 OTHER_DOCKER_CONTAINERS=(hydroshare_postgis_1 hydroshare_rabbitmq_1 hydroshare_redis_1 )
@@ -78,7 +78,6 @@ stop_hs() {
 }
 
 preflight_hs() {
-    ### Pre-flight Configuration ###
     yes | cp -rf ${HS_PATH}/docker-compose.template ${HS_PATH}/docker-compose.yml
     sed -i 's!HS_SHARED_VOLUME!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
     if [ "${USE_NGINX,,}" = true ]; then
@@ -116,7 +115,7 @@ rebuild_hs() {
     echo "*** ${1^^} *** "
     preflight_hs
     stop_hs STOP
-    echo "*** REMOVE: all hydroshare docker containers  ***"
+    echo "*** REMOVE: all hydroshare docker containers (preserves exiting database contents)  ***"
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
         docker rm -fv $f;
     done
@@ -143,7 +142,6 @@ rebuild_hs() {
 
 loaddb_hs() {
     echo "*** ${1^^} ***"
-    # load database into postgis container
     echo "*** load clean pg.development.sql database from the running hydroshare container ***"
     CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
     echo "*** drop existing database ***"
@@ -166,7 +164,7 @@ deploy_hs() {
     echo "*** ${1^^} ***"
     preflight_hs
     stop_hs STOP
-    echo "*** REMOVE: all docker containers  ***"
+    echo "*** REMOVE: all docker containers (deletes existing database)  ***"
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
         docker rm -fv $f;
     done
@@ -202,7 +200,7 @@ deploy_hs() {
     fi
 }
 
-# if less than two arguments supplied, display usage
+### Display usage if exactly one argument is not provided ###
 if [  $# -ne 1 ]
 then
     display_usage

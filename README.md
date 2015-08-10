@@ -15,14 +15,14 @@ For ease of standing the environment up, a predefined Xubuntu image has been cre
 
 The **hydrodev** VM is distributed as a VirtualBox Appliance and can be installed by choosing `File > Import Appliance` from the VirtualBox menu.
 
-A predefined user named `hydro` with sudo rights has been designated as the default user as found in the hydroshare repository.
+A predefined user named `hydro` with sudo rights has been designated as the default user.
 
 - User: **hydro**
 - Password: **hydro**
 
 ## Running HydroShare
 
-The hydroshare code is configured with the assumption the the developer is using the **hydrodev** VM and will be operating as user **hydro** the `/home/hydro` directory.
+The hydroshare code is configured with the assumption the the developer is using the **hydrodev** VM and will be operating as user **hydro** from the `/home/hydro` directory.
 
 A new installation would first require the cloning of the hydroshare repository.
 
