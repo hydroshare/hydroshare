@@ -1,5 +1,7 @@
 __author__ = 'lisa_stillwell'
 
+import unittest
+
 from unittest import TestCase
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
@@ -50,6 +52,7 @@ class TestSetAccessRules(TestCase):
         self.test_group.delete()
         #self.new_res.delete()
 
+    @unittest.skip
     def test_set_access_rules(self):
 
         res_id = self.new_res.short_id

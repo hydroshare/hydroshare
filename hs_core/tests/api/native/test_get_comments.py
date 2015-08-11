@@ -2,6 +2,7 @@ __author__ = 'Tian Gan'
 
 ## unit test for get_comments() from social.py
 
+import unittest
 
 from django.contrib.auth.models import User
 from mezzanine.generic.models import ThreadedComment
@@ -59,6 +60,7 @@ class TestGetComments(TestCase):
         User.objects.all().delete()
         GenericResource.objects.all().delete()
 
+    @unittest.skip
     def test_get_comments(self):
         res_comments = hydroshare.get_comments(self.res.short_id)
 

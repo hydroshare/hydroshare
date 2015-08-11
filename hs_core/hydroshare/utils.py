@@ -26,15 +26,9 @@ class ResourceFileSizeException(Exception):
 class ResourceFileValidationException(Exception):
     pass
 
-cached_resource_types = None
-
 def get_resource_types():
-    global cached_resource_types
-    #cached_resource_types = filter(lambda x: issubclass(x, AbstractResource), get_models()) if\
-    #    not cached_resource_types else cached_resource_types
-    cached_resource_types = filter(lambda x: issubclass(x, AbstractResource), get_models())
-
-    return cached_resource_types
+    resource_types = filter(lambda x: issubclass(x, AbstractResource), get_models())
+    return resource_types
 
 
 def get_resource_instance(app, model_name, pk, or_404=True):
@@ -208,14 +202,16 @@ def check_file_dict_for_error(file_validation_dict):
             error_message = file_validation_dict.get('message', "Uploaded file(s) failed validation.")
             raise ResourceFileValidationException(error_message)
 
+def raise_file_size_exception():
+    from .resource import file_size_limit_for_display
+    error_msg = 'The resource file is larger than the supported size limit: %s.' % file_size_limit_for_display
+    raise ResourceFileSizeException(error_msg)
 
 def validate_resource_file_size(resource_files):
-    from .resource import check_resource_files, file_size_limit_for_display
+    from .resource import check_resource_files
     valid = check_resource_files(resource_files)
     if not valid:
-        error_msg = 'The resource file is larger than the supported size limit: %s.' % file_size_limit_for_display
-        raise ResourceFileSizeException(error_msg)
-
+        raise_file_size_exception()
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key, files=(), metadata=None,  **kwargs):
     from.resource import check_resource_type

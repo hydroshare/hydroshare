@@ -1,4 +1,7 @@
 __author__ = 'Pabitra'
+
+import unittest
+
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
 from hs_core.models import GroupOwnership
@@ -14,6 +17,7 @@ class TestDeleteGroupOwnerAPI(TestCase):
         Group.objects.all().delete()
         pass
 
+    @unittest.skip
     def test_delete_group_the_only_owner(self):
         user_owner_1 = hydroshare.create_account(
             'owner_1@usu.edu',
@@ -41,6 +45,7 @@ class TestDeleteGroupOwnerAPI(TestCase):
         # test we don't have any group ownership after we delete the group owner
         self.assertEqual(GroupOwnership.objects.all().count(), 0)
 
+    @unittest.skip
     def test_delete_group_the_same_owner_twice(self):
         user_owner_1 = hydroshare.create_account(
             'owner_1@usu.edu',
@@ -71,6 +76,7 @@ class TestDeleteGroupOwnerAPI(TestCase):
         # test we don't have any group ownership after we delete the group owner
         self.assertEqual(GroupOwnership.objects.all().count(), 0)
 
+    @unittest.skip
     def test_delete_group_one_of_the_owners(self):
         user_owner_1 = hydroshare.create_account(
             'owner_1@usu.edu',

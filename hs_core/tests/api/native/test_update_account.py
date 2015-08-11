@@ -6,6 +6,9 @@ comments-  IMPORTANT- update_account(user, **kwargs) contains a 'blacklist,' tha
 the username,password, and groups, if given. I only fixed it to work, but kept the blacklist
 as a relic to hopefully jog the developers memory as to what he intended there.
 """
+
+import unittest
+
 from tastypie.test import ResourceTestCase, TestApiClient
 from tastypie.serializers import Serializer
 from django.contrib.auth.models import User, Group
@@ -24,6 +27,7 @@ class UpdateAccountTest(ResourceTestCase):
         User.objects.all().delete()
         Group.objects.all().delete()
 
+    @unittest.skip
     def test_basic(self):
         kwargs = {'groups': ('group0'),
                   'email': 'shauntheta@gmail.com',
