@@ -85,85 +85,63 @@
     </p>
 
     <h3>Model Program Resource Type Description</h3>
-    <p> A Model Program resource type is the executable file containing the model's logic and computational engine. The Model Program resource type consists of
-        the source code or compiled software for executing the model in addition to any documentation related to the model (e.g. user manual and theoretical manual).
-        Beyond the Dublin Core terms, this resource type has the following metadata elements to adequately describe the model:
+    <p> A Model Program resource describes the software component of a generic model within the water domain.  It aims to fully describe the software-related metadata of a given model program  to enables scientists to seamlessly retrieve all the content and information required to get a model up-and-running on their local or server-side machine.   This resource consists of uploaded content such as source code, compiled binaries, and documentation, as well as metadata describing the model's software. The Model Program resource can be related to many Model Instance resources (below) to completely describe a simulation and the exact software version used for a particular study, to make data replication possible. The specific metadata elements are as follows:
 
         <ul>
-            <li><strong>dc:license:</strong> The license for the program and source code (e.g., GPL).</li>
-            <li><strong>hsterms:ModelVersionNumber:</strong> Model version including a build number (e.g., SWAT2012 rev. 629).</li>
-            <li><strong>hsterms:ModelProgramLanguage:</strong> Programming language used to create model (e.g., C++).</li>
-            <li><strong>hsterms:SupportedOperatingSystem:</strong>Compatible operating systems (e.g., Mac OS X version 10.7 and later).</li>
-            <li><strong>hsterms:ModelReleaseDate:</strong> Date that the model was released.</li>
-            <li><strong>hsterms:ModelReleaseNotes:</strong>Release notes for Model Program resource.</li>
-            <li><strong>hsterms:ModelWebpage:</strong> URL for Model Program resource webpage maintained by the model developers.</li>
-            <li><strong>hsterms:CodeRepository:</strong> URL for project page in a code repository (e.g., Github, Bitbucket, Google Code, etc.).</li>
-            <li><strong>hsterms:hasModelUserManual:</strong> Documentation that describes the use of the model.</li>
-            <li><strong>hsterm:hasModelTheoreticalManual:</strong> Documentation that describes the processes represented within the model.</li>
-            <li><strong>hsterms:hasSourceCode:</strong> The source code used to build the Model Program.</li>
+{#            <li><strong>dc:license:</strong> The license for the program and source code (e.g., GPL).</li>#}
+            <li><strong>ModelVersionNumber:</strong> Model version and/or build number (e.g., SWAT2012 rev. 629)</li>
+            <li><strong>SupportedOperatingSystem:</strong>Compatible operating systems (e.g., Mac OS X version 10.7 and later)</li>
+            <li><strong>ModelReleaseDate:</strong> The date that this version of the model was released</li>
+            <li><strong>ModelReleaseNotes:</strong>Notes regarding the software release</li>
+            <li><strong>ModelWebpage:</strong> A URL to the webpage maintained by the model developers</li>
+            <li><strong>CodeRepository:</strong> A URL to the source code repository (e.g., Github, Bitbucket, etc.)</li>
+            <li><strong>ModelUserManual:</strong> Uploaded content that describes the general use of the model</li>
+            <li><strong>ModelTheoreticalManual:</strong> Uploaded content that describes the theoretical representation of the model</li>
+            <li><strong>SourceCode:</strong> Uploaded archive containing the source code of the model</li>
         </ul>
     </p>
 
     <h3>Model Instance Resource Type Description</h3>
-    <p> A Model Instance resource type is the data input and output files for a general hydrological model run for a specific time and place.
-        In addition to the Dublin Core metadata elements, this resource type has specific metadata elements to describe the file content and
-        the relationship between the Model Program and Model Instance resource types. These specific metadata elements are as follows:
+    <p> A Model Instance resource defines the input and output data for a generic hydrological model, for a specific time and place.  This resource consists of specific metadata to describe the model content as well as the Model Program resource that is used to execute a simulation. These specific metadata elements are as follows:
         <ul>
-            <li><strong>hsterms:ModelOutput:</strong> HydroShare Class that includes all the metadata elements related to Model Instance resource output files.</li>
-                <ul>
-                    <li><strong>hsterms:ModelOutput / hsterms:IncludesModelOutput:</strong> This metadata element is used to show if the output files are included with the
-                        uploaded input files or not.</li>
-                </ul>
-            <li><strong>hsterms:ExecutedBy:</strong> HydroShare Class that includes the information about the Model Program resource that is used to execute the Model Instance resource.</li>
-                <ul>
-                    <li><strong>hsterms:ExecutedBy / hsterms:ModelProgramName:</strong> For this metadata element, there is a drop-down list of the available Model Program resources
-                        in the HydroShare system.The user chooses the Model Program resource to be executed using the Model Instance resource files.</li>
-                    <li><strong>hsterms:ExecutedBy / hsterms:ModelProgramURL:</strong></li> The URL of the choosen Model Program resource in HydroShare.</li>
-                </ul>
+            <li><strong>ModelOutput:</strong> A HydroShare class that encapsulates all the metadata elements related to Model Instance resource output files</li>
+            <li><strong>IncludesModelOutput:</strong> A boolean value that indicates if the output files are included with the uploaded content</li>
+            <li><strong>ExecutedBy:</strong> A HydroShare class that defines the Model Program that executes the current resource </li>
+            <li><strong>ModelProgramName:</strong> The name of the model that executes the current resource</li>
+            <li><strong>ModelProgramURL:</strong> The HydroShare URL of the Model Program resource that executes the current resource</li>
         </ul>
     </p>
 
     <h3>SWAT Model Instance Resource Type Description</h3>
-    <p> SWAT Model Instance resource type is a specific Model Instance resource type for a specific hydrological model (SWAT). It is an extension of the Model Instance resource type.
-        The SWAT Model Instance resource type is implemented by extending the Model Instance resource type metadata resource to accommodate metadata elements
-        required to specifically describe the SWAT model and its input files. These specific metadata elements are as follows:
+    <p> This SWAT Model Instance resource is a specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool. This resource extends the more generic Model Instance metadata terms to accommodate additional SWAT specific terms which have been derived from simulation input files. These specific metadata elements are as follows:
         <ul>
-            <li><strong>hsterms:ModelObjective:</strong>The objective of building this SWAT Model Instance resource. This objective could be one or more of the following control vocabularies:
-                Hydrology, Water quality, BMPs, and Climate / Landuse Change. The user can also add a custom objective.</li>
-            <li><strong>hsterms:SimulationType:</strong>The type of the simulation used in the SWAT Model Instance resource type. This could be one of the following controlled
-                vocabularies: Normal Simulation, Sensitivity Analysis, and Auto-Calibration.</li>
-            <li><strong>hsterms:ModelInput:</strong>HydroShare Class that includes all the metadata elements related to SWAT Model Instance resource input files</li>
-                <ul>
-                    <li><strong>hsterms:ModelInput / hsterms:warm-upPeriodType:</strong>The SWAT Model warm-up period type. Always in years.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:warm-upPeriodValue:</strong>The SWAT Model warm-up period value in years.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:rainfallTimeStepType:</strong>The time step type used within the rainfall data in the SWAT Model Instance resource input files.
-                        This metadata element has control vocabularies: Daily, and Sub-hourly.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:rainfallTimeStepValue:</strong>The time step value used within the rainfall data in the SWAT Model Instance resource input files.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:routingTimeStepType:</strong>The time step type used within the model routing in the SWAT Model Instance resource input files.
-                        This metadata element has control vocabularies: Daily, and Hourly.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:routingTimeStepValue:</strong>The time step value used within the model routing in the SWAT Model Instance resource input files.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:simulationTimeStepType:</strong>The time step type used for simulating the SWAT Model Instance resource. This metadata element
-                        has control vocabularies: Annual, Monthly, Daily, and Hourly.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:simulationTimeStepValue:</strong>The time step value used for simulating the SWAT Model Instance resource.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:watershedArea:</strong>The watershed area in Km&sup2 in the SWAT Model Instance resource input files.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:numberOfSubbasins:</strong>The number of the subbasin within the watershed in the SWAT Model Instance resource input files.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:numberOfHRUs:</strong>The number of the Hydrologic Response Units within the watershed in the SWAT Model Instance resource input files.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:DEMResolution:</strong>The resolution of the Digital Elevation Model in meters in the SWAT Model Instance resouce input files.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:DEMSourceName:</strong>The source name for the Digitial Elevation Model data.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:DEMSourceURL:</strong>The source URL for the Digital Elevation Model data if applicable.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:landUseDataSourceName:</strong>The source name for the Landuse data.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:landUseDataSourceURL:</strong>The source URL for the Landuse data if applicable.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:soilDataSourceName:</strong>The source name for Soil data.</li>
-                    <li><strong>hsterms:ModelInput / hsterms:soilDataSourceURL:</strong>The source URL for Soil data if applicable.</li>
-                </ul>
-            <li><strong>hsterms:ModelMethod:</strong>HydroShare class that includes all the metadata elements related to SWAT model methods used in the SWAT Model Instance resource.</li>
-                <ul>
-                    <li><strong>hsterms:ModeMethod / hsterms:runoffCalculationMethod:</strong>The runoff calculation method used in the SWAT Model Instance resource input files.</li>
-                    <li><strong>hsterms:ModelMethod / hsterms:flowRoutingMethod:</strong>The flow routing method used in the SWAT Model Instance resource input files.</li>
-                    <li><strong>hsterms:ModelMethod / hsterms:PETEstimationMethod:</strong>The Potential EvapoTranspiration estimation method used in the SWAT Instance resource input files.</li>
-                </ul>
-            <li><strong>hsterms:ModelParameter:</strong>The parameters used in the model. For SWAT model, there are control vocabularies: Crop rotation, Title drainage , Point source, Fertilizer,
-                Tilage operation, Inlet of draining watershed, Irrigation operation. Also the user can add any other parameters.</li>
+            <li><strong>ModelObjective:</strong>The objective of the SWAT Model (e.g. Hydrology, Water quality, BMPs, and Climate / Landuse Change, etc.)</li>
+            <li><strong>SimulationType:</strong>The type of the simulation used (e.g. Normal Simulation, Sensitivity Analysis, and Auto-Calibration)</li>
+            <li><strong>ModelInput:</strong>HydroShare Class that includes all the metadata elements related to SWAT Model Instance resource input files</li>
+            <li><strong>warm-upPeriodType:</strong>The warm-up period type</li>
+            <li><strong>warm-upPeriodValue:</strong>The numeric value of the warm-up period in years</li>
+            <li><strong>rainfallTimeStepType:</strong>The type of time step used in the simulation for input rainfall data (e.g. Daily or Sub-hourly)</li>
+            <li><strong>rainfallTimeStepValue:</strong>The time step value associated with the rainfall data</li>
+            <li><strong>routingTimeStepType:</strong>The type of time step used in the simulation for river routing calculations (e.g. Daily or Hourly)</li>
+            <li><strong>routingTimeStepValue:</strong>The time step value used for the river routing calculations</li>
+            <li><strong>simulationTimeStepType:</strong>The type of time step type used for model simulation (e.g. Annual, Monthly, Daily, or Hourly)</li>
+            <li><strong>simulationTimeStepValue:</strong>The time step value used for simulation</li>
+            <li><strong>watershedArea:</strong>The watershed area in Km&sup2</li>
+            <li><strong>numberOfSubbasins:</strong>The number of the subbasin within the watershed</li>
+            <li><strong>numberOfHRUs:</strong>The number of the Hydrologic Response Units within the watershed</li>
+            <li><strong>DEMResolution:</strong>The resolution of the Digital Elevation Model in meters</li>
+            <li><strong>DEMSourceName:</strong>The name of the Digital Elevation Model dataset provider</li>
+            <li><strong>DEMSourceURL:</strong>The URL of the Digital Elevation Model dataset (if applicable)</li>
+            <li><strong>landUseDataSourceName:</strong>The name for the Landuse dataset provider</li>
+            <li><strong>landUseDataSourceURL:</strong>The URL for the Landuse dataset (if applicable)</li>
+            <li><strong>soilDataSourceName:</strong>The name for Soil dataset provider</li>
+            <li><strong>soilDataSourceURL:</strong>The URL for Soil dataset (if applicable)</li>
+            <li><strong>ModelMethod:</strong>HydroShare class that includes all the metadata elements related to SWAT model methods used in simulation</li>
+            <li><strong>runoffCalculationMethod:</strong>The runoff calculation method used</li>
+            <li><strong>flowRoutingMethod:</strong>The flow routing method used</li>
+            <li><strong>PETEstimationMethod:</strong>The Potential EvapoTranspiration estimation method used</li>
+            <li><strong>ModelParameter:</strong>The parameters used in the model (e.g. Crop rotation, Title drainage , Point source, Fertilizer,
+                Tilage operation, Inlet of draining watershed, Irrigation operation, etc.)</li>
         </ul>
     </p>
 
