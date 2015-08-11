@@ -54,9 +54,33 @@
         we will use the following entities:
         <ul>
             <li><strong>Spatial Reference:</strong> The coordinate reference system and spatial extent information
-                defined in the NetCDF file.</li>
+                defined in the NetCDF file.
+                <ul>
+                    <li><strong>Coordinate reference system:</strong> the name of the coordinate reference system.</li>
+                    <li><strong>Coordinate reference system representation type:</strong>the type of the string text used to express
+                        the coordinate reference system. Three types are supported including Proj4 spring, EPSG code, and OGC WKT projection.</li>
+                    <li><strong>Coordinate reference system representation text:</strong> the string text used to express the coordinate reference system based on the given representation type.</li>
+                    <li><strong>North Extent:</strong> the north limit of the spatial extent.</li>
+                    <li><strong>East Extent:</strong> the east limit of the spatial extent. </li>
+                    <li><strong>South Extent:</strong> the south limit of the spatial extent. </li>
+                    <li><strong>West Extent:</strong> the west limit of the spatial extent. </li>
+                    <li><strong>Extent Unit:</strong> the unit of the spatial extent. </li>
+                </ul>
+            </li>
             <li><strong>Variable:</strong> The variables defined in the NetCDF file representing the multidimensional space-time
-                data.</li>
+                data.
+                <ul>
+                    <li><strong>Name:</strong> the defined variable name in file. This name may not explicitly explain what variable it actually represents.</li>
+                    <li><strong>Unit:</strong> the unit of the variable. </li>
+                    <li><strong>Type:</strong>
+                        the data type of the variable which is upported in the <a href="https://www.unidata.ucar.edu/software/netcdf/docs/enhanced_model.html"> NetCDF enhanced data model.</a></li>
+                    <li><strong>Shape:</strong> the shape defined for the variable. </li>
+                    <li><strong>Long Name:</strong> a descriptive name for the variable to explain what the variable represents. </li>
+                    <li><strong>Comment:</strong> miscellaneous information about the variable. </li>
+                    <li><strong>Missing Value:</strong> the data value used to represent missing data value. The data type for missing value should be the same as the variable type.</li>
+
+                </ul>
+            </li>
         </ul>
     </p>
 
@@ -75,7 +99,10 @@
         a geographic raster resource in HydroShare. To describe the geographic raster data, we will use the following entities:
         <ul>
             <li><strong>Spatial Reference:</strong> The coordinate reference system and spatial extent information
-                defined in GeoTIFF file.</li>
+                defined in GeoTIFF file. The metadata element includes the following sub elements:
+
+            </li>
+
             <li>
                 <strong>Band Information:</strong>The information to describe the  phenomenon represented in each band of the geographic raster data.</li>
             <li>
