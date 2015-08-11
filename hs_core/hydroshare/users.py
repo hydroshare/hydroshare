@@ -5,6 +5,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.core import signing
+from django.db.models import Q
 
 from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject, Description, Title, \
     UserAccess, PrivilegeCodes
@@ -165,7 +166,7 @@ def create_account(
     #    iaccount.create(username)
     #    iaccount.setPassward(username, password)
 
-    groups = groups if groups else Group.objects.all()
+    groups = groups if groups else []
     groups = Group.objects.in_bulk(*groups) if groups and isinstance(groups[0], int) else groups
 
     if superuser:
@@ -186,14 +187,19 @@ def create_account(
 
     u.is_staff = False
     if not active:
-        u.is_active=False
+        u.is_active = False
     u.save()
 
     u.groups = groups
 
-    user_access = UserAccess(user=u, admin=False)
-    user_access.save()
+    # make the user a member of the Hydroshare role group
+    u.groups.add(Group.objects.get(name='Hydroshare Author'))
 
+    if superuser:
+        user_access = UserAccess(user=u, admin=True)
+    else:
+        user_access = UserAccess(user=u, admin=False)
+    user_access.save()
     return u
 
 
@@ -551,7 +557,6 @@ def get_resource_list(creator=None,
         subject = list of subject
         type = list of resource type names, used for filtering
     """
-    from django.db.models import Q
 
     if not any((creator, group, user, owner, from_date, to_date, start, count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
@@ -595,15 +600,10 @@ def get_resource_list(creator=None,
         if edit_permission:
             if group:
                 group = group_from_id(group)
-                queries[t].append(Q(edit_groups=group))
+                queries[t].append(Q(gaccess__resource__in=group.gaccess.get_editable_resources()))
 
-            if user:
-                user = user_from_id(user)
-                queries[t].append(Q(raccess__r2urp__privilege__lte=PrivilegeCodes.CHANGE,
-                                    raccess__r2urp__user=user.uaccess) |
-                                  Q(raccess__r2urp__privilege__lte=PrivilegeCodes.OWNER,
-                                    raccess__r2urp__user=user.uaccess)
-                                  )
+            queries, public = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=True,
+                                                                   queries=queries, resource_type=t, is_public=public)
 
         else:
             if creator:
@@ -612,34 +612,10 @@ def get_resource_list(creator=None,
 
             if group:
                 group = group_from_id(group)
-                queries[t].append(Q(raccess__r2grp__privilege__lte=PrivilegeCodes.CHANGE,
-                                    raccess__r2grp__group=group.gaccess) |
-                                  Q(raccess__r2grp__privilege__lte=PrivilegeCodes.VIEW,
-                                    raccess__r2grp__group=group.gaccess)
-                                  )
+                queries[t].append(Q(gaccess__resource__in=group.gaccess.get_held_resources()))
 
-            if user:
-                user = user_from_id(user)
-                if owner:
-                    try:
-                        owner = user_from_id(owner, raise404=False)
-                    except User.DoesNotExist:
-                        pass
-                    else:
-                        queries[t].append(Q(raccess__r2urp__privilege__lte=PrivilegeCodes.OWNER,
-                                            raccess__r2urp__user=owner.uaccess))
-
-                        if user != owner:
-                            public = True
-                else:
-                    queries[t].append(Q(raccess__r2urp__privilege__lte=PrivilegeCodes.CHANGE,
-                                        raccess__r2urp__user=user.uaccess) |
-                                      Q(raccess__r2urp__privilege__lte=PrivilegeCodes.VIEW,
-                                        raccess__r2urp__user=user.uaccess) |
-                                      Q(raccess__r2urp__privilege__lte=PrivilegeCodes.OWNER,
-                                        raccess__r2urp__user=user.uaccess) |
-                                      Q(raccess__public=True)
-                                      )
+            queries, public = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False,
+                                                                   queries=queries, resource_type=t, is_public=public)
 
         if from_date and to_date:
             queries[t].append(Q(created__range=(from_date, to_date)))
@@ -652,7 +628,6 @@ def get_resource_list(creator=None,
             subjects = Subject.objects.filter(value__in=subject)
             queries[t].append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
 
-
         flt = t.objects.all()
         for q in queries[t]:
             flt = flt.filter(q)
@@ -662,7 +637,8 @@ def get_resource_list(creator=None,
 
         if full_text_search:
             fts_qs = flt.search(full_text_search)
-            description_matching = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+            description_matching = Description.objects.filter(abstract__icontains=full_text_search).\
+                values_list('object_id', flat=True)
             title_matching = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
 
             if description_matching:
@@ -681,7 +657,7 @@ def get_resource_list(creator=None,
 
         qcnt = 0
         if queries[t]:
-            qcnt = queries[t].__len__();
+            qcnt = queries[t].__len__()
 
         if start is not None and count is not None:
             if qcnt > start:
@@ -697,3 +673,26 @@ def get_resource_list(creator=None,
                 queries[t] = queries[t][0:count]
 
     return queries
+
+
+def _filter_resources_for_user_and_owner(user, owner, is_editable, queries, resource_type, is_public):
+    if user:
+        user = user_from_id(user)
+        if owner:
+            try:
+                owner = user_from_id(owner, raise404=False)
+            except User.DoesNotExist:
+                pass
+            else:
+                queries[resource_type].append(Q(raccess__resource__in=owner.uaccess.get_owned_resources()))
+
+                if user != owner:
+                    is_public = True
+        else:
+            if is_editable:
+                queries[resource_type].append(Q(raccess__resource__in=user.uaccess.get_editable_resources()))
+            else:
+                queries[resource_type].append(Q(raccess__resource__in=user.uaccess.get_held_resources())|
+                                              Q(raccess__public=True))
+
+    return queries, is_public

@@ -1574,6 +1574,16 @@ class UserAccess(models.Model):
         # OLD:  return UserResourcePrivilege.objects.filter(user=self, privilege=PrivilegeCodes.OWNER)\
         # OLD:      .values_list('resource_id', flat=True).distinct().count()
 
+    def get_editable_resources(self):
+        """
+        Get a list of resources that can be edited by user.
+
+        :return: List of resource objects that can be edited  by this user.
+        """
+
+        return GenericResource.objects.filter(raccess__r2urp__user=self, raccess__immutable=False,
+                                              raccess__r2urp__privilege__lte=PrivilegeCodes.CHANGE).distinct()
+
     #############################################
     # Check access permissions for self (user)
     #############################################
@@ -2530,6 +2540,15 @@ class GroupAccess(models.Model):
         # return self.get_held_resources().count()
         return self.held_resources.distinct().count()
 
+    def get_editable_resources(self):
+        """
+        Get a list of resources that can be edited by group.
+
+        :return: List of resource objects that can be edited  by this group.
+        """
+        return GenericResource.objects.filter(raccess__r2grp__user=self, raccess__immutable=False,
+                                              raccess__r2grp__privilege__lte=PrivilegeCodes.CHANGE).distinct()
+
     def get_owners(self):
         """
         Return list of owners for a group.
@@ -2937,9 +2956,9 @@ class ResourceAccess(models.Model):
         This is not normally used in application code.
         """
         user_priv = self.get_combined_privilege(this_user)
-        if (self.immutable):
+        if self.immutable:
             user_priv = max(user_priv, PrivilegeCodes.VIEW)
-        if (self.public):
+        if self.public:
             user_priv = min(user_priv, PrivilegeCodes.VIEW)
         return user_priv
 
@@ -2968,6 +2987,7 @@ def page_permissions_page_processor(request, page):
         "owners": owners,
         "can_change_resource_flags": can_change_resource_flags
     }
+
 
 class AbstractMetaDataElement(models.Model):
     term = None
@@ -4850,13 +4870,6 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
 def resource_update_signal_handler(sender, instance, created, **kwargs):
     """Add dublin core metadata based on the person who just updated the resource. Handle publishing too..."""
 
-@receiver(post_save, sender=User)
-def user_creation_signal_handler(sender, instance, created, **kwargs):
-    if created:
-        if not instance.is_staff:
-            instance.is_staff = True
-            instance.save()
-            instance.groups.add(Group.objects.get(name='Hydroshare Author'))
 
 # this import statement is necessary in models.py to receive signals
 # any hydroshare app that needs to listen to signals from hs_core also needs to

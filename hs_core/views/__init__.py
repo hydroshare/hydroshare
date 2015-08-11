@@ -5,6 +5,7 @@ import requests
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
+from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
@@ -262,57 +263,21 @@ def change_permissions(request, shortkey, *args, **kwargs):
     t = request.POST['t']
     values = [int(k) for k in request.POST.getlist('designees', [])]
     if t == 'owners':
-        owners_to_keep = User.objects.in_bulk(values).values()
-        for owner in res.raccess.edit_users.all():
-            if owner not in owners_to_keep:
-                try:
-                    user.uaccess.unshare_resource_with_user(res, owner)
-                except HSAccessException:
-                    #TODO: propogate this error to the user interface and leave the loop
-                    pass
-
+        _unshare_resource_with_users(request, user, values, res, 'owner')
     elif t == 'edit_users':
-        edit_users_to_keep = User.objects.in_bulk(values).values()
-        for edit_user in res.raccess.edit_users.all():
-            if edit_user not in edit_users_to_keep:
-                try:
-                    user.uaccess.unshare_resource_with_user(res, edit_user)
-                except HSAccessException:
-                    #TODO: propogate this error to the user interface and leave the loop
-                    pass
-
+        _unshare_resource_with_users(request, user, values, res, 'edit')
     elif t == 'edit_groups':
         res.edit_groups = Group.objects.in_bulk(values)
     elif t == 'view_users':
-        view_users_to_keep = User.objects.in_bulk(values).values()
-        for view_user in res.raccess.view_users.all():
-            if view_user not in view_users_to_keep:
-                try:
-                    user.uaccess.unshare_resource_with_user(res, view_user)
-                except HSAccessException:
-                    #TODO: propogate this error to the user interface and leave the loop
-                    pass
-
+        _unshare_resource_with_users(request, user, values, res, 'view')
     elif t == 'view_groups':
         res.view_groups = Group.objects.in_bulk(values)
     elif t == 'add_view_user':
         frm = AddUserForm(data=request.POST)
-        if frm.is_valid():
-            try:
-                user.uaccess.share_resource_with_user(res, frm.cleaned_data['user'], PrivilegeCodes.VIEW)
-            except HSAccessException:
-                #TODO: propogate this error to the user interface
-                pass
-
+        _share_resource_with_user(request, frm, res, user, PrivilegeCodes.VIEW)
     elif t == 'add_edit_user':
         frm = AddUserForm(data=request.POST)
-        if frm.is_valid():
-            try:
-                user.uaccess.share_resource_with_user(res, frm.cleaned_data['user'], PrivilegeCodes.CHANGE)
-            except HSAccessException:
-                #TODO: propogate this error to the user interface
-                pass
-
+        _share_resource_with_user(request, frm, res, user, PrivilegeCodes.CHANGE)
     elif t == 'add_view_group':
         frm = AddGroupForm(data=request.POST)
         if frm.is_valid():
@@ -323,23 +288,11 @@ def change_permissions(request, shortkey, *args, **kwargs):
             res.edit_groups.add(frm.cleaned_data['group'])
     elif t == 'add_owner':
         frm = AddUserForm(data=request.POST)
-        if frm.is_valid():
-            try:
-                user.uaccess.share_resource_with_user(res, frm.cleaned_data['user'], PrivilegeCodes.OWNER)
-            except HSAccessException:
-                #TODO: propogate this error to the user interface
-                pass
-
+        _share_resource_with_user(request, frm, res, user, PrivilegeCodes.OWNER)
     elif t == 'make_public':
-        if res.can_be_public:
-            if user.uaccess.can_change_resource_flags(res):
-                res.raccess.public = True
-                res.raccess.save()
-
+        _set_resource_sharing_status(request, user, res, True)
     elif t == 'make_private':
-        if user.uaccess.can_change_resource_flags(res):
-            res.raccess.public = False
-            res.raccess.save()
+        _set_resource_sharing_status(request, user, res, False)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -433,7 +386,6 @@ class FilterForm(forms.Form):
     from_date = forms.DateTimeField(required=False)
 
 
-
 @processor_for('my-resources')
 def my_resources(request, page):
     # import sys
@@ -504,16 +456,15 @@ def my_resources(request, page):
             'ct': total_res_cnt,
         }
 
+
 @processor_for(GenericResource)
 def add_generic_context(request, page):
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
-
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
-
 
     return {
         'add_owner_user_form': AddUserForm(),
@@ -616,3 +567,53 @@ def resource_listing_processor(request, page):
     return locals()
 
 # FIXME need a task somewhere that amounts to checking inactive accounts and deleting them after 30 days.
+
+
+def _share_resource_with_user(request, frm, resource, requesting_user, privilege):
+    if frm.is_valid():
+        try:
+            requesting_user.uaccess.share_resource_with_user(resource, frm.cleaned_data['user'], privilege)
+        except HSAccessException as exp:
+            messages.error(request, exp.value)
+    else:
+        messages.error(request, frm.errors.as_json())
+
+
+def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with, resource, privilege):
+    users_to_keep = User.objects.in_bulk(users_to_unshare_with).values()
+    owners = set(resource.raccess.owners.all())
+    editors = set(resource.raccess.edit_users.all()) - owners
+    viewers = set(resource.raccess.view_users.all()) - editors - owners
+
+    if privilege == 'owner':
+        all_shared_users = owners
+    elif privilege == 'edit':
+        all_shared_users = editors
+    elif privilege == 'view':
+        all_shared_users = viewers
+    else:
+        all_shared_users = []
+
+    for user in all_shared_users:
+        if user not in users_to_keep:
+            try:
+                if requesting_user.uaccess.can_unshare_resource_with_user(resource, user):
+                    # requesting user is the resource owner
+                    requesting_user.uaccess.unshare_resource_with_user(resource, user)
+                else:
+                    # requesting user is the original grantor of privilege to user
+                    requesting_user.uaccess.undo_share_resource_with_user(resource, user)
+            except HSAccessException as exp:
+                messages.error(request, exp.value)
+                break
+
+
+def _set_resource_sharing_status(request, user, resource, is_public):
+    if is_public and not resource.can_be_public:
+        messages.error(request, "Resource may not have sufficient required metadata to be public")
+    else:
+        if user.uaccess.can_change_resource_flags(resource):
+            resource.raccess.public = is_public
+            resource.raccess.save()
+        else:
+            messages.error(request, "You don't have permission to change resource sharing status")
