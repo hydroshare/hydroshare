@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 find /home/docker/hydroshare -user root -ls | tr -s ' ' | cut -d ' ' -f 12 > root-items.txt
 

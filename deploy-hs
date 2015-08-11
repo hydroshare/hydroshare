@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # deploy-hs
 # Author: Michael Stealey <michael.j.stealey@gmail.com>

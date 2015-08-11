@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # run-nginx.sh
 # Author: Michael Stealey <michael.j.stealey@gmail.com>

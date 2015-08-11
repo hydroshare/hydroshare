@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # pre-remove-hs
 # Author: Michael Stealey <michael.j.stealey@gmail.com>

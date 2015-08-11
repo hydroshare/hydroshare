@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Run migrations separately for django 1.7
 # specific to running in PyCharm on local machine (due to sshd)
