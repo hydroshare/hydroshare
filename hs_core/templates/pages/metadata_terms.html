@@ -10,6 +10,19 @@
         however, no value added tools are provided given that HydroShare cannot anticipate what the contents of generic resources will be.
     </p>
 
+    <p> To describe the entities of a generic resource in HydroShare, we choose the Dublin Core Meta Data Elements as the resource science metadata,
+        Each of these elements consists of sub metadata elements:
+        <ul>
+            <li><strong>Site:</strong> The location at which the time series was observed or generated. This includes the following sub metadata elements:
+                <ul>
+                    <li><strong>SiteCode:</strong> a code used to represent the site.</li>
+
+                </ul>
+            </li>
+        </ul>
+
+    </p>
+
     <h3> Time Series Resource Type Description</h3>
     <p>The time series is a sequence of individual data values that are ordered in time to record the
         changing trend of a certain phenomenon. As time series are widely used for hydrologic research
@@ -25,14 +38,57 @@
         implementation of ODM2 that will be used for storing time series in HydroShare is described in more detail
         in a subsequent section, but, in general, ODM2 describes a time series via the following entities:
         <ul>
-            <li><strong>Site/SamplingFeature:</strong> The location at which the time series was observed or generated</li>
-            <li><strong>Person/Organization:</strong> The person and organization responsible for creating the time series</li>
-            <li><strong>Method:</strong> The procedure used to create the time series</li>
-            <li><strong>Variable/Units:</strong> The phenomenon that the time series represents and the units in which the values are recorded</li>
-            <li><strong>Action:</strong> The specific action or event that created the time series</li>
-            <li><strong>ProcessingLevel:</strong> level of processing or quality control to which the time series has been subjected</li>
-            <li><strong>Offset:</strong> The X, Y, and Z location of the time series measurements if offset from the site location</li>
-            <li><strong>DataValues:</strong> The data values, their recorded dates/times,  and their value-level attributes</li>
+            <li><strong>Site:</strong> The location at which the time series was observed or generated. This includes the following sub metadata elements:
+                <ul>
+                    <li><strong>SiteCode:</strong> a code used to represent the site.</li>
+                    <li><strong>SiteName:</strong> the name of the site.</li>
+                    <li><strong>Elevation_m:</strong> the elevation of the site with the unit as meter.</li>
+                    <li><strong>ElevationDatum:</strong> the datum used for the elevation of the site.</li>
+                    <li><strong>SiteType:</strong> a categorization of sites that indicates the type of "Feature of Interest" that the site was established to measure. </li>
+                </ul>
+            </li>
+
+            <li><strong>Method:</strong> The procedure used to create the time series. This includes the following sub metadata elements:
+                <ul>
+                    <li><strong>MethodCode:</strong> a code used to represent the method.</li>
+                    <li><strong>MethodName:</strong> the name of the method.</li>
+                    <li><strong>MethodType:</strong> this is choosen from a controlled vocabulary to indicate the category of method.</li>
+                    <li><strong>MethodDescription:</strong> detailed description of the method.</li>
+                    <li><strong>MethodLink:</strong> a URL that provides further details of the method.</li>
+                </ul>
+            </li>
+
+            <li><strong>Variable:</strong> The phenomenon that the time series represents and the units in which the values are recorded. This includes the following sub metadata elements:
+                <ul>
+                    <li><strong>VariableCode:</strong> code used to represent the variable.</li>
+                    <li><strong>VariableName:</strong> a controlled vocabulary used to name variables.</li>
+                    <li><strong>VariableType:</strong> a way to group variables into categories for easier querying and filtering. Variable types are selected from a controlled vocabulary.</li>
+                    <li><strong>NoDataValue:</strong> placeholders to indicate that no value was observed or recorded, but a value should have been recorded.</li>
+                    <li><strong>VariableDefinition:</strong> additional information to describe the variable being observed. </li>
+                    <li><strong>Speciation:</strong> the chemical speciation in which the ResultValues are expressed. Values for speciation are selected from a controlled vocabulary.</li>
+                </ul>
+            </li>
+
+            <li><strong>ProcessingLevel:</strong> level of processing or quality control to which the time series has been subjected. This includes the following sub metadata elements:
+                <ul>
+                    <li><strong>ProcessingLevelCode:</strong> a code used to represent the processing level.</li>
+                    <li><strong>Definition:</strong> the name of the processing level.</li>
+                    <li><strong>Explanation:</strong> detailed information to describe what the processing level means.</li>
+                </ul>
+            </li>
+
+            <li><strong>TimeSeriesResult:</strong> The specific action or event that created the time series. This includes the following sub metadata elements:
+                <ul>
+                    <li><strong>UnitsType:</strong> type of the units.</li>
+                    <li><strong>UnitsName:</strong> name of the units.</li>
+                    <li><strong>UnitsAbbreviation:</strong> abbreviation of the units.</li>
+                    <li><strong>Status:</strong> the status of the result.</li>
+                    <li><strong>SampleMedium:</strong> the physical medium that is sampled.</li>
+                    <li><strong>ValueCount:</strong> the count of values of the time series result.</li>
+                    <li><strong>AggregationStatistics:</strong> statistical method used for spatial or temporal aggregation of the result.</li>
+                </ul>
+            </li>
+
         </ul>
     </p>
     <h3>Reference Time Series Resource Type Description</h3>
@@ -54,7 +110,7 @@
         we will use the following entities:
         <ul>
             <li><strong>Spatial Reference:</strong> The coordinate reference system and spatial extent information
-                defined in the NetCDF file.
+                defined in the NetCDF file. This includes the following sub metadata elements:
                 <ul>
                     <li><strong>Coordinate reference system:</strong> the name of the coordinate reference system.</li>
                     <li><strong>Coordinate reference system representation type:</strong>the type of the string text used to express
@@ -68,7 +124,7 @@
                 </ul>
             </li>
             <li><strong>Variable:</strong> The variables defined in the NetCDF file representing the multidimensional space-time
-                data.
+                data. This includes the following sub metadata elements:
                 <ul>
                     <li><strong>Name:</strong> the defined variable name in file. This name may not explicitly explain what variable it actually represents.</li>
                     <li><strong>Unit:</strong> the unit of the variable. </li>
@@ -99,14 +155,42 @@
         a geographic raster resource in HydroShare. To describe the geographic raster data, we will use the following entities:
         <ul>
             <li><strong>Spatial Reference:</strong> The coordinate reference system and spatial extent information
-                defined in GeoTIFF file. The metadata element includes the following sub elements:
-
+                defined in GeoTIFF file. This includes the following sub metadata elements:
+                <ul>
+                    <li><strong>Coordinate reference system:</strong> the name of the coordinate reference system.</li>
+                    <li><strong>Coordinate reference system unit:</strong> the unit defined in the coordinate reference system.</li>
+                    <li><strong>North Extent:</strong> the north limit of the spatial extent.</li>
+                    <li><strong>East Extent:</strong> the east limit of the spatial extent. </li>
+                    <li><strong>South Extent:</strong> the south limit of the spatial extent. </li>
+                    <li><strong>West Extent:</strong> the west limit of the spatial extent. </li>
+                </ul>
             </li>
 
-            <li>
-                <strong>Band Information:</strong>The information to describe the  phenomenon represented in each band of the geographic raster data.</li>
-            <li>
-                <strong>Cell Information:</strong>The information to describe the cell attributes of the band.</li>
+            <li><strong>Band Information:</strong>The information to describe the  phenomenon represented in each band of the geographic raster data.
+                This includes the following sub metadata elements:
+                <ul>
+                    <li><strong>Band name:</strong> the name of the band.</li>
+                    <li><strong>Variable name:</strong> the name of the variable represented in the band.</li>
+                    <li><strong>Variable unit:</strong> the unit of the variable represented in the band.</li>
+                    <li><strong>Method:</strong> the method used to create the data of the band. </li>
+                    <li><strong>Comment:</strong> miscellaneous information about the variable.</li>
+
+                </ul>
+            </li>
+
+            <li><strong>Cell Information:</strong>The information to describe the cell attributes which applies to all bands.This includes the following sub metadata elements:
+                <ul>
+                    <li><strong>Rows:</strong> the rows of the cells in each band. </li>
+                    <li><strong>Columns:</strong> the columns of the cells in each band. </li>
+                    <li><strong>Cell Size X Value:</strong> the length of the x direction of a cell in the band.</li>
+                    <li><strong>Cell Size Y Value:</strong> the length of the y direction of a cell in the band.</li>
+                    <li><strong>Cell Size Unit:</strong> the unit defined for the length of the cell size.</li>
+                    <li><strong>Cell Data Type:</strong> the data type of the value represented in each cell. </li>
+                    <li><strong>No Data Value:</strong> the value used for the condition when there is no actual data value recorded in the cell.</li>
+
+
+                </ul>
+            </li>
 
         </ul>
     </p>
