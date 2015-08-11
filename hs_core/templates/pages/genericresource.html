@@ -1394,6 +1394,8 @@
                     {%  else %}
                        {%  crispy metadata_form  %}
                     {%  endif %}
+                    {% block extra_section %} {# add extra section for resource landing page #}
+                    {% endblock %}
                     </div>
                     {%  endif %}
                 {%  endif %}
@@ -1417,8 +1419,7 @@
             </div>
         <!-- ==== Tabs end ==== -->
 
-        {% block extra_section %} {# add extra section for resource landing page #}
-        {% endblock %}
+
 
 
         <div class="rating">

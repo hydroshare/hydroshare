@@ -11,7 +11,7 @@
 
                 {% if extended_metadata_exists %}
                     {# Add the original coverage meta #}
-                    <h4 ><strong>Spatial Reference:</strong></h4>
+                    <h4 ><strong>Spatial Reference</strong></h4>
                     {% if original_coverage %}
                         <hr style="margin-top: 0px;margin-bottom: 2px">
 
@@ -83,7 +83,7 @@
                     {# Add the Variable meta #}
                     {% if variables %}
                         {% for variable in variables %}
-                            <h4 style="margin-top:20px"><strong>Variable:</strong></h4>
+                            <h4 style="margin-top:20px"><strong>Variable</strong></h4>
                             <hr style=" margin-top: 0px;margin-bottom: 2px">
                             {# Required extended meta subelement for Variable #}
                             <div class="row">
@@ -153,11 +153,9 @@
     {# Add ncdump section #}
     {% if cm.files.all %}
         {# tab body for ncdump #}
-        <div id="ncdumpText">
-
             {% for f in cm.files.all %}
                 {% if f.resource_file.name|slice:"-3:" == 'txt'%}
-                    <div id="showNcdump">
+                    <div style="clear: both">
                         <h3 style="margin-top:40px"> NetCDF Header Info</h3>
                         <p>{{ f.resource_file.name|slice:"33:" }}</p>
                         {% if f.resource_file.size <= 5000000 %}
@@ -178,8 +176,6 @@
 {#                        {% endif %}#}
                 {% endif %}
             {% endfor %}
-
-        </div>
     {% endif %}
 
 {% endblock %} {# extra block ends here #}
@@ -220,13 +216,13 @@
 {#        }#}
 {#    })#}
 
-    // add ncdump text area
-    $(document).ready(function(){
-        var $ncdump_text = $('div[id="ncdumpText"]');
-        if ($ncdump_text){
-            $('div [class="tab-elements"]').after($ncdump_text);
-        }
-    })
+{#    // add ncdump text area#}
+{#    $(document).ready(function(){#}
+{#        var $ncdump_text = $('div[id="ncdumpText"]');#}
+{#        if ($ncdump_text){#}
+{#            $('div [class="tab-elements"]').after($ncdump_text);#}
+{#        }#}
+{#    })#}
 </script>
 
 {% endblock %}
