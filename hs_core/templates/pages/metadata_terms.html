@@ -216,10 +216,14 @@
     <p> A Model Instance resource defines the input and output data for a generic hydrological model, for a specific time and place.  This resource consists of specific metadata to describe the model content as well as the Model Program resource that is used to execute a simulation. These specific metadata elements are as follows:
         <ul>
             <li><strong>ModelOutput:</strong> A HydroShare class that encapsulates all the metadata elements related to Model Instance resource output files</li>
-            <li><strong>IncludesModelOutput:</strong> A boolean value that indicates if the output files are included with the uploaded content</li>
+                <ul>
+                    <li><strong>IncludesModelOutput:</strong> A boolean value that indicates if the output files are included with the uploaded content</li>
+                </ul>
             <li><strong>ExecutedBy:</strong> A HydroShare class that defines the Model Program that executes the current resource </li>
-            <li><strong>ModelProgramName:</strong> The name of the model that executes the current resource</li>
-            <li><strong>ModelProgramURL:</strong> The HydroShare URL of the Model Program resource that executes the current resource</li>
+                <ul>
+                    <li><strong>ModelProgramName:</strong> The name of the model that executes the current resource</li>
+                    <li><strong>ModelProgramURL:</strong> The HydroShare URL of the Model Program resource that executes the current resource</li>
+                </ul>
         </ul>
     </p>
 
@@ -229,28 +233,32 @@
             <li><strong>ModelObjective:</strong>The objective of the SWAT Model (e.g. Hydrology, Water quality, BMPs, and Climate / Landuse Change, etc.)</li>
             <li><strong>SimulationType:</strong>The type of the simulation used (e.g. Normal Simulation, Sensitivity Analysis, and Auto-Calibration)</li>
             <li><strong>ModelInput:</strong>HydroShare Class that includes all the metadata elements related to SWAT Model Instance resource input files</li>
-            <li><strong>warm-upPeriodType:</strong>The warm-up period type</li>
-            <li><strong>warm-upPeriodValue:</strong>The numeric value of the warm-up period in years</li>
-            <li><strong>rainfallTimeStepType:</strong>The type of time step used in the simulation for input rainfall data (e.g. Daily or Sub-hourly)</li>
-            <li><strong>rainfallTimeStepValue:</strong>The time step value associated with the rainfall data</li>
-            <li><strong>routingTimeStepType:</strong>The type of time step used in the simulation for river routing calculations (e.g. Daily or Hourly)</li>
-            <li><strong>routingTimeStepValue:</strong>The time step value used for the river routing calculations</li>
-            <li><strong>simulationTimeStepType:</strong>The type of time step type used for model simulation (e.g. Annual, Monthly, Daily, or Hourly)</li>
-            <li><strong>simulationTimeStepValue:</strong>The time step value used for simulation</li>
-            <li><strong>watershedArea:</strong>The watershed area in Km&sup2</li>
-            <li><strong>numberOfSubbasins:</strong>The number of the subbasin within the watershed</li>
-            <li><strong>numberOfHRUs:</strong>The number of the Hydrologic Response Units within the watershed</li>
-            <li><strong>DEMResolution:</strong>The resolution of the Digital Elevation Model in meters</li>
-            <li><strong>DEMSourceName:</strong>The name of the Digital Elevation Model dataset provider</li>
-            <li><strong>DEMSourceURL:</strong>The URL of the Digital Elevation Model dataset (if applicable)</li>
-            <li><strong>landUseDataSourceName:</strong>The name for the Landuse dataset provider</li>
-            <li><strong>landUseDataSourceURL:</strong>The URL for the Landuse dataset (if applicable)</li>
-            <li><strong>soilDataSourceName:</strong>The name for Soil dataset provider</li>
-            <li><strong>soilDataSourceURL:</strong>The URL for Soil dataset (if applicable)</li>
+                <ul>
+                    <li><strong>warm-upPeriodType:</strong>The warm-up period type</li>
+                    <li><strong>warm-upPeriodValue:</strong>The numeric value of the warm-up period in years</li>
+                    <li><strong>rainfallTimeStepType:</strong>The type of time step used in the simulation for input rainfall data (e.g. Daily or Sub-hourly)</li>
+                    <li><strong>rainfallTimeStepValue:</strong>The time step value associated with the rainfall data</li>
+                    <li><strong>routingTimeStepType:</strong>The type of time step used in the simulation for river routing calculations (e.g. Daily or Hourly)</li>
+                    <li><strong>routingTimeStepValue:</strong>The time step value used for the river routing calculations</li>
+                    <li><strong>simulationTimeStepType:</strong>The type of time step type used for model simulation (e.g. Annual, Monthly, Daily, or Hourly)</li>
+                    <li><strong>simulationTimeStepValue:</strong>The time step value used for simulation</li>
+                    <li><strong>watershedArea:</strong>The watershed area in Km&sup2</li>
+                    <li><strong>numberOfSubbasins:</strong>The number of the subbasin within the watershed</li>
+                    <li><strong>numberOfHRUs:</strong>The number of the Hydrologic Response Units within the watershed</li>
+                    <li><strong>DEMResolution:</strong>The resolution of the Digital Elevation Model in meters</li>
+                    <li><strong>DEMSourceName:</strong>The name of the Digital Elevation Model dataset provider</li>
+                    <li><strong>DEMSourceURL:</strong>The URL of the Digital Elevation Model dataset (if applicable)</li>
+                    <li><strong>landUseDataSourceName:</strong>The name for the Landuse dataset provider</li>
+                    <li><strong>landUseDataSourceURL:</strong>The URL for the Landuse dataset (if applicable)</li>
+                    <li><strong>soilDataSourceName:</strong>The name for Soil dataset provider</li>
+                    <li><strong>soilDataSourceURL:</strong>The URL for Soil dataset (if applicable)</li>
+                </ul>
             <li><strong>ModelMethod:</strong>HydroShare class that includes all the metadata elements related to SWAT model methods used in simulation</li>
-            <li><strong>runoffCalculationMethod:</strong>The runoff calculation method used</li>
-            <li><strong>flowRoutingMethod:</strong>The flow routing method used</li>
-            <li><strong>PETEstimationMethod:</strong>The Potential EvapoTranspiration estimation method used</li>
+                <ul>
+                    <li><strong>runoffCalculationMethod:</strong>The runoff calculation method used</li>
+                    <li><strong>flowRoutingMethod:</strong>The flow routing method used</li>
+                    <li><strong>PETEstimationMethod:</strong>The Potential EvapoTranspiration estimation method used</li>
+                </ul>
             <li><strong>ModelParameter:</strong>The parameters used in the model (e.g. Crop rotation, Title drainage , Point source, Fertilizer,
                 Tilage operation, Inlet of draining watershed, Irrigation operation, etc.)</li>
         </ul>
