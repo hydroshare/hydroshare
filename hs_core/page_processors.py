@@ -1,12 +1,12 @@
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import GenericResource, AbstractResource
+from hs_core.models import GenericResource, AbstractResource, BaseResource
 from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import ToolResourceType
 from django_irods.storage import IrodsStorage
 
-@processor_for(GenericResource)
+@processor_for(BaseResource)
 def landing_page(request, page):
     # TODO: this if/else is an exact copy of the function 'check_resource_mode', defined below
     if request.method == "GET":
@@ -20,6 +20,7 @@ def landing_page(request, page):
         edit_resource = True
 
     return get_page_context(page, request.user, resource_edit=edit_resource, request=request)
+
 
 # resource type specific app needs to call this method to inject a crispy_form layout
 # object for displaying metadata UI for the extended metadata for their resource
