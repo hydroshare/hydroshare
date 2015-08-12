@@ -1634,6 +1634,17 @@ class GenericResource(BaseResource):
     class Meta:
         proxy = True
 
+
+old_get_content_model = Page.get_content_model
+def new_get_content_model(self):
+    from hs_core.hydroshare.utils import get_resource_types
+    content_model = self.content_model
+    if content_model.endswith('resource'):
+        rt = [rt for rt in get_resource_types() if rt._meta.model_name == content_model][0]
+        return rt.objects.get(id=self.id)
+Page.get_content_model = new_get_content_model
+
+
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
     #from django.contrib.sites.models import Site
