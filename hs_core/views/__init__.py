@@ -22,12 +22,13 @@ import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage
+from hs_access_control.models import PrivilegeCodes, HSAccessException
 
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods
-from hs_core.models import GenericResource, resource_processor, CoreMetaData, PrivilegeCodes, HSAccessException
+from hs_core.models import GenericResource, resource_processor, CoreMetaData
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -35,6 +36,7 @@ from . import user_rest_api
 from hs_core.hydroshare import utils
 from . import utils as view_utils
 from hs_core.signals import *
+
 
 def short_url(request, *args, **kwargs):
     try:
@@ -258,14 +260,14 @@ def change_permissions(request, shortkey, *args, **kwargs):
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
-
     res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
     t = request.POST['t']
     values = [int(k) for k in request.POST.getlist('designees', [])]
+    go_to_resource_listing_page = False
     if t == 'owners':
-        _unshare_resource_with_users(request, user, values, res, 'owner')
+        go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'owner')
     elif t == 'edit_users':
-        _unshare_resource_with_users(request, user, values, res, 'edit')
+        go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'edit')
     elif t == 'edit_groups':
         res.edit_groups = Group.objects.in_bulk(values)
     elif t == 'view_users':
@@ -294,7 +296,12 @@ def change_permissions(request, shortkey, *args, **kwargs):
     elif t == 'make_private':
         _set_resource_sharing_status(request, user, res, False)
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    # due to self unsharing of a private resource the user will have no access to that resource
+    # so need to redirect to the resource listing page
+    if go_to_resource_listing_page:
+        return HttpResponseRedirect('/my-resources/')
+    else:
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 # view functions mapped with INPLACE_SAVE_URL(/hsapi/save_inline/) for Django inplace editing
 def save_ajax(request):
@@ -594,18 +601,23 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
     else:
         all_shared_users = []
 
+    go_to_resource_listing_page = False
     for user in all_shared_users:
         if user not in users_to_keep:
             try:
                 if requesting_user.uaccess.can_unshare_resource_with_user(resource, user):
-                    # requesting user is the resource owner
+                    # requesting user is the resource owner or requesting_user is self unsharing
                     requesting_user.uaccess.unshare_resource_with_user(resource, user)
                 else:
                     # requesting user is the original grantor of privilege to user
                     requesting_user.uaccess.undo_share_resource_with_user(resource, user)
+
+                if requesting_user == user and not resource.raccess.public:
+                    go_to_resource_listing_page = True
             except HSAccessException as exp:
                 messages.error(request, exp.value)
                 break
+    return go_to_resource_listing_page
 
 
 def _set_resource_sharing_status(request, user, resource, is_public):

@@ -7,8 +7,7 @@ from django.core import exceptions
 from django.core import signing
 from django.db.models import Q
 
-from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject, Description, Title, \
-    UserAccess, PrivilegeCodes
+from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject, Description, Title
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
 
 
@@ -154,17 +153,9 @@ def create_account(
     """
 
     from django.contrib.auth.models import User, Group
-    from django.contrib.sites.models import Site
-    from django.conf import settings
+    from hs_access_control.models import UserAccess
 
     username = username if username else email
-
-    # useirods = getattr(settings,'USE_IRODS', False)
-    # if useirods:
-    #    from django_irods import account
-    #    iaccount = account.IrodsAccount()
-    #    iaccount.create(username)
-    #    iaccount.setPassward(username, password)
 
     groups = groups if groups else []
     groups = Group.objects.in_bulk(*groups) if groups and isinstance(groups[0], int) else groups
