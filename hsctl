@@ -36,20 +36,28 @@ display_usage() {
 	echo "usage: $0 stop        # stops all running containers"
 }
 
-restart_nginx() {
+start_nginx() {
     echo "*** RESTART NGINX ***"
     cd $NGINX_DIR
-    ./run-nginx.sh --clean
+    ./run-nginx start
+    cd -
+}
+
+stop_nginx() {
+    echo "*** RESTART NGINX ***"
+    cd $NGINX_DIR
+    ./run-nginx stop
     cd -
 }
 
 restart_hs() {
     echo "*** ${1^^} ***"
+    stop_nginx
     preflight_hs
     docker stop hydroshare_hydroshare_1
     docker start hydroshare_hydroshare_1
     if [ "${USE_NGINX,,}" = true ]; then
-        restart_nginx
+        start_nginx
     fi
 }
 
@@ -63,12 +71,13 @@ start_hs() {
         docker start $f;
     done
     if [ "${USE_NGINX,,}" = true ]; then
-        restart_nginx
+        start_nginx
     fi
 }
 
 stop_hs() {
     echo "*** ${1^^}: all running docker containers ***"
+    stop_nginx
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
         docker stop $f;
     done
@@ -113,8 +122,8 @@ preflight_hs() {
 
 rebuild_hs() {
     echo "*** ${1^^} *** "
-    preflight_hs
     stop_hs STOP
+    preflight_hs
     echo "*** REMOVE: all hydroshare docker containers (preserves exiting database contents)  ***"
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
         docker rm -fv $f;
@@ -136,7 +145,7 @@ rebuild_hs() {
     done
     echo
     if [ "${USE_NGINX,,}" = true ]; then
-        restart_nginx
+        start_nginx
     fi
 }
 
@@ -162,8 +171,8 @@ loaddb_hs() {
 
 deploy_hs() {
     echo "*** ${1^^} ***"
-    preflight_hs
     stop_hs STOP
+    preflight_hs
     echo "*** REMOVE: all docker containers (deletes existing database)  ***"
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
         docker rm -fv $f;
@@ -196,7 +205,7 @@ deploy_hs() {
     echo
     loaddb_hs LOADDB
     if [ "${USE_NGINX,,}" = true ]; then
-        restart_nginx
+        start_nginx
     fi
 }
 
