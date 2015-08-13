@@ -16,7 +16,8 @@ from hs_core import hydroshare
 
 class CreateAccountTest(ResourceTestCase):
     def setUp(self):
-        pass
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+
     def tearDown(self):
         User.objects.all().delete()
         Group.objects.all().delete()

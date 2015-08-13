@@ -415,7 +415,6 @@ class UserAccess(models.Model):
     ##########################################
     ##########################################
 
-    # TODO: Check with Alva if we should remove this method
     def create_group(self, title):
         """
         Create a group.

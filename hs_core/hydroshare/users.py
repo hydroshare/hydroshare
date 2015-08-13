@@ -357,8 +357,8 @@ def create_group(name, members=None, owners=None):
     verification step to avoid automated creation of fake groups. The creating user would automatically be set as the
     owner of the created group.
     """
-    g = Group.objects.create(name=name)
 
+    g = Group.objects.create(name=name)
 
     if owners:
         owners = [user_from_id(owner) for owner in owners]
