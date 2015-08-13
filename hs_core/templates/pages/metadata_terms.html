@@ -18,92 +18,92 @@
         Generic resources are treated the same way as other resource types in terms of sharing and access control;
         however, no value added tools are provided given that HydroShare cannot anticipate what the contents of generic resources will be.
     </p>
-
+    <a name="name"></a>
     <p> To describe the entities of a generic resource in HydroShare, we choose the Dublin Core Meta Data Elements as the resource science metadata,
         Each of these elements consists of sub metadata elements:
     </p>
         <br/>
-
-        <ul id="name">
+        <a name="createrOrder"></a>
+        <ul>
             <li><strong>Term: </strong>name</li>
-            <li><strong>URI: </strong><a class='anchor' href="#name">http://www.hydroshare.org/terms/name</a></li>
+            <li><strong>URI: </strong><a href="#name">http://www.hydroshare.org/terms/name</a></li>
             <li><strong>Label: </strong>Name</li>
             <li><strong>Description: </strong>name of the creator or contributor.</li>
         </ul>
-
+        <a name="organization"></a>
         <ul>
             <li><strong>Term: </strong>creatorOrder</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/creatorOrder</a></li>
+            <li><strong>URI: </strong><a href="#createrOrder">http://www.hydroshare.org/terms/creatorOrder</a></li>
             <li><strong>Label: </strong>Creator Order</li>
             <li><strong>Description: </strong>number used to specify the order of the authorship for the dataset creator.</li>
         </ul>
-
+        <a name="address"></a>
         <ul>
             <li><strong>Term: </strong>organization</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/organization</a></li>
+            <li><strong>URI: </strong><a href="#organization">http://www.hydroshare.org/terms/organization</a></li>
             <li><strong>Label: </strong>Organization</li>
             <li><strong>Description: </strong>The organization associated with the creator or contributor.</li>
         </ul>
-
+        <a name="email"></a>
         <ul>
             <li><strong>Term: </strong>address</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/address</a></li>
+            <li><strong>URI: </strong><a href="#address">http://www.hydroshare.org/terms/address</a></li>
             <li><strong>Label: </strong>Address</li>
             <li><strong>Description: </strong>the address associated with the creator or contributor.</li>
         </ul>
-
+        <a name="phone"></a>
         <ul>
             <li><strong>Term: </strong>email</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/email</a></li>
+            <li><strong>URI: </strong><a href="#email">http://www.hydroshare.org/terms/email</a></li>
             <li><strong>Label: </strong>Email</li>
             <li><strong>Description: </strong>the email for contact with the creator or contributor.</li>
         </ul>
-
+        <a name="homepage"></a>
         <ul>
             <li><strong>Term: </strong>phone</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/phone</a></li>
+            <li><strong>URI: </strong><a href="#phone">http://www.hydroshare.org/terms/phone</a></li>
             <li><strong>Label: </strong>Phone</li>
             <li><strong>Description: </strong>the phone number for contact with the creator or contributor.</li>
         </ul>
-
+        <a name="doi"></a>
         <ul>
             <li><strong>Term: </strong>homepage</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/homepage</a></li>
+            <li><strong>URI: </strong><a href="#homepage">http://www.hydroshare.org/terms/homepage</a></li>
             <li><strong>Label: </strong>Homepage</li>
             <li><strong>Description: </strong>the homepage used to provide additional detailed information of the creator or contributor.</li>
         </ul>
-
+        <a name="hydroshareIdentifier"></a>
         <ul>
             <li><strong>Term: </strong>doi</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/doi</a></li>
+            <li><strong>URI: </strong><a href="#doi">http://www.hydroshare.org/terms/doi</a></li>
             <li><strong>Label: </strong>DOI</li>
             <li><strong>Description: </strong>The digitial object identifier for the resource which is published in HydroShare.</li>
         </ul>
-
+        <a name="publisherName"></a>
         <ul>
             <li><strong>Term: </strong>hydroshareIdentifier</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/hydroshareIdentifier</a></li>
+            <li><strong>URI: </strong><a href="#hydroshareIdentifier">http://www.hydroshare.org/terms/hydroshareIdentifier</a></li>
             <li><strong>Label: </strong>HydroShare Identifier</li>
             <li><strong>Description: </strong>the UUID assigned to each Hydroshare resource</li>
         </ul>
-
+        <a name="publisherURL"></a>
         <ul>
             <li><strong>Term: </strong>publisherName</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/publisherName</a></li>
+            <li><strong>URI: </strong><a href="#publisherName">http://www.hydroshare.org/terms/publisherName</a></li>
             <li><strong>Label: </strong>Publisher Name</li>
             <li><strong>Description: </strong>the name of the dataset publisher</li>
         </ul>
-
+        <a name="rightsStatement"></a>
         <ul>
             <li><strong>Term: </strong>publisherURL</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/publisherURL</a></li>
+            <li><strong>URI: </strong><a href="#publisherURL">http://www.hydroshare.org/terms/publisherURL</a></li>
             <li><strong>Label: </strong>Publisher URL</li>
             <li><strong>Description: </strong>the URL link pointing to the website with publisher information.</li>
         </ul>
-
+        <a name="URL"></a>
         <ul>
             <li><strong>Term: </strong>rightsStatement</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/rightsStatement</a></li>
+            <li><strong>URI: </strong><a href="#rightsStatement">http://www.hydroshare.org/terms/rightsStatement</a></li>
             <li><strong>Label: </strong>Rights Statement</li>
             <li><strong>Description: </strong> a text statement that points to a rights
                 management or usage statement for the resource.</li>
@@ -111,7 +111,7 @@
 
         <ul>
             <li><strong>Term: </strong>URL</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/URL</a></li>
+            <li><strong>URI: </strong><a href="#URL">http://www.hydroshare.org/terms/URL</a></li>
             <li><strong>Label: </strong>Uniform Resource Locator</li>
             <li><strong>Description: </strong>URL that points to a rights
                 management or usage statement for the resource.</li>
@@ -128,231 +128,236 @@
         specified by Version 2.0 of the Observations Data Model (ODM2) – see description of a time series result in
         ODM2 <a href="https://github.com/UCHIC/ODM2/blob/master/doc/ODM2Docs/ext_results_timeseries.md">here</a>
     </p>
+    <a name="site"></a>
     <p> ODM2 does not limit the types of time series that can be supported.  Any time series supported by the
         ODM2 information model will be valid for input as a time series resource in HydroShare. The specific
         implementation of ODM2 that will be used for storing time series in HydroShare is described in more detail
         in a subsequent section, but, in general, ODM2 describes a time series via the following entities:
     </p>
         <br/>
-
+        <a name="SiteCode"></a>
         <ul>
             <li><strong>Term: </strong>site</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/site</a></li>
+            <li><strong>URI: </strong><a href="#site">http://www.hydroshare.org/terms/site</a></li>
             <li><strong>Label: </strong> Site </li>
             <li><strong>Description: </strong>The location at which the time series was observed or generated.</li>
         </ul>
-
+        <a name="SiteName"></a>
         <ul>
             <li><strong>Term: </strong>SiteCode:</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/SiteCode</a></li>
+            <li><strong>URI: </strong><a href="#SiteCode">http://www.hydroshare.org/terms/SiteCode</a></li>
             <li><strong>Label: </strong> Site Code</li>
             <li><strong>Description: </strong>a code used to represent the site.</li>
         </ul>
-
+        <a name="SiteType"></a>
         <ul>
             <li><strong>Term: </strong>SiteName:</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/SiteName</a></li>
+            <li><strong>URI: </strong><a href="#SiteName">http://www.hydroshare.org/terms/SiteName</a></li>
             <li><strong>Label: </strong> Site Name</li>
             <li><strong>Description: </strong>the name of the site.</li>
         </ul>
-
+        <a name="Elevation_m"></a>
         <ul >
             <li><strong>Term: </strong>SiteType</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/SiteType</a></li>
+            <li><strong>URI: </strong><a href="#SiteType">http://www.hydroshare.org/terms/SiteType</a></li>
             <li><strong>Label: </strong>Site Type</li>
             <li><strong>Description: </strong> a categorization of sites that indicates the type of "Feature of Interest" that the site was established to measure.</li>
         </ul>
-
+        <a name="ElevationDatum"></a>
         <ul>
             <li><strong>Term: </strong>Elevation_m:</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/Elevation_m</a></li>
+            <li><strong>URI: </strong><a href="#Elevation_m">http://www.hydroshare.org/terms/Elevation_m</a></li>
             <li><strong>Label: </strong> Elevation_m</li>
             <li><strong>Description: </strong>the elevation of the site with the unit as meter.</li>
         </ul>
-
+        <a name="ts_method"></a>
         <ul >
             <li><strong>Term: </strong>ElevationDatum</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/ElevationDatum</a></li>
+            <li><strong>URI: </strong><a href="#ElevationDatum">http://www.hydroshare.org/terms/ElevationDatum</a></li>
             <li><strong>Label: </strong>Elevation Datum</li>
             <li><strong>Description: </strong>the datum used for the elevation of the site.</li>
         </ul>
         <br/>
+        <a name="MethodCode"></a>
         <ul >
             <li><strong>Term: </strong>method</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/method</a></li>
+            <li><strong>URI: </strong><a href="#ts_method">http://www.hydroshare.org/terms/ts_method</a></li>
             <li><strong>Label: </strong>Method</li>
             <li><strong>Description: </strong>The procedure used to create the time series.</li>
         </ul>
-
+        <a name="MethodName"></a>
         <ul >
             <li><strong>Term: </strong>MethodCode</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/MethodCode</a></li>
+            <li><strong>URI: </strong><a href="#MethodCode">http://www.hydroshare.org/terms/MethodCode</a></li>
             <li><strong>Label: </strong>Method Code</li>
             <li><strong>Description: </strong>a code used to represent the method.</li>
         </ul>
-
+        <a name="MethodType"></a>
         <ul >
             <li><strong>Term: </strong>MethodName</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/MethodName</a></li>
+            <li><strong>URI: </strong><a href="#MethodName">http://www.hydroshare.org/terms/MethodName</a></li>
             <li><strong>Label: </strong>Method Name </li>
             <li><strong>Description: </strong>the name of the method.</li>
         </ul>
-
+        <a name="MethodDescription"></a>
         <ul >
             <li><strong>Term: </strong>MethodType</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/MethodType</a></li>
+            <li><strong>URI: </strong><a href="#MethodType">http://www.hydroshare.org/terms/MethodType</a></li>
             <li><strong>Label: </strong>Method Type </li>
             <li><strong>Description: </strong>this is choosen from a controlled vocabulary to indicate the category of method.</li>
         </ul>
-
+        <a name="MethodLink"></a>
         <ul >
             <li><strong>Term: </strong>MethodDescription</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/MethodDescription</a></li>
+            <li><strong>URI: </strong><a href="#MethodDescription">http://www.hydroshare.org/terms/MethodDescription</a></li>
             <li><strong>Label: </strong>Method Description </li>
             <li><strong>Description: </strong>detailed description of the method.</li>
         </ul>
-
+        <a name="variable"></a>
         <ul >
             <li><strong>Term: </strong>MethodLink</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/MethodLink</a></li>
+            <li><strong>URI: </strong><a href="#MethodLink">http://www.hydroshare.org/terms/MethodLink</a></li>
             <li><strong>Label: </strong>Method Link</li>
             <li><strong>Description: </strong>a URL that provides further details of the method.</li>
         </ul>
 
         <br/>
+        <a name="VariableCode"></a>
         <ul >
             <li><strong>Term: </strong>variable</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/variable</a></li>
+            <li><strong>URI: </strong><a href="#variable">http://www.hydroshare.org/terms/variable</a></li>
             <li><strong>Label: </strong>Variable</li>
             <li><strong>Description: </strong>The phenomenon that the time series represents. </li>
         </ul>
-
+        <a name="VariableName"></a>
         <ul >
             <li><strong>Term: </strong>VariableCode</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/VariableCode</a></li>
+            <li><strong>URI: </strong><a href="#VariableCode">http://www.hydroshare.org/terms/VariableCode</a></li>
             <li><strong>Label: </strong>Variable Code</li>
             <li><strong>Description: </strong>code used to represent the variable.</li>
         </ul>
-
+        <a name="VariableType"></a>
         <ul >
             <li><strong>Term: </strong>VariableName</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/VariableName</a></li>
+            <li><strong>URI: </strong><a href="#VariableName">http://www.hydroshare.org/terms/VariableName</a></li>
             <li><strong>Label: </strong>Variable Name</li>
             <li><strong>Description: </strong>a controlled vocabulary used to name variables.</li>
         </ul>
-
+        <a name="NoDataValue"></a>
         <ul >
             <li><strong>Term: </strong>VariableType</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/VariableType</a></li>
+            <li><strong>URI: </strong><a href="#VariableType">http://www.hydroshare.org/terms/VariableType</a></li>
             <li><strong>Label: </strong>Variable Type</li>
             <li><strong>Description: </strong>a way to group variables into categories for easier querying and filtering.
                 Variable types are selected from a controlled vocabulary.</li>
         </ul>
-
+        <a name="VariableDefinition"></a>
         <ul >
             <li><strong>Term: </strong>NoDataValue</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/NoDataValue</a></li>
+            <li><strong>URI: </strong><a href="#NoDataValue">http://www.hydroshare.org/terms/NoDataValue</a></li>
             <li><strong>Label: </strong>No Data Value</li>
             <li><strong>Description: </strong>placeholders to indicate that no value was observed or recorded, but a
                 value should have been recorded.</li>
         </ul>
-
+        <a name="Speciation"></a>
         <ul >
             <li><strong>Term: </strong>VariableDefinition</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/VariableDefinition</a></li>
+            <li><strong>URI: </strong><a href="#VariableDefinition">http://www.hydroshare.org/terms/VariableDefinition</a></li>
             <li><strong>Label: </strong>Variable Definition</li>
             <li><strong>Description: </strong>additional information to describe the variable being observed.</li>
         </ul>
-
+        <a name="processingLevel"></a>
         <ul >
             <li><strong>Term: </strong>Speciation</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/Speciation</a></li>
+            <li><strong>URI: </strong><a href="#Speciation">http://www.hydroshare.org/terms/Speciation</a></li>
             <li><strong>Label: </strong>Speciation</li>
             <li><strong>Description: </strong>the chemical speciation in which the ResultValues are expressed. Values for speciation are selected from a controlled vocabulary.</li>
         </ul>
 
         <br/>
+        <a name="ProcessingLevelCode"></a>
         <ul >
             <li><strong>Term: </strong>processingLevel</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/processingLevel</a></li>
+            <li><strong>URI: </strong><a href="#processingLevel">http://www.hydroshare.org/terms/processingLevel</a></li>
             <li><strong>Label: </strong>Processing Level</li>
             <li><strong>Description: </strong>level of processing or quality control to which the time series has been subjected.</li>
         </ul>
-
+        <a name="Definition"></a>
         <ul >
             <li><strong>Term: </strong>ProcessingLevelCode</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/ProcessingLevelCode</a></li>
+            <li><strong>URI: </strong><a href="#ProcessingLevelCode">http://www.hydroshare.org/terms/ProcessingLevelCode</a></li>
             <li><strong>Label: </strong>Processing Level Code</li>
             <li><strong>Description: </strong>a code used to represent the processing level.</li>
         </ul>
-
+        <a name="Explanation"></a>
         <ul >
             <li><strong>Term: </strong>Definition</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/Definition</a></li>
+            <li><strong>URI: </strong><a href="#Definition">http://www.hydroshare.org/terms/Definition</a></li>
             <li><strong>Label: </strong>Definition</li>
             <li><strong>Description: </strong>the defined name of the processing level.</li>
         </ul>
-
+        <a name="timeSeriesResult"></a>
         <ul >
             <li><strong>Term: </strong>Explanation</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/Explanation</a></li>
+            <li><strong>URI: </strong><a href="#Explanation">http://www.hydroshare.org/terms/Explanation</a></li>
             <li><strong>Label: </strong>Explanation</li>
             <li><strong>Description: </strong>detailed information to describe what the processing level means.</li>
         </ul>
 
         <br/>
+        <a name="UnitsType"></a>
         <ul >
             <li><strong>Term: </strong>timeSeriesResult</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/timeSeriesResult</a></li>
+            <li><strong>URI: </strong><a href="#timeSeriesResult">http://www.hydroshare.org/terms/timeSeriesResult</a></li>
             <li><strong>Label: </strong>Time Series Result</li>
             <li><strong>Description: </strong>The specific action or event that created the time series.</li>
         </ul>
-
+        <a name="UnitsName"></a>
         <ul >
             <li><strong>Term: </strong>UnitsType</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/UnitsType</a></li>
+            <li><strong>URI: </strong><a href="#UnitsType">http://www.hydroshare.org/terms/UnitsType</a></li>
             <li><strong>Label: </strong>Units Type</li>
             <li><strong>Description: </strong>type of the units.</li>
         </ul>
-
+        <a name="UnitsAbbreviation"></a>
         <ul >
             <li><strong>Term: </strong>UnitsName</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/UnitsName</a></li>
+            <li><strong>URI: </strong><a href="#UnitsName">http://www.hydroshare.org/terms/UnitsName</a></li>
             <li><strong>Label: </strong>Units Name</li>
             <li><strong>Description: </strong>name of the units.</li>
         </ul>
-
+        <a name="Status"></a>
         <ul >
             <li><strong>Term: </strong>UnitsAbbreviation</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/UnitsAbbreviation</a></li>
+            <li><strong>URI: </strong><a href="#UnitsAbbreviation">http://www.hydroshare.org/terms/UnitsAbbreviation</a></li>
             <li><strong>Label: </strong>Units Abbreviation</li>
             <li><strong>Description: </strong>abbreviation of the units.</li>
         </ul>
-
+        <a name="SampleMedium"></a>
         <ul >
             <li><strong>Term: </strong>Status</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/Status</a></li>
+            <li><strong>URI: </strong><a href="#Status">http://www.hydroshare.org/terms/Status</a></li>
             <li><strong>Label: </strong>Status</li>
             <li><strong>Description: </strong>the status of the result.</li>
         </ul>
-
+        <a name="ValueCount"></a>
         <ul >
             <li><strong>Term: </strong>SampleMedium</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/SampleMedium</a></li>
+            <li><strong>URI: </strong><a href="#SampleMedium">http://www.hydroshare.org/terms/SampleMedium</a></li>
             <li><strong>Label: </strong>Sample Medium</li>
             <li><strong>Description: </strong>the physical medium that is sampled.</li>
         </ul>
-
+        <a name="AggregationStatistics"></a>
         <ul >
             <li><strong>Term: </strong>ValueCount</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/ValueCount</a></li>
+            <li><strong>URI: </strong><a href="#ValueCount">http://www.hydroshare.org/terms/ValueCount</a></li>
             <li><strong>Label: </strong>Value Count</li>
             <li><strong>Description: </strong>the count of values of the time series result.</li>
         </ul>
 
         <ul >
             <li><strong>Term: </strong>AggregationStatistics</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/AggregationStatistics</a></li>
+            <li><strong>URI: </strong><a href="#AggregationStatistics">http://www.hydroshare.org/terms/AggregationStatistics</a></li>
             <li><strong>Label: </strong>Aggregation Statistics</li>
             <li><strong>Description: </strong>statistical method used for spatial or temporal aggregation of the result.</li>
         </ul>
@@ -371,105 +376,106 @@
         and other user defined dimensions , we choose NetCDF as the file format to support the sharing of
         the multidimensional space-time data in HydroShare.
     </p>
+    <a name="nc_spatialReference"></a>
     <p> Currently, we define the multidimensional (NetCDF) resource such that it includes only one NetCDF file with
         ".nc" extension. Any multidimensional space-time data supported by the NetCDF format will be valid for input as
         a multidimensional (NetCDF) resource in HydroShare. To describe the multidimensional space-time data in NetCDF format,
         we will use the following entities:
     </p>
         <br/>
+        <a name="crsName"></a>
         <ul >
             <li><strong>Term: </strong>spatialReference</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/spatialReference</a></li>
+            <li><strong>URI: </strong><a href="#nc_spatialReference">http://www.hydroshare.org/terms/nc_spatialReference</a></li>
             <li><strong>Label: </strong>Spatial Reference</li>
             <li><strong>Description: </strong>The coordinate reference system and spatial extent information defined in the NetCDF file.</li>
         </ul>
-
+        <a name="crsRepresentationType"></a>
         <ul >
             <li><strong>Term: </strong>crsName</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/crsName</a></li>
+            <li><strong>URI: </strong><a href="#crsName">http://www.hydroshare.org/terms/crsName</a></li>
             <li><strong>Label: </strong>Coordinate Reference System Name</li>
             <li><strong>Description: </strong> the name of the coordinate reference system.</li>
         </ul>
-
+        <a name="crsRepresentationText"></a>
         <ul >
             <li><strong>Term: </strong>crsRepresentationType</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/</a>crsRepresentationType</li>
+            <li><strong>URI: </strong><a href="#crsRepresentationType">http://www.hydroshare.org/terms/crsRepresentationType</a></li>
             <li><strong>Label: </strong>Coordinate Reference System Representation Type</li>
             <li><strong>Description: </strong>the type of the string text used to express the coordinate reference system.
                 Three types are supported including Proj4 spring, EPSG code, and OGC WKT projection.</li>
         </ul>
-
+        <a name="extent"></a>
         <ul >
             <li><strong>Term: </strong>crsRepresentationText</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/crsRepresenationText</a></li>
+            <li><strong>URI: </strong><a href="#crsRepresentationText">http://www.hydroshare.org/terms/crsRepresenationText</a></li>
             <li><strong>Label: </strong>Coordinate Reference System Representation Text</li>
             <li><strong>Description: </strong>the string text used to express the coordinate reference system based on the given representation type.</li>
         </ul>
-
-
-
+        <a name="netcdfVariable"></a>
         <ul >
             <li><strong>Term: </strong>extent</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/extent</a></li>
+            <li><strong>URI: </strong><a href="#extent">http://www.hydroshare.org/terms/extent</a></li>
             <li><strong>Label: </strong>Extent</li>
             <li><strong>Description: </strong>the spatial extent of the dataset including north limit, south limit, east limit,
                 west limit and the corresponding units of the extent.</li>
         </ul>
 
         <br/>
+        <a name="nc_name"></a>
         <ul >
             <li><strong>Term: </strong>netcdfVariable</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/netcdfVariable</a></li>
+            <li><strong>URI: </strong><a href="#netcdfVariable">http://www.hydroshare.org/terms/netcdfVariable</a></li>
             <li><strong>Label: </strong>NetCDF Variable</li>
             <li><strong>Description: </strong>The variables defined in the NetCDF file representing the multidimensional space-time data. </li>
         </ul>
-
+        <a name="nc_unit"></a>
         <ul >
             <li><strong>Term: </strong>name</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/name</a></li>
+            <li><strong>URI: </strong><a href="#nc_name">http://www.hydroshare.org/terms/name_nc</a></li>
             <li><strong>Label: </strong>Name</li>
             <li><strong>Description: </strong>the defined name of the NetCDF variable. This name may not explicitly explain what variable it actually represents.</li>
         </ul>
-
+        <a name="type"></a>
         <ul >
             <li><strong>Term: </strong>unit</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/unit</a></li>
+            <li><strong>URI: </strong><a href="#nc_unit">http://www.hydroshare.org/terms/nc_unit</a></li>
             <li><strong>Label: </strong>Unit</li>
             <li><strong>Description: </strong>the unit of the NetCDF variable.</li>
         </ul>
-
+        <a name="shape"></a>
         <ul >
             <li><strong>Term: </strong>type</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/type</a></li>
+            <li><strong>URI: </strong><a href="#type">http://www.hydroshare.org/terms/type</a></li>
             <li><strong>Label: </strong>Type</li>
             <li><strong>Description: </strong> the data type of the variable which is upported in the
                 <a href="https://www.unidata.ucar.edu/software/netcdf/docs/enhanced_model.html"> NetCDF enhanced data model.</a></li>
         </ul>
-
+        <a name="longName"></a>
         <ul >
             <li><strong>Term: </strong>shape</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/shape</a></li>
+            <li><strong>URI: </strong><a href="#shape">http://www.hydroshare.org/terms/shape</a></li>
             <li><strong>Label: </strong>Shape</li>
             <li><strong>Description: </strong>the shape defined for the variable. </li>
         </ul>
-
+        <a name="comment"></a>
         <ul >
             <li><strong>Term: </strong>longName</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/longName</a></li>
+            <li><strong>URI: </strong><a href="#longName">http://www.hydroshare.org/terms/longName</a></li>
             <li><strong>Label: </strong>Long Name</li>
             <li><strong>Description: </strong>a descriptive name for the NetCDF variable to explain what the variable represents. </li>
         </ul>
-
+        <a name="missingValue"></a>
         <ul >
             <li><strong>Term: </strong>comment</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/comment</a></li>
+            <li><strong>URI: </strong><a href="#comment">http://www.hydroshare.org/terms/comment</a></li>
             <li><strong>Label: </strong>Comment</li>
             <li><strong>Description: </strong>miscellaneous information about the variable.</li>
         </ul>
 
         <ul >
             <li><strong>Term: </strong>missingValue</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/missingValue</a></li>
+            <li><strong>URI: </strong><a href="#missingValue">http://www.hydroshare.org/terms/missingValue</a></li>
             <li><strong>Label: </strong>Missing Value</li>
             <li><strong>Description: </strong>the data value used to represent missing data value. The data type for
                 missing value should be the same as the variable type.</li>
@@ -484,121 +490,125 @@
         tags within the TIFF file. The geographic data can then be used to position the image in the correct location and
         geometry on the screen of a geographic information display.
     </p>
+    <a name="rt_spatialReference"></a>
     <p> Currently, we define the geographic raster resource such that it includes only one geographic raster in GeoTIFF format which includes a
         single or multiple bands. Any raster data in GeoTIFF format will be valid for input as
         a geographic raster resource in HydroShare. To describe the geographic raster data, we will use the following entities:
     </p>
         <br/>
+        <a name="box"></a>
         <ul >
             <li><strong>Term: </strong>spatialReference</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/spatialReference</a></li>
+            <li><strong>URI: </strong><a href="#rt_spatialReference">http://www.hydroshare.org/terms/rt_spatialReference</a></li>
             <li><strong>Label: </strong>Spatial Reference</li>
             <li><strong>Description: </strong>The coordinate reference system and spatial extent information defined in GeoTIFF file. </li>
         </ul>
-
+        <a name="BandInformation"></a>
         <ul >
             <li><strong>Term: </strong>box</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/box</a></li>
+            <li><strong>URI: </strong><a href="#box">http://www.hydroshare.org/terms/box</a></li>
             <li><strong>Label: </strong>Box</li>
             <li><strong>Description: </strong>the spatial extent as well as projection information for the dataset.</li>
         </ul>
 
         <br/>
+        <a name="rt_name"></a>
         <ul >
             <li><strong>Term: </strong>BandInformation</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/BandInformation</a></li>
+            <li><strong>URI: </strong><a href="#BandInformation">http://www.hydroshare.org/terms/BandInformation</a></li>
             <li><strong>Label: </strong>Band Information</li>
             <li><strong>Description: </strong>The information to describe the phenomenon represented in each band of the
                 geographic raster data. </li>
         </ul>
-
+        <a name="variableName"></a>
         <ul >
             <li><strong>Term: </strong>name</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/name</a></li>
+            <li><strong>URI: </strong><a href="#rt_name">http://www.hydroshare.org/terms/rt_name</a></li>
             <li><strong>Label: </strong>Name</li>
             <li><strong>Description: </strong>the name of the band.</li>
         </ul>
-
+        <a name="variableUnit"></a>
         <ul >
             <li><strong>Term: </strong>variableName</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/variableName</a></li>
+            <li><strong>URI: </strong><a href="#variableName">http://www.hydroshare.org/terms/variableName</a></li>
             <li><strong>Label: </strong>Variable Name</li>
             <li><strong>Description: </strong>the name of the variable represented in the band.</li>
         </ul>
-
+        <a name="rt_method"></a>
         <ul >
             <li><strong>Term: </strong>variableUnit</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/variableUnit</a></li>
+            <li><strong>URI: </strong><a href="#variableUnit">http://www.hydroshare.org/terms/variableUnit</a></li>
             <li><strong>Label: </strong>Variable Unit</li>
             <li><strong>Description: </strong>the unit of the variable represented in the band.</li>
         </ul>
-
+        <a name="rt_comment"></a>
         <ul >
             <li><strong>Term: </strong>method</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/method</a></li>
+            <li><strong>URI: </strong><a href="#rt_method">http://www.hydroshare.org/terms/rt_method</a></li>
             <li><strong>Label: </strong>Method</li>
             <li><strong>Description: </strong>the method used to create the data of the band.</li>
         </ul>
-
+        <a name="CellInformation"></a>
         <ul >
             <li><strong>Term: </strong>comment</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/comment</a></li>
+            <li><strong>URI: </strong><a href="#rt_comment">http://www.hydroshare.org/terms/rt_comment</a></li>
             <li><strong>Label: </strong>Comment</li>
             <li><strong>Description: </strong>miscellaneous information about the variable.</li>
         </ul>
         <br/>
+        <a name="rows"></a>
         <ul >
             <li><strong>Term: </strong>CellInformation</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/CellInformation</a></li>
+            <li><strong>URI: </strong><a href="#CellInformation">http://www.hydroshare.org/terms/CellInformation</a></li>
             <li><strong>Label: </strong>Cell Information</li>
             <li><strong>Description: </strong>The information to describe the cell attributes which applies to all bands.</li>
         </ul>
-
+        <a name="columns"></a>
         <ul >
             <li><strong>Term: </strong>rows</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/rows</a></li>
+            <li><strong>URI: </strong><a href="#rows">http://www.hydroshare.org/terms/rows</a></li>
             <li><strong>Label: </strong>Rows</li>
             <li><strong>Description: </strong>the rows of the cells in each band. </li>
         </ul>
-
+        <a name="cellSizeXValue"></a>
         <ul >
             <li><strong>Term: </strong>columns</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/columns</a></li>
+            <li><strong>URI: </strong><a href="#columns">http://www.hydroshare.org/terms/columns</a></li>
             <li><strong>Label: </strong>Columns</li>
             <li><strong>Description: </strong>the columns of the cells in each band. </li>
         </ul>
-
+        <a name="cellSizeYValue"></a>
         <ul >
             <li><strong>Term: </strong>cellSizeXValue</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/cellSizeXValue</a></li>
+            <li><strong>URI: </strong><a href="#cellSizeXValue">http://www.hydroshare.org/terms/cellSizeXValue</a></li>
             <li><strong>Label: </strong>Cell Size X Value</li>
             <li><strong>Description: </strong>the length of the x direction of a cell in the band.</li>
         </ul>
-
+        <a name="cellSizeUnit"></a>
         <ul >
             <li><strong>Term: </strong>cellSizeYValue</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/cellSizeYValue</a></li>
-            <li><strong>Label: </strong>cell Size Y Value</li>
+            <li><strong>URI: </strong><a href="#cellSizeYValue">http://www.hydroshare.org/terms/cellSizeYValue</a></li>
+            <li><strong>Label: </strong>Cell Size Y Value</li>
             <li><strong>Description: </strong>the length of the y direction of a cell in the band.</li>
         </ul>
-
+        <a name="cellDataType"></a>
         <ul >
             <li><strong>Term: </strong>cellSizeUnit</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/cellSizeUnit</a></li>
+            <li><strong>URI: </strong><a href="#cellSizeUnit">http://www.hydroshare.org/terms/cellSizeUnit</a></li>
             <li><strong>Label: </strong>Cell Size Unit</li>
             <li><strong>Description: </strong>the unit defined for the length of the cell size.</li>
         </ul>
-
+        <a name="noDataValue"></a>
         <ul >
             <li><strong>Term: </strong>cellDataType</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/cellDataType</a></li>
+            <li><strong>URI: </strong><a href="#cellDataType">http://www.hydroshare.org/terms/cellDataType</a></li>
             <li><strong>Label: </strong>Cell Data Type</li>
             <li><strong>Description: </strong>the data type of the value represented in each cell. </li>
         </ul>
 
         <ul >
             <li><strong>Term: </strong>noDataValue</li>
-            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/noDtaValue</a></li>
+            <li><strong>URI: </strong><a href="#noDataValue">http://www.hydroshare.org/terms/noDtaValue</a></li>
             <li><strong>Label: </strong>No Data Value</li>
             <li><strong>Description: </strong>the value used for the condition when there is no actual data value recorded in the cell.</li>
         </ul>
