@@ -1,5 +1,14 @@
 {% extends 'pages/page.html' %}
 
+{% block extra_css %}
+    <style>
+        .anchor{
+            position: relative;
+            padding-top:300px;
+        }
+    </style>
+{% endblock %}
+
 {% block main %}
     <h2>Description of HydroShare Resource Types and Metadata Terms</h2>
     <h3>Generic Resource Type Description</h3>
@@ -13,6 +22,101 @@
     <p> To describe the entities of a generic resource in HydroShare, we choose the Dublin Core Meta Data Elements as the resource science metadata,
         Each of these elements consists of sub metadata elements:
     </p>
+        <br/>
+
+        <ul id="name">
+            <li><strong>Term: </strong>name</li>
+            <li><strong>URI: </strong><a class='anchor' href="#name">http://www.hydroshare.org/terms/name</a></li>
+            <li><strong>Label: </strong>Name</li>
+            <li><strong>Description: </strong>name of the creator or contributor.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>creatorOrder</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/creatorOrder</a></li>
+            <li><strong>Label: </strong>Creator Order</li>
+            <li><strong>Description: </strong>number used to specify the order of the authorship for the dataset creator.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>organization</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/organization</a></li>
+            <li><strong>Label: </strong>Organization</li>
+            <li><strong>Description: </strong>The organization associated with the creator or contributor.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>address</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/address</a></li>
+            <li><strong>Label: </strong>Address</li>
+            <li><strong>Description: </strong>the address associated with the creator or contributor.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>email</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/email</a></li>
+            <li><strong>Label: </strong>Email</li>
+            <li><strong>Description: </strong>the email for contact with the creator or contributor.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>phone</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/phone</a></li>
+            <li><strong>Label: </strong>Phone</li>
+            <li><strong>Description: </strong>the phone number for contact with the creator or contributor.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>homepage</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/homepage</a></li>
+            <li><strong>Label: </strong>Homepage</li>
+            <li><strong>Description: </strong>the homepage used to provide additional detailed information of the creator or contributor.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>doi</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/doi</a></li>
+            <li><strong>Label: </strong>DOI</li>
+            <li><strong>Description: </strong>The digitial object identifier for the resource which is published in HydroShare.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>hydroshareIdentifier</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/hydroshareIdentifier</a></li>
+            <li><strong>Label: </strong>HydroShare Identifier</li>
+            <li><strong>Description: </strong>the UUID assigned to each Hydroshare resource</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>publisherName</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/publisherName</a></li>
+            <li><strong>Label: </strong>Publisher Name</li>
+            <li><strong>Description: </strong>the name of the dataset publisher</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>publisherURL</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/publisherURL</a></li>
+            <li><strong>Label: </strong>Publisher URL</li>
+            <li><strong>Description: </strong>the URL link pointing to the website with publisher information.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>rightsStatement</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/rightsStatement</a></li>
+            <li><strong>Label: </strong>Rights Statement</li>
+            <li><strong>Description: </strong> a text statement that points to a rights
+                management or usage statement for the resource.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>URL</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/URL</a></li>
+            <li><strong>Label: </strong>Uniform Resource Locator</li>
+            <li><strong>Description: </strong>URL that points to a rights
+                management or usage statement for the resource.</li>
+        </ul>
+
 
     <h3> Time Series Resource Type Description</h3>
     <p>The time series is a sequence of individual data values that are ordered in time to record the
@@ -516,7 +620,7 @@
             <li><strong>SourceCode:</strong> Uploaded archive containing the source code of the model</li>
         </ul>
     </p>
-
+l
     <h3>Model Instance Resource Type Description</h3>
     <p> A Model Instance resource defines the input and output data for a generic hydrological model, for a specific time and place.  This resource consists of specific metadata to describe the model content as well as the Model Program resource that is used to execute a simulation. These specific metadata elements are as follows:
         <ul>
