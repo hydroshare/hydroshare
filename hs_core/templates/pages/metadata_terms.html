@@ -271,38 +271,105 @@
         ".nc" extension. Any multidimensional space-time data supported by the NetCDF format will be valid for input as
         a multidimensional (NetCDF) resource in HydroShare. To describe the multidimensional space-time data in NetCDF format,
         we will use the following entities:
-        <ul>
-            <li><strong>Spatial Reference:</strong> The coordinate reference system and spatial extent information
-                defined in the NetCDF file. This includes the following sub metadata elements:
-                <ul>
-                    <li><strong>Coordinate reference system:</strong> the name of the coordinate reference system.</li>
-                    <li><strong>Coordinate reference system representation type:</strong>the type of the string text used to express
-                        the coordinate reference system. Three types are supported including Proj4 spring, EPSG code, and OGC WKT projection.</li>
-                    <li><strong>Coordinate reference system representation text:</strong> the string text used to express the coordinate reference system based on the given representation type.</li>
-                    <li><strong>North Extent:</strong> the north limit of the spatial extent.</li>
-                    <li><strong>East Extent:</strong> the east limit of the spatial extent. </li>
-                    <li><strong>South Extent:</strong> the south limit of the spatial extent. </li>
-                    <li><strong>West Extent:</strong> the west limit of the spatial extent. </li>
-                    <li><strong>Extent Unit:</strong> the unit of the spatial extent. </li>
-                </ul>
-            </li>
-            <li><strong>Variable:</strong> The variables defined in the NetCDF file representing the multidimensional space-time
-                data. This includes the following sub metadata elements:
-                <ul>
-                    <li><strong>Name:</strong> the defined variable name in file. This name may not explicitly explain what variable it actually represents.</li>
-                    <li><strong>Unit:</strong> the unit of the variable. </li>
-                    <li><strong>Type:</strong>
-                        the data type of the variable which is upported in the <a href="https://www.unidata.ucar.edu/software/netcdf/docs/enhanced_model.html"> NetCDF enhanced data model.</a></li>
-                    <li><strong>Shape:</strong> the shape defined for the variable. </li>
-                    <li><strong>Long Name:</strong> a descriptive name for the variable to explain what the variable represents. </li>
-                    <li><strong>Comment:</strong> miscellaneous information about the variable. </li>
-                    <li><strong>Missing Value:</strong> the data value used to represent missing data value. The data type for missing value should be the same as the variable type.</li>
-
-                </ul>
-            </li>
-        </ul>
     </p>
+        <br/>
+        <ul >
+            <li><strong>Term: </strong>spatialReference</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/spatialReference</a></li>
+            <li><strong>Label: </strong>Spatial Reference</li>
+            <li><strong>Description: </strong>The coordinate reference system and spatial extent information defined in the NetCDF file.</li>
+        </ul>
 
+        <ul >
+            <li><strong>Term: </strong>crsName</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/crsName</a></li>
+            <li><strong>Label: </strong>Coordinate Reference System Name</li>
+            <li><strong>Description: </strong> the name of the coordinate reference system.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>crsRepresentationType</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/</a>crsRepresentationType</li>
+            <li><strong>Label: </strong>Coordinate Reference System Representation Type</li>
+            <li><strong>Description: </strong>the type of the string text used to express the coordinate reference system.
+                Three types are supported including Proj4 spring, EPSG code, and OGC WKT projection.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>crsRepresentationText</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/crsRepresenationText</a></li>
+            <li><strong>Label: </strong>Coordinate Reference System Representation Text</li>
+            <li><strong>Description: </strong>the string text used to express the coordinate reference system based on the given representation type.</li>
+        </ul>
+
+
+
+        <ul >
+            <li><strong>Term: </strong>extent</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/extent</a></li>
+            <li><strong>Label: </strong>Extent</li>
+            <li><strong>Description: </strong>the spatial extent of the dataset including north limit, south limit, east limit,
+                west limit and the corresponding units of the extent.</li>
+        </ul>
+
+        <br/>
+        <ul >
+            <li><strong>Term: </strong>netcdfVariable</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/netcdfVariable</a></li>
+            <li><strong>Label: </strong>NetCDF Variable</li>
+            <li><strong>Description: </strong>The variables defined in the NetCDF file representing the multidimensional space-time data. </li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>name</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/name</a></li>
+            <li><strong>Label: </strong>Name</li>
+            <li><strong>Description: </strong>the defined name of the NetCDF variable. This name may not explicitly explain what variable it actually represents.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>unit</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/unit</a></li>
+            <li><strong>Label: </strong>Unit</li>
+            <li><strong>Description: </strong>the unit of the NetCDF variable.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>type</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/type</a></li>
+            <li><strong>Label: </strong>Type</li>
+            <li><strong>Description: </strong> the data type of the variable which is upported in the
+                <a href="https://www.unidata.ucar.edu/software/netcdf/docs/enhanced_model.html"> NetCDF enhanced data model.</a></li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>shape</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/shape</a></li>
+            <li><strong>Label: </strong>Shape</li>
+            <li><strong>Description: </strong>the shape defined for the variable. </li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>longName</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/longName</a></li>
+            <li><strong>Label: </strong>Long Name</li>
+            <li><strong>Description: </strong>a descriptive name for the NetCDF variable to explain what the variable represents. </li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>comment</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/comment</a></li>
+            <li><strong>Label: </strong>Comment</li>
+            <li><strong>Description: </strong>miscellaneous information about the variable.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>missingValue</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/missingValue</a></li>
+            <li><strong>Label: </strong>Missing Value</li>
+            <li><strong>Description: </strong>the data value used to represent missing data value. The data type for
+                missing value should be the same as the variable type.</li>
+        </ul>
 
     <h3>Geographic Raster Resource Type Description</h3>
     <p> Geographic raster data are commonly used for representing and managing imagry, digital elevation, and other phenomena
@@ -316,47 +383,122 @@
     <p> Currently, we define the geographic raster resource such that it includes only one geographic raster in GeoTIFF format which includes a
         single or multiple bands. Any raster data in GeoTIFF format will be valid for input as
         a geographic raster resource in HydroShare. To describe the geographic raster data, we will use the following entities:
-        <ul>
-            <li><strong>Spatial Reference:</strong> The coordinate reference system and spatial extent information
-                defined in GeoTIFF file. This includes the following sub metadata elements:
-                <ul>
-                    <li><strong>Coordinate reference system:</strong> the name of the coordinate reference system.</li>
-                    <li><strong>Coordinate reference system unit:</strong> the unit defined in the coordinate reference system.</li>
-                    <li><strong>North Extent:</strong> the north limit of the spatial extent.</li>
-                    <li><strong>East Extent:</strong> the east limit of the spatial extent. </li>
-                    <li><strong>South Extent:</strong> the south limit of the spatial extent. </li>
-                    <li><strong>West Extent:</strong> the west limit of the spatial extent. </li>
-                </ul>
-            </li>
-
-            <li><strong>Band Information:</strong>The information to describe the  phenomenon represented in each band of the geographic raster data.
-                This includes the following sub metadata elements:
-                <ul>
-                    <li><strong>Band name:</strong> the name of the band.</li>
-                    <li><strong>Variable name:</strong> the name of the variable represented in the band.</li>
-                    <li><strong>Variable unit:</strong> the unit of the variable represented in the band.</li>
-                    <li><strong>Method:</strong> the method used to create the data of the band. </li>
-                    <li><strong>Comment:</strong> miscellaneous information about the variable.</li>
-
-                </ul>
-            </li>
-
-            <li><strong>Cell Information:</strong>The information to describe the cell attributes which applies to all bands.This includes the following sub metadata elements:
-                <ul>
-                    <li><strong>Rows:</strong> the rows of the cells in each band. </li>
-                    <li><strong>Columns:</strong> the columns of the cells in each band. </li>
-                    <li><strong>Cell Size X Value:</strong> the length of the x direction of a cell in the band.</li>
-                    <li><strong>Cell Size Y Value:</strong> the length of the y direction of a cell in the band.</li>
-                    <li><strong>Cell Size Unit:</strong> the unit defined for the length of the cell size.</li>
-                    <li><strong>Cell Data Type:</strong> the data type of the value represented in each cell. </li>
-                    <li><strong>No Data Value:</strong> the value used for the condition when there is no actual data value recorded in the cell.</li>
-
-
-                </ul>
-            </li>
-
-        </ul>
     </p>
+        <br/>
+        <ul >
+            <li><strong>Term: </strong>spatialReference</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/spatialReference</a></li>
+            <li><strong>Label: </strong>Spatial Reference</li>
+            <li><strong>Description: </strong>The coordinate reference system and spatial extent information defined in GeoTIFF file. </li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>box</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/box</a></li>
+            <li><strong>Label: </strong>Box</li>
+            <li><strong>Description: </strong>the spatial extent as well as projection information for the dataset.</li>
+        </ul>
+
+        <br/>
+        <ul >
+            <li><strong>Term: </strong>BandInformation</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/BandInformation</a></li>
+            <li><strong>Label: </strong>Band Information</li>
+            <li><strong>Description: </strong>The information to describe the phenomenon represented in each band of the
+                geographic raster data. </li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>name</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/name</a></li>
+            <li><strong>Label: </strong>Name</li>
+            <li><strong>Description: </strong>the name of the band.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>variableName</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/variableName</a></li>
+            <li><strong>Label: </strong>Variable Name</li>
+            <li><strong>Description: </strong>the name of the variable represented in the band.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>variableUnit</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/variableUnit</a></li>
+            <li><strong>Label: </strong>Variable Unit</li>
+            <li><strong>Description: </strong>the unit of the variable represented in the band.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>method</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/method</a></li>
+            <li><strong>Label: </strong>Method</li>
+            <li><strong>Description: </strong>the method used to create the data of the band.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>comment</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/comment</a></li>
+            <li><strong>Label: </strong>Comment</li>
+            <li><strong>Description: </strong>miscellaneous information about the variable.</li>
+        </ul>
+        <br/>
+        <ul >
+            <li><strong>Term: </strong>CellInformation</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/CellInformation</a></li>
+            <li><strong>Label: </strong>Cell Information</li>
+            <li><strong>Description: </strong>The information to describe the cell attributes which applies to all bands.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>rows</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/rows</a></li>
+            <li><strong>Label: </strong>Rows</li>
+            <li><strong>Description: </strong>the rows of the cells in each band. </li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>columns</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/columns</a></li>
+            <li><strong>Label: </strong>Columns</li>
+            <li><strong>Description: </strong>the columns of the cells in each band. </li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>cellSizeXValue</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/cellSizeXValue</a></li>
+            <li><strong>Label: </strong>Cell Size X Value</li>
+            <li><strong>Description: </strong>the length of the x direction of a cell in the band.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>cellSizeYValue</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/cellSizeYValue</a></li>
+            <li><strong>Label: </strong>cell Size Y Value</li>
+            <li><strong>Description: </strong>the length of the y direction of a cell in the band.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>cellSizeUnit</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/cellSizeUnit</a></li>
+            <li><strong>Label: </strong>Cell Size Unit</li>
+            <li><strong>Description: </strong>the unit defined for the length of the cell size.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>cellDataType</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/cellDataType</a></li>
+            <li><strong>Label: </strong>Cell Data Type</li>
+            <li><strong>Description: </strong>the data type of the value represented in each cell. </li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>noDataValue</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/noDtaValue</a></li>
+            <li><strong>Label: </strong>No Data Value</li>
+            <li><strong>Description: </strong>the value used for the condition when there is no actual data value recorded in the cell.</li>
+        </ul>
+
 
     <h3>Model Program Resource Type Description</h3>
     <p> A Model Program resource describes the software component of a generic model within the water domain.  It aims to fully describe the software-related metadata of a given model program  to enables scientists to seamlessly retrieve all the content and information required to get a model up-and-running on their local or server-side machine.   This resource consists of uploaded content such as source code, compiled binaries, and documentation, as well as metadata describing the model's software. The Model Program resource can be related to many Model Instance resources (below) to completely describe a simulation and the exact software version used for a particular study, to make data replication possible. The specific metadata elements are as follows:
