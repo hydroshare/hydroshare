@@ -4,11 +4,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
 from django.db import models
+
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
+
 from lxml import etree
-from hs_core.models import AbstractResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
+
+from hs_core.models import GenericResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 
 
 
@@ -391,12 +394,12 @@ class ModelInput(AbstractMetaDataElement):
         raise ValidationError("ModelInput element of a resource can't be deleted.")
 
 #SWAT Model Instance Resource type
-class SWATModelInstanceResource(Page, AbstractResource):
+class SWATModelInstanceResource(GenericResource):
     objects = ResourceManager()
 
     class Meta:
         verbose_name = 'SWAT Model Instance Resource'
-
+        proxy = True
 
     @property
     def metadata(self):
