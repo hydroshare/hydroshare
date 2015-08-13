@@ -12,15 +12,6 @@
 
     <p> To describe the entities of a generic resource in HydroShare, we choose the Dublin Core Meta Data Elements as the resource science metadata,
         Each of these elements consists of sub metadata elements:
-        <ul>
-            <li><strong>Site:</strong> The location at which the time series was observed or generated. This includes the following sub metadata elements:
-                <ul>
-                    <li><strong>SiteCode:</strong> a code used to represent the site.</li>
-
-                </ul>
-            </li>
-        </ul>
-
     </p>
 
     <h3> Time Series Resource Type Description</h3>
@@ -37,60 +28,232 @@
         ODM2 information model will be valid for input as a time series resource in HydroShare. The specific
         implementation of ODM2 that will be used for storing time series in HydroShare is described in more detail
         in a subsequent section, but, in general, ODM2 describes a time series via the following entities:
-        <ul>
-            <li><strong>Site:</strong> The location at which the time series was observed or generated. This includes the following sub metadata elements:
-                <ul>
-                    <li><strong>SiteCode:</strong> a code used to represent the site.</li>
-                    <li><strong>SiteName:</strong> the name of the site.</li>
-                    <li><strong>Elevation_m:</strong> the elevation of the site with the unit as meter.</li>
-                    <li><strong>ElevationDatum:</strong> the datum used for the elevation of the site.</li>
-                    <li><strong>SiteType:</strong> a categorization of sites that indicates the type of "Feature of Interest" that the site was established to measure. </li>
-                </ul>
-            </li>
-
-            <li><strong>Method:</strong> The procedure used to create the time series. This includes the following sub metadata elements:
-                <ul>
-                    <li><strong>MethodCode:</strong> a code used to represent the method.</li>
-                    <li><strong>MethodName:</strong> the name of the method.</li>
-                    <li><strong>MethodType:</strong> this is choosen from a controlled vocabulary to indicate the category of method.</li>
-                    <li><strong>MethodDescription:</strong> detailed description of the method.</li>
-                    <li><strong>MethodLink:</strong> a URL that provides further details of the method.</li>
-                </ul>
-            </li>
-
-            <li><strong>Variable:</strong> The phenomenon that the time series represents and the units in which the values are recorded. This includes the following sub metadata elements:
-                <ul>
-                    <li><strong>VariableCode:</strong> code used to represent the variable.</li>
-                    <li><strong>VariableName:</strong> a controlled vocabulary used to name variables.</li>
-                    <li><strong>VariableType:</strong> a way to group variables into categories for easier querying and filtering. Variable types are selected from a controlled vocabulary.</li>
-                    <li><strong>NoDataValue:</strong> placeholders to indicate that no value was observed or recorded, but a value should have been recorded.</li>
-                    <li><strong>VariableDefinition:</strong> additional information to describe the variable being observed. </li>
-                    <li><strong>Speciation:</strong> the chemical speciation in which the ResultValues are expressed. Values for speciation are selected from a controlled vocabulary.</li>
-                </ul>
-            </li>
-
-            <li><strong>ProcessingLevel:</strong> level of processing or quality control to which the time series has been subjected. This includes the following sub metadata elements:
-                <ul>
-                    <li><strong>ProcessingLevelCode:</strong> a code used to represent the processing level.</li>
-                    <li><strong>Definition:</strong> the name of the processing level.</li>
-                    <li><strong>Explanation:</strong> detailed information to describe what the processing level means.</li>
-                </ul>
-            </li>
-
-            <li><strong>TimeSeriesResult:</strong> The specific action or event that created the time series. This includes the following sub metadata elements:
-                <ul>
-                    <li><strong>UnitsType:</strong> type of the units.</li>
-                    <li><strong>UnitsName:</strong> name of the units.</li>
-                    <li><strong>UnitsAbbreviation:</strong> abbreviation of the units.</li>
-                    <li><strong>Status:</strong> the status of the result.</li>
-                    <li><strong>SampleMedium:</strong> the physical medium that is sampled.</li>
-                    <li><strong>ValueCount:</strong> the count of values of the time series result.</li>
-                    <li><strong>AggregationStatistics:</strong> statistical method used for spatial or temporal aggregation of the result.</li>
-                </ul>
-            </li>
-
-        </ul>
     </p>
+        <br/>
+
+        <ul>
+            <li><strong>Term: </strong>site</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/site</a></li>
+            <li><strong>Label: </strong> Site </li>
+            <li><strong>Description: </strong>The location at which the time series was observed or generated.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>SiteCode:</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/SiteCode</a></li>
+            <li><strong>Label: </strong> Site Code</li>
+            <li><strong>Description: </strong>a code used to represent the site.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>SiteName:</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/SiteName</a></li>
+            <li><strong>Label: </strong> Site Name</li>
+            <li><strong>Description: </strong>the name of the site.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>SiteType</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/SiteType</a></li>
+            <li><strong>Label: </strong>Site Type</li>
+            <li><strong>Description: </strong> a categorization of sites that indicates the type of "Feature of Interest" that the site was established to measure.</li>
+        </ul>
+
+        <ul>
+            <li><strong>Term: </strong>Elevation_m:</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/Elevation_m</a></li>
+            <li><strong>Label: </strong> Elevation_m</li>
+            <li><strong>Description: </strong>the elevation of the site with the unit as meter.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>ElevationDatum</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/ElevationDatum</a></li>
+            <li><strong>Label: </strong>Elevation Datum</li>
+            <li><strong>Description: </strong>the datum used for the elevation of the site.</li>
+        </ul>
+        <br/>
+        <ul >
+            <li><strong>Term: </strong>method</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/method</a></li>
+            <li><strong>Label: </strong>Method</li>
+            <li><strong>Description: </strong>The procedure used to create the time series.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>MethodCode</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/MethodCode</a></li>
+            <li><strong>Label: </strong>Method Code</li>
+            <li><strong>Description: </strong>a code used to represent the method.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>MethodName</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/MethodName</a></li>
+            <li><strong>Label: </strong>Method Name </li>
+            <li><strong>Description: </strong>the name of the method.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>MethodType</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/MethodType</a></li>
+            <li><strong>Label: </strong>Method Type </li>
+            <li><strong>Description: </strong>this is choosen from a controlled vocabulary to indicate the category of method.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>MethodDescription</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/MethodDescription</a></li>
+            <li><strong>Label: </strong>Method Description </li>
+            <li><strong>Description: </strong>detailed description of the method.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>MethodLink</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/MethodLink</a></li>
+            <li><strong>Label: </strong>Method Link</li>
+            <li><strong>Description: </strong>a URL that provides further details of the method.</li>
+        </ul>
+
+        <br/>
+        <ul >
+            <li><strong>Term: </strong>variable</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/variable</a></li>
+            <li><strong>Label: </strong>Variable</li>
+            <li><strong>Description: </strong>The phenomenon that the time series represents. </li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>VariableCode</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/VariableCode</a></li>
+            <li><strong>Label: </strong>Variable Code</li>
+            <li><strong>Description: </strong>code used to represent the variable.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>VariableName</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/VariableName</a></li>
+            <li><strong>Label: </strong>Variable Name</li>
+            <li><strong>Description: </strong>a controlled vocabulary used to name variables.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>VariableType</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/VariableType</a></li>
+            <li><strong>Label: </strong>Variable Type</li>
+            <li><strong>Description: </strong>a way to group variables into categories for easier querying and filtering.
+                Variable types are selected from a controlled vocabulary.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>NoDataValue</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/NoDataValue</a></li>
+            <li><strong>Label: </strong>No Data Value</li>
+            <li><strong>Description: </strong>placeholders to indicate that no value was observed or recorded, but a
+                value should have been recorded.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>VariableDefinition</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/VariableDefinition</a></li>
+            <li><strong>Label: </strong>Variable Definition</li>
+            <li><strong>Description: </strong>additional information to describe the variable being observed.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>Speciation</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/Speciation</a></li>
+            <li><strong>Label: </strong>Speciation</li>
+            <li><strong>Description: </strong>the chemical speciation in which the ResultValues are expressed. Values for speciation are selected from a controlled vocabulary.</li>
+        </ul>
+
+        <br/>
+        <ul >
+            <li><strong>Term: </strong>processingLevel</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/processingLevel</a></li>
+            <li><strong>Label: </strong>Processing Level</li>
+            <li><strong>Description: </strong>level of processing or quality control to which the time series has been subjected.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>ProcessingLevelCode</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/ProcessingLevelCode</a></li>
+            <li><strong>Label: </strong>Processing Level Code</li>
+            <li><strong>Description: </strong>a code used to represent the processing level.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>Definition</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/Definition</a></li>
+            <li><strong>Label: </strong>Definition</li>
+            <li><strong>Description: </strong>the defined name of the processing level.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>Explanation</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/Explanation</a></li>
+            <li><strong>Label: </strong>Explanation</li>
+            <li><strong>Description: </strong>detailed information to describe what the processing level means.</li>
+        </ul>
+
+        <br/>
+        <ul >
+            <li><strong>Term: </strong>timeSeriesResult</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/timeSeriesResult</a></li>
+            <li><strong>Label: </strong>Time Series Result</li>
+            <li><strong>Description: </strong>The specific action or event that created the time series.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>UnitsType</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/UnitsType</a></li>
+            <li><strong>Label: </strong>Units Type</li>
+            <li><strong>Description: </strong>type of the units.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>UnitsName</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/UnitsName</a></li>
+            <li><strong>Label: </strong>Units Name</li>
+            <li><strong>Description: </strong>name of the units.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>UnitsAbbreviation</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/UnitsAbbreviation</a></li>
+            <li><strong>Label: </strong>Units Abbreviation</li>
+            <li><strong>Description: </strong>abbreviation of the units.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>Status</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/Status</a></li>
+            <li><strong>Label: </strong>Status</li>
+            <li><strong>Description: </strong>the status of the result.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>SampleMedium</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/SampleMedium</a></li>
+            <li><strong>Label: </strong>Sample Medium</li>
+            <li><strong>Description: </strong>the physical medium that is sampled.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>ValueCount</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/ValueCount</a></li>
+            <li><strong>Label: </strong>Value Count</li>
+            <li><strong>Description: </strong>the count of values of the time series result.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>AggregationStatistics</li>
+            <li><strong>URI: </strong><a href="">http://www.hydroshare.org/terms/AggregationStatistics</a></li>
+            <li><strong>Label: </strong>Aggregation Statistics</li>
+            <li><strong>Description: </strong>statistical method used for spatial or temporal aggregation of the result.</li>
+        </ul>
+
+
     <h3>Reference Time Series Resource Type Description</h3>
     <div>[TODO:Describe reference time series resource type here]</div>
     <div>[TODO:Describe reference time series resource type metadata terms here]</div>
