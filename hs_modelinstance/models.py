@@ -4,11 +4,12 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
 from django.db import models
 from django.contrib.sites.models import get_current_site
+
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import AbstractResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import GenericResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_model_program.models import ModelProgramResource
 from hs_core.signals import *
 from hs_core.hydroshare import utils
@@ -93,12 +94,12 @@ class ExecutedBy(AbstractMetaDataElement):
 
 
 # Model Instance Resource type
-class ModelInstanceResource(Page, AbstractResource):
+class ModelInstanceResource(GenericResource):
     objects = ResourceManager()
 
     class Meta:
         verbose_name = 'Model Instance Resource'
-
+        proxy = True
 
     @property
     def metadata(self):
@@ -106,16 +107,16 @@ class ModelInstanceResource(Page, AbstractResource):
         return self._get_metadata(md)
 
     def can_add(self, request):
-        return AbstractResource.can_add(self, request)
+        return super(ModelInstanceResource, self).can_add(request)
 
     def can_change(self, request):
-        return AbstractResource.can_change(self, request)
+        return super(ModelInstanceResource, self).can_change(request)
 
     def can_delete(self, request):
-        return AbstractResource.can_delete(self, request)
+        return super(ModelInstanceResource, self).can_delete(request)
 
     def can_view(self, request):
-        return AbstractResource.can_view(self, request)
+        return super(ModelInstanceResource, self).can_view(request)
 
     @classmethod
     def get_supported_upload_file_types(cls):
