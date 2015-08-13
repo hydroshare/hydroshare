@@ -247,7 +247,8 @@ class NetcdfResource(GenericResource):
         return super(NetcdfResource, self).can_view(request)
 
     class Meta:
-            verbose_name = 'Multidimensional (NetCDF)'
+        verbose_name = 'Multidimensional (NetCDF)'
+        proxy = True
 
 processor_for(NetcdfResource)(resource_processor)
 
