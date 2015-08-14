@@ -106,6 +106,81 @@ class RequestUrlBase(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No Request Url Base element was found for id:%d." % element_id)
 
+class SupportedResTypeChoices(models.Model):
+    description = models.CharField(max_length=300)
+
+    def __unicode__(self):
+        self.description
+
+class SupportedResTypes(AbstractMetaDataElement):
+    term = 'SupportedResTypes'
+    supported_res_types= models.ManyToManyField(SupportedResTypeChoices, null=True, blank=True)
+
+
+    # def __unicode__(self):
+    #     self.other_parameters
+
+    def get_supported_res_types_str(self):
+        return ', '.join([parameter.description for parameter in self.supported_res_types.all()])
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'supported_res_types' in kwargs:
+        #     cls._validate_swat_model_parameters(kwargs['model_parameters'])
+        # else:
+        #     raise ValidationError("model_parameters is missing.")
+        # if not 'other_parameters' in kwargs:
+        #     raise ValidationError("ModelParameter other_parameters is missing.")
+
+            metadata_obj = kwargs['content_object']
+            new_meta_instance = SupportedResTypes.objects.create(content_object=metadata_obj,)
+
+        for res_type_str in kwargs['supported_res_types']:
+            qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
+            if qs.exists():
+                new_meta_instance.supported_res_types.add(qs[0])
+            else:
+                new_meta_instance.supported_res_types.create(description=res_type_str)
+
+        return new_meta_instance
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        meta_instance = SupportedResTypes.objects.get(id=element_id)
+        if meta_instance:
+            if 'supported_res_types' in kwargs:
+                #cls._validate_swat_model_parameters(kwargs['model_parameters'])
+                meta_instance.supported_res_types.all().delete()
+                for res_type_str in kwargs['supported_res_types']:
+                    qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
+                    if qs.exists():
+                        meta_instance.supported_res_types.add(qs[0])
+                    else:
+                        meta_instance.supported_res_types.create(description=res_type_str)
+
+            # if 'other_parameters' in kwargs:
+            #     swat_model_parameters.other_parameters = kwargs['other_parameters']
+
+            meta_instance.save()
+
+            # delete model_parameters metadata element if it has no data
+            if len(meta_instance.supported_res_types.all()) == 0 :
+                meta_instance.delete()
+        else:
+            raise ObjectDoesNotExist("No ModelParameter element was found for the provided id:%s" % kwargs['id'])
+
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("ModelParameter element of a resource can't be deleted.")
+
+    # @classmethod
+    # def _validate_swat_model_parameters(cls, parameters):
+    #     for swat_parameters in parameters:
+    #         if swat_parameters not in ['Crop rotation', 'Tile drainage', 'Point source', 'Fertilizer', 'Tillage operation', 'Inlet of draining watershed', 'Irrigation operation']:
+    #             raise ValidationError('Invalid swat_model_parameters:%s' % parameters)
+
+
 #the resource types that can be used by this tool- one class instance per type
 class ToolResourceType(AbstractMetaDataElement):
     term = 'Tool Resource Type'
@@ -144,42 +219,6 @@ class ToolResourceType(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No Resource Type element was found for id:%d." % element_id)
 
-# class Fee(AbstractMetaDataElement):
-#     term = 'Fee'
-#     description = models.TextField()
-#     value = models.DecimalField(max_digits=10, decimal_places=2)
-#
-#     @classmethod
-#     def create(cls, **kwargs):
-#         if 'content_object' in kwargs:
-#             metadata_obj = kwargs['content_object']
-#             metadata_type = ContentType.objects.get_for_model(metadata_obj)
-#             fee = Fee.objects.create(value=kwargs.get('value'),
-#                                      description=kwargs.get('description'),
-#                                      content_object=metadata_obj)
-#             return fee
-#         else:
-#             raise ValidationError('metadata object is missing from inputs')
-#
-#     @classmethod
-#     def update(cls, element_id, **kwargs):
-#         fee = Fee.objects.get(id=element_id)
-#         if fee:
-#             if 'value' in kwargs:
-#                 fee.value = kwargs['value']
-#             if 'description' in kwargs:
-#                 fee.description = kwargs['description']
-#             fee.save()
-#         else:
-#             raise ObjectDoesNotExist("No Fee element was found for the provided id:%s" % kwargs['id'])
-#
-#     @classmethod
-#     def remove(cls, element_id):
-#         fee = Fee.objects.get(id=element_id)
-#         if fee:
-#             fee.delete()
-#         else:
-#             raise ObjectDoesNotExist("No Fee element was found for id:%d." % element_id)
 
 
 class ToolVersion(AbstractMetaDataElement):
@@ -230,6 +269,7 @@ class ToolMetaData(CoreMetaData):
     #fees = generic.GenericRelation(Fee)
     # should be only one Version metadata element
     versions = generic.GenericRelation(ToolVersion)
+    supported_res_types= generic.GenericRelation(SupportedResTypes)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -240,6 +280,7 @@ class ToolMetaData(CoreMetaData):
         elements.append('ToolResourceType')
         #elements.append('Fee')
         elements.append('ToolVersion')
+        elements.append('SupportedResTypes')
         return elements
 
     def get_xml(self):

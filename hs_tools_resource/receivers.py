@@ -21,6 +21,8 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         element_form = UrlBaseForm(data=request.POST)
     elif element_name == 'toolversion':
         element_form = VersionForm(data=request.POST)
+    elif element_name == 'supportedrestypes':
+        element_form = SupportedResTypesValidationForm(data=request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
@@ -42,6 +44,8 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         element_form = UrlBaseForm(data=request.POST)
     elif element_name == 'toolversion':
         element_form = VersionForm(data=request.POST)
+    elif element_name == 'supportedrestypes':
+        element_form = SupportedResTypesValidationForm(data=request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}

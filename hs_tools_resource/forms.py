@@ -2,12 +2,13 @@ __author__ = 'Drew, Jeff & Shaun'
 from django.forms import ModelForm, BaseFormSet
 from django import forms
 from django.forms.models import formset_factory
-from crispy_forms.layout import *
-from crispy_forms.bootstrap import *
 from models import *
 from hs_core.forms import BaseFormHelper
 from crispy_forms.helper import FormHelper
 from hs_core.hydroshare.utils import get_resource_types
+from crispy_forms import *
+from crispy_forms.layout import *
+from crispy_forms.bootstrap import *
 
 #TODO: reference hs_core.forms
 class UrlBaseFormHelper(BaseFormHelper):
@@ -74,124 +75,6 @@ class ResTypeValidationForm(forms.Form):
     tool_res_type = forms.Field()
 
 
-# class FeeFormHelper(BaseFormHelper):
-#     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
-#         field_width = 'form-control input-sm'
-#         # change the fields name here
-#         layout = Layout(
-#                      Field('description', css_class=field_width),
-#                      Field('value', css_class=field_width),
-#                 )
-#
-#         super(FeeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
-
-
-# class FeeForm(ModelForm):
-#     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-#         super(FeeForm, self).__init__(*args, **kwargs)
-#         self.helper = FeeFormHelper(allow_edit, res_short_id, element_id, element_name='Fee')
-#         self.delete_modal_form = None
-#         self.number = 0
-#         self.allow_edit = allow_edit
-#         if res_short_id:
-#             self.action = "/hsapi/_internal/%s/fee/add-metadata/" % res_short_id
-#         else:
-#             self.action = ""
-#
-#     @property
-#     def form_id(self):
-#         form_id = 'id_fee_%s' % self.number
-#         return form_id
-#
-#     @property
-#     def form_id_button(self):
-#         form_id = 'id_fee_%s' % self.number
-#         return "'" + form_id + "'"
-#
-#     class Meta:
-#         model = Fee
-#         fields = ['description', 'value']
-#         exclude = ['content_object']
-
-
-# class FeeValidationForm(forms.Form):
-#     description = forms.CharField(min_length="0")
-#     value = forms.DecimalField(max_digits=10, decimal_places=2)
-
-
-# class BaseFeeFormSet(BaseFormSet):
-#     def add_fields(self, form, index):
-#         super(BaseFeeFormSet, self).add_fields(form, index)
-
-
-    # def get_metadata_dict(self):
-    #     fees_data = []
-    #     for form in self.forms:
-    #         fee_data = {k: v for k, v in form.cleaned_data.iteritems()}
-    #
-    #         fees_data.append({'Fee': fee_data})
-    #
-    #     return fees_data
-
-#FeeFormSet = formset_factory(FeeForm, formset=BaseFeeFormSet, extra=0)
-
-
-# ModalDialogLayoutAddFee = Layout(
-#                             HTML('<div class="modal fade" id="add-fee-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
-#                                     '<div class="modal-dialog">'
-#                                         '<div class="modal-content">'
-#                                             '<form action="{{ add_fee_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
-#                                             '{% csrf_token %} '
-#                                             '<input name="resource-mode" type="hidden" value="edit"/>'
-#                                             '<div class="modal-header">'
-#                                                 '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
-#                                                 '<h4 class="modal-title" id="myModalLabel">Add Fee</h4>'
-#                                             '</div>'
-#                                             '<div class="modal-body">'
-#                                                 '{% csrf_token %}'
-#                                                 '<div class="form-group">'
-#                                                     '{% load crispy_forms_tags %} '
-#                                                     '{% crispy add_fee_modal_form %} '
-#                                                 '</div>'
-#                                             '</div>'
-#                                             '<div class="modal-footer">'
-#                                                 '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
-#                                                 '<button type="submit" class="btn btn-primary">Save changes</button>'
-#                                             '</div>'
-#                                             '</form>'
-#                                         '</div>'
-#                                     '</div>'
-#                                 '</div>'
-#                             )
-#                         )
-#
-# FeeLayoutEdit = Layout(
-#                             HTML('{% load crispy_forms_tags %} '
-#                                  '{% for form in fee_formset.forms %} '
-#                                      '<div class="item form-group"> '
-#                                      '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
-#                                      '{% crispy form %} '
-#                                     '<div class="row" style="margin-top:10px">'
-#                                         '<div class="col-md-10">'
-#                                             '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-fee-element-dialog_{{ form.number }}" value="Delete Fee">'
-#                                         '</div>' #change
-#                                         '<div class="col-md-2">'
-#                                             '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'  # change
-#                                         '</div>'
-#                                     '</div>'
-#                                     '{% crispy form.delete_modal_form %} '
-#                                     '</form> '
-#                                     '</div> '
-#                                 '{% endfor %}'
-#                             ),
-#                             HTML('<div style="margin-top:10px">'
-#                                  '<p><a id="add-fee" class="btn btn-success" data-toggle="modal" data-target="#add-fee-dialog">'
-#                                  '<i class="fa fa-plus"></i>Add another Fee</a>'
-#                                  '</div>'
-#                             ),
-#                     )
-
-
 class VersionFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
@@ -216,8 +99,71 @@ class VersionForm(ModelForm):
 class VersionValidationForm(forms.Form):
     value = forms.CharField(max_length="500")
 
+parameters_choices = (
+                        ('GenericResource', 'GenericResource'),
+                        ('RasterResource', 'RasterResource'),
+                        ('RefTimeSeries', 'RefTimeSeries'),
+                        ('TimeSeriesResource', 'TimeSeriesResource'),
+                        ('NetcdfResource', 'NetcdfResource'),
+                        ('ModelProgramResource', 'ModelProgramResource'),
+                        ('ModelInstanceResource', 'ModelInstanceResource'),
+                        ('SWATModelInstanceResource', 'SWATModelInstanceResource'),
+                      )
+
+class MetadataField(layout.Field):
+          def __init__(self, *args, **kwargs):
+              kwargs['css_class'] = 'form-control input-sm'
+              super(MetadataField, self).__init__(*args, **kwargs)
 
 
+
+class SupportedResTypeFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        layout = Layout(
+                        MetadataField('supported_res_types'),
+                 )
+        kwargs['element_name_label'] = 'Supported Resource Types'
+        super(SupportedResTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class SupportedResTypesForm(ModelForm):
+    supported_res_types = forms.MultipleChoiceField(choices=parameters_choices,
+                                                 widget=forms.CheckboxSelectMultiple(
+                                                     attrs={'style': 'width:auto;margin-top:-5px'}))
+
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(SupportedResTypesForm, self).__init__(*args, **kwargs)
+        self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id, element_name='SupportedResTypes')
+        if self.instance:
+            try:
+                supported_res_types = self.instance.supported_res_types.all()
+                if len(supported_res_types) > 0:
+                    checked_item_list=[]
+                    for parameter in supported_res_types:
+                        checked_item_list.append(parameter.description)
+
+                    self.fields['supported_res_types'].initial = checked_item_list
+                else:
+                    self.fields['supported_res_types'].initial = []
+
+                #num=len(self.fields['supported_res_types'].initial)
+            except TypeError:
+                self.fields['supported_res_types'].initial = []
+            except AttributeError:
+                self.fields['supported_res_types'].initial = []
+            except ValueError:
+                self.fields['supported_res_types'].initial = []
+            except Exception as e:
+                self.fields['supported_res_types'].initial = []
+
+    class Meta:
+        model = SupportedResTypes
+
+
+class SupportedResTypesValidationForm(forms.Form):
+    supported_res_types = forms.MultipleChoiceField(choices=parameters_choices,required=False)
 
 
 

@@ -25,7 +25,7 @@ def landing_page(request, page):
         context['extended_metadata_exists'] = extended_metadata_exists
         context['url_base'] = content_model.metadata.url_bases.first()
         context['res_types'] = content_model.metadata.res_types.all()
-        # context['fees'] = content_model.metadata.fees.all()
+        context['supported_res_types'] = content_model.metadata.supported_res_types.first().get_supported_res_types_str() if  content_model.metadata.supported_res_types.first() else None
         context['version'] = content_model.metadata.versions.first()
     else:
         url_base = content_model.metadata.url_bases.first()
@@ -46,34 +46,38 @@ def landing_page(request, page):
                                     if res_type else None)
 
 
-        # fee = content_model.metadata.fees.first()
-        # fees_form = FeeForm(instance=fee,
-        #                     res_short_id=content_model.short_id,
-        #                     element_id=fee.id
-        #                     if fee else None)
-
         version = content_model.metadata.versions.first()
         version_form = VersionForm(instance=version,
                                    res_short_id=content_model.short_id,
                                    element_id=version.id
                                    if version else None)
 
+        supported_res_types_obj=content_model.metadata.supported_res_types.first()
+        supported_res_types_form = SupportedResTypesForm(instance=supported_res_types_obj, res_short_id=content_model.short_id,
+                             element_id=supported_res_types_obj.id if supported_res_types_obj else None)
+
         ext_md_layout = Layout(HTML("<div class='form-group col-lg-6 col-xs-12' id='url_bases'> "
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy url_base_form %} '
                                      '</div>'),
+
                                 HTML("<div class='form-group col-lg-6 col-xs-12' id='res_types'> "
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy res_type_form %} '
                                      '</div>'),
-                                # HTML('<div class="form-group col-lg-6 col-xs-12" id="fees"> '
-                                #         '{% load crispy_forms_tags %} '
-                                #         '{% crispy fees_form %} '
-                                #      '</div> '),
+
                                 HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy version_form %} '
                                      '</div> '),
+
+                                AccordionGroup('Model Output (required)',
+                                HTML('<div class="form-group" id="supported_res_types"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy supported_res_types_form %} '
+                                 '</div> '),
+                                ),
+
                         )
 
 
@@ -87,9 +91,9 @@ def landing_page(request, page):
         context['resource_type'] = 'Tool Resource'
         context['url_base_form'] = url_base_form
         context['res_type_form'] = res_type_form
-        # context['fees_form'] = fees_form
         context['version_form'] = version_form
         context['res_types'] = res_type_names
+        context['supported_res_types_form'] = supported_res_types_form
 
     hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)
