@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# remove-root-items
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
 find /home/docker/hydroshare -user root -ls | tr -s ' ' | cut -d ' ' -f 12 > root-items.txt
 
 while read line ; do
@@ -7,4 +10,4 @@ while read line ; do
     rm -rf $line;
 done < root-items.txt
 
-exit;
+exit 0;

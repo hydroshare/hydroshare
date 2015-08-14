@@ -37,14 +37,14 @@ display_usage() {
 }
 
 start_nginx() {
-    echo "*** RESTART NGINX ***"
+    echo "*** START NGINX ***"
     cd $NGINX_DIR
     ./run-nginx start
     cd -
 }
 
 stop_nginx() {
-    echo "*** RESTART NGINX ***"
+    echo "*** STOP NGINX ***"
     cd $NGINX_DIR
     ./run-nginx stop
     cd -
@@ -79,10 +79,16 @@ stop_hs() {
     echo "*** ${1^^}: all running docker containers ***"
     stop_nginx
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
-        docker stop $f;
+        CHECK_HS_DOCKER_CID=`docker ps -a | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_DOCKER_CID}" ]]; then
+            docker stop $f;
+        fi
     done
     for f in "${OTHER_DOCKER_CONTAINERS[@]}"; do
-        docker stop $f;
+        CHECK_HS_OTHER_CID=`docker ps -a | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_OTHER_CID}" ]]; then
+            docker stop $f;
+        fi
     done
 }
 
@@ -175,16 +181,25 @@ deploy_hs() {
     preflight_hs
     echo "*** REMOVE: all docker containers (deletes existing database)  ***"
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
-        docker rm -fv $f;
+        CHECK_HS_DOCKER_CID=`docker ps -a | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_DOCKER_CID}" ]]; then
+            docker rm -fv $f;
+        fi
     done
     sleep 1s
     for f in "${OTHER_DOCKER_CONTAINERS[@]}"; do
-        docker rm -fv $f;
+        CHECK_HS_OTHER_CID=`docker ps -a | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_OTHER_CID}" ]]; then
+            docker rm -fv $f;
+        fi
     done
     sleep 1s
     echo "*** REMOVE: all hydroshare docker images  ***"
     for f in "${HS_DOCKER_IMAGES[@]}"; do
-        docker rmi -f $f;
+        CHECK_HS_DOCKER_IMG=`docker images | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_DOCKER_IMG}" ]]; then
+            docker rmi -f $f;
+        fi
     done
     sleep 1s
     # get submodules
