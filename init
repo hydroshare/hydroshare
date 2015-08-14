@@ -1,13 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Run migrations separately for django 1.7
 # specific to running in PyCharm on local machine (due to sshd)
 
 sleep 3s
+echo "make sure postgis is enabled on PostgreSQL"
 psql -U postgres -h postgis -w -c 'create extension postgis;'
-echo "made sure postgis was enabled on PostgreSQL"
-#python manage.py syncdb --noinput
-#python manage.py migrate mezzanine.pages
-#python manage.py migrate
 /usr/sbin/sshd
 python manage.py runserver 0.0.0.0:8000
