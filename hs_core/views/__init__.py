@@ -47,6 +47,7 @@ def short_url(request, *args, **kwargs):
     m = get_resource_by_shortkey(shortkey)
     return HttpResponseRedirect(m.get_absolute_url())
 
+
 def verify(request, *args, **kwargs):
     _, pk, email = signing.loads(kwargs['token']).split(':')
     u = User.objects.get(pk=pk)
@@ -212,6 +213,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 @api_view(['GET'])
 def file_download_url_mapper(request, shortkey, filename):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
@@ -221,6 +223,7 @@ def file_download_url_mapper(request, shortkey, filename):
     istorage = IrodsStorage()
     file_download_url = istorage.url(irods_file_path)
     return HttpResponseRedirect(file_download_url)
+
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
@@ -252,6 +255,7 @@ def publish(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+# TOD0: this view function needs refactoring once the new access control UI works
 def change_permissions(request, shortkey, *args, **kwargs):
 
     class AddUserForm(forms.Form):
@@ -303,6 +307,62 @@ def change_permissions(request, shortkey, *args, **kwargs):
     else:
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
+# Needed for new access control UI functionality being developed by Mauriel
+def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
+    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    user_to_share_with = utils.user_from_id(user_id)
+    status = 'success'
+    err_message = ''
+    if privilege == 'view':
+        access_privilege = PrivilegeCodes.VIEW
+    elif privilege == 'edit':
+        access_privilege = PrivilegeCodes.CHANGE
+    elif privilege == 'owner':
+        access_privilege = PrivilegeCodes.OWNER
+    else:
+        err_message = "Not a valid privilege"
+        access_privilege = PrivilegeCodes.NONE
+
+    if access_privilege != PrivilegeCodes.NONE:
+        try:
+            user.uaccess.share_resource_with_user(res, user_to_share_with, access_privilege)
+        except HSAccessException as exp:
+            status = 'error'
+            err_message = exp.value
+    else:
+        status = 'error'
+
+    if status == 'success':
+        messages.success(request, "Resource sharing was successful")
+    else:
+        messages.error(request, err_message)
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+# Needed for new access control UI functionality being developed by Mauriel
+def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
+    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    user_to_unshare_with = utils.user_from_id(user_id)
+
+    try:
+        if user.uaccess.can_unshare_resource_with_user(res, user_to_unshare_with):
+            # requesting user is the resource owner or user is self unsharing (user is user_to_unshare_with)
+            user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
+        else:
+            # requesting user is the original grantor of privilege to user_to_unshare_with
+            user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
+
+        messages.success(request, "Resource unsharing was successful")
+        if user == user_to_unshare_with and not res.raccess.public:
+            # user has no access to the resource - redirect to resource listing page
+            return HttpResponseRedirect('/my-resources/')
+    except HSAccessException as exp:
+        messages.error(request, exp.value)
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 # view functions mapped with INPLACE_SAVE_URL(/hsapi/save_inline/) for Django inplace editing
 def save_ajax(request):
     if not request.method == 'POST':
@@ -336,9 +396,11 @@ def save_ajax(request):
         message_i18n = ', '.join([u"%s" % m for m in error.messages])
         return _get_http_response({'errors': message_i18n})
 
+
 class CaptchaVerifyForm(forms.Form):
     challenge = forms.CharField()
     response = forms.CharField()
+
 
 def verify_captcha(request):
     f = CaptchaVerifyForm(request.POST)
@@ -354,12 +416,14 @@ def verify_captcha(request):
         else:
             return HttpResponse('true', content_type='text/plain')
 
+
 def verify_account(request, *args, **kwargs):
     context = {
             'username' : request.GET['username'],
             'email' : request.GET['email']
         }
     return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+
 
 @processor_for('resend-verification-email')
 def resend_verification_email(request):
@@ -481,9 +545,11 @@ def add_generic_context(request, page):
         'add_edit_group_form': AddGroupForm(),
     }
 
+
 @login_required
 def create_resource_select_resource_type(request, *args, **kwargs):
     return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
+
 
 @login_required
 def create_resource(request, *args, **kwargs):
@@ -565,6 +631,7 @@ def get_file(request, *args, **kwargs):
     return HttpResponse(open(name), content_type='x-binary/octet-stream')
 
 processor_for(GenericResource)(resource_processor)
+
 
 @processor_for('resources')
 def resource_listing_processor(request, page):
