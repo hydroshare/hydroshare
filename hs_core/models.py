@@ -539,15 +539,15 @@ class Title(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         title = Title.objects.get(id=element_id)
+        # get matching resource
+        resource = GenericResource.objects.filter(object_id=title.content_object.id).first()
         if title:
             if 'value' in kwargs:
                 title.value = kwargs['value']
                 title.save()
-                # This way of updating the resource title field does not work
-                # so updating code is in in resource.py
-                # res = title.content_object.resource
-                # res.title = title.value
-                # res.save()
+                # sync resource title with title in metadata
+                resource.title = title.value
+                resource.save()
             else:
                 raise ValidationError('Value for title is missing.')
         else:

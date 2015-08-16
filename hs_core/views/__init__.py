@@ -180,20 +180,16 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                                         element_id=element_id, request=request)
     is_update_success = False
 
-    is_redirect = False
     for receiver, response in handler_response:
         if 'is_valid' in response:
             if response['is_valid']:
                 element_data_dict = response['element_data_dict']
                 res.metadata.update_element(element_name, element_id, **element_data_dict)
                 if element_name == 'title':
-                    res.title = res.metadata.title.value
-                    res.save()
-                    if res.racccess.public:
+                    if res.raccess.public:
                         if not res.can_be_public:
                             res.raccess.public = False
                             res.raccess.save()
-                            is_redirect = True
 
                 resource_modified(res, request.user)
                 is_update_success = True
