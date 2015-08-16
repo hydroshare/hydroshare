@@ -44,7 +44,7 @@ EDIT = 'edit'
 VIEW = 'view'
 PUBLIC = 'public'
 
-
+# TODO: this method is not used except in broken tests - if need to be used then new access control rules need to apply
 def set_access_rules(pk, user=None, group=None, access=None, allow=False):
     """
     Set the access permissions for an object identified by pid. Triggers a change in the system metadata. Successful
@@ -92,11 +92,11 @@ def set_access_rules(pk, user=None, group=None, access=None, allow=False):
         res = pk  # user passed in the resource instance instead of hte primary key
 
     if access == DO_NOT_DISTRIBUTE:
-        res.do_not_distribute = allow
-        res.save()
+        res.raccess.shareable = allow
+        res.raccess.save()
     elif access == PUBLIC:
-        res.public = allow
-        res.save()
+        res.raccess.public = allow
+        res.raccess.save()
     elif access == EDIT:
         if user:
             if allow:
