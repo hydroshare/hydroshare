@@ -362,10 +362,6 @@ def create_resource(
             **kwargs
         )
 
-        # by default make resource private
-        resource.public = False
-        resource.save()
-
         resource.set_slug('resource{0}{1}'.format('/', resource.short_id))
 
         if not metadata:
@@ -373,6 +369,7 @@ def create_resource(
 
         add_resource_files(resource.short_id, *files)
 
+        # by default resource is private
         resource_access = ResourceAccess(resource=resource)
         resource_access.save()
         UserResourcePrivilege(resource=resource_access, grantor=owner.uaccess, user=owner.uaccess,
@@ -721,10 +718,10 @@ def delete_resource_file(pk, filename_or_id, user):
     else:
         raise ObjectDoesNotExist(filename_or_id)
 
-    if resource.public:
+    if resource.raccess.public:
         if not resource.can_be_public:
-            resource.public = False
-            resource.save()
+            resource.raccess.public = False
+            resource.raccess.save()
 
     # generate bag
     utils.resource_modified(resource, user)

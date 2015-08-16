@@ -611,17 +611,19 @@ class Date(AbstractMetaDataElement):
             metadata_obj = kwargs['content_object']
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
             dt = Date.objects.filter(type= kwargs['type'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            # get matching resource
+            resource = GenericResource.objects.filter(object_id=metadata_obj.id).first()
             if dt:
                 raise ValidationError('Date type:%s already exists' % kwargs['type'])
             if not kwargs['type'] in ['created', 'modified', 'valid', 'available', 'published']:
                 raise ValidationError('Invalid date type:%s' % kwargs['type'])
 
             if kwargs['type'] == 'published':
-                if not metadata_obj.resource.published_and_frozen:
+                if not resource.raccess.published:
                     raise ValidationError("Resource is not published yet.")
 
             if kwargs['type'] == 'available':
-                if not metadata_obj.resource.public:
+                if not resource.raccess.public:
                     raise ValidationError("Resource has not been shared yet.")
 
             if 'start_date' in kwargs:
@@ -766,14 +768,18 @@ class Identifier(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if 'name' in kwargs:
             metadata_obj = kwargs['content_object']
+            # get matching resource
+            resource = GenericResource.objects.filter(object_id=metadata_obj.id).first()
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
             # check the identifier name doesn't already exist - identifier name needs to be unique per resource
-            idf = Identifier.objects.filter(name__iexact= kwargs['name'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            idf = Identifier.objects.filter(name__iexact= kwargs['name'], object_id=metadata_obj.id,
+                                            content_type=metadata_type).first()
             if idf:
                 raise ValidationError('Identifier name:%s already exists' % kwargs['name'])
             if kwargs['name'].lower() == 'doi':
-                if not metadata_obj.resource.doi:
-                    raise ValidationError("Identifier of 'DOI' type can't be created for a resource that has not been assign a DOI yet.")
+                if not resource.doi:
+                    raise ValidationError("Identifier of 'DOI' type can't be created for a resource that has not been "
+                                          "assigned a DOI yet.")
 
             if 'url' in kwargs:
                 idf = Identifier.objects.create(name=kwargs['name'], url=kwargs['url'], content_object=metadata_obj)
@@ -828,13 +834,16 @@ class Identifier(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         idf = Identifier.objects.get(id=element_id)
+        # get matching resource
+        resource = GenericResource.objects.filter(object_id=idf.content_object.id).first()
         if idf:
             if idf.name.lower() == 'hydroshareidentifier':
                 raise ValidationError("Hydroshare identifier:%s can't be deleted." % idf.name)
 
             if idf.name.lower() == 'doi':
-                if idf.content_object.resource.doi:
-                    raise ValidationError("Hydroshare identifier:%s can't be deleted for a resource that has been assigned a DOI." % idf.name)
+                if resource.doi:
+                    raise ValidationError("Hydroshare identifier:%s can't be deleted for a resource that has been "
+                                          "assigned a DOI." % idf.name)
             idf.delete()
         else:
             raise ObjectDoesNotExist("No identifier element was found for id:%d." % element_id)
@@ -852,12 +861,16 @@ class Publisher(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if 'name' in kwargs:
             metadata_obj = kwargs['content_object']
+            # get matching resource
+            resource = GenericResource.objects.filter(object_id=metadata_obj.id).first()
             if 'url' in kwargs:
-                if not metadata_obj.resource.public and metadata_obj.resource.published_and_frozen:
-                    raise ValidationError("Publisher element can't be created for a resource that is not shared nor published.")
+                if not resource.raccess.public and resource.raccess.published:
+                    raise ValidationError("Publisher element can't be created for a resource that is not shared nor "
+                                          "published.")
                 if kwargs['name'].lower() == 'hydroshare':
-                    if not  metadata_obj.resource.files.all():
-                        raise ValidationError("Hydroshare can't be the publisher for a resource that has no content files.")
+                    if not resource.files.all():
+                        raise ValidationError("Hydroshare can't be the publisher for a resource that has no content "
+                                              "files.")
                     else:
                         kwargs['name'] = 'HydroShare'
                         kwargs['url'] = 'http://hydroshare.org'
@@ -872,24 +885,28 @@ class Publisher(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         pub = Publisher.objects.get(id=element_id)
         metadata_obj = kwargs['content_object']
+        # get matching resource
+        resource = GenericResource.objects.filter(object_id=metadata_obj.id).first()
 
-        if metadata_obj.resource.frozen:
+        if resource.raccess.immutable:
             raise ValidationError("Resource metadata can't be edited when the resource is in frozen state.")
 
-        if metadata_obj.resource.published_and_frozen:
+        if resource.raccess.published:
             raise ValidationError("Resource metadata can't be edited once the resource has been published.")
 
         if pub:
             if 'name' in kwargs:
                 if pub.name.lower() != kwargs['name'].lower():
                     if pub.name.lower() == 'hydroshare':
-                        if metadata_obj.resource.files.all():
-                            raise ValidationError("Publisher 'HydroShare' can't be changed for a resource that has content files.")
+                        if resource.files.all():
+                            raise ValidationError("Publisher 'HydroShare' can't be changed for a resource that has "
+                                                  "content files.")
                     elif kwargs['name'].lower() == 'hydroshare':
-                        if not metadata_obj.resource.files.all():
-                            raise ValidationError("'HydroShare' can't be a publisher for a resource that has no content files.")
+                        if not resource.files.all():
+                            raise ValidationError("'HydroShare' can't be a publisher for a resource that has no "
+                                                  "content files.")
 
-                    if metadata_obj.resource.files.all():
+                    if resource.files.all():
                         pub.name = 'HydroShare'
                     else:
                         pub.name = kwargs['name']
@@ -908,21 +925,23 @@ class Publisher(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         pub = Publisher.objects.get(id=element_id)
+        # get matching resource
+        resource = GenericResource.objects.filter(object_id=pub.content_object.id).first()
 
-        if pub.content_object.resource.frozen:
+        if resource.raccess.immutable:
             raise ValidationError("Resource metadata can't be edited when the resource is in frozen state.")
 
-        if pub.content_object.resource.published_and_frozen:
+        if resource.raccess.published:
             raise ValidationError("Resource metadata can't be edited once the resource has been published.")
 
-        if pub.content_object.resource.public:
+        if resource.raccess.public:
             raise ValidationError("Resource publisher can't be deleted for shared resource.")
 
         if pub:
             if pub.name.lower() == 'hydroshare':
-                if pub.content_object.resource.files.all():
+                if resource.files.all():
                     raise ValidationError("Publisher HydroShare can't be deleted for a resource that has content files.")
-            if pub.content_object.resource.public:
+            if resource.raccess.public:
                 raise ValidationError("Publisher can't be deleted for a public resource.")
             pub.delete()
         else:

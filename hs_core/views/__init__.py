@@ -189,10 +189,10 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 if element_name == 'title':
                     res.title = res.metadata.title.value
                     res.save()
-                    if res.public:
+                    if res.racccess.public:
                         if not res.can_be_public:
-                            res.public = False
-                            res.save()
+                            res.raccess.public = False
+                            res.raccess.save()
                             is_redirect = True
 
                 resource_modified(res, request.user)
