@@ -364,23 +364,23 @@
 
 
     <h3>Reference Time Series Resource Type Description</h3>
-    <p> A Reference Time Series (RefTS) resource is referencing a specific time series dataset that is being hosted by external sources outside of HydroShare.
-As time series dataset can be growing (like continuous daily observations), the advantage of using RefTS resource is that users can always retrieve the most recent data. Current RefTS resources only use HydroServer as external data source, including all HydroServer instances that can be discovered by CAUSHI Water Data Services Catalog
-</p>
+    <p>
+        A Reference Time Series (RefTS) resource references a specific time series dataset hosted on an external web service. As time series datasets can grow (e.g. continuous daily observations), the advantage of using RefTS resource is that users can always retrieve the most recent data. The current RefTS implementation only supports CUAHSI HydroServer data sources. All HydroServer instances registered in the CAUSHI Water Data Services Catalog (http://hiscentral.cuahsi.org/) can be referenced using a RefTS resource.
+    </p>
 
      <a name="ReferenceURL"></a>
         <ul >
             <li><strong>Term: </strong>ReferenceURL</li>
             <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/refts_ReferenceURL</a></li>
             <li><strong>Label: </strong>Reference URL</li>
-            <li><strong>Description: </strong>The URL this RefTS resource is referencing.</li>
+            <li><strong>Description: </strong>RefTS resource metadata</li>
         </ul>
     <a name="value"></a>
         <ul >
             <li><strong>Term: </strong>value</li>
             <li><strong>URI: </strong><a href="#refts_value">http://www.hydroshare.org/terms/refts_value</a></li>
             <li><strong>Label: </strong>value</li>
-            <li><strong>Description: </strong>The URL value/string this RefTS resource is referencing.</li>
+            <li><strong>Description: </strong>The URL this RefTS resource is referencing.</li>
         </ul>
     <a name="type"></a>
         <ul >
@@ -733,7 +733,7 @@ As time series dataset can be growing (like continuous daily observations), the 
             <li><strong>ModelReleaseNotes:</strong>Notes regarding the software release</li>
             <li><strong>ModelWebpage:</strong> A URL to the webpage maintained by the model developers</li>
             <li><strong>CodeRepository:</strong> A URL to the source code repository (e.g., Github, Bitbucket, etc.)</li>
-            <li><strong>ModelUserManual:</strong> Uploaded content that describes the general use of the model</li>
+            <li><strong>ModelUserManual:</strong> Uploaded content that describes the generF1)al use of the model</li>
             <li><strong>ModelTheoreticalManual:</strong> Uploaded content that describes the theoretical representation of the model</li>
             <li><strong>SourceCode:</strong> Uploaded archive containing the source code of the model</li>
         </ul>
@@ -791,9 +791,9 @@ l
         </ul>
     </p>
 
-    <h3>Tools Resource Type Description</h3>
+    <h3>Web App Resource Type Description</h3>
     <p>
-        A Tool/App Resource is a shortcut (or reference) of an external web application that can work with HydroShare data resources. A Tool/App might be a simple webpage, a resource viewer/editor or a complicated scientific model. Third-party applications can easily access the HydroShare data resources using HydroShare REST API (<a href=" https://github.com/hydroshare/hydroshare/wiki/HydroShare-REST-API"> https://github.com/hydroshare/hydroshare/wiki/HydroShare-REST-API</a>), and can become sharable or discoverable by registering as a Tool/App resource.
+        A Web App resource is a shortcut (or reference) to an external web application that can work with HydroShare data resources. A Web App might be a simple webpage, a resource viewer, a data editor, or a complicated scientific model. Third-party web applications can easily access HydroShare data resources using the HydroShare REST API, and can be linked to specific HydroShare resource types and made discoverable within HydroShare by registering them as a Web App resource.
     </p>
     <a name="RequestUrlBase"></a>
         <ul >
