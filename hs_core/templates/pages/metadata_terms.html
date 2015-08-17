@@ -364,8 +364,116 @@
 
 
     <h3>Reference Time Series Resource Type Description</h3>
-    <div>[TODO:Describe reference time series resource type here]</div>
-    <div>[TODO:Describe reference time series resource type metadata terms here]</div>
+    <p> A Reference Time Series (RefTS) resource is referencing a specific time series dataset that is being hosted by external sources outside of HydroShare.
+As time series dataset can be growing (like continuous daily observations), the advantage of using RefTS resource is that users can always retrieve the most recent data. Current RefTS resources only use HydroServer as external data source, including all HydroServer instances that can be discovered by CAUSHI Water Data Services Catalog
+</p>
+
+     <a name="ReferenceURL"></a>
+        <ul >
+            <li><strong>Term: </strong>ReferenceURL</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/refts_ReferenceURL</a></li>
+            <li><strong>Label: </strong>Reference URL</li>
+            <li><strong>Description: </strong>The URL this RefTS resource is referencing.</li>
+        </ul>
+    <a name="value"></a>
+        <ul >
+            <li><strong>Term: </strong>value</li>
+            <li><strong>URI: </strong><a href="#refts_value">http://www.hydroshare.org/terms/refts_value</a></li>
+            <li><strong>Label: </strong>value</li>
+            <li><strong>Description: </strong>The URL value/string this RefTS resource is referencing.</li>
+        </ul>
+    <a name="type"></a>
+        <ul >
+            <li><strong>Term: </strong>type</li>
+            <li><strong>URI: </strong><a href="#refts_type">http://www.hydroshare.org/terms/refts_type</a></li>
+            <li><strong>Label: </strong>type</li>
+            <li><strong>Description: </strong>Connection type of the URL (REST or SOAP). </li>
+        </ul>
+     <a name="Method"></a>
+        <ul >
+            <li><strong>Term: </strong>Method</li>
+            <li><strong>URI: </strong><a href="#refts_method">http://www.hydroshare.org/terms/refts_method</a></li>
+            <li><strong>Label: </strong>Method</li>
+            <li><strong>Description: </strong>Connection type of the URL (REST or SOAP). </li>
+        </ul>
+    <a name="QualityControlLevel"></a>
+        <ul >
+            <li><strong>Term: </strong>QualityControlLevel</li>
+            <li><strong>URI: </strong><a href="#refts_QualityControlLevel">http://www.hydroshare.org/terms/refts_QualityControlLevel</a></li>
+            <li><strong>Label: </strong>QualityControlLevel</li>
+            <li><strong>Description: </strong>Quality control level code.</li>
+        </ul>
+    <a name="Variable"></a>
+        <ul >
+            <li><strong>Term: </strong>Variable</li>
+            <li><strong>URI: </strong><a href="#refts_Variable">http://www.hydroshare.org/terms/refts_Variable</a></li>
+            <li><strong>Label: </strong>Variable</li>
+            <li><strong>Description: </strong>The measuring object information of this dataset. </li>
+        </ul>
+    <a name="name"></a>
+        <ul >
+            <li><strong>Term: </strong>name</li>
+            <li><strong>URI: </strong><a href="#refts_name">http://www.hydroshare.org/terms/refts_name</a></li>
+            <li><strong>Label: </strong>name</li>
+            <li><strong>Description: </strong>The name of the measuring object. </li>
+        </ul>
+    <a name="code"></a>
+        <ul >
+            <li><strong>Term: </strong>code</li>
+            <li><strong>URI: </strong><a href="#refts_code">http://www.hydroshare.org/terms/refts_code</a></li>
+            <li><strong>Label: </strong>code</li>
+            <li><strong>Description: </strong>The code of the measuring object.  </li>
+        </ul>
+    <a name="data_type"></a>
+        <ul >
+            <li><strong>Term: </strong>data_type</li>
+            <li><strong>URI: </strong><a href="#refts_data_type">http://www.hydroshare.org/terms/refts_data_type</a></li>
+            <li><strong>Label: </strong>data_type</li>
+            <li><strong>Description: </strong>Date type of the measuring object. </li>
+        </ul>
+    <a name="sample_medium"></a>
+        <ul >
+            <li><strong>Term: </strong>sample_medium</li>
+            <li><strong>URI: </strong><a href="#refts_sample_medium">http://www.hydroshare.org/terms/refts_sample_medium</a></li>
+            <li><strong>Label: </strong>sample_medium</li>
+            <li><strong>Description: </strong>Sample medium of the measuring object. </li>
+        </ul>
+    <a name="Site"></a>
+        <ul >
+            <li><strong>Term: </strong>Site</li>
+            <li><strong>URI: </strong><a href="#refts_Site">http://www.hydroshare.org/terms/refts_Site</a></li>
+            <li><strong>Label: </strong>Site</li>
+            <li><strong>Description: </strong>Site information of this dataset. </li>
+        </ul>
+     <a name="name"></a>
+        <ul >
+            <li><strong>Term: </strong>name</li>
+            <li><strong>URI: </strong><a href="#refts_name">http://www.hydroshare.org/terms/refts_name</a></li>
+            <li><strong>Label: </strong>name</li>
+            <li><strong>Description: </strong>Site name. </li>
+        </ul>
+    <a name="code"></a>
+        <ul >
+            <li><strong>Term: </strong>code</li>
+            <li><strong>URI: </strong><a href="#refts_code">http://www.hydroshare.org/terms/refts_code</a></li>
+            <li><strong>Label: </strong>code</li>
+            <li><strong>Description: </strong>site code </li>
+        </ul>
+    <a name="latitude"></a>
+        <ul >
+            <li><strong>Term: </strong>latitude</li>
+            <li><strong>URI: </strong><a href="#refts_latitude">http://www.hydroshare.org/terms/refts_latitude</a></li>
+            <li><strong>Label: </strong>latitude</li>
+            <li><strong>Description: </strong> Site latitude</li>
+        </ul>
+     <a name="longitude"></a>
+        <ul >
+            <li><strong>Term: </strong>longitude</li>
+            <li><strong>URI: </strong><a href="#refts_latitude">http://www.hydroshare.org/terms/refts_longitude</a></li>
+            <li><strong>Label: </strong>longitude</li>
+            <li><strong>Description: </strong>Site longitude </li>
+        </ul>
+
 
     <h3>Multidimensional (NetCDF) Resource Type Description</h3>
     <p>Multidimensional space-time data is one of the major data types used for hydrological modeling. For example, the
@@ -684,4 +792,30 @@ l
     </p>
 
     <h3>Tools Resource Type Description</h3>
+    <p>
+        A Tool/App Resource is a shortcut (or reference) of an external web application that can work with HydroShare data resources. A Tool/App might be a simple webpage, a resource viewer/editor or a complicated scientific model. Third-party applications can easily access the HydroShare data resources using HydroShare REST API (<a href=" https://github.com/hydroshare/hydroshare/wiki/HydroShare-REST-API"> https://github.com/hydroshare/hydroshare/wiki/HydroShare-REST-API</a>), and can become sharable or discoverable by registering as a Tool/App resource.
+    </p>
+    <a name="RequestUrlBase"></a>
+        <ul >
+            <li><strong>Term: </strong>RequestUrlBase</li>
+            <li><strong>URI: </strong><a href="#RequestUrlBase">http://www.hydroshare.org/terms/RequestUrlBase</a></li>
+            <li><strong>Label: </strong>Request URL Base</li>
+            <li><strong>Description: </strong>URL of the external tool/app</li>
+        </ul>
+    <a name="ToolResourceType"></a>
+        <ul >
+            <li><strong>Term: </strong>ToolResourceType</li>
+            <li><strong>URI: </strong><a href="#ToolResourceType">http://www.hydroshare.org/terms/ToolResourceType</a></li>
+            <li><strong>Label: </strong>Tool Resource Type</li>
+            <li><strong>Description: </strong>Names of applicable date resource type</li>
+        </ul>
+    <a name="ToolVersion"></a>
+        <ul >
+            <li><strong>Term: </strong>ToolVersion</li>
+            <li><strong>URI: </strong><a href="#ToolVersion">http://www.hydroshare.org/terms/ToolVersion</a></li>
+            <li><strong>Label: </strong>Tool Version</li>
+            <li><strong>Description: </strong>Tool Version</li>
+        </ul>
+
+
 {% endblock %}
