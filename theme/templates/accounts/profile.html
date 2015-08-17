@@ -46,7 +46,11 @@
             {% endif %}
 
             {% if u.email %}
-            <li><strong>Email:</strong> <a href="mailto:{{ u.email }}">Send email to {{ u.first_name }}</a></li>
+                {% if user.pk %}
+                    <li><strong>Email:</strong> <a href="mailto:{{ u.email }}">Send email to {{ u.first_name }}</a></li>
+                {% else %}
+                    <li><strong>Email:</strong> (<a href="/accounts/login/">Log in to send email</a>)</li>
+                {% endif %}
             {% endif %}
             {% if profile.cv %}
             <li><a href="{{ profile.cv.url }}">Download a curriculum vitae</a></li>
