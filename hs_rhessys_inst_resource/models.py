@@ -19,14 +19,14 @@ from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import GenericResource, ResourceManager, resource_processor
+from hs_core.models import BaseResource, ResourceManager, resource_processor
 from hs_core.signals import *
 from hs_core import page_processors
 
 from .forms import InputForm
 
 
-class InstResource(GenericResource):
+class InstResource(BaseResource):
     objects = ResourceManager()
 
     class Meta:

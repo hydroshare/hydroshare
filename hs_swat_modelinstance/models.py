@@ -11,7 +11,7 @@ from mezzanine.pages.page_processors import processor_for
 
 from lxml import etree
 
-from hs_core.models import GenericResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 
 
 
@@ -394,7 +394,7 @@ class ModelInput(AbstractMetaDataElement):
         raise ValidationError("ModelInput element of a resource can't be deleted.")
 
 #SWAT Model Instance Resource type
-class SWATModelInstanceResource(GenericResource):
+class SWATModelInstanceResource(BaseResource):
     objects = ResourceManager()
 
     class Meta:

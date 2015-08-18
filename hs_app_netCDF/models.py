@@ -8,7 +8,7 @@ from django.contrib.contenttypes import generic
 from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import GenericResource, ResourceManager
+from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 
 
@@ -216,7 +216,7 @@ class Variable(AbstractMetaDataElement):
             raise ObjectDoesNotExist("No variable element was found for id:%d." % element_id)
 
 # Define the netCDF resource
-class NetcdfResource(GenericResource):
+class NetcdfResource(BaseResource):
     objects = ResourceManager()
 
     @property

@@ -1,5 +1,5 @@
 from mezzanine.pages.models import Page, RichText
-from hs_core.models import GenericResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from mezzanine.pages.page_processors import processor_for
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 
 
-class RefTimeSeries(GenericResource):
+class RefTimeSeries(BaseResource):
     objects = ResourceManager()
 
     class Meta:

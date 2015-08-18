@@ -26,7 +26,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods
-from hs_core.models import GenericResource, resource_processor, CoreMetaData
+from hs_core.models import BaseResource, resource_processor, CoreMetaData
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -462,7 +462,7 @@ def my_resources(request, page):
             'ct': total_res_cnt,
         }
 
-@processor_for(GenericResource)
+@processor_for(BaseResource)
 def add_generic_context(request, page):
 
     class AddUserForm(forms.Form):
@@ -572,7 +572,7 @@ def get_file(request, *args, **kwargs):
     session.runCmd('iget', [ name, 'tempfile.' + name ])
     return HttpResponse(open(name), content_type='x-binary/octet-stream')
 
-processor_for(GenericResource)(resource_processor)
+processor_for(BaseResource)(resource_processor)
 
 @processor_for('resources')
 def resource_listing_processor(request, page):

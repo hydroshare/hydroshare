@@ -1,6 +1,6 @@
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import GenericResource, AbstractResource, BaseResource
+from hs_core.models import BaseResource, AbstractResource, BaseResource
 from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import ToolResourceType

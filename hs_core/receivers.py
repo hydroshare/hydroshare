@@ -5,7 +5,7 @@ __author__ = 'hydro'
 
 from django.dispatch import receiver
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 from forms import *
 
 # This handler is executed only when a metadata element is added as part of editing a resource

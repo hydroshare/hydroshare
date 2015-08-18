@@ -3,14 +3,14 @@ from django.db import models
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 
-from hs_core.models import AbstractResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement, GenericResource, ResourceManager
+from hs_core.models import ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement, BaseResource, ResourceManager
 from hs_core import hydroshare
 
 from mezzanine.pages.models import Page
 from mezzanine.pages.page_processors import processor_for
 
 
-class ToolResource(GenericResource):
+class ToolResource(BaseResource):
     objects = ResourceManager('ToolResource')
 
     class Meta:

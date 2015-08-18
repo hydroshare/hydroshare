@@ -7,7 +7,7 @@ from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import GenericResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.signals import *
 
 
@@ -89,7 +89,7 @@ class MpMetadata(AbstractMetaDataElement):
         metadata.delete()
 
 
-class ModelProgramResource(GenericResource):
+class ModelProgramResource(BaseResource):
     objects = ResourceManager()
 
     class Meta:

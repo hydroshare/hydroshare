@@ -8,7 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from mezzanine.pages.models import Page
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import GenericResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 
 
 
@@ -231,7 +231,7 @@ class CellInformation(AbstractMetaDataElement):
 #
 # To create a new resource, use these two super-classes.
 #
-class RasterResource(GenericResource):
+class RasterResource(BaseResource):
     objects = ResourceManager()
 
     class Meta:
