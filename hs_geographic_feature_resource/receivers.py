@@ -150,8 +150,9 @@ def geofeature_pre_create_resource(sender, **kwargs):
 
                     # wgs84 extent
                     parsed_md_dict = parse_shp(shp_full_path)
-                    coverage_dict={"coverage":{"type":"box", "value":parsed_md_dict["wgs84_extent_dict"]}}
-                    metadata.append(coverage_dict)
+                    if parsed_md_dict["wgs84_extent_dict"]["westlimit"]!=UNKNOWN_STR:
+                        coverage_dict={"coverage": {"type": "box", "value": parsed_md_dict["wgs84_extent_dict"]}}
+                        metadata.append(coverage_dict)
 
                     #original extent
                     original_coverage_dict ={}
@@ -251,15 +252,17 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
                 originalcoverage_obj=res_obj.metadata.originalcoverage.all().first()
                 res_obj.metadata.update_element('OriginalCoverage', element_id=originalcoverage_obj.id, projection_string=UNKNOWN_STR, projection_name =UNKNOWN_STR, datum =UNKNOWN_STR, unit =UNKNOWN_STR)
 
-                wgs84_extent_dict={}
-                wgs84_extent_dict["westlimit"]=UNKNOWN_STR
-                wgs84_extent_dict["northlimit"]=UNKNOWN_STR
-                wgs84_extent_dict["eastlimit"]=UNKNOWN_STR
-                wgs84_extent_dict["southlimit"]=UNKNOWN_STR
-                wgs84_extent_dict["projection"]=UNKNOWN_STR
-                wgs84_extent_dict["units"]=UNKNOWN_STR
-                coverage_obj=res_obj.metadata.coverages.all().first()
-                res_obj.metadata.update_element('coverage', element_id=coverage_obj.id, type='box', value=wgs84_extent_dict)
+                # wgs84_extent_dict={}
+                # wgs84_extent_dict["westlimit"]=UNKNOWN_STR
+                # wgs84_extent_dict["northlimit"]=UNKNOWN_STR
+                # wgs84_extent_dict["eastlimit"]=UNKNOWN_STR
+                # wgs84_extent_dict["southlimit"]=UNKNOWN_STR
+                # wgs84_extent_dict["projection"]=UNKNOWN_STR
+                # wgs84_extent_dict["units"]=UNKNOWN_STR
+                # coverage_obj=res_obj.metadata.coverages.all().first()
+                # res_obj.metadata.update_element('coverage', element_id=coverage_obj.id, type='box', value=wgs84_extent_dict)
+                res_obj.metadata.coverages.all().delete()
+
             if one_file_removed:
                 ori_fn_dict=json.loads(ori_file_info.filenameString)
                 if del_f_fullname in ori_fn_dict:
@@ -345,9 +348,12 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                                          datum =parsed_md_dict["origin_datum"],
                                          unit =parsed_md_dict["origin_unit"])
         coverage_obj=resource.metadata.coverages.all().first()
-        resource.metadata.update_element('coverage', element_id=coverage_obj.id,
+        if coverage_obj:
+            resource.metadata.update_element('coverage', element_id=coverage_obj.id,
                                          type='box',
                                          value=parsed_md_dict["wgs84_extent_dict"])
+        else:
+            resource.metadata.create_element('Coverage', type='box', value=parsed_md_dict["wgs84_extent_dict"])
 
         if tmp_dir is not None:
             shutil.rmtree(tmp_dir)

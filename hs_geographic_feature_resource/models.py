@@ -55,11 +55,6 @@ class OriginalFileInfo(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         ori_file_info = OriginalFileInfo.objects.get(id=element_id)
         if ori_file_info:
-            # ori_file_info.fileType = kwargs['fileType']
-            # ori_file_info.baseFilename = kwargs['baseFilename']
-            # ori_file_info.fileCount = kwargs['fileCount']
-            # ori_file_info.save()
-
             # save filenameString info
             for key, value in kwargs.iteritems():
                 if key in ('fileType', 'baseFilename', 'fileCount', 'filenameString'):
@@ -99,10 +94,6 @@ class OriginalCoverage(AbstractMetaDataElement):
         # OriginalCoverage element is not repeatable
         unique_together = ("content_type", "object_id")
 
-    # @property
-    # def extent(self):
-    #     print self._extent
-    #     return json.loads(self._extent)
 
     @classmethod
     def create(cls, **kwargs):
@@ -128,12 +119,6 @@ class OriginalCoverage(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         ori_cov = OriginalCoverage.objects.get(id=element_id)
         if ori_cov:
-            # ori_cov.northlimit = kwargs['northlimit']
-            # ori_cov.southlimit = kwargs['southlimit']
-            # ori_cov.eastlimit = kwargs['eastlimit']
-            # ori_cov.westlimit = kwargs['westlimit']
-            # ori_cov.save()
-
             # # update projection string info
             for key, value in kwargs.iteritems():
                 if key in ('projection_string','projection_name','datum','unit', 'northlimit', 'southlimit', 'eastlimit', 'westlimit'):
@@ -254,9 +239,9 @@ class GeographicFeatureResource(Page, AbstractResource):
 
     @classmethod
     def get_supported_upload_file_types(cls):
-    # See Shapefile format: http://webhelp.esri.com/arcgisdesktop/9.2/index.cfm?TopicName=Shapefile_file_extensions
+    # See Shapefile format: http://resources.arcgis.com/en/help/main/10.2/index.html#//005600000003000000
     # 3 file types are supported
-        return (".zip", ".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg",)
+        return (".zip", ".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg", ".xml", ".fbn", ".fbx", ".ain", ".aih", ".atx", ".ixs", ".mxs")
 
     @classmethod
     def can_have_multiple_files(cls):
@@ -315,6 +300,8 @@ class GeographicFeatureMetaData(CoreMetaData):
 
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(GeographicFeatureMetaData, self).get_required_missing_elements()
+        if not self.coverages.all().filter(type='box').first():
+            missing_required_elements.append('Spatial Coverage: Box')
         if not self.originalcoverage.all().first():
             missing_required_elements.append('Spatial Reference')
         if not self.geometryinformation.all().first():
