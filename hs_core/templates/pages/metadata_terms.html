@@ -804,19 +804,47 @@
         </ul>
 
     <h3>Model Instance Resource Type Description</h3>
-    <p> A Model Instance resource defines the input and output data for a generic hydrological model, for a specific time and place.  This resource consists of specific metadata to describe the model content as well as the Model Program resource that is used to execute a simulation. These specific metadata elements are as follows:
-        <ul>
-            <li><strong>ModelOutput:</strong> A HydroShare class that encapsulates all the metadata elements related to Model Instance resource output files</li>
-                <ul>
-                    <li><strong>IncludesModelOutput:</strong> A boolean value that indicates if the output files are included with the uploaded content</li>
-                </ul>
-            <li><strong>ExecutedBy:</strong> A HydroShare class that defines the Model Program that executes the current resource </li>
-                <ul>
-                    <li><strong>ModelProgramName:</strong> The name of the model that executes the current resource</li>
-                    <li><strong>ModelProgramURL:</strong> The HydroShare URL of the Model Program resource that executes the current resource</li>
-                </ul>
-        </ul>
+    <p> A Model Instance resource defines the input and output data for a generic hydrological model, for a specific time and place.
+        This resource consists of specific metadata to describe the model content as well as the Model Program resource that is used
+        to execute a simulation. These specific metadata elements are as follows:
     </p>
+    <br/>
+    <a name="ModelOutput"></a>
+        <ul >
+            <li><strong>Term: </strong>ModelOutput</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/ModelOutput</a></li>
+            <li><strong>Label: </strong>Model Output</li>
+            <li><strong>Description: </strong>A HydroShare class that encapsulates all the metadata elements related to Model Instance resource output files</li>
+        </ul>
+    <a name="IncludesModelOutput"></a>
+        <ul >
+            <li><strong>Term: </strong>IncludesModelOutput</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/IncludesModelOutput</a></li>
+            <li><strong>Label: </strong>Includes Model Output</li>
+            <li><strong>Description: </strong>A boolean value that indicates if the output files are included with the uploaded content</li>
+        </ul>
+    <br/>
+    <a name="ExecutedBy"></a>
+        <ul >
+            <li><strong>Term: </strong>ExecutedBy</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/ExecutedBy</a></li>
+            <li><strong>Label: </strong>Executed By</li>
+            <li><strong>Description: </strong>A HydroShare class that defines the Model Program that executes the current resource</li>
+        </ul>
+    <a name="ModelProgramName"></a>
+        <ul >
+            <li><strong>Term: </strong>ModelProgramName</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/ModelProgramName</a></li>
+            <li><strong>Label: </strong>Model Program Name</li>
+            <li><strong>Description: </strong>The name of the model that executes the current resource</li>
+        </ul>
+    <a name="ModelProgramURL"></a>
+        <ul >
+            <li><strong>Term: </strong>ModelProgramURL</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/ModelProgramURL</a></li>
+            <li><strong>Label: </strong>Model Program URL</li>
+            <li><strong>Description: </strong>The HydroShare URL of the Model Program resource that executes the current resource</li>
+        </ul>
 
     <h3>SWAT Model Instance Resource Type Description</h3>
     <p> This SWAT Model Instance resource is a specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool. This resource extends the more generic Model Instance metadata terms to accommodate additional SWAT specific terms which have been derived from simulation input files. These specific metadata elements are as follows:
