@@ -723,22 +723,86 @@
 
 
     <h3>Model Program Resource Type Description</h3>
-    <p> A Model Program resource describes the software component of a generic model within the water domain.  It aims to fully describe the software-related metadata of a given model program  to enables scientists to seamlessly retrieve all the content and information required to get a model up-and-running on their local or server-side machine.   This resource consists of uploaded content such as source code, compiled binaries, and documentation, as well as metadata describing the model's software. The Model Program resource can be related to many Model Instance resources (below) to completely describe a simulation and the exact software version used for a particular study, to make data replication possible. The specific metadata elements are as follows:
-
-        <ul>
-{#            <li><strong>dc:license:</strong> The license for the program and source code (e.g., GPL).</li>#}
-            <li><strong>ModelVersionNumber:</strong> Model version and/or build number (e.g., SWAT2012 rev. 629)</li>
-            <li><strong>SupportedOperatingSystem:</strong>Compatible operating systems (e.g., Mac OS X version 10.7 and later)</li>
-            <li><strong>ModelReleaseDate:</strong> The date that this version of the model was released</li>
-            <li><strong>ModelReleaseNotes:</strong>Notes regarding the software release</li>
-            <li><strong>ModelWebpage:</strong> A URL to the webpage maintained by the model developers</li>
-            <li><strong>CodeRepository:</strong> A URL to the source code repository (e.g., Github, Bitbucket, etc.)</li>
-            <li><strong>ModelUserManual:</strong> Uploaded content that describes the generF1)al use of the model</li>
-            <li><strong>ModelTheoreticalManual:</strong> Uploaded content that describes the theoretical representation of the model</li>
-            <li><strong>SourceCode:</strong> Uploaded archive containing the source code of the model</li>
-        </ul>
+    <p> A Model Program resource describes the software component of a generic model within the water domain.  It aims to fully describe
+        the software-related metadata of a given model program  to enables scientists to seamlessly retrieve all the content and information
+        required to get a model up-and-running on their local or server-side machine.   This resource consists of uploaded content such as
+        source code, compiled binaries, and documentation, as well as metadata describing the model's software. The Model Program resource
+        can be related to many Model Instance resources (below) to completely describe a simulation and the exact software version used for
+        a particular study, to make data replication possible. The specific metadata elements are as follows:
     </p>
-l
+    <br/>
+    <a name="ModelVersionNumber"></a>
+        <ul >
+            <li><strong>Term: </strong>ModelVersionNumber</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/ModelVersionNumber</a></li>
+            <li><strong>Label: </strong>Model Version Number</li>
+            <li><strong>Description: </strong>Model version and/or build number (e.g., SWAT2012 rev. 629)</li>
+        </ul>
+    <br/>
+    <a name="SupportedOperatingSystem"></a>
+        <ul >
+            <li><strong>Term: </strong>SupportedOperatingSystem</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/SupportedOperatingSystem</a></li>
+            <li><strong>Label: </strong>Supported Operating System</li>
+            <li><strong>Description: </strong>Compatible operating systems (e.g., Mac OS X version 10.7 and later)</li>
+        </ul>
+    <br/>
+    <a name="ModelReleaseDate"></a>
+        <ul >
+            <li><strong>Term: </strong>ModelReleaseDate</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/ModelReleaseDate</a></li>
+            <li><strong>Label: </strong>Model Release Date</li>
+            <li><strong>Description: </strong>The date that this version of the model was released</li>
+        </ul>
+    <br/>
+    <a name="ModelReleaseNotes"></a>
+        <ul >
+            <li><strong>Term: </strong>ModelReleaseNotes</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/ModelReleaseNotes</a></li>
+            <li><strong>Label: </strong>Model Release Notes</li>
+            <li><strong>Description: </strong>Notes regarding the software release</li>
+        </ul>
+    <br/>
+    <a name="ModelWebpage"></a>
+        <ul >
+            <li><strong>Term: </strong>ModelWebpage</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/ModelWebpage</a></li>
+            <li><strong>Label: </strong>Model Webpage</li>
+            <li><strong>Description: </strong>A URL to the webpage maintained by the model developers</li>
+        </ul>
+    <br/>
+    <a name="CodeRepository"></a>
+        <ul >
+            <li><strong>Term: </strong>CodeRepository</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/CodeRepository</a></li>
+            <li><strong>Label: </strong>Code Repository</li>
+            <li><strong>Description: </strong>A URL to the source code repository (e.g., Github, Bitbucket, etc.)</li>
+        </ul>
+    <br/>
+    <a name="ModelUserManual"></a>
+        <ul >
+            <li><strong>Term: </strong>ModelUserManual</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/ModelUserManual</a></li>
+            <li><strong>Label: </strong>Model User Manual</li>
+            <li><strong>Description: </strong>Uploaded content that describes the general use of the model</li>
+        </ul>
+    <br/>
+    <a name="ModelTheoreticalManual"></a>
+        <ul >
+            <li><strong>Term: </strong>ModelTheoreticalManual</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/ModelTheoreticalManual</a></li>
+            <li><strong>Label: </strong>Model Theoretical Manual</li>
+            <li><strong>Description: </strong>Uploaded content that describes the theoretical representation of the model</li>
+        </ul>
+    <br/>
+    <a name="SourceCode"></a>
+        <ul >
+            <li><strong>Term: </strong>SourceCode</li>
+            <li><strong>URI: </strong><a href="#refts_ReferenceURL">http://www.hydroshare.org/terms/SourceCode</a></li>
+            <li><strong>Label: </strong>Source Code</li>
+            <li><strong>Description: </strong>Uploaded archive containing the source code of the model</li>
+        </ul>
+
     <h3>Model Instance Resource Type Description</h3>
     <p> A Model Instance resource defines the input and output data for a generic hydrological model, for a specific time and place.  This resource consists of specific metadata to describe the model content as well as the Model Program resource that is used to execute a simulation. These specific metadata elements are as follows:
         <ul>
