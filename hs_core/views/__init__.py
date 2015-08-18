@@ -268,26 +268,26 @@ def change_permissions(request, shortkey, *args, **kwargs):
         go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'owner')
     elif t == 'edit_users':
         go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'edit')
-    elif t == 'edit_groups':
-        res.edit_groups = Group.objects.in_bulk(values)
-    elif t == 'view_users':
-        _unshare_resource_with_users(request, user, values, res, 'view')
-    elif t == 'view_groups':
-        res.view_groups = Group.objects.in_bulk(values)
+    # elif t == 'edit_groups':
+    #     res.edit_groups = Group.objects.in_bulk(values)
+    # elif t == 'view_users':
+    #     _unshare_resource_with_users(request, user, values, res, 'view')
+    # elif t == 'view_groups':
+    #     res.view_groups = Group.objects.in_bulk(values)
     elif t == 'add_view_user':
         frm = AddUserForm(data=request.POST)
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.VIEW)
     elif t == 'add_edit_user':
         frm = AddUserForm(data=request.POST)
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.CHANGE)
-    elif t == 'add_view_group':
-        frm = AddGroupForm(data=request.POST)
-        if frm.is_valid():
-            res.view_groups.add(frm.cleaned_data['group'])
-    elif t == 'add_view_group':
-        frm = AddGroupForm(data=request.POST)
-        if frm.is_valid():
-            res.edit_groups.add(frm.cleaned_data['group'])
+    # elif t == 'add_view_group':
+    #     frm = AddGroupForm(data=request.POST)
+    #     if frm.is_valid():
+    #         res.view_groups.add(frm.cleaned_data['group'])
+    # elif t == 'add_view_group':
+    #     frm = AddGroupForm(data=request.POST)
+    #     if frm.is_valid():
+    #         res.edit_groups.add(frm.cleaned_data['group'])
     elif t == 'add_owner':
         frm = AddUserForm(data=request.POST)
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.OWNER)
@@ -627,16 +627,6 @@ def get_file(request, *args, **kwargs):
     return HttpResponse(open(name), content_type='x-binary/octet-stream')
 
 processor_for(GenericResource)(resource_processor)
-
-
-@processor_for('resources')
-def resource_listing_processor(request, page):
-    owned_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
-    editable_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
-    viewable_resources = list(GenericResource.objects.filter(public=True))
-    return locals()
-
-# FIXME need a task somewhere that amounts to checking inactive accounts and deleting them after 30 days.
 
 
 def _share_resource_with_user(request, frm, resource, requesting_user, privilege):

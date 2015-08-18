@@ -424,7 +424,7 @@ def create_resource(
 
     return resource
 
-
+# TODO: This is not used anywhere except in a skipped unit test - if need to be used then new access rules need to apply
 def update_resource(
         pk,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
@@ -472,44 +472,44 @@ def update_resource(
                 content_object=resource,
                 resource_file=File(file) if not isinstance(file, UploadedFile) else file
             )
-
-    if 'owner' in kwargs:
-        owner = utils.user_from_id(kwargs['owner'])
-        resource.owners.add(owner)
-
-    if edit_users:
-        resource.edit_users.clear()
-        for user in edit_users:
-            user = utils.user_from_id(user)
-            resource.edit_users.add(user)
-            resource.view_users.add(user)
-
-    if view_users:
-        resource.view_users.clear()
-        for user in view_users:
-            user = utils.user_from_id(user)
-            resource.view_users.add(user)
-
-    if edit_groups:
-        resource.edit_groups.clear()
-        for group in edit_groups:
-            group = utils.group_from_id(group)
-            resource.edit_groups.add(group)
-            resource.view_groups.add(group)
-
-    if view_groups:
-        resource.edit_groups.clear()
-        for group in view_groups:
-            group = utils.group_from_id(group)
-            resource.view_groups.add(group)
-
-    if keywords:
-        AssignedKeyword.objects.filter(object_pk=resource.id).delete()
-        ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
-        ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
-
-        for k in ks:
-            AssignedKeyword.objects.create(content_object=resource, keyword=k)
+    # TODO: use Alva's access control here
+    # if 'owner' in kwargs:
+    #     owner = utils.user_from_id(kwargs['owner'])
+    #     resource.owners.add(owner)
+    #
+    # if edit_users:
+    #     resource.edit_users.clear()
+    #     for user in edit_users:
+    #         user = utils.user_from_id(user)
+    #         resource.edit_users.add(user)
+    #         resource.view_users.add(user)
+    #
+    # if view_users:
+    #     resource.view_users.clear()
+    #     for user in view_users:
+    #         user = utils.user_from_id(user)
+    #         resource.view_users.add(user)
+    #
+    # if edit_groups:
+    #     resource.edit_groups.clear()
+    #     for group in edit_groups:
+    #         group = utils.group_from_id(group)
+    #         resource.edit_groups.add(group)
+    #         resource.view_groups.add(group)
+    #
+    # if view_groups:
+    #     resource.edit_groups.clear()
+    #     for group in view_groups:
+    #         group = utils.group_from_id(group)
+    #         resource.view_groups.add(group)
+    #
+    # if keywords:
+    #     AssignedKeyword.objects.filter(object_pk=resource.id).delete()
+    #     ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
+    #     ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
+    #
+    #     for k in ks:
+    #         AssignedKeyword.objects.create(content_object=resource, keyword=k)
 
     # for creating metadata elements based on the new metadata implementation
     if metadata:

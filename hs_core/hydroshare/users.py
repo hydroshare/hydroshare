@@ -11,6 +11,7 @@ from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, 
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
 
 
+# TODO: Only used in a skipped unit test - if needs to be used than Alva's new access control logic needs to be used
 def set_resource_owner(pk, user):
     """
     Changes ownership of the specified resource to the user specified by a userID.
@@ -34,8 +35,9 @@ def set_resource_owner(pk, user):
     """
 
     res = get_resource_by_shortkey(pk)
-    res.owners = [user]
-    res.save()
+    # TODO: Use Alva's new access logic here
+    # res.owners = [user]
+    # res.save()
     return pk
 
 
@@ -97,42 +99,44 @@ def set_access_rules(pk, user=None, group=None, access=None, allow=False):
     elif access == PUBLIC:
         res.raccess.public = allow
         res.raccess.save()
-    elif access == EDIT:
-        if user:
-            if allow:
-                if not res.edit_users.filter(pk=user.pk).exists():
-                    res.edit_users.add(user)
-            else:
-                if res.edit_users.filter(pk=user.pk).exists():
-                    res.edit_users.filter(pk=user.pk).delete()
-        elif group:
-            if allow:
-                if not res.edit_groups.filter(pk=group.pk).exists():
-                    res.edit_groups.add(group)
-            else:
-                if res.edit_groups.filter(pk=group.pk).exists():
-                    res.edit_groups.filter(pk=group.pk).delete()
-        else:
-            raise TypeError('Tried to edit access permissions without specifying a user or group')
-    elif access == VIEW:
-        if user:
-            if allow:
-                if not res.view_users.filter(pk=user.pk).exists():
-                    res.view_users.add(user)
-            else:
-                if res.view_users.filter(pk=user.pk).exists():
-                    res.view_users.filter(pk=user.pk).delete()
-        elif group:
-            if allow:
-                if not res.view_groups.filter(pk=group.pk).exists():
-                    res.view_groups.add(group)
-            else:
-                if res.view_groups.filter(pk=group.pk).exists():
-                    res.view_groups.filter(pk=group.pk).delete()
-        else:
-            raise TypeError('Tried to view access permissions without specifying a user or group')
-    else:
-        raise TypeError('access was none of {donotdistribute, public, edit, view}  ')
+
+    # TODO: Alva's new access control logic need to be used here
+    # elif access == EDIT:
+    #     if user:
+    #         if allow:
+    #             if not res.edit_users.filter(pk=user.pk).exists():
+    #                 res.edit_users.add(user)
+    #         else:
+    #             if res.edit_users.filter(pk=user.pk).exists():
+    #                 res.edit_users.filter(pk=user.pk).delete()
+    #     elif group:
+    #         if allow:
+    #             if not res.edit_groups.filter(pk=group.pk).exists():
+    #                 res.edit_groups.add(group)
+    #         else:
+    #             if res.edit_groups.filter(pk=group.pk).exists():
+    #                 res.edit_groups.filter(pk=group.pk).delete()
+    #     else:
+    #         raise TypeError('Tried to edit access permissions without specifying a user or group')
+    # elif access == VIEW:
+    #     if user:
+    #         if allow:
+    #             if not res.view_users.filter(pk=user.pk).exists():
+    #                 res.view_users.add(user)
+    #         else:
+    #             if res.view_users.filter(pk=user.pk).exists():
+    #                 res.view_users.filter(pk=user.pk).delete()
+    #     elif group:
+    #         if allow:
+    #             if not res.view_groups.filter(pk=group.pk).exists():
+    #                 res.view_groups.add(group)
+    #         else:
+    #             if res.view_groups.filter(pk=group.pk).exists():
+    #                 res.view_groups.filter(pk=group.pk).delete()
+    #     else:
+    #         raise TypeError('Tried to view access permissions without specifying a user or group')
+    # else:
+    #     raise TypeError('access was none of {donotdistribute, public, edit, view}  ')
 
     return res
 

@@ -70,52 +70,6 @@ class ResourcePermissionsMixin(Ownable):
                                 help_text='This is the person who first uploaded the resource',
                                 )
 
-    public = models.BooleanField(
-        help_text='If this is true, the resource is viewable and downloadable by anyone',
-        default=True
-    )
-
-    owners = models.ManyToManyField(User,
-                                    related_name='owns_%(app_label)s_%(class)s',
-                                    help_text='The person who has total ownership of the resource'
-    )
-    frozen = models.BooleanField(
-        help_text='If this is true, the resource should not be modified',
-        default=False
-    )
-    do_not_distribute = models.BooleanField(
-        help_text='If this is true, the resource owner has to designate viewers',
-        default=False
-    )
-    discoverable = models.BooleanField(
-        help_text='If this is true, it will turn up in searches.',
-        default=True
-    )
-    published_and_frozen = models.BooleanField(
-        help_text="Once this is true, no changes can be made to the resource",
-        default=False
-    )
-
-    view_users = models.ManyToManyField(User,
-                                        related_name='user_viewable_%(app_label)s_%(class)s',
-                                        help_text='This is the set of Hydroshare Users who can view the resource',
-                                        null=True, blank=True)
-
-    view_groups = models.ManyToManyField(Group,
-                                         related_name='group_viewable_%(app_label)s_%(class)s',
-                                         help_text='This is the set of Hydroshare Groups who can view the resource',
-                                         null=True, blank=True)
-
-    edit_users = models.ManyToManyField(User,
-                                        related_name='user_editable_%(app_label)s_%(class)s',
-                                        help_text='This is the set of Hydroshare Users who can edit the resource',
-                                        null=True, blank=True)
-
-    edit_groups = models.ManyToManyField(Group,
-                                         related_name='group_editable_%(app_label)s_%(class)s',
-                                         help_text='This is the set of Hydroshare Groups who can edit the resource',
-                                         null=True, blank=True)
-
     class Meta:
         abstract = True
 
@@ -235,19 +189,10 @@ class AbstractMetaDataElement(models.Model):
 class HSAdaptorEditInline(object):
     @classmethod
     def can_edit(cls, adaptor_field):
-        #from hs_core.views.utils import authorize
-        user = adaptor_field.request.user
-        can_edit = False
-        if user.is_anonymous():
-            pass
-        elif user.is_superuser:
-            can_edit = True
-        else:
-            obj = adaptor_field.obj
-            cm = obj.get_content_model()
-            #_, can_edit, _ = authorize(adaptor_field.request, res_id, edit=True, full=True) - need to know res_id
-            can_edit = (user in set(cm.edit_users.all())) or (len(set(cm.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
-        return can_edit
+        obj = adaptor_field.obj
+        cm = obj.get_content_model()
+        return cm.can_change(adaptor_field.request)
+
 
 class ExternalProfileLink(models.Model):
     type = models.CharField(max_length=50)
