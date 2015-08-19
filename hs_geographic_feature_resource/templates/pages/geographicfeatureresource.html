@@ -202,24 +202,33 @@
             $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").hide()
         }
     };
-{#    // netcdf tool button#}
-{#    $(document).ready(function(){#}
-{#        $("#btn-netcdf-tools").insertAfter("#btn-download-all");#}
-{#    })#}
 
-{#    // netcdf ncdump button#}
-{#    $(document).ready(function(){#}
-{#        if($('#showNcdump').length !=0){#}
-{#            $('#createNcdump').hide()#}
-{#        }#}
-{#    })#}
-
-    // add ncdump text area
+    del_msg_shp_shx_dbf = "The 'shp', 'shx' and 'dbf' are three mandatory files. This operation is about to permanently remove all existing files of this resource!"
+    del_msg_prj = "This operation is about to remove coordinate system metadata!"
     $(document).ready(function(){
-        var $ncdump_text = $('div[id="ncdumpText"]');
-        if ($ncdump_text){
-            $('div [class="tab-elements"]').after($ncdump_text);
-        }
+
+         $('.label-file-name').each( //iterate
+                 function()
+                 {
+                     filename=$(this).text()
+                     extension=filename.substring(filename.length-4, filename.length)
+                     if (extension == ".shp" || extension == ".shx" || extension == ".dbf")
+                     {
+                         tag_id=$(this).parent().parent().next().children().find("span[title='Delete']").attr('data-target')
+                         tag_id2= tag_id.substring(1, tag_id.length)
+                         $("div[id='"+tag_id2+"']").children().find("div[class='modal-body']").html(del_msg_shp_shx_dbf)
+                     }//if
+                     else if (extension == ".prj")
+                     {
+                         tag_id=$(this).parent().parent().next().children().find("span[title='Delete']").attr('data-target')
+                         tag_id2= tag_id.substring(1, tag_id.length)
+                         $("div[id='"+tag_id2+"']").children().find("div[class='modal-body']").html(del_msg_prj)
+                     }
+                 }//fucntion
+
+         )//each
+
+
     })
 </script>
 
