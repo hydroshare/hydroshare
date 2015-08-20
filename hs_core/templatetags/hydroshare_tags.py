@@ -53,7 +53,8 @@ register = template.Library()
 
 @register.filter
 def resource_type(content):
-    return content._meta.verbose_name
+    # assert False, (type(content), content, content._meta.verbose_name)
+    return content.get_content_model()._meta.verbose_name
 
 @register.filter
 def contact(content):

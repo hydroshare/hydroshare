@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.core import signing
 
-from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject, Description, Title
+from hs_core.models import GroupOwnership, BaseResource, Party, Contributor, Creator, Subject, Description, Title
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
 
 
@@ -552,13 +552,14 @@ def get_resource_list(creator=None,
     if not any((creator, group, user, owner, from_date, to_date, start, count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
-    resource_types = get_resource_types()
+    #resource_types = get_resource_types()
 
     # filtering based on resource type.
-    if type:
-        queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in type)
-    else:
-        queries = dict((el, []) for el in resource_types)
+    # if type:
+    #     queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in type)
+    # else:
+    #     queries = dict((el, []) for el in resource_types)
+    queries = {BaseResource: []}
 
     for t, q in queries.items():
         if published:
