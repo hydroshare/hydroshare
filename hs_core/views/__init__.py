@@ -424,8 +424,7 @@ def my_resources(request, page):
         )
 
         # TODO ten separate SQL queries for basically the same data
-        res = set()
-        for lst in get_resource_list(
+        reslst = get_resource_list(
             user=user,
             owner= owner,
             published=published,
@@ -434,11 +433,8 @@ def my_resources(request, page):
             full_text_search=words,
             public=public,
             **search_items
-        ).values():
-            res = res.union(lst)
-        total_res_cnt = len(res)
-
-        reslst = list(res)
+        )
+        total_res_cnt = len(reslst)
 
         # need to return total number of resources as 'ct' so have to get all resources
         # and then filter by start and count

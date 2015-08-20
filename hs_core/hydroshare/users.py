@@ -559,120 +559,117 @@ def get_resource_list(creator=None,
     #     queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in type)
     # else:
     #     queries = dict((el, []) for el in resource_types)
-    queries = {BaseResource: []}
+    q = []
 
-    for t, q in queries.items():
-        if published:
-            queries[t].append(Q(doi__isnull=False))
+    if published:
+        q.append(Q(doi__isnull=False))
 
-        if author:
-            author_parties = (
-                #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
-                (Creator.objects.filter(email__in=author) | Creator.objects.filter(name__in=author))
-            )
-            # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
-            # assert author_parties, Creator.objects.all().values_list('name', flat=True)
-            # assert False, author_parties.values_list('id', flat=True)
-            # if t is GenericResource:
-            #     assert False, t.objects.all().values_list('object_id', flat=True)
-            queries[t].append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
+    if author:
+        author_parties = (
+            #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
+            (Creator.objects.filter(email__in=author) | Creator.objects.filter(name__in=author))
+        )
+        # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
+        # assert author_parties, Creator.objects.all().values_list('name', flat=True)
+        # assert False, author_parties.values_list('id', flat=True)
+        # if t is GenericResource:
+        #     assert False,objects.all().values_list('object_id', flat=True)
+        q.append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
 
-        if contributor:
-            contributor_parties = (
-                #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
-                (Contributor.objects.filter(email__in=contributor) | Contributor.objects.filter(name__in=contributor))
-            )
-            # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
-            # assert author_parties, Creator.objects.all().values_list('name', flat=True)
-            # assert False, author_parties.values_list('id', flat=True)
-            # if t is GenericResource:
-            #     assert False, t.objects.all().values_list('object_id', flat=True)
-            queries[t].append(Q(object_id__in=contributor_parties.values_list('object_id', flat=True)))
+    if contributor:
+        contributor_parties = (
+            #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
+            (Contributor.objects.filter(email__in=contributor) | Contributor.objects.filter(name__in=contributor))
+        )
+        # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
+        # assert author_parties, Creator.objects.all().values_list('name', flat=True)
+        # assert False, author_parties.values_list('id', flat=True)
+        # if t is GenericResource:
+        #     assert False, BaseResource.objects.all().values_list('object_id', flat=True)
+        q.append(Q(object_id__in=contributor_parties.values_list('object_id', flat=True)))
 
-        if edit_permission:
-            if group:
-                group = group_from_id(group)
-                queries[t].append(Q(edit_groups=group))
+    if edit_permission:
+        if group:
+            group = group_from_id(group)
+            q.append(Q(edit_groups=group))
 
-            if user:
-                user = user_from_id(user)
-                queries[t].append(Q(edit_users=user) | Q(owners=user))
+        if user:
+            user = user_from_id(user)
+            q.append(Q(edit_users=user) | Q(owners=user))
+    else:
+        if creator:
+            creator = user_from_id(creator)
+            q.append(Q(creator=creator))
+
+        if group:
+            group = group_from_id(group)
+            q.append(Q(edit_groups=group) | Q(view_groups=group))
+
+        if user:
+            user = user_from_id(user)
+            if owner:
+                try:
+                    owner = user_from_id(owner, raise404=False)
+                except User.DoesNotExist:
+                    q.append(Q(owners__isnull=True))
+                else:
+                    q.append(Q(owners=owner))
+                    if user != owner:
+                        public = True
+            else:
+                q.append(Q(edit_users=user) | Q(view_users=user) | Q(owners=user) | Q(public=True))
+
+    if from_date and to_date:
+        q.append(Q(created__range=(from_date, to_date)))
+    elif from_date:
+        q.append(Q(created__gte=from_date))
+    elif to_date:
+        q.append(Q(created__lte=to_date))
+
+    if subject:
+        subjects = Subject.objects.filter(value__in=subject)
+        q.append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
+
+
+    flt = BaseResource.objects.all()
+    for q in q:
+        flt = flt.filter(q)
+
+    if public:
+        flt = flt.filter(public=True)
+
+    if full_text_search:
+        fts_qs = flt.search(full_text_search)
+        description_matching = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+        title_matching = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
+
+        if description_matching:
+            desc_qs = flt.filter(object_id__in=description_matching)
         else:
-            if creator:
-                creator = user_from_id(creator)
-                queries[t].append(Q(creator=creator))
+            desc_qs = BaseResource.objects.none()
 
-            if group:
-                group = group_from_id(group)
-                queries[t].append(Q(edit_groups=group) | Q(view_groups=group))
+        if title_matching:
+            title_qs = flt.filter(object_id__in=title_matching)
+        else:
+            title_qs = BaseResource.objects.none()
 
-            if user:
-                user = user_from_id(user)
-                if owner:
-                    try:
-                        owner = user_from_id(owner, raise404=False)
-                    except User.DoesNotExist:
-                        queries[t].append(Q(owners__isnull=True))
-                    else:
-                        queries[t].append(Q(owners=owner))
-                        if user != owner:
-                            public = True
-                else:
-                    queries[t].append(Q(edit_users=user) | Q(view_users=user) | Q(owners=user) | Q(public=True))
+        flt = fts_qs.distinct() | desc_qs.distinct() | title_qs.distinct()
 
-        if from_date and to_date:
-            queries[t].append(Q(created__range=(from_date, to_date)))
-        elif from_date:
-            queries[t].append(Q(created__gte=from_date))
-        elif to_date:
-            queries[t].append(Q(created__lte=to_date))
+    qcnt = 0
+    if flt:
+        qcnt = len(flt);
 
-        if subject:
-            subjects = Subject.objects.filter(value__in=subject)
-            queries[t].append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
-
-
-        flt = t.objects.all()
-        for q in queries[t]:
-            flt = flt.filter(q)
-
-        if public:
-            flt = flt.filter(public=True)
-
-        if full_text_search:
-            fts_qs = flt.search(full_text_search)
-            description_matching = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
-            title_matching = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
-
-            if description_matching:
-                desc_qs = flt.filter(object_id__in=description_matching)
+    if start is not None and count is not None:
+        if qcnt > start:
+            if qcnt >= start + count:
+                flt = flt[start:start+count]
             else:
-                desc_qs = t.objects.none()
+                flt = flt[start:qcnt]
+    elif start is not None:
+        if qcnt >= start:
+            flt = flt[start:qcnt]
+    elif count is not None:
+        if qcnt > count:
+            flt = flt[0:count]
 
-            if title_matching:
-                title_qs = flt.filter(object_id__in=title_matching)
-            else:
-                title_qs = t.objects.none()
-
-            flt = fts_qs.distinct() | desc_qs.distinct() | title_qs.distinct()
-
-        queries[t] = flt
-
-        qcnt = 0
-        if queries[t]:
-            qcnt = queries[t].__len__();
-
-        if start is not None and count is not None:
-            if qcnt > start:
-                if qcnt >= start + count:
-                    queries[t] = queries[t][start:start+count]
-                else:
-                    queries[t] = queries[t][start:qcnt]
-        elif start is not None:
-            if qcnt >= start:
-                queries[t] = queries[t][start:qcnt]
-        elif count is not None:
-            if qcnt > count:
-                queries[t] = queries[t][0:count]
-
-    return queries
+    return flt
