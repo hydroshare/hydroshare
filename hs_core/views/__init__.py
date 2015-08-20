@@ -229,12 +229,7 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    try:
-        hydroshare.delete_resource_file(shortkey, f, user)
-
-    except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['file_validation_error'] = ex.message
-
+    hydroshare.delete_resource_file(shortkey, f, user)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -526,7 +521,7 @@ def create_resource(request, *args, **kwargs):
     url_key = "page_redirect_url"
 
     try:
-        page_url_dict, res_title, metadata, resource_files = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
+        page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
                                                                     resource_title=res_title,
                                                                     page_redirect_url_key=url_key, **kwargs)
     except utils.ResourceFileSizeException as ex:

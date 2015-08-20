@@ -199,7 +199,6 @@ def get_file_mime_type(file_name):
 def check_file_dict_for_error(file_validation_dict):
     if 'are_files_valid' in file_validation_dict:
         if not file_validation_dict['are_files_valid']:
-
             error_message = file_validation_dict.get('message', "Uploaded file(s) failed validation.")
             raise ResourceFileValidationException(error_message)
 
@@ -244,7 +243,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     if len(files) > 0:
         check_file_dict_for_error(file_validation_dict)
 
-    return page_url_dict, resource_title,  metadata, files
+    return page_url_dict, resource_title,  metadata
 
 
 def resource_post_create_actions(resource, user, metadata,  **kwargs):

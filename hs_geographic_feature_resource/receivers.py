@@ -281,7 +281,7 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
     if sender is GeographicFeatureResource:
         res_obj = kwargs['resource']
         del_file = kwargs['file']
-        validate_files_dict = kwargs['validate_files']
+        #validate_files_dict = kwargs['validate_files']
         one_file_removed=True
         all_file_removed=False
         ori_file_info=res_obj.metadata.originalfileinfo.all().first()
@@ -296,7 +296,9 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
                 one_file_removed=False
 
                 for f in ResourceFile.objects.filter(object_id=res_obj.id):
-                    if f.resource_file.name!=del_f_fullname:
+                    res_f_fullname = f.resource_file.name.lower()
+                    res_f_fullname= res_f_fullname[res_f_fullname.rfind('/')+1:]
+                    if res_f_fullname != del_f_fullname:
                         f.resource_file.delete()
                         f.delete()
 
