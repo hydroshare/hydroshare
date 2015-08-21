@@ -270,8 +270,8 @@ def change_permissions(request, shortkey, *args, **kwargs):
         go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'edit')
     # elif t == 'edit_groups':
     #     res.edit_groups = Group.objects.in_bulk(values)
-    # elif t == 'view_users':
-    #     _unshare_resource_with_users(request, user, values, res, 'view')
+    elif t == 'view_users':
+        go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'view')
     # elif t == 'view_groups':
     #     res.view_groups = Group.objects.in_bulk(values)
     elif t == 'add_view_user':
@@ -325,7 +325,7 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
             user.uaccess.share_resource_with_user(res, user_to_share_with, access_privilege)
         except HSAccessException as exp:
             status = 'error'
-            err_message = exp.value
+            err_message = exp.message
     else:
         status = 'error'
 
@@ -355,7 +355,7 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
             # user has no access to the resource - redirect to resource listing page
             return HttpResponseRedirect('/my-resources/')
     except HSAccessException as exp:
-        messages.error(request, exp.value)
+        messages.error(request, exp.message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -634,7 +634,7 @@ def _share_resource_with_user(request, frm, resource, requesting_user, privilege
         try:
             requesting_user.uaccess.share_resource_with_user(resource, frm.cleaned_data['user'], privilege)
         except HSAccessException as exp:
-            messages.error(request, exp.value)
+            messages.error(request, exp.message)
     else:
         messages.error(request, frm.errors.as_json())
 
@@ -668,7 +668,7 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
                 if requesting_user == user and not resource.raccess.public:
                     go_to_resource_listing_page = True
             except HSAccessException as exp:
-                messages.error(request, exp.value)
+                messages.error(request, exp.message)
                 break
     return go_to_resource_listing_page
 

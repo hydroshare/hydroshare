@@ -1548,8 +1548,23 @@ class Bags(models.Model):
         ordering = ['-timestamp']
 
 
+class PublicResourceManager(models.Manager):
+    def get_queryset(self):
+        return super(PublicResourceManager, self).get_queryset().filter(raccess__public=True)
+
+
+class DiscoverableResourceManager(models.Manager):
+    def get_queryset(self):
+        return super(DiscoverableResourceManager, self).get_queryset().filter(Q(raccess__discoverable=True) |
+                                                                              Q(raccess__public=True))
+
+
 # remove RichText parent class from the parameters for Django inplace editing to work; otherwise, get internal edit error when saving changes
 class GenericResource(Page, AbstractResource):
+
+    objects = models.Manager()
+    public_resources = PublicResourceManager()
+    discoverable_resources = DiscoverableResourceManager()
 
     class Meta:
         verbose_name = 'Generic'

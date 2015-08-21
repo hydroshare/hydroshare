@@ -12,7 +12,7 @@ from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
     PrivilegeCodes, HSAccessException, HSAUsageException, HSAIntegrityException
 
 from hs_core import hydroshare
-
+from hs_core.models import GenericResource
 
 def global_reset():
     UserResourcePrivilege.objects.all().delete()
@@ -433,16 +433,17 @@ class T03CreateResource(TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # is it listed as discoverable?
-        self.assertTrue(match_lists([], UserAccess.get_discoverable_resources()))
-        self.assertTrue(match_lists([], UserAccess.get_public_resources()))
+        self.assertTrue(match_lists([], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists([], GenericResource.public_resources.all()))
 
         # make it discoverable
         holes.raccess.discoverable = True
         holes.raccess.save()
 
         # is it listed as discoverable?
-        self.assertTrue(match_lists([holes], UserAccess.get_discoverable_resources()))
-        self.assertTrue(match_lists([], UserAccess.get_public_resources()))
+        self.assertTrue(match_lists([holes], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists([], GenericResource.public_resources.all()))
+
 
         # metadata state
         self.assertEqual(holes.title, 'all about dog holes')
@@ -603,16 +604,16 @@ class T03CreateResource(TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # is it listed as discoverable?
-        self.assertTrue(match_lists([], UserAccess.get_discoverable_resources()))
-        self.assertTrue(match_lists([], UserAccess.get_public_resources()))
+        self.assertTrue(match_lists([], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists([], GenericResource.public_resources.all()))
 
         # make it public
         holes.raccess.public = True
         holes.raccess.save()
 
         # is it listed as discoverable?
-        self.assertTrue(match_lists([holes], UserAccess.get_discoverable_resources()))
-        self.assertTrue(match_lists([holes], UserAccess.get_public_resources()))
+        self.assertTrue(match_lists([holes], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists([holes], GenericResource.public_resources.all()))
 
         # metadata state
         self.assertEqual(holes.title, 'all about dog holes')
@@ -2248,8 +2249,8 @@ class T05ShareResource(TestCase):
             dog.uaccess.share_resource_with_group(holes, meowers, PrivilegeCodes.OWNER)
             self.fail("groups should not be able to own resources")
         except HSAccessException as e:
-            self.assertEqual(e.value, "Groups cannot own resources",
-                             "Invalid exception was '"+e.value+"'")
+            self.assertEqual(e.message, "Groups cannot own resources",
+                             "Invalid exception was '"+e.message+"'")
 
     def test_12_resource_sharing_rw_with_group(self):
         """Resource can be shared as CHANGE with a group"""
@@ -2400,8 +2401,8 @@ class T06ProtectGroup(TestCase):
             dog.uaccess.share_group_with_user(polyamory, dog, PrivilegeCodes.CHANGE)
             self.fail("non-members should not be able to add users to a group")
         except HSAccessException as e:
-            self.assertEqual(e.value, "User has insufficient privilege over group",
-                             "Invalid exception was '"+e.value+"'")
+            self.assertEqual(e.message, "User has insufficient privilege over group",
+                             "Invalid exception was '"+e.message+"'")
 
     def test_03_share_rw(self):
         "Sharing with PrivilegeCodes.CHANGE privilege allows group changes "
@@ -2749,8 +2750,8 @@ class T08ResourceFlags(TestCase):
             cat.uaccess.share_resource_with_user(bones, bat, PrivilegeCodes.VIEW)
             self.fail("should not be able to share an unshareable resource")
         except HSAccessException as e:
-            self.assertEqual(e.value, "User must own resource or have sharing privilege",
-                             "Invalid exception was '"+e.value+"'")
+            self.assertEqual(e.message, "User must own resource or have sharing privilege",
+                             "Invalid exception was '"+e.message+"'")
 
     def test_04_transitive_sharing(self):
         """Resource shared with one user can be shared with another"""
@@ -2791,7 +2792,7 @@ class T08ResourceFlags(TestCase):
         self.assertTrue(bones.raccess.discoverable)
         self.assertTrue(bones.raccess.shareable)
 
-        self.assertTrue(match_lists([bones], UserAccess.get_discoverable_resources()),
+        self.assertTrue(match_lists([bones], GenericResource.discoverable_resources.all()),
                         "error in discoverable resource listing")
 
     def test_06_not_discoverable(self):
@@ -2808,7 +2809,7 @@ class T08ResourceFlags(TestCase):
         self.assertFalse(bones.raccess.discoverable)
         self.assertTrue(bones.raccess.shareable)
 
-        names = UserAccess.get_discoverable_resources()
+        names = GenericResource.discoverable_resources.all()
         self.assertEqual(names.count(), 0)
 
     def test_07_immutable(self):
@@ -2874,8 +2875,8 @@ class T08ResourceFlags(TestCase):
         self.assertFalse(chewies.raccess.discoverable)
         self.assertTrue(chewies.raccess.shareable)
 
-        self.assertTrue(match_lists([chewies], UserAccess.get_public_resources()), "error in public resource listing")
-        self.assertTrue(match_lists([chewies], UserAccess.get_discoverable_resources()),
+        self.assertTrue(match_lists([chewies], GenericResource.public_resources.all()), "error in public resource listing")
+        self.assertTrue(match_lists([chewies], GenericResource.discoverable_resources.all()),
                         "error in public resource listing")
 
         # can 'nobody' see the public resource owned by 'dog'
@@ -2907,8 +2908,8 @@ class T08ResourceFlags(TestCase):
 
         # discoverable doesn't mean public
         # TODO: get_public_resources and get_discoverable_resources should be static methods
-        self.assertTrue(match_lists([], nobody.uaccess.get_public_resources()), "error in public resource listing")
-        self.assertTrue(match_lists([chewies], nobody.uaccess.get_discoverable_resources()), "error in discoverable resource listing")
+        self.assertTrue(match_lists([], GenericResource.public_resources.all()), "error in public resource listing")
+        self.assertTrue(match_lists([chewies], GenericResource.discoverable_resources.all()), "error in discoverable resource listing")
 
         # can 'nobody' see the public resource owned by 'dog' but not explicitly shared with 'nobody'.
         self.assertFalse(nobody.uaccess.owns_resource(chewies))
@@ -3014,8 +3015,8 @@ class T09GroupSharing(TestCase):
             dog.uaccess.share_resource_with_group(scratching, felines, PrivilegeCodes.OWNER)
             self.fail("A group should not be able to own a resource")
         except HSAccessException as e:
-            self.assertEqual(e.value, "Groups cannot own resources",
-                             "Invalid exception was '"+e.value+"'")
+            self.assertEqual(e.message, "Groups cannot own resources",
+                             "Invalid exception was '"+e.message+"'")
 
     def test_02_share_rw(self):
         """An owner can share with CHANGE privileges"""
@@ -3049,8 +3050,8 @@ class T09GroupSharing(TestCase):
             nobody.uaccess.unshare_resource_with_group(scratching, felines)
             self.fail("Unrelated user was able to unshare resource with group")
         except HSAccessException as e:
-            self.assertEqual(e.value, 'Insufficient privilege to unshare resource',
-                             "Invalid exception was '"+e.value+"'")
+            self.assertEqual(e.message, 'Insufficient privilege to unshare resource',
+                             "Invalid exception was '"+e.message+"'")
 
         dog.uaccess.unshare_resource_with_group(scratching, felines)
         self.assertEqual(felines.gaccess.get_number_of_held_resources(), 0)
@@ -3341,8 +3342,8 @@ class T11PreserveOwnership(TestCase):
             dog.uaccess.share_group_with_user(felines, dog, PrivilegeCodes.VIEW)
             self.fail("should not be able to remove sole owner")
         except HSAccessException as e:
-            self.assertEqual(e.value, 'Cannot remove last owner of group',
-                             "Invalid exception was '"+e.value+"'")
+            self.assertEqual(e.message, 'Cannot remove last owner of group',
+                             "Invalid exception was '"+e.message+"'")
 
     def test_01_remove_last_owner_of_resource(self):
         """Cannot remove last owner of a resource"""
@@ -3355,8 +3356,8 @@ class T11PreserveOwnership(TestCase):
             dog.uaccess.share_resource_with_user(scratching, dog, PrivilegeCodes.VIEW)
             self.fail("should not be able to remove sole owner")
         except HSAccessException as e:
-            self.assertEqual(e.value, 'Cannot remove last owner of resource',
-                             "Invalid exception was '"+e.value+"'")
+            self.assertEqual(e.message, 'Cannot remove last owner of resource',
+                             "Invalid exception was '"+e.message+"'")
 
 
 class T13Delete(TestCase):
