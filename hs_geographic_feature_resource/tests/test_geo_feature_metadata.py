@@ -8,7 +8,7 @@ from hs_core.models import GenericResource, Creator, Contributor, CoreMetaData, 
     Type, Subject, Description, Date, Format, Relation, Source
 
 from hs_geographic_feature_resource.models import *
-
+from hs_geographic_feature_resource.receivers import *
 from django.contrib.auth.models import Group, User
 from hs_core import hydroshare
 
@@ -315,6 +315,42 @@ class TestGeoFeatureMetadata(TestCase):
 
         resource.delete_metadata_element(self.resGeoFeature.short_id, 'FieldInformation', element_id=field_2_ele_id_old)
         self.assertEqual (len(FieldInformation.objects.all()), 0)
+
+        #test receivers.py
+        #test geofeature_pre_create_resource(sender, **kwargs):
+
+        resource_type="GeographicFeatureResource"
+        resource_cls = hydroshare.check_resource_type(resource_type)
+        from django.core.files.uploadedfile import UploadedFile
+        files = []
+        target='hs_geographic_feature_resource/tests/states_shp_sample.zip'
+        files.append(UploadedFile(file=open(target, 'r'), name='states_shp_sample.zip'))
+        metadata = []
+        validate_files_dict = {"are_files_valid":"", "message":""}
+        res_title = "test title"
+        url_key = "page_redirect_url"
+        page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=files,
+                                                                    resource_title=res_title,
+                                                                    page_redirect_url_key=url_key)
+
+        self.assertEqual (len(files), 7)
+
+        # res_list=[]
+        # for file in ResourceFile.objects.filter(object_id=resource.id):
+        #      res_list.append(file.resource_file)
+        # for f in ResourceFile.objects.filter(object_id=resource.id):
+        #     hydroshare.delete_resource_file(resource.short_id, f.id, self.user)
+
+        files=[]
+        target='hs_geographic_feature_resource/tests/states_shp_sample.zip'
+        files.append(UploadedFile(file=open(target, 'r'), name='states_shp_sample.zip'))
+        hydroshare.utils.resource_file_add_pre_process(resource, files, self.user,)
+        #self.assertEqual (len(resource.files.all()), 7)
+
+
+        #hydroshare.utils.resource_file_add_process(resource, files, self.user, )
+
+
 
 
 
