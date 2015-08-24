@@ -503,6 +503,48 @@ def delete_group_owner(group, user):
     GroupOwnership.objects.filter(group=group, owner=user).delete()
 
 
+def get_discoverable_groups():
+        """
+        Get a list of all groups marked discoverable or public.
+
+        :return: List of discoverable groups.
+
+        A user can view owners and abstract for a discoverable group.
+        Usage:
+        ------
+            # fetch information about each discoverable or public group
+            groups = GroupAccess.get_discoverable_groups()
+            for g in groups:
+                owners = g.get_owners()
+                # abstract = g.abstract
+                if g.public:
+                    # expose group list
+                    members = g.members.all()
+                else:
+                    members = [] # can't see them.
+        """
+        return Group.objects.filter(Q(gaccess__discoverable=True) | Q(gaccess__public=True))
+
+
+def get_public_groups():
+        """
+        Get a list of all groups marked public.
+
+        :return: List of public groups.
+
+        All users can list the members of a public group.  Public implies discoverable but not vice-versa.
+        Usage:
+        ------
+            # fetch information about each public group
+            groups = GroupAccess.get_public_groups()
+            for g in groups:
+                owners = g.get_owners()
+                # abstract = g.abstract
+                members = g.members.all()
+                # now display member information
+        """
+        return Group.objects.filter(gaccess__public=True)
+
 def get_resource_list(creator=None,
         group=None, user=None, owner=None,
         from_date=None, to_date=None,

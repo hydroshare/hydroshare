@@ -283,6 +283,7 @@ class UserAccess(models.Model):
     This creates a back-relation User.uaccess to access this model.
 
     """
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, editable=False, null=True,
                                 related_name='uaccess',
                                 related_query_name='uaccess')
@@ -306,10 +307,6 @@ class UserAccess(models.Model):
                                          related_name='group2user',  # not used, but django requires it
                                          help_text='groups held by this user')
 
-    @staticmethod
-    def __helper():
-        from .utils import AccessControlHelper
-        return AccessControlHelper
 
     ##########################################
     ##########################################
@@ -318,35 +315,103 @@ class UserAccess(models.Model):
     ##########################################
 
     def create_group(self, title):
-        return UserAccess.__helper().create_group(self, title)
+        """
+        Create a group.
+
+        :param title: Group title.
+        :return: Group object
+
+        Anyone can create a group. The creator is also the first owner.
+
+        An owner can assign ownership to another user via share_group_with_user,
+        but cannot remove self-ownership if that would leave the group with no
+        owner.
+        """
+        raw_group = Group(name=title) # the single attribute of the group
+        raw_group.save()
+        g = GroupAccess(group=raw_group)
+        g.save()
+        # Must bootstrap access control system initially
+        UserGroupPrivilege(group=g,
+                           user=self,
+                           grantor=self,
+                           privilege=PrivilegeCodes.OWNER).save()
+        return raw_group
 
     def delete_group(self, this_group):
-        UserAccess.__helper().delete_group(self, this_group)
+        """
+        Delete a group and all membership information.
 
-    ################################
-    # public and discoverable groups
-    ################################
+        :param this_group: Group to delete.
+        :return: None
 
-    @staticmethod
-    def get_discoverable_groups():
-        return UserAccess.__helper().get_discoverable_groups()
+        To delete a group a user must be owner or administrator of the group.
+        Deleting a group deletes all membership and sharing information.
+        There is no undo.
+        """
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Grantee is not a group")
+        access_group = this_group.gaccess
 
-    @staticmethod
-    def get_public_groups():
-        return UserAccess.__helper().get_public_groups()
+        if self.admin or self.owns_group(this_group):
+            # delete all references to group_id
+            # default is CASCADE; this is probably unnecessary
+
+            # remove any group privileges that might have accumulated
+            UserGroupPrivilege.objects.filter(group=access_group).delete()
+            GroupResourcePrivilege.objects.filter(group=access_group).delete()
+
+            # remove access control object first: references main group
+            access_group.delete()
+
+            # get rid of the controlled object
+            this_group.delete()
+        else:
+            raise HSAccessException("User must own group")
 
     ################################
     # held and owned group
     ################################
 
     def get_held_groups(self):
-        return UserAccess.__helper().get_held_groups(self)
+        """
+        Get number of groups accessible to self.
+
+        :return: QuerySet evaluating to held groups.
+
+        This is really documentation of how to access held groups.
+        A held group is fully accessible to the user in question, as if it were public.
+        """
+        return Group.objects.filter(gaccess__members=self)
 
     def get_number_of_held_groups(self):
-        return UserAccess.__helper().get_number_of_held_groups(self)
+        """
+        Get number of groups held by self.
+
+        :return: Integer number of held groups.
+        """
+        # returning indirect objects will take too long
+        return GroupAccess.objects.filter(members=self).count()
 
     def get_owned_groups(self):
-        return UserAccess.__helper().get_owned_groups(self)
+        """
+        Return a list of groups owned by self.
+
+        :return: QuerySet of groups owned by self.
+
+        This requires a two-step process due to lack of understanding of the Django ORM.
+        Usage:
+        ------
+        Because this returns a QuerySet, and not a set of objects, one can append
+        extra QuerySet attributes to it, e.g. ordering, selection, projection:
+            q = user.get_owned_groups()
+            q2 = q.order_by(...)
+            v2 = q2.values('title')
+            # etc
+        """
+
+        return Group.objects.filter(gaccess__g2ugp__user=self,
+                                    gaccess__g2ugp__privilege=PrivilegeCodes.OWNER).distinct()
 
     def get_number_of_owned_groups(self):
         """
@@ -364,57 +429,622 @@ class UserAccess(models.Model):
     #################################
 
     def owns_group(self, this_group):
-        return UserAccess.__helper().owns_group(self, this_group)
+        """
+        Boolean: is the user an owner of this group?
+
+        :param this_group: group to check
+        :return: Boolean: whether user is an owner.
+
+        Usage:
+        ------
+            if my_user.owns_group(g):
+                # do something that requires group ownership
+                g.public=True
+                g.discoverable=True
+                g.save()
+                my_user.unshare_user_with_group(g,another_user) # e.g.
+        """
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Target is not a group")
+        access_group = this_group.gaccess
+
+        if UserGroupPrivilege.objects.filter(group=access_group,
+                                             privilege=PrivilegeCodes.OWNER,
+                                             user=self):
+            return True
+        else:
+            return False
 
     def can_change_group(self, this_group):
-        return UserAccess.__helper().can_change_group(self, this_group)
+        """
+        Return whether a user can change this group, including the effect of resource flags.
+
+        :param this_group: group to check
+        :return: Boolean: whether user can change this group.
+
+        For groups, ownership implies change privilege but not vice versa.
+        Note that change privilege does not apply to group flags, including
+        active, shareable, discoverable, and public. Only owners can set these.
+        Usage:
+        ------
+            if my_user.can_change_group(g):
+                # do something that requires change privilege with g.
+        """
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Target is not a group")
+        access_group = this_group.gaccess
+
+        if not self.active:
+            return False
+
+        if UserGroupPrivilege.objects.filter(group=access_group,
+                                             privilege__lte=PrivilegeCodes.CHANGE,
+                                             user=self):
+            return True
+        else:
+            return False
 
     def can_view_group(self, this_group):
-        return UserAccess.__helper().can_view_group(self, this_group)
+        """
+        Whether user can view this group in entirety
+
+        :param this_group: group to check
+        :return: True if user can view this resource.
+
+        Usage:
+        ------
+            if my_user.can_view_group(g):
+                # do something that requires viewing g.
+        See can_view_metadata below for the special case of discoverable resources.
+        """
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Target is not a group")
+        access_group = this_group.gaccess
+
+        # allow access to public resources even if user is not logged in.
+        if not self.active:
+            return False
+        if access_group.public:
+            return True
+
+        if UserGroupPrivilege.objects.filter(group=access_group,
+                                             privilege__lte=PrivilegeCodes.VIEW,
+                                             user=self):
+            return True
+        else:
+            return False
 
     def can_view_group_metadata(self, this_group):
-        return UserAccess.__helper().can_view_group_metadata(self, this_group)
+        """
+        Whether user can view metadata (independent of viewing data).
+
+        :param this_group: group to check
+        :return: Boolean: whether user can view metadata
+
+        For a group, metadata includes the group description and abstract, but not the
+        member list. The member list is considered to be data.
+        Being able to view metadata is a matter of being discoverable, public, or held.
+        Usage:
+        ------
+            if my_user.can_view_metadata(some_group):
+                # show metadata...
+        """
+        # allow access to non-logged in users for public or discoverable metadata.
+
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Target is not a group")
+        access_group = this_group.gaccess
+
+        if not self.active:
+            return False
+
+        if access_group.discoverable or access_group.public:
+            return True
+        else:
+            return self.can_view_group(this_group)
 
     def can_change_group_flags(self, this_group):
-        return UserAccess.__helper().can_change_group_flags(self, this_group)
+        """
+        Whether the current user can change group flags:
+
+        :param this_group: group to query
+        :return: True if the user can set flags.
+
+        Usage:
+        ------
+            if my_user.can_change_group_flags(some_group):
+                some_group.active=False
+                some_group.save()
+        In practice:
+        --------------
+        This routine is called *both* when building views and when writing responders.
+        It should be called on both sides of the connection.
+            * In a view builder, it determines whether buttons are shown for flag changes.
+            * In a responder, it determines whether the request is valid.
+        At this point, the return value is synonymous with ownership or admin.
+        This may not always be true. So it is best to explicitly call this function
+        rather than assuming implications between functions.
+        """
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Target is not a group")
+
+        return self.active and (self.admin or self.owns_group(this_group))
 
     def can_delete_group(self, this_group):
-        return UserAccess.__helper().can_delete_group(self, this_group)
+        """
+        Whether the current user can delete a group.
+
+        :param this_group: group to query
+        :return: True if the user can delete it.
+
+        Usage:
+            if my_user.can_delete_group(some_group):
+                my_user.delete_group(some_group)
+            else:
+                raise HSAccessException("Insufficient privilege")
+        In practice:
+        --------------
+        At this point, this is synonymous with ownership or admin. This may not always be true.
+        So it is best to explicitly call this function rather than assuming implications
+        between functions.
+        """
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Target is not a group")
+
+        return self.active and (self.admin or self.owns_group(this_group))
 
     ####################################
     # sharing permission checking
     ####################################
 
     def can_share_group(self, this_group, this_privilege):
-        return UserAccess.__helper().can_share_group(self, this_group, this_privilege)
+        """
+        Return True if a given user can share this group with a given privilege.
+
+        :param this_group: group to check
+        :param this_privilege: privilege to assign
+        :return: True if sharing is possible, otherwise false.
+
+        This determines whether the current user can share a group, independent of
+        what entity it might be shared with.
+        Usage:
+        ------
+            if my_user.can_share_group(some_group, PrivilegeCodes.VIEW):
+                # ...time passes, forms are created, requests are made...
+                my_user.share_group_with_user(some_group, some_user, PrivilegeCodes.VIEW)
+        In practice:
+        ------------
+        If this returns False, UserAccess.share_group_with_user will raise an exception
+        for the corresponding arguments -- *guaranteed*.
+        """
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Target is not a group")
+        access_group = this_group.gaccess
+
+        if not self.active:
+            return False
+
+        if not self.owns_group(this_group) and not access_group.shareable:
+            return False
+
+        # must have a this_privilege greater than or equal to what we want to assign
+        if UserGroupPrivilege.objects.filter(group=access_group,
+                                             user=self,
+                                             privilege__lte=this_privilege):
+            return True
+        else:
+            return False
 
     ####################################
     # group membership sharing
     ####################################
 
     def share_group_with_user(self, this_group, this_user, this_privilege):
-        UserAccess.__helper().share_group_with_user(self, this_group, this_user, this_privilege)
+        """
+        :param this_group: Group to be affected.
+        :param this_user: User with whom to share group
+        :param this_privilege: privilege to assign: 1-4
+        :return: none
+
+        User self must be one of:
+                * admin
+                * group owner
+                * group member with shareable=True
+        and have equivalent or greater privilege over group.
+        Usage:
+        ------
+            if my_user.can_share_group(some_group, PrivilegeCodes.CHANGE):
+                # ...time passes, forms are created, requests are made...
+                share_group_with_user(some_group, some_user, PrivilegeCodes.CHANGE)
+        In practice:
+        ------------
+        "can_share_group" is used to construct views with appropriate buttons or popups, e.g., "share with...",
+        while "share_group_with_user" is used in the form responder to implement changes.
+        This is safe to do even if the state changes, because "share_group_with_user" always
+        rechecks permissions before implementing changes. If -- in the interim -- one removes
+        _my_user_'s sharing privileges, _share_group_with_user_ will raise an exception.
+        """
+
+        # check for user error
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Target is not a group")
+        access_group = this_group.gaccess
+
+        if not isinstance(this_user, User):
+            raise HSAUsageException("Grantee is not a user")
+        access_user = this_user.uaccess
+
+        # check for user authorization
+        if not self.active:
+            raise HSAccessException("User is not active")
+
+        if not self.owns_group(this_group) and not access_group.shareable:
+            raise HSAccessException("User is not group owner and group is not shareable")
+
+        # must have a this_privilege greater than or equal to what we want to assign
+        if not UserGroupPrivilege.objects.filter(group=access_group,
+                                                 user=self,
+                                                 privilege__lte=this_privilege):
+            raise HSAccessException("User has insufficient privilege over group")
+
+        # user is authorized and privilege is appropriate
+        # proceed to change the record if present
+
+        # This logic implicitly limits one to one record per resource and requester.
+        try:
+            record = UserGroupPrivilege.objects.get(group=access_group,
+                                                    user=access_user,
+                                                    grantor=self)
+            if record.privilege==PrivilegeCodes.OWNER \
+                    and this_privilege!=PrivilegeCodes.OWNER \
+                    and access_group.get_number_of_owners()==1:
+                raise HSAccessException("Cannot remove last owner of group")
+
+            record.privilege=this_privilege
+            record.save()
+
+        except UserGroupPrivilege.DoesNotExist:
+            # create a new record
+            UserGroupPrivilege(group=access_group,
+                               user=access_user,
+                               privilege=this_privilege,
+                               grantor=self).save()
+
+    def __handle_unshare_group_with_user(self, this_group, this_user, command=CommandCodes.CHECK):
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Target is not a group")
+        access_group = this_group.gaccess
+
+        if not isinstance(this_user, User):
+            raise HSAUsageException("Grantee is not a user")
+        access_user = this_user.uaccess
+
+        if command != CommandCodes.CHECK and command != CommandCodes.DO:
+            raise HSAUsageException("Invalid command code")
+
+        if not self.active:
+            if command == CommandCodes.DO:
+                raise HSAccessException("Grantor is not active")
+            else:
+                return False
+
+        if access_user not in access_group.members.all():
+            if command == CommandCodes.DO:
+                raise HSAccessException("User is not a member of the group")
+            else:
+                return False
+
+        # User authorization: can make change if
+        #   Admin
+        #   Owner of group
+        #   Modifying privileges for self
+        if self.admin \
+            or self.owns_group(this_group) \
+            or access_user==self:
+            # if there is a different owner,  we're fine
+            if UserGroupPrivilege.objects.filter(group=access_group,
+                                                 privilege=PrivilegeCodes.OWNER).exclude(user=access_user):
+                if command == CommandCodes.DO:
+                    # then remove the record.
+                    # this does not return an error if the object is not shared with the user
+                    UserGroupPrivilege.objects.filter(group=access_group, user=access_user).delete()
+                return True  #  report success!
+
+            else:
+                # Hidden privilege other than OWNER cannot be removed for OWNERS
+                if command == CommandCodes.DO:
+                    raise HSAccessException("Cannot remove sole owner of group")
+                else:
+                    return False
+        else:
+            if command == CommandCodes.DO:
+                raise HSAccessException("User has insufficient privilege to unshare")
+            else:
+                return False
 
     def unshare_group_with_user(self, this_group, this_user):
-        return UserAccess.__helper().unshare_group_with_user(self, this_group, this_user)
+        """
+        Remove a user from a group by removing privileges.
+
+        :param this_group: Group to be affected.
+        :param this_user: User with whom to unshare group
+        :return: None
+
+        This removes a user "this_user" from a group if "this_user" is not the sole owner and
+        one of the following is true:
+            * self is an administrator.
+            * self owns the group.
+            * this_user is self.
+        Usage:
+        ------
+            if my_user.can_unshare_group_with_user(some_group, some_user):
+                # ...time passes, forms are created, requests are made...
+                my_user.unshare_group_with_user(some_group, some_user)
+        In practice:
+        ------------
+        "can_unshare_*" is used to construct views with appropriate forms and
+        change buttons, while "unshare_*" is used to implement the responder to the
+        view's forms. "unshare_*" still checks for permission (again) in case
+        things have changed (e.g., through a stale form).
+        """
+
+        return self.__handle_unshare_group_with_user(this_group, this_user, CommandCodes.DO)
 
     def can_unshare_group_with_user(self, this_group, this_user):
-        return UserAccess.__helper().can_unshare_group_with_user(self, this_group, this_user)
+        """
+        Determines whether a group can be unshared.
+
+        :param this_group: group to be unshared.
+        :param this_user: user to which to deny access.
+        :return: Boolean: whether self can unshare this_group with this_user
+
+        Usage:
+        ------
+            if my_user.can_unshare_group_with_user(some_group, some_user):
+                # ...time passes, forms are created, requests are made...
+                my_user.unshare_group_with_user(some_group, some_user)
+        In practice:
+        ------------
+        If this routine returns False, UserAccess.unshare_group_with_user is *guaranteed*
+        to raise an exception.
+        """
+        return self.__handle_unshare_group_with_user(this_group, this_user, CommandCodes.CHECK)
+
+    def __handle_undo_share_group_with_user(self, this_group, this_user, command=CommandCodes.CHECK, this_grantor=None):
+
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Target is not a group")
+        access_group = this_group.gaccess
+
+        if not isinstance(this_user, User):
+            raise HSAUsageException("Grantee is not a user")
+        access_user = this_user.uaccess
+
+        if command != CommandCodes.CHECK and command != CommandCodes.DO:
+            raise HSAUsageException("Invalid command code")
+
+        # handle optional grantor parameter that scopes owner-based unshare to one share.
+        if this_grantor is not None:
+            if not isinstance(this_grantor, User):
+                raise HSAUsageException("Grantor is not a user")
+            access_grantor = this_grantor.uaccess
+            if not UserGroupPrivilege.objects.filter(group=access_group,
+                                                     user=access_user,
+                                                     grantor=access_grantor):
+                if command == CommandCodes.DO:
+                    raise HSAccessException("Grantor did not grant privilege")
+                else:
+                    return False
+
+            if not self.owns_group(this_group) and not self.admin:
+                if command == CommandCodes.DO:
+                    raise HSAccessException("Self must be owner or admin")
+                else:
+                    return False
+        else:
+            access_grantor = self
+
+        if not self.active:
+            if command == CommandCodes.DO:
+                raise HSAccessException("Grantor is not active")
+            else:
+                return False
+
+        if access_user not in access_group.members.all():
+            if command == CommandCodes.DO:
+                raise HSAccessException("User is not a member of the group")
+            else:
+                return False
+        try:
+            existing = UserGroupPrivilege.objects.get(group=access_group,
+                                                      user=access_user,
+                                                      grantor=self)
+            # if the privilege for user is not OWNER,
+            # or there's another OWNER:
+            if existing.privilege != PrivilegeCodes.OWNER \
+                    or UserGroupPrivilege.objects \
+                          .filter(group=access_group,
+                                  privilege=PrivilegeCodes.OWNER) \
+                          .exclude(user=access_user, grantor=access_grantor):
+                if command == CommandCodes.DO:
+                    # then remove the record.
+                    # this does not return an error if the object is not shared with the user
+                    UserGroupPrivilege.objects.filter(group=access_group,
+                                                      user=access_user,
+                                                      grantor=access_grantor).delete()
+                return True
+            else:
+                if command == CommandCodes.DO:
+                    raise HSAccessException("Cannot remove sole owner of group")
+                else:
+                    return False
+        except UserGroupPrivilege.DoesNotExist:
+            if command == CommandCodes.DO:
+                raise HSAccessException("No share to undo")
+            else:
+                return False
 
     def undo_share_group_with_user(self, this_group, this_user, this_grantor=None):
-        return UserAccess.__helper().undo_share_group_with_user(self, this_group, this_user, this_grantor)
+        """
+        Remove a user from a group who was assigned by self.
+
+        :param this_group: group to affect.
+        :param this_user: user with whom to unshare group.
+        :return: None
+
+        This removes one share for a user in the case where that share was
+        assigned by self, and the removal does not leave the group without
+        an owner.
+        Usage:
+        ------
+            if my_user.can_undo_share_group_with_user(some_group, some_user):
+                # ...time passes, forms are created, requests are made...
+                my_user.undo_share_group_with_user(some_group, some_user)
+        In practice:
+        ------------
+        "can_undo_share_*" is used to construct views with appropriate forms and
+        change buttons, while "undo_share_*" is used to implement the responder to the
+        view's forms. "undo_share_*" still checks for permission (again) in case
+        things have changes (e.g., through a stale form).
+        """
+        return self.__handle_undo_share_group_with_user(this_group, this_user, CommandCodes.DO, this_grantor)
 
     def can_undo_share_group_with_user(self, this_group, this_user, this_grantor=None):
-        return UserAccess.__helper().can_undo_share_group_with_user(self, this_group, this_user, this_grantor)
+        """
+        Check whether we can remove a user from a group who was assigned by self.
+
+        :param this_group: group to affect.
+        :param this_user: user with whom to unshare group.
+        :return: Boolean
+
+        This removes one share for a user in the case where that share was
+        assigned by self, and the removal does not leave the group without
+        an owner.
+        Usage:
+        ------
+            if my_user.can_undo_share_group_with_user(some_group, some_user):
+                # ...time passes, forms are created, requests are made...
+                my_user.undo_share_group_with_user(some_group, some_user)
+        In practice:
+        ------------
+        This returns True exactly when "undo_share_group_with_user" does not
+        raise an exception.
+        Thus, this can be used to condition views by only providing options that
+        will work.
+            * In a group view, use "can_undo" to create "undo share" buttons only when
+              user has privilege.
+            * In the responder, use the corresponding "undo_share" to accomplish the undo.
+        Note that this is safe to do even if the state changes, because "undo_share"
+        in the responder will always recheck that its actions are permissible before
+        doing them.
+        """
+
+        return self.__handle_undo_share_group_with_user(this_group, this_user, CommandCodes.CHECK, this_grantor)
 
     ##########################################
     # users whose access could be undone by self
     ##########################################
     def get_group_undo_users(self, this_group):
-        return UserAccess.__helper().get_group_undo_users(self, this_group)
+        """
+        Get a list of users to whom self granted access
+
+        :param this_group: group to check.
+        :return: list of users granted access by self.
+
+        These are the users for which an unprivileged user can call
+        undo_share_group_with_users
+        Usage:
+        ------
+            # g is a target group
+            # u is a target user
+            undo_users = self.get_group_undo_users(g)
+            if u in undo_users:
+                self.undo_share_group_with_user(g, u)
+        """
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Target is not a group")
+        access_group = this_group.gaccess
+
+        if self.admin or self.owns_group(this_group):
+
+            if access_group.get_number_of_owners()>1:
+                # every possible undo is permitted, including self-undo
+                return User.objects.filter(uaccess__held_groups=access_group)
+            else:  # exclude sole owner from undo
+                return User.objects.filter(uaccess__u2ugp__group=access_group)\
+                                   .exclude(uaccess__u2ugp__group=access_group,
+                                            uaccess__u2ugp__privilege=PrivilegeCodes.OWNER)
+        else:
+            if access_group.get_number_of_owners()>1:
+                return User.objects.filter(uaccess__u2ugp__grantor=self, uaccess__u2ugp__group=access_group)
+
+            else:  # exclude sole owner from undo
+
+                # The following is a tricky query
+                # a) I need to match for one record in u2ugp, which means that
+                #    the matches have to be in the same filter()
+                # b) I need to exclude matches with one extra attribute.
+                #    Thus I must repeat attributes in the exclude.
+                return User.objects.filter(uaccess__u2ugp__group=access_group,
+                                           uaccess__u2ugp__grantor=self)\
+                                   .exclude(uaccess__u2ugp__group=access_group,
+                                            uaccess__u2ugp__grantor=self,
+                                            uaccess__u2ugp__privilege=PrivilegeCodes.OWNER)
 
     def get_group_unshare_users(self, this_group):
-        return UserAccess.__helper().get_group_unshare_users(self, this_group)
+        """
+        Get a list of users who could be unshared from this group.
+
+        :param this_group: group to check.
+        :return: list of users who could be removed by self.
+
+        A user can be unshared with a group if:
+            * The user is self
+            * Self is group owner.
+            * Self has admin privilege.
+        except that a user in the list cannot be the last owner of the group.
+        Usage:
+        ------
+            g = some_group
+            u = some_user
+            unshare_users = request_user.get_group_unshare_users(g)
+            if u in unshare_users:
+                self.unshare_group_with_user(g, u)
+        """
+        # Users who can be removed fall into three catagories
+        # a) self is admin: everyone.
+        # b) self is group owner: everyone.
+        # c) self is beneficiary: self only
+        # Except that a user in the list cannot be the last owner.
+
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Target is not a group")
+        access_group = this_group.gaccess
+
+        if self.admin or self.owns_group(this_group):
+            # everyone who holds this resource, minus potential sole owners
+            if access_group.get_number_of_owners() == 1:
+                # get list of owners to exclude from main list
+                ids_exclude = UserGroupPrivilege.objects\
+                        .filter(group=access_group, privilege=PrivilegeCodes.OWNER)\
+                        .values_list('user_id', flat=True)\
+                        .distinct()
+                return access_group.get_members().exclude(uaccess__pk__in=ids_exclude)
+            else:
+                return access_group.get_members()
+        elif self in access_group.holding_users.all():
+            if access_group.get_number_of_owners == 1:
+                # if I'm not that owner
+                if not UserGroupPrivilege.objects\
+                        .filter(user=self, group=access_group, privilege=PrivilegeCodes.OWNER):
+                    # this is a fancy way to return self as a QuerySet
+                    # I can remove myself
+                    return User.objects.filter(uaccess=self)
+                else:
+                    # I can't remove anyone
+                    return User.objects.filter(uaccess=None)  # empty set
+        else:
+            return User.objects.filter(uaccess=None)  # empty set
 
     ##########################################
     ##########################################
@@ -422,104 +1052,884 @@ class UserAccess(models.Model):
     ##########################################
     ##########################################
 
+
     ##########################################
     # held and owned resources
     ##########################################
 
     def get_held_resources(self):
-        return UserAccess.__helper().get_held_resources(self)
+        """
+        Get a list of resources held by user.
+
+        :return: List of resource objects accessible (in any form) to user.
+        """
+        return GenericResource.objects.filter(Q(raccess__holding_users=self) | Q(raccess__holding_groups__members=self))
 
     def get_number_of_held_resources(self):
-        return UserAccess.__helper().get_number_of_held_resources(self)
+        """
+        Get the number of resources held by user.
+
+        :return: Integer number of resources accessible for this user.
+        """
+        # utilize simpler join-free query that that of get_held_resources()
+        return ResourceAccess.objects.filter(Q(holding_users=self) | Q(holding_groups__members=self)).count()
 
     def get_owned_resources(self):
-        return UserAccess.__helper().get_owned_resources(self)
+        """
+        Get a list of resources owned by user.
+
+        :return: List of resource objects owned by this user.
+        """
+
+        return GenericResource.objects.filter(raccess__r2urp__user=self,
+                                              raccess__r2urp__privilege=PrivilegeCodes.OWNER).distinct()
 
     def get_number_of_owned_resources(self):
-        return UserAccess.__helper().get_number_of_owned_resources(self)
+        """
+        Get number of resources owned by self.
+
+        :return: Integer number of resources owned by user.
+
+        This is a separate procedure, rather than get_owned_resources().count(), due to performance concerns.
+        """
+        # This is a join-free query; get_owned_resources includes a join.
+        return self.get_owned_resources().count()
 
     def get_editable_resources(self):
-        return UserAccess.__helper().get_editable_resources(self)
+        """
+        Get a list of resources that can be edited by user.
+
+        :return: List of resource objects that can be edited  by this user.
+        """
+        return GenericResource.objects.filter(raccess__r2urp__user=self, raccess__immutable=False,
+                                              raccess__r2urp__privilege__lte=PrivilegeCodes.CHANGE).distinct()
 
     #############################################
     # Check access permissions for self (user)
     #############################################
 
     def owns_resource(self, this_resource):
-        return UserAccess.__helper().owns_resource(self, this_resource)
+        """
+        Boolean: is the user an owner of this resource?
+
+        :param self: user on which to report.
+        :return: True if user is an owner otherwise false
+
+        Note that the fact that someone owns a resource is not sufficient proof that
+        one has permission to change it, because resource flags can override the raw
+        privilege. It is thus necessary to check that one can change something
+        explicitly, using UserAccess.can_change_resource()
+        """
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if UserResourcePrivilege.objects.filter(resource=access_resource,
+                                                privilege=PrivilegeCodes.OWNER,
+                                                user=self):
+            return True
+        else:
+            return False
 
     def can_change_resource(self, this_resource):
-        return UserAccess.__helper().can_change_resource(self, this_resource)
+        """
+        Return whether a user can change this resource, including the effect of resource flags.
+
+        :param self: User on which to report.
+        :return: Boolean: whether user can change this resource.
+
+        This result is advisory and is not enforced. The Django application must enforce this
+        policy, using this routine for guidance.
+        Note that the ability to change a resource is not just contingent upon sharing,
+        but also upon the resource flag "immutable". Thus "owns" does not imply "can change" privilege.
+        Note also that the ability to change a resource applies to its data and metadata, but not to its
+        resource state flags: shareable, public, immutable, published, and discoverable.
+        We elected not to return a queryset for this one, because that would mean that it
+        would return two types depending upon conditions -- Boolean for simple queries and
+        QuerySet for complex queries.
+        """
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if not self.active:
+            return False
+
+        if access_resource.immutable:
+            return False
+
+        if UserResourcePrivilege.objects.filter(resource=access_resource,
+                                                privilege__lte=PrivilegeCodes.CHANGE,
+                                                user=self):
+            return True
+
+        if GroupResourcePrivilege.objects.filter(resource=access_resource,
+                                                 privilege__lte=PrivilegeCodes.CHANGE,
+                                                 group__members=self):
+            return True
+
+        return False
 
     def can_change_resource_flags(self, this_resource):
-        return UserAccess.__helper().can_change_resource_flags(self, this_resource)
+        """
+        Whether self can change resource flags.
+
+        :param this_resource: Resource to check.
+        :return: True if user can set flags otherwise false.
+
+        This is not enforced. It is up to the programmer to obey this restriction.
+        """
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+
+        return self.active and (self.admin or self.owns_resource(this_resource))
 
     def can_view_resource(self, this_resource):
-        return UserAccess.__helper().can_view_resource(self, this_resource)
+        """
+        Whether user can view this resource
+
+        :param this_resource: Resource to check
+        :return: True if user can view this resource, otherwise false.
+
+        Note that one can view resources that are public, that one does not own.
+        """
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if not self.active:
+            return False
+
+        if access_resource.public:
+            return True
+
+        if UserResourcePrivilege.objects.filter(resource=access_resource,
+                                                privilege__lte=PrivilegeCodes.VIEW,
+                                                user=self):
+            return True
+
+        if GroupResourcePrivilege.objects.filter(resource=access_resource,
+                                                 privilege__lte=PrivilegeCodes.VIEW,
+                                                 group__members=self):
+            return True
+
+        return False
 
     def can_delete_resource(self, this_resource):
-        return UserAccess.__helper().can_delete_resource(self, this_resource)
+        """
+        Whether user can delete a resource
+
+        :param this_resource: Resource to check.
+        :return: True if user can delete the resource, otherwise false.
+
+        """
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+
+        return self.active and (self.admin or self.owns_resource(this_resource))
 
     ##########################################
     # check sharing rights
     ##########################################
 
     def can_share_resource(self, this_resource, this_privilege):
-        return UserAccess.__helper().can_share_resource(self, this_resource, this_privilege)
+        """
+        Can a resource be shared by the current user?
+
+        :param this_resource: resource to check
+        :param this_privilege: privilege to assign
+        :return: Boolean: whether resource can be shared.
+
+        In this computation, user target of sharing is not relevant.
+        One can share with self, which can only downgrade privilege.
+        """
+        # translate into ResourceAccess object
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if not self.active:
+            return False
+
+        # access control logic: Can change privilege if
+        #   Admin
+        #   Owner
+        #   Privilege for self
+        whom_priv = access_resource.get_combined_privilege(self.user)
+
+        # check for user authorization
+        if self.admin:
+            pass  # admin can do anything
+
+        elif whom_priv == PrivilegeCodes.OWNER:
+            pass  # owner can do anything
+
+        elif access_resource.shareable:
+            pass  # non-owners can share
+
+        else:
+            return False
+
+        # no privilege over resource
+        if whom_priv > PrivilegeCodes.VIEW:
+            return False
+
+        # insufficient privilege over resource
+        if whom_priv > this_privilege:
+            return False
+
+        return True
 
     def can_share_resource_with_group(self, this_resource, this_group, this_privilege):
-        return UserAccess.__helper().can_share_resource_with_group(self, this_resource, this_group, this_privilege)
+        """
+        Check whether one can share a resource with a group.
+
+        :param this_resource: resource to share.
+        :param this_group: group with which to share it.
+        :param this_privilege: privilege level of sharing.
+        :return: Boolean: whether one can share.
+
+        This function returns False exactly when share_resource_with_group will raise
+        an exception if called.
+        """
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Grantee is not a group")
+
+        if this_privilege==PrivilegeCodes.OWNER:
+            return False
+
+        # check for user authorization
+        # a) user must have privilege over resource
+        # b) user must be in the group
+        if not self.can_share_resource(this_resource, this_privilege):
+            return False
+
+        if self not in this_group.members:
+            return False
+
+        return True
+
+    def __handle_undo_share_resource_with_group(self, this_resource, this_group, command=CommandCodes.CHECK,
+                                                this_grantor=None):
+        # first check for usage error
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Grantee is not a group")
+        access_group = this_group.gaccess
+
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if command != CommandCodes.CHECK and command != CommandCodes.DO:
+            raise HSAUsageException("Invalid command code")
+
+        # handle optional grantor parameter that scopes owner-based unshare to one share.
+        if this_grantor is not None and this_grantor.uaccess != self:
+            if not isinstance(this_grantor, User):
+                raise HSAUsageException("Grantor is not a user")
+
+            access_grantor = this_grantor.uaccess
+
+            if not self.owns_resource(this_resource) and not self.admin:
+                if command == CommandCodes.DO:
+                    raise HSAccessException("Self must be owner or admin")
+                else:
+                    return False  # non-owners cannot specify grantor
+
+            if not GroupResourcePrivilege.objects.filter(group=access_group,
+                                                         resource=access_resource,
+                                                         grantor=access_grantor):
+                # print('non-default: no grant for '+access_grantor.user.first_name)
+                if command == CommandCodes.DO:
+                    raise HSAccessException("No privilege to remove")
+                else:
+                    return False
+        else:
+            access_grantor = self
+
+        if GroupResourcePrivilege.objects.filter(resource=access_resource,
+                                                 group=access_group,
+                                                 grantor=access_grantor):
+            if command == CommandCodes.DO:
+                GroupResourcePrivilege.objects.get(resource=access_resource,
+                                                   group=access_group,
+                                                   grantor=access_grantor).delete()
+            return True  # return success
+        else:
+            if command == CommandCodes.DO:
+                raise HSAccessException("Grantor did not grant privilege")
+            else:
+                return False
 
     def undo_share_resource_with_group(self, this_resource, this_group, this_grantor=None):
-        return UserAccess.__helper().undo_share_resource_with_group(self, this_resource, this_group, this_grantor)
+        """
+        Remove resource privileges self-granted to a group.
+
+        :param this_resource: resource for which to undo share.
+        :param this_group: group with which to unshare resource
+        :return: None
+
+        This tries to remove one user access record for "this_group" and "this_resource"
+        if grantor is self. If this_grantor is specified, that is utilized as grantor as long as
+        self is owner or admin.
+        """
+        return self.__handle_undo_share_resource_with_group(this_resource,
+                                                            this_group,
+                                                            CommandCodes.DO,
+                                                            this_grantor)
 
     def can_undo_share_resource_with_group(self, this_resource, this_group, this_grantor=None):
-        return UserAccess.__helper().can_undo_share_resource_with_group(self, this_resource, this_group, this_grantor)
+        """
+        Check whether one can remove resource privileges self-granted to a group.
+
+        :param this_resource: resource for which to undo share.
+        :param this_group: group with which to unshare resource
+        :return: Boolean
+
+        This checks whether one can remove one user access record for "this_group" and "this_resource"
+        if grantor is self. If this_grantor is specified, that is utilized as the grantor as long as
+        self is owner or admin.
+        """
+        return self.__handle_undo_share_resource_with_group(this_resource,
+                                                            this_group,
+                                                            CommandCodes.CHECK,
+                                                            this_grantor)
 
     #################################
     # share and unshare resources with user
     #################################
     def share_resource_with_user(self, this_resource, this_user, this_privilege):
-        UserAccess.__helper().share_resource_with_user(self, this_resource, this_user, this_privilege)
+        """
+        Share a resource with a specific (third-party) user
+
+        :param this_resource: Resource to be shared.
+        :param this_user: User with whom to share resource
+        :param this_privilege: privilege to assign: 1-4
+        :return: none
+
+        Assigning user (self) must be admin, owner, or have equivalent privilege over resource.
+        """
+
+        # check for user error
+
+        if not isinstance(this_user, User):
+            raise HSAUsageException("Grantee is not a user")
+        access_user = this_user.uaccess
+
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        # this is parallel to can_share_resource_with_user(this_resource, this_privilege)
+
+        if not self.active:
+            raise HSAccessException("Requester is not an active user")
+
+        # access control logic: Can change privilege if
+        #   Admin
+        #   Self-set permission
+        #   Owner
+        #   Non-owner and shareable
+        whom_priv = access_resource.get_combined_privilege(self.user)
+
+        # check for user authorization
+
+        if self.admin:
+            pass  # admin can do anything
+
+        elif whom_priv == PrivilegeCodes.OWNER:
+            pass  # owner can do anything
+
+        elif access_resource.shareable:
+            pass  # non-owners can share
+
+        else:
+            raise HSAccessException("User must own resource or have sharing privilege")
+
+        # privilege checking
+
+        if whom_priv > PrivilegeCodes.VIEW:
+            raise HSAccessException("User has no privilege over resource")
+
+        if whom_priv > this_privilege:
+            raise HSAccessException("User has insufficient privilege over resource")
+
+        # user is authorized and privilege is appropriate
+        # proceed to change the record if present
+
+        # This logic implicitly limits one to one record per resource and requester.
+        try:
+            record = UserResourcePrivilege.objects.get(resource=access_resource,
+                                                       user=access_user,
+                                                       grantor=self)
+            if record.privilege == PrivilegeCodes.OWNER \
+                    and this_privilege != PrivilegeCodes.OWNER \
+                    and access_resource.get_number_of_owners() == 1:
+                raise HSAccessException("Cannot remove last owner of resource")
+
+            # record.start=timezone.now() # now automatically set
+            record.privilege = this_privilege
+            record.save()
+
+        except UserResourcePrivilege.DoesNotExist:
+            # create a new record
+            UserResourcePrivilege(resource=access_resource,
+                                  user=access_user,
+                                  privilege=this_privilege,
+                                  grantor=self).save()
+
+    def __handle_unshare_resource_with_user(self, this_resource, this_user, command=CommandCodes.CHECK):
+
+        """
+        Remove a user from a resource by removing privileges.
+
+        :param this_resource: resource to unshare
+        :param this_user: user with which to unshare resource
+        :param command: command code to perform
+        :return: Boolean if command is CommandCodes.CHECK, otherwise none
+
+        This removes a user "this_user" from resource access to "this_resource" if one of the following is true:
+            * self is an administrator.
+            * self owns the group.
+            * requesting user is the grantee of resource access.
+        *and* removing the user will not lead to a resource without an owner.
+        There is no provision for revoking lower-level permissions for an owner.
+        If a user is a sole owner and holds other privileges, this call will not remove them.
+        """
+
+        # first check for usage error
+        if not isinstance(this_user, User):
+            raise HSAUsageException("Grantee is not a user")
+        access_user = this_user.uaccess
+
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if command != CommandCodes.CHECK and command != CommandCodes.DO:
+            raise HSAUsageException("Invalid command code")
+
+        if access_user not in access_resource.holding_users.all():
+            if command == CommandCodes.DO:
+                raise HSAccessException("User does not have access to resource")
+            else:
+                return False
+
+        # User authorization: can make change if
+        #   Admin
+        #   Owner of resource
+        #   Modifying self
+        if self.admin \
+                or access_resource.get_combined_privilege(self.user) == PrivilegeCodes.OWNER \
+                or access_user == self:
+            if UserResourcePrivilege.objects \
+                    .filter(resource=access_resource,
+                            privilege=PrivilegeCodes.OWNER) \
+                    .exclude(user=access_user):
+                # then remove the record.
+                # this does not return an error if the object is not shared with the user
+                if command == CommandCodes.DO:
+                    UserResourcePrivilege.objects.filter(resource=access_resource,
+                                                         user=access_user).delete()
+                return True  # indicate success
+            else:
+                # this prevents one from removing privilege for a user
+                # if any grant is owner. This protects the other grants as well.
+                if command == CommandCodes.DO:
+                    raise HSAccessException("Cannot remove sole resource owner")
+                else:
+                    return False
+        else:
+            if command == CommandCodes.DO:
+                raise HSAccessException("Insufficient privilege to unshare resource")
+            else:
+                return False
 
     def unshare_resource_with_user(self, this_resource, this_user):
-        return UserAccess.__helper().unshare_resource_with_user(self, this_resource, this_user)
+        """
+        Unshare a resource with a specific user, removing all privilege for that user
+
+        :param this_resource: Resource to unshare
+        :param this_user:  User wich whom to unshare it.
+        :return: True if it is unshared successfully, otherwise false
+        """
+        return self.__handle_unshare_resource_with_user(this_resource, this_user, CommandCodes.DO)
 
     def can_unshare_resource_with_user(self, this_resource, this_user):
-        return UserAccess.__helper().can_unshare_resource_with_user(self, this_resource, this_user)
+        """
+        Check whether one can dissociate a specific user from a resource
+
+        :param this_resource: resource to protect.
+        :param this_user: user to remove.
+        :return: Boolean: whether one can unshare this resource with this user.
+
+        This checks if both of the following are true:
+            * self is administrator, or owns the resource.
+            * This act does not remove the last owner of the resource.
+        If so, it removes all privilege over this_resource for this_user.
+        To remove a single privilege, rather than all privilege,
+        see can_undo_share_resource_with_user
+        """
+        return self.__handle_unshare_resource_with_user(this_resource, this_user, CommandCodes.CHECK)
+
+    def __handle_undo_share_resource_with_user(self, this_resource, this_user, command=CommandCodes.CHECK,
+                                               this_grantor=None):
+        """
+        Remove a self-granted privilege from a user.
+
+        :param this_resource: resource to unshare
+        :param this_user: user with which to unshare resource
+        :return: Boolean if command is CommandCodes.CHECK, otherwise none
+
+        This removes a user "this_user" from resource access to "this_resource" if self granted the privilege,
+        *and* removing the user will not lead to a resource without an owner.
+        """
+
+        # first check for usage error
+        if not isinstance(this_user, User):
+            raise HSAUsageException("Grantee is not a user")
+        access_user = this_user.uaccess
+
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if command != CommandCodes.CHECK and command != CommandCodes.DO:
+            raise HSAUsageException("Invalid command code")
+
+        # handle optional grantor parameter that scopes owner-based unshare to one share.
+        if this_grantor is not None:
+            if not isinstance(this_grantor, User):
+                raise HSAUsageException("Grantor is not a user")
+            access_grantor = this_grantor.uaccess
+
+            if not GroupResourcePrivilege.objects.filter(user=access_user,
+                                                         resource=access_resource,
+                                                         grantor=access_grantor):
+                if command == CommandCodes.DO:
+                    raise HSAccessException("Grantor did not grant privilege")
+                else:
+                    return False
+
+            if not self.owns_resource(this_resource) and not self.admin:
+                if command == CommandCodes.DO:
+                    raise HSAccessException("Self must be owner or admin")
+                else:
+                    return False
+        else:
+            access_grantor = self
+
+        try:
+            existing = UserResourcePrivilege.objects.get(resource=access_resource,
+                                                         user=access_user,
+                                                         grantor=access_grantor)
+            # if there is an owner other than the grantee, or the grantee is not an owner
+            if existing.privilege != PrivilegeCodes.OWNER \
+                    or UserResourcePrivilege.objects.filter(resource=access_resource,
+                                                            privilege=PrivilegeCodes.OWNER) \
+                                                    .exclude(resource=access_resource,
+                                                             user=access_user,
+                                                             grantor=access_grantor):
+                # then remove the record.
+                # this does not return an error if the object is not shared with the user
+                if command == CommandCodes.DO:
+                    UserResourcePrivilege.objects.filter(resource=access_resource,
+                                                         user=access_user,
+                                                         grantor=access_grantor).delete()
+                return True  # Indicate success!
+
+            else:
+                # this prevents one from removing privilege for a user
+                # if any grant is owner. This protects the other grants as well.
+                if command == CommandCodes.DO:
+                    raise HSAccessException("Cannot remove sole resource owner")
+                else:
+                    return False
+
+        except UserResourcePrivilege.DoesNotExist:
+            if command == CommandCodes.DO:
+                raise HSAccessException("No share to undo")
+            else:
+                return False
 
     def undo_share_resource_with_user(self, this_resource, this_user, this_grantor=None):
-        return UserAccess.__helper().undo_share_resource_with_user(self, this_resource, this_user, this_grantor)
+        return self.__handle_undo_share_resource_with_user(this_resource, this_user, CommandCodes.DO, this_grantor)
 
     def can_undo_share_resource_with_user(self, this_resource, this_user, this_grantor=None):
-        return UserAccess.__helper().can_undo_share_resource_with_user(self, this_resource, this_user, this_grantor)
+        """
+        Check whether one can dissociate a specific user from a resource
+
+        :param this_resource: resource to protect.
+        :param this_user: user to remove.
+        :return: Boolean: whether one can unshare this resource with this user.
+
+        This checks if both of the following are true:
+            * self is administrator, or owns the resource.
+            * This act does not remove the last owner of the resource.
+        If so, it removes all privilege over this_resource for this_user.
+        To remove a single privilege, rather than all privilege,
+        see can_undo_share_resource_with_user
+        """
+        return self.__handle_undo_share_resource_with_user(this_resource, this_user, CommandCodes.CHECK, this_grantor)
 
     ######################################
     # share and unshare resource with group
     ######################################
     def share_resource_with_group(self, this_resource, this_group, this_privilege):
-        UserAccess.__helper().share_resource_with_group(self, this_resource, this_group, this_privilege)
+        """
+        Share a resource with a group
+
+        :param this_resource: Resource to share.
+        :param this_group: User with whom to share resource
+        :param this_privilege: privilege to assign: 1-4
+        :return: None
+
+        Assigning user must be admin, owner, or have equivalent privilege over resource.
+        Assigning user must be a member of the group.
+        """
+
+        # check for user error
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Grantee is not a group")
+        access_group = this_group.gaccess
+
+        if this_privilege==PrivilegeCodes.OWNER:
+            raise HSAccessException("Groups cannot own resources")
+        if this_privilege<PrivilegeCodes.OWNER or this_privilege>PrivilegeCodes.VIEW:
+            raise HSAccessException("Privilege level not valid")
+
+        # check for user authorization
+        if not self.can_share_resource(this_resource, this_privilege):
+            raise HSAccessException("User has insufficient sharing privilege over resource")
+
+        if self not in access_group.members.all():
+            raise HSAccessException("User is not a member of the group")
+
+        # user is authorized and privilege is appropriate
+        # proceed to change the record if present
+
+        # This logic implicitly limits one to one record per resource and requester.
+        try:
+            record = GroupResourcePrivilege.objects.get(resource=access_resource,
+                                                        group=access_group,
+                                                        grantor=self)
+
+            # record.start=timezone.now() # now automatically set
+            record.privilege=this_privilege
+            record.save()
+
+        except GroupResourcePrivilege.DoesNotExist:
+            # create a new record
+            GroupResourcePrivilege(resource=access_resource,
+                                   group=access_group,
+                                   privilege=this_privilege,
+                                   grantor=self).save()
+
+    def __handle_unshare_resource_with_group(self, this_resource, this_group, command=CommandCodes.CHECK):
+        # first check for usage error
+
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if not isinstance(this_group, Group):
+            raise HSAUsageException("Grantee is not a group")
+        access_group = this_group.gaccess
+
+        if command != CommandCodes.CHECK and command != CommandCodes.DO:
+            raise HSAUsageException("Invalid command code")
+
+        if access_group not in access_resource.holding_groups.all():
+            if command == CommandCodes.DO:
+                raise HSAccessException("Group does not have access to resource")
+            else:
+                return False
+
+        # User authorization: can make change if
+        #   Admin
+        #   Owner of resource
+        #   Owner of group
+        if self.admin \
+                or self.owns_resource(this_resource) \
+                or self.owns_group(this_group):
+
+            # this does not return an error if the object is not shared with the user
+            if command == CommandCodes.DO:
+                GroupResourcePrivilege.objects.filter(resource=access_resource,
+                                                      group=access_group).delete()
+            return True
+
+        else:
+            if command == CommandCodes.DO:
+                raise HSAccessException("Insufficient privilege to unshare resource")
+            else:
+                return False
 
     def unshare_resource_with_group(self, this_resource, this_group):
-        return UserAccess.__helper().unshare_resource_with_group(self, this_resource, this_group)
+        """
+        Remove a group from access to a resource by removing privileges.
+
+        :param this_resource: resource to be affected.
+        :param this_group: user with which to unshare resource
+        :return: None
+
+        This removes a user "this_group" from access to "this_resource" if one of the following is true:
+            * self is an administrator.
+            * self owns the resource.
+            * self owns the group.
+        """
+        return self.__handle_unshare_resource_with_group(this_resource, this_group, CommandCodes.DO)
 
     def can_unshare_resource_with_group(self, this_resource, this_group):
-        return UserAccess.__helper().can_unshare_resource_with_group(self, this_resource, this_group)
+        """
+        Check whether one can unshare a resource with a group.
+
+        :param this_resource: resource to be protected.
+        :param this_group: group with which to unshare resource.
+        :return: Boolean
+
+        Unsharing will remove a user "this_group" from access to "this_resource" if one of the following is true:
+            * self is an administrator.
+            * self owns the resource.
+            * self owns the group.
+        This routine returns False exactly when unshare_resource_with_group will raise an exception.
+        """
+        return self.__handle_unshare_resource_with_group(this_resource, this_group, CommandCodes.CHECK)
 
     ##########################################
     # users whose access could be undone by self
     ##########################################
     def get_resource_undo_users(self, this_resource):
-        return UserAccess.__helper().get_resource_undo_users(self, this_resource)
+        """
+        Get a list of users to whom self granted access
+
+        :param this_resource: resource to check.
+        :return: list of users granted access by self.
+        """
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if self.admin or self.owns_resource(this_resource):
+
+            if access_resource.get_number_of_owners() > 1:
+                # print("Returning results for all undoes -- owners>1")
+                return User.objects.filter(uaccess__held_resources=access_resource)
+            else:  # exclude sole owner from undo
+                # print("Returning results for non-owner undos -- owners==1")
+                # We need to return the users who are not owners, not the users who have privileges other than owner
+                # all candidate undos
+                ids_shared = UserResourcePrivilege.objects.filter(resource=access_resource)\
+                                                   .values_list('user_id', flat=True).distinct()
+                # undoes that will remove sole owner
+                ids_owner = UserResourcePrivilege.objects.filter(resource=access_resource,
+                                                                 privilege=PrivilegeCodes.OWNER)\
+                                                   .values_list('user_id', flat=True).distinct()
+                # return difference
+                return User.objects.filter(uaccess__held_resources=access_resource, uaccess__pk__in=ids_shared)\
+                                   .exclude(uaccess__pk__in=ids_owner)
+        else:
+            if access_resource.get_number_of_owners()>1:
+                # self is grantor
+                return User.objects.filter(uaccess__u2urp__grantor=self,
+                                           uaccess__u2urp__resource=access_resource).distinct()
+
+            else:  # exclude sole owner from undo
+                return User.objects.filter(uaccess__u2urp__grantor=self,
+                                           uaccess__u2urp__resource=access_resource)\
+                                   .exclude(uaccess__u2urp__grantor=self,
+                                            uaccess__u2urp__resource=access_resource,
+                                            uaccess__u2urp__privilege=PrivilegeCodes.OWNER).distinct()
 
     def get_resource_unshare_users(self, this_resource):
-        return UserAccess.__helper().get_resource_unshare_users(self, this_resource)
+        """
+        Get a list of users who could be unshared from this resource.
+
+        :param this_resource: resource to check.
+        :return: list of users who could be removed by self.
+        """
+        # Users who can be removed fall into three catagories
+        # a) self is admin: everyone.
+        # b) self is resource owner: everyone.
+        # c) self is beneficiary: self only
+
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if self.admin or self.owns_resource(this_resource):
+            # everyone who holds this resource, minus potential sole owners
+            if access_resource.get_number_of_owners() == 1:
+                # get list of owners to exclude from main list
+                ids_exclude = UserResourcePrivilege.objects\
+                        .filter(resource=access_resource, privilege=PrivilegeCodes.OWNER)\
+                        .values_list('user_id', flat=True)\
+                        .distinct()
+                return access_resource.get_users().exclude(uaccess__pk__in=ids_exclude)
+            else:
+                return access_resource.get_users()
+        elif self in access_resource.holding_users.all():
+            return User.objects.filter(uaccess=self)
+        else:
+            return User.objects.filter(uaccess=None)  # empty set
 
     def get_resource_undo_groups(self, this_resource):
-        return UserAccess.__helper().get_resource_undo_groups(self, this_resource)
+        """
+        Get a list of groups to whom self granted access
+
+        :param this_resource: resource to check.
+        :return: list of groups granted access by self.
+
+        A user can undo a privilege if
+            1. That privilege was assigned by this user.
+            2. User owns the resource
+            3. User owns the group -- *not implemented*
+            4. User is an administrator
+        """
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        if self.admin or self.owns_resource(this_resource):
+            return Group.objects.filter(gaccess__held_resources=access_resource).distinct()
+        else:  #  privilege only for grantor
+            return Group.objects.filter(gaccess__g2grp__resource=access_resource,
+                                        gaccess__g2grp__grantor=self).distinct()
 
     def get_resource_unshare_groups(self, this_resource):
-        return UserAccess.__helper().get_resource_unshare_groups(self, this_resource)
+        """
+        Get a list of groups who could be unshared from this group.
+
+        :param this_resource: resource to check.
+        :return: list of groups who could be removed by self.
+
+        This is a list of groups for which unshare_resource_with_group will work for this user.
+        """
+        if not isinstance(this_resource, GenericResource):
+            raise HSAUsageException("Target is not a resource")
+        access_resource = this_resource.raccess
+
+        # Users who can be removed fall into three catagories
+        # a) self is admin: everyone with access.
+        # b) self is resource owner: everyone with access.
+        # c) self is group owner: only for owned groups
+
+        # if user is administrator or owner, then return all groups with access.
+
+        if self.admin or self.owns_resource(this_resource):
+            # all shared groups
+            return Group.objects.filter(gaccess__held_resources=access_resource)
+        else:
+            return Group.objects.filter(gaccess__g2ugp__user=self,
+                                        gaccess__g2ugp__privilege=PrivilegeCodes.OWNER).distinct()
 
 
 class GroupAccess(models.Model):
@@ -607,7 +2017,7 @@ class GroupAccess(models.Model):
         """
         Return list of owners for a group.
 
-        :return: list
+        :return: list of users
 
         This eliminates duplicates due to multiple invitations.
         """
@@ -628,6 +2038,7 @@ class GroupAccess(models.Model):
     def get_number_of_owner_records(self):
         """
         Return number of owner records for a group
+
         :return: QuerySet that evaluates to an integer number of owner records
 
         This can be *greater* than the number of owners due to duplicate owner invitations from different users.
@@ -647,7 +2058,7 @@ class GroupAccess(models.Model):
 
     def get_user_privilege(self, this_user):
         """
-        Return cumulative privilege for a user
+        Return cumulative privilege for a user over a group
 
         :param this_user: User to check
         :return: Privilege code 1-4
@@ -735,6 +2146,8 @@ class ResourceAccess(models.Model):
     def get_owners(self):
         """
         Get a list of owner objects for the current resource
+        :return: QuerySet that evaluates to a list of user objects
+
         """
 
         return User.objects.filter(uaccess__u2urp__privilege=PrivilegeCodes.OWNER,
@@ -816,6 +2229,7 @@ class ResourceAccess(models.Model):
     def get_number_of_holders(self):
         """
         Return number of users with any kind of privilege over this resource
+
         :return: an Integer
 
         This includes users with direct privilege and users with group privilege, and eliminates duplicates.

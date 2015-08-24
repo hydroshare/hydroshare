@@ -3127,7 +3127,7 @@ class T10GroupFlags(TestCase):
         """Getting discoverable groups works properly"""
         felines = self.felines
 
-        self.assertTrue(felines in UserAccess.get_discoverable_groups())
+        self.assertTrue(felines in hydroshare.get_discoverable_groups())
 
     def test_06_make_not_discoverable(self):
         """Can make a group undiscoverable"""
@@ -3145,8 +3145,8 @@ class T10GroupFlags(TestCase):
         self.assertTrue(felines.gaccess.active)
         self.assertTrue(felines.gaccess.shareable)
 
-        self.assertTrue(felines in UserAccess.get_discoverable_groups(), "error in discoverable groups")
-        self.assertTrue(felines in UserAccess.get_public_groups(), "error in public groups")  # still public!
+        self.assertTrue(felines in hydroshare.get_discoverable_groups(), "error in discoverable groups")
+        self.assertTrue(felines in hydroshare.get_public_groups(), "error in public groups")  # still public!
 
         # undo prior change
         felines.gaccess.discoverable = True
@@ -3160,8 +3160,8 @@ class T10GroupFlags(TestCase):
         self.assertTrue(felines.gaccess.active)
         self.assertTrue(felines.gaccess.shareable)
 
-        self.assertTrue(felines in UserAccess.get_discoverable_groups())  # still discoverable
-        self.assertTrue(felines in UserAccess.get_public_groups())  # still public!
+        self.assertTrue(felines in hydroshare.get_discoverable_groups())  # still discoverable
+        self.assertTrue(felines in hydroshare.get_public_groups())  # still public!
 
     def test_07_make_not_public(self):
         """Can make a group not public"""
@@ -3179,8 +3179,8 @@ class T10GroupFlags(TestCase):
         self.assertTrue(felines.gaccess.active)
         self.assertTrue(felines.gaccess.shareable)
 
-        self.assertTrue(felines in UserAccess.get_discoverable_groups())  # still discoverable
-        self.assertTrue(felines not in UserAccess.get_public_groups())  # not still public!
+        self.assertTrue(felines in hydroshare.get_discoverable_groups())  # still discoverable
+        self.assertTrue(felines not in hydroshare.get_public_groups())  # not still public!
 
         felines.gaccess.public = True
         felines.gaccess.save()
@@ -3193,8 +3193,8 @@ class T10GroupFlags(TestCase):
         self.assertTrue(felines.gaccess.active)
         self.assertTrue(felines.gaccess.shareable)
 
-        self.assertTrue(felines in UserAccess.get_discoverable_groups())  # still public!
-        self.assertTrue(felines in UserAccess.get_public_groups())  # still public!
+        self.assertTrue(felines in hydroshare.get_discoverable_groups())  # still public!
+        self.assertTrue(felines in hydroshare.get_public_groups())  # still public!
 
     def test_07_make_private(self):
         """Making a group not public and not discoverable hides it"""
@@ -3213,13 +3213,13 @@ class T10GroupFlags(TestCase):
         self.assertTrue(felines.gaccess.active)
         self.assertTrue(felines.gaccess.shareable)
 
-        self.assertTrue(felines not in UserAccess.get_discoverable_groups())
-        self.assertTrue(felines not in UserAccess.get_public_groups())
+        self.assertTrue(felines not in hydroshare.get_discoverable_groups())
+        self.assertTrue(felines not in hydroshare.get_public_groups())
 
         # can an unrelated user do anything with the group?
         nobody = self.nobody
-        self.assertEqual(nobody.uaccess.get_discoverable_groups().count(), 0)
-        self.assertEqual(nobody.uaccess.get_public_groups().count(), 0)
+        self.assertEqual(hydroshare.get_discoverable_groups().count(), 0)
+        self.assertEqual(hydroshare.get_public_groups().count(), 0)
 
         self.assertFalse(nobody.uaccess.owns_group(felines))
         self.assertFalse(nobody.uaccess.can_change_group(felines))
@@ -3241,8 +3241,8 @@ class T10GroupFlags(TestCase):
         self.assertTrue(felines.gaccess.active)
         self.assertTrue(felines.gaccess.shareable)
 
-        self.assertTrue(felines in UserAccess.get_discoverable_groups())
-        self.assertTrue(felines in UserAccess.get_public_groups())
+        self.assertTrue(felines in hydroshare.get_discoverable_groups())
+        self.assertTrue(felines in hydroshare.get_public_groups())
 
     def test_08_make_not_shareable(self):
         """Can remove sharing privilege from a group"""
