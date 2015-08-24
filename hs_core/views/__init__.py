@@ -629,6 +629,10 @@ def get_file(request, *args, **kwargs):
 processor_for(GenericResource)(resource_processor)
 
 
+def get_metadata_terms_page(request, *args, **kwargs):
+    return render(request, 'pages/metadata_terms.html')
+
+
 def _share_resource_with_user(request, frm, resource, requesting_user, privilege):
     if frm.is_valid():
         try:
