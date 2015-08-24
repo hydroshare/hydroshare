@@ -50,7 +50,7 @@ def authorize(request, res_id, edit=False, view=False, full=False, superuser=Fal
     authorized = (edit and has_edit) or \
                  (view and has_view ) or \
                  (full and has_full) or \
-                 (superuser and user.uaccess.admin)
+                 (superuser and (user.uaccess.admin or user.is_superuser))
 
     if raises_exception and not authorized:
         raise PermissionDenied()

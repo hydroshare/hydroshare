@@ -174,7 +174,8 @@ class T01CreateUser(TestCase):
         self.assertEqual(self.admin.uaccess.user.username, 'admin')
         self.assertEqual(self.admin.uaccess.user.first_name, 'administrator')
         self.assertTrue(self.admin.uaccess.active)
-        self.assertTrue(self.admin.uaccess.admin)
+        # super user is not necessarily an admin for access control
+        self.assertFalse(self.admin.uaccess.admin)
 
         # start as privileged user
         self.assertEqual(self.admin.uaccess.get_number_of_owned_resources(), 0)

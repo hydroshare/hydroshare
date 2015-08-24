@@ -190,11 +190,11 @@ class UserGroupPrivilege(models.Model):
     # a bogus default, which would be transparently applied during
     # migrations and is a worse option.
 
-    user = models.ForeignKey('UserAccess', null=True, editable=False, related_name='u2ugp',
+    user = models.ForeignKey('UserAccess', null=False, editable=False, related_name='u2ugp',
                              help_text='user to be granted privilege')
-    group = models.ForeignKey('GroupAccess', null=True, editable=False, related_name='g2ugp',
+    group = models.ForeignKey('GroupAccess', null=False, editable=False, related_name='g2ugp',
                               help_text='group to which privilege applies')
-    grantor = models.ForeignKey('UserAccess', null=True, editable=False, related_name='x2ugp',
+    grantor = models.ForeignKey('UserAccess', null=False, editable=False, related_name='x2ugp',
                                 help_text='grantor of privilege')
 
     class Meta:
@@ -222,13 +222,13 @@ class UserResourcePrivilege(models.Model):
     # a bogus default, which would be transparently applied during
     # migrations and is a worse option.
 
-    user = models.ForeignKey('UserAccess', null=True, editable=False,
+    user = models.ForeignKey('UserAccess', null=False, editable=False,
                              related_name='u2urp',
                              help_text='user to be granted privilege')
-    resource = models.ForeignKey('ResourceAccess', null=True, editable=False,
+    resource = models.ForeignKey('ResourceAccess', null=False, editable=False,
                                  related_name="r2urp",
                                  help_text='resource to which privilege applies')
-    grantor = models.ForeignKey('UserAccess', null=True, editable=False,
+    grantor = models.ForeignKey('UserAccess', null=False, editable=False,
                                 related_name='x2urp',
                                 help_text='grantor of privilege')
 
@@ -257,13 +257,13 @@ class GroupResourcePrivilege(models.Model):
     # a bogus default, which would be transparently applied during
     # migrations and is a worse option.
 
-    group = models.ForeignKey('GroupAccess', null=True, editable=False,
+    group = models.ForeignKey('GroupAccess', null=False, editable=False,
                               related_name='g2grp',
                               help_text='group to be granted privilege')
-    resource = models.ForeignKey('ResourceAccess', null=True, editable=False,
+    resource = models.ForeignKey('ResourceAccess', null=False, editable=False,
                                  related_name='r2grp',
                                  help_text='resource to which privilege applies')
-    grantor = models.ForeignKey('UserAccess', null=True, editable=False,
+    grantor = models.ForeignKey('UserAccess', null=False, editable=False,
                                 related_name='x2grp',
                                 help_text='grantor of privilege')
 
