@@ -7,13 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from mezzanine.pages.models import Page
 from mezzanine.pages.page_processors import processor_for
 
-# def get_resource_names():
-#     names = []
-#     for res in hydroshare.get_resource_types():
-#         names.append(res.__name__)
-#
-#         
-        
+
 #
 # To create a new resource, use these two super-classes.
 #
@@ -116,21 +110,12 @@ class SupportedResTypes(AbstractMetaDataElement):
     term = 'SupportedResTypes'
     supported_res_types= models.ManyToManyField(SupportedResTypeChoices, null=True, blank=True)
 
-
-    # def __unicode__(self):
-    #     self.other_parameters
-
     def get_supported_res_types_str(self):
         return ', '.join([parameter.description for parameter in self.supported_res_types.all()])
 
     @classmethod
     def create(cls, **kwargs):
         if 'supported_res_types' in kwargs:
-        #     cls._validate_swat_model_parameters(kwargs['model_parameters'])
-        # else:
-        #     raise ValidationError("model_parameters is missing.")
-        # if not 'other_parameters' in kwargs:
-        #     raise ValidationError("ModelParameter other_parameters is missing.")
 
             metadata_obj = kwargs['content_object']
             new_meta_instance = SupportedResTypes.objects.create(content_object=metadata_obj,)
@@ -158,9 +143,6 @@ class SupportedResTypes(AbstractMetaDataElement):
                     else:
                         meta_instance.supported_res_types.create(description=res_type_str)
 
-            # if 'other_parameters' in kwargs:
-            #     swat_model_parameters.other_parameters = kwargs['other_parameters']
-
             meta_instance.save()
 
             # delete model_parameters metadata element if it has no data
@@ -173,48 +155,6 @@ class SupportedResTypes(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("SupportedResTypes element can't be deleted.")
-
-
-
-
-# #the resource types that can be used by this tool- one class instance per type
-# class ToolResourceType(AbstractMetaDataElement):
-#     term = 'Tool Resource Type'
-#     tool_res_type = models.CharField(null=True, max_length="500")  #a string of the resource type class, lowered. like res.content_model
-#
-#     @classmethod
-#     def create(cls, **kwargs):
-#         if 'tool_res_type' in kwargs:
-#             if 'content_object' in kwargs:
-#                 content_object = kwargs['content_object']
-#                 tool_res_type_res = ToolResourceType.objects.create(tool_res_type=kwargs['tool_res_type'], content_object=content_object)
-#                 return tool_res_type_res
-#             else:
-#                 raise ValidationError('Metadata instance for which Resource Type element to be created is missing.')
-#         else:
-#             raise ValidationError("String 'tool_res_type' is missing.")
-#
-#
-#     @classmethod
-#     def update(cls, element_id, **kwargs):
-#         tool_res_type_res = ToolResourceType.objects.get(id=element_id)
-#         if tool_res_type_res:
-#             if 'tool_res_type' in kwargs:
-#                 tool_res_type_res.tool_res_type = kwargs['tool_res_type']
-#                 tool_res_type_res.save()
-#             else:
-#                 raise ValidationError("String 'tool_res_type' is missing.")
-#         else:
-#             raise ObjectDoesNotExist("No Resource Type element was found for the provided id:%s" % kwargs['id'])
-#
-#     @classmethod
-#     def remove(cls, element_id):
-#         tool_res_type_res = ToolResourceType.objects.get(id=element_id)
-#         if tool_res_type_res:
-#             tool_res_type_res.delete()
-#         else:
-#             raise ObjectDoesNotExist("No Resource Type element was found for id:%d." % element_id)
-
 
 
 class ToolVersion(AbstractMetaDataElement):
@@ -261,7 +201,6 @@ class ToolMetaData(CoreMetaData):
     # tool license is implemented via existing metadata element "rights" with attr. "statement" and "url"
     # should be only one Request Url Base metadata element
     url_bases = generic.GenericRelation(RequestUrlBase)
-    # res_types = generic.GenericRelation(ToolResourceType)
 
     # should be only one Version metadata element
     versions = generic.GenericRelation(ToolVersion)
@@ -273,8 +212,6 @@ class ToolMetaData(CoreMetaData):
         elements = super(ToolMetaData, cls).get_supported_element_names()
         # add the name of any additional element to the list
         elements.append('RequestUrlBase')   # needs to match the class name
-        # elements.append('ToolResourceType')
-        #
         elements.append('ToolVersion')
         elements.append('SupportedResTypes')
         return elements
@@ -297,11 +234,11 @@ class ToolMetaData(CoreMetaData):
             hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
             hsterms_name.text = url.value
 
-        # for type in self.res_types.all():
-        #     hsterms_method = etree.SubElement(container, '{%s}ResourceType' % self.NAMESPACES['hsterms'])
-        #     hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-        #     hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}type' % self.NAMESPACES['hsterms'])
-        #     hsterms_name.text = type.tool_res_type
+        for type in self.supported_res_types.all():
+            hsterms_method = etree.SubElement(container, '{%s}ResourceType' % self.NAMESPACES['hsterms'])
+            hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}type' % self.NAMESPACES['hsterms'])
+            hsterms_name.text = type.get_supported_res_types_str()
 
 
         for v in self.versions.all():

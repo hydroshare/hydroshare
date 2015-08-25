@@ -41,41 +41,7 @@ class UrlBaseValidationForm(forms.Form):
     value = forms.CharField(max_length="500")
 
 # The following 3 classes need to have the "field" same as the fields defined in "ToolResourceType" table in models.py
-# class ResTypeFormHelper(BaseFormHelper):
-#     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
-#
-#         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-#         field_width = 'form-control input-sm'
-#         layout = Layout(
-#                         Field('tool_res_type', css_class=field_width),
-#                         HTML(
-#                             '<ul>'
-#                             '{% for r in res_types %}'
-#                             '<li>{{ r }}</li>'
-#                             '{% endfor %}'
-#                             '</ul>'
-#                         )
-#                  )
-#
-#         super(ResTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
-#
-#
-# class ResTypeForm(ModelForm):
-#     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-#         super(ResTypeForm, self).__init__(*args, **kwargs)
-#         self.helper = ResTypeFormHelper(allow_edit, res_short_id, element_id, element_name='ToolResourceType')
-#
-#
-#     class Meta:
-#         model = ToolResourceType
-#         fields = ['tool_res_type']
-#         exclude = ['content_object']
-#
-#
-# class ResTypeValidationForm(forms.Form):
-#     tool_res_type = forms.Field()
-#
-#
+
 class VersionFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
