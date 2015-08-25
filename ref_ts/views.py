@@ -203,7 +203,7 @@ def add_dublin_core(request, page):
     tools = context.get('relevant_tools')
     if tools:
         for tool in tools:
-            tool['url'] = "{0}{1}{2}{3}{4}".format(tool['url'],"&fn=",wml2_fn,"&fileurl=", request.build_absolute_uri(wml2_url))
+            tool['url'] = "{0}{1}{2}".format(tool['url'],"&fn=",wml2_fn)
     context['extended_metadata_exists'] = extended_metadata_exists
     context['site'] = content_model.metadata.sites.all().first()
     context['variable'] = content_model.metadata.variables.all().first()

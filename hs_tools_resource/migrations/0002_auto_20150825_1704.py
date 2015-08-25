@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('contenttypes', '0001_initial'),
-        ('hs_tools_resource', '0002_auto_20150708_2304'),
+        ('hs_tools_resource', '0001_initial'),
     ]
 
     operations = [
@@ -36,6 +36,13 @@ class Migration(migrations.Migration):
             bases=(models.Model,),
         ),
         migrations.RemoveField(
+            model_name='fee',
+            name='content_type',
+        ),
+        migrations.DeleteModel(
+            name='Fee',
+        ),
+        migrations.RemoveField(
             model_name='toolresourcetype',
             name='content_type',
         ),
@@ -45,5 +52,11 @@ class Migration(migrations.Migration):
         migrations.AlterModelOptions(
             name='toolresource',
             options={'ordering': ('_order',), 'verbose_name': 'Web App Resource'},
+        ),
+        migrations.AddField(
+            model_name='requesturlbase',
+            name='resShortID',
+            field=models.CharField(default=b'UNKNOWN', max_length=100),
+            preserve_default=True,
         ),
     ]
