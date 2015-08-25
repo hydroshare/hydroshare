@@ -1168,7 +1168,7 @@
                                 </div>
                                 <div id="div_id_northlimit" class="control-group"><label
                                         for="id_northlimit" class="control-label requiredField">
-                                    North Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                    North Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_northlimit" name="northlimit" type="text"
@@ -1178,7 +1178,7 @@
                                 </div>
                                 <div id="div_id_eastlimit" class="control-group"><label
                                         for="id_eastlimit" class="control-label requiredField">
-                                    East Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                    East Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_eastlimit" name="eastlimit" type="text"
@@ -1187,7 +1187,7 @@
                                 </div>
                                 <div id="div_id_southlimit" class="control-group"><label
                                         for="id_southlimit" class="control-label requiredField">
-                                    South Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                    South Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_southlimit" name="southlimit" type="text"
@@ -1196,7 +1196,7 @@
                                 </div>
                                 <div id="div_id_westlimit" class="control-group"><label
                                         for="id_westlimit" class="control-label requiredField">
-                                    West Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                    West Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_westlimit" name="westlimit" type="text"
@@ -1394,6 +1394,8 @@
                     {%  else %}
                        {%  crispy metadata_form  %}
                     {%  endif %}
+                    {% block extra_section %} {# add extra section for resource landing page #}
+                    {% endblock %}
                     </div>
                     {%  endif %}
                 {%  endif %}
@@ -1416,6 +1418,10 @@
             </div>
             </div>
         <!-- ==== Tabs end ==== -->
+
+
+
+
         <div class="rating">
             {% rating_for cm %}
         </div>
