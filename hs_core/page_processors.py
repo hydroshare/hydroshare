@@ -3,7 +3,7 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core.models import GenericResource, AbstractResource
 from hs_core import languages_iso
 from forms import *
-from hs_tools_resource.models import ToolResourceType
+from hs_tools_resource.models import SupportedResTypes
 from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
 
@@ -44,8 +44,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     if not resource_edit:
             relevant_tools = []
-            for res_type in ToolResourceType.objects.all():
-                if str(content_model.content_model).lower() in str(res_type.tool_res_type).lower():
+            for res_type in SupportedResTypes.objects.all():
+                if str(content_model.content_model).lower() in str(res_type.get_supported_res_types_str()).lower():
                     url_obj = res_type.content_object.url_bases.first()
                     tool_res_obj = hydroshare.get_resource_by_shortkey(url_obj.resShortID)
                     tool_edit_mode = False

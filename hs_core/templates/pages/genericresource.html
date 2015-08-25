@@ -763,7 +763,7 @@
                         <li class="col-xs-2 col-md-2">
                             <a href="#relevantTools" data-toggle="tab">
                                 <span class="glyphicon glyphicon-wrench"></span>
-                                &nbsp;Relevant Tools
+                                &nbsp;Relevant Web Apps
                             </a>
                         </li>
                     {% endif %}
@@ -1406,7 +1406,7 @@
                 {% if not metadata_form %}
                     {% for tool in relevant_tools %}
                         <h4>{{ tool.title }}</h4>
-                        <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch Tool</button></a>
+                        <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch Web App</button></a>
                         <hr>
                     {% endfor %}
                 {% else %}

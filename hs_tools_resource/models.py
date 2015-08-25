@@ -20,7 +20,7 @@ from mezzanine.pages.page_processors import processor_for
 class ToolResource(Page, AbstractResource):
 
     class Meta:
-        verbose_name = 'Tool Resource'
+        verbose_name = 'Web App Resource'
 
     def extra_capabilities(self):
         return None
@@ -167,57 +167,53 @@ class SupportedResTypes(AbstractMetaDataElement):
             if len(meta_instance.supported_res_types.all()) == 0 :
                 meta_instance.delete()
         else:
-            raise ObjectDoesNotExist("No ModelParameter element was found for the provided id:%s" % kwargs['id'])
+            raise ObjectDoesNotExist("No supported_res_types element was found for the provided id:%s" % kwargs['id'])
 
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("ModelParameter element of a resource can't be deleted.")
-
-    # @classmethod
-    # def _validate_swat_model_parameters(cls, parameters):
-    #     for swat_parameters in parameters:
-    #         if swat_parameters not in ['Crop rotation', 'Tile drainage', 'Point source', 'Fertilizer', 'Tillage operation', 'Inlet of draining watershed', 'Irrigation operation']:
-    #             raise ValidationError('Invalid swat_model_parameters:%s' % parameters)
+        raise ValidationError("SupportedResTypes element can't be deleted.")
 
 
-#the resource types that can be used by this tool- one class instance per type
-class ToolResourceType(AbstractMetaDataElement):
-    term = 'Tool Resource Type'
-    tool_res_type = models.CharField(null=True, max_length="500")  #a string of the resource type class, lowered. like res.content_model
-
-    @classmethod
-    def create(cls, **kwargs):
-        if 'tool_res_type' in kwargs:
-            if 'content_object' in kwargs:
-                content_object = kwargs['content_object']
-                tool_res_type_res = ToolResourceType.objects.create(tool_res_type=kwargs['tool_res_type'], content_object=content_object)
-                return tool_res_type_res
-            else:
-                raise ValidationError('Metadata instance for which Resource Type element to be created is missing.')
-        else:
-            raise ValidationError("string 'tool_res_type' is missing.")
 
 
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        tool_res_type_res = ToolResourceType.objects.get(id=element_id)
-        if tool_res_type_res:
-            if 'tool_res_type' in kwargs:
-                tool_res_type_res.tool_res_type = kwargs['tool_res_type']
-                tool_res_type_res.save()
-            else:
-                raise ValidationError("String 'tool_res_type' is missing.")
-        else:
-            raise ObjectDoesNotExist("No Resource Type element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        tool_res_type_res = ToolResourceType.objects.get(id=element_id)
-        if tool_res_type_res:
-            tool_res_type_res.delete()
-        else:
-            raise ObjectDoesNotExist("No Resource Type element was found for id:%d." % element_id)
+# #the resource types that can be used by this tool- one class instance per type
+# class ToolResourceType(AbstractMetaDataElement):
+#     term = 'Tool Resource Type'
+#     tool_res_type = models.CharField(null=True, max_length="500")  #a string of the resource type class, lowered. like res.content_model
+#
+#     @classmethod
+#     def create(cls, **kwargs):
+#         if 'tool_res_type' in kwargs:
+#             if 'content_object' in kwargs:
+#                 content_object = kwargs['content_object']
+#                 tool_res_type_res = ToolResourceType.objects.create(tool_res_type=kwargs['tool_res_type'], content_object=content_object)
+#                 return tool_res_type_res
+#             else:
+#                 raise ValidationError('Metadata instance for which Resource Type element to be created is missing.')
+#         else:
+#             raise ValidationError("String 'tool_res_type' is missing.")
+#
+#
+#     @classmethod
+#     def update(cls, element_id, **kwargs):
+#         tool_res_type_res = ToolResourceType.objects.get(id=element_id)
+#         if tool_res_type_res:
+#             if 'tool_res_type' in kwargs:
+#                 tool_res_type_res.tool_res_type = kwargs['tool_res_type']
+#                 tool_res_type_res.save()
+#             else:
+#                 raise ValidationError("String 'tool_res_type' is missing.")
+#         else:
+#             raise ObjectDoesNotExist("No Resource Type element was found for the provided id:%s" % kwargs['id'])
+#
+#     @classmethod
+#     def remove(cls, element_id):
+#         tool_res_type_res = ToolResourceType.objects.get(id=element_id)
+#         if tool_res_type_res:
+#             tool_res_type_res.delete()
+#         else:
+#             raise ObjectDoesNotExist("No Resource Type element was found for id:%d." % element_id)
 
 
 
@@ -233,13 +229,13 @@ class ToolVersion(AbstractMetaDataElement):
                 metadata_type = ContentType.objects.get_for_model(content_object)
                 version = ToolVersion.objects.filter(value__iexact=kwargs['value'], object_id=content_object.id, content_type=metadata_type).first()
                 if version:
-                    raise ValidationError('There can only be one Tool Version')
+                    raise ValidationError('There can only be one App Version')
                 version = ToolVersion.objects.create(value=kwargs['value'], content_object=content_object)
                 return version
             else:
-                raise ValidationError('Metadata instance for which Tool Version element to be created is missing.')
+                raise ValidationError('Metadata instance for which App Version element to be created is missing.')
         else:
-            raise ValidationError("Value of Tool Version is missing.")
+            raise ValidationError("App Version is missing.")
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -249,9 +245,9 @@ class ToolVersion(AbstractMetaDataElement):
                 version.value = kwargs['value']
                 version.save()
             else:
-                raise ValidationError('Value of Tool Version is missing')
+                raise ValidationError('App Version is missing')
         else:
-            raise ObjectDoesNotExist("No Tool Version element was found for the provided id:%s" % kwargs['id'])
+            raise ObjectDoesNotExist("No App Version element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
@@ -259,14 +255,14 @@ class ToolVersion(AbstractMetaDataElement):
         if version:
             version.delete()
         else:
-            raise ObjectDoesNotExist("No Tool Version element was found for id:%d." % element_id)
+            raise ObjectDoesNotExist("No App Version element was found for id:%d." % element_id)
 
 class ToolMetaData(CoreMetaData):
     # tool license is implemented via existing metadata element "rights" with attr. "statement" and "url"
     # should be only one Request Url Base metadata element
     url_bases = generic.GenericRelation(RequestUrlBase)
-    res_types = generic.GenericRelation(ToolResourceType)
-    #fees = generic.GenericRelation(Fee)
+    # res_types = generic.GenericRelation(ToolResourceType)
+
     # should be only one Version metadata element
     versions = generic.GenericRelation(ToolVersion)
     supported_res_types= generic.GenericRelation(SupportedResTypes)
@@ -277,8 +273,8 @@ class ToolMetaData(CoreMetaData):
         elements = super(ToolMetaData, cls).get_supported_element_names()
         # add the name of any additional element to the list
         elements.append('RequestUrlBase')   # needs to match the class name
-        elements.append('ToolResourceType')
-        #elements.append('Fee')
+        # elements.append('ToolResourceType')
+        #
         elements.append('ToolVersion')
         elements.append('SupportedResTypes')
         return elements
@@ -301,25 +297,18 @@ class ToolMetaData(CoreMetaData):
             hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
             hsterms_name.text = url.value
 
-        for type in self.res_types.all():
-            hsterms_method = etree.SubElement(container, '{%s}ResourceType' % self.NAMESPACES['hsterms'])
-            hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}type' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = type.tool_res_type
-
-        # for fee in self.fees.all():
-        #     hsterms_method = etree.SubElement(container, '{%s}Fee' % self.NAMESPACES['hsterms'])
+        # for type in self.res_types.all():
+        #     hsterms_method = etree.SubElement(container, '{%s}ResourceType' % self.NAMESPACES['hsterms'])
         #     hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-        #     hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
-        #     hsterms_name.text = unicode(fee.value)
-        #     hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}description' % self.NAMESPACES['hsterms'])
-        #     hsterms_name.text = fee.description
+        #     hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}type' % self.NAMESPACES['hsterms'])
+        #     hsterms_name.text = type.tool_res_type
+
 
         for v in self.versions.all():
             hsterms_method = etree.SubElement(container, '{%s}ToolVersion' % self.NAMESPACES['hsterms'])
             hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = unicode(v.value)
+        #     hsterms_name.text = unicode(v.value)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 

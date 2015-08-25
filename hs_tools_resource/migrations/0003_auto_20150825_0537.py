@@ -35,4 +35,15 @@ class Migration(migrations.Migration):
             },
             bases=(models.Model,),
         ),
+        migrations.RemoveField(
+            model_name='toolresourcetype',
+            name='content_type',
+        ),
+        migrations.DeleteModel(
+            name='ToolResourceType',
+        ),
+        migrations.AlterModelOptions(
+            name='toolresource',
+            options={'ordering': ('_order',), 'verbose_name': 'Web App Resource'},
+        ),
     ]
