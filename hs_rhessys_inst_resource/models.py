@@ -46,16 +46,16 @@ class InstResource(BaseResource):
     project_name = models.CharField(max_length=100)
 
     def can_add(self, request):
-        return AbstractResource.can_add(self, request)
+        return super(InstResource, self).can_add(self, request)
 
     def can_change(self, request):
-        return AbstractResource.can_change(self, request)
+        return super(InstResource, self).can_change(self, request)
 
     def can_delete(self, request):
-        return AbstractResource.can_delete(self, request)
+        return super(InstResource, self).can_delete(self, request)
 
     def can_view(self, request):
-        return AbstractResource.can_view(self, request)
+        return super(InstResource, self).can_view(self, request)
 
 def when_my_process_ends(sender, instance, result_text=None, result_data=None, files=None, logs=None, **kw):
     # make something out of the result data - result_data is a dict, result_text is plaintext
