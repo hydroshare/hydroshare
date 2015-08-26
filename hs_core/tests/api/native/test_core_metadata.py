@@ -950,10 +950,6 @@ class TestCoreMetadata(TestCase):
 
     def test_get_xml(self):
 
-        # add a type element
-        resource.create_metadata_element(self.res.short_id, 'type', url="http://hydroshare.org/GenericResource")
-        self.assertEqual(self.res.metadata.type.url, "http://hydroshare.org/GenericResource")
-
         # change the title
         resource.update_metadata_element(self.res.short_id, 'title', self.res.metadata.title.id,
                                          value="Test generic resource")

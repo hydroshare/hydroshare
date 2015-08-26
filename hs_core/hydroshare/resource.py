@@ -363,6 +363,7 @@ def create_resource(
         )
 
         resource.set_slug('resource{0}{1}'.format('/', resource.short_id))
+        resource.save()
 
         if not metadata:
             metadata = []
