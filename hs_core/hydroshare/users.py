@@ -561,6 +561,9 @@ def get_resource_list(creator=None,
     #     queries = dict((el, []) for el in resource_types)
     q = []
 
+    if type:
+        q.append(Q(resource_type=type[0]))
+
     if published:
         q.append(Q(doi__isnull=False))
 

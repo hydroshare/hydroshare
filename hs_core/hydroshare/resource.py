@@ -361,6 +361,8 @@ def create_resource(
             **kwargs
         )
 
+        resource.resource_type = resource_type
+
         # by default make resource private
         #resource.content_model = "baseresource"
         resource.public = False
