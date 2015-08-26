@@ -302,6 +302,8 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
     metadata.append({'identifier': {'name':'hydroShareIdentifier',
                                     'url':'{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id)}})
 
+    metadata.append({'type': {'url': '{0}/terms/{1}'.format(current_site_url(), resource.__class__.__name__)}})
+
     metadata.append({'date': {'type': 'created', 'start_date': resource.created}})
     metadata.append({'date': {'type': 'modified', 'start_date': resource.updated}})
 
