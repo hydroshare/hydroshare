@@ -83,7 +83,7 @@ function get_store(store, parent, margin){
                         $('.file').removeClass('selected');
                         $(e.target).css('background','#cecece');
                         $(e.target).addClass('selected');
-                        set_datastore($(this).parent('div')[0], 0)
+                        set_datastore($(this).parent('div')[0], false)
                         return false
                     });
                 });
@@ -100,28 +100,28 @@ function get_store(store, parent, margin){
 
 function click_folder_opr() {
     var margin_left = parseInt($(this).css('margin-left')) + 10;
-        if($(this).hasClass('isOpen')) {
-            $(this).addClass('isClose');
-            $(this).removeClass('isOpen');
-            $(this).children('div').hide();
-            set_datastore($(this).attr('name'), 'folder');
-        }
-        else if($(this).hasClass('isClose')) {
-            $(this).addClass('isOpen');
-            $(this).removeClass('isClose');
-            $(this).children('div').show();
-        }
-        else {
-            var store = $(this).attr('name');
-            var parent = $(this)
-            get_store(store, parent, margin_left);
-            $(this).addClass('isOpen');
-            set_datastore($(this).attr('name'), 1);
-        }
-        return false;
+    if($(this).hasClass('isOpen')) {
+        $(this).addClass('isClose');
+        $(this).removeClass('isOpen');
+        $(this).children('div').hide();
+        set_datastore($(this).attr('name'), true);
+    }
+    else if($(this).hasClass('isClose')) {
+        $(this).addClass('isOpen');
+        $(this).removeClass('isClose');
+        $(this).children('div').show();
+    }
+    else {
+        var store = $(this).attr('name');
+        var parent = $(this)
+        get_store(store, parent, margin_left);
+        $(this).addClass('isOpen');
+        set_datastore($(this).attr('name'), true);
+    }
+    return false;
 }
 
-function set_datastore(store,isFolder) {
+function set_datastore(store, isFolder) {
     if (!isFolder) {
         store = $(store).attr('name');
     }
@@ -170,13 +170,6 @@ $('#iget_irods').on('click',function(){
     $("#irods-port").val(sessionStorage.IRODS_port)
     $('#irodsContent .modal-backdrop.up-load').show();
     $('#irodsContent .ajax-loader').show();
-});
-
-// Submit post on submit
-$('#post-form').on('submit', function(event){
-    event.preventDefault();
-    console.log("form submitted!")  // sanity check
-    create_post();
 });
 
 function irods_login() {
