@@ -7,12 +7,13 @@
     {% with u.userprofile as profile %}
 
         <div class="row">
-            <div class="col-sm-3">
+            <div class="col-sm-3 col-xs-12">
                 {% if profile.picture %}
-                    <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>
+                <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>
                 {% endif %}
+
             </div>
-            <div class="col-sm-9">
+            <div class="col-sm-9 col-xs-12">
                 <h2><b>{{ u.first_name }} {{ u.last_name }}</b></h2>
 
                 <h4 class="text-muted">
@@ -70,7 +71,7 @@
                                         <h5 class="text-muted">(904) 343 3074</h5>
                                     </div>
                                     <div class="col-xs-12 col-sm-3">
-                                        <a href="http://www.usu.edu/" target="_blank"><img class="img-responsive"
+                                        <a href="http://www.usu.edu/" target="_blank"><img class="img-responsive affiliation-logo"
                                                                                            src="http://www.usu.edu/prm/identity/logos/vertical-blue.jpg"
                                                                                            alt="USU logo"></a>
                                     </div>
@@ -87,7 +88,7 @@
                                         <h5 class="text-muted">(904) 343 3074</h5>
                                     </div>
                                     <div class="col-xs-12 col-sm-3">
-                                        <a href="http://uwrl.usu.edu/" target="_blank"><img class="img-responsive"
+                                        <a href="http://uwrl.usu.edu/" target="_blank"><img class="img-responsive affiliation-logo"
                                                                                             src="http://uwrl.usu.edu/sites/default/files/uwrllogo.gif"
                                                                                             alt="UWRL logo"></a>
                                     </div>

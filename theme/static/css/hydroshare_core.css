@@ -1933,6 +1933,14 @@ ul.resource-search-options {
 	padding: 20px;
 }
 
+.affiliation-row {
+	width: 100%;
+}
+
+.affiliation-logo {
+
+}
+
 #tab-contact .social li {
 	border: 1px solid #3E7A8C;
 	-webkit-border-radius: 2px;
