@@ -1,4 +1,7 @@
 __author__ = 'Pabitra'
+
+import unittest
+
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
 from hs_core.models import GroupOwnership
@@ -14,6 +17,7 @@ class TestSetGroupOwnerAPI(TestCase):
         Group.objects.all().delete()
         pass
 
+    @unittest.skip
     def test_set_group_owner(self):
         user_owner_1 = hydroshare.create_account(
             'owner_1@usu.edu',
@@ -42,6 +46,7 @@ class TestSetGroupOwnerAPI(TestCase):
         # test the group ownership has the correct owner
         self.assertEqual(group_ownership[0].owner, user_owner_1)
 
+    @unittest.skip
     def test_set_group_owner_duplicate(self):
         user_owner_1 = hydroshare.create_account(
             'owner_1@usu.edu',

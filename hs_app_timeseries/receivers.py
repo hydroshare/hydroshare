@@ -464,7 +464,7 @@ def _validate_odm2_db_file(uploaded_file_sqlite_file):
             cur = con.cursor()
             odm2_core_table_names = ['People', 'Affiliations', 'SamplingFeatures', 'ActionBy', 'Organizations',
                                      'Methods', 'FeatureActions', 'Actions', 'RelatedActions', 'Results', 'Variables',
-                                     'Units', 'DataSets', 'DataSetsResults', 'ProcessingLevels', 'TaxonomicClassifiers' ]
+                                     'Units', 'Datasets', 'DatasetsResults', 'ProcessingLevels', 'TaxonomicClassifiers' ]
             # check the tables exist
             for table_name in odm2_core_table_names:
                 cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?", ("table", table_name))

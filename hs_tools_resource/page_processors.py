@@ -10,6 +10,7 @@ from functools import *
 from hs_core.views import *
 
 @processor_for(ToolResource)
+# TODO: problematic permissions
 def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
@@ -73,7 +74,7 @@ def landing_page(request, page):
 
 
         # get the context from hs_core
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
 
         res_type_names = []
         for res_type_class in get_resource_types():

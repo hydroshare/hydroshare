@@ -9,6 +9,7 @@ from hs_core.views import *
 
 @processor_for(ModelProgramResource)
 # when the resource is created this page will be shown
+# TODO: problematic permissions
 def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
@@ -39,7 +40,7 @@ def landing_page(request, page):
 
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
-                                                   extended_metadata_layout=ext_md_layout)
+                                                   extended_metadata_layout=ext_md_layout, request=request)
 
         context['resource_type'] = 'Model Program Resource'
         context['output_form'] = output_form

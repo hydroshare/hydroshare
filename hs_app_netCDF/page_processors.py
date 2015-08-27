@@ -92,28 +92,25 @@ def landing_page(request, page):
                 form.action = "/hsapi/_internal/%s/variable/add-metadata/" % content_model.short_id
 
         # get the context from hs_core
-        ext_md_layout = Layout(
-                                AccordionGroup('Spatial Reference',
-                                    HTML('<div class="form-group col-lg-6 col-xs-12" id="originalcoverage"> '
-                                                '{% load crispy_forms_tags %} '
-                                                '{% crispy original_coverage_form %} '
-                                              '</div> '
+        ext_md_layout = Layout(HTML('<div class="form-group col-lg-6 col-xs-12" id="originalcoverage"> '
+                                            '{% load crispy_forms_tags %} '
+                                            '{% crispy original_coverage_form %} '
+                                          '</div> '
 
-                                              '<div class="row" style="margin-top:10px">'
-                                                '<div class="col-md-10">'
-                                                    '<input class="btn-danger btn btn-md" onclick="check_ori_meta_status()" type="button" data-toggle="modal" data-target="#delete-original-coverage-element-dialog" value="Delete Spatial Reference">'
-                                                '</div>'
-                                              '</div>'
-                                                '<hr style="border: 0;">'
-                                              '{% crispy original_coverage_form.delete_modal_form %} '
-                                         ),
-                                ),
-                                AccordionGroup('Variable', VariableLayoutEdit),
-                                ModalDialogLayoutAddVariable,
+                                          '<div class="row" style="margin-top:10px">'
+                                            '<div class="col-md-10">'
+                                                '<input class="btn-danger btn btn-md" onclick="check_ori_meta_status()" type="button" data-toggle="modal" data-target="#delete-original-coverage-element-dialog" value="Delete Spatial Reference">'
+                                            '</div>'
+                                          '</div>'
+                                            '<hr style="border: 0;">'
+                                          '{% crispy original_coverage_form.delete_modal_form %} '
+                                     ),
+                            VariableLayoutEdit,
+                            ModalDialogLayoutAddVariable,
 
         )
 
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
         context['variable_formset'] = variable_formset
         context['add_variable_modal_form'] = add_variable_modal_form
         context['original_coverage_form'] = ori_cov_form

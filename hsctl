@@ -1,0 +1,251 @@
+#!/usr/bin/env bash
+
+# hsctl
+# HydroShare Control Script
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
+### Local Config ###
+CONFIG_DIRECTORY='./config'
+CONFIG_FILE=${CONFIG_DIRECTORY}'/hydroshare-config.yaml'
+HOME_DIR=${PWD}
+
+# Read hydroshare-config.yaml into environment
+sed -e "s/:[^:\/\/]/=/g;s/$//g;s/ *=/=/g" $CONFIG_FILE > $CONFIG_DIRECTORY/hydroshare-config.sh
+sed -i 's/#.*$//' $CONFIG_DIRECTORY/hydroshare-config.sh
+sed -i '/^\s*$/d' $CONFIG_DIRECTORY/hydroshare-config.sh
+while read line; do export $line; done < <(cat $CONFIG_DIRECTORY/hydroshare-config.sh)
+
+### Docker Variables ###
+HS_DOCKER_CONTAINERS=(hydroshare_hydroshare_1 hydroshare_dockerworker_1 hydroshare_defaultworker_1 )
+HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_dockerworker hydroshare_defaultworker)
+OTHER_DOCKER_CONTAINERS=(hydroshare_postgis_1 hydroshare_rabbitmq_1 hydroshare_redis_1 )
+
+### Pre-flight Variables ###
+HTTP_RECAPTCHA='http://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
+HTTPS_RECAPTCHA='https://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
+DEV_SERVER='python manage.py runserver 0.0.0.0:8000'
+PROD_SERVER='uwsgi --socket :8001 --ini uwsgi.ini'
+
+display_usage() {
+	echo "*** HydroShare Control script ***"
+	echo "usage: $0 deploy      # deletes all database and container contents and deploys from scratch"
+	echo "usage: $0 loaddb      # loads database specified in hydroshare-config.yaml into running container"
+	echo "usage: $0 rebuild     # deletes hydroshare container contents only and deploys using exsiting database"
+	echo "usage: $0 restart     # restarts the hydroshare container without rebuilding"
+	echo "usage: $0 start       # attempts to start all containers"
+	echo "usage: $0 stop        # stops all running containers"
+}
+
+start_nginx() {
+    echo "*** START NGINX ***"
+    cd $NGINX_DIR
+    ./run-nginx start
+    cd -
+}
+
+stop_nginx() {
+    echo "*** STOP NGINX ***"
+    cd $NGINX_DIR
+    ./run-nginx stop
+    cd -
+}
+
+restart_hs() {
+    echo "*** ${1^^} ***"
+    stop_nginx
+    preflight_hs
+    docker stop hydroshare_hydroshare_1
+    docker start hydroshare_hydroshare_1
+    if [ "${USE_NGINX,,}" = true ]; then
+        start_nginx
+    fi
+}
+
+start_hs() {
+    echo "*** ${1^^}: all docker containers ***"
+    preflight_hs
+    for f in "${OTHER_DOCKER_CONTAINERS[@]}"; do
+        docker start $f;
+    done
+    for f in "${HS_DOCKER_CONTAINERS[@]}"; do
+        docker start $f;
+    done
+    if [ "${USE_NGINX,,}" = true ]; then
+        start_nginx
+    fi
+}
+
+stop_hs() {
+    echo "*** ${1^^}: all running docker containers ***"
+    stop_nginx
+    for f in "${HS_DOCKER_CONTAINERS[@]}"; do
+        CHECK_HS_DOCKER_CID=`docker ps -a | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_DOCKER_CID}" ]]; then
+            docker stop $f;
+        fi
+    done
+    for f in "${OTHER_DOCKER_CONTAINERS[@]}"; do
+        CHECK_HS_OTHER_CID=`docker ps -a | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_OTHER_CID}" ]]; then
+            docker stop $f;
+        fi
+    done
+}
+
+preflight_hs() {
+    yes | cp -rf ${HS_PATH}/docker-compose.template ${HS_PATH}/docker-compose.yml
+    sed -i 's!HS_SHARED_VOLUME!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
+    if [ "${USE_NGINX,,}" = true ]; then
+        echo "*** Using nginx: USE_NGINX = ${USE_NGINX} ***"
+        # create hs-certs directory if it doesn't exist
+        if [[ ! -d ${HOST_SSL_DIR} ]]; then
+            echo "*** creating directory: ${HOST_SSL_DIR} ***"
+            mkdir ${HOST_SSL_DIR};
+        fi
+        # generate nginx configuration file
+        if [ "${USE_SSL,,}" = true ]; then
+            echo "*** Using SSL: USE_SSL = ${USE_SSL} ***"
+            # use https version of recaptcha
+            sed -i 's!'${HTTP_RECAPTCHA}'!'${HTTPS_RECAPTCHA}'!g' ${HS_PATH}/theme/templates/accounts/_signup_form.html
+            # copy ssl cert and ssl key to hs-certs directory
+            yes | cp -rf ${SSL_CERT_DIR}/${SSL_CERT_FILE} ${HOST_SSL_DIR}
+            yes | cp -rf ${SSL_CERT_DIR}/${SSL_KEY_FILE} ${HOST_SSL_DIR};
+        else
+            echo "*** Not using SSL: USE_SSL = ${USE_SSL} ***"
+            # use http version of recaptcha
+            sed -i 's!'${HTTPS_RECAPTCHA}'!'${HTTP_RECAPTCHA}'!g' ${HS_PATH}/theme/templates/accounts/_signup_form.html;
+        fi
+        # use production server to run HydroShare
+        sed -i 's/'"${DEV_SERVER}"'/'"${PROD_SERVER}"'/g' ${HS_PATH}/init;
+    else
+        echo "*** Not using nginx: USE_NGINX = ${USE_NGINX} ***"
+        # use http version of recaptcha
+        sed -i 's!'${HTTPS_RECAPTCHA}'!'${HTTP_RECAPTCHA}'!g' ${HS_PATH}/theme/templates/accounts/_signup_form.html
+        # use development server to run HydroShare
+        sed -i 's/'"${PROD_SERVER}"'/'"${DEV_SERVER}"'/g' ${HS_PATH}/init;
+    fi
+}
+
+rebuild_hs() {
+    echo "*** ${1^^} *** "
+    stop_hs STOP
+    preflight_hs
+    echo "*** REMOVE: all hydroshare docker containers (preserves exiting database contents)  ***"
+    for f in "${HS_DOCKER_CONTAINERS[@]}"; do
+        docker rm -fv $f;
+    done
+    sleep 1s
+    echo "*** REMOVE: all hydroshare docker images  ***"
+    for f in "${HS_DOCKER_IMAGES[@]}"; do
+        docker rmi -f $f;
+    done
+    sleep 1s
+    # bring up all docker containers
+    echo "*** bring up all docker containers as defined in docker-compose.yml ***"
+    docker-compose up -d
+    # allow containers to start
+    echo "*** allowing containers to start up ***"
+    for pc in $(seq 10 -1 1); do
+        echo -ne "$pc ...\033[0K\r"
+        sleep 1
+    done
+    echo
+    if [ "${USE_NGINX,,}" = true ]; then
+        start_nginx
+    fi
+}
+
+loaddb_hs() {
+    echo "*** ${1^^} ***"
+    echo "*** load clean pg.development.sql database from the running hydroshare container ***"
+    CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
+    echo "*** drop existing database ***"
+    docker exec $CID dropdb -U postgres -h postgis postgres
+    echo "*** create new database ***"
+    docker exec $CID createdb -U postgres -h postgis postgres --encoding UNICODE --template=template0
+    echo "*** create POSTGIS extension ***"
+    docker exec $CID psql -U postgres -h postgis -w -c 'create extension postgis;'
+    echo "*** load database with contents of ${HS_DATABASE} ***"
+    docker exec $CID psql -U postgres -h postgis -f ${HS_DATABASE}
+    echo "*** mangae.py collectstatic ***"
+    docker exec $CID python manage.py collectstatic -v0 --noinput
+    #echo "*** manage.py makemigrations ***"
+    #docker exec $CID python manage.py makemigrations
+    echo "*** manage.py migrate ***"
+    docker exec $CID python manage.py migrate
+}
+
+deploy_hs() {
+    echo "*** ${1^^} ***"
+    stop_hs STOP
+    preflight_hs
+    echo "*** REMOVE: all docker containers (deletes existing database)  ***"
+    for f in "${HS_DOCKER_CONTAINERS[@]}"; do
+        CHECK_HS_DOCKER_CID=`docker ps -a | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_DOCKER_CID}" ]]; then
+            docker rm -fv $f;
+        fi
+    done
+    sleep 1s
+    for f in "${OTHER_DOCKER_CONTAINERS[@]}"; do
+        CHECK_HS_OTHER_CID=`docker ps -a | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_OTHER_CID}" ]]; then
+            docker rm -fv $f;
+        fi
+    done
+    sleep 1s
+    echo "*** REMOVE: all hydroshare docker images  ***"
+    for f in "${HS_DOCKER_IMAGES[@]}"; do
+        CHECK_HS_DOCKER_IMG=`docker images | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_DOCKER_IMG}" ]]; then
+            docker rmi -f $f;
+        fi
+    done
+    sleep 1s
+    # get submodules
+    echo "*** get git submodules ***"
+    git submodule init && git submodule update
+    # build docker containers
+    echo "*** build docker containers as defined in docker-compose.yml ***"
+    docker-compose build
+    # bring up all docker containers
+    echo "*** bring up all docker containers as defined in docker-compose.yml ***"
+    docker-compose up -d
+    # allow containers to start
+    echo "*** allowing containers to start up ***"
+    for pc in $(seq 10 -1 1); do
+        echo -ne "$pc ...\033[0K\r"
+        sleep 1
+    done
+    echo
+    loaddb_hs LOADDB
+    if [ "${USE_NGINX,,}" = true ]; then
+        start_nginx
+    fi
+}
+
+### Display usage if exactly one argument is not provided ###
+if [  $# -ne 1 ]
+then
+    display_usage
+    exit 1
+fi
+
+case "$1" in
+    deploy) deploy_hs $1
+        ;;
+    loaddb) loaddb_hs $1
+        ;;
+    rebuild) rebuild_hs $1
+        ;;
+    restart) restart_hs $1
+        ;;
+    start) start_hs $1
+        ;;
+    stop) stop_hs $1
+        ;;
+    *) display_usage
+        ;;
+esac
+
+exit 0;

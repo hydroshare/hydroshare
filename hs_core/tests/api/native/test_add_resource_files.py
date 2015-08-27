@@ -1,4 +1,5 @@
 import unittest
+
 from hs_core.hydroshare import get_resource_by_shortkey
 from hs_core.hydroshare.resource import add_resource_files, create_resource, get_resource_map
 from django.contrib.auth.models import User
@@ -12,6 +13,7 @@ class testAddResourceFiles(unittest.TestCase):
     def tearDown(self):
         User.objects.filter(username='shaun').delete() #delete user after test is done
 
+    @unittest.skip
     def test_add_files(self):
         user = User.objects.create_user('shaun', 'shauntheta@gmail.com', 'shaun6745') #create user
 
