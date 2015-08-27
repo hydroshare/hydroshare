@@ -4,7 +4,7 @@
 {% block meta_title %}User profile for {{ u|best_name }}{% endblock %}
 
 {% block main %}
-{% with u.userprofile as profile %}
+    {% with u.userprofile as profile %}
 
         <div class="row">
             <div class="col-sm-3">
@@ -14,139 +14,183 @@
             </div>
             <div class="col-sm-9">
                 <h2><b>{{ u.first_name }} {{ u.last_name }}</b></h2>
-                <h4 class="text-muted">{% if profile.organization %}{{ profile.organization }}{% endif %} |
-                    {% if profile.title %}{{ profile.title }}{% endif %}</h4>
-                {% if profile.subject_areas %}
-                    <p><span class="text-muted">Subject Areas</span>: {{ profile.subject_areas }}</p>
-                {% endif %}
+
+                <h4 class="text-muted">
+                    {% if profile.organization %}{{ profile.organization }}{% endif %} |
+                    {% if profile.title %}{{ profile.title }}{% endif %}
+                </h4>
+                <table>
+                    <tbody>
+                    {% if profile.subject_areas %}
+                        <tr>
+                            <td><span class="text-muted">Subject Areas:</span></td>
+                            <td>{{ profile.subject_areas }}</td>
+                        </tr>
+                        <tr>
+                            <td><span class="text-muted">Profession:</span></td>
+                            <td>Computer Scientist</td>
+                        </tr>
+                    {% endif %}
+
+                    </tbody>
+                </table>
+
+                <h4>About {{ u.first_name }}</h4>
+
+                <p>{{ profile.details }}</p>
+                {#                {% if profile.profession %}#}
+                {#                    <p><span class="text-muted">Profession:</span> {{ profile.profession }}</p>#}
+                {#                {% endif %}#}
+
+
+            </div>
+        </div>
+
+
+        <div class="row">
+            <!-- tabs left -->
+            <div id="about-section">
+                <div>
+                    <div class="tabbable tabs-left">
+                        <ul class="nav nav-tabs col-sm-3">
+                            <li class="active"><a class="text-muted" href="#tab-affiliations" data-toggle="tab">Affiliations</a>
+                            </li>
+                            <li><a class="text-muted" href="#tab-contributions" data-toggle="tab">Contributions</a></li>
+                            <li><a class="text-muted" href="#tab-contact" data-toggle="tab">Contact</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="tab-affiliations">
+                                <div class="row pull-left affiliation-row">
+                                    <div class="col-xs-12 col-sm-9">
+                                        <a href="http://www.usu.edu/" target="_blank">
+                                            <span class="organization_name">Utah State University</span></a>
+                                        <span class="text-muted">(2001-2015)</span>
+                                        <h5 class="text-muted">8200 Old Main Hill, Logan, UT, 84322</h5>
+                                        <h5 class="text-muted">Civil and Environmental Engineering | Professor</h5>
+                                        <h5 class="text-muted">(904) 343 3074</h5>
+                                    </div>
+                                    <div class="col-xs-12 col-sm-3">
+                                        <a href="http://www.usu.edu/" target="_blank"><img class="img-responsive"
+                                                                                           src="http://www.usu.edu/prm/identity/logos/vertical-blue.jpg"
+                                                                                           alt="USU logo"></a>
+                                    </div>
+                                </div>
+                                <div class="row pull-left affiliation-row">
+                                    <div class="col-xs-12 col-sm-9">
+                                        <a href="http://www.usu.edu/" target="_blank">
+                                        <span class="organization_name">Utah Water Research
+                                        Laboratory</span></a>
+                                        <span class="text-muted">(2001-2015)</span>
+                                        <h5 class="text-muted">1600 Canyon Road, Logan, UT, 84321</h5>
+                                        <h5 class="text-muted">Software Programming and Research Support | Web
+                                            Developer</h5>
+                                        <h5 class="text-muted">(904) 343 3074</h5>
+                                    </div>
+                                    <div class="col-xs-12 col-sm-3">
+                                        <a href="http://uwrl.usu.edu/" target="_blank"><img class="img-responsive"
+                                                                                            src="http://uwrl.usu.edu/sites/default/files/uwrllogo.gif"
+                                                                                            alt="UWRL logo"></a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab-contributions">
+                                <div class=col-sm-12">
+                                    <table class="table table-striped table-hover">
+                                        <tbody>
+                                        {% for res in resources %}
+                                            <tr>
+                                                <td>
+                                                    <h5><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></h5>
+                                                </td>
+                                                <td>
+                                                    <h5 class="text-muted">Last modified: {{ res.updated|date }}, {{ res.updated|time }}</h5>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <td>This user has no Resources, yet.</td>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab-contact">
+                                <div class="col-sm-12">
+                                    <h4>Contact info</h4>
+                                    <table>
+                                        <tbody>
+                                        {% if profile.phone_1 %}
+                                            <tr>
+                                                <td><span class="text-muted">{{ profile.phone_1_type }}:</span></td>
+                                                <td>{{ profile.phone_1 }}</td>
+                                            </tr>
+                                        {% endif %}
+                                        {% if profile.phone_2 %}
+                                            <tr>
+                                                <td><span class="text-muted">{{ profile.phone_2_type }}:</span></td>
+                                                <td>{{ profile.phone_2 }}</td>
+                                            </tr>
+                                        {% endif %}
+                                        {% if u.email %}
+                                            {% if user.pk %}
+                                                <tr>
+                                                    <td><span class="text-muted">Email:</span></td>
+                                                    <td><a href="mailto:{{ u.email }}">send email
+                                                        to {{ u.first_name }}</a></td>
+                                                </tr>
+                                            {% else %}
+                                                <tr>
+                                                    <td><span class="text-muted">Email:</span></td>
+                                                    <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                        </tbody>
+                                    </table>
+
+                                    <div class="content social">
+                                        <h4>Additional profile urls</h4>
+                                        <ul>
+                                            <li><a href="#" target="_blank"><i class="fa fa-twitter"></i></a></li>
+
+                                            <li><a href="#" target="_blank"><i class="fa fa-facebook"></i></a></li>
+
+                                            <li><a href="#" target="_blank"><i class="fa fa-pinterest"></i></a></li>
+
+                                            <li><a href="#" target="_blank"><i class="fa fa-youtube"></i></a></li>
+
+                                            <li><a hhref="#" target="_blank"><i class="fa fa-github"></i></a></li>
+
+                                            <li><a href="#" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+
+                                            <li><a href="#" target="_blank"><i class="fa fa-vk"></i></a></li>
+
+                                            <li><a href="#" target="_blank"><i class="fa fa-google-plus"></i></a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /tabs -->
+                </div>
             </div>
         </div>
 
         <div class="row">
-                <!-- tabs left -->
-            <div id="about-section">
-            <div class="about-header col-sm-12">
-                <h3>About</h3>
-            </div>
             <div class="col-sm-12">
-                <div class="tabbable tabs-left">
-                    <ul class="nav nav-tabs col-sm-3">
-                        <li class="active"><a href="#tab-affiliations" data-toggle="tab">Affiliations</a></li>
-                        <li><a href="#tab-contributions" data-toggle="tab">Contributions</a></li>
-                        <li><a href="#tab-contact" data-toggle="tab">Contact</a></li>
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane active" id="tab-affiliations">
-                            <div class="row pull-left affiliation-row">
-                                <div class="col-sm-3">
-                                    <a href="http://www.usu.edu/" target="_blank"><img class="img-responsive"
-                                         src="http://www.usu.edu/prm/identity/logos/vertical-blue.jpg"
-                                         alt="USU logo"></a>
-                                </div>
-                                <div class="col-sm-9">
-                                    <a href="http://www.usu.edu/" target="_blank"><h3>Utah State University</h3></a>
-                                    <h5 class="text-muted">8200 Old Main Hill, Logan, UT, 84322</h5>
-                                    <h5 class="text-muted">Civil and Environmental Engineering | Professor</h5>
-                                </div>
-                            </div>
-                            <div class="row pull-left affiliation-row">
-                                <div class="col-sm-3">
-                                    <a href="http://uwrl.usu.edu/" target="_blank"><img class="img-responsive"
-                                         src="http://uwrl.usu.edu/sites/default/files/uwrllogo.gif"
-                                         alt="UWRL logo"></a>
-                                </div>
-                                <div class="col-sm-9">
-                                    <a href="http://www.usu.edu/" target="_blank"><h3>Utah Water Research Laboratory</h3></a>
-                                    <h5 class="text-muted">1600 Canyon Road, Logan, UT, 84321</h5>
-                                    <h5 class="text-muted">Software Programming and Research Support | Web Developer</h5>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tab-pane" id="tab-contributions">
-                            Contributions Content
-                        </div>
-                        <div class="tab-pane" id="tab-contact">
-                            Contact Content
-                        </div>
-                    </div>
+                <h4>Activity</h4>
+                {% for res in resources %}
+
+                <div class="activity-block">
+                    <img src="{{ profile.picture.url }}" class="activity-thumbnail" alt="profile picture">
+                    <span>{{ u.first_name }} {{ u.last_name }}</span><span class="text-muted"> shared </span>
+                    <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
+                    <h5 style="margin-top:0" class="text-muted">{{ res.updated|date }}, {{ res.updated|time }}</h5>
                 </div>
-                <!-- /tabs -->
+                {% endfor %}
             </div>
-            </div>
+
         </div>
-
-
-
-{#    #}
-{#<div class="row">#}
-{#<div class="col-md-3">#}
-{#    <h2>Profile information</h2>#}
-{##}
-{#    {% if profile.picture %}#}
-{#        <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>#}
-{#    {% endif %}#}
-{##}
-{#    <ul class="list-unstyled">#}
-{#        <li><strong>Name:</strong> {{ u.first_name }} {{ u.last_name }}</li>#}
-{##}
-{#        {% if profile.public %}#}
-{#            {% if profile.title %}#}
-{#            <li><strong>Title</strong> {{ profile.title }}</li>#}
-{#            {% endif %}#}
-{##}
-{#            {% if profile.profession %}#}
-{#            <li><strong>Profession:</strong> {{ profile.profession }}</li>#}
-{#            {% endif %}#}
-{##}
-{#            {% if profile.subject_areas %}#}
-{#            <li><strong>Subject areas:</strong> {{ profile.subject_areas }}</li>#}
-{#            {% endif %}#}
-{##}
-{#            {% if profile.organization %}#}
-{#            <li><strong>Organization:</strong> {{ profile.organization }}</li>#}
-{#            {% endif %}#}
-{##}
-{#            {% if profile.organization_type %}#}
-{#            <li><strong>Organization Type:</strong> {{ profile.organization_type }}</li>#}
-{#            {% endif %}#}
-{##}
-{#            {% if profile.phone_1 %}#}
-{#            <li><strong>Phone 1:</strong> {{ profile.phone_1 }} {{ profile.phone_1_type }}</li>#}
-{#            {% endif %}#}
-{##}
-{#            {% if profile.phone_2 %}#}
-{#            <li><strong>Phone 2:</strong> {{ profile.phone_2 }} {{ profile.phone_2_type }}</li>#}
-{#            {% endif %}#}
-{##}
-{#            {% if u.email %}#}
-{#            <li><strong>Email:</strong> <a href="mailto:{{ u.email }}">Send email to {{ u.first_name }}</a></li>#}
-{#            {% endif %}#}
-{#            {% if profile.cv %}#}
-{#            <li><a href="{{ profile.cv.url }}">Download a curriculum vitae</a></li>#}
-{#            {% endif %}#}
-{#        {% else %}#}
-{#            <li>User has chosen to make their profile information private.</li>#}
-{#        {% endif %}#}
-{#    </ul>#}
-{##}
-{##}
-{#</div>#}
-{##}
-{#<div class="col-md-5 text-justify">#}
-{#<h2>About {{ u.first_name }}</h2>{{ profile.details }}</div>#}
-{##}
-{#<div class="col-md-4">#}
-{#<h2>Resources</h2>#}
-{#    <ul class="nav nav-stacked">#}
-{#    {% for res in resources %}#}
-{#        <li><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></li>#}
-{#    {% empty %}#}
-{#        <li>This user has no Resources, yet.</li>#}
-{#    {% endfor %}#}
-{#    </ul>#}
-{#</div>#}
-{#</div>#}
-{##}
-{##}
-{% endwith %}
+    {% endwith %}
 {% endblock %}
