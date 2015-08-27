@@ -27,16 +27,16 @@ class RefTimeSeries(BaseResource):
         return self._get_metadata(md)
 
     def can_add(self, request):
-        return super(RefTimeSeries, self).can_add(self, request)
+        return super(RefTimeSeries, self).can_add(request)
 
     def can_change(self, request):
-        return super(RefTimeSeries, self).can_change(self, request)
+        return super(RefTimeSeries, self).can_change(request)
 
     def can_delete(self, request):
-        return super(RefTimeSeries, self).can_delete(self, request)
+        return super(RefTimeSeries, self).can_delete(request)
 
     def can_view(self, request):
-        return super(RefTimeSeries, self).can_view(self, request)
+        return super(RefTimeSeries, self).can_view(request)
 
     @classmethod
     def get_supported_upload_file_types(cls):
