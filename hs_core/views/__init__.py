@@ -295,12 +295,18 @@ def change_permissions(request, shortkey, *args, **kwargs):
         if frm.is_valid():
             res.owners.add(frm.cleaned_data['user'])
     elif t == 'make_public':
-        #if res.metadata.has_all_required_elements():
+        # if res.metadata.has_all_required_elements():
         if res.can_be_public:
             res.public = True
+            res.discoverable = True
             res.save()
     elif t == 'make_private':
         res.public = False
+        res.discoverable = False
+        res.save()
+    elif t == 'make_discoverable':
+        res.public = False
+        res.discoverable = True
         res.save()
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
