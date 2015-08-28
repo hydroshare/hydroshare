@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # pre-remove-hs
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
-docker exec hydroshare_hydroshare_1 /bin/bash scripts/remove-root-items.sh
+docker exec hydroshare_hydroshare_1 /usr/bin/env bash scripts/remove-root-items
 
 echo "*** FINISHED SCRIPT pre-remove-hs ***"
-exit;
+exit 0;
