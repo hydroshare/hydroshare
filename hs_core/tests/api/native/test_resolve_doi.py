@@ -1,4 +1,7 @@
 __author__ = 'Pabitra'
+
+import unittest
+
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -14,6 +17,7 @@ class TestResolveDOIAPI(TestCase):
         GenericResource.objects.all().delete()
         pass
 
+    @unittest.skip
     def test_resolve_doi(self):
         # create a user to be used for creating the resource
         user_creator = hydroshare.create_account(
