@@ -704,118 +704,126 @@
 
 
         {#        ======= Content =======#}
-        <div>
-            <h3>Content</h3>
+        {% if cm.public or page.perms.change %}
+            <div>
+                <h3>Content</h3>
 
-            <div class="custom-well">
-                {#            {% block extra_content %}#}
-                {#            {% endblock %}#}
-                {% if cm.files.all %}
-                    <div class="table-container">
-                        <table class="table-plain table-striped">
-                            {% for f in cm.files.all %}
-                                {% if f.resource_file %}
-                                    {#======= Modal window begins =======#}
-                                    <div class="modal fade" id="delete-resource-file-{{ f.pk }}" tabindex="-1"
-                                         role="dialog"
-                                         aria-labelledby="myModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <button type="button" class="close" data-dismiss="modal"
-                                                            aria-hidden="true">&times;</button>
-                                                    <h4 class="modal-title">Confirm file deletion</h4>
-                                                </div>
-                                                <div class="modal-body">
-                                                    Consider saving a copy of the file before you delete it if it is
-                                                    important to you.
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-default" data-dismiss="modal">
-                                                        Cancel
-                                                    </button>
-                                                    <a type="button" class="btn btn-danger"
-                                                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
+                <div class="custom-well">
+                    {#            {% block extra_content %}#}
+                    {#            {% endblock %}#}
+                    {% if cm.files.all %}
+                        <div class="table-container">
+                            <table class="table-plain table-striped">
+                                {% for f in cm.files.all %}
+                                    {% if f.resource_file %}
+                                        {#======= Modal window begins =======#}
+                                        {% if page.perms.change and metadata_form %}
+                                        <div class="modal fade" id="delete-resource-file-{{ f.pk }}" tabindex="-1"
+                                             role="dialog"
+                                             aria-labelledby="myModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal"
+                                                                aria-hidden="true">&times;</button>
+                                                        <h4 class="modal-title">Confirm file deletion</h4>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        Consider saving a copy of the file before you delete it if it is
+                                                        important to you.
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-default"
+                                                                data-dismiss="modal">
+                                                            Cancel
+                                                        </button>
+                                                        <a type="button" class="btn btn-danger"
+                                                           href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    {#======= Modal window ends =======#}
-                                    <tr>
-                                        <td>
-                                            <span class="glyphicon glyphicon-file file-icon"></span>
+                                        {% endif %}
+                                        {#======= Modal window ends =======#}
+                                        <tr>
+                                            <td>
+                                                <span class="glyphicon glyphicon-file file-icon"></span>
                                         <span>
                                             <span class="label-file-name">{{ f.resource_file.name|slice:"33:" }}</span>
                                             <p class="label-file-size">{{ f.resource_file.size|filesizeformat }}</p>
                                         </span>
-                                        </td>
-                                        {#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
-                                        <td>
-                                            {% if page.perms.change %}
+                                            </td>
+                                            {#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
+                                            <td>
+                                                {% if page.perms.change and metadata_form %}
 
-                                                <a href="{{ f.resource_file.url }}"><span data-toggle="modal"
-                                                                                          data-target="#delete-resource-file-{{ f.pk }}"
+                                                    <a href="{{ f.resource_file.url }}"><span data-toggle="modal"
+                                                                                              data-target="#delete-resource-file-{{ f.pk }}"
+                                                                                              data-placement="auto"
+                                                                                              title="Delete"
+                                                                                              class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>
+
+                                                {% endif %}
+
+                                                <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"
                                                                                           data-placement="auto"
-                                                                                          title="Delete"
-                                                                                          class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>
+                                                                                          title="Download"
+                                                                                          class="glyphicon glyphicon-download icon-button btn-download"></span></a>
 
-                                            {% endif %}
-
-                                            <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"
-                                                                                      data-placement="auto"
-                                                                                      title="Download"
-                                                                                      class="glyphicon glyphicon-download icon-button btn-download"></span></a>
-
-                                            {% if preview %}
-                                                <a href="{{ preview }}"><span data-toggle="tooltip"
-                                                                              data-placement="auto"
-                                                                              title="Preview"
-                                                                              class="glyphicon glyphicon-eye-open icon-button"></span></a>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                            {% endfor %}
-                        </table>
-                    </div>
-                {% endif %}
-                <!-- Buttons -->
-                {% for b in cm.bags.all %}
-                    <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag_url }}">
+                                                {% if preview %}
+                                                    <a href="{{ preview }}"><span data-toggle="tooltip"
+                                                                                  data-placement="auto"
+                                                                                  title="Preview"
+                                                                                  class="glyphicon glyphicon-eye-open icon-button"></span></a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </table>
+                        </div>
+                    {% endif %}
+                    <!-- Buttons -->
+                    {% for b in cm.bags.all %}
+                        <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag_url }}">
                             <span class="glyphicon glyphicon-download-alt">
                                 <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
                             </span>
-                    </a>
-                {% endfor %}
+                        </a>
+                    {% endfor %}
 
-                {% if page.perms.change %}
-                    <a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal"
-                       data-target="#add-file-dialog"
-                       multiple="multiple">
-                        <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
-                    </a>
-                    <a id="btn-signin-irods" type="button" class="btn btn-success" data-toggle="modal"
-                       data-target="#irodsSignin">
-                        <span class="glyphicon glyphicon-plus"><span class="button-label">Sign in iRODS...</span></span>
-                    </a>
+                    {% if page.perms.change and metadata_form %}
+                        <a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal"
+                           data-target="#add-file-dialog"
+                           multiple="multiple">
+                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
+                        </a>
+                        <a id="btn-signin-irods" type="button" class="btn btn-success" data-toggle="modal"
+                           data-target="#irodsSignin">
+                            <span class="glyphicon glyphicon-plus"><span
+                                    class="button-label">Sign in iRODS...</span></span>
+                        </a>
 
-                    <span id="sign-in-info"></span>
-                    <a id="btn-select-irods-file" type="button" class="btn btn-success" data-toggle="modal"
-                       data-target="#irodsContent" style="display:none;">
-                        <span class="glyphicon glyphicon-plus"><span class="button-label">Add file from iRODS...</span></span>
-                    </a>
-                    {% if file_type_error %}
-                        <div class="alert alert-danger alert-dismissible" role="alert">
-                            <button id="validation-error-close" type="button" class="close" data-dismiss="alert"
-                                    aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>
-                        </div>
+                        <span id="sign-in-info"></span>
+                        <a id="btn-select-irods-file" type="button" class="btn btn-success" data-toggle="modal"
+                           data-target="#irodsContent" style="display:none;">
+                            <span class="glyphicon glyphicon-plus"><span
+                                    class="button-label">Add file from iRODS...</span></span>
+                        </a>
+                        {% if file_type_error %}
+                            <div class="alert alert-danger alert-dismissible" role="alert">
+                                <button id="validation-error-close" type="button" class="close" data-dismiss="alert"
+                                        aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>
+                            </div>
+                        {% endif %}
                     {% endif %}
-                {% endif %}
-                <div class="col-lg-12"><a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the
-                    Bagit archive format</a></div>
+                    <div class="col-lg-12"><a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about
+                        the
+                        Bagit archive format</a></div>
+                </div>
             </div>
-        </div>
+        {% endif %}
 
         <!-- === Tabs begin === -->
         <div class="tab-elements">
