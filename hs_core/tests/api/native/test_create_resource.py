@@ -1,5 +1,7 @@
 __author__ = 'tonycastronova'
 
+import unittest
+
 from unittest import TestCase
 from hs_core.hydroshare import resource, get_resource_by_shortkey
 from hs_core.hydroshare import users
@@ -59,6 +61,7 @@ class TestCreateResource(TestCase):
 
 
     # authored by: Pabitra
+    @unittest.skip
     def test_create_resource_with_metadata(self):
         # TODO: add more metadata elements to the following dict
         metadata_dict = [

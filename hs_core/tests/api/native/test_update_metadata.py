@@ -5,6 +5,8 @@ Tastypie API tests for update_science_metadata and update_system_metadata
 comments-
 
 """
+import unittest
+
 from tastypie.test import ResourceTestCase, TestApiClient
 from unittest import TestCase
 from django.contrib.auth.models import User, Group
@@ -58,6 +60,7 @@ class TestUpdateMetadata(TestCase):
 
         pass
 
+    @unittest.skip
     def test_update_keywords(self):
         kws= ['kw1','kw2','kw3']
 
@@ -65,6 +68,7 @@ class TestUpdateMetadata(TestCase):
 
         self.assertEqual(AssignedKeyword.objects.filter(object_pk=res.id),Keyword.objects.all())
 
+    @unittest.skip
     def test_update_kwargs(self):
         kwargs = {'description':'new description',
                   'title':'new title'
@@ -76,6 +80,7 @@ class TestUpdateMetadata(TestCase):
         self.assertEqual(user.title,'new title')
 
     # Pabitra's unit test for the new metadata implementation
+    @unittest.skip
     def test_update_science_metadata_pk(self):
         # add these new metadata elements
         metadata_dict = [

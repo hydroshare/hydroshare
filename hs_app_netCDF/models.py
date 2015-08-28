@@ -304,7 +304,8 @@ class NetcdfMetaData(CoreMetaData):
                 "type": "type",
                 "shape": "shape",
                 "descriptive_name": "longName",
-                "method": "comment"
+                "method": "comment",
+                "missing_value": "missingValue"
             }  # element name : name in xml
             self.add_metadata_element_to_xml(container, variable, md_fields)
 

@@ -283,7 +283,7 @@ class ResourceCreate(generics.CreateAPIView):
                 raise ValidationError(detail={'file': 'Multiple file upload is not allowed on resource creation. Add additional files after the resource is created.'})
             # Place files into format expected by hydroshare.utils.resource_pre_create_actions and
             # hydroshare.create_resource, i.e. a tuple of django.core.files.uploadedfile.TemporaryUploadedFile objects.
-            files = (request.FILES['file'],)
+            files = [request.FILES['file'],]
         else:
             files = ()
 

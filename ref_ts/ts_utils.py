@@ -455,7 +455,8 @@ def create_vis(path, site_name, data, xlab, variable_name, units, noDataValue):
     ax.autoscale_view()
 
     ax.grid(True)
-    vis_name = 'visualization-'+site_name+'-'+variable_name+'.png'
+    vis_name = 'vis-'+site_name+'-'+variable_name+'.png'
+    vis_name = vis_name.replace(" ", "")
     vis_path = path + "/" + vis_name
     savefig(vis_path, bbox_inches='tight')
     vis_file = open(vis_path, 'r')

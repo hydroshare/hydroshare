@@ -55,7 +55,6 @@ ALTER TABLE ONLY public.hs_tools_resource_requesturlbase DROP CONSTRAINT hs_t_co
 ALTER TABLE ONLY public.hs_tools_resource_fee DROP CONSTRAINT hs_t_content_type_id_5ec1c49e6fcf0e12_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_tools_resource_toolversion DROP CONSTRAINT hs_t_content_type_id_51e17884abf9eddc_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_tools_resource_toolresource DROP CONSTRAINT hs_t_content_type_id_1643e7df8c8b0a37_fk_django_content_type_id;
-ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelparameters DROP CONSTRAINT hs_swat_modelinstance_swatmodelparameters_content_type_id_fkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstanceresource_view_users DROP CONSTRAINT hs_swat_modelinstance_swatmodelinstanceresource_vi_user_id_fkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstanceresource_view_groups DROP CONSTRAINT hs_swat_modelinstance_swatmodelinstanceresource_v_group_id_fkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstanceresource DROP CONSTRAINT hs_swat_modelinstance_swatmodelinstanceresource_user_id_fkey;
@@ -70,9 +69,10 @@ ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstancemetadata DROP CON
 ALTER TABLE ONLY public.hs_swat_modelinstance_simulationtype DROP CONSTRAINT hs_swat_modelinstance_simulationtype_content_type_id_fkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modeloutput DROP CONSTRAINT hs_swat_modelinstance_modeloutput_content_type_id_fkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective DROP CONSTRAINT hs_swat_modelinstance_modelobjective_content_type_id_fkey;
-ALTER TABLE ONLY public.hs_swat_modelinstance_modelmethods DROP CONSTRAINT hs_swat_modelinstance_modelmethods_content_type_id_fkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelinput DROP CONSTRAINT hs_swat_modelinstance_modelinput_content_type_id_fkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_executedby DROP CONSTRAINT hs_swat_modelinstance_executedby_content_type_id_fkey;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelmethod DROP CONSTRAINT hs_s_content_type_id_7a0e6caa7ea88974_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter DROP CONSTRAINT hs_s_content_type_id_67e73462ac6a1f3b_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_edit_users DROP CONSTRAINT hs_modelinstance_modeli_user_id_a535107c1cfe905_fk_auth_user_id;
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource DROP CONSTRAINT hs_modelinstance_model_user_id_68500db80b77e956_fk_auth_user_id;
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_owners DROP CONSTRAINT hs_modelinstance_model_user_id_68218fffe6d094a4_fk_auth_user_id;
@@ -225,6 +225,7 @@ ALTER TABLE ONLY public.auth_group_permissions DROP CONSTRAINT auth_group_permis
 ALTER TABLE ONLY public.auth_permission DROP CONSTRAINT auth_content_type_id_508cf46651277a81_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_modelinstance_modelinstancemetadata DROP CONSTRAINT ad492224ba8c27b74282fb2c6035021e;
 ALTER TABLE ONLY public."hs_app_netCDF_netcdfresource_edit_users" DROP CONSTRAINT ad224c48bd495b7c7b92f66b7d505c99;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter_model_parameters DROP CONSTRAINT ad127dae388d348e8d57f9ed18647c59;
 ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_owners DROP CONSTRAINT a6d705a048cb4b645896c5efbd55047f;
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_view_groups DROP CONSTRAINT "D9c0ea64c2091390a715bc4ca5a8daaf";
 ALTER TABLE ONLY public.hs_core_genericresource_view_groups DROP CONSTRAINT "D998a5f26f0216c5d716c912e17e6d9c";
@@ -261,12 +262,15 @@ ALTER TABLE ONLY public.hs_tools_resource_toolresource_owners DROP CONSTRAINT "D
 ALTER TABLE ONLY public.django_docker_processes_dockerport DROP CONSTRAINT "D33ece86ac4d6b9f723a21fc5ee52956";
 ALTER TABLE ONLY public.django_docker_processes_dockerlink DROP CONSTRAINT "D31c29d49b8f7ec3acaeadd6d03d4a4f";
 ALTER TABLE ONLY public.ref_ts_reftimeseries_view_groups DROP CONSTRAINT "D2c0bf6ddb1076a68924eac1bbbbb32f";
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter_model_parameters DROP CONSTRAINT "D298685713846fce4c3b8f825f6971fc";
 ALTER TABLE ONLY public.hs_model_program_modelprogrammetadata DROP CONSTRAINT "D28d4ec87c18a4f707acafb3b265fe0b";
 ALTER TABLE ONLY public.hs_geo_raster_resource_rasterresource_edit_groups DROP CONSTRAINT "D1f17760fc8ce883abe48928f2366835";
 ALTER TABLE ONLY public.django_docker_processes_dockervolume DROP CONSTRAINT "D1cd11468aed7088c8176baf1733f0a9";
 ALTER TABLE ONLY public.django_docker_processes_dockerprocess DROP CONSTRAINT "D1c0b5309109a103589fe605907962d9";
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective_swat_model_objectives DROP CONSTRAINT "D1aa88a4e8e7c50866281523397c0b8e";
 ALTER TABLE ONLY public.django_docker_processes_dockerlink DROP CONSTRAINT "D16cd563c928a22ccbdb7c425a399b3c";
 ALTER TABLE ONLY public.hs_core_genericresource_edit_users DROP CONSTRAINT "D167e0d092afa7f61f3186226e495eb5";
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective_swat_model_objectives DROP CONSTRAINT "D160961fcba05fdd989826403bd5f914";
 ALTER TABLE ONLY public.ref_ts_reftsmetadata DROP CONSTRAINT "D122fb62e9df31f5bd8fb766773e4bd8";
 ALTER TABLE ONLY public.hs_model_program_modelprogramresource_view_users DROP CONSTRAINT "D0fd8506eaee84a86c46cc60614399d9";
 ALTER TABLE ONLY public.ga_resources_orderedresource DROP CONSTRAINT "D0d41531a62e8a1740c2e8b57a4309ae";
@@ -318,7 +322,6 @@ DROP INDEX public.hs_tools_resource_toolresource_417f1b1c;
 DROP INDEX public.hs_tools_resource_toolresource_3700153c;
 DROP INDEX public.hs_tools_resource_requesturlbase_417f1b1c;
 DROP INDEX public.hs_tools_resource_fee_417f1b1c;
-DROP INDEX public.hs_swat_modelinstance_swatmodelparameters_content_type_id;
 DROP INDEX public.hs_swat_modelinstance_swatmodelinstanceresource_view_users_96fd;
 DROP INDEX public.hs_swat_modelinstance_swatmodelinstanceresource_view_users_3470;
 DROP INDEX public.hs_swat_modelinstance_swatmodelinstanceresource_view_groups24c0;
@@ -338,9 +341,14 @@ DROP INDEX public.hs_swat_modelinstance_swatmodelinstanceresource_doi;
 DROP INDEX public.hs_swat_modelinstance_swatmodelinstanceresource_creator_id;
 DROP INDEX public.hs_swat_modelinstance_swatmodelinstanceresource_content_type_id;
 DROP INDEX public.hs_swat_modelinstance_simulationtype_content_type_id;
+DROP INDEX public.hs_swat_modelinstance_modelparameter_model_parameters_d6566261;
+DROP INDEX public.hs_swat_modelinstance_modelparameter_model_parameters_614dbbb6;
+DROP INDEX public.hs_swat_modelinstance_modelparameter_417f1b1c;
 DROP INDEX public.hs_swat_modelinstance_modeloutput_content_type_id;
+DROP INDEX public.hs_swat_modelinstance_modelobjective_swat_model_objectives_5316;
+DROP INDEX public.hs_swat_modelinstance_modelobjective_swat_model_objectives_402b;
 DROP INDEX public.hs_swat_modelinstance_modelobjective_content_type_id;
-DROP INDEX public.hs_swat_modelinstance_modelmethods_content_type_id;
+DROP INDEX public.hs_swat_modelinstance_modelmethod_417f1b1c;
 DROP INDEX public.hs_swat_modelinstance_modelinput_content_type_id;
 DROP INDEX public.hs_swat_modelinstance_executedby_content_type_id;
 DROP INDEX public.hs_modelinstance_modeloutput_417f1b1c;
@@ -608,7 +616,6 @@ ALTER TABLE ONLY public.hs_tools_resource_toolresource_edit_groups DROP CONSTRAI
 ALTER TABLE ONLY public.hs_tools_resource_toolmetadata DROP CONSTRAINT hs_tools_resource_toolmetadata_pkey;
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbase DROP CONSTRAINT hs_tools_resource_requesturlbase_pkey;
 ALTER TABLE ONLY public.hs_tools_resource_fee DROP CONSTRAINT hs_tools_resource_fee_pkey;
-ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelparameters DROP CONSTRAINT hs_swat_modelinstance_swatmodelparameters_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstanceresource_view_users DROP CONSTRAINT hs_swat_modelinstance_swatmodelinstanceresource_view_users_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstanceresource_view_groups DROP CONSTRAINT hs_swat_modelinstance_swatmodelinstanceresource_view_group_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstanceresource DROP CONSTRAINT hs_swat_modelinstance_swatmodelinstanceresource_pkey;
@@ -622,9 +629,16 @@ ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstanceresource_view_gro
 ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstanceresource_view_users DROP CONSTRAINT hs_swat_modelinstance_swatmod_swatmodelinstanceresource_id_key1;
 ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstanceresource_owners DROP CONSTRAINT hs_swat_modelinstance_swatmod_swatmodelinstanceresource_id__key;
 ALTER TABLE ONLY public.hs_swat_modelinstance_simulationtype DROP CONSTRAINT hs_swat_modelinstance_simulationtype_pkey;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameterschoices DROP CONSTRAINT hs_swat_modelinstance_modelparameterschoices_pkey;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter DROP CONSTRAINT hs_swat_modelinstance_modelparameter_pkey;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter_model_parameters DROP CONSTRAINT hs_swat_modelinstance_modelparameter_model_parameters_pkey;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter_model_parameters DROP CONSTRAINT hs_swat_modelinstance_modelpa_modelparameter_id_modelparame_key;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modeloutput DROP CONSTRAINT hs_swat_modelinstance_modeloutput_pkey;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjectivechoices DROP CONSTRAINT hs_swat_modelinstance_modelobjectivechoices_pkey;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective_swat_model_objectives DROP CONSTRAINT hs_swat_modelinstance_modelobjective_swat_model_objectives_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective DROP CONSTRAINT hs_swat_modelinstance_modelobjective_pkey;
-ALTER TABLE ONLY public.hs_swat_modelinstance_modelmethods DROP CONSTRAINT hs_swat_modelinstance_modelmethods_pkey;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective_swat_model_objectives DROP CONSTRAINT hs_swat_modelinstance_modelob_modelobjective_id_modelobject_key;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelmethod DROP CONSTRAINT hs_swat_modelinstance_modelmethod_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelinput DROP CONSTRAINT hs_swat_modelinstance_modelinput_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_executedby DROP CONSTRAINT hs_swat_modelinstance_executedby_pkey;
 ALTER TABLE ONLY public.hs_modelinstance_modeloutput DROP CONSTRAINT hs_modelinstance_modeloutput_pkey;
@@ -642,6 +656,7 @@ ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_edit_groups DROP 
 ALTER TABLE ONLY public.hs_modelinstance_modelinstanceresource_view_groups DROP CONSTRAINT hs_modelinstance_modelinstanc_modelinstanceresource_id_gro_key1;
 ALTER TABLE ONLY public.hs_modelinstance_executedby DROP CONSTRAINT hs_modelinstance_executedby_pkey;
 ALTER TABLE ONLY public.hs_model_program_mpmetadata DROP CONSTRAINT hs_model_program_mpmetadata_pkey;
+ALTER TABLE ONLY public.hs_model_program_mpmetadata DROP CONSTRAINT hs_model_program_mpmetada_content_type_id_6d7804f108cda18d_uniq;
 ALTER TABLE ONLY public.hs_model_program_modelprogramresource_view_users DROP CONSTRAINT hs_model_program_modelprogramresource_view_users_pkey;
 ALTER TABLE ONLY public.hs_model_program_modelprogramresource_view_groups DROP CONSTRAINT hs_model_program_modelprogramresource_view_groups_pkey;
 ALTER TABLE ONLY public.hs_model_program_modelprogramresource DROP CONSTRAINT hs_model_program_modelprogramresource_pkey;
@@ -852,16 +867,20 @@ ALTER TABLE public.hs_tools_resource_toolresource_edit_users ALTER COLUMN id DRO
 ALTER TABLE public.hs_tools_resource_toolresource_edit_groups ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_tools_resource_requesturlbase ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_tools_resource_fee ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.hs_swat_modelinstance_swatmodelparameters ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_swatmodelinstanceresource_view_users ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_swatmodelinstanceresource_view_groups ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_swatmodelinstanceresource_owners ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_swatmodelinstanceresource_edit_users ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_swatmodelinstanceresource_edit_groups ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_simulationtype ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_swat_modelinstance_modelparameterschoices ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_swat_modelinstance_modelparameter_model_parameters ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_swat_modelinstance_modelparameter ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_modeloutput ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_swat_modelinstance_modelobjectivechoices ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_swat_modelinstance_modelobjective_swat_model_objectives ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_modelobjective ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.hs_swat_modelinstance_modelmethods ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_swat_modelinstance_modelmethod ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_modelinput ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_executedby ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_modelinstance_modeloutput ALTER COLUMN id DROP DEFAULT;
@@ -1031,8 +1050,6 @@ DROP SEQUENCE public.hs_tools_resource_requesturlbase_id_seq;
 DROP TABLE public.hs_tools_resource_requesturlbase;
 DROP SEQUENCE public.hs_tools_resource_fee_id_seq;
 DROP TABLE public.hs_tools_resource_fee;
-DROP SEQUENCE public.hs_swat_modelinstance_swatmodelparameters_id_seq;
-DROP TABLE public.hs_swat_modelinstance_swatmodelparameters;
 DROP SEQUENCE public.hs_swat_modelinstance_swatmodelinstanceresource_view_use_id_seq;
 DROP TABLE public.hs_swat_modelinstance_swatmodelinstanceresource_view_users;
 DROP SEQUENCE public.hs_swat_modelinstance_swatmodelinstanceresource_view_gro_id_seq;
@@ -1047,12 +1064,22 @@ DROP TABLE public.hs_swat_modelinstance_swatmodelinstanceresource;
 DROP TABLE public.hs_swat_modelinstance_swatmodelinstancemetadata;
 DROP SEQUENCE public.hs_swat_modelinstance_simulationtype_id_seq;
 DROP TABLE public.hs_swat_modelinstance_simulationtype;
+DROP SEQUENCE public.hs_swat_modelinstance_modelparameterschoices_id_seq;
+DROP TABLE public.hs_swat_modelinstance_modelparameterschoices;
+DROP SEQUENCE public.hs_swat_modelinstance_modelparameter_model_parameters_id_seq;
+DROP TABLE public.hs_swat_modelinstance_modelparameter_model_parameters;
+DROP SEQUENCE public.hs_swat_modelinstance_modelparameter_id_seq;
+DROP TABLE public.hs_swat_modelinstance_modelparameter;
 DROP SEQUENCE public.hs_swat_modelinstance_modeloutput_id_seq;
 DROP TABLE public.hs_swat_modelinstance_modeloutput;
+DROP SEQUENCE public.hs_swat_modelinstance_modelobjectivechoices_id_seq;
+DROP TABLE public.hs_swat_modelinstance_modelobjectivechoices;
+DROP SEQUENCE public.hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq;
+DROP TABLE public.hs_swat_modelinstance_modelobjective_swat_model_objectives;
 DROP SEQUENCE public.hs_swat_modelinstance_modelobjective_id_seq;
 DROP TABLE public.hs_swat_modelinstance_modelobjective;
-DROP SEQUENCE public.hs_swat_modelinstance_modelmethods_id_seq;
-DROP TABLE public.hs_swat_modelinstance_modelmethods;
+DROP SEQUENCE public.hs_swat_modelinstance_modelmethod_id_seq;
+DROP TABLE public.hs_swat_modelinstance_modelmethod;
 DROP SEQUENCE public.hs_swat_modelinstance_modelinput_id_seq;
 DROP TABLE public.hs_swat_modelinstance_modelinput;
 DROP SEQUENCE public.hs_swat_modelinstance_executedby_id_seq;
@@ -5981,8 +6008,8 @@ CREATE TABLE hs_swat_modelinstance_modelinput (
     id integer NOT NULL,
     object_id integer NOT NULL,
     content_type_id integer NOT NULL,
-    rainfall_time_step character varying(100),
-    simulation_time_step character varying(100),
+    rainfall_time_step_value character varying(100),
+    simulation_time_step_value character varying(100),
     watershed_area character varying(100),
     number_of_subbasins character varying(100),
     "number_of_HRUs" character varying(100),
@@ -5993,6 +6020,11 @@ CREATE TABLE hs_swat_modelinstance_modelinput (
     "landUse_data_source_URL" character varying(200),
     soil_data_source_name character varying(200),
     "soil_data_source_URL" character varying(200),
+    routing_time_step_value character varying(100),
+    warm_up_period character varying(100),
+    rainfall_time_step_type character varying(100),
+    routing_time_step_type character varying(100),
+    simulation_time_step_type character varying(100),
     CONSTRAINT hs_swat_modelinstance_modelinput_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -6021,27 +6053,27 @@ ALTER SEQUENCE hs_swat_modelinstance_modelinput_id_seq OWNED BY hs_swat_modelins
 
 
 --
--- Name: hs_swat_modelinstance_modelmethods; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_swat_modelinstance_modelmethod; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE TABLE hs_swat_modelinstance_modelmethods (
+CREATE TABLE hs_swat_modelinstance_modelmethod (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    content_type_id integer NOT NULL,
     runoff_calculation_method character varying(200),
     flow_routing_method character varying(200),
     "PET_estimation_method" character varying(200),
-    CONSTRAINT hs_swat_modelinstance_modelmethods_object_id_check CHECK ((object_id >= 0))
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_swat_modelinstance_modelmethod_object_id_check CHECK ((object_id >= 0))
 );
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelmethods OWNER TO postgres;
+ALTER TABLE public.hs_swat_modelinstance_modelmethod OWNER TO postgres;
 
 --
--- Name: hs_swat_modelinstance_modelmethods_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: hs_swat_modelinstance_modelmethod_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE hs_swat_modelinstance_modelmethods_id_seq
+CREATE SEQUENCE hs_swat_modelinstance_modelmethod_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -6049,13 +6081,13 @@ CREATE SEQUENCE hs_swat_modelinstance_modelmethods_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelmethods_id_seq OWNER TO postgres;
+ALTER TABLE public.hs_swat_modelinstance_modelmethod_id_seq OWNER TO postgres;
 
 --
--- Name: hs_swat_modelinstance_modelmethods_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: hs_swat_modelinstance_modelmethod_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE hs_swat_modelinstance_modelmethods_id_seq OWNED BY hs_swat_modelinstance_modelmethods.id;
+ALTER SEQUENCE hs_swat_modelinstance_modelmethod_id_seq OWNED BY hs_swat_modelinstance_modelmethod.id;
 
 
 --
@@ -6066,7 +6098,6 @@ CREATE TABLE hs_swat_modelinstance_modelobjective (
     id integer NOT NULL,
     object_id integer NOT NULL,
     content_type_id integer NOT NULL,
-    swat_model_objective character varying(100) NOT NULL,
     other_objectives character varying(200),
     CONSTRAINT hs_swat_modelinstance_modelobjective_object_id_check CHECK ((object_id >= 0))
 );
@@ -6093,6 +6124,73 @@ ALTER TABLE public.hs_swat_modelinstance_modelobjective_id_seq OWNER TO postgres
 --
 
 ALTER SEQUENCE hs_swat_modelinstance_modelobjective_id_seq OWNED BY hs_swat_modelinstance_modelobjective.id;
+
+
+--
+-- Name: hs_swat_modelinstance_modelobjective_swat_model_objectives; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_swat_modelinstance_modelobjective_swat_model_objectives (
+    id integer NOT NULL,
+    modelobjective_id integer NOT NULL,
+    modelobjectivechoices_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_swat_modelinstance_modelobjective_swat_model_objectives OWNER TO postgres;
+
+--
+-- Name: hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq OWNED BY hs_swat_modelinstance_modelobjective_swat_model_objectives.id;
+
+
+--
+-- Name: hs_swat_modelinstance_modelobjectivechoices; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_swat_modelinstance_modelobjectivechoices (
+    id integer NOT NULL,
+    description character varying(300) NOT NULL
+);
+
+
+ALTER TABLE public.hs_swat_modelinstance_modelobjectivechoices OWNER TO postgres;
+
+--
+-- Name: hs_swat_modelinstance_modelobjectivechoices_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_swat_modelinstance_modelobjectivechoices_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_swat_modelinstance_modelobjectivechoices_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_swat_modelinstance_modelobjectivechoices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_swat_modelinstance_modelobjectivechoices_id_seq OWNED BY hs_swat_modelinstance_modelobjectivechoices.id;
 
 
 --
@@ -6129,6 +6227,109 @@ ALTER TABLE public.hs_swat_modelinstance_modeloutput_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE hs_swat_modelinstance_modeloutput_id_seq OWNED BY hs_swat_modelinstance_modeloutput.id;
+
+
+--
+-- Name: hs_swat_modelinstance_modelparameter; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_swat_modelinstance_modelparameter (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    other_parameters character varying(200),
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_swat_modelinstance_modelparameter_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.hs_swat_modelinstance_modelparameter OWNER TO postgres;
+
+--
+-- Name: hs_swat_modelinstance_modelparameter_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_swat_modelinstance_modelparameter_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_swat_modelinstance_modelparameter_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_swat_modelinstance_modelparameter_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_swat_modelinstance_modelparameter_id_seq OWNED BY hs_swat_modelinstance_modelparameter.id;
+
+
+--
+-- Name: hs_swat_modelinstance_modelparameter_model_parameters; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_swat_modelinstance_modelparameter_model_parameters (
+    id integer NOT NULL,
+    modelparameter_id integer NOT NULL,
+    modelparameterschoices_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_swat_modelinstance_modelparameter_model_parameters OWNER TO postgres;
+
+--
+-- Name: hs_swat_modelinstance_modelparameter_model_parameters_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_swat_modelinstance_modelparameter_model_parameters_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_swat_modelinstance_modelparameter_model_parameters_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_swat_modelinstance_modelparameter_model_parameters_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_swat_modelinstance_modelparameter_model_parameters_id_seq OWNED BY hs_swat_modelinstance_modelparameter_model_parameters.id;
+
+
+--
+-- Name: hs_swat_modelinstance_modelparameterschoices; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_swat_modelinstance_modelparameterschoices (
+    id integer NOT NULL,
+    description character varying(300) NOT NULL
+);
+
+
+ALTER TABLE public.hs_swat_modelinstance_modelparameterschoices OWNER TO postgres;
+
+--
+-- Name: hs_swat_modelinstance_modelparameterschoices_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_swat_modelinstance_modelparameterschoices_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_swat_modelinstance_modelparameterschoices_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_swat_modelinstance_modelparameterschoices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_swat_modelinstance_modelparameterschoices_id_seq OWNED BY hs_swat_modelinstance_modelparameterschoices.id;
 
 
 --
@@ -6375,49 +6576,6 @@ ALTER TABLE public.hs_swat_modelinstance_swatmodelinstanceresource_view_use_id_s
 --
 
 ALTER SEQUENCE hs_swat_modelinstance_swatmodelinstanceresource_view_use_id_seq OWNED BY hs_swat_modelinstance_swatmodelinstanceresource_view_users.id;
-
-
---
--- Name: hs_swat_modelinstance_swatmodelparameters; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE hs_swat_modelinstance_swatmodelparameters (
-    id integer NOT NULL,
-    object_id integer NOT NULL,
-    content_type_id integer NOT NULL,
-    has_crop_rotation boolean NOT NULL,
-    has_title_drainage boolean NOT NULL,
-    has_point_source boolean NOT NULL,
-    has_fertilizer boolean NOT NULL,
-    has_tillage_operation boolean NOT NULL,
-    has_inlet_of_draining_watershed boolean NOT NULL,
-    has_irrigation_operation boolean NOT NULL,
-    other_parameters character varying(200),
-    CONSTRAINT hs_swat_modelinstance_swatmodelparameters_object_id_check CHECK ((object_id >= 0))
-);
-
-
-ALTER TABLE public.hs_swat_modelinstance_swatmodelparameters OWNER TO postgres;
-
---
--- Name: hs_swat_modelinstance_swatmodelparameters_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE hs_swat_modelinstance_swatmodelparameters_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.hs_swat_modelinstance_swatmodelparameters_id_seq OWNER TO postgres;
-
---
--- Name: hs_swat_modelinstance_swatmodelparameters_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE hs_swat_modelinstance_swatmodelparameters_id_seq OWNED BY hs_swat_modelinstance_swatmodelparameters.id;
 
 
 --
@@ -8223,7 +8381,7 @@ ALTER TABLE ONLY hs_swat_modelinstance_modelinput ALTER COLUMN id SET DEFAULT ne
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY hs_swat_modelinstance_modelmethods ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_modelmethods_id_seq'::regclass);
+ALTER TABLE ONLY hs_swat_modelinstance_modelmethod ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_modelmethod_id_seq'::regclass);
 
 
 --
@@ -8237,7 +8395,42 @@ ALTER TABLE ONLY hs_swat_modelinstance_modelobjective ALTER COLUMN id SET DEFAUL
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY hs_swat_modelinstance_modelobjective_swat_model_objectives ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelobjectivechoices ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_modelobjectivechoices_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY hs_swat_modelinstance_modeloutput ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_modeloutput_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelparameter ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_modelparameter_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelparameter_model_parameters ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_modelparameter_model_parameters_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelparameterschoices ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_modelparameterschoices_id_seq'::regclass);
 
 
 --
@@ -8280,13 +8473,6 @@ ALTER TABLE ONLY hs_swat_modelinstance_swatmodelinstanceresource_view_groups ALT
 --
 
 ALTER TABLE ONLY hs_swat_modelinstance_swatmodelinstanceresource_view_users ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_swatmodelinstanceresource_view_use_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_swat_modelinstance_swatmodelparameters ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_swatmodelparameters_id_seq'::regclass);
 
 
 --
@@ -8471,204 +8657,210 @@ SELECT pg_catalog.setval('auth_group_id_seq', 1, true);
 --
 
 COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
-760	1	124
-761	1	125
-762	1	126
-763	1	127
-764	1	128
-765	1	129
-766	1	130
-767	1	131
-768	1	132
-769	1	133
-770	1	134
-771	1	135
-772	1	136
-773	1	137
-774	1	138
-775	1	139
-776	1	140
-777	1	141
-778	1	142
-779	1	143
-780	1	144
-781	1	145
-782	1	146
-783	1	147
-784	1	148
-785	1	149
-786	1	150
-787	1	151
-788	1	152
-789	1	153
-790	1	154
-791	1	155
-792	1	156
-793	1	157
-794	1	158
-795	1	159
-796	1	160
-797	1	161
-798	1	162
-799	1	163
-800	1	164
-801	1	165
-802	1	166
-803	1	167
-804	1	168
-805	1	169
-806	1	170
-807	1	171
-808	1	172
-809	1	173
-810	1	174
-811	1	175
-812	1	176
-813	1	177
-814	1	178
-815	1	179
-816	1	180
-817	1	181
-818	1	182
-819	1	183
-820	1	184
-821	1	185
-822	1	186
-823	1	221
-824	1	222
-825	1	223
-826	1	224
-827	1	225
-828	1	226
-829	1	227
-830	1	228
-831	1	229
-832	1	230
-833	1	231
-834	1	232
-835	1	233
-836	1	234
-837	1	235
-838	1	236
-839	1	237
-840	1	238
-841	1	239
-842	1	240
-843	1	241
-844	1	242
-845	1	243
-846	1	244
-847	1	245
-848	1	246
-849	1	247
-850	1	248
-851	1	249
-852	1	250
-853	1	251
-854	1	252
-855	1	253
-856	1	254
-857	1	255
-858	1	256
-859	1	257
-860	1	258
-861	1	259
-862	1	260
-863	1	261
-864	1	262
-865	1	263
-866	1	264
-867	1	265
-868	1	266
-869	1	267
-870	1	268
-871	1	269
-872	1	270
-873	1	271
-874	1	272
-875	1	273
-876	1	274
-877	1	275
-878	1	276
-879	1	277
-880	1	278
-881	1	279
-882	1	280
-883	1	281
-884	1	282
-885	1	283
-886	1	284
-887	1	285
-888	1	286
-889	1	287
-890	1	288
-891	1	289
-892	1	290
-893	1	291
-894	1	292
-895	1	293
-896	1	294
-897	1	295
-898	1	296
-899	1	297
-900	1	298
-901	1	299
-902	1	300
-903	1	301
-904	1	302
-905	1	303
-906	1	304
-907	1	305
-908	1	306
-909	1	307
-910	1	341
-911	1	342
-912	1	343
-913	1	344
-914	1	345
-915	1	346
-916	1	347
-917	1	348
-918	1	349
-919	1	350
-920	1	351
-921	1	352
-922	1	353
-923	1	354
-924	1	355
-925	1	356
-926	1	357
-927	1	358
-928	1	359
-929	1	360
-930	1	361
-931	1	362
-932	1	363
-933	1	364
-934	1	365
-935	1	366
-936	1	367
-937	1	368
-938	1	369
-939	1	370
-940	1	371
-941	1	372
-942	1	373
-943	1	374
-944	1	375
-945	1	376
-946	1	377
-947	1	378
-948	1	379
-949	1	380
-950	1	381
-951	1	382
-952	1	383
-953	1	384
-954	1	385
-955	1	386
-956	1	387
-957	1	388
+958	1	124
+959	1	125
+960	1	126
+961	1	127
+962	1	128
+963	1	129
+964	1	130
+965	1	131
+966	1	132
+967	1	133
+968	1	134
+969	1	135
+970	1	136
+971	1	137
+972	1	138
+973	1	139
+974	1	140
+975	1	141
+976	1	142
+977	1	143
+978	1	144
+979	1	145
+980	1	146
+981	1	147
+982	1	148
+983	1	149
+984	1	150
+985	1	151
+986	1	152
+987	1	153
+988	1	154
+989	1	155
+990	1	156
+991	1	157
+992	1	158
+993	1	159
+994	1	160
+995	1	161
+996	1	162
+997	1	163
+998	1	164
+999	1	165
+1000	1	166
+1001	1	167
+1002	1	168
+1003	1	169
+1004	1	170
+1005	1	171
+1006	1	172
+1007	1	173
+1008	1	174
+1009	1	175
+1010	1	176
+1011	1	177
+1012	1	178
+1013	1	179
+1014	1	180
+1015	1	181
+1016	1	182
+1017	1	183
+1018	1	184
+1019	1	185
+1020	1	186
+1021	1	221
+1022	1	222
+1023	1	223
+1024	1	224
+1025	1	225
+1026	1	226
+1027	1	227
+1028	1	228
+1029	1	229
+1030	1	230
+1031	1	231
+1032	1	232
+1033	1	233
+1034	1	234
+1035	1	235
+1036	1	236
+1037	1	237
+1038	1	238
+1039	1	239
+1040	1	240
+1041	1	241
+1042	1	242
+1043	1	243
+1044	1	244
+1045	1	245
+1046	1	246
+1047	1	247
+1048	1	248
+1049	1	249
+1050	1	250
+1051	1	251
+1052	1	252
+1053	1	253
+1054	1	254
+1055	1	255
+1056	1	256
+1057	1	257
+1058	1	258
+1059	1	259
+1060	1	260
+1061	1	261
+1062	1	262
+1063	1	263
+1064	1	264
+1065	1	265
+1066	1	266
+1067	1	267
+1068	1	268
+1069	1	269
+1070	1	270
+1071	1	271
+1072	1	272
+1073	1	273
+1074	1	274
+1075	1	275
+1076	1	276
+1077	1	277
+1078	1	278
+1079	1	279
+1080	1	280
+1081	1	281
+1082	1	282
+1083	1	283
+1084	1	284
+1085	1	285
+1086	1	286
+1087	1	287
+1088	1	288
+1089	1	289
+1090	1	290
+1091	1	291
+1092	1	292
+1093	1	293
+1094	1	294
+1095	1	295
+1096	1	296
+1097	1	297
+1098	1	298
+1099	1	299
+1100	1	300
+1101	1	301
+1102	1	302
+1103	1	303
+1104	1	304
+1105	1	305
+1106	1	306
+1107	1	307
+1108	1	341
+1109	1	342
+1110	1	343
+1111	1	344
+1112	1	345
+1113	1	346
+1114	1	347
+1115	1	348
+1116	1	349
+1117	1	350
+1118	1	351
+1119	1	352
+1120	1	353
+1121	1	354
+1122	1	355
+1123	1	356
+1124	1	357
+1125	1	358
+1126	1	359
+1127	1	360
+1128	1	361
+1129	1	362
+1130	1	363
+1131	1	364
+1132	1	365
+1133	1	366
+1134	1	367
+1135	1	368
+1136	1	369
+1137	1	370
+1138	1	371
+1139	1	372
+1140	1	373
+1141	1	380
+1142	1	381
+1143	1	382
+1144	1	383
+1145	1	384
+1146	1	385
+1147	1	386
+1148	1	387
+1149	1	388
+1150	1	389
+1151	1	390
+1152	1	391
+1153	1	392
+1154	1	393
+1155	1	394
+1156	1	395
+1157	1	396
+1158	1	397
+1159	1	398
+1160	1	399
+1161	1	400
 \.
 
 
@@ -8676,7 +8868,7 @@ COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_group_permissions_id_seq', 957, true);
+SELECT pg_catalog.setval('auth_group_permissions_id_seq', 1161, true);
 
 
 --
@@ -9057,12 +9249,6 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 371	Can add simulation type	124	add_simulationtype
 372	Can change simulation type	124	change_simulationtype
 373	Can delete simulation type	124	delete_simulationtype
-374	Can add model methods	125	add_modelmethods
-375	Can change model methods	125	change_modelmethods
-376	Can delete model methods	125	delete_modelmethods
-377	Can add swat model parameters	126	add_swatmodelparameters
-378	Can change swat model parameters	126	change_swatmodelparameters
-379	Can delete swat model parameters	126	delete_swatmodelparameters
 380	Can add model input	127	add_modelinput
 381	Can change model input	127	change_modelinput
 382	Can delete model input	127	delete_modelinput
@@ -9072,6 +9258,18 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 386	Can add swat model instance meta data	129	add_swatmodelinstancemetadata
 387	Can change swat model instance meta data	129	change_swatmodelinstancemetadata
 388	Can delete swat model instance meta data	129	delete_swatmodelinstancemetadata
+389	Can add model objective choices	130	add_modelobjectivechoices
+390	Can change model objective choices	130	change_modelobjectivechoices
+391	Can delete model objective choices	130	delete_modelobjectivechoices
+392	Can add model method	131	add_modelmethod
+393	Can change model method	131	change_modelmethod
+394	Can delete model method	131	delete_modelmethod
+395	Can add model parameters choices	132	add_modelparameterschoices
+396	Can change model parameters choices	132	change_modelparameterschoices
+397	Can delete model parameters choices	132	delete_modelparameterschoices
+398	Can add model parameter	133	add_modelparameter
+399	Can change model parameter	133	change_modelparameter
+400	Can delete model parameter	133	delete_modelparameter
 \.
 
 
@@ -9079,7 +9277,7 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_permission_id_seq', 388, true);
+SELECT pg_catalog.setval('auth_permission_id_seq', 400, true);
 
 
 --
@@ -9087,7 +9285,7 @@ SELECT pg_catalog.setval('auth_permission_id_seq', 388, true);
 --
 
 COPY auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-1	pbkdf2_sha256$12000$B7DphCPqbo0P$/faQOTxeoHdcrovoBYn8oCdZaM/EKpX2WOruP0L926E=	2015-05-15 20:14:26.952252+00	t	admin			admin@example.com	t	t	2015-05-15 20:13:47.142214+00
+1	pbkdf2_sha256$15000$c1qVrblLfgou$mFXWCdaxHo88UpSUdraLVrAuppA9UUVDIT2X9cK/Mgk=	2015-07-10 20:33:26.973998+00	t	admin			admin@example.com	t	t	2015-05-15 20:13:47.142214+00
 \.
 
 
@@ -9292,6 +9490,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 22	2015-05-15 20:44:31.749912+00	1	Hydroshare Author	2	Changed permissions.	2	1
 23	2015-05-15 20:44:52.579663+00	1	Hydroshare Author	2	Changed permissions.	2	1
 24	2015-05-15 20:45:41.250747+00	1	Hydroshare Author	2	No fields changed.	2	1
+25	2015-07-10 20:33:43.7036+00	1	Hydroshare Author	2	Changed permissions.	2	1
 \.
 
 
@@ -9299,7 +9498,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_admin_log_id_seq', 24, true);
+SELECT pg_catalog.setval('django_admin_log_id_seq', 25, true);
 
 
 --
@@ -9461,11 +9660,13 @@ COPY django_content_type (id, name, app_label, model) FROM stdin;
 122	executed by	hs_swat_modelinstance	executedby
 123	model objective	hs_swat_modelinstance	modelobjective
 124	simulation type	hs_swat_modelinstance	simulationtype
-125	model methods	hs_swat_modelinstance	modelmethods
-126	swat model parameters	hs_swat_modelinstance	swatmodelparameters
 127	model input	hs_swat_modelinstance	modelinput
 128	SWAT Model Instance Resource	hs_swat_modelinstance	swatmodelinstanceresource
 129	swat model instance meta data	hs_swat_modelinstance	swatmodelinstancemetadata
+130	model objective choices	hs_swat_modelinstance	modelobjectivechoices
+131	model method	hs_swat_modelinstance	modelmethod
+132	model parameters choices	hs_swat_modelinstance	modelparameterschoices
+133	model parameter	hs_swat_modelinstance	modelparameter
 \.
 
 
@@ -9473,7 +9674,7 @@ COPY django_content_type (id, name, app_label, model) FROM stdin;
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_content_type_id_seq', 129, true);
+SELECT pg_catalog.setval('django_content_type_id_seq', 133, true);
 
 
 --
@@ -9680,6 +9881,10 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 17	django_docker_processes	0001_initial	2015-05-15 20:42:05.22799+00
 18	hs_model_program	0001_initial	2015-05-15 20:42:31.546003+00
 19	hs_modelinstance	0001_initial	2015-05-15 20:42:32.769538+00
+20	hs_model_program	0002_auto_20150527_1944	2015-06-26 18:55:03.038896+00
+21	hs_swat_modelinstance	0001_initial	2015-06-26 18:58:19.023392+00
+22	hs_swat_modelinstance	0002_auto_20150626_1920	2015-07-07 15:40:13.193479+00
+23	hs_swat_modelinstance	0003_auto_20150707_1513	2015-07-07 15:40:15.149429+00
 \.
 
 
@@ -9687,7 +9892,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 19, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 23, true);
 
 
 --
@@ -9711,6 +9916,9 @@ SELECT pg_catalog.setval('django_redirect_id_seq', 1, false);
 
 COPY django_session (session_key, session_data, expire_date) FROM stdin;
 flxpn3hii2goadcoy7adra8bxyt1vph8	Zjk0NzMwNTU0OWExODViN2ZhZmJlOTc3NzZhZTFkOTI3YmM2MmIyNzp7Il9hdXRoX3VzZXJfaGFzaCI6IjVmNTUxYjkxYzM4MmU2NTJiMDI3YjA5ZGUxMzc0NjhlYTFhMzk4NzEiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJtZXp6YW5pbmUuY29yZS5hdXRoX2JhY2tlbmRzLk1lenphbmluZUJhY2tlbmQiLCJfYXV0aF91c2VyX2lkIjoxfQ==	2015-05-29 20:14:27.011195+00
+rs391fcr96eeg1d4ju0pnn1zzur8ynhy	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-07-10 18:56:58.097448+00
+5a6bs2zh3z4wyjx15ah1skh234yx1ftq	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-07-10 18:56:58.105578+00
+04st0xdaqt58elpx43jxgaq8p7zv7qw8	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-07-24 20:34:11.926695+00
 \.
 
 
@@ -11118,7 +11326,7 @@ SELECT pg_catalog.setval('hs_swat_modelinstance_executedby_id_seq', 1, false);
 -- Data for Name: hs_swat_modelinstance_modelinput; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_swat_modelinstance_modelinput (id, object_id, content_type_id, rainfall_time_step, simulation_time_step, watershed_area, number_of_subbasins, "number_of_HRUs", "DEM_resolution", "DEM_source_name", "DEM_source_URL", "landUse_data_source_name", "landUse_data_source_URL", soil_data_source_name, "soil_data_source_URL") FROM stdin;
+COPY hs_swat_modelinstance_modelinput (id, object_id, content_type_id, rainfall_time_step_value, simulation_time_step_value, watershed_area, number_of_subbasins, "number_of_HRUs", "DEM_resolution", "DEM_source_name", "DEM_source_URL", "landUse_data_source_name", "landUse_data_source_URL", soil_data_source_name, "soil_data_source_URL", routing_time_step_value, warm_up_period, rainfall_time_step_type, routing_time_step_type, simulation_time_step_type) FROM stdin;
 \.
 
 
@@ -11130,25 +11338,25 @@ SELECT pg_catalog.setval('hs_swat_modelinstance_modelinput_id_seq', 1, false);
 
 
 --
--- Data for Name: hs_swat_modelinstance_modelmethods; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: hs_swat_modelinstance_modelmethod; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_swat_modelinstance_modelmethods (id, object_id, content_type_id, runoff_calculation_method, flow_routing_method, "PET_estimation_method") FROM stdin;
+COPY hs_swat_modelinstance_modelmethod (id, object_id, runoff_calculation_method, flow_routing_method, "PET_estimation_method", content_type_id) FROM stdin;
 \.
 
 
 --
--- Name: hs_swat_modelinstance_modelmethods_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: hs_swat_modelinstance_modelmethod_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('hs_swat_modelinstance_modelmethods_id_seq', 1, false);
+SELECT pg_catalog.setval('hs_swat_modelinstance_modelmethod_id_seq', 1, false);
 
 
 --
 -- Data for Name: hs_swat_modelinstance_modelobjective; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_swat_modelinstance_modelobjective (id, object_id, content_type_id, swat_model_objective, other_objectives) FROM stdin;
+COPY hs_swat_modelinstance_modelobjective (id, object_id, content_type_id, other_objectives) FROM stdin;
 \.
 
 
@@ -11157,6 +11365,36 @@ COPY hs_swat_modelinstance_modelobjective (id, object_id, content_type_id, swat_
 --
 
 SELECT pg_catalog.setval('hs_swat_modelinstance_modelobjective_id_seq', 1, false);
+
+
+--
+-- Name: hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_swat_modelinstance_modelobjective_swat_model_objectives; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_swat_modelinstance_modelobjective_swat_model_objectives (id, modelobjective_id, modelobjectivechoices_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_swat_modelinstance_modelobjectivechoices; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_swat_modelinstance_modelobjectivechoices (id, description) FROM stdin;
+\.
+
+
+--
+-- Name: hs_swat_modelinstance_modelobjectivechoices_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_swat_modelinstance_modelobjectivechoices_id_seq', 1, false);
 
 
 --
@@ -11172,6 +11410,51 @@ COPY hs_swat_modelinstance_modeloutput (id, object_id, content_type_id, includes
 --
 
 SELECT pg_catalog.setval('hs_swat_modelinstance_modeloutput_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_swat_modelinstance_modelparameter; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_swat_modelinstance_modelparameter (id, object_id, other_parameters, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_swat_modelinstance_modelparameter_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_swat_modelinstance_modelparameter_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_swat_modelinstance_modelparameter_model_parameters; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_swat_modelinstance_modelparameter_model_parameters (id, modelparameter_id, modelparameterschoices_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_swat_modelinstance_modelparameter_model_parameters_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_swat_modelinstance_modelparameter_model_parameters_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_swat_modelinstance_modelparameterschoices; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_swat_modelinstance_modelparameterschoices (id, description) FROM stdin;
+\.
+
+
+--
+-- Name: hs_swat_modelinstance_modelparameterschoices_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_swat_modelinstance_modelparameterschoices_id_seq', 1, false);
 
 
 --
@@ -11278,21 +11561,6 @@ SELECT pg_catalog.setval('hs_swat_modelinstance_swatmodelinstanceresource_view_u
 
 COPY hs_swat_modelinstance_swatmodelinstanceresource_view_users (id, swatmodelinstanceresource_id, user_id) FROM stdin;
 \.
-
-
---
--- Data for Name: hs_swat_modelinstance_swatmodelparameters; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY hs_swat_modelinstance_swatmodelparameters (id, object_id, content_type_id, has_crop_rotation, has_title_drainage, has_point_source, has_fertilizer, has_tillage_operation, has_inlet_of_draining_watershed, has_irrigation_operation, other_parameters) FROM stdin;
-\.
-
-
---
--- Name: hs_swat_modelinstance_swatmodelparameters_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('hs_swat_modelinstance_swatmodelparameters_id_seq', 1, false);
 
 
 --
@@ -13218,6 +13486,14 @@ ALTER TABLE ONLY hs_model_program_modelprogramresource_view_users
 
 
 --
+-- Name: hs_model_program_mpmetada_content_type_id_6d7804f108cda18d_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_model_program_mpmetadata
+    ADD CONSTRAINT hs_model_program_mpmetada_content_type_id_6d7804f108cda18d_uniq UNIQUE (content_type_id, object_id);
+
+
+--
 -- Name: hs_model_program_mpmetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -13354,11 +13630,19 @@ ALTER TABLE ONLY hs_swat_modelinstance_modelinput
 
 
 --
--- Name: hs_swat_modelinstance_modelmethods_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_swat_modelinstance_modelmethod_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
-ALTER TABLE ONLY hs_swat_modelinstance_modelmethods
-    ADD CONSTRAINT hs_swat_modelinstance_modelmethods_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY hs_swat_modelinstance_modelmethod
+    ADD CONSTRAINT hs_swat_modelinstance_modelmethod_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_swat_modelinstance_modelob_modelobjective_id_modelobject_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelobjective_swat_model_objectives
+    ADD CONSTRAINT hs_swat_modelinstance_modelob_modelobjective_id_modelobject_key UNIQUE (modelobjective_id, modelobjectivechoices_id);
 
 
 --
@@ -13370,11 +13654,59 @@ ALTER TABLE ONLY hs_swat_modelinstance_modelobjective
 
 
 --
+-- Name: hs_swat_modelinstance_modelobjective_swat_model_objectives_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelobjective_swat_model_objectives
+    ADD CONSTRAINT hs_swat_modelinstance_modelobjective_swat_model_objectives_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_swat_modelinstance_modelobjectivechoices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelobjectivechoices
+    ADD CONSTRAINT hs_swat_modelinstance_modelobjectivechoices_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: hs_swat_modelinstance_modeloutput_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
 ALTER TABLE ONLY hs_swat_modelinstance_modeloutput
     ADD CONSTRAINT hs_swat_modelinstance_modeloutput_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_swat_modelinstance_modelpa_modelparameter_id_modelparame_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelparameter_model_parameters
+    ADD CONSTRAINT hs_swat_modelinstance_modelpa_modelparameter_id_modelparame_key UNIQUE (modelparameter_id, modelparameterschoices_id);
+
+
+--
+-- Name: hs_swat_modelinstance_modelparameter_model_parameters_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelparameter_model_parameters
+    ADD CONSTRAINT hs_swat_modelinstance_modelparameter_model_parameters_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_swat_modelinstance_modelparameter_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelparameter
+    ADD CONSTRAINT hs_swat_modelinstance_modelparameter_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_swat_modelinstance_modelparameterschoices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelparameterschoices
+    ADD CONSTRAINT hs_swat_modelinstance_modelparameterschoices_pkey PRIMARY KEY (id);
 
 
 --
@@ -13479,14 +13811,6 @@ ALTER TABLE ONLY hs_swat_modelinstance_swatmodelinstanceresource_view_groups
 
 ALTER TABLE ONLY hs_swat_modelinstance_swatmodelinstanceresource_view_users
     ADD CONSTRAINT hs_swat_modelinstance_swatmodelinstanceresource_view_users_pkey PRIMARY KEY (id);
-
-
---
--- Name: hs_swat_modelinstance_swatmodelparameters_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY hs_swat_modelinstance_swatmodelparameters
-    ADD CONSTRAINT hs_swat_modelinstance_swatmodelparameters_pkey PRIMARY KEY (id);
 
 
 --
@@ -15400,10 +15724,10 @@ CREATE INDEX hs_swat_modelinstance_modelinput_content_type_id ON hs_swat_modelin
 
 
 --
--- Name: hs_swat_modelinstance_modelmethods_content_type_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_swat_modelinstance_modelmethod_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_swat_modelinstance_modelmethods_content_type_id ON hs_swat_modelinstance_modelmethods USING btree (content_type_id);
+CREATE INDEX hs_swat_modelinstance_modelmethod_417f1b1c ON hs_swat_modelinstance_modelmethod USING btree (content_type_id);
 
 
 --
@@ -15414,10 +15738,45 @@ CREATE INDEX hs_swat_modelinstance_modelobjective_content_type_id ON hs_swat_mod
 
 
 --
+-- Name: hs_swat_modelinstance_modelobjective_swat_model_objectives_402b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_swat_modelinstance_modelobjective_swat_model_objectives_402b ON hs_swat_modelinstance_modelobjective_swat_model_objectives USING btree (modelobjective_id);
+
+
+--
+-- Name: hs_swat_modelinstance_modelobjective_swat_model_objectives_5316; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_swat_modelinstance_modelobjective_swat_model_objectives_5316 ON hs_swat_modelinstance_modelobjective_swat_model_objectives USING btree (modelobjectivechoices_id);
+
+
+--
 -- Name: hs_swat_modelinstance_modeloutput_content_type_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
 CREATE INDEX hs_swat_modelinstance_modeloutput_content_type_id ON hs_swat_modelinstance_modeloutput USING btree (content_type_id);
+
+
+--
+-- Name: hs_swat_modelinstance_modelparameter_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_swat_modelinstance_modelparameter_417f1b1c ON hs_swat_modelinstance_modelparameter USING btree (content_type_id);
+
+
+--
+-- Name: hs_swat_modelinstance_modelparameter_model_parameters_614dbbb6; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_swat_modelinstance_modelparameter_model_parameters_614dbbb6 ON hs_swat_modelinstance_modelparameter_model_parameters USING btree (modelparameter_id);
+
+
+--
+-- Name: hs_swat_modelinstance_modelparameter_model_parameters_d6566261; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_swat_modelinstance_modelparameter_model_parameters_d6566261 ON hs_swat_modelinstance_modelparameter_model_parameters USING btree (modelparameterschoices_id);
 
 
 --
@@ -15551,13 +15910,6 @@ CREATE INDEX hs_swat_modelinstance_swatmodelinstanceresource_view_users_3470 ON 
 --
 
 CREATE INDEX hs_swat_modelinstance_swatmodelinstanceresource_view_users_96fd ON hs_swat_modelinstance_swatmodelinstanceresource_view_users USING btree (user_id);
-
-
---
--- Name: hs_swat_modelinstance_swatmodelparameters_content_type_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX hs_swat_modelinstance_swatmodelparameters_content_type_id ON hs_swat_modelinstance_swatmodelparameters USING btree (content_type_id);
 
 
 --
@@ -15924,6 +16276,14 @@ ALTER TABLE ONLY ref_ts_reftsmetadata
 
 
 --
+-- Name: D160961fcba05fdd989826403bd5f914; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelobjective_swat_model_objectives
+    ADD CONSTRAINT "D160961fcba05fdd989826403bd5f914" FOREIGN KEY (modelobjectivechoices_id) REFERENCES hs_swat_modelinstance_modelobjectivechoices(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D167e0d092afa7f61f3186226e495eb5; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -15937,6 +16297,14 @@ ALTER TABLE ONLY hs_core_genericresource_edit_users
 
 ALTER TABLE ONLY django_docker_processes_dockerlink
     ADD CONSTRAINT "D16cd563c928a22ccbdb7c425a399b3c" FOREIGN KEY (docker_profile_from_id) REFERENCES django_docker_processes_dockerprofile(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D1aa88a4e8e7c50866281523397c0b8e; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelobjective_swat_model_objectives
+    ADD CONSTRAINT "D1aa88a4e8e7c50866281523397c0b8e" FOREIGN KEY (modelobjective_id) REFERENCES hs_swat_modelinstance_modelobjective(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -15969,6 +16337,14 @@ ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_edit_groups
 
 ALTER TABLE ONLY hs_model_program_modelprogrammetadata
     ADD CONSTRAINT "D28d4ec87c18a4f707acafb3b265fe0b" FOREIGN KEY (coremetadata_ptr_id) REFERENCES hs_core_coremetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D298685713846fce4c3b8f825f6971fc; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelparameter_model_parameters
+    ADD CONSTRAINT "D298685713846fce4c3b8f825f6971fc" FOREIGN KEY (modelparameterschoices_id) REFERENCES hs_swat_modelinstance_modelparameterschoices(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -16257,6 +16633,14 @@ ALTER TABLE ONLY hs_modelinstance_modelinstanceresource_view_groups
 
 ALTER TABLE ONLY hs_geo_raster_resource_rasterresource_owners
     ADD CONSTRAINT a6d705a048cb4b645896c5efbd55047f FOREIGN KEY (rasterresource_id) REFERENCES hs_geo_raster_resource_rasterresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: ad127dae388d348e8d57f9ed18647c59; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelparameter_model_parameters
+    ADD CONSTRAINT ad127dae388d348e8d57f9ed18647c59 FOREIGN KEY (modelparameter_id) REFERENCES hs_swat_modelinstance_modelparameter(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -17476,6 +17860,22 @@ ALTER TABLE ONLY hs_modelinstance_modelinstanceresource_edit_users
 
 
 --
+-- Name: hs_s_content_type_id_67e73462ac6a1f3b_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelparameter
+    ADD CONSTRAINT hs_s_content_type_id_67e73462ac6a1f3b_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_s_content_type_id_7a0e6caa7ea88974_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelmethod
+    ADD CONSTRAINT hs_s_content_type_id_7a0e6caa7ea88974_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_swat_modelinstance_executedby_content_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -17489,14 +17889,6 @@ ALTER TABLE ONLY hs_swat_modelinstance_executedby
 
 ALTER TABLE ONLY hs_swat_modelinstance_modelinput
     ADD CONSTRAINT hs_swat_modelinstance_modelinput_content_type_id_fkey FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: hs_swat_modelinstance_modelmethods_content_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_swat_modelinstance_modelmethods
-    ADD CONSTRAINT hs_swat_modelinstance_modelmethods_content_type_id_fkey FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -17609,14 +18001,6 @@ ALTER TABLE ONLY hs_swat_modelinstance_swatmodelinstanceresource_view_groups
 
 ALTER TABLE ONLY hs_swat_modelinstance_swatmodelinstanceresource_view_users
     ADD CONSTRAINT hs_swat_modelinstance_swatmodelinstanceresource_vi_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: hs_swat_modelinstance_swatmodelparameters_content_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_swat_modelinstance_swatmodelparameters
-    ADD CONSTRAINT hs_swat_modelinstance_swatmodelparameters_content_type_id_fkey FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
