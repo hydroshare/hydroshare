@@ -23,6 +23,7 @@ from dateutil import parser
 import json
 
 
+# ALVA: This should use OneToOne rather than ForeignKey
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
     owner = models.ForeignKey(User)
@@ -62,6 +63,13 @@ def validate_user_url(value):
         if not User.objects.filter(pk=user_id).exists():
             raise ValidationError(err_message)
 
+# ALVA: Plan for new Access Control 
+# ALVA: Do not put AccessControl information into the Resource object. 
+# ALVA: Instead, put in a OneToOne reference to ResourceAccess. 
+# ALVA: Thus, code boundaries are maintained. 
+# 
+# ALVA: It looks like everything has to be in this file 
+# ALVA: to avoid cyclic references. 
 
 class ResourcePermissionsMixin(Ownable):
     creator = models.ForeignKey(User,

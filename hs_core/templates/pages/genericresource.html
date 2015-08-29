@@ -499,7 +499,7 @@
                                                                 <ul class="dropdown-menu" aria-labelledby="roles-menu">
                                                                     <li>
                                                                         <form id="share-view-{{ u.pk }}"
-                                                                              action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/view/{{ u.pk }}"
+                                                                              action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/view/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
                                                                             <button type="submit">Can view</button>
@@ -507,7 +507,7 @@
                                                                     </li>
                                                                     <li>
                                                                         <form id="share-edit-{{ u.pk }}"
-                                                                              action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/edit/{{ u.pk }}"
+                                                                              action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/edit/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
                                                                             <button type="submit">Can edit</button>
@@ -515,7 +515,7 @@
                                                                     </li>
                                                                     <li>
                                                                         <form id="share-owner-{{ u.pk }}"
-                                                                              action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/owner/{{ u.pk }}"
+                                                                              action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with/owner/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
                                                                             <button type="submit">Is owner</button>
@@ -526,7 +526,7 @@
                                                     </td>
 
                                                     <td class="user-actions">
-                                                        <form action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with/{{ u.pk }}"
+                                                        <form action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with/{{ u.pk }}/"
                                                               method="POST">
                                                             {% csrf_token %}
                                                             <span class="glyphicon glyphicon-remove btn-remove-row"></span>
@@ -1314,7 +1314,7 @@
                                                 </div>
                                                 <div id="div_id_northlimit" class="control-group"><label
                                                         for="id_northlimit" class="control-label requiredField">
-                                                    North Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                                    North Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                                     <div class="controls"><input
                                                             class="form-control input-sm textinput textInput"
@@ -1326,7 +1326,7 @@
                                                 </div>
                                                 <div id="div_id_eastlimit" class="control-group"><label
                                                         for="id_eastlimit" class="control-label requiredField">
-                                                    East Latitude (WGS 84 decimal degrees)<span
+                                                    East Longitude (WGS 84 decimal degrees)<span
                                                         class="asteriskField">*</span></label>
 
                                                     <div class="controls"><input
@@ -1338,7 +1338,7 @@
                                                 </div>
                                                 <div id="div_id_southlimit" class="control-group"><label
                                                         for="id_southlimit" class="control-label requiredField">
-                                                    South Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                                    South Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                                     <div class="controls"><input
                                                             class="form-control input-sm textinput textInput"
@@ -1349,7 +1349,7 @@
                                                 </div>
                                                 <div id="div_id_westlimit" class="control-group"><label
                                                         for="id_westlimit" class="control-label requiredField">
-                                                    West Latitude (WGS 84 decimal degrees)<span
+                                                    West Longitude (WGS 84 decimal degrees)<span
                                                         class="asteriskField">*</span></label>
 
                                                     <div class="controls"><input
@@ -1560,6 +1560,8 @@
                                     {% else %}
                                         {% crispy metadata_form %}
                                     {% endif %}
+                                    {% block extra_section %} {# add extra section for resource landing page #}
+                                    {% endblock %}
                                 </div>
                             {% endif %}
                         {% endif %}
