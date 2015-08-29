@@ -1,12 +1,12 @@
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, AbstractResource, BaseResource
+from hs_core.models import BaseResource, AbstractResource, GenericResource
 from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import ToolResourceType
 from django_irods.storage import IrodsStorage
 
-@processor_for(BaseResource)
+@processor_for(GenericResource)
 def landing_page(request, page):
     # TODO: this if/else is an exact copy of the function 'check_resource_mode', defined below
     if request.method == "GET":

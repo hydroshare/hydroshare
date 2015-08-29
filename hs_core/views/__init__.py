@@ -458,7 +458,7 @@ def my_resources(request, page):
             'ct': total_res_cnt,
         }
 
-@processor_for(BaseResource)
+@processor_for(GenericResource)
 def add_generic_context(request, page):
 
     class AddUserForm(forms.Form):
@@ -568,7 +568,7 @@ def get_file(request, *args, **kwargs):
     session.runCmd('iget', [ name, 'tempfile.' + name ])
     return HttpResponse(open(name), content_type='x-binary/octet-stream')
 
-processor_for(BaseResource)(resource_processor)
+processor_for(GenericResource)(resource_processor)
 
 
 def get_metadata_terms_page(request, *args, **kwargs):
