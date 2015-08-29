@@ -187,7 +187,14 @@
                     <img src="{{ profile.picture.url }}" class="activity-thumbnail" alt="profile picture">
                     <span>{{ u.first_name }} {{ u.last_name }}</span><span class="text-muted"> shared </span>
                     <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
-                    <h5 style="margin-top:0" class="text-muted">{{ res.updated|date }}, {{ res.updated|time }}</h5>
+                    <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
+                    <ul>
+                        <li><a class="tag">test</a></li>
+                    </ul>
+                    {% if  res.metadata.description %}
+                    <h5 style="margin-top:0">{{ res.metadata.description }}</h5>
+
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
