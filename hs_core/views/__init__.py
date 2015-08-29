@@ -26,7 +26,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods
-from hs_core.models import BaseResource, resource_processor, CoreMetaData
+from hs_core.models import BaseResource, GenericResource, resource_processor, CoreMetaData
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -576,9 +576,9 @@ def get_metadata_terms_page(request, *args, **kwargs):
 
 @processor_for('resources')
 def resource_listing_processor(request, page):
-    owned_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
-    editable_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
-    viewable_resources = list(GenericResource.objects.filter(public=True))
+    owned_resources = list(BaseResource.objects.filter(owners__pk=request.user.pk))
+    editable_resources = list(BaseResource.objects.filter(owners__pk=request.user.pk))
+    viewable_resources = list(BaseResource.objects.filter(public=True))
     return locals()
 
 # FIXME need a task somewhere that amounts to checking inactive accounts and deleting them after 30 days.
