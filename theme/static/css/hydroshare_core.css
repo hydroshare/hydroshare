@@ -1912,6 +1912,7 @@ ul.resource-search-options {
 	border-left: 3px solid #3E7A8C;
 	padding-left: 12px;
 	font-weight: bold;
+	color: #3E7A8C;
 }
 
 #about-section .nav-tabs {
@@ -1981,4 +1982,39 @@ ul.resource-search-options {
 	padding: 20px;
 	border-radius: 1px;
 	border-color: #e5e6e9 #dfe0e4 #d0d1d5;
+}
+
+.activity-block .quote {
+	margin-top: 30px;
+	clear: both;
+}
+
+.quote {
+	padding: 0 15px;
+	color: #777;
+	border-left: 4px solid #ddd;
+}
+
+.section-title {
+	margin-top: 20px;
+	border-bottom: 1px solid #3E7A8C;
+	padding-bottom: 5px;
+	color: #3E7A8C;
+}
+
+#list-contributions {
+	margin: 20px;
+}
+
+#list-contributions .quote {
+	max-height: 55px;
+	overflow: auto;
+}
+
+#list-contributions i, #list-contributions h4 {
+	color: #3E7A8C;
+}
+
+table.overview td:first-child > span {
+	margin-right: 15px;
 }
