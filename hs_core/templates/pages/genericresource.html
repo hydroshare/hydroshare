@@ -667,7 +667,7 @@
 
                                         <div class="input-group">
                                             <form id="add-access-form"
-                                                  action="/hsapi/_internal/{{ cm.short_id }}/share-resource-width/"
+                                                  action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/"
                                                   method="POST">
                                                 {% csrf_token %}
 
@@ -677,19 +677,19 @@
                                                     <button class="btn btn-default dropdown-toggle" type="button"
                                                             id="roles_list" data-toggle="dropdown"
                                                             aria-haspopup="true" aria-expanded="true">
-                                                        <span id="selected_role">Can view</span>
+                                                        <span id="selected_role" data-role="VIEW">Can view</span>
                                                         <span class="caret"></span>
                                                     </button>
 
-                                                    <ul id="lstRoles" class="dropdown-menu"
+                                                    <ul id="list-roles" class="dropdown-menu"
                                                         aria-labelledby="roles_list">
-                                                        <li><a data-role="view" href="#">Can view</a></li>
-                                                        <li><a data-role="edit" href="#">Can edit</a></li>
-                                                        <li><a data-role="owner" href="#">Is owner</a></li>
+                                                        <li><a data-role="VIEW" href="#">Can view</a></li>
+                                                        <li><a data-role="CHANGE" href="#">Can edit</a></li>
+                                                        <li><a data-role="OWNER" href="#">Is owner</a></li>
                                                     </ul>
                                                 </div>
 
-                                                <button onclick="share_resource_ajax_submit('add-access-form', '', ''); return false;"
+                                                <button type="button" onclick="share_resource_ajax_submit('add-access-form'); return false;"
                                                         class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
                                                         class="button-label">&nbspAdd</span></button>
                                             </form>
@@ -2488,7 +2488,9 @@
             function onRoleSelect(event) {
                 var el = $(event.target);
                 $("#selected_role").text(el.text());
+                $("#selected_role")[0].setAttribute("data-role", el[0].getAttribute("data-role"));
             }
+
             function onRowRemove(event) {
                 var el = $(event.target);
                 var pk = el[0].getAttribute("data-pk");
@@ -2497,15 +2499,17 @@
                 form.submit();
                 {#               update_access_ajax_submit(event, formID);#}
             }
+
             function share_resource_ajax_submit(form_id) {
                 $form = $('#' + form_id);
                 var datastring = $form.serialize();
-                var share_with = $("#id_user-deck > .hilight").getAttribute("data-value");
-                var access_type = "";
-                //todo: Extract and pass access type from dropdown
+                var share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+                var access_type = $("#selected_role")[0].getAttribute("data-role");
+                var url = $form.attr('action') + access_type + "/" + share_with + "/";
+
                 $.ajax({
                     type: "POST",
-                    url: $form.attr('action') + "/" + access_type + "/" + share_with,
+                    url: url,
                     dataType: 'html',
                     data: datastring,
                     success: function (result) {
@@ -2521,6 +2525,7 @@
                 //don't submit the form
                 return false;
             }
+
             function onRemoveKeyword(event) {
                 $($(this).closest(".tags").parent().find(".btn-primary")[0]).show();    // Show save button
                 $(event.target).closest(".tag").remove();
@@ -2699,6 +2704,7 @@
                         onAddKeyword();
                     }
                 });
+                $("#list-roles a").click(onRoleSelect);
 
                 // hide add file button if necessary
                 var file_count = $("#file-count").attr('value');
