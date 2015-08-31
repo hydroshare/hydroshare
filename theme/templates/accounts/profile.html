@@ -9,7 +9,7 @@
         <div class="row">
             <div class="col-sm-3 col-xs-12">
                 {% if profile.picture %}
-                <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>
+                    <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>
                 {% endif %}
 
             </div>
@@ -23,26 +23,29 @@
                 <table class="overview">
                     <tbody>
                     {% if profile.subject_areas %}
-                        <tr>
-                            <td><span class="text-muted">Subject Areas</span></td>
-                            <td>{{ profile.subject_areas }}</td>
-                        </tr>
-                        <tr>
-                            <td><span class="text-muted">Profession</span></td>
-                            <td>Computer Scientist</td>
-                        </tr>
+                        {% if profile.subject_areas %}
+                            <tr>
+                                <td><span class="text-muted">Subject Areas</span></td>
+                                <td>{{ profile.subject_areas }}</td>
+                            </tr>
+                        {% endif %}
+
+                        {% if profile.profession %}
+                            <tr>
+                                <td><span class="text-muted">Profession</span></td>
+                                <td>{{ profile.profession }}</td>
+                            </tr>
+                        {% endif %}
+
                     {% endif %}
 
                     </tbody>
                 </table>
 
-                <h3>About {{ u.first_name }}</h3>
-
-                <p>{{ profile.details }}</p>
-                {#                {% if profile.profession %}#}
-                {#                    <p><span class="text-muted">Profession:</span> {{ profile.profession }}</p>#}
-                {#                {% endif %}#}
-
+                {% if profile.details %}
+                    <h3>About {{ u.first_name }}</h3>
+                    <p>{{ profile.details }}</p>
+                {% endif %}
 
             </div>
         </div>
@@ -64,6 +67,7 @@
                                 <i class="glyphicon glyphicon-user"></i>&nbsp;&nbsp;Contact</a></li>
                         </ul>
                         <div class="tab-content">
+                            {#  ---------- AFFILIATIONS ----------#}
                             <div class="tab-pane active" id="tab-affiliations">
                                 <div class="pull-left affiliation-row">
                                     <div class="col-xs-12 col-sm-9">
@@ -98,6 +102,7 @@
                                     </div>
                                 </div>
                             </div>
+                        {#  ---------- CONTRIBUTIONS ----------#}
                             <div class="tab-pane" id="tab-contributions">
                                 <div class=col-sm-12">
                                     <div id="list-contributions" class="list-group">
@@ -112,6 +117,8 @@
                                     </div>
                                 </div>
                             </div>
+
+                        {#  ---------- CONTACT ----------#}
                             <div class="tab-pane" id="tab-contact">
                                 <div class="col-sm-12">
                                     <h4>Contact info</h4>
@@ -173,25 +180,25 @@
                     <!-- /tabs -->
                 </div>
             </div>
+
         </div>
 
+        {#  ---------- ACTIVITY ----------#}
         <div class="row">
             <div class="col-sm-12">
                 <h3>Activity</h3>
                 {% for res in resources %}
-
-                <div class="activity-block">
-                    <img src="{{ profile.picture.url }}" class="activity-thumbnail" alt="profile picture">
-                    <strong>{{ u.first_name }} {{ u.last_name }}</strong><span class="text-muted"> shared </span>
-                    <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
-                    <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
-                    {% if  res.metadata.description %}
-                    <h5 class="quote" >{{ res.metadata.description }}</h5>
-                    {% endif %}
-                </div>
+                    <div class="activity-block">
+                        <img src="{{ profile.picture.url }}" class="activity-thumbnail" alt="profile picture">
+                        <strong>{{ u.first_name }} {{ u.last_name }}</strong><span class="text-muted"> shared </span>
+                        <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
+                        <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
+                        {% if  res.metadata.description %}
+                            <h5 class="quote">{{ res.metadata.description }}</h5>
+                        {% endif %}
+                    </div>
                 {% endfor %}
             </div>
-
         </div>
     {% endwith %}
 {% endblock %}
