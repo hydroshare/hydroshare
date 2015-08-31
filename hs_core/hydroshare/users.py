@@ -617,7 +617,7 @@ def get_resource_list(creator=None,
                         if user != owner:
                             public = True
                 else:
-                    queries[t].append(Q(edit_users=user) | Q(view_users=user) | Q(owners=user) | Q(public=True))
+                    queries[t].append(Q(edit_users=user) | Q(view_users=user) | Q(owners=user) | Q(public=True) | Q(discoverable=True))
 
         if from_date and to_date:
             queries[t].append(Q(created__range=(from_date, to_date)))
