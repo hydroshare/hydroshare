@@ -1,5 +1,6 @@
 import json
 import os
+import string
 from django.http import HttpResponse, HttpResponseRedirect
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
@@ -22,6 +23,26 @@ def search_ds(coll):
     store['folder'] = folder
     return store
 
+def check_upload_files(resource_cls, fnames_list):
+    file_types = resource_cls.get_supported_upload_file_types()
+    valid = False
+    ext = ''
+    if file_types == ".*":
+        valid = True
+    else:
+        for fname in fnames_list:
+            ext = os.path.splitext(fname)[1]
+            if ext == file_types:
+                valid = True
+            else:
+                for index in range(len(file_types)):
+                    file_type_str = file_types[index].strip()
+                    if file_type_str == ".*" or ext == file_type_str:
+                        valid = True
+                        break
+
+    return (valid, ext)
+
 # Create your views here.
 def login(request):
     if request.method == 'POST':
@@ -41,7 +62,7 @@ def login(request):
         except CollectionDoesNotExist:
             response_data['irods_loggedin'] = False
             response_data['login_message'] = 'iRODS login failed'
-            response_data['irods_file_name'] = ''
+            response_data['irods_file_names'] = ''
             response_data['error'] = "iRODS collection does not exist"
             return HttpResponse(
                 json.dumps(response_data),
@@ -55,7 +76,7 @@ def login(request):
             response_data['zone'] = zone
             response_data['datastore'] = datastore
             response_data['irods_loggedin'] = True
-            response_data['irods_file_name'] = ''
+            response_data['irods_file_names'] = ''
             return HttpResponse(
                 json.dumps(response_data),
                 content_type = "application/json"
@@ -85,30 +106,22 @@ def store(request):
 
 def upload(request):
     if request.method == 'POST':
-        file_name = str(request.POST['upload'])
+        file_names = str(request.POST['upload'])
+        fnames_list = string.split(file_names, ',')
 
         resource_cls = hydroshare.check_resource_type(request.POST['res_type'])
-        file_types = resource_cls.get_supported_upload_file_types()
-        valid = False
-        if file_types == ".*":
-            valid = True
-        else:
-            ext = os.path.splitext(file_name)[1]
-            if ext == file_types:
-                valid = True
-            else:
-                for index in range(len(file_types)):
-                    if ext == file_types[index].strip():
-                        valid = True
-                        break
-        response_data = {}
+        valid, ext = check_upload_files(resource_cls, fnames_list)
 
+        response_data = {}
         if valid:
             response_data['file_type_error'] = ''
-            response_data['irods_file_name'] = file_name
+            response_data['irods_file_names'] = file_names
+            # get selected file names without path for informational display on the page
+            response_data['irods_sel_file'] = ', '.join(os.path.basename(f.rstrip(os.sep)) for f in fnames_list)
         else:
             response_data['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
-            response_data['irods_file_name'] = 'No file selected'
+            response_data['irods_file_names'] = ''
+            response_data['irods_sel_file'] = 'No file selected'
 
         return HttpResponse(
             json.dumps(response_data),
@@ -128,22 +141,11 @@ def upload_add(request):
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
 
-    irods_fname = request.POST.get('irods_file_name', '')
+    irods_fnames = request.POST.get('irods_file_names', '')
+    irods_fnames_list = string.split(irods_fnames, ',')
     res_cls = resource.__class__
-    file_types = res_cls.get_supported_upload_file_types()
-    valid = False
-    if file_types == ".*":
-        valid = True
-    else:
-        ext = os.path.splitext(irods_fname)[1]
-        if ext == file_types:
-            valid = True
-        else:
-            for index in range(len(file_types)):
-                file_type_str = file_types[index].strip()
-                if file_type_str == ".*" or ext == file_type_str:
-                    valid = True
-                    break
+
+    valid, ext = check_upload_files(res_cls, irods_fnames_list)
 
     if not valid:
         request.session['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
@@ -156,7 +158,7 @@ def upload_add(request):
         zone = request.POST.get("irods-zone")
         try:
             upload_from_irods(username=user, password=password, host=host, port=port,
-                              zone=zone, irods_fname=irods_fname, res_files=res_files)
+                              zone=zone, irods_fnames=irods_fnames, res_files=res_files)
         except Exception as ex:
             request.session['file_validation_error'] = ex.message
             return HttpResponseRedirect(request.META['HTTP_REFERER'])

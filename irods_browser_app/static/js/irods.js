@@ -278,10 +278,10 @@ function irods_upload() {
             res_type: $('#res_type').val()
         },
         success: function(json) {
-            $("#irods-sel-file").text(json.irods_file_name);
+            $("#irods-sel-file").text(json.irods_sel_file);
             $("#file-type-error").text(json.file_type_error);
             $('#irodsContent').modal('hide');
-            $('#irods_file_name').val(json.irods_file_name)
+            $('#irods_file_names').val(json.irods_file_names)
         },
         error: function(xhr, errmsg, err) {
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
