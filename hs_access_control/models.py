@@ -1471,7 +1471,6 @@ class UserAccess(models.Model):
                     and access_resource.get_number_of_owners() == 1:
                 raise HSAccessException("Cannot remove last owner of resource")
 
-            # record.start=timezone.now() # now automatically set
             record.privilege = this_privilege
             record.save()
 
@@ -1481,6 +1480,14 @@ class UserAccess(models.Model):
                                   user=access_user,
                                   privilege=this_privilege,
                                   grantor=self).save()
+
+        # TODO: Check with Alva on this 'if statement' that I (Pabitra) added is in fact needed
+        # Reason: If the user is down grading his own access to a resource then any higher privileges that he/she
+        # might have been granted previously (by anyone) must be deleted
+        # With this change all Alva's unit tests still pass
+        if access_user == self:
+            UserResourcePrivilege.objects.filter(resource=access_resource, user=access_user,
+                                                 privilege__lt=this_privilege).all().delete()
 
     def __handle_unshare_resource_with_user(self, this_resource, this_user, command=CommandCodes.CHECK):
 

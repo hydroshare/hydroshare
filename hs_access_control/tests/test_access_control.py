@@ -110,6 +110,7 @@ class BasicFunction(TestCase):
     def test_share(self):
         self.assertTrue(self.bikes.raccess.get_number_of_owners() == 1)
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.NONE)
+        self.assertTrue(self.bikes.raccess.get_effective_privilege(self.alva) == PrivilegeCodes.NONE)
         self.george.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.OWNER)
         self.assertTrue(self.bikes.raccess.get_number_of_users() == 2)
         # junk = self.bikes.raccess.get_holders().all()
@@ -121,6 +122,12 @@ class BasicFunction(TestCase):
         self.assertTrue(self.alva.uaccess.can_change_resource(self.bikes))
         self.assertTrue(self.alva.uaccess.can_view_resource(self.bikes))
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.OWNER)
+        self.assertTrue(self.bikes.raccess.get_effective_privilege(self.alva) == PrivilegeCodes.OWNER)
+
+        # test a user can downgrade (e.g., from OWNER to CHANGE) his/her access privilege
+        self.alva.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.CHANGE)
+        self.assertTrue(self.bikes.raccess.get_effective_privilege(self.alva) == PrivilegeCodes.CHANGE)
+
         self.george.uaccess.unshare_resource_with_user(self.bikes, self.alva)
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.NONE)
         self.george.uaccess.share_group_with_user(self.bikers, self.alva, PrivilegeCodes.OWNER)
