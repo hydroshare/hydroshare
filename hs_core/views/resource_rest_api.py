@@ -285,7 +285,7 @@ class ResourceCreate(generics.CreateAPIView):
             # hydroshare.create_resource, i.e. a tuple of django.core.files.uploadedfile.TemporaryUploadedFile objects.
             files = [request.FILES['file'],]
         else:
-            files = ()
+            files = []
 
         _, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
                                                                               resource_title=res_title,
