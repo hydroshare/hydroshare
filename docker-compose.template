@@ -4,6 +4,10 @@ redis:
   image: redis:2.8
 rabbitmq:
   image: rabbitmq:3.5
+solr:
+  image: makuk66/docker-solr
+  ports:
+    - "8983:8983"
 hydroshare:
   build: .
   environment:

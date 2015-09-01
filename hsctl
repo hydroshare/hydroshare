@@ -16,9 +16,9 @@ sed -i '/^\s*$/d' $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat $CONFIG_DIRECTORY/hydroshare-config.sh)
 
 ### Docker Variables ###
-HS_DOCKER_CONTAINERS=(hydroshare_hydroshare_1 hydroshare_dockerworker_1 hydroshare_defaultworker_1 )
+HS_DOCKER_CONTAINERS=(hydroshare_hydroshare_1 hydroshare_dockerworker_1 hydroshare_defaultworker_1)
 HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_dockerworker hydroshare_defaultworker)
-OTHER_DOCKER_CONTAINERS=(hydroshare_postgis_1 hydroshare_rabbitmq_1 hydroshare_redis_1 )
+OTHER_DOCKER_CONTAINERS=(hydroshare_postgis_1 hydroshare_rabbitmq_1 hydroshare_redis_1 hydroshare_solr_1)
 
 ### Pre-flight Variables ###
 HTTP_RECAPTCHA='http://www.google.com/recaptcha/api/js/recaptcha_ajax.js'

@@ -36,6 +36,10 @@ RUN rm irods-icommands-4.1.0-64bit.deb
 # Install test coverage module
 RUN pip install coverage
 
+# Install haystack and sphinx
+RUN pip install django-haystack
+RUN pip install sphinx
+
 WORKDIR /home/docker/hydroshare
 
 CMD /bin/bash
