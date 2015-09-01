@@ -2017,7 +2017,7 @@ class GroupAccess(models.Model):
 
         :return: List of resource objects that can be edited  by this group.
         """
-        return GenericResource.objects.filter(raccess__r2grp__user=self, raccess__immutable=False,
+        return GenericResource.objects.filter(raccess__r2grp__group=self, raccess__immutable=False,
                                               raccess__r2grp__privilege__lte=PrivilegeCodes.CHANGE).distinct()
 
     def get_owners(self):

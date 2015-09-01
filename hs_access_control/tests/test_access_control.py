@@ -128,17 +128,32 @@ class BasicFunction(TestCase):
         self.alva.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.CHANGE)
         self.assertTrue(self.bikes.raccess.get_effective_privilege(self.alva) == PrivilegeCodes.CHANGE)
 
+        # test user 'alva'  has resource 'bikes' as one of the resources that he can edit
+        self.assertTrue(self.bikes in self.alva.uaccess.get_editable_resources())
+
         self.george.uaccess.unshare_resource_with_user(self.bikes, self.alva)
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.NONE)
+
+        # test resource 'bikes' is not one of the resources that user 'alva'  can edit
+        self.assertFalse(self.bikes in self.alva.uaccess.get_editable_resources())
+
         self.george.uaccess.share_group_with_user(self.bikers, self.alva, PrivilegeCodes.OWNER)
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.NONE)
         self.george.uaccess.share_resource_with_group(self.bikes, self.bikers, PrivilegeCodes.VIEW)
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.VIEW)
         self.george.uaccess.share_resource_with_group(self.bikes, self.harpers, PrivilegeCodes.CHANGE)
+
+        # test that the group 'harpers' has resource 'bikes' as one of the editable resources
+        self.assertTrue(self.bikes in self.harpers.gaccess.get_editable_resources())
+
         self.george.uaccess.share_group_with_user(self.harpers, self.alva, PrivilegeCodes.CHANGE)
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.CHANGE)
         self.george.uaccess.unshare_group_with_user(self.harpers, self.alva)
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.VIEW)
+
+        self.george.uaccess.unshare_resource_with_group(self.bikes, self.harpers)
+        # test the resource 'bikes' is not one of the editable resources for the group 'harpers
+        self.assertFalse(self.bikes in self.harpers.gaccess.get_editable_resources())
 
 
 def match_lists(l1, l2):
