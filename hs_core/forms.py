@@ -1145,8 +1145,8 @@ class CoverageTemporalForm(forms.Form):
             if len(self.cleaned_data['name']) == 0:
                 del self.cleaned_data['name']
 
-        self.cleaned_data['start'] = self.cleaned_data['start'].strftime('%m/%d/%Y')
-        self.cleaned_data['end'] = self.cleaned_data['end'].strftime('%m/%d/%Y')
+        self.cleaned_data['start'] = self.cleaned_data['start'].isoformat()
+        self.cleaned_data['end'] = self.cleaned_data['end'].isoformat()
         self.cleaned_data['value'] = copy.deepcopy(self.cleaned_data)
         self.cleaned_data['type'] = 'period'
         if 'name' in self.cleaned_data:
