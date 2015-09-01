@@ -415,17 +415,6 @@ class SWATModelInstanceResource(BaseResource):
     def can_have_multiple_files(cls):
         return True
 
-    def can_add(self, request):
-        return super(SWATModelInstanceResource, self).can_add(request)
-
-    def can_change(self, request):
-        return super(SWATModelInstanceResource, self).can_change(request)
-
-    def can_delete(self, request):
-        return super(SWATModelInstanceResource, self).can_delete(request)
-
-    def can_view(self, request):
-        return super(SWATModelInstanceResource, self).can_view(request)
 
 processor_for(SWATModelInstanceResource)(resource_processor)
 

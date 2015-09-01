@@ -253,17 +253,6 @@ class RasterResource(BaseResource):
         # can have only 1 file
         return False
 
-    def can_add(self, request):
-        return super(RasterResource, self).can_add(request)
-
-    def can_change(self, request):
-        return super(RasterResource, self).can_change(request)
-
-    def can_delete(self, request):
-        return super(RasterResource, self).can_delete(request)
-
-    def can_view(self, request):
-        return super(RasterResource, self).can_view(request)
 
 # this would allow us to pick up additional form elements for the template before the template is displayed via Mezzanine page processor
 processor_for(RasterResource)(resource_processor)

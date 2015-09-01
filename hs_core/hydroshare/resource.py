@@ -52,7 +52,7 @@ def get_resource(pk):
     # 3.F.2. Serialize the resource to disk using TastyPie.
     # 3.F.3. Create a bagit file from the serialized resource.
     # 3.F.4. Return the bagit file
-    return utils.get_resource_by_shortkey(pk).bags.first()
+    return utils.get_resource_by_shortkey(pk).baseresource.bags.first()
 
 
 def get_science_metadata(pk):

@@ -234,18 +234,6 @@ class NetcdfResource(BaseResource):
         # can have only 1 file
         return False
 
-    def can_add(self, request):
-        return super(NetcdfResource, self).can_add(request)
-
-    def can_change(self, request):
-        return super(NetcdfResource, self).can_change(request)
-
-    def can_delete(self, request):
-        return super(NetcdfResource, self).can_delete(request)
-
-    def can_view(self, request):
-        return super(NetcdfResource, self).can_view(request)
-
     class Meta:
         verbose_name = 'Multidimensional (NetCDF)'
         proxy = True

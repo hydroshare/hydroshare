@@ -45,7 +45,7 @@ class TestGetResource(TestCase):
     def test_get_resource(self):
 
         # get the resource by pid
-        res = resource.get_resource(self.pid).content_object
+        res = resource.get_resource(self.pid).get_content_model()
 
         self.assertTrue(res is not None)
         self.assertEqual(res.resource_type, 'GenericResource')

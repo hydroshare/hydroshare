@@ -199,7 +199,7 @@ def create_bag(resource):
 
     # link the zipped bag file in IRODS via bag_url for bag downloading
     b = Bags.objects.create(
-        content_object=resource,
+        content_object=resource.baseresource,
         timestamp=resource.updated
     )
 

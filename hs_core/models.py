@@ -1591,6 +1591,9 @@ class Bags(models.Model):
     class Meta:
         ordering = ['-timestamp']
 
+    def get_content_model(self):
+        return self.content_object.get_content_model()
+
 
 # remove RichText parent class from the parameters for Django inplace editing to work; otherwise, get internal edit error when saving changes
 class BaseResource(Page, AbstractResource):
@@ -1600,19 +1603,6 @@ class BaseResource(Page, AbstractResource):
     class Meta:
         verbose_name = 'Generic'
         db_table = 'hs_core_genericresource'
-
-    def can_add(self, request):
-        return AbstractResource.can_add(self, request)
-
-    def can_change(self, request):
-        return AbstractResource.can_change(self, request)
-
-    def can_delete(self, request):
-        return AbstractResource.can_delete(self, request)
-
-    def can_view(self, request):
-        return AbstractResource.can_view(self, request)
-
 
     @classmethod
     def get_supported_upload_file_types(cls):
