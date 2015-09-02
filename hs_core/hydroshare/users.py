@@ -636,7 +636,7 @@ def get_resource_list(creator=None,
             flt = flt.filter(q)
 
         if public:
-            flt = flt.filter(public=True)
+            flt = flt.filter(Q(public=True) | Q(discoverable=True))
 
         if full_text_search:
             fts_qs = flt.search(full_text_search)

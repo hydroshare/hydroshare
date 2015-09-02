@@ -28,14 +28,14 @@
         {# ======= Missing fields notification =======#}
         {% if not metadata_form and page.perms.change %}
             {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
-                <div class="alert alert-success alert-dismissible" role="alert">
+                <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
                     {% if just_created %}
                         <strong>Congratulations! </strong>
-                        <span>Now that your resource has been created the following metadata are still required:</span>
+                        <span>Now that your resource has been created the following metadata are still required to make it public or discoverable:</span>
                     {% else %}
-                        <span>The following metadata are still required:</span>
+                        <span>The following metadata are still required to make the resource public or discoverable:</span>
                     {% endif %}
                     <ul>
                         {% for element in missing_metadata_elements %}
@@ -81,8 +81,8 @@
         {% endif %}
         {#        ======= Top right buttons =======#}
         {% if not metadata_form %}
+            <div class="lined-wrapper">
             {% if page.perms.change %}
-                <div class="lined-wrapper">
                     <div class="custom-btn-toolbar">
                         <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
                             {% csrf_token %}
@@ -98,8 +98,8 @@
                                     class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
                         </form>
                     </div>
-                </div>
             {% endif %}
+             </div>
         {% else %}
             <div class="lined-wrapper">
                 <div class="custom-btn-toolbar">
@@ -313,11 +313,14 @@
                                   method="POST">
                                 {% csrf_token %}
                                 <input name="t" type="hidden" value="make_public"/>
-                                <button id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                <button {% if metadata_status == 'Insufficient to make public' %} disabled {% endif %}
+                                        id="btn-public" data-toggle="tooltip" data-placement="auto"
                                         title='Can be viewed and downloaded by anyone.' type="submit"
                                         class="btn btn-default">Public
                                 </button>
                             </form>
+
+
                         {% endif %}
 
                         {# -------- DISCOVERABLE -------- #}
@@ -332,7 +335,8 @@
                                   method="POST">
                                 <input name="t" type="hidden" value="make_discoverable"/>
                                 {% csrf_token %}
-                                <button id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
+                                <button {% if metadata_status == 'Insufficient to make public' %} disabled {% endif %}
+                                        id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
                                         title='Metadata is public but data is protected.' type="submit"
                                         class="btn btn-default">Discoverable
                                 </button>
@@ -2514,7 +2518,7 @@
                         }
                     }
 
-                    // If does not exist, add it
+                    // If subject does not exist, add it
                     if (!exists && keyword[i] != "") {
                         var li = $("<li class='tag'><span></span></li>");
                         li.find('span').text(keyword[i]);
@@ -2567,7 +2571,7 @@
                         //$('#' + form_id).html(result);
                         console.log(result);
                         json_response = JSON.parse(result);
-                        console.log(json_response);
+{#                        console.log(json_response);#}
                         if (json_response.status === 'success') {
                             $form.find("button").hide();
                             if (json_response.hasOwnProperty('element_id')) {
@@ -2580,7 +2584,7 @@
                                 if (json_response.element_name === 'title') {
                                     $res_title = $(".section-header").find("span").first();
                                     field_name_value = $res_title.text();
-                                    console.log(field_name_value);
+{#                                    console.log(field_name_value);#}
                                     updated_title = $form.find("#id_value").val();
                                     $res_title.text(updated_title);
                                 }
@@ -2590,18 +2594,10 @@
                                     $('#metadata-status').text(json_response.metadata_status);
                                     if (json_response.metadata_status == "Sufficient to make public") {
                                         customAlert("Metadata Status:Sufficient to make public", 3000);
-                                        $('#metadata-status').removeClass('text-danger');
-                                        $('#metadata-status').addClass('text-success');
-                                        $('#id_sharing #make-public').remove();
-                                        $('#id_sharing').append('<input name="t" type="hidden" value="make_public"/><button id="make-public" type="submit" class="btn btn-danger">Make public</button>');
+                                        $("#btn-public").prop("disabled", false);
+                                        $("#btn-discoverable").prop("disabled", false);
                                     }
-                                    else {
-                                        $('#metadata-status').removeClass('text-success');
-                                        $('#metadata-status').addClass('text-danger');
-                                        $('#id_sharing #make-public').hide();
-                                        $('#id_sharing #make-private').hide();
-                                        $('#sharing-status').text('Private');
-                                    }
+
                                 }
                             }
                             $('body > .container').append($alert_success);
@@ -2676,7 +2672,7 @@
                 var file_count = $("#file-count").attr('value');
                 //set allowed file types
                 var file_types = $("#supported-file-types").attr('value');
-                console.log(file_types)
+{#                console.log(file_types)#}
                 if (file_types != ".*") {
                     var display_file_types = file_types.substring(0, file_types.length - 2) + ').'
                     $("#file-types").text("Only the listed file types can be uploaded: " + display_file_types);
@@ -2856,7 +2852,7 @@
                         //$(this).css('border-color', 'gray');
                         $(this).closest("form").find("button").show();
                     });
-                })
+                });
                 $(".dateinput").each(function () {
                     $(this).datepicker({
                         format: 'mm-dd-yyyy',
@@ -2866,7 +2862,7 @@
                     $(this).on('change', function () {
                         $(this).closest("form").find("button").show();
                     });
-                })
+                });
                 // Code adapted from http://djangosnippets.org/snippets/1389/
                 function updateElementIndex(el, prefix, ndx) {
                     var id_regex = new RegExp('(' + prefix + '-\\d+-)');
@@ -2902,85 +2898,6 @@
                         if (prefix == 'creators') {
                             alert("Resource needs to have at least one creator!");
                         }
-                    }
-                    return false;
-                }
-
-                function addForm(btn, prefix) {
-                    var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
-                    // You can only submit a maximum of 10 todo items
-                    if (formCount < 10) {
-                        // Clone a form (without event handlers) from the first form
-                        var row = $("#" + prefix + " .item:first").clone(false).get(0);
-                        // Insert it after the last form
-                        $(row).removeAttr('id').hide().insertAfter("#" + prefix + " .item:last").slideDown(300);
-                        // Remove the bits we don't want in the new row/form
-                        // e.g. error messages
-                        $(".errorlist", row).remove();
-                        $(row).children().removeClass("error");
-                        $(row).find(".item_link:not(:first)").remove();
-                        // Relabel or rename all the relevant bits of the main form
-                        $(row).children().children().each(function () {
-                            updateElementIndex(this, prefix, formCount);
-                            $(this).val("");
-                        });
-                        // Relabel or rename all the relevant bits of the child form
-                        var link_prefix = prefix + '_links'
-                        $(row).find("*").each(function () {
-                            updateElementIndex(this, link_prefix, formCount);
-                            if ($(this).attr("id")) {
-                                if ($(this).attr("id").substr(-6) !== "_FORMS") {
-                                    $(this).val("");
-                                }
-                                else {
-                                    if ($(this).attr("id").substr(-11) === "TOTAL_FORMS") {
-                                        $(this).val("1");
-                                    }
-                                }
-                            }
-                            else {
-                                $(this).val("");
-                            }
-                        });
-                        $(row).find('input').each(function () {
-                            updateElementIndex(this, prefix, formCount);
-                            if ($(this).attr('type') == 'button') {
-                                if (prefix === 'creator') {
-                                    $(this).attr('value', 'Delete creator');
-                                }
-                                else if (prefix === 'contributor') {
-                                    $(this).attr('value', 'Delete contributor');
-                                }
-                                else {
-                                    $(this).attr('value', 'Delete');
-                                }
-                            }
-                            if ($(this).attr('type') == 'submit') {
-                                $(this).attr('value', 'Save');
-                            }
-                        })
-                        // Add an event handler for the delete item/form link
-                        $(row).find(".delete-creator").click(function () {
-                            return deleteForm(this, prefix);
-                        });
-                        $(row).find(".delete-contributor").click(function () {
-                            return deleteForm(this, prefix);
-                        });
-                        $(row).find("#addLinkCreator").click(function () {
-                            return addLink(this, "creator");
-                        });
-                        // Add an event handler for the delete item/form link
-                        $(row).find(".delete-link-creator").click(function () {
-                            return deleteLink(this, prefix);
-                        });
-                        $(row).find(".delete-link-contributor").click(function () {
-                            return deleteLink(this, prefix);
-                        });
-                        // Update the total form count
-                        $("#id_" + prefix + "-TOTAL_FORMS").val(formCount + 1);
-                    } // End if
-                    else {
-                        alert("Sorry, you can only enter a maximum of ten items.");
                     }
                     return false;
                 }
@@ -3034,13 +2951,13 @@
                         $(row).find('*').each(function () {
                             updateElementIndex(this, update_prefix, formCount);
                             $(this).val("");
-                        })
+                        });
                         $(row).find('button').each(function () {
                             updateElementIndex(this, update_prefix, formCount);
                             if ($(this).attr('type') == 'button') {
                                 $(this).text('Delete Link');
                             }
-                        })
+                        });
                         // Add an event handler for the delete item/form link
                         $(row).find(".delete-link-creator").click(function () {
                             return deleteLink(this, prefix);

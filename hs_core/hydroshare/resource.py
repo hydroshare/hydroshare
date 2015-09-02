@@ -362,6 +362,7 @@ def create_resource(
 
         # by default make resource private
         resource.public = False
+        resource.discoverable = False
         resource.save()
 
         if not metadata:

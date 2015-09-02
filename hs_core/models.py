@@ -156,7 +156,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_view(self, request):
         user = get_user(request)
 
-        if self.public:
+        if self.public or self.discoverable:
             return True
         if user.is_authenticated():
             if user.is_superuser:
