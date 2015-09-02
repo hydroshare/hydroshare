@@ -11,7 +11,7 @@
 
                 {% if extended_metadata_exists %}
                     {# Add the original coverage meta #}
-                    <h4 ><strong>Spatial Reference:</strong></h4>
+                    <h4 ><strong>Spatial Reference</strong></h4>
                     {% if original_coverage %}
                         <hr style="margin-top: 0px;margin-bottom: 2px">
 
@@ -83,7 +83,7 @@
                     {# Add the Variable meta #}
                     {% if variables %}
                         {% for variable in variables %}
-                            <h4 style="margin-top:20px"><strong>Variable:</strong></h4>
+                            <h4 style="margin-top:20px"><strong>Variable</strong></h4>
                             <hr style=" margin-top: 0px;margin-bottom: 2px">
                             {# Required extended meta subelement for Variable #}
                             <div class="row">
@@ -130,18 +130,17 @@
                     {% endif %} {# variable section end #}
 
                 {%  endif %}{# extended meta section end #}
-
                 {# Add the view mode html code for resource extended meta tababove #}
                 </div>
             </div>
         </div>
+{%  endblock %}
 
 
+{#  Add the code of extended section on the landing page below #}
+{% block extra_section %}
 
-    {#  Add the code of extended section on the landing page below #}
-    {% block extended_section %}
-
-        {# Add netcdf tool button  #}
+    {# Add netcdf tool button  #}
 {#        {% for f in cm.files.all %}#}
 {#            {% if f.resource_file.name|slice:"-3:" == '.nc'%}#}
 {#                <td><a style="margin-left:15px" id="btn-netcdf-tools" type="button" class="btn btn-success" href="{% url "nc_tools:index" cm.short_id 'initial' %}">#}
@@ -151,22 +150,20 @@
 {#        {% endfor %}#}
 
 
-        {# Add ncdump section #}
-        {% if cm.files.all %}
-            {# tab body for ncdump #}
-            <div id="ncdumpText">
-
-                {% for f in cm.files.all %}
-                    {% if f.resource_file.name|slice:"-3:" == 'txt'%}
-                        <div id="showNcdump">
-                            <h3 style="margin-top:40px"> NetCDF Header Info</h3>
-                            <p>{{ f.resource_file.name|slice:"33:" }}</p>
-                            {% if f.resource_file.size <= 5000000 %}
-                                <textarea readonly rows="15" style="margin-bottom:20px;border: 1px solid #ddd;width:100%">{{ f.resource_file.read}}</textarea>
-                            {% else %}
-                                <textarea readonly rows="5" style="margin-bottom:20px;border: 1px solid #ddd;width:100%">The size of the netCDF header information text file is too large for loading on the page.</textarea>
-                        {% endif %}
-                        </div>
+    {# Add ncdump section #}
+    {% if cm.files.all %}
+        {# tab body for ncdump #}
+            {% for f in cm.files.all %}
+                {% if f.resource_file.name|slice:"-3:" == 'txt'%}
+                    <div style="clear: both">
+                        <h3 style="margin-top:40px"> NetCDF Header Info</h3>
+                        <p>{{ f.resource_file.name|slice:"33:" }}</p>
+                        {% if f.resource_file.size <= 5000000 %}
+                            <textarea readonly rows="15" style="margin-bottom:20px;border: 1px solid #ddd;width:100%">{{ f.resource_file.read}}</textarea>
+                        {% else %}
+                            <textarea readonly rows="5" style="margin-bottom:20px;border: 1px solid #ddd;width:100%">The size of the netCDF header information text file is too large for loading on the page.</textarea>
+                    {% endif %}
+                    </div>
 {#                    {% else %}#}
 {#                        {% if page.perms.change %}#}
 {#                            <div id="createNcdump" style="margin-bottom: 25px">#}
@@ -177,17 +174,12 @@
 {#                                </a>#}
 {#                            </div>#}
 {#                        {% endif %}#}
-                    {% endif %}
-                {% endfor %}
+                {% endif %}
+            {% endfor %}
+    {% endif %}
 
-            </div>
-        {% endif %}
+{% endblock %} {# extra block ends here #}
 
-
-    {% endblock %} {# extended block ends here #}
-
-
-{%  endblock %}
 
 
 {% block extra_js %}
@@ -224,13 +216,6 @@
 {#        }#}
 {#    })#}
 
-    // add ncdump text area
-    $(document).ready(function(){
-        var $ncdump_text = $('div[id="ncdumpText"]');
-        if ($ncdump_text){
-            $('div [class="tab-elements"]').after($ncdump_text);
-        }
-    })
 </script>
 
 {% endblock %}
