@@ -179,9 +179,11 @@
         </div>
     {%  endif %}
 {%  endblock %}
+
+{% load staticfiles  %}
 {% block extra_js %}
     {{ block.super }}
 
     {# resource specific js can go here #}
-
+    <script src="{% static "js/model_instance.js"%}"></script>
 {%  endblock %}

@@ -9,9 +9,10 @@ from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 from lxml import etree
 from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_model_program.models import ModelProgramResource
 
-
-
+import logging
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(message)s')
 
 # extended metadata elements for SWAT Model Instance resource type
 class ModelOutput(AbstractMetaDataElement):
@@ -40,26 +41,53 @@ class ModelOutput(AbstractMetaDataElement):
 
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
-    name = models.CharField(max_length=200)
-    url = models.URLField()
+    model_name = models.CharField(max_length=500, choices=(('-', '    '),), default=None)
+    model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True,related_name='swatmodelinstance')
+    # term = 'ExecutedBY'
+    # name = models.CharField(max_length=200)
+    # url = models.URLField()
 
     def __unicode__(self):
-        self.name
+        self.model_name
 
     @classmethod
     def create(cls, **kwargs):
-        return ExecutedBy.objects.create(**kwargs)
+        shortid = kwargs['model_name']
+        logging.error('!!!!!!!!!!!!!!!! - '+str(shortid))
+        # get the MP object that matches.  Returns None if nothing is found
+        obj = ModelProgramResource.objects.filter(short_id=shortid).first()
+        logging.error('!!!!!!!!!!!!!!!! - '+str(obj))
+
+        kwargs['model_program_fk'] = obj
+        metadata_obj = kwargs['content_object']
+        title = obj.title
+        logging.error('!!!!!!!!!!!!!!!! - GOT OBJ')
+        mp_fk = ExecutedBy.objects.create(model_program_fk=obj,
+                                          model_name=title,
+                                          content_object=metadata_obj)
+        logging.error('!!!!!!!!!!!!!!!! - '+str(mp_fk))
+        return mp_fk
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        logging.error('!!!!!!!!!!!!!!!! - '+str('b'))
+        shortid = kwargs['model_name']
+
+        # get the MP object that matches.  Returns None if nothing is found
+        obj = ModelProgramResource.objects.filter(short_id=shortid).first()
+
+        kwargs['model_program_fk'] = obj
+
         executed_by = ExecutedBy.objects.get(id=element_id)
         if executed_by:
             for key, value in kwargs.iteritems():
                 setattr(executed_by, key, value)
 
             executed_by.save()
+
         else:
             raise ObjectDoesNotExist("No ExecutedBy element was found for the provided id:%s" % kwargs['id'])
+
 
     @classmethod
     def remove(cls, element_id):
@@ -501,6 +529,8 @@ class SWATModelInstanceMetaData(CoreMetaData):
 
 
     def get_xml(self, pretty_print=True):
+        print '1'
+
         # get the xml string representation of the core metadata elements
         xml_string = super(SWATModelInstanceMetaData, self).get_xml(pretty_print=False)
 
@@ -514,22 +544,43 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_output = etree.SubElement(container, '{%s}ModelOutput' % self.NAMESPACES['hsterms'])
             hsterms_model_output_rdf_Description = etree.SubElement(hsterms_model_output, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_model_output_value = etree.SubElement(hsterms_model_output_rdf_Description, '{%s}IncludesModelOutput' % self.NAMESPACES['hsterms'])
-            if self.model_output.includes_output == True: hsterms_model_output_value.text = "Yes"
-            else: hsterms_model_output_value.text = "No"
+
+
+        if self.model_output.includes_output == True: hsterms_model_output_value.text = "Yes"
+        else: hsterms_model_output_value.text = "No"
+
+        print 'here'
         if self.executed_by:
             hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramName' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_name.text = self.executed_by.name
+            # hsterms_executed_by_name.text = self.executed_by.name
+
+            title = self.executed_by.model_program_fk.title if self.executed_by.model_program_fk else "Unspecified"
+            hsterms_executed_by_name.text = title
+
+            hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description,
+                                                       '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
+
+            url = '%s%s' % (utils.current_site_url(), self.executed_by.model_program_fk.get_absolute_url()) if self.executed_by.model_program_fk else "None"
+
+            hsterms_executed_by_url.text = url
+
+
         if self.model_objective:
             hsterms_model_objective = etree.SubElement(container, '{%s}ModelObjective' % self.NAMESPACES['hsterms'])
+
             if self.model_objective.other_objectives:
                 hsterms_model_objective.text = ', '.join([objective.description for objective in self.model_objective.swat_model_objectives.all()]) + ', ' + self.model_objective.other_objectives
             else:
                 hsterms_model_objective.text = ', '.join([objective.description for objective in self.model_objective.swat_model_objectives.all()])
+
+
         if self.simulation_type:
             hsterms_simulation_type = etree.SubElement(container, '{%s}SimulationType' % self.NAMESPACES['hsterms'])
             hsterms_simulation_type.text = self.simulation_type.simulation_type_name
+
+
         if self.model_method:
             hsterms_model_methods = etree.SubElement(container, '{%s}ModelMethod' % self.NAMESPACES['hsterms'])
             hsterms_model_methods_rdf_Description = etree.SubElement(hsterms_model_methods, '{%s}Description' % self.NAMESPACES['rdf'])
@@ -539,12 +590,17 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_methods_flow_routing_method.text = self.model_method.flow_routing_method
             hsterms_model_methods_PET_estimation_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}PETEstimationMethod' % self.NAMESPACES['hsterms'])
             hsterms_model_methods_PET_estimation_method.text = self.model_method.PET_estimation_method
+
+
         if self.model_parameter:
             hsterms_swat_model_parameters = etree.SubElement(container, '{%s}ModelParameter' % self.NAMESPACES['hsterms'])
+
             if self.model_parameter.other_parameters:
                 hsterms_swat_model_parameters.text = ', '.join([parameter.description for parameter in self.model_parameter.model_parameters.all()]) + ', ' + self.model_parameter.other_parameters
             else:
                 hsterms_swat_model_parameters.text = ', '.join([parameter.description for parameter in self.model_parameter.model_parameters.all()])
+
+
         if self.model_input:
             hsterms_model_input = etree.SubElement(container, '{%s}ModelInput' % self.NAMESPACES['hsterms'])
             hsterms_model_input_rdf_Description = etree.SubElement(hsterms_model_input, '{%s}Description' % self.NAMESPACES['rdf'])
