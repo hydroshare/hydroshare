@@ -298,6 +298,27 @@ INSTALLED_APPS = (
     "hs_swat_modelinstance",
 )
 
+# These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
+# All apps beginning with "django." or "mezzanine." are also excluded by default
+APPS_TO_NOT_RUN = (
+    'ga_ows',
+    'ga_resources',
+    'jquery_ui',
+    'djcelery',
+    'rest_framework',
+    'django_docker_processes',
+    'dublincore',
+    'django_nose',
+    'inplaceeditform',
+    'grappelli_safe',
+    'django_irods',
+    'crispy_forms',
+    'autocomplete_light',
+    'widget_tweaks',
+    'oauth2_provider',
+    # etc...
+)
+
 # List of processors used by RequestContext to populate the context.
 # Each one should be a callable that takes the request object as its
 # only parameter and returns a dictionary to add to the context.
