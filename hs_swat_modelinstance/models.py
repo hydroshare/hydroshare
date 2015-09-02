@@ -12,7 +12,6 @@ from hs_core.models import AbstractResource, resource_processor, CoreMetaData, A
 from hs_model_program.models import ModelProgramResource
 from hs_core.hydroshare import utils
 
-
 # extended metadata elements for SWAT Model Instance resource type
 class ModelOutput(AbstractMetaDataElement):
     term = 'ModelOutput'
@@ -42,6 +41,9 @@ class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
     model_name = models.CharField(max_length=500, choices=(('-', '    '),), default=None)
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True,related_name='swatmodelinstance')
+    # term = 'ExecutedBY'
+    # name = models.CharField(max_length=200)
+    # url = models.URLField()
 
     def __unicode__(self):
         self.model_name
@@ -59,6 +61,10 @@ class ExecutedBy(AbstractMetaDataElement):
                                           model_name=title,
                                           content_object=metadata_obj)
         return mp_fk
+                                          model_name=title,
+                                          content_object=metadata_obj)
+        logging.error('!!!!!!!!!!!!!!!! - '+str(mp_fk))
+        return mp_fk
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -68,6 +74,7 @@ class ExecutedBy(AbstractMetaDataElement):
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
 
         kwargs['model_program_fk'] = obj
+
 
         executed_by = ExecutedBy.objects.get(id=element_id)
         if executed_by:
@@ -511,6 +518,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
 
     def get_xml(self, pretty_print=True):
 
+
         # get the xml string representation of the core metadata elements
         xml_string = super(SWATModelInstanceMetaData, self).get_xml(pretty_print=False)
 
@@ -529,6 +537,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
         if self.model_output.includes_output == True: hsterms_model_output_value.text = "Yes"
         else: hsterms_model_output_value.text = "No"
 
+        print 'here'
         if self.executed_by:
             hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by, '{%s}Description' % self.NAMESPACES['rdf'])
