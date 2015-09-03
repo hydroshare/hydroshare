@@ -616,10 +616,12 @@
 
             {#        ======= Content =======#}
             <div>
+                {% if show_content_files %}
                 <h3>Content</h3>
                 <div class="custom-well">
                     {#            {% block extra_content %}#}
                     {#            {% endblock %}#}
+
                     {% if cm.files.all %}
                     <div class="table-container">
                         <table class="table-plain table-striped">
@@ -686,14 +688,17 @@
                         </table>
                     </div>
                     {% endif %}
+
                     <!-- Buttons -->
-                    {% for b in cm.bags.all %}
-                        <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag_url }}">
-                            <span class="glyphicon glyphicon-download-alt">
-                                <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
-                            </span>
-                        </a>
-                    {% endfor %}
+                    {% if show_content_files %}
+                        {% for b in cm.bags.all %}
+                            <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag_url }}">
+                                <span class="glyphicon glyphicon-download-alt">
+                                    <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
+                                </span>
+                            </a>
+                        {% endfor %}
+                    {%  endif %}
 
                     {% if page.perms.change %}
                         <a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
@@ -717,6 +722,7 @@
                     {% endif %}
                     <div class="col-lg-12"><a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a></div>
                 </div>
+                {% endif %}
             </div>
 
             <!-- === Tabs begin === -->

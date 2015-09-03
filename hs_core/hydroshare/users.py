@@ -667,7 +667,7 @@ def get_resource_list(creator=None,
             flt = flt.filter(q)
 
         if public:
-            flt = flt.filter(raccess__public=True)
+            flt = flt.filter(Q(raccess__public=True) | Q(raccess__discoverable=True))
 
         if full_text_search:
             fts_qs = flt.search(full_text_search)
@@ -727,6 +727,6 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, queries, reso
                 queries[resource_type].append(Q(raccess__resource__in=user.uaccess.get_editable_resources()))
             else:
                 queries[resource_type].append(Q(raccess__resource__in=user.uaccess.get_held_resources())|
-                                              Q(raccess__public=True))
+                                              Q(raccess__public=True) | Q(raccess__discoverable=True))
 
     return queries, is_public
