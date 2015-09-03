@@ -666,8 +666,9 @@
             {% endif %}
         </div>
 
+
         {#        ======= Content =======#}
-        {% if cm.public or page.perms.change %}
+        {% if cm.public or page.perms.change or is_edit_user or is_view_user %}
             <div>
                 <h3>Content</h3>
                 <div class="custom-well">

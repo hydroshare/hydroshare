@@ -35,7 +35,6 @@ RUN rm irods-icommands.deb
 
 # Install test coverage module
 RUN pip install coverage
-RUN npm install bootstrap
 
 WORKDIR /home/docker/hydroshare
 
