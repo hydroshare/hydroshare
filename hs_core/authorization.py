@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+# TODO: not used anywhere. delete.
 class HydroshareAuthorization(object):
     def read_list(self, object_list, bundle):
         return filter(lambda x: x.can_view(bundle.request), object_list)

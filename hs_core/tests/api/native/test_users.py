@@ -1,3 +1,6 @@
+
+import unittest
+
 from django.contrib.auth.models import User, Group
 from django.db import IntegrityError
 from django.test import TestCase
@@ -12,6 +15,7 @@ class TestUsersAPI(TestCase):
     def tearDown(self):
         pass
 
+    @unittest.skip
     def test_create_group(self):
         user1 = hydroshare.create_account(
             'jeff@renci.org',
@@ -70,6 +74,7 @@ class TestUsersAPI(TestCase):
         user2.delete()
         a_group.delete()
 
+    @unittest.skip
     def test_create_account(self):
         a_group = hydroshare.create_group('A Group')
 

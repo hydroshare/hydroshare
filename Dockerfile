@@ -4,9 +4,9 @@ WORKDIR /home/docker
 
 # Install iRODS packages
 RUN apt-get install -y libssl0.9.8 libfuse2
-RUN curl ftp://ftp.renci.org/pub/irods/releases/4.1.0/ubuntu14/irods-runtime-4.1.0-ubuntu14-x86_64.deb -o irods-runtime-4.1.0-64bit.deb
-RUN curl ftp://ftp.renci.org/pub/irods/releases/4.1.0/ubuntu14/irods-icommands-4.1.0-ubuntu14-x86_64.deb -o irods-icommands-4.1.0-64bit.deb
-RUN sudo dpkg -i irods-runtime-4.1.0-64bit.deb irods-icommands-4.1.0-64bit.deb
+RUN curl ftp://ftp.renci.org/pub/irods/releases/4.1.5/ubuntu14/irods-runtime-4.1.5-ubuntu14-x86_64.deb -o irods-runtime.deb
+RUN curl ftp://ftp.renci.org/pub/irods/releases/4.1.5/ubuntu14/irods-icommands-4.1.5-ubuntu14-x86_64.deb -o irods-icommands.deb
+RUN sudo dpkg -i irods-runtime.deb irods-icommands.deb
 RUN sudo apt-get -f install
 RUN pip install -e git+https://github.com/iPlantCollaborativeOpenSource/python-irodsclient.git@master#egg=python-irodsclient
 
@@ -30,8 +30,11 @@ RUN chmod 777 /tmp
 
 # Cleanup iRODS install files
 WORKDIR /home/docker
-RUN rm irods-runtime-4.1.0-64bit.deb
-RUN rm irods-icommands-4.1.0-64bit.deb
+RUN rm irods-runtime.deb
+RUN rm irods-icommands.deb
+
+# Install test coverage module
+RUN pip install coverage
 
 WORKDIR /home/docker/hydroshare
 

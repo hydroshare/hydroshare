@@ -1,5 +1,7 @@
 __author__ = 'pabitra'
 
+import unittest
+
 from unittest import TestCase
 from django.contrib.contenttypes.models import ContentType
 from hs_core.hydroshare import utils, users, resource
@@ -65,7 +67,7 @@ class TestTimeSeriesMetaData(TestCase):
         ProcessingLevel.objects.all().delete()
         TimeSeriesResult.objects.all().delete()
 
-
+    @unittest.skip
     def test_metadata(self):
         # add a type element
         resource.create_metadata_element(self.resTimeSeries.short_id, 'type', url="http://hydroshare.org/netcdf")

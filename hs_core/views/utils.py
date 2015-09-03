@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from rest_framework.exceptions import *
 import json
 import os
+import string
 
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
@@ -13,17 +14,24 @@ from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type
 from hs_core.models import AbstractMetaDataElement, GenericResource
 from hs_core.signals import pre_metadata_element_create
+from hs_core.hydroshare import file_size_limit
+from hs_core.hydroshare.utils import raise_file_size_exception
 from django_irods.storage import IrodsStorage
 from irods.exception import iRODSException
 
 # use iget to transfer selected data object from irods zone to local as a NamedTemporaryFile
-def upload_from_irods(username, password, host, port, zone, irods_fname, res_files):
+def upload_from_irods(username, password, host, port, zone, irods_fnames, res_files):
     try:
         irods_storage = IrodsStorage()
         irods_storage.set_user_session(username=username, password=password, host=host, port=port, zone=zone)
-        tmpFile = irods_storage.download(irods_fname)
-        fname = os.path.basename(irods_fname.rstrip(os.sep))
-        res_files.append(UploadedFile(file=tmpFile, name=fname))
+        ifnames = string.split(irods_fnames, ',')
+        for ifname in ifnames:
+            size = irods_storage.size(ifname)
+            if size > file_size_limit:
+                raise_file_size_exception()
+            tmpFile = irods_storage.download(ifname)
+            fname = os.path.basename(ifname.rstrip(os.sep))
+            res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
     except Exception as ex:
         raise iRODSException(ex.message)
 

@@ -1,6 +1,8 @@
 __author__ = 'Tian Gan'
 
 ## unit test for list_group_member() from users.py
+import unittest
+
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
 from hs_core import hydroshare
@@ -37,6 +39,7 @@ class TestListGroupMembers(TestCase):
         User.objects.all().delete()
         Group.objects.all().delete()
 
+    @unittest.skip
     def test_list_group_members(self):
         # assign group instance to get the member list
         print list(hydroshare.list_group_members(self.group))

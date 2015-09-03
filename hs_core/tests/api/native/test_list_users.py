@@ -5,6 +5,8 @@ Tastypie API tests for list_users
 comments-
 
 """
+import unittest
+
 from tastypie.test import ResourceTestCase, TestApiClient
 from tastypie.serializers import Serializer
 from django.contrib.auth.models import User
@@ -39,6 +41,7 @@ class ListUsersTest(ResourceTestCase):
     def tearDown(self):
         User.objects.all().delete()
 
+    @unittest.skip
     def test_using_json(self):
         q = self.serialize(self.query)
         l = hydroshare.list_users(query=q)
@@ -49,6 +52,7 @@ class ListUsersTest(ResourceTestCase):
 
         self.assertEqual(self.u_ids,sorted(new_ids))
 
+    @unittest.skip
     def test_using_dict(self):
         q = self.query
         l = hydroshare.list_users(query=q)
@@ -60,6 +64,7 @@ class ListUsersTest(ResourceTestCase):
 
         self.assertEqual(self.u_ids,sorted(new_ids))
 
+    @unittest.skip
     def test_differentiate(self):
         new_user = hydroshare.create_account(
             'joe@gmail.com',
