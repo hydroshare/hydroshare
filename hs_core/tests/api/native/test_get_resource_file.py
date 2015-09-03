@@ -4,11 +4,12 @@ import os
 from unittest import TestCase
 from hs_core import hydroshare
 from hs_core.models import ResourceFile, GenericResource
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 
 class TestGetResourceFile(TestCase):
     def setUp(self):
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
             'jamy2@gmail.com',
             username='jamy2',

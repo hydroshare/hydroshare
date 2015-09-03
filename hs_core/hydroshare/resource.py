@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from mezzanine.generic.models import Keyword, AssignedKeyword
+from hs_access_control.models import ResourceAccess, PrivilegeCodes, UserResourcePrivilege
 
 from hs_core.hydroshare import hs_bagit
 from hs_core.hydroshare.utils import get_resource_types
@@ -14,6 +15,7 @@ from hs_core.hydroshare import utils
 
 file_size_limit = 10*(1024 ** 3)
 file_size_limit_for_display = '10G'
+
 
 def get_resource(pk):
     """
@@ -360,8 +362,7 @@ def create_resource(
             **kwargs
         )
 
-        # by default make resource private
-        resource.public = False
+        resource.set_slug('resource{0}{1}'.format('/', resource.short_id))
         resource.save()
 
         if not metadata:
@@ -369,31 +370,31 @@ def create_resource(
 
         add_resource_files(resource.short_id, *files)
 
-        if 'owner' in kwargs:
-            owner = utils.user_from_id(kwargs['owner'])
-            resource.owners.add(owner)
-
-        resource.owners.add(owner)
+        # by default resource is private
+        resource_access = ResourceAccess(resource=resource)
+        resource_access.save()
+        UserResourcePrivilege(resource=resource_access, grantor=owner.uaccess, user=owner.uaccess,
+                              privilege=PrivilegeCodes.OWNER).save()
 
         if edit_users:
             for user in edit_users:
                 user = utils.user_from_id(user)
-                resource.edit_users.add(user)
-                resource.view_users.add(user)
+                owner.uaccess.share_resource_with_user(resource, user, PrivilegeCodes.CHANGE)
+
         if view_users:
             for user in view_users:
                 user = utils.user_from_id(user)
-                resource.view_users.add(user)
+                owner.uaccess.share_resource_with_user(resource, user, PrivilegeCodes.VIEW)
 
         if edit_groups:
             for group in edit_groups:
                 group = utils.group_from_id(group)
-                resource.edit_groups.add(group)
-                resource.view_groups.add(group)
+                owner.uaccess.share_resource_with_group(resource, group, PrivilegeCodes.CHANGE)
+
         if view_groups:
             for group in view_groups:
                 group = utils.group_from_id(group)
-                resource.view_groups.add(group)
+                owner.uaccess.share_resource_with_group(resource, group, PrivilegeCodes.VIEW)
 
         if keywords:
             ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
@@ -424,7 +425,7 @@ def create_resource(
 
     return resource
 
-
+# TODO: This is not used anywhere except in a skipped unit test - if need to be used then new access rules need to apply
 def update_resource(
         pk,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
@@ -472,44 +473,44 @@ def update_resource(
                 content_object=resource,
                 resource_file=File(file) if not isinstance(file, UploadedFile) else file
             )
-
-    if 'owner' in kwargs:
-        owner = utils.user_from_id(kwargs['owner'])
-        resource.owners.add(owner)
-
-    if edit_users:
-        resource.edit_users.clear()
-        for user in edit_users:
-            user = utils.user_from_id(user)
-            resource.edit_users.add(user)
-            resource.view_users.add(user)
-
-    if view_users:
-        resource.view_users.clear()
-        for user in view_users:
-            user = utils.user_from_id(user)
-            resource.view_users.add(user)
-
-    if edit_groups:
-        resource.edit_groups.clear()
-        for group in edit_groups:
-            group = utils.group_from_id(group)
-            resource.edit_groups.add(group)
-            resource.view_groups.add(group)
-
-    if view_groups:
-        resource.edit_groups.clear()
-        for group in view_groups:
-            group = utils.group_from_id(group)
-            resource.view_groups.add(group)
-
-    if keywords:
-        AssignedKeyword.objects.filter(object_pk=resource.id).delete()
-        ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
-        ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
-
-        for k in ks:
-            AssignedKeyword.objects.create(content_object=resource, keyword=k)
+    # TODO: use Alva's access control here
+    # if 'owner' in kwargs:
+    #     owner = utils.user_from_id(kwargs['owner'])
+    #     resource.owners.add(owner)
+    #
+    # if edit_users:
+    #     resource.edit_users.clear()
+    #     for user in edit_users:
+    #         user = utils.user_from_id(user)
+    #         resource.edit_users.add(user)
+    #         resource.view_users.add(user)
+    #
+    # if view_users:
+    #     resource.view_users.clear()
+    #     for user in view_users:
+    #         user = utils.user_from_id(user)
+    #         resource.view_users.add(user)
+    #
+    # if edit_groups:
+    #     resource.edit_groups.clear()
+    #     for group in edit_groups:
+    #         group = utils.group_from_id(group)
+    #         resource.edit_groups.add(group)
+    #         resource.view_groups.add(group)
+    #
+    # if view_groups:
+    #     resource.edit_groups.clear()
+    #     for group in view_groups:
+    #         group = utils.group_from_id(group)
+    #         resource.view_groups.add(group)
+    #
+    # if keywords:
+    #     AssignedKeyword.objects.filter(object_pk=resource.id).delete()
+    #     ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
+    #     ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
+    #
+    #     for k in ks:
+    #         AssignedKeyword.objects.create(content_object=resource, keyword=k)
 
     # for creating metadata elements based on the new metadata implementation
     if metadata:
@@ -718,10 +719,10 @@ def delete_resource_file(pk, filename_or_id, user):
     else:
         raise ObjectDoesNotExist(filename_or_id)
 
-    if resource.public:
+    if resource.raccess.public:
         if not resource.can_be_public:
-            resource.public = False
-            resource.save()
+            resource.raccess.public = False
+            resource.raccess.save()
 
     # generate bag
     utils.resource_modified(resource, user)
@@ -751,12 +752,11 @@ def publish_resource(pk):
     Note:  This is different than just giving public access to a resource via access control rul
     """
     resource = utils.get_resource_by_shortkey(pk)
-    resource.published_and_frozen = True
-    resource.frozen = True
-    resource.edit_users = []
-    resource.edit_groups = []
+    resource.raccess.published = True
+    resource.raccess.immutable = True
+    resource.raccess.save()
+    resource.doi = "to be assigned"
     resource.save()
-
 
 
 def resolve_doi(doi):

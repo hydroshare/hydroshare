@@ -1,17 +1,15 @@
 import unittest
 
-from unittest import TestCase
+from django.contrib.auth.models import Group, User
+
 from hs_core.hydroshare import utils
 from hs_core.models import GenericResource
-from django.contrib.auth.models import Group, User
 from hs_core import hydroshare
-#from dublincore.models import QualifiedDublinCoreElement
-#from hs_scholar_profile.models import *
 
-class TestUtils(TestCase):
+
+class TestUtils(unittest.TestCase):
     def setUp(self):
         try:
-            #self.user = User.objects.create_user('user1', email='user1@nowhere.com')
             self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
             self.user = hydroshare.create_account(
                 'user1@nowhere.com',
@@ -29,21 +27,19 @@ class TestUtils(TestCase):
             self.tearDown()
             self.user = User.objects.create_user('user1', email='user1@nowhere.com')
 
-        #self.group, _ = Group.objects.get_or_create(name='group1')
-        self.res, created = GenericResource.objects.get_or_create(
-            user=self.user,
-            title='resource',
-            creator=self.user,
-            last_changed_by=self.user,
-            doi='doi1000100010001'
-        )
-        if created:
-            self.res.owners.add(self.user)
-
+        self.res = hydroshare.create_resource(
+            'GenericResource',
+            self.user,
+            'resource'
+            )
+        self.res.doi = 'doi1000100010001'
+        self.res.save()
 
     def tearDown(self):
+        self.user.uaccess.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
+        self.res.raccess.delete()
         GenericResource.objects.all().delete()
         #QualifiedDublinCoreElement.objects.all().delete()
 
@@ -296,4 +292,5 @@ class TestUtils(TestCase):
         # print(xml)
 
         # knowingly have this buggy statement so that I (Pabitra) can see the output of the above print statement
-        print(xml1)
+        #print(xml1)
+        pass

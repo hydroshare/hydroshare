@@ -37,7 +37,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
                 - split into two functions: get_readonly_page_context(...) and get_editable_page_context(...)
     """
-    file_type_error=''
+    file_type_error = ''
     if request:
         file_type_error = request.session.get("file_type_error", None)
         if file_type_error:
@@ -57,7 +57,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                       'url': "{}{}{}".format(url.value, "/?res_id=", content_model.short_id)}
                 relevant_tools.append(tl)
 
-
     just_created = False
     if request:
         file_validation_error = check_for_file_validation(request)
@@ -67,6 +66,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session['just_created']
 
     bag_url = AbstractResource.bag_url(content_model.short_id)
+
+    if user.is_authenticated():
+        show_content_files = user.uaccess.can_view_resource(content_model)
+    else:
+        # if anonymous user getting access to a private resource (since resource is discoverable),
+        # then don't show content files
+        show_content_files = content_model.raccess.public
 
     # user requested the resource in READONLY mode
     if not resource_edit:
@@ -130,7 +136,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'relevant_tools': relevant_tools,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
-                   'bag_url': bag_url
+                   'bag_url': bag_url,
+                   'show_content_files': show_content_files
         }
         return context
 
@@ -312,6 +319,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'citation': content_model.get_citation(),
                'extended_metadata_layout': extended_metadata_layout,
                'bag_url': bag_url,
+               'show_content_files': show_content_files,
                'file_validation_error': file_validation_error if file_validation_error else None
     }
 
