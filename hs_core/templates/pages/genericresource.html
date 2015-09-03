@@ -2583,7 +2583,8 @@
         })
         $(".dateinput").each(function(){
             $(this).datepicker({
-                format: 'mm-dd-yyyy',
+                dateFormat: 'yy-mm-dd',
+                yearRange: "-1000:+1000",
                 changeMonth: true,
                 changeYear: true
              });
