@@ -333,111 +333,127 @@
                     {% endif %}
                 {% endif %}
             </div>
-                {% if not metadata_form %}
-                {% if rights.statement or rights.url %}
-                    <div id="rights">
-                        {% if rights.statement %}
-                            <span class="rights-text">{{ rights.statement }} </span>
-                        {% endif %}
-
-                        {% if rights.url %}
-                            <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
-                        {% endif %}
-                    </div>
-                    {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
-                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
-                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
-                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
-                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
-                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
+        {% if not metadata_form %}
+            {% if rights.statement or rights.url %}
+                <div id="rights">
+                    {% if rights.statement %}
+                        <span class="rights-text">{{ rights.statement }} </span>
                     {% endif %}
-                {% endif %}
-                {% else %}
-                    <form action="/hsapi/_internal/{{ cm.short_id }}/rights/{{ cm.metadata.rights.id }}/update-metadata/"#}
-                          id="id-rights" method="post">
-                        {% csrf_token %}
-                        <fieldset>
-                            <p></p>
-                            <div class="col-md-6">
-                                <label class="control-label" for="select_license"> Select a license </label>
-                                <span data-toggle="tooltip" data-placement="auto" title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
-                                      class="glyphicon glyphicon-info-sign"></span>
-                                <select id="select_license" class="form-control">
-                                    <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option>
-                                    <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option>
-                                    <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons Attribution-NoDerivs CC BY-ND</option>
-                                    <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA</option>
-                                    <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NoCommercial CC BY-NC</option>
-                                    <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <div id="div_id_statement" class="control-group">
-                                    <label for="id_statement" class="control-label"> Statement</label>
-                                    <div class="controls">
-                                        <textarea class="form-control input-sm textarea" cols="40"
-                                                                    id="id_statement" name="statement" readonly="True"
-                                                                    rows="3" style="background-color:white;">{{ cm.metadata.rights.statement }}</textarea>
-                                    </div>
-                                </div>
-                                <div id="div_id_url" class="control-group">
-                                    <label for="id_url" class="control-label">Url</label>
 
-                                    <div class="controls">
-                                        <input class="form-control input-sm urlinput" id="id_url"
-                                                 maxlength="200" name="url" readonly="True"
-                                                 style="background-color:white;" type="url"
-                                                 value={{ cm.metadata.rights.url }}>
-                                    </div>
-                                </div>
-                                <img id="img-badge" class="cc-image"
+                    {% if rights.url %}
+                        <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                    {% endif %}
+                </div>
+                {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
+                {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
+                {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
+                {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
+                {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
+                {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+                    <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <form action="/hsapi/_internal/{{ cm.short_id }}/rights/{{ cm.metadata.rights.id }}/update-metadata/"#}
+                  id="id-rights" method="post">
+                {% csrf_token %}
+                <fieldset>
+                    <p></p>
+
+                    <div class="col-md-6">
+                        <label class="control-label" for="select_license"> Select a license </label>
+                                <span data-toggle="tooltip" data-placement="auto"
+                                      title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
+                                      class="glyphicon glyphicon-info-sign"></span>
+                        <select id="select_license" class="form-control">
+                            <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC
+                                BY
+                            </option>
+                            <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons
+                                Attribution-ShareAlike CC BY-SA
+                            </option>
+                            <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons
+                                Attribution-NoDerivs CC BY-ND
+                            </option>
+                            <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons
+                                Attribution-NoCommercial-ShareAlike CC BY-NC-SA
+                            </option>
+                            <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons
+                                Attribution-NoCommercial CC BY-NC
+                            </option>
+                            <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons
+                                Attribution-NoCommercial-NoDerivs CC BY-NC-ND
+                            </option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="div_id_statement" class="control-group">
+                            <label for="id_statement" class="control-label"> Statement</label>
+
+                            <div class="controls">
+                                        <textarea class="form-control input-sm textarea" cols="40"
+                                                  id="id_statement" name="statement" readonly="True"
+                                                  rows="3"
+                                                  style="background-color:white;">{{ cm.metadata.rights.statement }}</textarea>
+                            </div>
+                        </div>
+                        <div id="div_id_url" class="control-group">
+                            <label for="id_url" class="control-label">Url</label>
+
+                            <div class="controls">
+                                <input class="form-control input-sm urlinput" id="id_url"
+                                       maxlength="200" name="url" readonly="True"
+                                       style="background-color:white;" type="url"
+                                       value={{ cm.metadata.rights.url }}>
+                            </div>
+                        </div>
+                        <img id="img-badge" class="cc-image"
                                 {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
+                             src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
                                 {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
+                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
                                 {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
+                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
                                 {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
+                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
                                 {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                                   src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
+                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
                                 {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                                    src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
+                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
                                 {% endif %}
                                 />
-                            </div>
+                    </div>
 
-                            <div style="margin-top:10px">
-                                <button type="button" class="btn btn-primary pull-right"
-                                        onclick="metadata_update_ajax_submit('id-rights'); return false;"
-                                        style="display: none;">Save changes
-                                </button>
-                            </div>
-                        </fieldset>
-                    </form>
-                {% endif %}
-                <div id="permission-panel">
-                {% if user == cm.user %}
-                    <p>You are the owner of this resource.</p>
-                {% elif is_edit_user %}
-                    <p>You have been given specific permission to edit this resource.</p>
-                {% elif in_edit_group %}
-                    Your research group(s) have been given specific permission to edit this resource.</p>
-                {% elif is_view_user %}
-                    <p>You have been given specific permission to view this resource.</p>
-                {% elif in_view_group %}
-                    <p>Your research group(s) have been given specific permission to view this resource.</p>
-                {% endif %}
+                    <div style="margin-top:10px">
+                        <button type="button" class="btn btn-primary pull-right"
+                                onclick="metadata_update_ajax_submit('id-rights'); return false;"
+                                style="display: none;">Save changes
+                        </button>
+                    </div>
+                </fieldset>
+            </form>
+        {% endif %}
+        <div id="permission-panel">
+            {% if user == cm.user %}
+                <p>You are the owner of this resource.</p>
+            {% elif is_edit_user %}
+                <p>You have been given specific permission to edit this resource.</p>
+            {% elif in_edit_group %}
+                Your research group(s) have been given specific permission to edit this resource.</p>
+            {% elif is_view_user %}
+                <p>You have been given specific permission to view this resource.</p>
+            {% elif in_view_group %}
+                <p>Your research group(s) have been given specific permission to view this resource.</p>
+            {% endif %}
 
-                {% if page.perms.change %}
-                    <div class="panel panel-default panel-faq">
+            {% if page.perms.change %}
+                <div class="panel panel-default panel-faq">
                     <div class="panel-heading">
                         <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
                             <h4 class="panel-title">
@@ -450,7 +466,8 @@
                         <div class="panel-body">
                             <div class="col-md-4">
                                 <div class="custom-well">
-                                    <h5 class="access-panel-title"><strong>Owners with full permissions to do anything on this resource</strong></h5>
+                                    <h5 class="access-panel-title"><strong>Owners with full permissions to do anything
+                                        on this resource</strong></h5>
 
                                     <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
                                           method="POST">
@@ -487,7 +504,8 @@
 
                             <div class="col-md-4">
                                 <div class="custom-well">
-                                    <h5 class="access-panel-title"><strong>Users who can edit the content of this resource</strong></h5>
+                                    <h5 class="access-panel-title"><strong>Users who can edit the content of this
+                                        resource</strong></h5>
 
                                     <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
                                           method="POST">
@@ -523,50 +541,51 @@
                                 </div>
                             </div>
 
-{#                            <div class="col-md-4">#}
-{#                                <div class="custom-well">#}
-{#                                    <h5 class="access-panel-title"><strong>Research groups that can edit the content of this resource</strong>#}
-{#                                    </h5>#}
-{##}
-{#                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
-{#                                          method="POST">#}
-{#                                        {% csrf_token %}#}
-{#                                        <select name="designees" id="edit_groups-select" multiple#}
-{#                                                class="form-control" size="{{ edit_groups.count }}">#}
-{#                                            {% for u in edit_groups %}#}
-{#                                                <option value="{{ u.pk }}"#}
-{#                                                        {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>#}
-{#                                            {% endfor %}#}
-{#                                        </select>#}
-{#                                        <input name="t" value="edit_groups" type="hidden"/>#}
-{#                                        <button type="submit"#}
-{#                                                class="btn btn-update-list pull-left btn-default glyphicon"><span#}
-{#                                                class="button-label">&nbspUpdate access list</span></button>#}
-{#                                                <span data-toggle="tooltip" data-placement="auto"#}
-{#                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
-{#                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
-{#                                    </form>#}
-{#                                    <form class="form-inline"#}
-{#                                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
-{#                                          method="POST" style="padding-top:0.3em">#}
-{#                                        {% csrf_token %}#}
-{#                                        <div class="form-group">#}
-{##}
-{##}
-{#                                            <button type="submit"#}
-{#                                                    class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus"><span#}
-{#                                                    class="button-label">&nbspAdd group</span></button>#}
-{#                                            {{ add_edit_group_form.user }}#}
-{#                                            <input name="t" value="add_edit_group" type="hidden"/>#}
-{#                                        </div>#}
-{#                                    </form>#}
-{#                                </div>#}
-{#                            </div>#}
+                            {#                            <div class="col-md-4">#}
+                            {#                                <div class="custom-well">#}
+                            {#                                    <h5 class="access-panel-title"><strong>Research groups that can edit the content of this resource</strong>#}
+                            {#                                    </h5>#}
+                            {##}
+                            {#                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+                            {#                                          method="POST">#}
+                            {#                                        {% csrf_token %}#}
+                            {#                                        <select name="designees" id="edit_groups-select" multiple#}
+                            {#                                                class="form-control" size="{{ edit_groups.count }}">#}
+                            {#                                            {% for u in edit_groups %}#}
+                            {#                                                <option value="{{ u.pk }}"#}
+                            {#                                                        {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>#}
+                            {#                                            {% endfor %}#}
+                            {#                                        </select>#}
+                            {#                                        <input name="t" value="edit_groups" type="hidden"/>#}
+                            {#                                        <button type="submit"#}
+                            {#                                                class="btn btn-update-list pull-left btn-default glyphicon"><span#}
+                            {#                                                class="button-label">&nbspUpdate access list</span></button>#}
+                            {#                                                <span data-toggle="tooltip" data-placement="auto"#}
+                            {#                                                      title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
+                            {#                                                      class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
+                            {#                                    </form>#}
+                            {#                                    <form class="form-inline"#}
+                            {#                                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+                            {#                                          method="POST" style="padding-top:0.3em">#}
+                            {#                                        {% csrf_token %}#}
+                            {#                                        <div class="form-group">#}
+                            {##}
+                            {##}
+                            {#                                            <button type="submit"#}
+                            {#                                                    class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus"><span#}
+                            {#                                                    class="button-label">&nbspAdd group</span></button>#}
+                            {#                                            {{ add_edit_group_form.user }}#}
+                            {#                                            <input name="t" value="add_edit_group" type="hidden"/>#}
+                            {#                                        </div>#}
+                            {#                                    </form>#}
+                            {#                                </div>#}
+                            {#                            </div>#}
 
                             {% if not cm.public %}
                                 <div class="col-md-4">
                                     <div class="custom-well">
-                                        <h5 class="access-panel-title"><strong>Users who can view and download the resource</strong></h5>
+                                        <h5 class="access-panel-title"><strong>Users who can view and download the
+                                            resource</strong></h5>
 
                                         <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
                                               method="POST">
@@ -600,54 +619,52 @@
                                     </div>
                                 </div>
 
-{#                                <div class="col-md-4">#}
-{#                                    <div class="custom-well">#}
-{#                                        <h5 class="access-panel-title"><strong>Research groups that can view and download the resource</strong>#}
-{#                                        </h5>#}
-{##}
-{#                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
-{#                                              method="POST">#}
-{#                                            {% csrf_token %}#}
-{#                                            <select name="designees" id="view_groups-select" multiple#}
-{#                                                    class="form-control" size="{{ view_groups.count }}">#}
-{#                                                {% for u in view_groups %}#}
-{#                                                    <option value="{{ u.pk }}"#}
-{#                                                            {% if u in view_groups %}selected{% endif %}>{{ u }}</option>#}
-{#                                                {% endfor %}#}
-{#                                            </select>#}
-{#                                            <input name="t" value="view_groups" type="hidden"/>#}
-{#                                            <button type="submit"#}
-{#                                                    class="btn btn-update-list pull-left btn-default glyphicon">#}
-{#                                                <span class="button-label">&nbspUpdate access list</span></button>#}
-{#                                                    <span data-toggle="tooltip" data-placement="auto"#}
-{#                                                          title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
-{#                                                          class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
-{#                                        </form>#}
-{#                                        <form class="form-inline"#}
-{#                                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
-{#                                              method="POST" style="padding-top:0.3em">#}
-{#                                            {% csrf_token %}#}
-{#                                            <div class="form-group">#}
-{#                                                <button type="submit"#}
-{#                                                        class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus">#}
-{#                                                    <span class="button-label">&nbspAdd group</span></button>#}
-{#                                                {{ add_view_group_form.user }}#}
-{#                                                <input name="t" value="add_view_group" type="hidden"/>#}
-{#                                            </div>#}
-{#                                        </form>#}
-{#                                    </div>#}
-{#                                </div>#}
+                                {#                                <div class="col-md-4">#}
+                                {#                                    <div class="custom-well">#}
+                                {#                                        <h5 class="access-panel-title"><strong>Research groups that can view and download the resource</strong>#}
+                                {#                                        </h5>#}
+                                {##}
+                                {#                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+                                {#                                              method="POST">#}
+                                {#                                            {% csrf_token %}#}
+                                {#                                            <select name="designees" id="view_groups-select" multiple#}
+                                {#                                                    class="form-control" size="{{ view_groups.count }}">#}
+                                {#                                                {% for u in view_groups %}#}
+                                {#                                                    <option value="{{ u.pk }}"#}
+                                {#                                                            {% if u in view_groups %}selected{% endif %}>{{ u }}</option>#}
+                                {#                                                {% endfor %}#}
+                                {#                                            </select>#}
+                                {#                                            <input name="t" value="view_groups" type="hidden"/>#}
+                                {#                                            <button type="submit"#}
+                                {#                                                    class="btn btn-update-list pull-left btn-default glyphicon">#}
+                                {#                                                <span class="button-label">&nbspUpdate access list</span></button>#}
+                                {#                                                    <span data-toggle="tooltip" data-placement="auto"#}
+                                {#                                                          title='Hold down "Control", or "Command" on a Mac, to select more than one.'#}
+                                {#                                                          class="pull-right glyphicon glyphicon-info-sign info-icon"></span>#}
+                                {#                                        </form>#}
+                                {#                                        <form class="form-inline"#}
+                                {#                                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"#}
+                                {#                                              method="POST" style="padding-top:0.3em">#}
+                                {#                                            {% csrf_token %}#}
+                                {#                                            <div class="form-group">#}
+                                {#                                                <button type="submit"#}
+                                {#                                                        class="btn btn-default btn-add-access pull-left glyphicon glyphicon-plus">#}
+                                {#                                                    <span class="button-label">&nbspAdd group</span></button>#}
+                                {#                                                {{ add_view_group_form.user }}#}
+                                {#                                                <input name="t" value="add_view_group" type="hidden"/>#}
+                                {#                                            </div>#}
+                                {#                                        </form>#}
+                                {#                                    </div>#}
+                                {#                                </div>#}
                             {% endif %}
                         </div>
                     </div>
-                    </div>
-                    <div>
-
-                    </div>
-                {% endif %}
                 </div>
-            </div>
+                <div>
 
+                </div>
+            {% endif %}
+        </div>
 
         {#        ======= Content =======#}
         {% if cm.public or page.perms.change %}
@@ -657,37 +674,38 @@
                     {#            {% block extra_content %}#}
                     {#            {% endblock %}#}
                     {% if cm.files.all %}
-                    <div class="table-container">
-                        <table class="table-plain table-striped">
-                            {% for f in cm.files.all %}
-                                {% if f.resource_file %}
-                                {#======= Modal window begins =======#}
+                        <div class="table-container">
+                            <table class="table-plain table-striped">
+                                {% for f in cm.files.all %}
+                                    {% if f.resource_file %}
+                                        {#======= Modal window begins =======#}
                                         {% if page.perms.change and metadata_form %}
-                                        <div class="modal fade" id="delete-resource-file-{{ f.pk }}" tabindex="-1"
-                                             role="dialog"
-                                             aria-labelledby="myModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <button type="button" class="close" data-dismiss="modal"
-                                                                aria-hidden="true">&times;</button>
-                                                        <h4 class="modal-title">Confirm file deletion</h4>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        Consider saving a copy of the file before you delete it if it is
-                                                        important to you.
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-default"
-                                                                data-dismiss="modal">
-                                                            Cancel
-                                                        </button>
-                                                        <a type="button" class="btn btn-danger"
-                                                           href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
+                                            <div class="modal fade" id="delete-resource-file-{{ f.pk }}" tabindex="-1"
+                                                 role="dialog"
+                                                 aria-labelledby="myModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                    aria-hidden="true">&times;</button>
+                                                            <h4 class="modal-title">Confirm file deletion</h4>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            Consider saving a copy of the file before you delete it if
+                                                            it is
+                                                            important to you.
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-default"
+                                                                    data-dismiss="modal">
+                                                                Cancel
+                                                            </button>
+                                                            <a type="button" class="btn btn-danger"
+                                                               href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
                                         {% endif %}
                                         {#======= Modal window ends =======#}
                                         <tr>
@@ -702,30 +720,31 @@
                                             <td>
                                                 {% if page.perms.change and metadata_form %}
 
-                                            <a href="{{ f.resource_file.url }}"><span data-toggle="modal"
-                                                                                  data-target="#delete-resource-file-{{ f.pk }}"
+                                                    <a href="{{ f.resource_file.url }}"><span data-toggle="modal"
+                                                                                              data-target="#delete-resource-file-{{ f.pk }}"
+                                                                                              data-placement="auto"
+                                                                                              title="Delete"
+                                                                                              class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>
+
+                                                {% endif %}
+
+                                                <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"
+                                                                                          data-placement="auto"
+                                                                                          title="Download"
+                                                                                          class="glyphicon glyphicon-download icon-button btn-download"></span></a>
+
+                                                {% if preview %}
+                                                    <a href="{{ preview }}"><span data-toggle="tooltip"
                                                                                   data-placement="auto"
-                                                                                  title="Delete"
-                                                                                  class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>
-
-                                        {% endif %}
-
-                                        <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"
-                                                                                  data-placement="auto" title="Download"
-                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>
-
-                                        {% if preview  %}
-                                            <a href="{{ preview }}"><span data-toggle="tooltip"
-                                                                                      data-placement="auto"
-                                                                                      title="Preview"
-                                                                                            class="glyphicon glyphicon-eye-open icon-button"></span></a>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endif %}
-                            {% endfor %}
-                        </table>
-                    </div>
+                                                                                  title="Preview"
+                                                                                  class="glyphicon glyphicon-eye-open icon-button"></span></a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </table>
+                        </div>
                     {% endif %}
                     <!-- Buttons -->
                     {% for b in cm.bags.all %}
@@ -760,9 +779,9 @@
                     <div class="col-lg-12"><a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a></div>
                 </div>
             </div>
-
+        {% endif %}
             <!-- === Tabs begin === -->
-            <div class="tab-elements">
+        <div class="tab-elements">
             <div class="panel-tabs">
                 <ul class="nav nav-tabs">
                     <li class="active col-xs-2 col-md-2">
@@ -787,682 +806,743 @@
                             </a>
                         </li>
                     {% endif %}
-                    {% if extended_metadata_exists or metadata_form  %}
+                    {% if extended_metadata_exists or metadata_form %}
                         {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
                         {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
                             {% if  cm|resource_type != "Generic" %}
-                            <li class="col-xs-2 col-md-2">
-                                <a href="#resourceSpecificTab" data-toggle="tab">
-                                    <span class="glyphicon glyphicon-folder-close"></span>
-                                    &nbspResource Specific
-                                </a>
-                            </li>
+                                <li class="col-xs-2 col-md-2">
+                                    <a href="#resourceSpecificTab" data-toggle="tab">
+                                        <span class="glyphicon glyphicon-folder-close"></span>
+                                        &nbspResource Specific
+                                    </a>
+                                </li>
                             {% endif %}
                         {% endif %}
                     {% endif %}
-{#                    {% if relevant_tools or metadata_form %}#}
-{#                        <li class="col-xs-2 col-md-2">#}
-{#                            <a href="#relevantTools" data-toggle="tab">#}
-{#                                <span class="glyphicon glyphicon-wrench"></span>#}
-{#                                &nbsp;Relevant Tools#}
-{#                            </a>#}
-{#                        </li>#}
-{#                    {% endif %}#}
+                    {#                    {% if relevant_tools or metadata_form %}#}
+                    {#                        <li class="col-xs-2 col-md-2">#}
+                    {#                            <a href="#relevantTools" data-toggle="tab">#}
+                    {#                                <span class="glyphicon glyphicon-wrench"></span>#}
+                    {#                                &nbsp;Relevant Tools#}
+                    {#                            </a>#}
+                    {#                        </li>#}
+                    {#                    {% endif %}#}
                 </ul>
             </div>
             <div class="tabs-body">
-            <!-- Tab panes -->
-            <div class="tab-content">
-                <!-- ========= CONTACT TAB ========= -->
-                <div class="tab-pane active" id="contactTab">
-                    {% if not metadata_form %}
-                    <table class="table table-striped">
-                        <tbody>
-                        <tr>
-                            <th class="division-title">Authors</th>
-                        </tr>
-                        <tr class="header-row">
-                            <th>Name</th>
-                            <th>Organization</th>
-                            <th>Address</th>
-                            <th>Phone</th>
-                        </tr>
-                        {% for cr in creators %}
-                            <tr>
-                                <td>{% if cr.description %} <a href="{{ cr.description }}">{{ cr.name }}</a>{% else %}{{ cr.name }}{% endif %}</td>
-                                <td>{% if cr.organization %} {{ cr.organization }}{% endif %}</td>
-                                <td>{% if cr.address %} {{ cr.address }}{% endif %}</td>
-                                <td>{% if cr.phone %} {{ cr.phone }}{% endif %}</td>
-                            </tr>
-                        {% endfor %}
-                        {% if contributors %}
-                            <tr>
-                                <th class="division-title">Contributors</th>
-                            </tr>
-                            <tr class="header-row">
-                                <th>Name</th>
-                                <th>Organization</th>
-                                <th>Address</th>
-                                <th>Phone</th>
-                            </tr>
-
-                            {% for cont in contributors %}
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <!-- ========= CONTACT TAB ========= -->
+                    <div class="tab-pane active" id="contactTab">
+                        {% if not metadata_form %}
+                            <table class="table table-striped">
+                                <tbody>
                                 <tr>
-                                    <td>{% if cont.description %} <a href="{{ cont.description }}">{{ cont.name }}</a>{% else %}{{ cont.name }}{% endif %}</td>
-                                    <td>{% if cont.organization %} {{ cont.organization }}{% endif %}</td>
-                                    <td>{% if cont.address %} {{ cont.address }}{% endif %}</td>
-                                    <td>{% if cont.phone %} {{ cont.phone }}{% endif %}</td>
+                                    <th class="division-title">Authors</th>
                                 </tr>
-                            {% endfor %}
-                        {% endif %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                     <div class="tab-pane active" id="contactTab">
-                        <table id="contact-table" class="table table-striped">
-                            <tbody>
-                            <tr>
-                                <th class="division-title">Authors</th>
-                            </tr>
-                            <tr class="header-row">
-                                <th>Name</th>
-                                <th>Organization</th>
-                                <th>Address</th>
-                                <th>Phone</th>
-                                <th>Actions</th>
-                            </tr>
-                            {% for author in creator_formset.initial %}
-                            <tr>
-                                <td>{% if author.description %} <a href="{{ author.description }}">{{ author.name }}</a>{% else %}{{ author.name }}{% endif %}</td>
-                                <td>{%  if  author.organization %}{{ author.organization }}{% endif %}</td>
-                                <td>{%  if  author.address %}{{ author.address }}{% endif %}</td>
-                                <td>{%  if  author.phone %}{{ author.phone }}{% endif %}</td>
-                                <td>
-                                    <a data-toggle="modal" data-placement="auto" title="Edit"
-                                            class="glyphicon glyphicon-pencil icon-button btn-edit"
-                                            data-target="#edit-creator-dialog{{ author.id }}"
-                                            ></a>
+                                <tr class="header-row">
+                                    <th>Name</th>
+                                    <th>Organization</th>
+                                    <th>Address</th>
+                                    <th>Phone</th>
+                                </tr>
+                                {% for cr in creators %}
+                                    <tr>
+                                        <td>{% if cr.description %}
+                                            <a href="{{ cr.description }}">{{ cr.name }}</a>{% else %}
+                                            {{ cr.name }}{% endif %}</td>
+                                        <td>{% if cr.organization %} {{ cr.organization }}{% endif %}</td>
+                                        <td>{% if cr.address %} {{ cr.address }}{% endif %}</td>
+                                        <td>{% if cr.phone %} {{ cr.phone }}{% endif %}</td>
+                                    </tr>
+                                {% endfor %}
+                                {% if contributors %}
+                                    <tr>
+                                        <th class="division-title">Contributors</th>
+                                    </tr>
+                                    <tr class="header-row">
+                                        <th>Name</th>
+                                        <th>Organization</th>
+                                        <th>Address</th>
+                                        <th>Phone</th>
+                                    </tr>
 
-                                    {# Prevent deletion of last creator#}
-                                    {% if creator_formset.initial|length > 1 %}
-                                    <a data-toggle="modal" data-placement="auto" title="Remove"
-                                            class="glyphicon glyphicon-trash icon-button btn-remove"
-                                            data-target="#delete-creator-dialog{{ author.id }}"></a>
-                                    {% endif %}
-                                </td>
-                            </tr>
+                                    {% for cont in contributors %}
+                                        <tr>
+                                            <td>{% if cont.description %}
+                                                <a href="{{ cont.description }}">{{ cont.name }}</a>{% else %}
+                                                {{ cont.name }}{% endif %}</td>
+                                            <td>{% if cont.organization %} {{ cont.organization }}{% endif %}</td>
+                                            <td>{% if cont.address %} {{ cont.address }}{% endif %}</td>
+                                            <td>{% if cont.phone %} {{ cont.phone }}{% endif %}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endif %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="tab-pane active" id="contactTab">
+                                <table id="contact-table" class="table table-striped">
+                                    <tbody>
+                                    <tr>
+                                        <th class="division-title">Authors</th>
+                                    </tr>
+                                    <tr class="header-row">
+                                        <th>Name</th>
+                                        <th>Organization</th>
+                                        <th>Address</th>
+                                        <th>Phone</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    {% for author in creator_formset.initial %}
+                                        <tr>
+                                            <td>{% if author.description %}
+                                                <a href="{{ author.description }}">{{ author.name }}</a>{% else %}
+                                                {{ author.name }}{% endif %}</td>
+                                            <td>{% if  author.organization %}{{ author.organization }}{% endif %}</td>
+                                            <td>{% if  author.address %}{{ author.address }}{% endif %}</td>
+                                            <td>{% if  author.phone %}{{ author.phone }}{% endif %}</td>
+                                            <td>
+                                                <a data-toggle="modal" data-placement="auto" title="Edit"
+                                                   class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                                   data-target="#edit-creator-dialog{{ author.id }}"
+                                                        ></a>
 
-                            {% endfor %}
-                            <tr>
-                                <th class="division-title">
-                                    <a type="button" class="btn btn-success" data-toggle="modal"
-                                       data-target="#add-creator-dialog" multiple="multiple">
+                                                {# Prevent deletion of last creator#}
+                                                {% if creator_formset.initial|length > 1 %}
+                                                    <a data-toggle="modal" data-placement="auto" title="Remove"
+                                                       class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                       data-target="#delete-creator-dialog{{ author.id }}"></a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+
+                                    {% endfor %}
+                                    <tr>
+                                        <th class="division-title">
+                                            <a type="button" class="btn btn-success" data-toggle="modal"
+                                               data-target="#add-creator-dialog" multiple="multiple">
                                                     <span class="glyphicon glyphicon-plus"><span
                                                             class="button-label"> Add author...</span></span>
-                                    </a>
-                                </th>
-                            </tr>
-                            <tr>
-                                <th class="division-title">Contributors</th>
-                            </tr>
-                            <tr class="header-row">
-                                <th>Name</th>
-                                <th>Organization</th>
-                                <th>Address</th>
-                                <th>Phone</th>
-                                <th>Actions</th>
-                            </tr>
-                            {% for contributor in contributor_formset.initial %}
-                            <tr>
-                                <td>{% if contributor.description %} <a href="{{ contributor.description }}">{{ contributor.name }}</a>{% else %}{{ contributor.name }}{% endif %}</td>
-                                <td>{%  if  contributor.organization %}{{ contributor.organization }}{% endif %}</td>
-                                <td>{%  if  contributor.address %}{{ contributor.address }}{% endif %}</td>
-                                <td>{%  if  contributor.phone %}{{ contributor.phone }}{% endif %}</td>
-                                <td>
-                                    <a data-toggle="modal" data-placement="auto" title="Edit"
-                                            class="glyphicon glyphicon-pencil icon-button btn-edit"
-                                            data-target="#edit-contributor-dialog{{ contributor.id }}"
-                                            ></a>
-                                    <a data-toggle="modal" data-placement="auto" title="Remove"
-                                            class="glyphicon glyphicon-trash icon-button btn-remove"
-                                            data-target="#delete-contributor-dialog{{ contributor.id }}"
-                                            ></a>
-                                </td>
-                            </tr>
-                            {% endfor %}
+                                            </a>
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th class="division-title">Contributors</th>
+                                    </tr>
+                                    <tr class="header-row">
+                                        <th>Name</th>
+                                        <th>Organization</th>
+                                        <th>Address</th>
+                                        <th>Phone</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    {% for contributor in contributor_formset.initial %}
+                                        <tr>
+                                            <td>{% if contributor.description %}
+                                                <a href="{{ contributor.description }}">{{ contributor.name }}</a>{% else %}
+                                                {{ contributor.name }}{% endif %}</td>
+                                            <td>{% if  contributor.organization %}
+                                                {{ contributor.organization }}{% endif %}</td>
+                                            <td>{% if  contributor.address %}{{ contributor.address }}{% endif %}</td>
+                                            <td>{% if  contributor.phone %}{{ contributor.phone }}{% endif %}</td>
+                                            <td>
+                                                <a data-toggle="modal" data-placement="auto" title="Edit"
+                                                   class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                                   data-target="#edit-contributor-dialog{{ contributor.id }}"
+                                                        ></a>
+                                                <a data-toggle="modal" data-placement="auto" title="Remove"
+                                                   class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                   data-target="#delete-contributor-dialog{{ contributor.id }}"
+                                                        ></a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
 
-                            <tr>
-                                <th class="division-title">
-                                    <a type="button" class="btn btn-success" data-toggle="modal"
-                                       data-target="#add-contributor-dialog" multiple="multiple">
-                                        <span class="glyphicon glyphicon-plus"><span class="button-label"> Add contributor...</span></span>
-                                    </a>
-                                </th>
-                            </tr>
+                                    <tr>
+                                        <th class="division-title">
+                                            <a type="button" class="btn btn-success" data-toggle="modal"
+                                               data-target="#add-contributor-dialog" multiple="multiple">
+                                                <span class="glyphicon glyphicon-plus"><span class="button-label"> Add contributor...</span></span>
+                                            </a>
+                                        </th>
+                                    </tr>
 
-                            </tbody>
-                        </table>
-                     </div>
-                    {% endif %}
-            </div>
-                <!-- ========= COVERAGE TAB ========= -->
-                {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
-                <div class="tab-pane" id="coverageTab">
-                    {% if not metadata_form %}
-                    {% if spatial_coverage.north or spatial_coverage.northlimit %}
-                        <h4><strong>Spatial</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-
-
-                    {% if spatial_coverage.type == 'point' %}
-                        {#                                TODO: find a place for doi field#}
-                        {#                                {% if cm.doi %}#}
-                        {#                                <tr>#}
-                        {#								    <th scope="row" class="dataset-label">DOI:</th>#}
-                        {#								    <td class="dataset-details"><a id="permalink" href="http://{{ request.get_host }}/r/doi/{{ cm.doi }}/">{{ cm.doi }}</a></td>#}
-                        {#							    </tr>#}
-                        {#                                {% endif %}#}
-                        {% if spatial_coverage.name %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.name }}</div>
+                                    </tbody>
+                                </table>
                             </div>
-                        {% endif %}
-                        {% if spatial_coverage.projection %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate System/Geographic
-                                    Projection:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.projection }}</div>
-                            </div>
-                        {% endif %}
-                        {% if spatial_coverage.east %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Longitude:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.east }}</div>
-                            </div>
-                        {% endif %}
-                        {% if spatial_coverage.north %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Latitude:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.north }}</div>
-                            </div>
-                        {% endif %}
-                        {% if spatial_coverage.units %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.units }}</div>
-                            </div>
-                        {% endif %}
-                    {% else %}
-                        {% if spatial_coverage.name %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>CPlace/Area Name:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.name }}</div>
-                            </div>
-                        {% endif %}
-                        {% if spatial_coverage.projection %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate System/Geographic
-                                    Projection:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.projection }}</div>
-                            </div>
-                        {% endif %}
-                        {% if spatial_coverage.northlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>North Latitude:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.northlimit }}</div>
-                            </div>
-                        {% endif %}
-                        {% if spatial_coverage.eastlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>East Longitude:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.eastlimit }}</div>
-                            </div>
-                        {% endif %}
-                        {% if spatial_coverage.southlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>South Latitude:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.southlimit }}</div>
-                            </div>
-                        {% endif %}
-                        {% if spatial_coverage.westlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>West Longitude:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.westlimit }}</div>
-                            </div>
-                        {% endif %}
-                        {% if spatial_coverage.units %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
-                                <div class="col-sm-8">{{ spatial_coverage.units }}</div>
-                            </div>
-                        {% endif %}
-
-                    {% endif %}
-                    <hr style="border: 0;">
-                    {% endif %}
-
-                    {% if temporal_coverage %}
-                        <h4><strong>Temporal</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Start Date:</strong></div>
-                            <div class="col-sm-8">{{ temporal_coverage.start_date }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>End Date:</strong></div>
-                            <div class="col-sm-8">{{ temporal_coverage.end_date }}</div>
-                        </div>
-                    {% endif %}
-                    {% else %}
-                    <div class="form-group col-md-6 col-sm-12 col-xs-12" id="coverage-spatial">
-                        {% if not coverage_spatial_form.initial.north and not coverage_spatial_form.initial.northlimit %}
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
-                              id="id-coverage-spatial" method="post">
-                            {% csrf_token %}
-                            <fieldset>
-                                <legend>Spatial</legend>
-                                <div id="div_id_type" class="control-group">
-                                    <div class="controls">
-                                        <label class="radio control-label">
-                                            <input type="radio" name="type" id="id_type_1" value="box">Box
-                                        </label>
-                                        <label class="radio control-label"><input type="radio" checked="checked" name="type" id="id_type_2" value="point">Point</label>
-                                    </div>
-                                </div>
-                                <div id="div_id_name" class="control-group">
-                                    <label for="id_name" class="control-label">Place/Area Name</label>
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                                                 id="id_name" maxlength="200" name="name" type="text">
-                                    </div>
-                                </div>
-                                <div id="div_id_projection" class="control-group">
-                                    <label for="id_projection" class="control-label">Coordinate System/Geographic Projection</label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                                                 id="id_projection" maxlength="100" name="projection"
-                                                                 readonly="True" style="background-color:white;"
-                                                                 type="text" value="WGS 84 EPSG:4326">
-                                    </div>
-                                </div>
-                                <div id="div_id_east" class="control-group">
-                                    <label for="id_east" class="control-label requiredField">
-                                    Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput" id="id_east" name="east" type="text">
-                                    </div>
-                                </div>
-                                <div id="div_id_north" class="control-group">
-                                    <label for="id_north" class="control-label requiredField">
-                                    Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_north" name="north" type="text"></div>
-                                </div>
-                                <div id="div_id_northlimit" class="control-group" style="display: none;"><label
-                                        for="id_northlimit" class="control-label requiredField">
-                                    North Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_northlimit" name="northlimit" type="text"></div>
-                                </div>
-                                <div id="div_id_eastlimit" class="control-group" style="display: none;"><label
-                                        for="id_eastlimit" class="control-label requiredField">
-                                    East Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_eastlimit" name="eastlimit" type="text"></div>
-                                </div>
-                                <div id="div_id_southlimit" class="control-group" style="display: none;"><label
-                                        for="id_southlimit" class="control-label requiredField">
-                                    South Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_southlimit" name="southlimit" type="text"></div>
-                                </div>
-                                <div id="div_id_westlimit" class="control-group" style="display: none;"><label
-                                        for="id_westlimit" class="control-label requiredField">
-                                    West Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_westlimit" name="westlimit" type="text"></div>
-                                </div>
-                                <div id="div_id_units" class="control-group"><label for="id_units"
-                                                                                    class="control-label requiredField">
-                                    Coordinate Units<span class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_units" maxlength="50" name="units"
-                                                                 readonly="True" style="background-color:white;"
-                                                                 type="text" value="Decimal degrees"></div>
-                                </div>
-                                <div style="margin-top:10px">
-                                    <button type="button" class="btn btn-primary pull-right"
-                                            onclick="metadata_update_ajax_submit('id-coverage-spatial'); return false;"
-                                            style="display: none;">Save changes
-                                    </button>
-                                </div>
-                            </fieldset>
-                        </form>
-                        {% else %}
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{{ coverage_spatial_form.initial.id }}/update-metadata/"
-                              id="id-coverage-spatial" method="post">
-                            {% csrf_token %}
-                            <fieldset>
-                                <legend>Spatial</legend>
-                                <div id="div_id_type" class="control-group">
-                                    <div class="controls">
-                                        <label class="radio control-label">
-                                            <input type="radio"
-                                                   {% if coverage_spatial_form.initial.type == "box" %}
-                                                   checked="checked"
-                                                   {% endif %}
-                                                   name="type" id="id_type_1" value="box">Box
-                                        </label>
-                                        <label class="radio control-label">
-                                            <input type="radio"
-                                                   {% if coverage_spatial_form.initial.type == "point" %}
-                                                   checked="checked"
-                                                   {% endif %}
-                                                   name="type" id="id_type_2" value="point">Point
-                                        </label>
-                                    </div>
-                                </div>
-                                <div id="div_id_name" class="control-group">
-                                    <label for="id_name" class="control-label">Place/Area Name</label>
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                                                 id="id_name" maxlength="200" name="name" type="text"
-                                                                 value="{% if coverage_spatial_form.initial.name %}{{ coverage_spatial_form.initial.name }}{% endif %}">
-                                    </div>
-                                </div>
-                                <div id="div_id_projection" class="control-group">
-                                    <label for="id_projection" class="control-label">Coordinate System/Geographic Projection</label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                                                 id="id_projection" maxlength="100" name="projection"
-                                                                 readonly="True" style="background-color:white;"
-                                                                 type="text" value="WGS 84 EPSG:4326"
-                                                value="{% if coverage_spatial_form.initial.projection %}{{ coverage_spatial_form.initial.projection }}{% endif %}">
-                                    </div>
-                                </div>
-                                <div id="div_id_east" class="control-group">
-                                    <label for="id_east" class="control-label requiredField">
-                                    Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput" id="id_east" name="east" type="text"
-                                                value="{% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east }}{% endif %}">
-                                    </div>
-                                </div>
-                                <div id="div_id_north" class="control-group">
-                                    <label for="id_north" class="control-label requiredField">
-                                    Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_north" name="north" type="text"
-                                            value="{% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north }}{% endif %}">
-                                    </div>
-                                </div>
-                                <div id="div_id_northlimit" class="control-group"><label
-                                        for="id_northlimit" class="control-label requiredField">
-                                    North Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_northlimit" name="northlimit" type="text"
-                                                                 value="{% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit }}{% endif %}"
-                                            >
-                                    </div>
-                                </div>
-                                <div id="div_id_eastlimit" class="control-group"><label
-                                        for="id_eastlimit" class="control-label requiredField">
-                                    East Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_eastlimit" name="eastlimit" type="text"
-                                            value="{% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit }}{% endif %}">
-                                    </div>
-                                </div>
-                                <div id="div_id_southlimit" class="control-group"><label
-                                        for="id_southlimit" class="control-label requiredField">
-                                    South Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_southlimit" name="southlimit" type="text"
-                                            value="{% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit }}{% endif %}">
-                                    </div>
-                                </div>
-                                <div id="div_id_westlimit" class="control-group"><label
-                                        for="id_westlimit" class="control-label requiredField">
-                                    West Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_westlimit" name="westlimit" type="text"
-                                            value="{% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit }}{% endif %}">
-                                    </div>
-                                </div>
-                                <div id="div_id_units" class="control-group">
-                                    <label for="id_units" class="control-label requiredField">
-                                    Coordinate Units<span class="asteriskField">*</span></label>
-
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_units" maxlength="50" name="units"
-                                                                 readonly="True" style="background-color:white;"
-                                                                 type="text" value="{% if coverage_spatial_form.initial.units %}{{ coverage_spatial_form.initial.units }}{% endif %}">
-                                    </div>
-                                </div>
-                                <div style="margin-top:10px">
-                                    <button type="button" class="btn btn-primary pull-right"
-                                            onclick="metadata_update_ajax_submit('id-coverage-spatial'); return false;"
-                                            style="display: none;">Save changes
-                                    </button>
-                                </div>
-                            </fieldset>
-                        </form>
                         {% endif %}
                     </div>
+                    <!-- ========= COVERAGE TAB ========= -->
+                    {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
+                        <div class="tab-pane" id="coverageTab">
+                            {% if not metadata_form %}
+                                {% if spatial_coverage.north or spatial_coverage.northlimit %}
+                                    <h4><strong>Spatial</strong></h4>
+                                    <hr style="margin-top: 0px;margin-bottom: 2px">
 
-                    {#  Add new temporal coverage#}
-                    <div class="form-group col-md-6 col-sm-12 col-xs-12" id="coverage-temporal">
-                        {% if not coverage_temporal_form.initial.start %}
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
-                              id="id-coverage-temporal" method="post">
-                             {% csrf_token %}
-                            <fieldset>
-                                <legend>Temporal</legend>
-                                <div id="div_id_start" class="control-group">
-                                    <label for="id_start" class="control-label requiredField">
-                                    Start Date<span class="asteriskField">*</span></label>
 
-                                    <div class="controls">
-                                        <input class="form-control input-sm dateinput" id="id_start"
-                                            name="start" type="text">
+                                    {% if spatial_coverage.type == 'point' %}
+                                        {#                                TODO: find a place for doi field#}
+                                        {#                                {% if cm.doi %}#}
+                                        {#                                <tr>#}
+                                        {#								    <th scope="row" class="dataset-label">DOI:</th>#}
+                                        {#								    <td class="dataset-details"><a id="permalink" href="http://{{ request.get_host }}/r/doi/{{ cm.doi }}/">{{ cm.doi }}</a></td>#}
+                                        {#							    </tr>#}
+                                        {#                                {% endif %}#}
+                                        {% if spatial_coverage.name %}
+                                            <div class="row">
+                                                <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
+                                                <div class="col-sm-8">{{ spatial_coverage.name }}</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.projection %}
+                                            <div class="row">
+                                                <div class="col-sm-4"><strong>Coordinate System/Geographic
+                                                    Projection:</strong></div>
+                                                <div class="col-sm-8">{{ spatial_coverage.projection }}</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.east %}
+                                            <div class="row">
+                                                <div class="col-sm-4"><strong>Longitude:</strong></div>
+                                                <div class="col-sm-8">{{ spatial_coverage.east }}</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.north %}
+                                            <div class="row">
+                                                <div class="col-sm-4"><strong>Latitude:</strong></div>
+                                                <div class="col-sm-8">{{ spatial_coverage.north }}</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.units %}
+                                            <div class="row">
+                                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                                <div class="col-sm-8">{{ spatial_coverage.units }}</div>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        {% if spatial_coverage.name %}
+                                            <div class="row">
+                                                <div class="col-sm-4"><strong>CPlace/Area Name:</strong></div>
+                                                <div class="col-sm-8">{{ spatial_coverage.name }}</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.projection %}
+                                            <div class="row">
+                                                <div class="col-sm-4"><strong>Coordinate System/Geographic
+                                                    Projection:</strong></div>
+                                                <div class="col-sm-8">{{ spatial_coverage.projection }}</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.northlimit %}
+                                            <div class="row">
+                                                <div class="col-sm-4"><strong>North Latitude:</strong></div>
+                                                <div class="col-sm-8">{{ spatial_coverage.northlimit }}</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.eastlimit %}
+                                            <div class="row">
+                                                <div class="col-sm-4"><strong>East Longitude:</strong></div>
+                                                <div class="col-sm-8">{{ spatial_coverage.eastlimit }}</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.southlimit %}
+                                            <div class="row">
+                                                <div class="col-sm-4"><strong>South Latitude:</strong></div>
+                                                <div class="col-sm-8">{{ spatial_coverage.southlimit }}</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.westlimit %}
+                                            <div class="row">
+                                                <div class="col-sm-4"><strong>West Longitude:</strong></div>
+                                                <div class="col-sm-8">{{ spatial_coverage.westlimit }}</div>
+                                            </div>
+                                        {% endif %}
+                                        {% if spatial_coverage.units %}
+                                            <div class="row">
+                                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
+                                                <div class="col-sm-8">{{ spatial_coverage.units }}</div>
+                                            </div>
+                                        {% endif %}
+
+                                    {% endif %}
+                                    <hr style="border: 0;">
+                                {% endif %}
+
+                                {% if temporal_coverage %}
+                                    <h4><strong>Temporal</strong></h4>
+                                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Start Date:</strong></div>
+                                        <div class="col-sm-8">{{ temporal_coverage.start_date }}</div>
                                     </div>
-                                </div>
-                                <div id="div_id_end" class="control-group">
-                                    <label for="id_end" class="control-label requiredField">End Date<span class="asteriskField">*</span></label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm dateinput" id="id_end"
-                                            name="end" type="text">
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>End Date:</strong></div>
+                                        <div class="col-sm-8">{{ temporal_coverage.end_date }}</div>
                                     </div>
-                                </div>
-                                <div style="margin-top:10px">
-                                    <button type="button" class="btn btn-primary pull-right"
-                                            onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;">
-                                        Save changes
-                                    </button>
-                                </div>
-                            </fieldset>
-                        </form>
+                                {% endif %}
                             {% else %}
+                                <div class="form-group col-md-6 col-sm-12 col-xs-12" id="coverage-spatial">
+                                    {% if not coverage_spatial_form.initial.north and not coverage_spatial_form.initial.northlimit %}
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
+                                              id="id-coverage-spatial" method="post">
+                                            {% csrf_token %}
+                                            <fieldset>
+                                                <legend>Spatial</legend>
+                                                <div id="div_id_type" class="control-group">
+                                                    <div class="controls">
+                                                        <label class="radio control-label">
+                                                            <input type="radio" name="type" id="id_type_1" value="box">Box
+                                                        </label>
+                                                        <label class="radio control-label"><input type="radio"
+                                                                                                  checked="checked"
+                                                                                                  name="type"
+                                                                                                  id="id_type_2"
+                                                                                                  value="point">Point</label>
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_name" class="control-group">
+                                                    <label for="id_name" class="control-label">Place/Area Name</label>
 
-                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{{ coverage_temporal_form.initial.id }}/update-metadata/"
-                              id="id-coverage-temporal" method="post">
-                             {% csrf_token %}
-                            <fieldset>
-                                <legend>Temporal</legend>
-                                <div id="div_id_start" class="control-group">
-                                    <label for="id_start" class="control-label requiredField">
-                                    Start Date<span class="asteriskField">*</span></label>
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm textinput textInput"
+                                                               id="id_name" maxlength="200" name="name" type="text">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_projection" class="control-group">
+                                                    <label for="id_projection" class="control-label">Coordinate
+                                                        System/Geographic Projection</label>
 
-                                    <div class="controls">
-                                        <input class="form-control input-sm dateinput" id="id_start"
-                                            name="start" type="text" value="{{ coverage_temporal_form.initial.start }}">
-                                    </div>
-                                </div>
-                                <div id="div_id_end" class="control-group">
-                                    <label for="id_end" class="control-label requiredField">End Date<span class="asteriskField">*</span></label>
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm textinput textInput"
+                                                               id="id_projection" maxlength="100" name="projection"
+                                                               readonly="True" style="background-color:white;"
+                                                               type="text" value="WGS 84 EPSG:4326">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_east" class="control-group">
+                                                    <label for="id_east" class="control-label requiredField">
+                                                        Latitude (WGS 84 decimal degrees)<span
+                                                            class="asteriskField">*</span></label>
 
-                                    <div class="controls">
-                                        <input class="form-control input-sm dateinput" id="id_end"
-                                            name="end" type="text" value="{{ coverage_temporal_form.initial.end }}">
-                                    </div>
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm textinput textInput"
+                                                               id="id_east" name="east" type="text">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_north" class="control-group">
+                                                    <label for="id_north" class="control-label requiredField">
+                                                        Longitude (WGS 84 decimal degrees)<span
+                                                            class="asteriskField">*</span></label>
+
+                                                    <div class="controls"><input
+                                                            class="form-control input-sm textinput textInput"
+                                                            id="id_north" name="north" type="text"></div>
+                                                </div>
+                                                <div id="div_id_northlimit" class="control-group"
+                                                     style="display: none;"><label
+                                                        for="id_northlimit" class="control-label requiredField">
+                                                    North Latitude (WGS 84 decimal degrees)<span
+                                                        class="asteriskField">*</span></label>
+
+                                                    <div class="controls"><input
+                                                            class="form-control input-sm textinput textInput"
+                                                            id="id_northlimit" name="northlimit" type="text"></div>
+                                                </div>
+                                                <div id="div_id_eastlimit" class="control-group" style="display: none;">
+                                                    <label
+                                                            for="id_eastlimit" class="control-label requiredField">
+                                                        East Longitude (WGS 84 decimal degrees)<span
+                                                            class="asteriskField">*</span></label>
+
+                                                    <div class="controls"><input
+                                                            class="form-control input-sm textinput textInput"
+                                                            id="id_eastlimit" name="eastlimit" type="text"></div>
+                                                </div>
+                                                <div id="div_id_southlimit" class="control-group"
+                                                     style="display: none;"><label
+                                                        for="id_southlimit" class="control-label requiredField">
+                                                    South Latitude (WGS 84 decimal degrees)<span
+                                                        class="asteriskField">*</span></label>
+
+                                                    <div class="controls"><input
+                                                            class="form-control input-sm textinput textInput"
+                                                            id="id_southlimit" name="southlimit" type="text"></div>
+                                                </div>
+                                                <div id="div_id_westlimit" class="control-group" style="display: none;">
+                                                    <label
+                                                            for="id_westlimit" class="control-label requiredField">
+                                                        West Longitude (WGS 84 decimal degrees)<span
+                                                            class="asteriskField">*</span></label>
+
+                                                    <div class="controls"><input
+                                                            class="form-control input-sm textinput textInput"
+                                                            id="id_westlimit" name="westlimit" type="text"></div>
+                                                </div>
+                                                <div id="div_id_units" class="control-group"><label for="id_units"
+                                                                                                    class="control-label requiredField">
+                                                    Coordinate Units<span class="asteriskField">*</span></label>
+
+                                                    <div class="controls"><input
+                                                            class="form-control input-sm textinput textInput"
+                                                            id="id_units" maxlength="50" name="units"
+                                                            readonly="True" style="background-color:white;"
+                                                            type="text" value="Decimal degrees"></div>
+                                                </div>
+                                                <div style="margin-top:10px">
+                                                    <button type="button" class="btn btn-primary pull-right"
+                                                            onclick="metadata_update_ajax_submit('id-coverage-spatial'); return false;"
+                                                            style="display: none;">Save changes
+                                                    </button>
+                                                </div>
+                                            </fieldset>
+                                        </form>
+                                    {% else %}
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{{ coverage_spatial_form.initial.id }}/update-metadata/"
+                                              id="id-coverage-spatial" method="post">
+                                            {% csrf_token %}
+                                            <fieldset>
+                                                <legend>Spatial</legend>
+                                                <div id="div_id_type" class="control-group">
+                                                    <div class="controls">
+                                                        <label class="radio control-label">
+                                                            <input type="radio"
+                                                                    {% if coverage_spatial_form.initial.type == "box" %}
+                                                                   checked="checked"
+                                                                    {% endif %}
+                                                                   name="type" id="id_type_1" value="box">Box
+                                                        </label>
+                                                        <label class="radio control-label">
+                                                            <input type="radio"
+                                                                    {% if coverage_spatial_form.initial.type == "point" %}
+                                                                   checked="checked"
+                                                                    {% endif %}
+                                                                   name="type" id="id_type_2" value="point">Point
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_name" class="control-group">
+                                                    <label for="id_name" class="control-label">Place/Area Name</label>
+
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm textinput textInput"
+                                                               id="id_name" maxlength="200" name="name" type="text"
+                                                               value="
+                                                                       {% if coverage_spatial_form.initial.name %}{{ coverage_spatial_form.initial.name }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_projection" class="control-group">
+                                                    <label for="id_projection" class="control-label">Coordinate
+                                                        System/Geographic Projection</label>
+
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm textinput textInput"
+                                                               id="id_projection" maxlength="100" name="projection"
+                                                               readonly="True" style="background-color:white;"
+                                                               type="text" value="WGS 84 EPSG:4326"
+                                                               value="
+                                                                       {% if coverage_spatial_form.initial.projection %}{{ coverage_spatial_form.initial.projection }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_east" class="control-group">
+                                                    <label for="id_east" class="control-label requiredField">
+                                                        Latitude (WGS 84 decimal degrees)<span
+                                                            class="asteriskField">*</span></label>
+
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm textinput textInput"
+                                                               id="id_east" name="east" type="text"
+                                                               value="
+                                                                       {% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_north" class="control-group">
+                                                    <label for="id_north" class="control-label requiredField">
+                                                        Longitude (WGS 84 decimal degrees)<span
+                                                            class="asteriskField">*</span></label>
+
+                                                    <div class="controls"><input
+                                                            class="form-control input-sm textinput textInput"
+                                                            id="id_north" name="north" type="text"
+                                                            value="
+                                                                    {% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_northlimit" class="control-group"><label
+                                                        for="id_northlimit" class="control-label requiredField">
+                                                    North Latitude (WGS 84 decimal degrees)<span
+                                                        class="asteriskField">*</span></label>
+
+                                                    <div class="controls"><input
+                                                            class="form-control input-sm textinput textInput"
+                                                            id="id_northlimit" name="northlimit" type="text"
+                                                            value="
+                                                                    {% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit }}{% endif %}"
+                                                            >
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_eastlimit" class="control-group"><label
+                                                        for="id_eastlimit" class="control-label requiredField">
+                                                    East Longitude (WGS 84 decimal degrees)<span
+                                                        class="asteriskField">*</span></label>
+
+                                                    <div class="controls"><input
+                                                            class="form-control input-sm textinput textInput"
+                                                            id="id_eastlimit" name="eastlimit" type="text"
+                                                            value="
+                                                                    {% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_southlimit" class="control-group"><label
+                                                        for="id_southlimit" class="control-label requiredField">
+                                                    South Latitude (WGS 84 decimal degrees)<span
+                                                        class="asteriskField">*</span></label>
+
+                                                    <div class="controls"><input
+                                                            class="form-control input-sm textinput textInput"
+                                                            id="id_southlimit" name="southlimit" type="text"
+                                                            value="
+                                                                    {% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_westlimit" class="control-group"><label
+                                                        for="id_westlimit" class="control-label requiredField">
+                                                    West Longitude (WGS 84 decimal degrees)<span
+                                                        class="asteriskField">*</span></label>
+
+                                                    <div class="controls"><input
+                                                            class="form-control input-sm textinput textInput"
+                                                            id="id_westlimit" name="westlimit" type="text"
+                                                            value="
+                                                                    {% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_units" class="control-group">
+                                                    <label for="id_units" class="control-label requiredField">
+                                                        Coordinate Units<span class="asteriskField">*</span></label>
+
+                                                    <div class="controls"><input
+                                                            class="form-control input-sm textinput textInput"
+                                                            id="id_units" maxlength="50" name="units"
+                                                            readonly="True" style="background-color:white;"
+                                                            type="text" value="
+                                                            {% if coverage_spatial_form.initial.units %}{{ coverage_spatial_form.initial.units }}{% endif %}">
+                                                    </div>
+                                                </div>
+                                                <div style="margin-top:10px">
+                                                    <button type="button" class="btn btn-primary pull-right"
+                                                            onclick="metadata_update_ajax_submit('id-coverage-spatial'); return false;"
+                                                            style="display: none;">Save changes
+                                                    </button>
+                                                </div>
+                                            </fieldset>
+                                        </form>
+                                    {% endif %}
                                 </div>
-                                <div style="margin-top:10px">
-                                    <button type="button" class="btn btn-primary pull-right"
-                                            onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;"
-                                            style="display: none;">Save changes
-                                    </button>
+
+                                {#  Add new temporal coverage#}
+                                <div class="form-group col-md-6 col-sm-12 col-xs-12" id="coverage-temporal">
+                                    {% if not coverage_temporal_form.initial.start %}
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
+                                              id="id-coverage-temporal" method="post">
+                                            {% csrf_token %}
+                                            <fieldset>
+                                                <legend>Temporal</legend>
+                                                <div id="div_id_start" class="control-group">
+                                                    <label for="id_start" class="control-label requiredField">
+                                                        Start Date<span class="asteriskField">*</span></label>
+
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm dateinput" id="id_start"
+                                                               name="start" type="text">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_end" class="control-group">
+                                                    <label for="id_end" class="control-label requiredField">End
+                                                        Date<span class="asteriskField">*</span></label>
+
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm dateinput" id="id_end"
+                                                               name="end" type="text">
+                                                    </div>
+                                                </div>
+                                                <div style="margin-top:10px">
+                                                    <button type="button" class="btn btn-primary pull-right"
+                                                            onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;">
+                                                        Save changes
+                                                    </button>
+                                                </div>
+                                            </fieldset>
+                                        </form>
+                                    {% else %}
+
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{{ coverage_temporal_form.initial.id }}/update-metadata/"
+                                              id="id-coverage-temporal" method="post">
+                                            {% csrf_token %}
+                                            <fieldset>
+                                                <legend>Temporal</legend>
+                                                <div id="div_id_start" class="control-group">
+                                                    <label for="id_start" class="control-label requiredField">
+                                                        Start Date<span class="asteriskField">*</span></label>
+
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm dateinput" id="id_start"
+                                                               name="start" type="text"
+                                                               value="{{ coverage_temporal_form.initial.start }}">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_end" class="control-group">
+                                                    <label for="id_end" class="control-label requiredField">End
+                                                        Date<span class="asteriskField">*</span></label>
+
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm dateinput" id="id_end"
+                                                               name="end" type="text"
+                                                               value="{{ coverage_temporal_form.initial.end }}">
+                                                    </div>
+                                                </div>
+                                                <div style="margin-top:10px">
+                                                    <button type="button" class="btn btn-primary pull-right"
+                                                            onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;"
+                                                            style="display: none;">Save changes
+                                                    </button>
+                                                </div>
+                                            </fieldset>
+                                        </form>
+                                    {% endif %}
                                 </div>
-                            </fieldset>
-                        </form>
-                        {% endif %}
-                            </div>
+                            {% endif %}
+                        </div>
                     {% endif %}
+                    <!-- ========= RELATED RESOURCES TAB ========= -->
+                    {% if sources or relations or metadata_form %}
+                        <div class="tab-pane" id="relatedResourcesTab">
+                            {% if not metadata_form %}
+                                {% if sources %}
+                                    <h4><strong>Sources</strong></h4>
+                                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                                    {% for source in sources %}
+                                        <div class="row">
+                                            <div class="col-sm-4"><strong>Derived From:</strong></div>
+                                            <div class="col-sm-8">{{ source.derived_from }}</div>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                                {% if relations %}
+                                    <hr style="border: 0;">
+                                    <h4><strong>Relations</strong></h4>
+                                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                                    {% for relation in relations %}
+                                        <div class="row">
+                                            <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
+                                            <div class="col-sm-8">{{ relation.value }}</div>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% else %}
+                                <div>
+                                    <table class="table" style="margin-bottom: 0;">
+                                        <tbody>
+                                        <legend>Sources</legend>
+                                        {% for source in source_formset.initial %}
+                                            <tr>
+                                                <th scope="row" class="dataset-label">Derived From:</th>
+                                                <td class="dataset-details">{{ source.derived_from }}</td>
+                                                <td>
+                                                    <a data-toggle="modal" data-placement="auto" title="Edit"
+                                                       class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                                       data-target="#edit-source-dialog{{ source.id }}"
+                                                       style="top: -5px; "></a>
+                                                </td>
+                                                <td>
+                                                    <a data-toggle="modal" data-placement="auto"
+                                                       title="Remove"
+                                                       class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                       data-target="#delete-source-element-dialog{{ source.id }}"
+                                                       style="top: -5px; right:20px;"></a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                    <a id="add-source" class="btn btn-success" data-toggle="modal"
+                                       data-target="#add-source-dialog"><i
+                                            class="fa fa-plus"></i> Add source</a>
+                                </div>
+                                <hr style="border: 0;">
+                                <div>
+                                    <table class="table" style="margin-bottom: 0;">
+                                        <tbody>
+                                        <legend>Relations</legend>
+                                        {% for relation in relation_formset.initial %}
+                                            <tr>
+                                                <th scope="row" class="dataset-label">{{ relation.type }}:</th>
+                                                <td class="dataset-details">{{ relation.value }}</td>
+                                                <td>
+                                                    <a data-toggle="modal" data-placement="auto" title="Edit"
+                                                       class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                                       data-target="#edit-relation-dialog_{{ relation.id }}"
+                                                       style="top: -5px; "></a>
+                                                </td>
+                                                <td>
+                                                    <a data-toggle="modal" data-placement="auto"
+                                                       title="Remove"
+                                                       class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                       data-target="#delete-relation-element-dialog{{ relation.id }}"
+                                                       style="top: -5px; right:20px;"></a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+
+                                        </tbody>
+                                    </table>
+                                    <a id="add-relation" class="btn btn-success" data-toggle="modal"
+                                       data-target="#add-relation-dialog"><i
+                                            class="fa fa-plus"></i> Add relation</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    <!-- ========= RESOURCE SPECIFIC TAB ========= -->
+                    {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
+                        {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
+                        {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
+                            {% if  cm|resource_type != "Generic" %}
+                                <div class="tab-pane" id="resourceSpecificTab">
+                                    {% if not metadata_form %}
+
+                                        {% block extended_metadata %}
+
+                                        {% endblock %}
+
+                                    {% else %}
+                                        {% crispy metadata_form %}
+                                    {% endif %}
+                                    {% block extra_section %} {# add extra section for resource landing page #}
+                                    {% endblock %}
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                    {#                <!-- ========= RELEVANT TOOLS TAB ========= -->#}
+                    {#            {% if relevant_tools or metadata_form %}#}
+                    {#                <div class="tab-pane" id="relevantTools">#}
+                    {#                {% if not metadata_form %}#}
+                    {#                    {% for tool in relevant_tools %}#}
+                    {#                        <h4>{{ tool.title }}</h4>#}
+                    {#                        <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch Tool</button></a>#}
+                    {#                        <hr>#}
+                    {#                    {% endfor %}#}
+                    {#                {% else %}#}
+                    {#                    ------- Relevant tools form here -------#}
+                    {#                {%  endif %}#}
+                    {#                </div>#}
+                    {#            {% endif %}#}
                 </div>
-            {% endif %}
-                <!-- ========= RELATED RESOURCES TAB ========= -->
-            {% if sources or relations or metadata_form %}
-            <div class="tab-pane" id="relatedResourcesTab">
-                {% if not metadata_form %}
-                {% if sources %}
-                    <h4><strong>Sources</strong></h4>
-                    <hr style="margin-top: 0px;margin-bottom: 2px">
-                    {% for source in sources %}
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Derived From:</strong></div>
-                            <div class="col-sm-8">{{ source.derived_from }}</div>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-                {% if relations %}
-                    <hr style="border: 0;">
-                    <h4><strong>Relations</strong></h4>
-                    <hr style="margin-top: 0px;margin-bottom: 2px">
-                    {% for relation in relations %}
-                        <div class="row">
-                            <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
-                            <div class="col-sm-8">{{ relation.value }}</div>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-                {% else %}
-                    <div>
-                        <table class="table" style="margin-bottom: 0;">
-                            <tbody>
-                            <legend>Sources</legend>
-                            {% for source in source_formset.initial %}
-                                <tr>
-                                    <th scope="row" class="dataset-label">Derived From:</th>
-                                    <td class="dataset-details">{{ source.derived_from }}</td>
-                                    <td>
-                                        <a data-toggle="modal" data-placement="auto" title="Edit"
-                                           class="glyphicon glyphicon-pencil icon-button btn-edit"
-                                           data-target="#edit-source-dialog{{ source.id }}"
-                                           style="top: -5px; "></a>
-                                    </td>
-                                    <td>
-                                        <a data-toggle="modal" data-placement="auto"
-                                           title="Remove" class="glyphicon glyphicon-trash icon-button btn-remove"
-                                           data-target="#delete-source-element-dialog{{ source.id }}"
-                                           style="top: -5px; right:20px;"></a>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                        <a id="add-source" class="btn btn-success" data-toggle="modal" data-target="#add-source-dialog"><i
-                                    class="fa fa-plus"></i> Add source</a>
-                    </div>
-                    <hr style="border: 0;">
-                    <div>
-                    <table class="table" style="margin-bottom: 0;">
-                        <tbody>
-                        <legend>Relations</legend>
-                        {% for relation in relation_formset.initial %}
-                            <tr>
-                                <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                <td class="dataset-details">{{ relation.value }}</td>
-                                <td>
-                                    <a data-toggle="modal" data-placement="auto" title="Edit"
-                                       class="glyphicon glyphicon-pencil icon-button btn-edit"
-                                       data-target="#edit-relation-dialog_{{ relation.id }}"
-                                       style="top: -5px; "></a>
-                                </td>
-                                <td>
-                                    <a data-toggle="modal" data-placement="auto"
-                                       title="Remove" class="glyphicon glyphicon-trash icon-button btn-remove"
-                                       data-target="#delete-relation-element-dialog{{ relation.id }}"
-                                       style="top: -5px; right:20px;"></a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-
-                        </tbody>
-                    </table>
-                    <a id="add-relation" class="btn btn-success" data-toggle="modal" data-target="#add-relation-dialog"><i
-                            class="fa fa-plus"></i> Add relation</a>
-                    </div>
-                {% endif %}
             </div>
-            {% endif %}
-                <!-- ========= RESOURCE SPECIFIC TAB ========= -->
-            {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
-                {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
-                {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
-                    {% if  cm|resource_type != "Generic" %}
-                    <div class="tab-pane" id="resourceSpecificTab">
-                    {% if not metadata_form %}
-
-                        {% block extended_metadata %}
-
-                        {%  endblock %}
-
-                    {%  else %}
-                       {%  crispy metadata_form  %}
-                    {%  endif %}
-                    {% block extra_section %} {# add extra section for resource landing page #}
-                    {% endblock %}
-                    </div>
-                    {%  endif %}
-                {%  endif %}
-            {%  endif %}
-{#                <!-- ========= RELEVANT TOOLS TAB ========= -->#}
-{#            {% if relevant_tools or metadata_form %}#}
-{#                <div class="tab-pane" id="relevantTools">#}
-{#                {% if not metadata_form %}#}
-{#                    {% for tool in relevant_tools %}#}
-{#                        <h4>{{ tool.title }}</h4>#}
-{#                        <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch Tool</button></a>#}
-{#                        <hr>#}
-{#                    {% endfor %}#}
-{#                {% else %}#}
-{#                    ------- Relevant tools form here -------#}
-{#                {%  endif %}#}
-{#                </div>#}
-{#            {% endif %}#}
-            </div>
-            </div>
-            </div>
+        </div>
         <!-- ==== Tabs end ==== -->
-
-
-
 
         <div class="rating">
             {% rating_for cm %}
@@ -2533,9 +2613,8 @@ function metadata_update_ajax_submit(form_id){
             if ($save_button.text() === "Save changes"){
                 $save_button.hide();
             }
-        })
-        // open all metadata collasible elements on page load
-{#        $('.accordion-body:not(".in")').collapse('show');#}
+        });
+
         $("#select_license").on('change', function () {
             var value = this.value;
             if (value === "other") {
@@ -2613,7 +2692,7 @@ function metadata_update_ajax_submit(form_id){
                 //$(this).css('border-color', 'gray');
                 $(this).closest("form").find("button").show();
             });
-        })
+        });
         $(".dateinput").each(function(){
             $(this).datepicker({
                 format: 'mm-dd-yyyy',
@@ -2624,119 +2703,10 @@ function metadata_update_ajax_submit(form_id){
             $(this).on('change', function(){
                 $(this).closest("form").find("button").show();
             });
-        })
-        // Code adapted from http://djangosnippets.org/snippets/1389/
-        function updateElementIndex(el, prefix, ndx) {
-            var id_regex = new RegExp('(' + prefix + '-\\d+-)');
-            var replacement = prefix + '-' + ndx + '-';
-            if ($(el).attr("for")) $(el).attr("for", $(el).attr("for").replace(id_regex,
-            replacement));
-            if (el.id) el.id = el.id.replace(id_regex, replacement);
-            if (el.name) el.name = el.name.replace(id_regex, replacement);
-        }
-        function deleteForm(btn, prefix) {
-            var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
-            if (formCount > 1) {
-                // Delete the item/form
-                $(btn).parents('.item').slideUp(300);
-                $(btn).parents('.item').remove();
-                var forms = $("#" + prefix + ' .item'); // Get all the forms
-                // Update the total number of forms (1 less than before)
-                $('#id_' + prefix + '-TOTAL_FORMS').val(forms.length);
-                var i = 0;
-                // Go through the forms and set their indices, names and IDs
-                for (formCount = forms.length; i < formCount; i++) {
-                    $(forms.get(i)).children().children().each(function () {
-                        if ($(this).attr('type') == 'text') updateElementIndex(this, prefix, i);
-                        if($(this).is('input')) updateElementIndex(this, prefix, i);
-                    });
-                    $(forms.get(i)).find('input').each(function (){
-                        updateElementIndex(this, prefix, i);
-                    })
-                }
-            } // End if
-            else {
-                if (prefix == 'creators'){
-                    alert("Resource needs to have at least one creator!");
-                }
-            }
-            return false;
-        }
-        
-        function deleteLink(btn, prefix) {
-            var link_form_input = $(btn).parents('.item').children('input:first');
-            var id = $(link_form_input).attr('id');
-            var link_formset_index = id.split("-")[1];
-            var formCount = parseInt($('#id_' + prefix + '_links-' + link_formset_index+ '-TOTAL_FORMS').val());
-            if (formCount > 1) {
-                // Delete the item/form
-                $(btn).parents('.item_link').slideUp(300);
-                $(btn).parents('.item_link').remove();
-                var forms = $("#" + prefix + ' .item_link'); // Get all the forms
-                // Update the total number of forms (1 less than before)
-                var update_prefix = prefix + '_links-' + link_formset_index;
-                $('#id_' + update_prefix + '-TOTAL_FORMS').val(forms.length);
-                var i = 0;
-                // Go through the forms and set their indices, names and IDs
-                for (formCount = forms.length; i < formCount; i++) {
-                    $(forms.get(i)).children().children().each(function () {
-                        if ($(this).attr('type') == 'text') updateElementIndex(this, update_prefix, i);
-                        if($(this).is('input')) updateElementIndex(this, update_prefix, i);
-                    });
-                    $(forms.get(i)).find('input').each(function (){
-                        updateElementIndex(this, update_prefix, i);
-                    })
-                }
-            } // End if
-            return false;
-        }
-        function addLink(btn, prefix) {
-            var link_form_input = $(btn).parents('.item').children('input:first');
-            var id = $(link_form_input).attr('id');
-            var link_formset_index = id.split("-")[1];
-            var formCount = parseInt($('#id_' + prefix + '_links-' + link_formset_index + '-TOTAL_FORMS').val());
-            // You can only submit a maximum of 10 todo items
-            if (formCount < 10) {
-                // Clone a form (without event handlers) from the first form
-                //var row = $("#" + prefix + " .item_link:first").clone(false).get(0);
-                var row = $(btn).parents(".item").find(".item_link:last").clone(false).get(0);
-                // Insert it after the last form
-                $(row).removeAttr('id').hide().insertAfter("#" + prefix + " .item_link:last").slideDown(300);
-                // Remove the bits we don't want in the new row/form
-                // e.g. error messages
-                $(".errorlist", row).remove();
-                $(row).children().removeClass("error");
-                var update_prefix = prefix + '_links-' + link_formset_index;
-                // Relabel or rename all the relevant bits
-                $(row).find('*').each(function (){
-                    updateElementIndex(this, update_prefix, formCount);
-                    $(this).val("");
-                })
-                $(row).find('button').each(function () {
-                    updateElementIndex(this, update_prefix, formCount);
-                    if ($(this).attr('type') == 'button'){
-                        $(this).text('Delete Link');
-                    }
-                })
-                // Add an event handler for the delete item/form link
-                $(row).find(".delete-link-creator").click(function () {
-                    return deleteLink(this, prefix);
-                });
-                $(row).find(".delete-link-contributor").click(function () {
-                    return deleteLink(this, prefix);
-                });
-                // Update the total form count
-                $("#id_" + update_prefix + "-TOTAL_FORMS").val(formCount + 1);
-            } // End if
-            else {
-                alert("Sorry, you can only enter a maximum of ten links.");
-            }
-            return false;
-        }
+        });
 
-        $("form input:radio").change(function () {
+        $("#id-coverage-spatial input:radio").change(function () {
             if ($(this).val() == "point") {
-                //alert('you select the point radio button');
                 $("#div_id_north").show();
                 $("#div_id_east").show();
                 $("#div_id_elevation").show();
@@ -2748,7 +2718,6 @@ function metadata_update_ajax_submit(form_id){
                 $("#div_id_downlimit").hide();
             }
             else {
-                //alert('you select the box radio button');
                 $("#div_id_north").hide();
                 $("#div_id_east").hide();
                 $("#div_id_elevation").hide();
