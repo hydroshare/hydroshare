@@ -556,8 +556,8 @@ def create_resource(request, *args, **kwargs):
 
     resource_files = request.FILES.getlist('files')
 
-    irods_fname = request.POST.get('irods_file_name')
-    if irods_fname:
+    irods_fnames = request.POST.get('irods_file_names')
+    if irods_fnames:
         user = request.POST.get('irods-username')
         password = request.POST.get("irods-password")
         port = request.POST.get("irods-port")
@@ -565,7 +565,7 @@ def create_resource(request, *args, **kwargs):
         zone = request.POST.get("irods-zone")
         try:
             upload_from_irods(username=user, password=password, host=host, port=port,
-                                  zone=zone, irods_fname=irods_fname, res_files=resource_files)
+                                  zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
         except utils.ResourceFileSizeException as ex:
             context = {'file_size_error': ex.message}
             return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
