@@ -6,8 +6,12 @@ import tempfile
 import mimetypes
 import zipfile
 
-from foresite import *
-from rdflib import URIRef, Namespace
+from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
+from rdflib import URIRef
+from rdflib import Namespace
+from rdflib import Graph
+from rdflib.namespace import DC
+
 import bagit
 
 from mezzanine.conf import settings
@@ -15,6 +19,8 @@ from mezzanine.conf import settings
 from hs_core.models import Bags, ResourceFile
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
+
+
 
 
 class HsBagitException(Exception):
@@ -248,3 +254,30 @@ def read_bag(bag_path):
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
+
+def read_resource_map(bag_content_path):
+    rmap_path = os.path.join(bag_content_path, 'data', 'resourcemap.xml')
+    if not os.path.isfile(rmap_path):
+        raise HsBagitException("Resource map {0} does not exist".format(rmap_path))
+    if not os.access(rmap_path, os.R_OK):
+        raise HsBagitException("Unable to read resource map {0}".format(rmap_path))
+
+    g = Graph()
+    g.parse(rmap_path)
+    # Get resource ID
+    res_id = None
+    for s,p,o in g.triples((None, None, None)):
+        if s.endswith("resourcemap.xml") and p == DC.identifier:
+            res_id = o
+            #print("Subject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
+            #    ....:
+            # Subject: http://www.hydroshare.org/resource/57d8a925efbd4c33ac074297ade37ad8/data/resourcemap.xml
+            # pred: http://purl.org/dc/elements/1.1/identifier
+            # obj: 57d8a925efbd4c33ac074297ade37ad8
+    if res_id is None:
+        raise HsBagitException("Unable to determine resource ID from resource map {0}".format(rmap_path))
+
+    print("Resource ID is {0}".format(res_id))
+
+def read_bag_meta(bag_content_path):
+    read_resource_map(bag_content_path)
