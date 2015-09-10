@@ -480,10 +480,6 @@ def my_resources(request, page):
             for item_type in ("type", "author", "contributor", "subject")
         )
 
-        # TODO: Restricting resource listing to GenericResource as no other resource type is currently aware of
-        # Alva's access control objects - this needs be removed after resource model refactoring
-        search_items['type'] = ['GenericResource']
-
         # TODO ten separate SQL queries for basically the same data
         reslst = get_resource_list(
             user=user,

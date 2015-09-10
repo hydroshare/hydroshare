@@ -634,25 +634,25 @@ def get_resource_list(creator=None,
         #     assert False, BaseResource.objects.all().values_list('object_id', flat=True)
         q.append(Q(object_id__in=contributor_parties.values_list('object_id', flat=True)))
 
-        if edit_permission:
-            if group:
-                group = group_from_id(group)
-                q.append(Q(gaccess__resource__in=group.gaccess.get_editable_resources()))
+    if edit_permission:
+        if group:
+            group = group_from_id(group)
+            q.append(Q(gaccess__resource__in=group.gaccess.get_editable_resources()))
 
-            q, public = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=True,
-                                                                   query=q, resource_type=t, is_public=public)
+        q, public = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=True,
+                                                               query=q, is_public=public)
 
-        else:
-            if creator:
-                creator = user_from_id(creator)
-                q.append(Q(creator=creator))
+    else:
+        if creator:
+            creator = user_from_id(creator)
+            q.append(Q(creator=creator))
 
-            if group:
-                group = group_from_id(group)
-                q.append(Q(gaccess__resource__in=group.gaccess.get_held_resources()))
+        if group:
+            group = group_from_id(group)
+            q.append(Q(gaccess__resource__in=group.gaccess.get_held_resources()))
 
-            q, public = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False,
-                                                                   query=q, resource_type=t, is_public=public)
+        q, public = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False,
+                                                               query=q, is_public=public)
 
     if from_date and to_date:
         q.append(Q(created__range=(from_date, to_date)))
@@ -670,25 +670,10 @@ def get_resource_list(creator=None,
     for q in q:
         flt = flt.filter(q)
 
-        if public:
-            flt = flt.filter(public=True)
-
         if full_text_search:
-            fts_qs = flt.search(full_text_search)
-            description_matching = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
-            title_matching = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
-
-        if description_matching:
-            desc_qs = flt.filter(object_id__in=description_matching)
-        else:
-            desc_qs = BaseResource.objects.none()
-
-        if title_matching:
-            title_qs = flt.filter(object_id__in=title_matching)
-        else:
-            title_qs = BaseResource.objects.none()
-
-        flt = fts_qs.distinct() | desc_qs.distinct() | title_qs.distinct()
+            flt = flt.search(full_text_search)
+            flt = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+            flt = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
 
     qcnt = 0
     if flt:
@@ -710,7 +695,7 @@ def get_resource_list(creator=None,
     return flt
 
 
-def _filter_resources_for_user_and_owner(user, owner, is_editable, queries, resource_type, is_public):
+def _filter_resources_for_user_and_owner(user, owner, is_editable, query, is_public):
     if user:
         user = user_from_id(user)
         if owner:
@@ -719,15 +704,15 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, queries, reso
             except User.DoesNotExist:
                 pass
             else:
-                queries[resource_type].append(Q(raccess__resource__in=owner.uaccess.get_owned_resources()))
+                query.append(Q(pk__in=owner.uaccess.get_owned_resources()))
 
                 if user != owner:
                     is_public = True
         else:
             if is_editable:
-                queries[resource_type].append(Q(raccess__resource__in=user.uaccess.get_editable_resources()))
+                query.append(Q(pk__in=user.uaccess.get_editable_resources()))
             else:
-                queries[resource_type].append(Q(raccess__resource__in=user.uaccess.get_held_resources())|
+                query.append(Q(pk__in=user.uaccess.get_held_resources())|
                                               Q(raccess__public=True))
 
-    return queries, is_public
+    return query, is_public
