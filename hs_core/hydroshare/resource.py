@@ -369,7 +369,7 @@ def create_resource(
 
         # by default make resource private
         #resource.content_model = "baseresource"
-        resource.public = False
+        resource.set_slug('resource{0}{1}'.format('/', resource.short_id))
         resource.save()
 
         if not metadata:
