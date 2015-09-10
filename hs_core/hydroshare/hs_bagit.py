@@ -7,6 +7,7 @@ import mimetypes
 import zipfile
 
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
+import rdflib
 from rdflib import URIRef
 from rdflib import Namespace
 from rdflib import Graph
@@ -278,6 +279,13 @@ def read_resource_map(bag_content_path):
         raise HsBagitException("Unable to determine resource ID from resource map {0}".format(rmap_path))
 
     print("Resource ID is {0}".format(res_id))
+
+    agSubj = "http://www.hydroshare.org/resource/{res_id}/data/resourcemap.xml#aggregation".format(res_id=res_id)
+    rmap = URIRef(agSubj)
+    titleLit = g.value(rmap, rdflib.namespace.DC.title)
+    title = str(titleLit)
+
+    print("\tTitle is {0}".format(title))
 
 def read_bag_meta(bag_content_path):
     read_resource_map(bag_content_path)
