@@ -485,7 +485,7 @@ class Title(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         title = Title.objects.get(id=element_id)
         # get matching resource
-        resource = GenericResource.objects.filter(object_id=title.content_object.id).first()
+        resource = BaseResource.objects.filter(object_id=title.content_object.id).first()
         if title:
             if 'value' in kwargs:
                 title.value = kwargs['value']
@@ -557,7 +557,7 @@ class Date(AbstractMetaDataElement):
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
             dt = Date.objects.filter(type= kwargs['type'], object_id=metadata_obj.id, content_type=metadata_type).first()
             # get matching resource
-            resource = GenericResource.objects.filter(object_id=metadata_obj.id).first()
+            resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
             if dt:
                 raise ValidationError('Date type:%s already exists' % kwargs['type'])
             if not kwargs['type'] in ['created', 'modified', 'valid', 'available', 'published']:
@@ -714,7 +714,7 @@ class Identifier(AbstractMetaDataElement):
         if 'name' in kwargs:
             metadata_obj = kwargs['content_object']
             # get matching resource
-            resource = GenericResource.objects.filter(object_id=metadata_obj.id).first()
+            resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
             # check the identifier name doesn't already exist - identifier name needs to be unique per resource
             idf = Identifier.objects.filter(name__iexact= kwargs['name'], object_id=metadata_obj.id,
@@ -780,7 +780,7 @@ class Identifier(AbstractMetaDataElement):
     def remove(cls, element_id):
         idf = Identifier.objects.get(id=element_id)
         # get matching resource
-        resource = GenericResource.objects.filter(object_id=idf.content_object.id).first()
+        resource = BaseResource.objects.filter(object_id=idf.content_object.id).first()
         if idf:
             if idf.name.lower() == 'hydroshareidentifier':
                 raise ValidationError("Hydroshare identifier:%s can't be deleted." % idf.name)
@@ -807,7 +807,7 @@ class Publisher(AbstractMetaDataElement):
         if 'name' in kwargs:
             metadata_obj = kwargs['content_object']
             # get matching resource
-            resource = GenericResource.objects.filter(object_id=metadata_obj.id).first()
+            resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
             if 'url' in kwargs:
                 if not resource.raccess.public and resource.raccess.published:
                     raise ValidationError("Publisher element can't be created for a resource that is not shared nor "
@@ -831,7 +831,7 @@ class Publisher(AbstractMetaDataElement):
         pub = Publisher.objects.get(id=element_id)
         metadata_obj = kwargs['content_object']
         # get matching resource
-        resource = GenericResource.objects.filter(object_id=metadata_obj.id).first()
+        resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
 
         if resource.raccess.immutable:
             raise ValidationError("Resource metadata can't be edited when the resource is in frozen state.")
@@ -871,7 +871,7 @@ class Publisher(AbstractMetaDataElement):
     def remove(cls, element_id):
         pub = Publisher.objects.get(id=element_id)
         # get matching resource
-        resource = GenericResource.objects.filter(object_id=pub.content_object.id).first()
+        resource = BaseResource.objects.filter(object_id=pub.content_object.id).first()
 
         if resource.raccess.immutable:
             raise ValidationError("Resource metadata can't be edited when the resource is in frozen state.")
