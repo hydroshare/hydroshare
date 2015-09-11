@@ -714,5 +714,7 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, query, is_pub
             else:
                 query.append(Q(pk__in=user.uaccess.get_held_resources())|
                                               Q(raccess__public=True))
+    else:
+        query.append(Q(raccess__public=True) | Q(raccess__discoverable=True))
 
     return query, is_public

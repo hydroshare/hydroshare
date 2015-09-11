@@ -25,7 +25,7 @@
         {% endblock %}
 
             {# ======= Missing fields notification =======#}
-            {% if not metadata_form and page.perms.change %}
+            {% if not metadata_form and can_change %}
                 {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
                     <div class="alert alert-success alert-dismissible" role="alert">
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -76,7 +76,7 @@
             {% endif %}
             {#        ======= Top right buttons =======#}
             {% if not metadata_form %}
-                {% if page.perms.change %}
+                {% if can_change %}
                     <div class="lined-wrapper">
                     <div class="custom-btn-toolbar">
                         <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
@@ -260,7 +260,7 @@
 
                 <div id="sharing-status">
                     <span class="pull-left">Sharing status:</span>
-                    {% if page.perms.change and can_change_resource_flags %}
+                    {% if page.can_change and can_change_resource_flags %}
                         <form id="form-sharing" class="pull-left"
                               action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
                             {% csrf_token %}
@@ -401,7 +401,7 @@
                     <p>Your research group(s) have been given specific permission to view this resource.</p>
                 {% endif %}
 
-                {% if page.perms.change %}
+                {% if can_change %}
                     <div class="panel panel-default panel-faq">
                     <div class="panel-heading">
                         <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
@@ -659,7 +659,7 @@
                                     </td>
                                     {#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
                                     <td>
-                                        {% if page.perms.change %}
+                                        {% if can_change %}
 
                                             <a href="{{ f.resource_file.url }}"><span data-toggle="modal"
                                                                                   data-target="#delete-resource-file-{{ f.pk }}"

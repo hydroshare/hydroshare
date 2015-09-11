@@ -1598,6 +1598,18 @@ class BaseResource(Page, AbstractResource):
         verbose_name = 'Generic'
         db_table = 'hs_core_genericresource'
 
+    def can_add(self, request):
+        return AbstractResource.can_add(self, request)
+
+    def can_change(self, request):
+        return AbstractResource.can_change(self, request)
+
+    def can_delete(self, request):
+        return AbstractResource.can_delete(self, request)
+
+    def can_view(self, request):
+        return AbstractResource.can_view(self, request)
+
     @classmethod
     def get_supported_upload_file_types(cls):
         # all file types are supported

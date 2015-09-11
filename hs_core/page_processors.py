@@ -69,6 +69,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     bag_url = AbstractResource.bag_url(content_model.short_id)
 
+    # whether the user has permission to change the model
+    can_change = content_model.can_change(request)
+
     # user requested the resource in READONLY mode
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
@@ -110,35 +113,34 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         language = languages_dict[content_model.metadata.language.code] if content_model.metadata.language else None
         title = content_model.metadata.title.value if content_model.metadata.title else None
         abstract = content_model.metadata.description.abstract if content_model.metadata.description else None
-        context = {'metadata_form': None,
-                   'citation': content_model.get_citation(),
-                   'title': title,
-                   'abstract': abstract,
-                   'creators': content_model.metadata.creators.all(),
-                   'contributors': content_model.metadata.contributors.all(),
-                   'temporal_coverage': temporal_coverage_data_dict,
-                   'spatial_coverage': spatial_coverage_data_dict,
-                   'language': language,
-                   'keywords': keywords,
-                   'rights': content_model.metadata.rights,
-                   'sources': content_model.metadata.sources.all(),
-                   'relations': content_model.metadata.relations.all(),
-                   'metadata_status': metadata_status,
-                   'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
-                   'supported_file_types': content_model.get_supported_upload_file_types(),
-                   'allow_multiple_file_upload': content_model.can_have_multiple_files(),
-                   'file_validation_error': file_validation_error if file_validation_error else None,
-                   'relevant_tools': relevant_tools,
-                   'file_type_error': file_type_error,
-                   'just_created': just_created,
-                   'bag_url': bag_url
+        context = {
+            'metadata_form': None,
+            'citation': content_model.get_citation(),
+            'title': title,
+            'abstract': abstract,
+            'creators': content_model.metadata.creators.all(),
+            'contributors': content_model.metadata.contributors.all(),
+            'temporal_coverage': temporal_coverage_data_dict,
+            'spatial_coverage': spatial_coverage_data_dict,
+            'language': language,
+            'keywords': keywords,
+            'rights': content_model.metadata.rights,
+            'sources': content_model.metadata.sources.all(),
+            'relations': content_model.metadata.relations.all(),
+            'metadata_status': metadata_status,
+            'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
+            'supported_file_types': content_model.get_supported_upload_file_types(),
+            'allow_multiple_file_upload': content_model.can_have_multiple_files(),
+            'file_validation_error': file_validation_error if file_validation_error else None,
+            'relevant_tools': relevant_tools,
+            'file_type_error': file_type_error,
+            'just_created': just_created,
+            'bag_url': bag_url,
+            'can_change': can_change,
         }
         return context
 
     # user requested the resource in EDIT MODE
-
-    # whether the user has permission to change the model
-    can_change = content_model.can_change(request)
 
     add_creator_modal_form = CreatorForm(allow_edit=can_change, res_short_id=content_model.short_id)
     add_contributor_modal_form = ContributorForm(allow_edit=can_change, res_short_id=content_model.short_id)
