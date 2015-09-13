@@ -11,7 +11,7 @@ import rdflib
 from rdflib import URIRef
 from rdflib import Namespace
 from rdflib import Graph
-from rdflib.namespace import DC
+#from rdflib.namespace import DC, DCTERMS
 
 import bagit
 
@@ -268,7 +268,7 @@ def read_resource_map(bag_content_path):
     # Get resource ID
     res_id = None
     for s,p,o in g.triples((None, None, None)):
-        if s.endswith("resourcemap.xml") and p == DC.identifier:
+        if s.endswith("resourcemap.xml") and p == rdflib.namespace.DC.identifier:
             res_id = o
             #print("Subject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
             #    ....:
@@ -280,12 +280,24 @@ def read_resource_map(bag_content_path):
 
     print("Resource ID is {0}".format(res_id))
 
-    agSubj = "http://www.hydroshare.org/resource/{res_id}/data/resourcemap.xml#aggregation".format(res_id=res_id)
-    rmap = URIRef(agSubj)
+    res_root_url = "http://www.hydroshare.org/resource/{res_id}".format(res_id=res_id)
+    res_agg_subj = "{res_root_url}/data/resourcemap.xml#aggregation".format(res_root_url=res_root_url)
+    rmap = URIRef(res_agg_subj)
     titleLit = g.value(rmap, rdflib.namespace.DC.title)
     title = str(titleLit)
 
     print("\tTitle is {0}".format(title))
+
+    typeLit = g.value(rmap, rdflib.namespace.DCTERMS.type)
+    res_type = str(typeLit)
+
+    print("\tType is {0}".format(res_type))
+
+    # Get list of files in resource
+    ore = rdflib.namespace.Namespace('http://www.openarchives.org/ore/terms/')
+    for s,p,o in g.triples((rmap, ore.aggregates, None)):
+        # TODO: filter out resource metadata?
+        print("Subject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
 
 def read_bag_meta(bag_content_path):
     read_resource_map(bag_content_path)
