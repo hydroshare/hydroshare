@@ -23,6 +23,7 @@ from django_irods.icommands import SessionException
 
 
 class ResourceMeta(object):
+    root_uri = None
     # From resource map
     id = None
     res_type = None
@@ -309,8 +310,9 @@ def read_resource_map(bag_content_path):
     print("Resource ID is {0}".format(res_meta.id))
 
     # Build URI reference for #aggregation section of resource map
-    res_root_uri = "http://www.hydroshare.org/resource/{res_id}/".format(res_id=res_meta.id)
-    res_agg_subj = "{res_root_url}data/resourcemap.xml#aggregation".format(res_root_url=res_root_uri)
+    res_root_uri = "http://www.hydroshare.org/resource/{res_id}".format(res_id=res_meta.id)
+    res_meta.root_uri = res_root_uri
+    res_agg_subj = "{res_root_url}/data/resourcemap.xml#aggregation".format(res_root_url=res_root_uri)
     res_agg = URIRef(res_agg_subj)
 
     # Get resource type
@@ -328,19 +330,20 @@ def read_resource_map(bag_content_path):
     print("\tTitle is {0}".format(res_meta.title))
 
     # Get list of files in resource
+    res_root_uri_withslash = res_root_uri + '/'
     res_meta_path = None
     ore = rdflib.namespace.Namespace('http://www.openarchives.org/ore/terms/')
     for s,p,o in g.triples((res_agg, ore.aggregates, None)):
         if o.endswith('resourcemetadata.xml'):
             if res_meta_path is not None and o != res_meta_path:
                 msg = "More than one resource metadata URI found. "
-                msg += "(first: {first}, second: {second}".format(first=res_meta_uri,
+                msg += "(first: {first}, second: {second}".format(first=res_meta_path,
                                                                   second=o)
                 raise HsBagitException(msg)
-            res_meta_path = o.split(res_root_uri)[1]
+            res_meta_path = o.split(res_root_uri_withslash)[1]
             continue
 
-        res_meta.files.append(o.split(res_root_uri)[1])
+        res_meta.files.append(o.split(res_root_uri_withslash)[1])
 
     if res_meta_path is None:
         raise HsBagitException("No resource metadata found in resource map {0}".format(rmap_path))
@@ -353,5 +356,42 @@ def read_resource_map(bag_content_path):
     return (res_meta, res_meta_path)
 
 
+def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
+    """
+
+    :param bag_content_path: String representing the filesystem path of
+     exploded bag contents
+    :param res_meta_path: String represents the relative path of the
+     resourcemetadata.xml, within bag_content_path, from which further
+     metadata can be read.
+    :param res_meta: ResourceMeta representing resource metadata
+    :return: None
+    """
+    rmeta_path = os.path.join(bag_content_path, res_meta_path)
+    if not os.path.isfile(rmeta_path):
+        raise HsBagitException("Resource metadata {0} does not exist".format(rmeta_path))
+    if not os.access(rmeta_path, os.R_OK):
+        raise HsBagitException("Unable to read resource metadata {0}".format(rmeta_path))
+
+    g = Graph()
+    g.parse(rmeta_path)
+
+    res_uri = URIRef(res_meta.root_uri)
+
+    # Make sure title matches that from resource map
+    title_lit = g.value(res_uri, rdflib.namespace.DC.title)
+    title = str(title_lit)
+    if title != res_meta.title:
+        msg = "Title from resource metadata {0} "
+        msg += "does not match title from resource map {1}".format(title, res_meta.title)
+        raise HsBagitException(msg)
+    
+    # Get abstract
+    for s,p,o in g.triples((None, rdflib.namespace.DCTERMS.abstract, None)):
+        res_meta.abstract = o
+    if res_meta.abstract:
+        print("\t\tAbstract: {0}".format(res_meta.abstract))
+
 def read_bag_meta(bag_content_path):
-    read_resource_map(bag_content_path)
+    (res_meta, res_meta_path) = read_resource_map(bag_content_path)
+    read_resource_metadata(bag_content_path, res_meta_path, res_meta)
