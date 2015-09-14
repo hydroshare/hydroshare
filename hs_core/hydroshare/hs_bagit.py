@@ -22,10 +22,28 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 
+class ResourceMeta(object):
+    # From resource map
+    id = None
+    res_type = None
+    title = None
+    files = []
+    # From resource metadata
+    abstract = None
+    keywords = []
+    creators_uri = []
+    language = None
+    rights_uri = None
+    creation_date = None
+    modification_date = None
+
+    def __init__(self):
+        pass
 
 
 class HsBagitException(Exception):
     pass
+
 
 def delete_bag(resource):
     """
@@ -50,6 +68,7 @@ def delete_bag(resource):
     # delete the bags table
     for bag in resource.bags.all():
         bag.delete()
+
 
 def create_bag_files(resource):
     """
@@ -160,6 +179,7 @@ def create_bag_files(resource):
 
     return istorage
 
+
 def create_bag_by_irods(resource_id, istorage = None):
     """
     create a resource bag on iRODS side by running the bagit rule followed by ibun zipping operation
@@ -191,6 +211,7 @@ def create_bag_by_irods(resource_id, istorage = None):
             istorage.zipup(irods_bagit_input_path, 'bags/{res_id}.zip'.format(res_id=resource_id))
         except SessionException:
             pass
+
 
 def create_bag(resource):
     """
@@ -256,69 +277,81 @@ def read_bag(bag_path):
         if tmpdir:
             shutil.rmtree(tmpdir)
 
+
 def read_resource_map(bag_content_path):
+    """
+    Attempt to read resource metadata out of the resourcemap.xml of the
+     exploded bag path
+    :param bag_content_path: String representing the filesystem path of
+     exploded bag contents
+    :return: Tuple of type (ResourceMeta, String) where String represents the
+     relative path of the resourcemetadata.xml, within bag_content_path,
+     from which further metadata can be read.
+    :raises: HsBagitException if metadata cannot be found or do not appear
+     as expected.
+    """
     rmap_path = os.path.join(bag_content_path, 'data', 'resourcemap.xml')
     if not os.path.isfile(rmap_path):
         raise HsBagitException("Resource map {0} does not exist".format(rmap_path))
     if not os.access(rmap_path, os.R_OK):
         raise HsBagitException("Unable to read resource map {0}".format(rmap_path))
 
+    res_meta = ResourceMeta()
+
     g = Graph()
     g.parse(rmap_path)
     # Get resource ID
-    res_id = None
     for s,p,o in g.triples((None, None, None)):
         if s.endswith("resourcemap.xml") and p == rdflib.namespace.DC.identifier:
-            res_id = o
-            #print("Subject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
-            #    ....:
-            # Subject: http://www.hydroshare.org/resource/57d8a925efbd4c33ac074297ade37ad8/data/resourcemap.xml
-            # pred: http://purl.org/dc/elements/1.1/identifier
-            # obj: 57d8a925efbd4c33ac074297ade37ad8
-    if res_id is None:
+            res_meta.id = o
+    if res_meta.id is None:
         raise HsBagitException("Unable to determine resource ID from resource map {0}".format(rmap_path))
+    print("Resource ID is {0}".format(res_meta.id))
 
-    print("Resource ID is {0}".format(res_id))
+    # Build URI reference for #aggregation section of resource map
+    res_root_uri = "http://www.hydroshare.org/resource/{res_id}/".format(res_id=res_meta.id)
+    res_agg_subj = "{res_root_url}data/resourcemap.xml#aggregation".format(res_root_url=res_root_uri)
+    res_agg = URIRef(res_agg_subj)
 
-    res_root_url = "http://www.hydroshare.org/resource/{res_id}".format(res_id=res_id)
-    res_agg_subj = "{res_root_url}/data/resourcemap.xml#aggregation".format(res_root_url=res_root_url)
-    rmap = URIRef(res_agg_subj)
-    titleLit = g.value(rmap, rdflib.namespace.DC.title)
-    title = str(titleLit)
+    # Get resource type
+    type_lit = g.value(res_agg, rdflib.namespace.DCTERMS.type)
+    if type_lit is None:
+        raise HsBagitException("No resource type found in resource map {0}".format(rmap_path))
+    res_meta.res_type = str(type_lit)
+    print("\tType is {0}".format(res_meta.res_type))
 
-    print("\tTitle is {0}".format(title))
-
-    typeLit = g.value(rmap, rdflib.namespace.DCTERMS.type)
-    res_type = str(typeLit)
-
-    print("\tType is {0}".format(res_type))
+    # Get resource title
+    title_lit = g.value(res_agg, rdflib.namespace.DC.title)
+    if title_lit is None:
+        raise HsBagitException("No resource title found in resource map {0}".format(rmap_path))
+    res_meta.title = str(title_lit)
+    print("\tTitle is {0}".format(res_meta.title))
 
     # Get list of files in resource
-    res_meta_uri = None
-    contents_uri_list = []
+    res_meta_path = None
     ore = rdflib.namespace.Namespace('http://www.openarchives.org/ore/terms/')
-    for s,p,o in g.triples((rmap, ore.aggregates, None)):
-        # TODO: filter out resource metadata?
-        # print("Subject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
-
+    for s,p,o in g.triples((res_agg, ore.aggregates, None)):
         if o.endswith('resourcemetadata.xml'):
-            if res_meta_uri != None and o != res_meta_uri:
+            if res_meta_path is not None and o != res_meta_path:
                 msg = "More than one resource metadata URI found. "
                 msg += "(first: {first}, second: {second}".format(first=res_meta_uri,
                                                                   second=o)
                 raise HsBagitException(msg)
-            res_meta_uri = o
+            res_meta_path = o.split(res_root_uri)[1]
             continue
 
-        contents_uri_list.append(o)
+        res_meta.files.append(o.split(res_root_uri)[1])
 
-    if res_meta_uri == None:
-        raise HsBagitException("No resource metadata URI found.")
+    if res_meta_path is None:
+        raise HsBagitException("No resource metadata found in resource map {0}".format(rmap_path))
 
-    print("\tResource metadata URI {0}".format(res_meta_uri))
+    print("\tResource metadata path {0}".format(res_meta_path))
 
-    for uri in contents_uri_list:
-        print("\tContents URI: {0}".format(uri))
+    for uri in res_meta.files:
+        print("\tContents: {0}".format(uri))
+
+    return (res_meta, res_meta_path)
+
 
 def read_bag_meta(bag_content_path):
     read_resource_map(bag_content_path)
