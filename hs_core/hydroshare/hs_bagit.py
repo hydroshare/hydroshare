@@ -294,10 +294,31 @@ def read_resource_map(bag_content_path):
     print("\tType is {0}".format(res_type))
 
     # Get list of files in resource
+    res_meta_uri = None
+    contents_uri_list = []
     ore = rdflib.namespace.Namespace('http://www.openarchives.org/ore/terms/')
     for s,p,o in g.triples((rmap, ore.aggregates, None)):
         # TODO: filter out resource metadata?
-        print("Subject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
+        # print("Subject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
+
+        if o.endswith('resourcemetadata.xml'):
+            if res_meta_uri != None and o != res_meta_uri:
+                msg = "More than one resource metadata URI found. "
+                msg += "(first: {first}, second: {second}".format(first=res_meta_uri,
+                                                                  second=o)
+                raise HsBagitException(msg)
+            res_meta_uri = o
+            continue
+
+        contents_uri_list.append(o)
+
+    if res_meta_uri == None:
+        raise HsBagitException("No resource metadata URI found.")
+
+    print("\tResource metadata URI {0}".format(res_meta_uri))
+
+    for uri in contents_uri_list:
+        print("\tContents URI: {0}".format(uri))
 
 def read_bag_meta(bag_content_path):
     read_resource_map(bag_content_path)
