@@ -10,6 +10,7 @@ from mezzanine.pages.page_processors import processor_for
 from lxml import etree
 from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_model_program.models import ModelProgramResource
+from hs_core.hydroshare import utils
 
 import logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(message)s')
