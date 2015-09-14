@@ -26,14 +26,49 @@
                     {%  endif %}
                 </div>
                 <div>
-                    {% if executed_by.name %}
+                    {% if executed_by.model_program_fk %}
                         <h4><strong>Executed By:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            <div class="col-sm-4"><strong>Model Program used for execution:</strong></div>
-                            <div class="col-sm-8">{{ executed_by.name }}</div>
+
+                            <div class="col-sm-4"><strong>Name</strong></div>
+                            <div class="col-sm-8">{{ executed_by.model_program_fk.title }}</div>
+
+                            <div class="col-sm-4"><strong>Version</strong></div>
+                            <div class="col-sm-8">
+                                {% if executed_by.model_program_fk.metadata.program.software_version.strip %}
+                                    {{ executed_by.model_program_fk.metadata.program.software_version }}
+                                {% else %}
+                                    Not Provided
+                                {% endif %}
+
+                            </div>
+
+                            <div class="col-sm-4"><strong>Resource URL</strong></div>
+
+                            <div class="col-sm-8">
+                                {% if request.is_secure %}
+                                    <a id="permalink"
+                                       href="https://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/"
+                                       target="_blank">https://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
+                                {% else %}
+                                    <a id="permalink"
+                                       href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/"
+                                       target="_blank">http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
+                                {% endif %}
+                            </div>
                         </div>
-                    <hr style="border:0">
+
+                        <hr>
+
+                    {% else %}
+                        <h4><strong>Executed By:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Name</strong></div>
+                            <div class="col-sm-8">Unspecified</div>
+                        </div>
+
                     {% endif %}
                 </div>
                 <div>
