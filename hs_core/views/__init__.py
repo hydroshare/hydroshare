@@ -459,10 +459,10 @@ class FilterForm(forms.Form):
 
 @processor_for('my-resources')
 def my_resources(request, page):
-    # import sys
-    # sys.path.append("/home/docker/pycharm-debug")
-    # import pydevd
-    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('144.39.201.91', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
     if frm.is_valid():
