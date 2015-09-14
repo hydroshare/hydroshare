@@ -123,33 +123,6 @@ class ExecutedByValidationForm(forms.Form):
     model_program_fk = forms
 
 
-
-
-# class ExecutedByFormHelper(BaseFormHelper):
-#     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
-#
-#         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-#         layout = Layout(
-#                         MetadataField('name'),
-#                  )
-#
-#         kwargs['element_name_label'] = 'Model Program used for execution'
-#         super(ExecutedByFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
-#
-#
-# class ExecutedByForm(ModelForm):
-#     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-#         super(ExecutedByForm, self).__init__(*args, **kwargs)
-#         self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy')
-#
-#     class Meta:
-#         model = ExecutedBy
-#         fields = ('name',)
-#
-# class ExecutedByValidationForm(forms.Form):
-#     name = forms.CharField(max_length=200)
-
-
 class ModelObjectiveFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
