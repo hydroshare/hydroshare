@@ -5,7 +5,10 @@ import errno
 import tempfile
 import mimetypes
 import zipfile
+import datetime
+import re
 
+import pytz
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 import rdflib
 from rdflib import URIRef
@@ -20,6 +23,34 @@ from mezzanine.conf import settings
 from hs_core.models import Bags, ResourceFile
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
+
+
+# TODO: Should go in utils
+HS_DATE_PATT = "^(?P<year>[0-9]{4})-(?P<month>[0-9]{2})-(?P<day>[0-9]{2})"
+HS_DATE_PATT += "T(?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})"
+HS_DATE_PATT += "T(?P<tz>\S+)$"
+HS_DATE_RE = re.compile(HS_DATE_PATT)
+
+def hs_date_to_datetime(datestr):
+    """
+    Parse HydroShare (HS) formatted date from a String to a datetime.datetime.
+     Note: We use a weird TZ format, that does not appear to be ISO 8601
+     compliant, e.g.: 2015-06-03T09:29:00T-00003
+    :param datestr: String representing the date in HS format
+    :return: datetime.datetime with timezone set to UTC
+    """
+    m = HS_DATE_RE.match(datestr)
+    if m is None:
+        msg = "Unable to parse creation date {0}.".format(datestr)
+        raise HsBagitException(msg)
+    ret_date = datetime.datetime(year=int(m.group('year')),
+                                 month=int(m.group('month')),
+                                 day=int(m.group('day')),
+                                 hour=int(m.group('hour')),
+                                 minute=int(m.group('minute')),
+                                 second=int(m.group('second')),
+                                 tzinfo=pytz.utc)
+    return ret_date
 
 
 class ResourceMeta(object):
@@ -443,6 +474,16 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
 
     for c in res_meta.creators:
         print("\t\tCreator: {0}".format(str(c)))
+
+    # Get creation date
+    for s,p,o in g.triples((None, None, rdflib.namespace.DCTERMS.created)):
+        created_lit = g.value(s, rdflib.namespace.RDF.value)
+        if created_lit is None:
+            msg = "Resource metadata {0} does not contain a creation date.".format(rmeta_path)
+            raise HsBagitException(msg)
+        res_meta.creation_date = hs_date_to_datetime(str(created_lit))
+
+    print("\t\tCreation date: {0}".format(str(res_meta.creation_date)))
 
 
 
