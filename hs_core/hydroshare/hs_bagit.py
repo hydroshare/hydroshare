@@ -72,7 +72,7 @@ class ResourceMeta(object):
     keywords = []
     creators = []
     language = None
-    rights_uri = None
+    rights = None
     creation_date = None
     modification_date = None
 
@@ -535,11 +535,21 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
             msg = "Resource metadata {0} does not contain rights statement.".format(rmeta_path)
             raise HsBagitException(msg)
         resource_rights.statement = str(rights_stmt_lit)
+
     if resource_rights is None:
         msg = "Resource metadata {0} does not contain rights.".format(rmeta_path)
         raise HsBagitException(msg)
 
-    print("\t\tRights: {0}".format(resource_rights))
+    res_meta.rights = resource_rights
+
+    print("\t\tRights: {0}".format(res_meta.rights))
+
+    # Get keywords
+    for s,p,o in g.triples((None, rdflib.namespace.DC.subject, None)):
+        # print("Subject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
+        res_meta.keywords.append(str(o))
+
+    print("\t\tKeywords: {0}".format(str(res_meta.keywords)))
 
 
 def read_bag_meta(bag_content_path):
