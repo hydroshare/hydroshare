@@ -75,6 +75,7 @@ class ResourceMeta(object):
     rights = None
     creation_date = None
     modification_date = None
+    language = None
 
     def __init__(self):
         pass
@@ -444,6 +445,8 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
     :param res_meta: ResourceMeta representing resource metadata
     :return: None
     """
+    # TODO: Parse: dc:language, dc:coverage (raster, time series), dc:relation->dcterms:isDataFor (raster), dc:source->dcterms:isDerivedFrom (raster)
+    # TODO: What to do about contributors?
     rmeta_path = os.path.join(bag_content_path, res_meta_path)
     if not os.path.isfile(rmeta_path):
         raise HsBagitException("Resource metadata {0} does not exist".format(rmeta_path))
@@ -458,11 +461,12 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
 
     # Make sure title matches that from resource map
     title_lit = g.value(res_uri, rdflib.namespace.DC.title)
-    title = str(title_lit)
-    if title != res_meta.title:
-        msg = "Title from resource metadata {0} "
-        msg += "does not match title from resource map {1}".format(title, res_meta.title)
-        raise HsBagitException(msg)
+    if title_lit is not None:
+        title = str(title_lit)
+        if title != res_meta.title:
+            msg = "Title from resource metadata {0} "
+            msg += "does not match title from resource map {1}".format(title, res_meta.title)
+            raise HsBagitException(msg)
 
     # Get abstract
     for s,p,o in g.triples((None, rdflib.namespace.DCTERMS.abstract, None)):
@@ -548,6 +552,15 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
         res_meta.keywords.append(str(o))
 
     print("\t\tKeywords: {0}".format(str(res_meta.keywords)))
+
+    # Get language
+    lang_lit = g.value(res_uri, rdflib.namespace.DC.language)
+    if lang_lit is None:
+        res_meta.language = 'eng'
+    else:
+        res_meta.language = str(lang_lit)
+
+    print("\t\tLanguage: {0}".format(res_meta.language))
 
 
 def read_bag_meta(bag_content_path):
