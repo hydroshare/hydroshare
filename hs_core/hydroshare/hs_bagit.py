@@ -104,6 +104,7 @@ class ResourceMeta(object):
     creators = []
     contributors = []
     coverages = []
+    relations = []
     language = None
     rights = None
     creation_date = None
@@ -398,6 +399,34 @@ class ResourceCoverageBox(ResourceCoverage):
         if self.zunits is None and (self.uplimit is not None or self.downlimit is not None):
             msg = "Point coverage '{0}' contains uplimit or downlimit but does not contain zunits.".format(value_str)
             raise ResourceMetaException(msg)
+
+
+class ResourceRelation(object):
+    KNOWN_TYPES = {'isParentOf', 'isChildOf', 'isMemberOf', 'isDerivedFrom',
+                   'hasBibliographicInfoIn', 'isRevisionHistoryFor',
+                   'isCriticalReviewOf','isOverviewOf', 'isContentRatingFor',
+                   'isTermsandConditionsFor', 'isDataFor', 'isPartOf',
+                   'isExecutedBy', 'isDataFor', 'isVersionOf'}
+
+    uri = None
+    relationship_type = None
+
+    def __str__(self):
+        msg = "ResourceRelation {relationship_type}: {uri}"
+        msg = msg.format(relationship_type=self.relationship_type,
+                         uri=self.uri)
+        return msg.format(msg)
+
+    def __unicode__(self):
+        return unicode(str(self))
+
+    def __init__(self, uri, relationship_uri):
+        relationship_type = os.path.basename(relationship_uri)
+        if relationship_type not in self.KNOWN_TYPES:
+            msg = "Relationship uri {0} is not known.".format(relationship_uri)
+            raise ResourceMetaException(msg)
+        self.uri = uri
+        self.relationship_type = relationship_type
 
 
 class ResourceMetaException(Exception):
@@ -729,7 +758,7 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
     :param res_meta: ResourceMeta representing resource metadata
     :return: None
     """
-    # TODO: Parse: dc:coverage (raster, time series), dc:relation->dcterms:isDataFor (raster), dc:source->dcterms:isDerivedFrom (raster)
+    # TODO: Parse: dc:relation->dcterms:isDataFor (raster), dc:source->dcterms:isDerivedFrom (raster)
     rmeta_path = os.path.join(bag_content_path, res_meta_path)
     if not os.path.isfile(rmeta_path):
         raise ResourceMetaException("Resource metadata {0} does not exist".format(rmeta_path))
@@ -897,6 +926,16 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
     print("\t\tCoverages: ")
     for c in res_meta.coverages:
         print("\t\t\t{0}".format(str(c)))
+
+    # Get relations
+    for s,p,o in g.triples((None, rdflib.namespace.DC.relation, None)):
+        for pred, obj in g.predicate_objects(o):
+            relation = ResourceRelation(obj, pred)
+            res_meta.relations.append(relation)
+
+    print("\t\tRelations: ")
+    for r in res_meta.relations:
+        print("\t\t\t{0}".format(str(r)))
 
 
 def read_bag_meta(bag_content_path):
