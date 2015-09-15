@@ -31,6 +31,11 @@ HS_DATE_PATT += "T(?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})"
 HS_DATE_PATT += "T(?P<tz>\S+)$"
 HS_DATE_RE = re.compile(HS_DATE_PATT)
 
+HS_DATE_ISO_PATT = "^(?P<year>[0-9]{4})-(?P<month>[0-9]{2})-(?P<day>[0-9]{2})"
+HS_DATE_ISO_PATT += "T(?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})"
+HS_DATE_ISO_PATT += "(?P<tz>\S+)$"
+HS_DATE_ISO_RE = re.compile(HS_DATE_ISO_PATT)
+
 
 def hs_date_to_datetime(datestr):
     """
@@ -42,7 +47,7 @@ def hs_date_to_datetime(datestr):
     """
     m = HS_DATE_RE.match(datestr)
     if m is None:
-        msg = "Unable to parse creation date {0}.".format(datestr)
+        msg = "Unable to parse date {0}.".format(datestr)
         raise ResourceMetaException(msg)
     try:
         ret_date = datetime.datetime(year=int(m.group('year')),
@@ -53,8 +58,34 @@ def hs_date_to_datetime(datestr):
                                      second=int(m.group('second')),
                                      tzinfo=pytz.utc)
     except Exception as e:
-        msg = "Unable to parse creation date {0}, error {1}.".format(datestr,
-                                                                     str(e))
+        msg = "Unable to parse date {0}, error {1}.".format(datestr,
+                                                            str(e))
+        raise ResourceMetaException(msg)
+
+    return ret_date
+
+
+def hs_date_to_datetime_iso(datestr):
+    """
+    Parse the ISO 8601-formatted HydroShare (HS) date from a String to a datetime.datetime.
+    :param datestr: String representing the date in HS format
+    :return: datetime.datetime with timezone set to UTC
+    """
+    m = HS_DATE_ISO_RE.match(datestr)
+    if m is None:
+        msg = "Unable to parse date {0}.".format(datestr)
+        raise ResourceMetaException(msg)
+    try:
+        ret_date = datetime.datetime(year=int(m.group('year')),
+                                     month=int(m.group('month')),
+                                     day=int(m.group('day')),
+                                     hour=int(m.group('hour')),
+                                     minute=int(m.group('minute')),
+                                     second=int(m.group('second')),
+                                     tzinfo=pytz.utc)
+    except Exception as e:
+        msg = "Unable to parse date {0}, error {1}.".format(datestr,
+                                                            str(e))
         raise ResourceMetaException(msg)
 
     return ret_date
@@ -72,7 +103,7 @@ class ResourceMeta(object):
     keywords = []
     creators = []
     contributors = []
-    coverage = None
+    coverages = []
     language = None
     rights = None
     creation_date = None
@@ -150,6 +181,194 @@ class ResourceRights(object):
 
     def __unicode__(self):
         return unicode(str(self))
+
+
+class ResourceCoverage(object):
+    pass
+
+
+class ResourceCoveragePeriod(ResourceCoverage):
+    """
+    Time period resource coverage.
+    """
+    name = None # Optional
+    start_date = None
+    end_date = None
+    scheme = None
+
+    def __init__(self, value_str):
+        kvp = value_str.split(';')
+        for pair in kvp:
+            print(pair)
+            (key, value) = pair.split('=')
+            key = key.strip()
+            value = value.strip()
+            if key == 'start':
+                try:
+                    self.start_date = hs_date_to_datetime_iso(value)
+                except Exception as e:
+                    msg = "Unable to parse start date {0}, error: {1}".format(value,
+                                                                              str(e))
+                    raise ResourceMetaException(msg)
+            elif key == 'end':
+                try:
+                    self.end_date = hs_date_to_datetime_iso(value)
+                except Exception as e:
+                    msg = "Unable to parse end date {0}, error: {1}".format(value,
+                                                                            str(e))
+                    raise ResourceMetaException(msg)
+            elif key == 'scheme':
+                self.scheme = value
+            elif key == 'name':
+                self.name = value
+
+        if self.start_date is None:
+            msg = "Period coverage '{0}' does not contain start date.".format(value_str)
+            raise ResourceMetaException(msg)
+        if self.end_date is None:
+            msg = "Period coverage '{0}' does not contain end date.".format(value_str)
+            raise ResourceMetaException(msg)
+        if self.scheme is None:
+            msg = "Period coverage '{0}' does not contain scheme.".format(value_str)
+            raise ResourceMetaException(msg)
+
+
+class ResourceCoveragePoint(ResourceCoverage):
+    """
+    Point geographic resource coverage.
+    """
+    name = None # Optional
+    east = None
+    north = None
+    units = None
+    elevation = None # Optional
+    zunits = None # Optional
+    projection = None # Optional
+
+    def __init__(self, value_str):
+        kvp = value_str.split(';')
+        for pair in kvp:
+            print(pair)
+            (key, value) = pair.split('=')
+            key = key.strip()
+            value = value.strip()
+            if key == 'name':
+                self.name = value
+            elif key == 'east':
+                try:
+                    self.east = float(value)
+                except Exception as e:
+                    msg = "Unable to parse easting {0}, error: {1}".format(value,
+                                                                           str(e))
+                    raise ResourceMetaException(msg)
+            elif key == 'north':
+                try:
+                    self.north = float(value)
+                except Exception as e:
+                    msg = "Unable to parse northing {0}, error: {1}".format(value,
+                                                                            str(e))
+                    raise ResourceMetaException(msg)
+            elif key == 'units':
+                self.units = value
+            elif key == 'projection':
+                self.projection = value
+            elif key == 'elevation':
+                try:
+                    self.elevation = float(value)
+                except Exception as e:
+                    msg = "Unable to parse elevation {0}, error: {1}".format(value,
+                                                                             str(e))
+                    raise ResourceMetaException(msg)
+            elif key == 'zunits':
+                self.zunits = value
+
+        if self.east is None:
+            msg = "Point coverage '{0}' does not contain an easting.".format(value_str)
+            raise ResourceMetaException(msg)
+        if self.north is None:
+            msg = "Point coverage '{0}' does not contain a northing.".format(value_str)
+            raise ResourceMetaException(msg)
+        if self.units is None:
+            msg = "Point coverage '{0}' does not contain units information.".format(value_str)
+            raise ResourceMetaException(msg)
+
+
+class ResourceCoverageBox(ResourceCoverage):
+    """
+    Box geographic resource coverage.
+    """
+    name = None # Optional
+    northlimit = None
+    eastlimit = None
+    southlimit = None
+    westlimit = None
+    units = None
+    projection = None # Optional
+    uplimit = None # Optional
+    downlimit = None # Optional
+    zunits = None # Only present if uplimit or downlimit is present
+
+    def __init__(self, value_str):
+        kvp = value_str.split(';')
+        for pair in kvp:
+            print(pair)
+            (key, value) = pair.split('=')
+            key = key.strip()
+            value = value.strip()
+            if key == 'name':
+                self.name = value
+            elif key == 'eastlimit':
+                try:
+                    self.eastlimit = float(value)
+                except Exception as e:
+                    msg = "Unable to parse east limit {0}, error: {1}".format(value,
+                                                                              str(e))
+                    raise ResourceMetaException(msg)
+            elif key == 'northlimit':
+                try:
+                    self.northlimit = float(value)
+                except Exception as e:
+                    msg = "Unable to parse north limit {0}, error: {1}".format(value,
+                                                                               str(e))
+                    raise ResourceMetaException(msg)
+            elif key == 'southlimit':
+                try:
+                    self.southlimit = float(value)
+                except Exception as e:
+                    msg = "Unable to parse south limit {0}, error: {1}".format(value,
+                                                                               str(e))
+                    raise ResourceMetaException(msg)
+            elif key == 'westlimit':
+                try:
+                    self.westlimit = float(value)
+                except Exception as e:
+                    msg = "Unable to parse west limit {0}, error: {1}".format(value,
+                                                                              str(e))
+                    raise ResourceMetaException(msg)
+            elif key == 'units':
+                self.units = value
+            elif key == 'projection':
+                self.projection = value
+            elif key == 'uplimit':
+                try:
+                    self.uplimit = float(value)
+                except Exception as e:
+                    msg = "Unable to parse uplimit {0}, error: {1}".format(value,
+                                                                           str(e))
+                    raise ResourceMetaException(msg)
+            elif key == 'downlimit':
+                try:
+                    self.downlimit = float(value)
+                except Exception as e:
+                    msg = "Unable to parse downlimit {0}, error: {1}".format(value,
+                                                                             str(e))
+                    raise ResourceMetaException(msg)
+            elif key == 'zunits':
+                self.zunits = value
+
+        if self.zunits is None and (self.uplimit is not None or self.downlimit is not None):
+            msg = "Point coverage '{0}' contains uplimit or downlimit but does not contain zunits.".format(value_str)
+            raise ResourceMetaException(msg)
 
 
 class ResourceMetaException(Exception):
