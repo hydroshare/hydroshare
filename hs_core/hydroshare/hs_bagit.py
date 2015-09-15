@@ -105,6 +105,7 @@ class ResourceMeta(object):
     contributors = []
     coverages = []
     relations = []
+    sources = []
     language = None
     rights = None
     creation_date = None
@@ -412,8 +413,9 @@ class ResourceRelation(object):
     relationship_type = None
 
     def __str__(self):
-        msg = "ResourceRelation {relationship_type}: {uri}"
-        msg = msg.format(relationship_type=self.relationship_type,
+        msg = "{classname} {relationship_type}: {uri}"
+        msg = msg.format(classname=type(self).__name__,
+                         relationship_type=self.relationship_type,
                          uri=self.uri)
         return msg.format(msg)
 
@@ -427,6 +429,10 @@ class ResourceRelation(object):
             raise ResourceMetaException(msg)
         self.uri = uri
         self.relationship_type = relationship_type
+
+
+class ResourceSource(ResourceRelation):
+    KNOWN_TYPES = {'isDerivedFrom'}
 
 
 class ResourceMetaException(Exception):
@@ -935,6 +941,16 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
 
     print("\t\tRelations: ")
     for r in res_meta.relations:
+        print("\t\t\t{0}".format(str(r)))
+
+    # Get sources
+    for s,p,o in g.triples((None, rdflib.namespace.DC.source, None)):
+        for pred, obj in g.predicate_objects(o):
+            source = ResourceSource(obj, pred)
+            res_meta.sources.append(source)
+
+    print("\t\tSources: ")
+    for r in res_meta.sources:
         print("\t\t\t{0}".format(str(r)))
 
 
