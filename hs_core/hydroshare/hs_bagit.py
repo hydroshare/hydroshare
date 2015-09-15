@@ -31,6 +31,7 @@ HS_DATE_PATT += "T(?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})"
 HS_DATE_PATT += "T(?P<tz>\S+)$"
 HS_DATE_RE = re.compile(HS_DATE_PATT)
 
+
 def hs_date_to_datetime(datestr):
     """
     Parse HydroShare (HS) formatted date from a String to a datetime.datetime.
@@ -43,13 +44,19 @@ def hs_date_to_datetime(datestr):
     if m is None:
         msg = "Unable to parse creation date {0}.".format(datestr)
         raise HsBagitException(msg)
-    ret_date = datetime.datetime(year=int(m.group('year')),
-                                 month=int(m.group('month')),
-                                 day=int(m.group('day')),
-                                 hour=int(m.group('hour')),
-                                 minute=int(m.group('minute')),
-                                 second=int(m.group('second')),
-                                 tzinfo=pytz.utc)
+    try:
+        ret_date = datetime.datetime(year=int(m.group('year')),
+                                     month=int(m.group('month')),
+                                     day=int(m.group('day')),
+                                     hour=int(m.group('hour')),
+                                     minute=int(m.group('minute')),
+                                     second=int(m.group('second')),
+                                     tzinfo=pytz.utc)
+    except Exception as e:
+        msg = "Unable to parse creation date {0}, error {1}.".format(datestr,
+                                                                     str(e))
+        raise HsBagitException(msg)
+
     return ret_date
 
 
@@ -484,6 +491,16 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
         res_meta.creation_date = hs_date_to_datetime(str(created_lit))
 
     print("\t\tCreation date: {0}".format(str(res_meta.creation_date)))
+
+    # Get modification date
+    for s,p,o in g.triples((None, None, rdflib.namespace.DCTERMS.modified)):
+        modified_lit = g.value(s, rdflib.namespace.RDF.value)
+        if modified_lit is None:
+            msg = "Resource metadata {0} does not contain a modification date.".format(rmeta_path)
+            raise HsBagitException(msg)
+        res_meta.modification_date = hs_date_to_datetime(str(modified_lit))
+
+    print("\t\tModification date: {0}".format(str(res_meta.modification_date)))
 
 
 
