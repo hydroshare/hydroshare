@@ -196,10 +196,19 @@ class ResourceCoveragePeriod(ResourceCoverage):
     end_date = None
     scheme = None
 
+    def __str__(self):
+        msg = "ResourceCoveragePeriod start_date: {start_date}, "
+        msg += "end_date: {end_date}, scheme: {scheme}"
+        msg = msg.format(start_date=self.start_date, end_date=self.end_date,
+                         scheme=self.scheme)
+        return msg.format(msg)
+
+    def __unicode__(self):
+        return unicode(str(self))
+
     def __init__(self, value_str):
         kvp = value_str.split(';')
         for pair in kvp:
-            print(pair)
             (key, value) = pair.split('=')
             key = key.strip()
             value = value.strip()
@@ -245,10 +254,19 @@ class ResourceCoveragePoint(ResourceCoverage):
     zunits = None # Optional
     projection = None # Optional
 
+    def __str__(self):
+        msg = "ResourceCoveragePoint north: {north}, "
+        msg += "east: {east}, units: {units}"
+        msg = msg.format(north=self.north, east=self.east,
+                         units=self.units)
+        return msg.format(msg)
+
+    def __unicode__(self):
+        return unicode(str(self))
+
     def __init__(self, value_str):
         kvp = value_str.split(';')
         for pair in kvp:
-            print(pair)
             (key, value) = pair.split('=')
             key = key.strip()
             value = value.strip()
@@ -308,10 +326,21 @@ class ResourceCoverageBox(ResourceCoverage):
     downlimit = None # Optional
     zunits = None # Only present if uplimit or downlimit is present
 
+    def __str__(self):
+        msg = "ResourceCoverageBox northlimit: {northlimit}, "
+        msg += "eastlimit: {eastlimit}, southlimit: {southlimit}, "
+        msg += "westlimit: {westlimit}, units: {units}"
+        msg = msg.format(northlimit=self.northlimit, eastlimit=self.eastlimit,
+                         southlimit=self.southlimit, westlimit=self.westlimit,
+                         units=self.units)
+        return msg.format(msg)
+
+    def __unicode__(self):
+        return unicode(str(self))
+
     def __init__(self, value_str):
         kvp = value_str.split(';')
         for pair in kvp:
-            print(pair)
             (key, value) = pair.split('=')
             key = key.strip()
             value = value.strip()
@@ -838,8 +867,36 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
 
     print("\t\tLanguage: {0}".format(res_meta.language))
 
-    # Get coverage
+    # Get coverage (box)
+    for s,p,o in g.triples((None, None, rdflib.namespace.DCTERMS.box)):
+        coverage_lit = g.value(s, rdflib.namespace.RDF.value)
+        if coverage_lit is None:
+            msg = "Coverage value not found for {0}.".format(o)
+            raise ResourceMetaException(msg)
+        coverage = ResourceCoverageBox(str(coverage_lit))
+        res_meta.coverages.append(coverage)
 
+    # Get coverage (point)
+    for s,p,o in g.triples((None, None, rdflib.namespace.DCTERMS.point)):
+        coverage_lit = g.value(s, rdflib.namespace.RDF.value)
+        if coverage_lit is None:
+            msg = "Coverage value not found for {0}.".format(o)
+            raise ResourceMetaException(msg)
+        coverage = ResourceCoveragePoint(str(coverage_lit))
+        res_meta.coverages.append(coverage)
+
+    # Get coverage (period)
+    for s,p,o in g.triples((None, None, rdflib.namespace.DCTERMS.period)):
+        coverage_lit = g.value(s, rdflib.namespace.RDF.value)
+        if coverage_lit is None:
+            msg = "Coverage value not found for {0}.".format(o)
+            raise ResourceMetaException(msg)
+        coverage = ResourceCoveragePeriod(str(coverage_lit))
+        res_meta.coverages.append(coverage)
+
+    print("\t\tCoverages: ")
+    for c in res_meta.coverages:
+        print("\t\t\t{0}".format(str(c)))
 
 
 def read_bag_meta(bag_content_path):
