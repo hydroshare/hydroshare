@@ -474,7 +474,6 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
     for s,p,o in g.triples((None, rdflib.namespace.DC.creator, None)):
         creator = ResourceCreator()
         creator.uri = o
-        # print("\t\tSubject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
         # Get name
         name_lit = g.value(o, hsterms.name)
         if name_lit is None:
