@@ -43,7 +43,7 @@ def hs_date_to_datetime(datestr):
     m = HS_DATE_RE.match(datestr)
     if m is None:
         msg = "Unable to parse creation date {0}.".format(datestr)
-        raise HsBagitException(msg)
+        raise ResourceMetaException(msg)
     try:
         ret_date = datetime.datetime(year=int(m.group('year')),
                                      month=int(m.group('month')),
@@ -55,7 +55,7 @@ def hs_date_to_datetime(datestr):
     except Exception as e:
         msg = "Unable to parse creation date {0}, error {1}.".format(datestr,
                                                                      str(e))
-        raise HsBagitException(msg)
+        raise ResourceMetaException(msg)
 
     return ret_date
 
@@ -72,6 +72,7 @@ class ResourceMeta(object):
     keywords = []
     creators = []
     contributors = []
+    coverage = None
     language = None
     rights = None
     creation_date = None
@@ -149,6 +150,10 @@ class ResourceRights(object):
 
     def __unicode__(self):
         return unicode(str(self))
+
+
+class ResourceMetaException(Exception):
+    pass
 
 
 class HsBagitException(Exception):
@@ -397,14 +402,14 @@ def read_resource_map(bag_content_path):
     :return: Tuple of type (ResourceMeta, String) where String represents the
      relative path of the resourcemetadata.xml, within bag_content_path,
      from which further metadata can be read.
-    :raises: HsBagitException if metadata cannot be found or do not appear
+    :raises: ResourceMetaException if metadata cannot be found or do not appear
      as expected.
     """
     rmap_path = os.path.join(bag_content_path, 'data', 'resourcemap.xml')
     if not os.path.isfile(rmap_path):
-        raise HsBagitException("Resource map {0} does not exist".format(rmap_path))
+        raise ResourceMetaException("Resource map {0} does not exist".format(rmap_path))
     if not os.access(rmap_path, os.R_OK):
-        raise HsBagitException("Unable to read resource map {0}".format(rmap_path))
+        raise ResourceMetaException("Unable to read resource map {0}".format(rmap_path))
 
     res_meta = ResourceMeta()
 
@@ -415,7 +420,7 @@ def read_resource_map(bag_content_path):
         if s.endswith("resourcemap.xml") and p == rdflib.namespace.DC.identifier:
             res_meta.id = o
     if res_meta.id is None:
-        raise HsBagitException("Unable to determine resource ID from resource map {0}".format(rmap_path))
+        raise ResourceMetaException("Unable to determine resource ID from resource map {0}".format(rmap_path))
     print("Resource ID is {0}".format(res_meta.id))
 
     # Build URI reference for #aggregation section of resource map
@@ -427,14 +432,14 @@ def read_resource_map(bag_content_path):
     # Get resource type
     type_lit = g.value(res_agg, rdflib.namespace.DCTERMS.type)
     if type_lit is None:
-        raise HsBagitException("No resource type found in resource map {0}".format(rmap_path))
+        raise ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
     res_meta.res_type = str(type_lit)
     print("\tType is {0}".format(res_meta.res_type))
 
     # Get resource title
     title_lit = g.value(res_agg, rdflib.namespace.DC.title)
     if title_lit is None:
-        raise HsBagitException("No resource title found in resource map {0}".format(rmap_path))
+        raise ResourceMetaException("No resource title found in resource map {0}".format(rmap_path))
     res_meta.title = str(title_lit)
     print("\tTitle is {0}".format(res_meta.title))
 
@@ -448,14 +453,14 @@ def read_resource_map(bag_content_path):
                 msg = "More than one resource metadata URI found. "
                 msg += "(first: {first}, second: {second}".format(first=res_meta_path,
                                                                   second=o)
-                raise HsBagitException(msg)
+                raise ResourceMetaException(msg)
             res_meta_path = o.split(res_root_uri_withslash)[1]
             continue
 
         res_meta.files.append(o.split(res_root_uri_withslash)[1])
 
     if res_meta_path is None:
-        raise HsBagitException("No resource metadata found in resource map {0}".format(rmap_path))
+        raise ResourceMetaException("No resource metadata found in resource map {0}".format(rmap_path))
 
     print("\tResource metadata path {0}".format(res_meta_path))
 
@@ -477,12 +482,11 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
     :return: None
     """
     # TODO: Parse: dc:coverage (raster, time series), dc:relation->dcterms:isDataFor (raster), dc:source->dcterms:isDerivedFrom (raster)
-    # TODO: What to do about contributors?  Looks the same as creator
     rmeta_path = os.path.join(bag_content_path, res_meta_path)
     if not os.path.isfile(rmeta_path):
-        raise HsBagitException("Resource metadata {0} does not exist".format(rmeta_path))
+        raise ResourceMetaException("Resource metadata {0} does not exist".format(rmeta_path))
     if not os.access(rmeta_path, os.R_OK):
-        raise HsBagitException("Unable to read resource metadata {0}".format(rmeta_path))
+        raise ResourceMetaException("Unable to read resource metadata {0}".format(rmeta_path))
 
     g = Graph()
     g.parse(rmeta_path)
@@ -497,7 +501,7 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
         if title != res_meta.title:
             msg = "Title from resource metadata {0} "
             msg += "does not match title from resource map {1}".format(title, res_meta.title)
-            raise HsBagitException(msg)
+            raise ResourceMetaException(msg)
 
     # Get abstract
     for s,p,o in g.triples((None, rdflib.namespace.DCTERMS.abstract, None)):
@@ -513,19 +517,19 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
         name_lit = g.value(o, hsterms.name)
         if name_lit is None:
             msg = "Name for creator {0} was not found.".format(o)
-            raise HsBagitException(msg)
+            raise ResourceMetaException(msg)
         creator.name = str(name_lit)
         # Get order
         order_lit = g.value(o, hsterms.creatorOrder)
         if order_lit is None:
             msg = "Order for creator {0} was not found.".format(o)
-            raise HsBagitException(msg)
+            raise ResourceMetaException(msg)
         creator.order = str(order_lit)
         # Get email
         email_lit = g.value(o, hsterms.email)
         if email_lit is None:
             msg = "E-mail for creator {0} was not found.".format(o)
-            raise HsBagitException(msg)
+            raise ResourceMetaException(msg)
         creator.email = str(email_lit)
 
         res_meta.creators.append(creator)
@@ -541,13 +545,13 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
         name_lit = g.value(o, hsterms.name)
         if name_lit is None:
             msg = "Name for contributor {0} was not found.".format(o)
-            raise HsBagitException(msg)
+            raise ResourceMetaException(msg)
         contributor.name = str(name_lit)
         # Get email
         email_lit = g.value(o, hsterms.email)
         if email_lit is None:
             msg = "E-mail for contributor {0} was not found.".format(o)
-            raise HsBagitException(msg)
+            raise ResourceMetaException(msg)
         contributor.email = str(email_lit)
 
         res_meta.contributors.append(contributor)
@@ -560,7 +564,7 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
         created_lit = g.value(s, rdflib.namespace.RDF.value)
         if created_lit is None:
             msg = "Resource metadata {0} does not contain a creation date.".format(rmeta_path)
-            raise HsBagitException(msg)
+            raise ResourceMetaException(msg)
         res_meta.creation_date = hs_date_to_datetime(str(created_lit))
 
     print("\t\tCreation date: {0}".format(str(res_meta.creation_date)))
@@ -570,7 +574,7 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
         modified_lit = g.value(s, rdflib.namespace.RDF.value)
         if modified_lit is None:
             msg = "Resource metadata {0} does not contain a modification date.".format(rmeta_path)
-            raise HsBagitException(msg)
+            raise ResourceMetaException(msg)
         res_meta.modification_date = hs_date_to_datetime(str(modified_lit))
 
     print("\t\tModification date: {0}".format(str(res_meta.modification_date)))
@@ -583,18 +587,18 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
         rights_uri = g.value(o, hsterms.URL)
         if rights_uri is None:
             msg = "Resource metadata {0} does not contain rights URI.".format(rmeta_path)
-            raise HsBagitException(msg)
+            raise ResourceMetaException(msg)
         resource_rights.uri = str(rights_uri)
         # Rights statement
         rights_stmt_lit = g.value(o, hsterms.rightsStatement)
         if rights_stmt_lit is None:
             msg = "Resource metadata {0} does not contain rights statement.".format(rmeta_path)
-            raise HsBagitException(msg)
+            raise ResourceMetaException(msg)
         resource_rights.statement = str(rights_stmt_lit)
 
     if resource_rights is None:
         msg = "Resource metadata {0} does not contain rights.".format(rmeta_path)
-        raise HsBagitException(msg)
+        raise ResourceMetaException(msg)
 
     res_meta.rights = resource_rights
 
@@ -614,6 +618,9 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
         res_meta.language = str(lang_lit)
 
     print("\t\tLanguage: {0}".format(res_meta.language))
+
+    # Get coverage
+
 
 
 def read_bag_meta(bag_content_path):
