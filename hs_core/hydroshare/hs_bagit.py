@@ -546,7 +546,6 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
 
     # Get keywords
     for s,p,o in g.triples((None, rdflib.namespace.DC.subject, None)):
-        # print("Subject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
         res_meta.keywords.append(str(o))
 
     print("\t\tKeywords: {0}".format(str(res_meta.keywords)))
