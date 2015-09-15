@@ -1,0 +1,72 @@
+import datetime
+import re
+
+import pytz
+
+HS_DATE_PATT = "^(?P<year>[0-9]{4})-(?P<month>[0-9]{2})-(?P<day>[0-9]{2})"
+HS_DATE_PATT += "T(?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})"
+HS_DATE_PATT += "T(?P<tz>\S+)$"
+HS_DATE_RE = re.compile(HS_DATE_PATT)
+
+HS_DATE_ISO_PATT = "^(?P<year>[0-9]{4})-(?P<month>[0-9]{2})-(?P<day>[0-9]{2})"
+HS_DATE_ISO_PATT += "T(?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})"
+HS_DATE_ISO_PATT += "(?P<tz>\S+)$"
+HS_DATE_ISO_RE = re.compile(HS_DATE_ISO_PATT)
+
+
+def hs_date_to_datetime(datestr):
+    """
+    Parse HydroShare (HS) formatted date from a String to a datetime.datetime.
+     Note: We use a weird TZ format, that does not appear to be ISO 8601
+     compliant, e.g.: 2015-06-03T09:29:00T-00003
+    :param datestr: String representing the date in HS format
+    :return: datetime.datetime with timezone set to UTC
+    """
+    m = HS_DATE_RE.match(datestr)
+    if m is None:
+        msg = "Unable to parse date {0}.".format(datestr)
+        raise HsDateException(msg)
+    try:
+        ret_date = datetime.datetime(year=int(m.group('year')),
+                                     month=int(m.group('month')),
+                                     day=int(m.group('day')),
+                                     hour=int(m.group('hour')),
+                                     minute=int(m.group('minute')),
+                                     second=int(m.group('second')),
+                                     tzinfo=pytz.utc)
+    except Exception as e:
+        msg = "Unable to parse date {0}, error {1}.".format(datestr,
+                                                            str(e))
+        raise HsDateException(msg)
+
+    return ret_date
+
+
+def hs_date_to_datetime_iso(datestr):
+    """
+    Parse the ISO 8601-formatted HydroShare (HS) date from a String to a datetime.datetime.
+    :param datestr: String representing the date in HS format
+    :return: datetime.datetime with timezone set to UTC
+    """
+    m = HS_DATE_ISO_RE.match(datestr)
+    if m is None:
+        msg = "Unable to parse date {0}.".format(datestr)
+        raise HsDateException(msg)
+    try:
+        ret_date = datetime.datetime(year=int(m.group('year')),
+                                     month=int(m.group('month')),
+                                     day=int(m.group('day')),
+                                     hour=int(m.group('hour')),
+                                     minute=int(m.group('minute')),
+                                     second=int(m.group('second')),
+                                     tzinfo=pytz.utc)
+    except Exception as e:
+        msg = "Unable to parse date {0}, error {1}.".format(datestr,
+                                                            str(e))
+        raise HsDateException(msg)
+
+    return ret_date
+
+
+class HsDateException(Exception):
+    pass
