@@ -102,6 +102,23 @@ class ResourceCreator(object):
         return unicode(str(self))
 
 
+class ResourceRights(object):
+    uri = None
+    statement = None
+
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        msg = "ResourceRights {uri}, statement: {statement}"
+        msg = msg.format(uri=self.uri,
+                         statement=self.statement)
+        return msg.format(msg)
+
+    def __unicode__(self):
+        return unicode(str(self))
+
+
 class HsBagitException(Exception):
     pass
 
@@ -457,7 +474,7 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
     for s,p,o in g.triples((None, rdflib.namespace.DC.creator, None)):
         creator = ResourceCreator()
         creator.uri = o
-        print("\t\tSubject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
+        # print("\t\tSubject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
         # Get name
         name_lit = g.value(o, hsterms.name)
         if name_lit is None:
@@ -502,6 +519,27 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
 
     print("\t\tModification date: {0}".format(str(res_meta.modification_date)))
 
+    # Get rights
+    resource_rights = None
+    for s,p,o in g.triples((None, rdflib.namespace.DC.rights, None)):
+        resource_rights = ResourceRights()
+        # License URI
+        rights_uri = g.value(o, hsterms.URL)
+        if rights_uri is None:
+            msg = "Resource metadata {0} does not contain rights URI.".format(rmeta_path)
+            raise HsBagitException(msg)
+        resource_rights.uri = str(rights_uri)
+        # Rights statement
+        rights_stmt_lit = g.value(o, hsterms.rightsStatement)
+        if rights_stmt_lit is None:
+            msg = "Resource metadata {0} does not contain rights statement.".format(rmeta_path)
+            raise HsBagitException(msg)
+        resource_rights.statement = str(rights_stmt_lit)
+    if resource_rights is None:
+        msg = "Resource metadata {0} does not contain rights.".format(rmeta_path)
+        raise HsBagitException(msg)
+
+    print("\t\tRights: {0}".format(resource_rights))
 
 
 def read_bag_meta(bag_content_path):
