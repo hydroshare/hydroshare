@@ -71,6 +71,7 @@ class ResourceMeta(object):
     abstract = None
     keywords = []
     creators = []
+    contributors = []
     language = None
     rights = None
     creation_date = None
@@ -82,6 +83,11 @@ class ResourceMeta(object):
 
 
 class ResourceCreator(object):
+    # Only record elements essential for identifying the user
+    # as the user needs to exist in the HydroShare database
+    # to have any real meaning.  We really only need the URI,
+    # but it is also helpful to have name and e-mail in case
+    # we ever want to implement disambiguation logic.
     uri = None
     name = None
     order = None
@@ -96,6 +102,31 @@ class ResourceCreator(object):
         msg = msg.format(uri=self.uri,
                          name=self.name,
                          order=self.order,
+                         email=self.email)
+        return msg.format(msg)
+
+    def __unicode__(self):
+        return unicode(str(self))
+
+
+class ResourceContributor(object):
+    # Only record elements essential for identifying the user
+    # as the user needs to exist in the HydroShare database
+    # to have any real meaning.  We really only need the URI,
+    # but it is also helpful to have name and e-mail in case
+    # we ever want to implement disambiguation logic.
+    uri = None
+    name = None
+    email = None
+
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        msg = "ResourceCreator {uri}, name: {name}, "
+        msg += "email: {email}"
+        msg = msg.format(uri=self.uri,
+                         name=self.name,
                          email=self.email)
         return msg.format(msg)
 
@@ -445,8 +476,8 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
     :param res_meta: ResourceMeta representing resource metadata
     :return: None
     """
-    # TODO: Parse: dc:language, dc:coverage (raster, time series), dc:relation->dcterms:isDataFor (raster), dc:source->dcterms:isDerivedFrom (raster)
-    # TODO: What to do about contributors?
+    # TODO: Parse: dc:coverage (raster, time series), dc:relation->dcterms:isDataFor (raster), dc:source->dcterms:isDerivedFrom (raster)
+    # TODO: What to do about contributors?  Looks the same as creator
     rmeta_path = os.path.join(bag_content_path, res_meta_path)
     if not os.path.isfile(rmeta_path):
         raise HsBagitException("Resource metadata {0} does not exist".format(rmeta_path))
@@ -501,6 +532,28 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
 
     for c in res_meta.creators:
         print("\t\tCreator: {0}".format(str(c)))
+
+    # Get contributors
+    for s,p,o in g.triples((None, rdflib.namespace.DC.contributor, None)):
+        contributor = ResourceContributor()
+        contributor.uri = o
+        # Get name
+        name_lit = g.value(o, hsterms.name)
+        if name_lit is None:
+            msg = "Name for contributor {0} was not found.".format(o)
+            raise HsBagitException(msg)
+        contributor.name = str(name_lit)
+        # Get email
+        email_lit = g.value(o, hsterms.email)
+        if email_lit is None:
+            msg = "E-mail for contributor {0} was not found.".format(o)
+            raise HsBagitException(msg)
+        contributor.email = str(email_lit)
+
+        res_meta.contributors.append(contributor)
+
+    for c in res_meta.contributors:
+        print("\t\tContributor: {0}".format(str(c)))
 
     # Get creation date
     for s,p,o in g.triples((None, None, rdflib.namespace.DCTERMS.created)):
