@@ -764,7 +764,6 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
     :param res_meta: ResourceMeta representing resource metadata
     :return: None
     """
-    # TODO: Parse: dc:relation->dcterms:isDataFor (raster), dc:source->dcterms:isDerivedFrom (raster)
     rmeta_path = os.path.join(bag_content_path, res_meta_path)
     if not os.path.isfile(rmeta_path):
         raise ResourceMetaException("Resource metadata {0} does not exist".format(rmeta_path))
