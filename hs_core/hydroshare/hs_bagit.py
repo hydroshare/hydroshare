@@ -32,7 +32,7 @@ class ResourceMeta(object):
     # From resource metadata
     abstract = None
     keywords = []
-    creators_uri = []
+    creators = []
     language = None
     rights_uri = None
     creation_date = None
@@ -40,6 +40,28 @@ class ResourceMeta(object):
 
     def __init__(self):
         pass
+
+
+class ResourceCreator(object):
+    uri = None
+    name = None
+    order = None
+    email = None
+
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        msg = "ResourceCreator {uri}, name: {name}, "
+        msg += "order: {order}, email: {email}"
+        msg = msg.format(uri=self.uri,
+                         name=self.name,
+                         order=self.order,
+                         email=self.email)
+        return msg.format(msg)
+
+    def __unicode__(self):
+        return unicode(str(self))
 
 
 class HsBagitException(Exception):
@@ -376,6 +398,7 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
     g = Graph()
     g.parse(rmeta_path)
 
+    hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
     res_uri = URIRef(res_meta.root_uri)
 
     # Make sure title matches that from resource map
@@ -385,12 +408,43 @@ def read_resource_metadata(bag_content_path, res_meta_path, res_meta):
         msg = "Title from resource metadata {0} "
         msg += "does not match title from resource map {1}".format(title, res_meta.title)
         raise HsBagitException(msg)
-    
+
     # Get abstract
     for s,p,o in g.triples((None, rdflib.namespace.DCTERMS.abstract, None)):
         res_meta.abstract = o
     if res_meta.abstract:
         print("\t\tAbstract: {0}".format(res_meta.abstract))
+
+    # Get creators
+    for s,p,o in g.triples((None, rdflib.namespace.DC.creator, None)):
+        creator = ResourceCreator()
+        creator.uri = o
+        print("\t\tSubject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
+        # Get name
+        name_lit = g.value(o, hsterms.name)
+        if name_lit is None:
+            msg = "Name for creator {0} was not found.".format(o)
+            raise HsBagitException(msg)
+        creator.name = str(name_lit)
+        # Get order
+        order_lit = g.value(o, hsterms.creatorOrder)
+        if order_lit is None:
+            msg = "Order for creator {0} was not found.".format(o)
+            raise HsBagitException(msg)
+        creator.order = str(order_lit)
+        # Get email
+        email_lit = g.value(o, hsterms.email)
+        if email_lit is None:
+            msg = "E-mail for creator {0} was not found.".format(o)
+            raise HsBagitException(msg)
+        creator.email = str(email_lit)
+
+        res_meta.creators.append(creator)
+
+    for c in res_meta.creators:
+        print("\t\tCreator: {0}".format(str(c)))
+
+
 
 def read_bag_meta(bag_content_path):
     (res_meta, res_meta_path) = read_resource_map(bag_content_path)
