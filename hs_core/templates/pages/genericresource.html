@@ -260,7 +260,7 @@
 
                 <div id="sharing-status">
                     <span class="pull-left">Sharing status:</span>
-                    {% if page.can_change and can_change_resource_flags %}
+                    {% if can_change_resource_flags %}
                         <form id="form-sharing" class="pull-left"
                               action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
                             {% csrf_token %}
