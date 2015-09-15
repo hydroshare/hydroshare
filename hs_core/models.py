@@ -63,6 +63,63 @@ def validate_user_url(value):
             raise ValidationError(err_message)
 
 
+class Person(models.Model):
+    """
+    A supplement to the django.contrib.auth User with additional fields useful to hydroshare.
+    """
+    user = models.ForeignKey(User)
+    middle_name = models.CharField(max_length=100, null=True)
+    description = models.CharField(max_length=255, null=True)
+    homepage = models.URLField(null=True)
+    user_type = models.CharField(max_length=255, null=False)
+    # TODO: add photo field
+    # TODO: add CV field
+
+    def __unicode__(self):
+        return "{0} ({1})".format(user.username, self.user_type)
+
+
+class Organization(models.Model):
+    """
+    University, company, non-profit, or other similar entity that creates, shares, or consumes
+    hydrology data.
+    """
+    org_type = models.CharField(max_length=100, null=False)
+    name = models.CharField(max_length=100, null=False)
+    code = models.CharField(max_length=100, null=False)
+    description = models.CharField(max_length=255, null=True)
+    homepage = models.URLField(null=True)
+    # TODO: add logo field
+
+    def __unicode__(self):
+        return "{0}: {1}".format(self.code, self.name)
+
+
+class Affiliation(models.Model):
+    """
+    Annotated relationship between a Person and and Organization with job title, department, and
+    active date information.
+    """
+    organization = models.ForeignKey(Organization)
+    person = models.ForeignKey(Person)
+    job_title = models.CharField(max_length=100, null=True)
+    department_name = models.CharField(max_length=100, null=True)
+    address = models.CharField(max_length=250, null=True)
+    phone = models.CharField(max_length=25, null=True)
+    date_begin = models.DateField(null=True)
+    date_end = models.DateField(null=True)
+    phone = models.CharField(max_length=25, null=True)
+
+    def __unicode__(self):
+        return "{0} {1} ({2} at {3})".format(person.first_name,
+                                             person.last_name,
+                                             self.job_title,
+                                             organization.name)
+
+    class Meta:
+        abstract = True
+
+
 class ResourcePermissionsMixin(Ownable):
     creator = models.ForeignKey(User,
                                 related_name='creator_of_%(app_label)s_%(class)s',
