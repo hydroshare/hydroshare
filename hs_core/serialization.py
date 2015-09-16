@@ -5,6 +5,7 @@ from rdflib import URIRef
 from rdflib import Graph
 
 from django.core.files.uploadedfile import UploadedFile
+from django.db import IntegrityError
 
 from hs_core.hydroshare.utils import get_resource_types
 from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso
@@ -12,7 +13,7 @@ from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetim
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
-from hs_core.hydroshare import create_metadata_element
+
 
 class HsSerializationException(Exception):
     pass
@@ -87,6 +88,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
         if preserve_uuid:
             resource_id = rm.id
 
+        kwargs = {}
         resource = create_resource(resource_type=rm.res_type,
                                    owner=owner_pk,
                                    title=rm.title,
@@ -94,7 +96,8 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
                                    metadata=metadata,
                                    files=resource_files,
                                    content=rm.title,
-                                   short_id=resource_id)
+                                   short_id=resource_id,
+                                   **kwargs)
     except Exception as ex:
         raise HsDeserializationException(ex.message)
 
@@ -501,7 +504,15 @@ class GenericResourceMeta(object):
         :param resource: HydroShare resource instance
         """
         if self.abstract:
-            create_metadata_element(resource.short_id, 'description', abstract=self.abstract)
+            resource.metadata.create_element('description', abstract=self.abstract)
+        if self.rights:
+            try:
+                resource.metadata.create_element('rights', statement=self.rights.statement)
+            except IntegrityError:
+                resource.metadata.update_element('rights', resource.metadata.rights.id,
+                                                 statement=self.rights.statement)
+        # if self.language:
+        #     create_metadata_element(resource.short_id, 'description', abstract=self.abstract)
 
     class ResourceCreator(object):
         # Only record elements essential for identifying the user
