@@ -1,11 +1,107 @@
-import os
+import os, sys
 
 import rdflib
 from rdflib import URIRef
 from rdflib import Graph
 
+from django.core.files.uploadedfile import UploadedFile
+
 from hs_core.hydroshare.utils import get_resource_types
 from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso
+
+from hs_core.hydroshare.utils import resource_pre_create_actions
+from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
+from hs_core.hydroshare import create_resource
+from hs_core.hydroshare import create_metadata_element
+
+class HsSerializationException(Exception):
+    pass
+
+
+class HsDeserializationException(HsSerializationException):
+    pass
+
+
+def _prepare_resource_files_for_creation(file_paths):
+    res_files = []
+
+    for fp in file_paths:
+        fname = os.path.basename(fp)
+        fsize = os.stat(fp).st_size
+        fd = open(fp, 'rb')
+        res_files.append(UploadedFile(file=fd, name=fname, size=fsize))
+
+    return res_files
+
+
+def create_resource_from_bag(bag_content_path, preserve_uuid=True):
+    """
+    Create resource from existing uncompressed BagIt archive.
+
+    Follows roughly the same pattern as hs_core.views.create_resource().
+
+    :param bag_content_path:
+    :return:
+    :raises: HsDeserializationException if an error occurred.
+    """
+    # Get resource metadata
+    resource_files = None
+    try:
+        rm = GenericResourceMeta.read_metadata_from_resource_bag(bag_content_path)
+        res_files = [os.path.join(bag_content_path, f) for f in rm.files]
+        resource_files = _prepare_resource_files_for_creation(res_files)
+
+    except GenericResourceMeta.ResourceMetaException as e:
+        msg = "Error occurred while trying to create resource from bag path {0}. "
+        msg += "Error was: {1}"
+        msg = msg.format(bag_content_path, str(e))
+        raise HsDeserializationException(msg)
+
+    # Send pre-create resource signal
+    try:
+        if resource_files is None:
+            resource_files = []
+        page_url_dict, res_title, metadata = resource_pre_create_actions(resource_type=rm.res_type,
+                                                                         files=resource_files,
+                                                                         resource_title=rm.title,
+                                                                         page_redirect_url_key=None)
+    except ResourceFileSizeException as ex:
+        raise HsDeserializationException(ex.message)
+
+    except ResourceFileValidationException as ex:
+        raise HsDeserializationException(ex.message)
+
+    except Exception as ex:
+        raise HsDeserializationException(ex.message)
+
+    # Create the resource
+    resource = None
+    try:
+        # Get user
+        owner_uri = rm.get_owner_uri().strip()
+        owner_pk = os.path.basename(owner_uri)
+        # Override for testing
+        owner_pk = 1
+
+        resource_id = None
+        if preserve_uuid:
+            resource_id = rm.id
+
+        resource = create_resource(resource_type=rm.res_type,
+                                   owner=owner_pk,
+                                   title=rm.title,
+                                   keywords=rm.keywords,
+                                   metadata=metadata,
+                                   files=resource_files,
+                                   content=rm.title,
+                                   short_id=resource_id)
+    except Exception as ex:
+        raise HsDeserializationException(ex.message)
+
+    # Add additional metadata
+    assert(resource is not None)
+    if rm.abstract:
+        create_metadata_element(resource.short_id, 'description', abstract=rm.abstract)
 
 
 class GenericResourceMeta(object):
@@ -228,7 +324,7 @@ class GenericResourceMeta(object):
             if order_lit is None:
                 msg = "Order for creator {0} was not found.".format(o)
                 raise GenericResourceMeta.ResourceMetaException(msg)
-            creator.order = str(order_lit)
+            creator.order = int(str(order_lit))
             # Get email
             email_lit = self._rmeta_graph.value(o, hsterms.email)
             if email_lit is None:
@@ -383,6 +479,21 @@ class GenericResourceMeta(object):
         print("\t\tSources: ")
         for r in self.sources:
             print("\t\t\t{0}".format(str(r)))
+
+    def get_owner_uri(self):
+        """
+        Return the creator with the lowest order.
+
+        :return: String representing the URI of the owner of the resource.
+        """
+        min_order = sys.maxint
+        owner_uri = None
+        for c in self.creators:
+            if c.order < min_order:
+                min_order = c.order
+                owner_uri = c.uri
+                break
+        return owner_uri
 
     class ResourceCreator(object):
         # Only record elements essential for identifying the user
