@@ -33,66 +33,109 @@ class GenericResourceMeta(object):
     modification_date = None
 
     bag_content_path = None
-    _res_meta_path = None
+    root_uri = None
+    res_meta_path = None
     _rmeta_graph = None
 
     def __init__(self):
         pass
 
     @classmethod
-    def get_instance_for_resource_type(cls, resource_type):
+    def read_metadata_from_resource_bag(cls, bag_content_path):
         """
-        Factory method for getting resource-specific instance of resource metadata serializer.
+        Factory method for getting resource-specific metadata from an exploded BagIt archive.
+        To work with this factory, each HydroShare resource type must implement
+        a class that extends GenericResourceMeta stored in the following package/module:
+        ${RESOURCE_PACKAGE}.serialization.${RESOURCE_NAME}Meta.  For example,
+        the "RasterResource", with package "hs_geo_raster_resource" must implement its
+        subclass as hs_geo_raster_resource.serialization.RasterResourceMeta.
 
-        :param resource_type: String representing the class name of the resource type (without module name,
-        e.g. GenericResource, RasterResource, etc.
-        :return: An instance of GenericResourceMeta specific to the resource type.
+        :param bag_content_path: String representing path of exploded bag
+        content.
 
-        """
-        res_types = get_resource_types()
-        for rt in res_types:
-            rt_name = rt.__name__
-            if rt_name == resource_type:
-                rt_root = rt.__module__.split('.')[0]
-                rt_meta = "{0}Meta".format(rt_name)
-                module_root = __import__(rt_root)
-                module_serialization = getattr(module_root, 'serialization')
-                metadata_class = getattr(module_serialization, rt_meta)
-                instance = metadata_class()
-                return instance
-        return None
+        :return: An instance of GenericResourceMeta specific to the resource type with all
+        metadata read from the exploded bag.
 
-    def read_metadata_from_bag(self, bag_content_path):
-        self.bag_content_path = bag_content_path
-        self._read_resource_map()
-        self._read_resource_metadata()
-
-    def _read_resource_map(self):
-        """
-        Read resource metadata out of the resourcemap.xml of the exploded bag path
         :raises: ResourceMetaException if metadata cannot be found or do not appear
          as expected.
         """
-        rmap_path = os.path.join(self.bag_content_path, 'data', 'resourcemap.xml')
+
+        # Read resource map so that we know the resource type
+        (root_uri, res_meta_path, res_meta) = cls._read_resource_map(bag_content_path)
+
+        # Iterate over HydroShare resource types
+        res_types = get_resource_types()
+        for rt in res_types:
+            rt_name = rt.__name__
+            if rt_name == res_meta['type']:
+                # Instantiate metadata class for resource type
+                rt_root = rt.__module__.split('.')[0]
+                rt_meta = "{0}Meta".format(rt_name)
+                module_root = __import__(rt_root)
+                instance = None
+                try:
+                    module_serialization = getattr(module_root, 'serialization')
+                    metadata_class = getattr(module_serialization, rt_meta)
+                    instance = metadata_class()
+                except AttributeError as ae:
+                    msg = "Unable to instantiate metadata deserializer for resource type {0}, "
+                    msg += "based on resource bag {1}"
+                    msg = msg.format(res_meta['type'], bag_content_path)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+
+                assert(instance is not None)
+
+                # Populate core metadata
+                instance.id = res_meta['id']
+                instance.res_type = res_meta['type']
+                instance.title = res_meta['title']
+                instance.files = res_meta['files']
+
+                # Read additional metadata
+                instance.bag_content_path = bag_content_path
+                instance.res_meta_path = res_meta_path
+                instance.root_uri = root_uri
+                instance._read_resource_metadata()
+
+                return instance
+        return None
+
+    @classmethod
+    def _read_resource_map(cls, bag_content_path):
+        """
+        Read resource metadata out of the resourcemap.xml of the exploded bag path
+
+        :param bag_content_path: String representing path of exploded bag
+        content.
+
+        :return: Tuple<String, String, dict> representing: root URI of the resource metadata,
+         path of the resourcemetadata.xml within the bag, dictionary containing metadata from resource map.
+
+        :raises: ResourceMetaException if metadata cannot be found or do not appear
+         as expected.
+        """
+        rmap_path = os.path.join(bag_content_path, 'data', 'resourcemap.xml')
         if not os.path.isfile(rmap_path):
             raise GenericResourceMeta.ResourceMetaException("Resource map {0} does not exist".format(rmap_path))
         if not os.access(rmap_path, os.R_OK):
             raise GenericResourceMeta.ResourceMetaException("Unable to read resource map {0}".format(rmap_path))
+
+        res_meta = {}
 
         g = Graph()
         g.parse(rmap_path)
         # Get resource ID
         for s, p, o in g.triples((None, None, None)):
             if s.endswith("resourcemap.xml") and p == rdflib.namespace.DC.identifier:
-                self.id = o
-        if self.id is None:
+                res_meta['id'] = o
+        if res_meta['id'] is None:
             msg = "Unable to determine resource ID from resource map {0}".format(rmap_path)
             raise GenericResourceMeta.ResourceMetaException(msg)
-        print("Resource ID is {0}".format(self.id))
+        print("Resource ID is {0}".format(res_meta['id']))
 
         # Build URI reference for #aggregation section of resource map
-        res_root_uri = "http://www.hydroshare.org/resource/{res_id}".format(res_id=self.id)
-        self.root_uri = res_root_uri
+        res_root_uri = "http://www.hydroshare.org/resource/{res_id}".format(res_id=res_meta['id'])
+        root_uri = res_root_uri
         res_agg_subj = "{res_root_url}/data/resourcemap.xml#aggregation".format(res_root_url=res_root_uri)
         res_agg = URIRef(res_agg_subj)
 
@@ -100,17 +143,18 @@ class GenericResourceMeta(object):
         type_lit = g.value(res_agg, rdflib.namespace.DCTERMS.type)
         if type_lit is None:
             raise GenericResourceMeta.ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
-        self.res_type = str(type_lit)
-        print("\tType is {0}".format(self.res_type))
+        res_meta['type'] = str(type_lit)
+        print("\tType is {0}".format(res_meta['type']))
 
         # Get resource title
         title_lit = g.value(res_agg, rdflib.namespace.DC.title)
         if title_lit is None:
             raise GenericResourceMeta.ResourceMetaException("No resource title found in resource map {0}".format(rmap_path))
-        self.title = str(title_lit)
-        print("\tTitle is {0}".format(self.title))
+        res_meta['title'] = str(title_lit)
+        print("\tTitle is {0}".format(res_meta['title']))
 
         # Get list of files in resource
+        res_meta['files'] = []
         res_root_uri_withslash = res_root_uri + '/'
         res_meta_path = None
         ore = rdflib.namespace.Namespace('http://www.openarchives.org/ore/terms/')
@@ -124,17 +168,17 @@ class GenericResourceMeta(object):
                 res_meta_path = o.split(res_root_uri_withslash)[1]
                 continue
 
-            self.files.append(o.split(res_root_uri_withslash)[1])
+            res_meta['files'].append(o.split(res_root_uri_withslash)[1])
 
         if res_meta_path is None:
             raise GenericResourceMeta.ResourceMetaException("No resource metadata found in resource map {0}".format(rmap_path))
 
         print("\tResource metadata path {0}".format(res_meta_path))
 
-        for uri in self.files:
+        for uri in res_meta['files']:
             print("\tContents: {0}".format(uri))
 
-        self._res_meta_path = res_meta_path
+        return (root_uri, res_meta_path, res_meta)
 
     def _read_resource_metadata(self):
         """
@@ -142,7 +186,7 @@ class GenericResourceMeta(object):
 
         :return: None
         """
-        rmeta_path = os.path.join(self.bag_content_path, self._res_meta_path)
+        rmeta_path = os.path.join(self.bag_content_path, self.res_meta_path)
         if not os.path.isfile(rmeta_path):
             raise GenericResourceMeta.ResourceMetaException("Resource metadata {0} does not exist".format(rmeta_path))
         if not os.access(rmeta_path, os.R_OK):
