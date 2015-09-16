@@ -100,8 +100,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
 
     # Add additional metadata
     assert(resource is not None)
-    if rm.abstract:
-        create_metadata_element(resource.short_id, 'description', abstract=rm.abstract)
+    rm.write_metadata_to_resource(resource)
 
 
 class GenericResourceMeta(object):
@@ -494,6 +493,15 @@ class GenericResourceMeta(object):
                 owner_uri = c.uri
                 break
         return owner_uri
+
+    def write_metadata_to_resource(self, resource):
+        """
+        Write metadata to resource
+
+        :param resource: HydroShare resource instance
+        """
+        if self.abstract:
+            create_metadata_element(resource.short_id, 'description', abstract=self.abstract)
 
     class ResourceCreator(object):
         # Only record elements essential for identifying the user
