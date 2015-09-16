@@ -4,10 +4,11 @@ import rdflib
 from rdflib import URIRef
 from rdflib import Graph
 
+from hs_core.hydroshare.utils import get_resource_types
 from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso
 
 
-class ResourceMeta(object):
+class GenericResourceMeta(object):
     """
     Lightweight class for representing core metadata of Resources, including the
      ability to read metadata from an un-compressed BagIt archive.
@@ -33,9 +34,33 @@ class ResourceMeta(object):
 
     bag_content_path = None
     _res_meta_path = None
+    _rmeta_graph = None
 
     def __init__(self):
         pass
+
+    @classmethod
+    def get_instance_for_resource_type(cls, resource_type):
+        """
+        Factory method for getting resource-specific instance of resource metadata serializer.
+
+        :param resource_type: String representing the class name of the resource type (without module name,
+        e.g. GenericResource, RasterResource, etc.
+        :return: An instance of GenericResourceMeta specific to the resource type.
+
+        """
+        res_types = get_resource_types()
+        for rt in res_types:
+            rt_name = rt.__name__
+            if rt_name == resource_type:
+                rt_root = rt.__module__.split('.')[0]
+                rt_meta = "{0}Meta".format(rt_name)
+                module_root = __import__(rt_root)
+                module_serialization = getattr(module_root, 'serialization')
+                metadata_class = getattr(module_serialization, rt_meta)
+                instance = metadata_class()
+                return instance
+        return None
 
     def read_metadata_from_bag(self, bag_content_path):
         self.bag_content_path = bag_content_path
@@ -50,9 +75,9 @@ class ResourceMeta(object):
         """
         rmap_path = os.path.join(self.bag_content_path, 'data', 'resourcemap.xml')
         if not os.path.isfile(rmap_path):
-            raise ResourceMeta.ResourceMetaException("Resource map {0} does not exist".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException("Resource map {0} does not exist".format(rmap_path))
         if not os.access(rmap_path, os.R_OK):
-            raise ResourceMeta.ResourceMetaException("Unable to read resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException("Unable to read resource map {0}".format(rmap_path))
 
         g = Graph()
         g.parse(rmap_path)
@@ -62,7 +87,7 @@ class ResourceMeta(object):
                 self.id = o
         if self.id is None:
             msg = "Unable to determine resource ID from resource map {0}".format(rmap_path)
-            raise ResourceMeta.ResourceMetaException(msg)
+            raise GenericResourceMeta.ResourceMetaException(msg)
         print("Resource ID is {0}".format(self.id))
 
         # Build URI reference for #aggregation section of resource map
@@ -74,14 +99,14 @@ class ResourceMeta(object):
         # Get resource type
         type_lit = g.value(res_agg, rdflib.namespace.DCTERMS.type)
         if type_lit is None:
-            raise ResourceMeta.ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
         self.res_type = str(type_lit)
         print("\tType is {0}".format(self.res_type))
 
         # Get resource title
         title_lit = g.value(res_agg, rdflib.namespace.DC.title)
         if title_lit is None:
-            raise ResourceMeta.ResourceMetaException("No resource title found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException("No resource title found in resource map {0}".format(rmap_path))
         self.title = str(title_lit)
         print("\tTitle is {0}".format(self.title))
 
@@ -95,14 +120,14 @@ class ResourceMeta(object):
                     msg = "More than one resource metadata URI found. "
                     msg += "(first: {first}, second: {second}".format(first=res_meta_path,
                                                                       second=o)
-                    raise ResourceMeta.ResourceMetaException(msg)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
                 res_meta_path = o.split(res_root_uri_withslash)[1]
                 continue
 
             self.files.append(o.split(res_root_uri_withslash)[1])
 
         if res_meta_path is None:
-            raise ResourceMeta.ResourceMetaException("No resource metadata found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException("No resource metadata found in resource map {0}".format(rmap_path))
 
         print("\tResource metadata path {0}".format(res_meta_path))
 
@@ -119,52 +144,52 @@ class ResourceMeta(object):
         """
         rmeta_path = os.path.join(self.bag_content_path, self._res_meta_path)
         if not os.path.isfile(rmeta_path):
-            raise ResourceMeta.ResourceMetaException("Resource metadata {0} does not exist".format(rmeta_path))
+            raise GenericResourceMeta.ResourceMetaException("Resource metadata {0} does not exist".format(rmeta_path))
         if not os.access(rmeta_path, os.R_OK):
-            raise ResourceMeta.ResourceMetaException("Unable to read resource metadata {0}".format(rmeta_path))
+            raise GenericResourceMeta.ResourceMetaException("Unable to read resource metadata {0}".format(rmeta_path))
 
-        g = Graph()
-        g.parse(rmeta_path)
+        self._rmeta_graph = Graph()
+        self._rmeta_graph.parse(rmeta_path)
 
         hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
         res_uri = URIRef(self.root_uri)
 
         # Make sure title matches that from resource map
-        title_lit = g.value(res_uri, rdflib.namespace.DC.title)
+        title_lit = self._rmeta_graph.value(res_uri, rdflib.namespace.DC.title)
         if title_lit is not None:
             title = str(title_lit)
             if title != self.title:
                 msg = "Title from resource metadata {0} "
                 msg += "does not match title from resource map {1}".format(title, self.title)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
 
         # Get abstract
-        for s, p, o in g.triples((None, rdflib.namespace.DCTERMS.abstract, None)):
+        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DCTERMS.abstract, None)):
             self.abstract = o
         if self.abstract:
             print("\t\tAbstract: {0}".format(self.abstract))
 
         # Get creators
-        for s, p, o in g.triples((None, rdflib.namespace.DC.creator, None)):
-            creator = ResourceMeta.ResourceCreator()
+        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.creator, None)):
+            creator = GenericResourceMeta.ResourceCreator()
             creator.uri = o
             # Get name
-            name_lit = g.value(o, hsterms.name)
+            name_lit = self._rmeta_graph.value(o, hsterms.name)
             if name_lit is None:
                 msg = "Name for creator {0} was not found.".format(o)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             creator.name = str(name_lit)
             # Get order
-            order_lit = g.value(o, hsterms.creatorOrder)
+            order_lit = self._rmeta_graph.value(o, hsterms.creatorOrder)
             if order_lit is None:
                 msg = "Order for creator {0} was not found.".format(o)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             creator.order = str(order_lit)
             # Get email
-            email_lit = g.value(o, hsterms.email)
+            email_lit = self._rmeta_graph.value(o, hsterms.email)
             if email_lit is None:
                 msg = "E-mail for creator {0} was not found.".format(o)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             creator.email = str(email_lit)
 
             self.creators.append(creator)
@@ -173,20 +198,20 @@ class ResourceMeta(object):
             print("\t\tCreator: {0}".format(str(c)))
 
         # Get contributors
-        for s, p, o in g.triples((None, rdflib.namespace.DC.contributor, None)):
-            contributor = ResourceMeta.ResourceContributor()
+        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.contributor, None)):
+            contributor = GenericResourceMeta.ResourceContributor()
             contributor.uri = o
             # Get name
-            name_lit = g.value(o, hsterms.name)
+            name_lit = self._rmeta_graph.value(o, hsterms.name)
             if name_lit is None:
                 msg = "Name for contributor {0} was not found.".format(o)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             contributor.name = str(name_lit)
             # Get email
-            email_lit = g.value(o, hsterms.email)
+            email_lit = self._rmeta_graph.value(o, hsterms.email)
             if email_lit is None:
                 msg = "E-mail for contributor {0} was not found.".format(o)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             contributor.email = str(email_lit)
 
             self.contributors.append(contributor)
@@ -195,68 +220,68 @@ class ResourceMeta(object):
             print("\t\tContributor: {0}".format(str(c)))
 
         # Get creation date
-        for s, p, o in g.triples((None, None, rdflib.namespace.DCTERMS.created)):
-            created_lit = g.value(s, rdflib.namespace.RDF.value)
+        for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.created)):
+            created_lit = self._rmeta_graph.value(s, rdflib.namespace.RDF.value)
             if created_lit is None:
                 msg = "Resource metadata {0} does not contain a creation date.".format(rmeta_path)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             try:
                 self.creation_date = hs_date_to_datetime(str(created_lit))
             except Exception as e:
                 msg = "Unable to parse creation date {0}, error: {1}".format(str(created_lit),
                                                                              str(e))
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
 
         print("\t\tCreation date: {0}".format(str(self.creation_date)))
 
         # Get modification date
-        for s, p, o in g.triples((None, None, rdflib.namespace.DCTERMS.modified)):
-            modified_lit = g.value(s, rdflib.namespace.RDF.value)
+        for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.modified)):
+            modified_lit = self._rmeta_graph.value(s, rdflib.namespace.RDF.value)
             if modified_lit is None:
                 msg = "Resource metadata {0} does not contain a modification date.".format(rmeta_path)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             try:
                 self.modification_date = hs_date_to_datetime(str(modified_lit))
             except Exception as e:
                 msg = "Unable to parse modification date {0}, error: {1}".format(str(modified_lit),
                                                                                  str(e))
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
 
         print("\t\tModification date: {0}".format(str(self.modification_date)))
 
         # Get rights
         resource_rights = None
-        for s, p, o in g.triples((None, rdflib.namespace.DC.rights, None)):
-            resource_rights = ResourceMeta.ResourceRights()
+        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.rights, None)):
+            resource_rights = GenericResourceMeta.ResourceRights()
             # License URI
-            rights_uri = g.value(o, hsterms.URL)
+            rights_uri = self._rmeta_graph.value(o, hsterms.URL)
             if rights_uri is None:
                 msg = "Resource metadata {0} does not contain rights URI.".format(rmeta_path)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             resource_rights.uri = str(rights_uri)
             # Rights statement
-            rights_stmt_lit = g.value(o, hsterms.rightsStatement)
+            rights_stmt_lit = self._rmeta_graph.value(o, hsterms.rightsStatement)
             if rights_stmt_lit is None:
                 msg = "Resource metadata {0} does not contain rights statement.".format(rmeta_path)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             resource_rights.statement = str(rights_stmt_lit)
 
         if resource_rights is None:
             msg = "Resource metadata {0} does not contain rights.".format(rmeta_path)
-            raise ResourceMeta.ResourceMetaException(msg)
+            raise GenericResourceMeta.ResourceMetaException(msg)
 
         self.rights = resource_rights
 
         print("\t\tRights: {0}".format(self.rights))
 
         # Get keywords
-        for s, p, o in g.triples((None, rdflib.namespace.DC.subject, None)):
+        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.subject, None)):
             self.keywords.append(str(o))
 
         print("\t\tKeywords: {0}".format(str(self.keywords)))
 
         # Get language
-        lang_lit = g.value(res_uri, rdflib.namespace.DC.language)
+        lang_lit = self._rmeta_graph.value(res_uri, rdflib.namespace.DC.language)
         if lang_lit is None:
             self.language = 'eng'
         else:
@@ -265,30 +290,30 @@ class ResourceMeta(object):
         print("\t\tLanguage: {0}".format(self.language))
 
         # Get coverage (box)
-        for s, p, o in g.triples((None, None, rdflib.namespace.DCTERMS.box)):
-            coverage_lit = g.value(s, rdflib.namespace.RDF.value)
+        for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.box)):
+            coverage_lit = self._rmeta_graph.value(s, rdflib.namespace.RDF.value)
             if coverage_lit is None:
                 msg = "Coverage value not found for {0}.".format(o)
-                raise ResourceMeta.ResourceMetaException(msg)
-            coverage = ResourceMeta.ResourceCoverageBox(str(coverage_lit))
+                raise GenericResourceMeta.ResourceMetaException(msg)
+            coverage = GenericResourceMeta.ResourceCoverageBox(str(coverage_lit))
             self.coverages.append(coverage)
 
         # Get coverage (point)
-        for s, p, o in g.triples((None, None, rdflib.namespace.DCTERMS.point)):
-            coverage_lit = g.value(s, rdflib.namespace.RDF.value)
+        for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.point)):
+            coverage_lit = self._rmeta_graph.value(s, rdflib.namespace.RDF.value)
             if coverage_lit is None:
                 msg = "Coverage value not found for {0}.".format(o)
-                raise ResourceMeta.ResourceMetaException(msg)
-            coverage = ResourceMeta.ResourceCoveragePoint(str(coverage_lit))
+                raise GenericResourceMeta.ResourceMetaException(msg)
+            coverage = GenericResourceMeta.ResourceCoveragePoint(str(coverage_lit))
             self.coverages.append(coverage)
 
         # Get coverage (period)
-        for s, p, o in g.triples((None, None, rdflib.namespace.DCTERMS.period)):
-            coverage_lit = g.value(s, rdflib.namespace.RDF.value)
+        for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.period)):
+            coverage_lit = self._rmeta_graph.value(s, rdflib.namespace.RDF.value)
             if coverage_lit is None:
                 msg = "Coverage value not found for {0}.".format(o)
-                raise ResourceMeta.ResourceMetaException(msg)
-            coverage = ResourceMeta.ResourceCoveragePeriod(str(coverage_lit))
+                raise GenericResourceMeta.ResourceMetaException(msg)
+            coverage = GenericResourceMeta.ResourceCoveragePeriod(str(coverage_lit))
             self.coverages.append(coverage)
 
         print("\t\tCoverages: ")
@@ -296,9 +321,9 @@ class ResourceMeta(object):
             print("\t\t\t{0}".format(str(c)))
 
         # Get relations
-        for s, p, o in g.triples((None, rdflib.namespace.DC.relation, None)):
-            for pred, obj in g.predicate_objects(o):
-                relation = ResourceMeta.ResourceRelation(obj, pred)
+        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.relation, None)):
+            for pred, obj in self._rmeta_graph.predicate_objects(o):
+                relation = GenericResourceMeta.ResourceRelation(obj, pred)
                 self.relations.append(relation)
 
         print("\t\tRelations: ")
@@ -306,9 +331,9 @@ class ResourceMeta(object):
             print("\t\t\t{0}".format(str(r)))
 
         # Get sources
-        for s, p, o in g.triples((None, rdflib.namespace.DC.source, None)):
-            for pred, obj in g.predicate_objects(o):
-                source = ResourceMeta.ResourceSource(obj, pred)
+        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.source, None)):
+            for pred, obj in self._rmeta_graph.predicate_objects(o):
+                source = GenericResourceMeta.ResourceSource(obj, pred)
                 self.sources.append(source)
 
         print("\t\tSources: ")
@@ -415,14 +440,14 @@ class ResourceMeta(object):
                     except Exception as e:
                         msg = "Unable to parse start date {0}, error: {1}".format(value,
                                                                                   str(e))
-                        raise ResourceMeta.ResourceMetaException(msg)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'end':
                     try:
                         self.end_date = hs_date_to_datetime_iso(value)
                     except Exception as e:
                         msg = "Unable to parse end date {0}, error: {1}".format(value,
                                                                                 str(e))
-                        raise ResourceMeta.ResourceMetaException(msg)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'scheme':
                     self.scheme = value
                 elif key == 'name':
@@ -430,13 +455,13 @@ class ResourceMeta(object):
 
             if self.start_date is None:
                 msg = "Period coverage '{0}' does not contain start date.".format(value_str)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             if self.end_date is None:
                 msg = "Period coverage '{0}' does not contain end date.".format(value_str)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             if self.scheme is None:
                 msg = "Period coverage '{0}' does not contain scheme.".format(value_str)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
 
     class ResourceCoveragePoint(ResourceCoverage):
         """
@@ -474,14 +499,14 @@ class ResourceMeta(object):
                     except Exception as e:
                         msg = "Unable to parse easting {0}, error: {1}".format(value,
                                                                                str(e))
-                        raise ResourceMeta.ResourceMetaException(msg)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'north':
                     try:
                         self.north = float(value)
                     except Exception as e:
                         msg = "Unable to parse northing {0}, error: {1}".format(value,
                                                                                 str(e))
-                        raise ResourceMeta.ResourceMetaException(msg)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'units':
                     self.units = value
                 elif key == 'projection':
@@ -492,19 +517,19 @@ class ResourceMeta(object):
                     except Exception as e:
                         msg = "Unable to parse elevation {0}, error: {1}".format(value,
                                                                                  str(e))
-                        raise ResourceMeta.ResourceMetaException(msg)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'zunits':
                     self.zunits = value
 
             if self.east is None:
                 msg = "Point coverage '{0}' does not contain an easting.".format(value_str)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             if self.north is None:
                 msg = "Point coverage '{0}' does not contain a northing.".format(value_str)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             if self.units is None:
                 msg = "Point coverage '{0}' does not contain units information.".format(value_str)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
 
     class ResourceCoverageBox(ResourceCoverage):
         """
@@ -547,28 +572,28 @@ class ResourceMeta(object):
                     except Exception as e:
                         msg = "Unable to parse east limit {0}, error: {1}".format(value,
                                                                                   str(e))
-                        raise ResourceMeta.ResourceMetaException(msg)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'northlimit':
                     try:
                         self.northlimit = float(value)
                     except Exception as e:
                         msg = "Unable to parse north limit {0}, error: {1}".format(value,
                                                                                    str(e))
-                        raise ResourceMeta.ResourceMetaException(msg)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'southlimit':
                     try:
                         self.southlimit = float(value)
                     except Exception as e:
                         msg = "Unable to parse south limit {0}, error: {1}".format(value,
                                                                                    str(e))
-                        raise ResourceMeta.ResourceMetaException(msg)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'westlimit':
                     try:
                         self.westlimit = float(value)
                     except Exception as e:
                         msg = "Unable to parse west limit {0}, error: {1}".format(value,
                                                                                   str(e))
-                        raise ResourceMeta.ResourceMetaException(msg)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'units':
                     self.units = value
                 elif key == 'projection':
@@ -579,14 +604,14 @@ class ResourceMeta(object):
                     except Exception as e:
                         msg = "Unable to parse uplimit {0}, error: {1}".format(value,
                                                                                str(e))
-                        raise ResourceMeta.ResourceMetaException(msg)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'downlimit':
                     try:
                         self.downlimit = float(value)
                     except Exception as e:
                         msg = "Unable to parse downlimit {0}, error: {1}".format(value,
                                                                                  str(e))
-                        raise ResourceMeta.ResourceMetaException(msg)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'zunits':
                     self.zunits = value
 
@@ -594,7 +619,7 @@ class ResourceMeta(object):
                 msg = "Point coverage '{0}' contains uplimit or downlimit but "
                 msg += "does not contain zunits."
                 msg = msg.format(value_str)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
 
     class ResourceRelation(object):
         KNOWN_TYPES = {'isParentOf', 'isChildOf', 'isMemberOf', 'isDerivedFrom',
@@ -620,7 +645,7 @@ class ResourceMeta(object):
             relationship_type = os.path.basename(relationship_uri)
             if relationship_type not in self.KNOWN_TYPES:
                 msg = "Relationship uri {0} is not known.".format(relationship_uri)
-                raise ResourceMeta.ResourceMetaException(msg)
+                raise GenericResourceMeta.ResourceMetaException(msg)
             self.uri = uri
             self.relationship_type = relationship_type
 
