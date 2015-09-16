@@ -5,17 +5,22 @@ import errno
 import tempfile
 import mimetypes
 import zipfile
+import stat
 
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace
 
 import bagit
 
+from django.core.files.uploadedfile import UploadedFile
+
 from mezzanine.conf import settings
 
 from hs_core.models import Bags, ResourceFile
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
+
+from hs_core.serialization import GenericResourceMeta
 
 
 class HsBagitException(Exception):
@@ -253,3 +258,28 @@ def read_bag(bag_path):
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
+
+
+def _prepare_resource_files_for_upload(file_paths):
+    uploaded_files = []
+
+    for fp in file_paths:
+        fname = os.path.basename(fp)
+        fsize = os.stat(fp).st_size
+        fd = open(fp, 'rb')
+        uploaded_files.appen(UploadedFile(file=fd, name=fname, size=fsize))
+
+
+def create_resource_from_bag(bag_content_path):
+    try:
+        rm = GenericResourceMeta.read_metadata_from_resource_bag(bag_content_path)
+        res_files = [os.path.join(bag_content_path, f) for f in rm.files]
+        uploaded_files = _prepare_resource_files_for_upload(res_files)
+
+
+
+    except GenericResourceMeta.ResourceMetaException as e:
+        msg = "Error occurred while trying to create resource from bag path {0}. "
+        msg += "Error was: {1}"
+        msg = msg.format(bag_content_path, str(e))
+        raise HsBagitException(msg)
