@@ -1628,6 +1628,7 @@ class GenericResource(BaseResource):
     objects = ResourceManager('GenericResource')
 
     class Meta:
+        verbose_name = 'Generic'
         proxy = True
 
 

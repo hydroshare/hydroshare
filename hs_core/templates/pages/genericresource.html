@@ -25,7 +25,7 @@
         {% endblock %}
 
             {# ======= Missing fields notification =======#}
-            {% if not metadata_form and can_change %}
+            {% if not metadata_form and page.perms.change %}
                 {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
                     <div class="alert alert-success alert-dismissible" role="alert">
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -76,7 +76,7 @@
             {% endif %}
             {#        ======= Top right buttons =======#}
             {% if not metadata_form %}
-                {% if can_change %}
+                {% if page.perms.change %}
                     <div class="lined-wrapper">
                     <div class="custom-btn-toolbar">
                         <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
@@ -260,7 +260,7 @@
 
                 <div id="sharing-status">
                     <span class="pull-left">Sharing status:</span>
-                    {% if page.can_change and can_change_resource_flags %}
+                    {% if can_change_resource_flags %}
                         <form id="form-sharing" class="pull-left"
                               action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
                             {% csrf_token %}
@@ -401,7 +401,7 @@
                     <p>Your research group(s) have been given specific permission to view this resource.</p>
                 {% endif %}
 
-                {% if can_change %}
+                {% if page.perms.change %}
                     <div class="panel panel-default panel-faq">
                     <div class="panel-heading">
                         <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
@@ -616,10 +616,12 @@
 
             {#        ======= Content =======#}
             <div>
+                {% if show_content_files %}
                 <h3>Content</h3>
                 <div class="custom-well">
                     {#            {% block extra_content %}#}
                     {#            {% endblock %}#}
+
                     {% if cm.files.all %}
                     <div class="table-container">
                         <table class="table-plain table-striped">
@@ -659,7 +661,7 @@
                                     </td>
                                     {#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
                                     <td>
-                                        {% if can_change %}
+                                        {% if page.perms.change %}
 
                                             <a href="{{ f.resource_file.url }}"><span data-toggle="modal"
                                                                                   data-target="#delete-resource-file-{{ f.pk }}"
@@ -686,14 +688,17 @@
                         </table>
                     </div>
                     {% endif %}
+
                     <!-- Buttons -->
-                    {% for b in cm.bags.all %}
-                        <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag_url }}">
-                            <span class="glyphicon glyphicon-download-alt">
-                                <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
-                            </span>
-                        </a>
-                    {% endfor %}
+                    {% if show_content_files %}
+                        {% for b in cm.bags.all %}
+                            <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag_url }}">
+                                <span class="glyphicon glyphicon-download-alt">
+                                    <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
+                                </span>
+                            </a>
+                        {% endfor %}
+                    {%  endif %}
 
                     {% if page.perms.change %}
                         <a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
@@ -717,6 +722,7 @@
                     {% endif %}
                     <div class="col-lg-12"><a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a></div>
                 </div>
+                {% endif %}
             </div>
 
             <!-- === Tabs begin === -->
