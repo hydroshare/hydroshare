@@ -157,13 +157,7 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
 
         filtered_res_list = []
 
-        resource_table = hydroshare.get_resource_list(**filter_parms)
-        res = set()
-
-        for resources in resource_table.values():
-            res = res.union(resources)
-
-        for r in res:
+        for r in hydroshare.get_resource_list(**filter_parms):
             resource_list_item = self.resourceToResourceListItem(r)
             filtered_res_list.append(resource_list_item)
 
