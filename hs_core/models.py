@@ -67,11 +67,36 @@ class Person(models.Model):
     """
     A supplement to the django.contrib.auth User with additional fields useful to hydroshare.
     """
+
+    UNIVERSITY_FACULTY = 1
+    UNIVERSITY_PROFESSIONAL_OR_RESEARCH_STAFF = 2
+    POST_DOCTORAL_FELLOW = 3
+    UNIVERSITY_GRADUATE_STUDENT = 4
+    UNIVERSITY_UNDERGRADUATE_STUDENT = 5
+    COMMERCIAL_OR_PROFESSIONAL = 6
+    GOVERNMENT_OFFICIAL = 7
+    SCHOOL_STUDENT_K_TO_12 = 8
+    SCHOOL_TEACHER_K_TO_12 = 9
+    OTHER = 10
+
+    USER_TYPE_CHOICES = (
+        (UNIVERSITY_FACULTY, 'University Faculty'),
+        (UNIVERSITY_PROFESSIONAL_OR_RESEARCH_STAFF, 'University Professional or Research Staff'),
+        (POST_DOCTORAL_FELLOW, 'Post Doctoral Fellow'),
+        (UNIVERSITY_GRADUATE_STUDENT, 'University Graduate Student'),
+        (UNIVERSITY_UNDERGRADUATE_STUDENT, 'University Undergraduate Student'),
+        (COMMERCIAL_OR_PROFESSIONAL, 'Commercial or Professional'),
+        (GOVERNMENT_OFFICIAL, 'Government Official'),
+        (SCHOOL_STUDENT_K_TO_12, 'School Student Kindergarten to 12th Grade'),
+        (SCHOOL_TEACHER_K_TO_12, 'School Teacher Kindergarten to 12th Grade'),
+        (OTHER, 'Other'),
+    )
+
     user = models.ForeignKey(User)
     middle_name = models.CharField(max_length=100, null=True)
     description = models.CharField(max_length=255, null=True)
     homepage = models.URLField(null=True)
-    user_type = models.CharField(max_length=255, null=False)
+    user_type = models.IntegerField(choices=USER_TYPE_CHOICES, default=OTHER)
     # TODO: add photo field
     # TODO: add CV field
 
@@ -84,7 +109,64 @@ class Organization(models.Model):
     University, company, non-profit, or other similar entity that creates, shares, or consumes
     hydrology data.
     """
-    org_type = models.CharField(max_length=100, null=False)
+
+    ANALYTICAL_LABORATORY = 1
+    ASSOCIATION = 2
+    CENTER = 3
+    COLLEGE = 4
+    COMPANY = 5
+    CONSORTIUM = 6
+    DEPARTMENT = 7
+    DIVISION = 8
+    FOUNDATION = 9
+    FUNDING_ORGANIZATION = 10
+    GOVERNMENT_AGENCY = 11
+    INSTITUTE = 12
+    LABORATORY = 13
+    LIBRARY = 14
+    MANUFACTURER = 15
+    MUSEUM = 16
+    PROGRAM = 17
+    PUBLISHER = 18
+    RESEARCH_AGENCY = 19
+    RESEARCH_INSTITUTE = 20
+    RESEARCH_ORGANIZATION = 21
+    SCHOOL = 22
+    STUDENT_ORGANIZATION = 23
+    UNIVERSITY = 24
+    UNKNOWN = 25
+    VENDOR = 26
+
+    ORG_TYPE_CHOICES = (
+       (ANALYTICAL_LABORATORY, 'Analytical laboratory'),
+       (ASSOCIATION, 'Association'),
+       (CENTER , 'Center'),
+       (COLLEGE, 'College'),
+       (COMPANY, 'Company'),
+       (CONSORTIUM, 'Consortium'),
+       (DEPARTMENT, 'Department'),
+       (DIVISION, 'Division'),
+       (FOUNDATION, 'Foundation'),
+       (FUNDING_ORGANIZATION, 'Funding organization'),
+       (GOVERNMENT_AGENCY, 'Government agency'),
+       (INSTITUTE, 'Institute'),
+       (LABORATORY, 'Laboratory'),
+       (LIBRARY, 'Library'),
+       (MANUFACTURER, 'Manufacturer'),
+       (MUSEUM, 'Museum'),
+       (PROGRAM, 'Program'),
+       (PUBLISHER, 'Publisher'),
+       (RESEARCH_AGENCY, 'Research agency'),
+       (RESEARCH_INSTITUTE, 'Research institute'),
+       (RESEARCH_ORGANIZATION, 'Research organization'),
+       (SCHOOL, 'School'),
+       (STUDENT_ORGANIZATION, 'Student organization'),
+       (UNIVERSITY, 'University'),
+       (UNKNOWN, 'Unknown'),
+       (VENDOR, 'Vendor'),
+    )
+
+    org_type = models.IntegerField(choices=ORG_TYPE_CHOICES, default=UNKNOWN)
     name = models.CharField(max_length=100, null=False)
     code = models.CharField(max_length=100, null=False)
     description = models.CharField(max_length=255, null=True)
