@@ -1,6 +1,6 @@
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import GenericResource, AbstractResource
+from hs_core.models import BaseResource, AbstractResource, GenericResource
 from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import ToolResourceType
@@ -20,6 +20,7 @@ def landing_page(request, page):
         edit_resource = True
 
     return get_page_context(page, request.user, resource_edit=edit_resource, request=request)
+
 
 # resource type specific app needs to call this method to inject a crispy_form layout
 # object for displaying metadata UI for the extended metadata for their resource
@@ -68,6 +69,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     bag_url = AbstractResource.bag_url(content_model.short_id)
 
+    if user.is_authenticated():
+        show_content_files = user.uaccess.can_view_resource(content_model)
+    else:
+        # if anonymous user getting access to a private resource (since resource is discoverable),
+        # then don't show content files
+        show_content_files = content_model.raccess.public
+
     # user requested the resource in READONLY mode
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
@@ -109,7 +117,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         language = languages_dict[content_model.metadata.language.code] if content_model.metadata.language else None
         title = content_model.metadata.title.value if content_model.metadata.title else None
         abstract = content_model.metadata.description.abstract if content_model.metadata.description else None
-        context = {'metadata_form': None,
+        context = {
+                   'metadata_form': None,
                    'citation': content_model.get_citation(),
                    'title': title,
                    'abstract': abstract,
@@ -130,7 +139,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'relevant_tools': relevant_tools,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
-                   'bag_url': bag_url
+                   'bag_url': bag_url,
+                   'show_content_files': show_content_files
         }
         return context
 
@@ -287,7 +297,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     metadata_form = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
                                  extended_metadata_layout=extended_metadata_layout)
 
-    context = {'metadata_form': metadata_form,
+    context = {
+               'metadata_form': metadata_form,
                'title_form': title_form,
                'creator_formset': creator_formset,
                'add_creator_modal_form': add_creator_modal_form,
@@ -312,6 +323,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'citation': content_model.get_citation(),
                'extended_metadata_layout': extended_metadata_layout,
                'bag_url': bag_url,
+               'show_content_files': show_content_files,
                'file_validation_error': file_validation_error if file_validation_error else None
     }
 

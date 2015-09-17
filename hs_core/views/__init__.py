@@ -5,6 +5,7 @@ import requests
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
+from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
@@ -21,12 +22,13 @@ import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage
+from hs_access_control.models import PrivilegeCodes, HSAccessException
 
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods
-from hs_core.models import GenericResource, resource_processor, CoreMetaData
+from hs_core.models import BaseResource, GenericResource, resource_processor, CoreMetaData
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -34,6 +36,7 @@ from . import user_rest_api
 from hs_core.hydroshare import utils
 from . import utils as view_utils
 from hs_core.signals import *
+
 
 def short_url(request, *args, **kwargs):
     try:
@@ -43,6 +46,7 @@ def short_url(request, *args, **kwargs):
 
     m = get_resource_by_shortkey(shortkey)
     return HttpResponseRedirect(m.get_absolute_url())
+
 
 def verify(request, *args, **kwargs):
     _, pk, email = signing.loads(kwargs['token']).split(':')
@@ -176,7 +180,6 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                                         element_id=element_id, request=request)
     is_update_success = False
 
-    is_redirect = False
     for receiver, response in handler_response:
         if 'is_valid' in response:
             if response['is_valid']:
@@ -185,11 +188,10 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 if element_name == 'title':
                     res.title = res.metadata.title.value
                     res.save()
-                    if res.public:
+                    if res.raccess.public:
                         if not res.can_be_public:
-                            res.public = False
-                            res.save()
-                            is_redirect = True
+                            res.raccess.public = False
+                            res.raccess.save()
 
                 resource_modified(res, request.user)
                 is_update_success = True
@@ -209,6 +211,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 @api_view(['GET'])
 def file_download_url_mapper(request, shortkey, filename):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
@@ -218,6 +221,7 @@ def file_download_url_mapper(request, shortkey, filename):
     istorage = IrodsStorage()
     file_download_url = istorage.url(irods_file_path)
     return HttpResponseRedirect(file_download_url)
+
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
@@ -243,15 +247,13 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
 def publish(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
-    res.edit_users = []
-    res.edit_groups = []
-    res.published_and_frozen = True
-    res.doi = "to be assigned"
-    res.save()
+
+    hydroshare.publish_resource(shortkey)
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+# TOD0: this view function needs refactoring once the new access control UI works
 def change_permissions(request, shortkey, *args, **kwargs):
 
     class AddUserForm(forms.Form):
@@ -260,48 +262,102 @@ def change_permissions(request, shortkey, *args, **kwargs):
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
-
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
     t = request.POST['t']
     values = [int(k) for k in request.POST.getlist('designees', [])]
+    go_to_resource_listing_page = False
     if t == 'owners':
-        res.owners = User.objects.in_bulk(values)
+        go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'owner')
     elif t == 'edit_users':
-        res.edit_users = User.objects.in_bulk(values)
-    elif t == 'edit_groups':
-        res.edit_groups = Group.objects.in_bulk(values)
+        go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'edit')
+    # elif t == 'edit_groups':
+    #     res.edit_groups = Group.objects.in_bulk(values)
     elif t == 'view_users':
-        res.view_users = User.objects.in_bulk(values)
-    elif t == 'view_groups':
-        res.view_groups = Group.objects.in_bulk(values)
+        go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'view')
+    # elif t == 'view_groups':
+    #     res.view_groups = Group.objects.in_bulk(values)
     elif t == 'add_view_user':
         frm = AddUserForm(data=request.POST)
-        if frm.is_valid():
-            res.view_users.add(frm.cleaned_data['user'])
+        _share_resource_with_user(request, frm, res, user, PrivilegeCodes.VIEW)
     elif t == 'add_edit_user':
         frm = AddUserForm(data=request.POST)
-        if frm.is_valid():
-            res.edit_users.add(frm.cleaned_data['user'])
-    elif t == 'add_view_group':
-        frm = AddGroupForm(data=request.POST)
-        if frm.is_valid():
-            res.view_groups.add(frm.cleaned_data['group'])
-    elif t == 'add_view_group':
-        frm = AddGroupForm(data=request.POST)
-        if frm.is_valid():
-            res.edit_groups.add(frm.cleaned_data['group'])
+        _share_resource_with_user(request, frm, res, user, PrivilegeCodes.CHANGE)
+    # elif t == 'add_view_group':
+    #     frm = AddGroupForm(data=request.POST)
+    #     if frm.is_valid():
+    #         res.view_groups.add(frm.cleaned_data['group'])
+    # elif t == 'add_view_group':
+    #     frm = AddGroupForm(data=request.POST)
+    #     if frm.is_valid():
+    #         res.edit_groups.add(frm.cleaned_data['group'])
     elif t == 'add_owner':
         frm = AddUserForm(data=request.POST)
-        if frm.is_valid():
-            res.owners.add(frm.cleaned_data['user'])
+        _share_resource_with_user(request, frm, res, user, PrivilegeCodes.OWNER)
     elif t == 'make_public':
-        #if res.metadata.has_all_required_elements():
-        if res.can_be_public:
-            res.public = True
-            res.save()
+        _set_resource_sharing_status(request, user, res, True)
     elif t == 'make_private':
-        res.public = False
-        res.save()
+        _set_resource_sharing_status(request, user, res, False)
+
+    # due to self unsharing of a private resource the user will have no access to that resource
+    # so need to redirect to the resource listing page
+    if go_to_resource_listing_page:
+        return HttpResponseRedirect('/my-resources/')
+    else:
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+# Needed for new access control UI functionality being developed by Mauriel
+def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
+    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    user_to_share_with = utils.user_from_id(user_id)
+    status = 'success'
+    err_message = ''
+    if privilege == 'view':
+        access_privilege = PrivilegeCodes.VIEW
+    elif privilege == 'edit':
+        access_privilege = PrivilegeCodes.CHANGE
+    elif privilege == 'owner':
+        access_privilege = PrivilegeCodes.OWNER
+    else:
+        err_message = "Not a valid privilege"
+        access_privilege = PrivilegeCodes.NONE
+
+    if access_privilege != PrivilegeCodes.NONE:
+        try:
+            user.uaccess.share_resource_with_user(res, user_to_share_with, access_privilege)
+        except HSAccessException as exp:
+            status = 'error'
+            err_message = exp.message
+    else:
+        status = 'error'
+
+    if status == 'success':
+        messages.success(request, "Resource sharing was successful")
+    else:
+        messages.error(request, err_message)
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+# Needed for new access control UI functionality being developed by Mauriel
+def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
+    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    user_to_unshare_with = utils.user_from_id(user_id)
+
+    try:
+        if user.uaccess.can_unshare_resource_with_user(res, user_to_unshare_with):
+            # requesting user is the resource owner or user is self unsharing (user is user_to_unshare_with)
+            user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
+        else:
+            # requesting user is the original grantor of privilege to user_to_unshare_with
+            user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
+
+        messages.success(request, "Resource unsharing was successful")
+        if user == user_to_unshare_with and not res.raccess.public:
+            # user has no access to the resource - redirect to resource listing page
+            return HttpResponseRedirect('/my-resources/')
+    except HSAccessException as exp:
+        messages.error(request, exp.message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -338,9 +394,11 @@ def save_ajax(request):
         message_i18n = ', '.join([u"%s" % m for m in error.messages])
         return _get_http_response({'errors': message_i18n})
 
+
 class CaptchaVerifyForm(forms.Form):
     challenge = forms.CharField()
     response = forms.CharField()
+
 
 def verify_captcha(request):
     f = CaptchaVerifyForm(request.POST)
@@ -356,12 +414,14 @@ def verify_captcha(request):
         else:
             return HttpResponse('true', content_type='text/plain')
 
+
 def verify_account(request, *args, **kwargs):
     context = {
             'username' : request.GET['username'],
             'email' : request.GET['email']
         }
     return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+
 
 @processor_for('resend-verification-email')
 def resend_verification_email(request):
@@ -395,7 +455,6 @@ class FilterForm(forms.Form):
     from_date = forms.DateTimeField(required=False)
 
 
-
 @processor_for('my-resources')
 def my_resources(request, page):
     # import sys
@@ -424,21 +483,17 @@ def my_resources(request, page):
         )
 
         # TODO ten separate SQL queries for basically the same data
-        res = set()
-        for lst in get_resource_list(
+        reslst = get_resource_list(
             user=user,
-            owner= owner,
+            owner=owner,
             published=published,
             edit_permission=edit_permission,
             from_date=from_date,
             full_text_search=words,
             public=public,
             **search_items
-        ).values():
-            res = res.union(lst)
-        total_res_cnt = len(res)
-
-        reslst = list(res)
+        )
+        total_res_cnt = len(reslst)
 
         # need to return total number of resources as 'ct' so have to get all resources
         # and then filter by start and count
@@ -462,6 +517,7 @@ def my_resources(request, page):
             'ct': total_res_cnt,
         }
 
+
 @processor_for(GenericResource)
 def add_generic_context(request, page):
 
@@ -471,18 +527,7 @@ def add_generic_context(request, page):
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
-    cm = page.get_content_model()
-
     return {
-        'resource_type': cm._meta.verbose_name,
-        'bag': cm.bags.first(),
-        'users': User.objects.all(),
-        'groups': Group.objects.all(),
-        'owners': set(cm.owners.all()),
-        'view_users': set(cm.view_users.all()),
-        'view_groups': set(cm.view_groups.all()),
-        'edit_users': set(cm.edit_users.all()),
-        'edit_groups': set(cm.edit_groups.all()),
         'add_owner_user_form': AddUserForm(),
         'add_view_user_form': AddUserForm(),
         'add_edit_user_form': AddUserForm(),
@@ -490,9 +535,11 @@ def add_generic_context(request, page):
         'add_edit_group_form': AddGroupForm(),
     }
 
+
 @login_required
 def create_resource_select_resource_type(request, *args, **kwargs):
     return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
+
 
 @login_required
 def create_resource(request, *args, **kwargs):
@@ -539,19 +586,18 @@ def create_resource(request, *args, **kwargs):
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
 
-    try:
-        resource = hydroshare.create_resource(
-                resource_type=request.POST['resource-type'],
-                owner=request.user,
-                title=res_title,
-                keywords=None,
-                metadata=metadata,
-                files=resource_files,
-                content=res_title
-        )
-    except Exception as ex:
-        context = {'resource_creation_error': ex.message }
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+    # try:
+    resource = hydroshare.create_resource(
+            resource_type=request.POST['resource-type'],
+            owner=request.user,
+            title=res_title,
+            metadata=metadata,
+            files=resource_files,
+            content=res_title
+    )
+    # except Exception as ex:
+    #     context = {'resource_creation_error': ex.message }
+    #     return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     try:
         utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)
@@ -579,11 +625,57 @@ processor_for(GenericResource)(resource_processor)
 def get_metadata_terms_page(request, *args, **kwargs):
     return render(request, 'pages/metadata_terms.html')
 
-@processor_for('resources')
-def resource_listing_processor(request, page):
-    owned_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
-    editable_resources = list(GenericResource.objects.filter(owners__pk=request.user.pk))
-    viewable_resources = list(GenericResource.objects.filter(public=True))
-    return locals()
 
-# FIXME need a task somewhere that amounts to checking inactive accounts and deleting them after 30 days.
+def _share_resource_with_user(request, frm, resource, requesting_user, privilege):
+    if frm.is_valid():
+        try:
+            requesting_user.uaccess.share_resource_with_user(resource, frm.cleaned_data['user'], privilege)
+        except HSAccessException as exp:
+            messages.error(request, exp.message)
+    else:
+        messages.error(request, frm.errors.as_json())
+
+
+def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with, resource, privilege):
+    users_to_keep = User.objects.in_bulk(users_to_unshare_with).values()
+    owners = set(resource.raccess.owners.all())
+    editors = set(resource.raccess.edit_users.all()) - owners
+    viewers = set(resource.raccess.view_users.all()) - editors - owners
+
+    if privilege == 'owner':
+        all_shared_users = owners
+    elif privilege == 'edit':
+        all_shared_users = editors
+    elif privilege == 'view':
+        all_shared_users = viewers
+    else:
+        all_shared_users = []
+
+    go_to_resource_listing_page = False
+    for user in all_shared_users:
+        if user not in users_to_keep:
+            try:
+                if requesting_user.uaccess.can_unshare_resource_with_user(resource, user):
+                    # requesting user is the resource owner or requesting_user is self unsharing
+                    requesting_user.uaccess.unshare_resource_with_user(resource, user)
+                else:
+                    # requesting user is the original grantor of privilege to user
+                    requesting_user.uaccess.undo_share_resource_with_user(resource, user)
+
+                if requesting_user == user and not resource.raccess.public:
+                    go_to_resource_listing_page = True
+            except HSAccessException as exp:
+                messages.error(request, exp.message)
+                break
+    return go_to_resource_listing_page
+
+
+def _set_resource_sharing_status(request, user, resource, is_public):
+    if is_public and not resource.can_be_public:
+        messages.error(request, "Resource may not have sufficient required metadata to be public")
+    else:
+        if user.uaccess.can_change_resource_flags(resource):
+            resource.raccess.public = is_public
+            resource.raccess.save()
+        else:
+            messages.error(request, "You don't have permission to change resource sharing status")
