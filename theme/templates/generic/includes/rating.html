@@ -4,7 +4,7 @@
     {% if rating_sum %}
         {% if you_rated %}
             {% if rating_sum > 1 %}
-                You and 1 others&nbsp;
+                You and {{ rating_sum-1 }} others&nbsp;
             {% else %}
                 You&nbsp;
             {% endif %}
