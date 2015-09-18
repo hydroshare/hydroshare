@@ -6,48 +6,222 @@
 {% block main %}
     {% with u.userprofile as profile %}
 
-        <div class="row">
-            <div class="col-sm-3 col-xs-12">
+        <div class="row" style="padding: 40px 0;">
+            {#        Profile picture       #}
+            <div class="col-xs-12">
                 {% if profile.picture %}
-                    <img class="img-thumbnail" src="{{ profile.picture.url }}" alt=""/>
+                    <div style="background-image: url('{{ profile.picture.url }}'); float:left;" class="profile-pic round-image">
+                    </div>
                 {% endif %}
 
-            </div>
-            <div class="col-sm-9 col-xs-12">
-                <h2>{{ u.first_name }} {{ u.last_name }}</h2>
+                <div style="padding-top:10px;">
+                    <h2>{{ u.first_name }} {{ u.last_name }}</h2>
 
                 <h4 class="text-muted">
                     {% if profile.organization %}{{ profile.organization }}{% endif %} |
                     {% if profile.title %}{{ profile.title }}{% endif %}
                 </h4>
-                <table class="overview">
-                    <tbody>
-                    {% if profile.subject_areas %}
+                    <table class="overview">
+                        <tbody>
                         {% if profile.subject_areas %}
-                            <tr>
-                                <td><span class="text-muted">Subject Areas</span></td>
-                                <td>{{ profile.subject_areas }}</td>
-                            </tr>
+                            {% if profile.subject_areas %}
+                                <tr>
+                                    <td><span class="text-muted">Subject Areas: </span></td>
+                                    <td>{{ profile.subject_areas }}</td>
+                                </tr>
+                            {% endif %}
+
+                            {% if profile.profession %}
+                                <tr>
+                                    <td><span class="text-muted">Profession</span></td>
+                                    <td>{{ profile.profession }}</td>
+                                </tr>
+                            {% endif %}
                         {% endif %}
-
-                        {% if profile.profession %}
-                            <tr>
-                                <td><span class="text-muted">Profession</span></td>
-                                <td>{{ profile.profession }}</td>
-                            </tr>
-                        {% endif %}
-
-                    {% endif %}
-
-                    </tbody>
-                </table>
-
-                {% if profile.details %}
-                    <h3>About {{ u.first_name }}</h3>
-                    <p>{{ profile.details }}</p>
-                {% endif %}
-
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+
+        </div>
+
+        <div class="full-width-tabs-container">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs full-width-tabs" role="tablist">
+                <li role="presentation" class="active">
+                    <a href="#overview" aria-controls="home" role="tab"
+                       data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> OVERVIEW</a></li>
+                <li role="presentation">
+                    <a href="#contributions" aria-controls="profile" role="tab" data-toggle="tab">
+                        <i class="glyphicon glyphicon-file"></i> CONTRIBUTIONS</a>
+                </li>
+                <li role="presentation">
+                    <a href="#social" aria-controls="messages" role="tab"
+                       data-toggle="tab"><i class="glyphicon glyphicon-user"></i> SOCIAL</a></li>
+            </ul>
+
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane fade in active" id="overview">
+
+                    <div class="col-md-7">
+                        {#        DESCRIPTION       #}
+                        {% if profile.details %}
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">About {{ u.first_name }}</h3>
+                                </div>
+                                <div class="panel-body" style="color:#757575;">
+                                    {{ profile.details }}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Recent activity</h3>
+                            </div>
+                            <div class="panel-body">
+
+                                {% for res in resources %}
+                                    <div class="activity-block">
+                                        <div style="background-image: url('{{ profile.picture.url }}'); float:left;"
+                                             class="profile-pic-thumbnail round-image">
+                                        </div>
+
+                                        <strong>{{ u.first_name }} {{ u.last_name }}</strong><span class="text-muted"> shared <strong>{{ res|resource_type }}: </strong></span>
+                                        <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
+                                        <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
+
+                                        {% if  res.metadata.description %}
+                                        <a data-toggle="collapse"
+                                           href="#collapseExample" aria-expanded="false"
+                                           aria-controls="collapseExample">
+                                            [Show/hide abstract]
+                                        </a>
+
+                                        <div class="collapse" id="collapseExample">
+                                            <p style="color:#757575;">
+                                                <strong>ABSTRACT: </strong>{{ res.metadata.description }}
+                                            </p>
+                                        </div>
+
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-5">
+
+                        {#  CONTACT #}
+                        <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Contact</h3>
+                        </div>
+                        <div class="panel-body">
+                        <table class="overview">
+                            <tbody>
+                            {% if profile.phone_1 %}
+                                <tr>
+                                    <td><span class="text-muted">{% if profile.phone_1_type %}{{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
+                                    <td>{{ profile.phone_1 }}</td>
+                                </tr>
+                            {% endif %}
+                            {% if profile.phone_2 %}
+                                <tr>
+                                    <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
+                                    <td>{{ profile.phone_2 }}</td>
+                                </tr>
+                            {% endif %}
+                            {% if u.email %}
+                                {% if user.pk %}
+                                    <tr>
+                                        <td><span class="text-muted">Email</span></td>
+                                        <td><a href="mailto:{{ u.email }}">send email
+                                            to {{ u.first_name }}</a></td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td><span class="text-muted">Email</span></td>
+                                        <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
+                                    </tr>
+                                {% endif %}
+                            {% endif %}
+                            </tbody>
+                        </table>
+
+                        </div>
+                    </div>
+                        {#      AFFILIATIONS     #}
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Affiliations</h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-affiliations list-unstyled">
+                                    <li>
+                                        <div class="col-sm-3" style="padding:0">
+                                            <a href="http://www.usu.edu/" target="_blank"><img
+                                                    class="img-responsive affiliation-logo"
+                                                    src="http://www.usu.edu/prm/identity/logos/vertical-blue.jpg"
+                                                    alt="USU logo"></a>
+                                        </div>
+                                        <div class="col-sm-9" style="padding:0 10px">
+                                            <a href="http://www.usu.edu/" target="_blank">
+                                                <span class="organization_name">Utah State University</span></a>
+                                            <span class="text-muted">(2001-2015)</span>
+                                            <h5 class="text-muted">8200 Old Main Hill, Logan, UT, 84322</h5>
+                                            <h5 class="text-muted">Civil and Environmental Engineering | Professor</h5>
+                                            <h5 class="text-muted">(904) 343 3074</h5>
+                                        </div>
+                                    </li>
+
+                                    <li>
+                                        <div class="col-sm-3" style="padding:0">
+                                            <a href="http://uwrl.usu.edu/" target="_blank"><img
+                                                    class="img-responsive affiliation-logo"
+                                                    src="http://uwrl.usu.edu/sites/default/files/uwrllogo.gif"
+                                                    alt="UWRL logo"></a>
+                                        </div>
+                                        <div class="col-sm-9" style="padding:0 10px">
+                                            <a href="http://www.usu.edu/" target="_blank">
+                                        <span class="organization_name">Utah Water Research
+                                        Laboratory</span></a>
+                                            <span class="text-muted">(2001-2015)</span>
+                                            <h5 class="text-muted">1600 Canyon Road, Logan, UT, 84321</h5>
+                                            <h5 class="text-muted">Software Programming and Research Support | Web
+                                                Developer</h5>
+                                            <h5 class="text-muted">(904) 343 3074</h5>
+                                        </div>
+                                    </li>
+                                </ul>
+
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <div role="tabpanel" class="tab-pane fade" id="contributions">Contributions</div>
+
+                <div role="tabpanel" class="tab-pane fade" id="social">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">External profile urls</h3>
+                        </div>
+                        <div class="panel-body">
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
 
@@ -69,38 +243,7 @@
                         <div class="tab-content">
                             {#  ---------- AFFILIATIONS ----------#}
                             <div class="tab-pane active" id="tab-affiliations">
-                                <div class="pull-left affiliation-row">
-                                    <div class="col-xs-12 col-sm-9">
-                                        <a href="http://www.usu.edu/" target="_blank">
-                                            <span class="organization_name">Utah State University</span></a>
-                                        <span class="text-muted">(2001-2015)</span>
-                                        <h5 class="text-muted">8200 Old Main Hill, Logan, UT, 84322</h5>
-                                        <h5 class="text-muted">Civil and Environmental Engineering | Professor</h5>
-                                        <h5 class="text-muted">(904) 343 3074</h5>
-                                    </div>
-                                    <div class="col-xs-12 col-sm-3">
-                                        <a href="http://www.usu.edu/" target="_blank"><img class="img-responsive affiliation-logo"
-                                                                                           src="http://www.usu.edu/prm/identity/logos/vertical-blue.jpg"
-                                                                                           alt="USU logo"></a>
-                                    </div>
-                                </div>
-                                <div class="pull-left affiliation-row">
-                                    <div class="col-xs-12 col-sm-9">
-                                        <a href="http://www.usu.edu/" target="_blank">
-                                        <span class="organization_name">Utah Water Research
-                                        Laboratory</span></a>
-                                        <span class="text-muted">(2001-2015)</span>
-                                        <h5 class="text-muted">1600 Canyon Road, Logan, UT, 84321</h5>
-                                        <h5 class="text-muted">Software Programming and Research Support | Web
-                                            Developer</h5>
-                                        <h5 class="text-muted">(904) 343 3074</h5>
-                                    </div>
-                                    <div class="col-xs-12 col-sm-3">
-                                        <a href="http://uwrl.usu.edu/" target="_blank"><img class="img-responsive affiliation-logo"
-                                                                                            src="http://uwrl.usu.edu/sites/default/files/uwrllogo.gif"
-                                                                                            alt="UWRL logo"></a>
-                                    </div>
-                                </div>
+
                             </div>
                         {#  ---------- CONTRIBUTIONS ----------#}
                             <div class="tab-pane" id="tab-contributions">
@@ -122,36 +265,6 @@
                             <div class="tab-pane" id="tab-contact">
                                 <div class="col-sm-12">
                                     <h4>Contact info</h4>
-                                    <table class="overview">
-                                        <tbody>
-                                        {% if profile.phone_1 %}
-                                            <tr>
-                                                <td><span class="text-muted">{{ profile.phone_1_type }}</span></td>
-                                                <td>{{ profile.phone_1 }}</td>
-                                            </tr>
-                                        {% endif %}
-                                        {% if profile.phone_2 %}
-                                            <tr>
-                                                <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
-                                                <td>{{ profile.phone_2 }}</td>
-                                            </tr>
-                                        {% endif %}
-                                        {% if u.email %}
-                                            {% if user.pk %}
-                                                <tr>
-                                                    <td><span class="text-muted">Email</span></td>
-                                                    <td><a href="mailto:{{ u.email }}">send email
-                                                        to {{ u.first_name }}</a></td>
-                                                </tr>
-                                            {% else %}
-                                                <tr>
-                                                    <td><span class="text-muted">Email</span></td>
-                                                    <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
-                                                </tr>
-                                            {% endif %}
-                                        {% endif %}
-                                        </tbody>
-                                    </table>
 
                                     <div class="content social">
                                         <h4>Additional profile urls</h4>
@@ -183,22 +296,5 @@
 
         </div>
 
-        {#  ---------- ACTIVITY ----------#}
-        <div class="row">
-            <div class="col-sm-12">
-                <h3>Activity</h3>
-                {% for res in resources %}
-                    <div class="activity-block">
-                        <img src="{{ profile.picture.url }}" class="activity-thumbnail" alt="profile picture">
-                        <strong>{{ u.first_name }} {{ u.last_name }}</strong><span class="text-muted"> shared </span>
-                        <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
-                        <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
-                        {% if  res.metadata.description %}
-                            <h5 class="quote">{{ res.metadata.description }}</h5>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
     {% endwith %}
 {% endblock %}

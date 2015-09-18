@@ -67,8 +67,9 @@
 
 </head>
 <body id="{% block body_id %}body{% endblock %}">
-<!-- Navbar
-    ============= -->
+<div id="page-container">
+    <!-- Navbar
+        ============= -->
     <div class="navbar navbar-inverse navbar-fixed-top">
         <div class="container">
             <div class="navbar-header">
@@ -77,7 +78,8 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="/"><img src="{{ STATIC_URL }}img/logo-sm.png" alt="{{ settings.SITE_TITLE }}"/></a>
+                <a class="navbar-brand" href="/"><img src="{{ STATIC_URL }}img/logo-sm.png"
+                                                      alt="{{ settings.SITE_TITLE }}"/></a>
             </div>
             <div class="collapse navbar-collapse">
                 {% page_menu "pages/menus/dropdown.html" %}
@@ -94,21 +96,26 @@
                 {% endcomment %}
                 <ul class="nav navbar-nav navbar-right hidden-xs">
                     {% ifinstalled mezzanine.accounts %}
-                    {% if request.user.is_authenticated %}
-                    <li id="profile-menu" class="display-block">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ request.user|best_name }} <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            <li class="account">
-                                <p><b>{{ request.user }}</b>{% if request.user.email %}<br />{{ request.user.email }}{% endif %}</p>
-                                <p><a href="{% url 'profile_update' %}">Profile</a> | <a href="{% url 'logout' %}" id="signout-menu">Sign out</a>
-                                <div class="clearfix"></div>
+                        {% if request.user.is_authenticated %}
+                            <li id="profile-menu" class="display-block">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ request.user|best_name }}
+                                    <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    <li class="account">
+                                        <p><b>{{ request.user }}</b>{% if request.user.email %}<br/>
+                                            {{ request.user.email }}{% endif %}</p>
+
+                                        <p><a href="{% url 'profile_update' %}">Profile</a> | <a
+                                                href="{% url 'logout' %}" id="signout-menu">Sign out</a>
+
+                                        <div class="clearfix"></div>
+                                    </li>
+                                </ul>
                             </li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <!-- <li id="signup-menu"><a href="{% url 'signup' %}">Sign Up</a></li> -->
-                    <li id="signin-menu"><a href="{% url 'login' %}">Sign In</a></li>
-                    {% endif %}
+                        {% else %}
+                            <!-- <li id="signup-menu"><a href="{% url 'signup' %}">Sign Up</a></li> -->
+                            <li id="signin-menu"><a href="{% url 'login' %}">Sign In</a></li>
+                        {% endif %}
                     {% endifinstalled %}
                     {% comment %}
                     <!-- Search Button -->
@@ -129,41 +136,42 @@
         </div>
     </div>
     {% nevercache %}
-    {% if messages %}
-    {% for message in messages %}
-    <div class="page-tip animated slideInDown">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <button type="button" onClick="$(this).parent().parent().parent().parent().hide(400);" class="close">&times;</button>
-                    <p>{{ message }}</p>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="page-tip animated slideInDown">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="button" onClick="$(this).parent().parent().parent().parent().hide(400);"
+                                        class="close">&times;</button>
+                                <p>{{ message }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-    {% endif %}
+            {% endfor %}
+        {% endif %}
     {% endnevercache %}
 
 
     {% block all_content %}
-{#    <div class="section-header">#}
-{#        <div class="container">#}
-{#            <div class="row">#}
-{#                <div class="col-md-12">#}
-{#                    <h1><span>{% block title %}{% endblock %}</span></h1>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
-{#    </div>#}
-    <div class="container">
-        <div class="row">
-            <div class="{% block main_cols %}col-md-12{% endblock %}">
-                {% block main %}{% endblock %}
+        {#    <div class="section-header">#}
+        {#        <div class="container">#}
+        {#            <div class="row">#}
+        {#                <div class="col-md-12">#}
+        {#                    <h1><span>{% block title %}{% endblock %}</span></h1>#}
+        {#                </div>#}
+        {#            </div>#}
+        {#        </div>#}
+        {#    </div>#}
+        <div class="container">
+            <div class="row">
+                <div class="{% block main_cols %}col-md-12{% endblock %}">
+                    {% block main %}{% endblock %}
+                </div>
+                {% block after_main %}{% endblock %}
             </div>
-            {% block after_main %}{% endblock %}
         </div>
-    </div>
     {% endblock %}
     <!-- Foooter
     ================== -->
@@ -174,66 +182,72 @@
                 =================  -->
                 <div class="col-md-4 col-sm-4">
                     {% editable siteconf.col1_heading siteconf.col1_content %}
-                    <div class="headline">
-                        <h3>{{ siteconf.col1_heading }}</h3>
-                    </div>
-                    <div class="content">
-                        {{ siteconf.col1_content|richtext_filters|safe }}
-                    </div>
+                        <div class="headline">
+                            <h3>{{ siteconf.col1_heading }}</h3>
+                        </div>
+                        <div class="content">
+                            {{ siteconf.col1_content|richtext_filters|safe }}
+                        </div>
                     {% endeditable %}
                 </div>
                 <!-- Social icons 
                 ===================== -->
                 <div class="col-md-4 col-sm-4">
                     {% editable siteconf.col2_heading siteconf.twitter_link siteconf.facebook_link siteconf.pinterest_link siteconf.youtube_link siteconf.github_link siteconf.linkedin_link siteconf.vk_link siteconf.gplus_link %}
-                    <div class="headline"><h3>{{ siteconf.col2_heading }}</h3></div>
+                        <div class="headline"><h3>{{ siteconf.col2_heading }}</h3></div>
                     {% endeditable %}
                     <div class="content social">
                         {% editable siteconf.col2_content %}
-                        {{ siteconf.col2_content|richtext_filters|safe }}
+                            {{ siteconf.col2_content|richtext_filters|safe }}
                         {% endeditable %}
                         {% if siteconf.has_social_network_links %}
-                        <ul>{% if siteconf.twitter_link %}
-                            <li>
-                                <a href="{{ siteconf.twitter_link }}" target="_blank"><i class="fa fa-twitter"></i></a>
-                            </li>
+                            <ul>{% if siteconf.twitter_link %}
+                                <li>
+                                    <a href="{{ siteconf.twitter_link }}" target="_blank"><i class="fa fa-twitter"></i></a>
+                                </li>
                             {% endif %}
-                            {% if siteconf.facebook_link %}
-                            <li>
-                                <a href="{{ siteconf.facebook_link }}" target="_blank"><i class="fa fa-facebook"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.pinterest_link %}
-                            <li>
-                                <a href="{{ siteconf.pinterest_link }}" target="_blank"><i class="fa fa-pinterest"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.youtube_link %}
-                            <li>
-                                <a href="{{ siteconf.youtube_link }}" target="_blank"><i class="fa fa-youtube"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.github_link %}
-                            <li>
-                                <a href="{{ siteconf.github_link }}" target="_blank"><i class="fa fa-github"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.linkedin_link %}
-                            <li>
-                                <a href="{{ siteconf.linkedin_link }}" target="_blank"><i class="fa fa-linkedin"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.vk_link %}
-                            <li>
-                                <a href="{{ siteconf.vk_link }}" target="_blank"><i class="fa fa-vk"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.gplus_link %}
-                            <li>
-                                <a href="{{ siteconf.gplus_link }}" target="_blank"><i class="fa fa-google-plus"></i></a>
-                            </li>
-                            {% endif %}
-                        </ul>
+                                {% if siteconf.facebook_link %}
+                                    <li>
+                                        <a href="{{ siteconf.facebook_link }}" target="_blank"><i
+                                                class="fa fa-facebook"></i></a>
+                                    </li>
+                                {% endif %}
+                                {% if siteconf.pinterest_link %}
+                                    <li>
+                                        <a href="{{ siteconf.pinterest_link }}" target="_blank"><i
+                                                class="fa fa-pinterest"></i></a>
+                                    </li>
+                                {% endif %}
+                                {% if siteconf.youtube_link %}
+                                    <li>
+                                        <a href="{{ siteconf.youtube_link }}" target="_blank"><i
+                                                class="fa fa-youtube"></i></a>
+                                    </li>
+                                {% endif %}
+                                {% if siteconf.github_link %}
+                                    <li>
+                                        <a href="{{ siteconf.github_link }}" target="_blank"><i
+                                                class="fa fa-github"></i></a>
+                                    </li>
+                                {% endif %}
+                                {% if siteconf.linkedin_link %}
+                                    <li>
+                                        <a href="{{ siteconf.linkedin_link }}" target="_blank"><i
+                                                class="fa fa-linkedin"></i></a>
+                                    </li>
+                                {% endif %}
+                                {% if siteconf.vk_link %}
+                                    <li>
+                                        <a href="{{ siteconf.vk_link }}" target="_blank"><i class="fa fa-vk"></i></a>
+                                    </li>
+                                {% endif %}
+                                {% if siteconf.gplus_link %}
+                                    <li>
+                                        <a href="{{ siteconf.gplus_link }}" target="_blank"><i
+                                                class="fa fa-google-plus"></i></a>
+                                    </li>
+                                {% endif %}
+                            </ul>
                         {% endif %}
                         <div class="clearfix"></div>
                     </div>
@@ -242,10 +256,10 @@
                 =============== -->
                 <div class="col-md-4 col-sm-4">
                     {% editable siteconf.col3_heading siteconf.col3_content %}
-                    <div class="headline"><h3>{{ siteconf.col3_heading }}</h3></div>
-                    <div class="content">
-                        {{ siteconf.col3_content|richtext_filters|safe }}
-                    </div>
+                        <div class="headline"><h3>{{ siteconf.col3_heading }}</h3></div>
+                        <div class="content">
+                            {{ siteconf.col3_content|richtext_filters|safe }}
+                        </div>
                     {% endeditable %}
                 </div>
             </div>
@@ -257,7 +271,8 @@
                 <div class="row">
                     <div class="col-md-12">
                         {% editable siteconf.copyright %}
-                        <p>{{ siteconf.render_copyright }} | <a href="/terms-of-use">Terms Of Use</a> | <a href="/privacy">Statement of Privacy</a></p>
+                            <p>{{ siteconf.render_copyright }} | <a href="/terms-of-use">Terms Of Use</a> | <a
+                                    href="/privacy">Statement of Privacy</a></p>
                         {% endeditable %}
                     </div>
                 </div>
@@ -267,5 +282,6 @@
 
 
     {% include "includes/footer_scripts.html" %}
+</div>
 </body>
 </html>
