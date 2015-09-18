@@ -519,12 +519,19 @@ class GenericResourceMeta(object):
                                              code=self.language)
         if self.creation_date:
             res_created_date = resource.metadata.dates.all().filter(type='created')[0]
-            resource.metadata.update_element('date', res_created_date.id, start_date=self.creation_date)
+            res_created_date.start_date = self.creation_date
+            res_created_date.save()
+            resource.created = self.creation_date
+            resource.save()
         if self.modification_date:
             res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
             # This doesn't seem to be working.  Maybe updating an element triggers the mod. date to be
             #  updated.
-            resource.metadata.update_element('date', res_modified_date.id, start_date=self.modification_date)
+            #resource.metadata.update_element('date', res_modified_date.id, start_date=self.modification_date)
+            res_modified_date.start_date = self.modification_date
+            res_modified_date.save()
+            resource.updated = self.modification_date
+            resource.save()
 
         resource.save()
 
