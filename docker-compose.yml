@@ -17,7 +17,7 @@ hydroshare:
     PGPASSWORD: postgres
   volumes:
     # hydroshare repository
-    - "/home/hydro/hydroshare:/home/docker/hydroshare"
+    - ".:/home/docker/hydroshare"
     # pycharm debugging
     #- "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
   ports:

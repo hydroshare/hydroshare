@@ -1,11 +1,15 @@
+import json
+
 from django.contrib.contenttypes import generic
 from django.db import models
-from mezzanine.pages.models import Page
-from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
-from mezzanine.pages.page_processors import processor_for
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-import json
+
+from mezzanine.pages.models import Page
+from mezzanine.pages.page_processors import processor_for
+
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
+
 
 
 # extended metadata for raster resource type to store the original box type coverage since the core metadata coverage
@@ -227,9 +231,12 @@ class CellInformation(AbstractMetaDataElement):
 #
 # To create a new resource, use these two super-classes.
 #
-class RasterResource(Page, AbstractResource):
+class RasterResource(BaseResource):
+    objects = ResourceManager()
+
     class Meta:
         verbose_name = 'Geographic Raster'
+        proxy = True
 
     @property
     def metadata(self):
@@ -246,17 +253,6 @@ class RasterResource(Page, AbstractResource):
         # can have only 1 file
         return False
 
-    def can_add(self, request):
-        return AbstractResource.can_add(self, request)
-
-    def can_change(self, request):
-        return AbstractResource.can_change(self, request)
-
-    def can_delete(self, request):
-        return AbstractResource.can_delete(self, request)
-
-    def can_view(self, request):
-        return AbstractResource.can_view(self, request)
 
 # this would allow us to pick up additional form elements for the template before the template is displayed via Mezzanine page processor
 processor_for(RasterResource)(resource_processor)

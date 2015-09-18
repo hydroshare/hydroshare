@@ -15,7 +15,7 @@ from django.core.serializers import get_serializer
 from mezzanine.conf import settings
 
 from hs_core.signals import *
-from hs_core.models import AbstractResource
+from hs_core.models import AbstractResource, ResourceManager, BaseResource
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from django_irods.storage import IrodsStorage
 
@@ -26,8 +26,13 @@ class ResourceFileSizeException(Exception):
 class ResourceFileValidationException(Exception):
     pass
 
+
 def get_resource_types():
-    resource_types = filter(lambda x: issubclass(x, AbstractResource), get_models())
+    resource_types = []
+    for model in get_models():
+        if issubclass(model, AbstractResource) and model != BaseResource:
+            if not getattr(model, 'archived_model', False):
+                resource_types.append(model)
     return resource_types
 
 
@@ -40,27 +45,29 @@ def get_resource_instance(app, model_name, pk, or_404=True):
 
 
 def get_resource_by_shortkey(shortkey, or_404=True):
-    models = get_resource_types()
-    for model in models:
-        m = model.objects.filter(short_id=shortkey)
-        if m.exists():
-            return m[0]
-    if or_404:
-        raise Http404(shortkey)
-    else:
-        raise ObjectDoesNotExist(shortkey)
+    try:
+        res = BaseResource.objects.get(short_id=shortkey)
+    except BaseResource.DoesNotExist:
+        if or_404:
+            raise Http404(shortkey)
+        else:
+            raise
+    content = res.get_content_model()
+    assert content, (res, res.content_model)
+    return content
 
 
 def get_resource_by_doi(doi, or_404=True):
-    models = get_resource_types()
-    for model in models:
-        m = model.objects.filter(doi=doi)
-        if m.exists():
-            return m[0]
-    if or_404:
-        raise Http404(doi)
-    else:
-        raise ObjectDoesNotExist(doi)
+    try:
+        res = BaseResource.objects.get(doi=doi)
+    except BaseResource.DoesNotExist:
+        if or_404:
+            raise Http404(doi)
+        else:
+            raise
+    content = res.get_content_model()
+    assert content, (res, res.content_model)
+    return content
 
 
 def user_from_id(user, raise404=True):

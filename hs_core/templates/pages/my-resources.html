@@ -40,7 +40,7 @@
                 {# ################### #}
                 {% for res in resources %}
                     <tr>
-                        <td><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></td>
+                        <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
                         {# <th><i class="text-warning fa {% if starred %}fa-star{% else %}fa-star-o{% endif %}"></i></th>  #}
                         <td>{{ res|resource_type }}</td>
                         {% if res.first_creator.description %}
