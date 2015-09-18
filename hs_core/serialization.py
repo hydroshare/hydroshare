@@ -89,9 +89,9 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
             resource_id = rm.id
 
         kwargs = {}
-        if rm.creation_date:
-            # This has no effect
-            kwargs['created'] = rm.creation_date
+        # if rm.creation_date:
+        #     # This has no effect
+        #     kwargs['created'] = rm.creation_date
         resource = create_resource(resource_type=rm.res_type,
                                    owner=owner_pk,
                                    title=rm.title,
@@ -514,17 +514,19 @@ class GenericResourceMeta(object):
             except IntegrityError:
                 resource.metadata.update_element('rights', resource.metadata.rights.id,
                                                  statement=self.rights.statement)
-        # if self.creation_date:
-        #     res_created_date = resource.metadata.dates.all().filter(type='created')[0]
-        #     resource.metadata.update_element('date', res_created_date.id, created=self.creation_date)
         if self.language:
             resource.metadata.update_element('language', resource.metadata.language.id,
                                              code=self.language)
+        if self.creation_date:
+            res_created_date = resource.metadata.dates.all().filter(type='created')[0]
+            resource.metadata.update_element('date', res_created_date.id, start_date=self.creation_date)
         if self.modification_date:
             res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
             # This doesn't seem to be working.  Maybe updating an element triggers the mod. date to be
             #  updated.
-            resource.metadata.update_element('date', res_modified_date.id, modified=self.modification_date)
+            resource.metadata.update_element('date', res_modified_date.id, start_date=self.modification_date)
+
+        resource.save()
 
     class ResourceCreator(object):
         # Only record elements essential for identifying the user

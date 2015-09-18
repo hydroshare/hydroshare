@@ -610,10 +610,13 @@ class Date(AbstractMetaDataElement):
                 except TypeError:
                     raise TypeError("Not a valid date value.")
                 if dt.type == 'created':
-                    raise ValidationError("Resource creation date can't be changed")
+                    #raise ValidationError("Resource creation date can't be changed")
+                    dt.start_date = start_dt
+                    dt.save(force_update=True)
                 elif dt.type == 'modified':
-                    dt.start_date = now().isoformat()
-                    dt.save()
+                    # dt.start_date = now().isoformat()
+                    dt.start_date = start_dt
+                    dt.save(force_update=True)
                 elif dt.type == 'valid':
                     if 'end_date' in kwargs:
                         try:
