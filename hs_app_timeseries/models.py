@@ -3,10 +3,12 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models
+
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
-from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
+
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 
 
 # define extended metadata elements for Time Series resource type
@@ -191,9 +193,12 @@ class TimeSeriesResult(AbstractMetaDataElement):
 # To create a new resource, use these three super-classes.
 #
 
-class TimeSeriesResource(Page, AbstractResource):
+class TimeSeriesResource(BaseResource):
+    objects = ResourceManager()
+
     class Meta:
         verbose_name = 'Time Series'
+        proxy = True
 
     @property
     def metadata(self):

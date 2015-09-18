@@ -16,7 +16,7 @@ from .utils import authorize, validate_json
 from django.views.generic import View
 from django.core import exceptions
 
-from hs_core.models import AbstractResource
+from hs_core.models import AbstractResource, ResourceManager
 
 
 class ResourceCRUD(View):

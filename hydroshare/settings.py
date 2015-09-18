@@ -280,6 +280,7 @@ INSTALLED_APPS = (
     "ga_resources",
     #"dublincore",
     "hs_core",
+    "hs_access_control",
     "hs_metrics",
     "irods_browser_app",
     #"hs_rhessys_inst_resource",
