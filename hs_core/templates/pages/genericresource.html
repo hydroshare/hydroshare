@@ -450,7 +450,7 @@
                 <p>Your research group(s) have been given specific permission to view this resource.</p>
             {% endif %}
 
-            {% if page.perms.change and metadata_form%}
+            {% if page.perms.change and metadata_form %}
                 <div class="panel panel-default panel-faq">
                     <div class="panel-heading">
                         <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
@@ -666,10 +666,12 @@
 
 
         {#        ======= Content =======#}
-        {% if show_content_files  %}
+
             <div>
                 <h3>Content</h3>
-                <div class="custom-well">
+
+                {% if show_content_files  %}
+                    <div class="custom-well">
                     {#            {% block extra_content %}#}
                     {#            {% endblock %}#}
                     {% if cm.files.all %}
@@ -775,10 +777,15 @@
                           </div>
                         {% endif %}
                     {% endif %}
-                    <div class="col-lg-12"><a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a></div>
-                </div>
+                        <div class="col-lg-12"><a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more
+                            about the Bagit archive format</a></div>
+                    </div>
+                {% else %}
+                    <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;
+                    <span>You do not have permission to see these content files. Please contact the Authors if you wish to obtain access.</span>
+                {% endif %}
             </div>
-        {% endif %}
+
             <!-- === Tabs begin === -->
         <div class="tab-elements">
             <div class="panel-tabs">

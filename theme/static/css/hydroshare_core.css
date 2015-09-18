@@ -1708,10 +1708,17 @@ span.name-label {
     display: table;
 }
 
+i.no-access-icon {
+    font-size: 20px;
+    display: block;
+    float: left;
+}
+
 .tab-elements {
     max-height: 441px;
     overflow-x: auto;
     overflow-y: hidden;
+    margin-top: 20px;
 }
 
 .tab-elements .panel-tabs, .tab-elements .tabs-body {
