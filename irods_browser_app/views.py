@@ -64,6 +64,7 @@ def login(request):
             response_data['login_message'] = 'iRODS login failed'
             response_data['irods_file_names'] = ''
             response_data['error'] = "iRODS collection does not exist"
+            irods_sess.cleanup()
             return HttpResponse(
                 json.dumps(response_data),
                 content_type="application/json"
@@ -77,6 +78,7 @@ def login(request):
             response_data['datastore'] = datastore
             response_data['irods_loggedin'] = True
             response_data['irods_file_names'] = ''
+            irods_sess.cleanup()
             return HttpResponse(
                 json.dumps(response_data),
                 content_type = "application/json"
@@ -98,9 +100,10 @@ def store(request):
 
     return_object['files'] = store['files']
     return_object['folder'] = store['folder']
-
+    jsondump = json.dumps(return_object)
+    irods_sess.cleanup()
     return HttpResponse(
-        json.dumps(return_object),
+        jsondump,
         content_type = "application/json"
     )
 
