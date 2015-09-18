@@ -4,6 +4,7 @@ import string
 from django.http import HttpResponse, HttpResponseRedirect
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
+from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.views.utils import authorize, upload_from_irods
 from hs_core.hydroshare import utils
@@ -162,8 +163,8 @@ def upload_add(request):
         try:
             upload_from_irods(username=user, password=password, host=host, port=port,
                               zone=zone, irods_fnames=irods_fnames, res_files=res_files)
-        except Exception as ex:
-            request.session['file_validation_error'] = ex.message
+        except SessionException as ex:
+            request.session['file_validation_error'] = ex.stderr
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:
