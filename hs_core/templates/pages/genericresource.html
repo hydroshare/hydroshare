@@ -147,7 +147,7 @@
                                 <span>{{ u|contact|safe }}</span>&nbsp;&nbsp;
                             {% endfor %}
                         </td></tr>
-                        </tr><tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
+                        <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
                         <tr><th>Created:</th><td>{{ cm.created }}</td></tr>
                         <tr><th>Last updated:</th><td> {{ cm.updated }} by {%  if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
                     </table>
@@ -263,7 +263,7 @@
 
                     <div id="status-btn-group" class="btn-group" role="group" aria-label="...">
                         {# -------- PUBLIC -------- #}
-                        {% if cm.public and cm.discoverable %}
+                        {% if cm.raccess.public and discoverable %}
                             <button id="btn-public" data-toggle="tooltip" data-placement="auto"
                                     title='Can be viewed and downloaded by anyone.' type="button"
                                     class="btn btn-default active">Public
@@ -280,12 +280,10 @@
                                         class="btn btn-default">Public
                                 </button>
                             </form>
-
-
                         {% endif %}
 
                         {# -------- DISCOVERABLE -------- #}
-                        {% if not cm.public and cm.discoverable %}
+                        {% if not cm.raccess.public and discoverable %}
                             <button id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
                                     title='Metadata is public but data is protected.' type="button"
                                     class="btn btn-default active">Discoverable
@@ -305,7 +303,7 @@
                         {% endif %}
 
                         {# -------- PRIVATE -------- #}
-                        {% if not cm.public and not cm.discoverable %}
+                        {% if not cm.raccess.public and not discoverable %}
                             <button id="btn-private" data-toggle="tooltip" data-placement="auto"
                                     title='Can be viewed and downloaded only by designated users or research groups.'
                                     type="button" class="btn btn-default active">Private
@@ -324,11 +322,11 @@
                         {% endif %}
                     </div>
                 {% else %}
-                    {% if cm.public and cm.discoverable %}
+                    {% if cm.raccess.public and discoverable %}
                         <strong style="color:#5cb85c">&nbspPublic</strong>
-                    {% elif not cm.public and cm.discoverable %}
+                    {% elif not cm.raccess.public and discoverable %}
                         <strong style="color:#f0ad4e">&nbspDiscoverable</strong>
-                    {% elif not cm.public and not cm.discoverable %}
+                    {% elif not cm.raccess.public and not discoverable %}
                         <strong style="color:#d9534f">&nbspPrivate</strong>
                     {% endif %}
                 {% endif %}
@@ -452,7 +450,7 @@
                 <p>Your research group(s) have been given specific permission to view this resource.</p>
             {% endif %}
 
-            {% if page.perms.change %}
+            {% if page.perms.change and metadata_form%}
                 <div class="panel panel-default panel-faq">
                     <div class="panel-heading">
                         <a data-toggle="collapse" data-parent="#accordion-cat-1" href="#faq-cat-1-sub-1">
@@ -581,7 +579,7 @@
                             {#                                </div>#}
                             {#                            </div>#}
 
-                            {% if not cm.public %}
+                            {% if not cm.raccess.public %}
                                 <div class="col-md-4">
                                     <div class="custom-well">
                                         <h5 class="access-panel-title"><strong>Users who can view and download the
@@ -668,7 +666,7 @@
 
 
         {#        ======= Content =======#}
-        {% if cm.public or page.perms.change or is_edit_user or is_view_user %}
+        {% if show_content_files  %}
             <div>
                 <h3>Content</h3>
                 <div class="custom-well">

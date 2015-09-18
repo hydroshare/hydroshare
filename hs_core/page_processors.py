@@ -45,6 +45,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session["file_type_error"]
 
     content_model = page.get_content_model()
+    discoverable = content_model.raccess.discoverable
     file_validation_error = None
 
     metadata_status = _get_metadata_status(content_model)
@@ -140,7 +141,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'file_type_error': file_type_error,
                    'just_created': just_created,
                    'bag_url': bag_url,
-                   'show_content_files': show_content_files
+                   'show_content_files': show_content_files,
+                   'discoverable': discoverable
+
         }
         return context
 
@@ -324,7 +327,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'extended_metadata_layout': extended_metadata_layout,
                'bag_url': bag_url,
                'show_content_files': show_content_files,
-               'file_validation_error': file_validation_error if file_validation_error else None
+               'file_validation_error': file_validation_error if file_validation_error else None,
+               'discoverable': discoverable
     }
 
     return context
