@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.conf import settings
 
 from mezzanine.generic.views import initial_validation
 from mezzanine.utils.views import render, set_cookie, is_spam
@@ -105,6 +106,20 @@ from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.utils.views import render
 
 from .forms import SignupForm
+
+
+def verify_captcha(request):
+    f = CaptchaVerifyForm(request.POST)
+    if f.is_valid():
+        params = dict(f.cleaned_data)
+        params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY', settings.RECAPTCHA_PRIVATE_KEY)
+        params['remoteip'] = request.META['REMOTE_ADDR']
+        resp = requests.post('http://www.google.com/recaptcha/api/verify', params=params)
+        lines = resp.text.split('\n')
+        if not lines[0].startswith('false'):
+            return True
+    return False
+
 
 def signup(request, template="accounts/account_signup.html"):
     """

@@ -28,35 +28,12 @@
                 console.log(stuff);
                 alert('cannot create account');
             }
-            if(password===pwconfirm) {
-                $.ajax({
-                    type: "POST",
-                    url:'/hsapi/_internal/verify_captcha/',
-                    data:{
-                        challenge: Recaptcha.get_challenge(),
-                        response: Recaptcha.get_response()
-                    },
-                    success: function() {
-                        $('#form-signup').submit();
-                        // $.ajax({
-                        //     type: "POST",
-                        //     url:'/hsapi/accounts/',
-                        //     data: {
-                        //         username: username,
-                        //         first_name: firstName,
-                        //         last_name: lastName,
-                        //         email: email,
-                        //         superuser: false,
-                        //         password: password
-                        //     },
-                        //     success: onSuccess,
-                        //     error: onFailure
-                        // });
-                    },
-                    error: function() {
-                        Recaptcha.reload();
-                    }
-                });
+            if (password === pwconfirm) {
+                $("[name=challenge]").val(Recaptcha.get_challenge());
+                $("[name=response]").val(Recaptcha.get_response());
+
+                $('#form-signup').submit();
+            });
 
             }
             else {
@@ -71,6 +48,9 @@
 <form id=form-signup action="/accounts/signup/" class="" method="post" role="form">
     {% csrf_token %}
     {{ form.non_field_errors }}
+    <!-- recaptcha -->
+    <input type="hidden" name="challenge" />
+    <input type="hidden" name="response" />
     <div class="row">
         <div class="form-group">
             {% include "includes/form_field.html" with field=form.first_name inline_label=True %}
