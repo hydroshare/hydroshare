@@ -1,8 +1,16 @@
 {% load mezzanine_tags rating_tags i18n future %}
 <h3>{% trans "Ratings" %}</h3>
 <span id="rating-{{ rating_object.id }}">
-    {% if ratings_sum %}
-        Liked by {{ rating_sum }}
+    {% if rating_sum %}
+        {% if you_rated %}
+            {% if rating_sum > 1 %}
+                You and 1 others&nbsp;
+            {% else %}
+                You&nbsp;
+            {% endif %}
+        {% else %}
+            {{ rating_sum }} others
+        {% endif %}
     {% else %}
         Be the first one to&nbsp;
     {% endif %}
@@ -17,12 +25,8 @@
         {{ rating_form.timestamp }}
         {{ rating_form.security_hash }}
         <input value="1" name="value" type="hidden"/>
-        <input type="submit" class="btn btn-default btn-sm" value="+1"/>
+        <input type="submit" class="btn btn-default btn-sm" value={% if you_rated %} "Withdraw +1" {% else %} "+1" {% endif %}/>
         </form>
-
-        {% if not ratings_sum %}
-            &nbsp;this resource
-        {% endif %}
+        &nbsp;this.
     {% endif %}
-
 </span>
