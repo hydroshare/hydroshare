@@ -13,6 +13,7 @@ from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetim
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
+from hs_core.models import BaseResource
 
 
 class HsSerializationException(Exception):
@@ -521,19 +522,17 @@ class GenericResourceMeta(object):
             res_created_date = resource.metadata.dates.all().filter(type='created')[0]
             res_created_date.start_date = self.creation_date
             res_created_date.save()
+            # Update creation date representation provided by Mezzanine
             resource.created = self.creation_date
             resource.save()
         if self.modification_date:
             res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
-            # This doesn't seem to be working.  Maybe updating an element triggers the mod. date to be
-            #  updated.
-            #resource.metadata.update_element('date', res_modified_date.id, start_date=self.modification_date)
             res_modified_date.start_date = self.modification_date
             res_modified_date.save()
-            resource.updated = self.modification_date
-            resource.save()
-
-        resource.save()
+            # Update creation date representation provided by Mezzanine
+            #   Get around calling save() on the resource, which will overwrite the modification
+            #   date.
+            BaseResource.objects.filter(id=resource.id).update(updated=self.modification_date)
 
     class ResourceCreator(object):
         # Only record elements essential for identifying the user
