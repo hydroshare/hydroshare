@@ -108,24 +108,11 @@ from mezzanine.utils.views import render
 from .forms import SignupForm
 
 
-def verify_captcha(request):
-    f = CaptchaVerifyForm(request.POST)
-    if f.is_valid():
-        params = dict(f.cleaned_data)
-        params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY', settings.RECAPTCHA_PRIVATE_KEY)
-        params['remoteip'] = request.META['REMOTE_ADDR']
-        resp = requests.post('http://www.google.com/recaptcha/api/verify', params=params)
-        lines = resp.text.split('\n')
-        if not lines[0].startswith('false'):
-            return True
-    return False
-
-
 def signup(request, template="accounts/account_signup.html"):
     """
     Signup form.
     """
-    form = SignupForm(request.POST or None, request.FILES or None)
+    form = SignupForm(request, request.POST, request.FILES)
     if request.method == "POST" and form.is_valid():
         new_user = form.save()
         if not new_user.is_active:
@@ -142,5 +129,8 @@ def signup(request, template="accounts/account_signup.html"):
             info(request, _("Successfully signed up"))
             auth_login(request, new_user)
             return login_redirect(request)
-    context = {"form": form, "title": _("Sign up")}
+    context = {
+        "form": form,
+        "title": _("Sign up"),
+    }
     return render(request, template, context)

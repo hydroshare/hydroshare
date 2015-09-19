@@ -412,8 +412,6 @@ except ImportError:
 else:
     set_dynamic_settings(globals())
 
-#
-RECAPTCHA_PRIVATE_KEY = "6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x"
 AUTH_PROFILE_MODULE = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 REST_FRAMEWORK = {

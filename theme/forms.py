@@ -1,3 +1,4 @@
+import requests
 
 from django import forms
 from django.utils.translation import ugettext, ugettext_lazy as _
@@ -264,6 +265,27 @@ class SignupForm(forms.ModelForm):
 
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput())
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
+
+    challenge = forms.CharField()
+    response = forms.CharField()
+
+    def __init__(self, request, *args, **kwargs):
+        self.request = request
+        super(SignupForm, self).__init__(*args, **kwargs)
+
+    def verify_captcha(self):
+        params = dict(self.cleaned_data)
+        params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY', "6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x")
+        params['remoteip'] = self.request.META['REMOTE_ADDR']
+        resp = requests.post('http://www.google.com/recaptcha/api/verify', params=params)
+        lines = resp.text.split('\n')
+        if not lines[0].startswith('false'):
+            return True
+        return False
+
+    def clean(self):
+        if not self.verify_captcha():
+            self.add_error(None, "You did not complete the CAPTCHA correctly. Please try again.")
 
     def clean_password2(self):
         data = self.cleaned_data

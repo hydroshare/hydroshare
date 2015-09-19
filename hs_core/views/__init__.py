@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import json
-import requests
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -393,11 +392,6 @@ def save_ajax(request):
     except ValidationError as error: # The error is for a field that you are editing
         message_i18n = ', '.join([u"%s" % m for m in error.messages])
         return _get_http_response({'errors': message_i18n})
-
-
-class CaptchaVerifyForm(forms.Form):
-    challenge = forms.CharField()
-    response = forms.CharField()
 
 
 def verify_account(request, *args, **kwargs):

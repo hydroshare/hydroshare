@@ -33,10 +33,7 @@
                 $("[name=response]").val(Recaptcha.get_response());
 
                 $('#form-signup').submit();
-            });
-
-            }
-            else {
+            } else {
                 $("#password").val('');
                 $("#pwconfirm").val('');
                 $("div.showcase").append('<p class="alert alert-danger">Passwords do not match</p>');
