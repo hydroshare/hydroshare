@@ -277,7 +277,7 @@ class SignupForm(forms.ModelForm):
         params = dict(self.cleaned_data)
         params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY', "6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x")
         params['remoteip'] = self.request.META['REMOTE_ADDR']
-        resp = requests.post('http://www.google.com/recaptcha/api/verify', params=params)
+        resp = requests.post('https://www.google.com/recaptcha/api/verify', params=params)
         lines = resp.text.split('\n')
         if not lines[0].startswith('false'):
             return True
