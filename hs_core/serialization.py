@@ -595,17 +595,14 @@ class GenericResourceMeta(object):
                     msg = msg.format(c.__class__.__name__)
                     raise TypeError(msg)
         if len(self.relations) > 0:
+            Relation.objects.all().delete()
             for r in self.relations:
                 if isinstance(r, GenericResourceMeta.ResourceRelation):
                     kwargs = {}
                     kwargs['content_object'] = resource.metadata
                     kwargs['type'] = r.relationship_type
                     kwargs['value'] = r.uri
-                    rel = resource.metadata.relations.filter(type=kwargs['type'])
-                    if len(rel) == 0:
-                        Relation.create(**kwargs)
-                    else:
-                        Relation.update(rel.first().id, **kwargs)
+                    Relation.create(**kwargs)
                 else:
                     msg = "Relations with type {0} are not supported"
                     msg = msg.format(r.__class__.__name__)
