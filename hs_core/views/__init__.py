@@ -677,5 +677,8 @@ def _set_resource_sharing_status(request, user, resource, is_public):
         if user.uaccess.can_change_resource_flags(resource):
             resource.raccess.public = is_public
             resource.raccess.save()
+            # set isPublic metadata AVU isPublic accordingly
+            istorage = IrodsStorage()
+            istorage.setAVU(resource.short_id, "isPublic", str(is_public))
         else:
             messages.error(request, "You don't have permission to change resource sharing status")
