@@ -13,7 +13,7 @@ from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetim
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
-from hs_core.models import BaseResource, Coverage, Relation, Source
+from hs_core.models import BaseResource, Coverage, Relation, Source, Creator, Contributor
 
 
 class HsSerializationException(Exception):
@@ -346,10 +346,28 @@ class GenericResourceMeta(object):
             creator.order = int(str(order_lit))
             # Get email
             email_lit = self._rmeta_graph.value(o, hsterms.email)
-            if email_lit is None:
-                msg = "E-mail for creator {0} was not found.".format(o)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            creator.email = str(email_lit)
+            if email_lit is not None:
+                creator.email = str(email_lit)
+            # Get organization
+            org_lit = self._rmeta_graph.value(o, hsterms.organization)
+            if org_lit is not None:
+                creator.organization = str(org_lit)
+            # Get address
+            addy_lit = self._rmeta_graph.value(o, hsterms.address)
+            if addy_lit is not None:
+                creator.address = str(addy_lit)
+            # Get phone
+            phone_lit = self._rmeta_graph.value(o, hsterms.phone)
+            if phone_lit is not None:
+                phone_raw = str(phone_lit).split(':')
+                if len(phone_raw) > 1:
+                    creator.phone = phone_raw[1]
+                else:
+                    creator.phone = phone_raw[0]
+            # Get homepage
+            homepage_lit = self._rmeta_graph.value(o, hsterms.homepage)
+            if homepage_lit is not None:
+                creator.homepage = str(homepage_lit)
 
             self.creators.append(creator)
 
@@ -520,6 +538,26 @@ class GenericResourceMeta(object):
 
         :param resource: HydroShare resource instance
         """
+        for c in self.creators:
+            if c.order > 1:
+                # Add non-owner creators
+                if isinstance(c, GenericResourceMeta.ResourceCreator):
+                    kwargs = {}
+                    kwargs['content_object'] = resource.metadata
+                    kwargs['order'] = c.order
+                    kwargs['name'] = c.name
+                    kwargs['organization'] = c.organization
+                    kwargs['email'] = c.email
+                    kwargs['address'] = c.address
+                    kwargs['phone'] = c.phone
+                    kwargs['homepage'] = c.homepage
+                    kwargs['researcherID'] = c.researcherID
+                    kwargs['researchGageID'] = c.researchGateID
+                    Creator.create(**kwargs)
+                else:
+                    msg = "Creators with type {0} are not supported"
+                    msg = msg.format(c.__class__.__name__)
+                    raise TypeError(msg)
         if self.abstract:
             resource.metadata.create_element('description', abstract=self.abstract)
         if self.rights:
@@ -619,16 +657,37 @@ class GenericResourceMeta(object):
             #   date.
             BaseResource.objects.filter(id=resource.id).update(updated=self.modification_date)
 
-    class ResourceCreator(object):
-        # Only record elements essential for identifying the user
-        # as the user needs to exist in the HydroShare database
-        # to have any real meaning.  We really only need the URI,
-        # but it is also helpful to have name and e-mail in case
-        # we ever want to implement disambiguation logic.
+    class ResourceContributor(object):
         uri = None
         name = None
+        organization = None  # Optional
+        email = None  # Optional
+        address = None  # Optional
+        phone = None  # Optional
+        homepage = None  # Optional
+        researcherID = None  # Optional
+        researchGateID = None  # Optional
+
+        def __init__(self):
+            pass
+
+        def __str__(self):
+            msg = "ResourceContributor {uri}, name: {name}, "
+            msg += "email: {email}"
+            msg = msg.format(uri=self.uri,
+                             name=self.name,
+                             email=self.email)
+            return msg.format(msg)
+
+        def __unicode__(self):
+            return unicode(str(self))
+
+    class ResourceCreator(ResourceContributor):
+        """
+
+        Fields beyond URI are ignored for creators that are HydroShare users (i.e. have valid URI).
+        """
         order = None
-        email = None
 
         def __init__(self):
             pass
@@ -639,30 +698,6 @@ class GenericResourceMeta(object):
             msg = msg.format(uri=self.uri,
                              name=self.name,
                              order=self.order,
-                             email=self.email)
-            return msg.format(msg)
-
-        def __unicode__(self):
-            return unicode(str(self))
-
-    class ResourceContributor(object):
-        # Only record elements essential for identifying the user
-        # as the user needs to exist in the HydroShare database
-        # to have any real meaning.  We really only need the URI,
-        # but it is also helpful to have name and e-mail in case
-        # we ever want to implement disambiguation logic.
-        uri = None
-        name = None
-        email = None
-
-        def __init__(self):
-            pass
-
-        def __str__(self):
-            msg = "ResourceCreator {uri}, name: {name}, "
-            msg += "email: {email}"
-            msg = msg.format(uri=self.uri,
-                             name=self.name,
                              email=self.email)
             return msg.format(msg)
 
