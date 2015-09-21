@@ -13,7 +13,7 @@ from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetim
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
-from hs_core.models import BaseResource, Coverage
+from hs_core.models import BaseResource, Coverage, Relation
 
 
 class HsSerializationException(Exception):
@@ -594,7 +594,22 @@ class GenericResourceMeta(object):
                     msg = "Coverages with type {0} are not supported"
                     msg = msg.format(c.__class__.__name__)
                     raise TypeError(msg)
-
+        if len(self.relations) > 0:
+            for r in self.relations:
+                if isinstance(r, GenericResourceMeta.ResourceRelation):
+                    kwargs = {}
+                    kwargs['content_object'] = resource.metadata
+                    kwargs['type'] = r.relationship_type
+                    kwargs['value'] = r.uri
+                    rel = resource.metadata.relations.filter(type=kwargs['type'])
+                    if len(rel) == 0:
+                        Relation.create(**kwargs)
+                    else:
+                        Relation.update(rel.first().id, **kwargs)
+                else:
+                    msg = "Relations with type {0} are not supported"
+                    msg = msg.format(r.__class__.__name__)
+                    raise TypeError(msg)
 
         # Update modification date last
         if self.modification_date:
@@ -888,12 +903,8 @@ class GenericResourceMeta(object):
                 raise GenericResourceMeta.ResourceMetaException(msg)
 
     class ResourceRelation(object):
-        KNOWN_TYPES = {'isParentOf', 'isChildOf', 'isMemberOf', 'isDerivedFrom',
-                       'hasBibliographicInfoIn', 'isRevisionHistoryFor',
-                       'isCriticalReviewOf', 'isOverviewOf', 'isContentRatingFor',
-                       'isTermsandConditionsFor', 'isDataFor', 'isPartOf',
-                       'isExecutedBy', 'isDataFor', 'isVersionOf', 'isCreatedBy',
-                       'cites'}
+        KNOWN_TYPES = {'isParentOf', 'isExecutedBy', 'isCreatedBy',
+                       'isVersionOf', 'isDataFor', 'cites'}
 
         uri = None
         relationship_type = None
