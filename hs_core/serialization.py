@@ -13,7 +13,7 @@ from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetim
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
-from hs_core.models import BaseResource, Coverage, Relation
+from hs_core.models import BaseResource, Coverage, Relation, Source
 
 
 class HsSerializationException(Exception):
@@ -609,6 +609,18 @@ class GenericResourceMeta(object):
                 else:
                     msg = "Relations with type {0} are not supported"
                     msg = msg.format(r.__class__.__name__)
+                    raise TypeError(msg)
+        if len(self.sources) > 0:
+            Source.objects.all().delete()
+            for s in self.sources:
+                if isinstance(s, GenericResourceMeta.ResourceSource):
+                    kwargs = {}
+                    kwargs['content_object'] = resource.metadata
+                    kwargs['derived_from'] = s.uri
+                    Source.create(**kwargs)
+                else:
+                    msg = "Sources with type {0} are not supported"
+                    msg = msg.format(s.__class__.__name__)
                     raise TypeError(msg)
 
         # Update modification date last
