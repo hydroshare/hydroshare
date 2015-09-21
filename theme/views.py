@@ -116,7 +116,7 @@ def signup(request, template="accounts/account_signup.html"):
         try:
             new_user = form.save()
         except ValidationError as e:
-            form._errors.setdefault(NON_FIELD_ERRORS, []).append(e.message)
+            form.add_error(None, e.message)
         else:
             if not new_user.is_active:
                 if settings.ACCOUNTS_APPROVAL_REQUIRED:
