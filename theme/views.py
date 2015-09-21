@@ -3,17 +3,25 @@ from json import dumps
 from django.contrib.auth.models import User
 from django.views.generic import TemplateView
 from django.http import HttpResponse
-from django.shortcuts import redirect
-from django.conf import settings
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.messages import info, error
+from django.utils.translation import ugettext_lazy as _
 
+from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
 from mezzanine.utils.views import render, set_cookie, is_spam
 from mezzanine.utils.cache import add_cache_bypass
+from mezzanine.utils.email import send_verification_mail, send_approve_mail
+from mezzanine.utils.urls import login_redirect, next_url
+from mezzanine.utils.views import render
 
 from hs_core.hydroshare import get_resource_types
 from hs_core.models import BaseResource
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm
+
+from .forms import SignupForm
+
 
 class UserProfileView(TemplateView):
     template_name='accounts/profile.html'
@@ -94,18 +102,6 @@ def rating(request):
         ratings = ",".join(rating_form.previous + [rating_form.current])
         set_cookie(response, "mezzanine-rating", ratings)
     return response
-
-
-from mezzanine.conf import settings
-from django.contrib.messages import info, error
-from django.shortcuts import get_object_or_404, redirect
-from django.utils.translation import ugettext_lazy as _
-
-from mezzanine.utils.email import send_verification_mail, send_approve_mail
-from mezzanine.utils.urls import login_redirect, next_url
-from mezzanine.utils.views import render
-
-from .forms import SignupForm
 
 
 def signup(request, template="accounts/account_signup.html"):
