@@ -1,7 +1,8 @@
 from django.db import models
 from mezzanine.pages.page_processors import processor_for
 from hs_core.models import AbstractResource
-from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
+#from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from mezzanine.pages.models import Page
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 import json
@@ -230,8 +231,9 @@ class GeometryInformation(AbstractMetaDataElement):
 
 
 # Define the Geographic Feature
-class GeographicFeatureResource(Page, AbstractResource):
-
+#class GeographicFeatureResource(Page, AbstractResource):
+class GeographicFeatureResource(BaseResource):
+    objects = ResourceManager()
     @property
     def metadata(self):
         md = GeographicFeatureMetaData()
@@ -247,21 +249,22 @@ class GeographicFeatureResource(Page, AbstractResource):
     def can_have_multiple_files(cls):
         # can have more than one files
         return True
-
-    def can_add(self, request):
-        return AbstractResource.can_add(self, request)
-
-    def can_change(self, request):
-        return AbstractResource.can_change(self, request)
-
-    def can_delete(self, request):
-        return AbstractResource.can_delete(self, request)
-
-    def can_view(self, request):
-        return AbstractResource.can_view(self, request)
+    #
+    # def can_add(self, request):
+    #     return AbstractResource.can_add(self, request)
+    #
+    # def can_change(self, request):
+    #     return AbstractResource.can_change(self, request)
+    #
+    # def can_delete(self, request):
+    #     return AbstractResource.can_delete(self, request)
+    #
+    # def can_view(self, request):
+    #     return AbstractResource.can_view(self, request)
 
     class Meta:
-            verbose_name = 'Geographic Feature (ESRI Shapefiles)'
+        verbose_name = 'Geographic Feature (ESRI Shapefiles)'
+        proxy = True
 
 processor_for(GeographicFeatureResource)(resource_processor)
 
