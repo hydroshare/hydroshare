@@ -13,7 +13,7 @@ from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetim
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, Coverage
 
 
 class HsSerializationException(Exception):
@@ -538,6 +538,65 @@ class GenericResourceMeta(object):
             # Update creation date representation provided by Mezzanine
             resource.created = self.creation_date
             resource.save()
+        if len(self.coverages) > 0:
+            for c in self.coverages:
+                kwargs = {}
+                kwargs['content_object'] = resource.metadata
+                if isinstance(c, GenericResourceMeta.ResourceCoveragePeriod):
+                    kwargs['type'] = 'period'
+                    val = {}
+                    val['name'] = c.name
+                    val['start_date'] = c.start_date.isoformat()
+                    val['end_date'] = c.end_date.isoformat()
+                    val['scheme'] = c.scheme
+                    kwargs['value'] = val
+                    cov = resource.metadata.coverages.filter(type=kwargs['type'])
+                    if len(cov) == 0:
+                        Coverage.create(**kwargs)
+                    else:
+                        Coverage.update(cov.first().id, **kwargs)
+                elif isinstance(c, GenericResourceMeta.ResourceCoveragePoint):
+                    kwargs['type'] = 'point'
+                    val = {}
+                    val['name'] = c.name
+                    val['east'] = c.east
+                    val['north'] = c.north
+                    val['units'] = c.units
+                    val['elevation'] = c.elevation
+                    val['zunits'] = c.zunits
+                    val['projection'] = c.projection
+                    kwargs['value'] = val
+                    cov = resource.metadata.coverages.filter(type=kwargs['type'])
+                    if len(cov) == 0:
+                        Coverage.create(**kwargs)
+                    else:
+                        Coverage.update(cov.first().id, **kwargs)
+                elif isinstance(c, GenericResourceMeta.ResourceCoverageBox):
+                    kwargs['type'] = 'box'
+                    val = {}
+                    val['name'] = c.name
+                    val['northlimit'] = c.northlimit
+                    val['eastlimit'] = c.eastlimit
+                    val['southlimit'] = c.southlimit
+                    val['westlimit'] = c.westlimit
+                    val['units'] = c.units
+                    val['projection'] = c.projection
+                    val['uplimit'] = c.uplimit
+                    val['downlimit'] = c.downlimit
+                    val['zunits'] = c.zunits
+                    kwargs['value'] = val
+                    cov = resource.metadata.coverages.filter(type=kwargs['type'])
+                    if len(cov) == 0:
+                        Coverage.create(**kwargs)
+                    else:
+                        Coverage.update(cov.first().id, **kwargs)
+                else:
+                    msg = "Coverages with type {0} are not supported"
+                    msg = msg.format(c.__class__.__name__)
+                    raise TypeError(msg)
+
+
+        # Update modification date last
         if self.modification_date:
             res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
             res_modified_date.start_date = self.modification_date
@@ -833,7 +892,8 @@ class GenericResourceMeta(object):
                        'hasBibliographicInfoIn', 'isRevisionHistoryFor',
                        'isCriticalReviewOf', 'isOverviewOf', 'isContentRatingFor',
                        'isTermsandConditionsFor', 'isDataFor', 'isPartOf',
-                       'isExecutedBy', 'isDataFor', 'isVersionOf'}
+                       'isExecutedBy', 'isDataFor', 'isVersionOf', 'isCreatedBy',
+                       'cites'}
 
         uri = None
         relationship_type = None
