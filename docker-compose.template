@@ -6,6 +6,9 @@ rabbitmq:
   image: rabbitmq:3.5
 solr:
   image: makuk66/docker-solr
+  volumes:
+    # hydroshare repository
+    - "HS_SHARED_VOLUME:/hydroshare"
   ports:
     - "8983:8983"
 hydroshare:
