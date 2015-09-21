@@ -547,8 +547,8 @@ class GenericResourceMeta(object):
                     kwargs['type'] = 'period'
                     val = {}
                     val['name'] = c.name
-                    val['start_date'] = c.start_date.isoformat()
-                    val['end_date'] = c.end_date.isoformat()
+                    val['start'] = c.start_date.isoformat()
+                    val['end'] = c.end_date.isoformat()
                     val['scheme'] = c.scheme
                     kwargs['value'] = val
                     Coverage.create(**kwargs)
