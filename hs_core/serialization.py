@@ -332,18 +332,18 @@ class GenericResourceMeta(object):
         for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.creator, None)):
             creator = GenericResourceMeta.ResourceCreator()
             creator.uri = o
-            # Get name
-            name_lit = self._rmeta_graph.value(o, hsterms.name)
-            if name_lit is None:
-                msg = "Name for creator {0} was not found.".format(o)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            creator.name = str(name_lit)
             # Get order
             order_lit = self._rmeta_graph.value(o, hsterms.creatorOrder)
             if order_lit is None:
                 msg = "Order for creator {0} was not found.".format(o)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             creator.order = int(str(order_lit))
+            # Get name
+            name_lit = self._rmeta_graph.value(o, hsterms.name)
+            if name_lit is None:
+                msg = "Name for creator {0} was not found.".format(o)
+                raise GenericResourceMeta.ResourceMetaException(msg)
+            creator.name = str(name_lit)
             # Get email
             email_lit = self._rmeta_graph.value(o, hsterms.email)
             if email_lit is not None:
@@ -386,10 +386,28 @@ class GenericResourceMeta(object):
             contributor.name = str(name_lit)
             # Get email
             email_lit = self._rmeta_graph.value(o, hsterms.email)
-            if email_lit is None:
-                msg = "E-mail for contributor {0} was not found.".format(o)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            contributor.email = str(email_lit)
+            if email_lit is not None:
+                contributor.email = str(email_lit)
+            # Get organization
+            org_lit = self._rmeta_graph.value(o, hsterms.organization)
+            if org_lit is not None:
+                contributor.organization = str(org_lit)
+            # Get address
+            addy_lit = self._rmeta_graph.value(o, hsterms.address)
+            if addy_lit is not None:
+                contributor.address = str(addy_lit)
+            # Get phone
+            phone_lit = self._rmeta_graph.value(o, hsterms.phone)
+            if phone_lit is not None:
+                phone_raw = str(phone_lit).split(':')
+                if len(phone_raw) > 1:
+                    contributor.phone = phone_raw[1]
+                else:
+                    contributor.phone = phone_raw[0]
+            # Get homepage
+            homepage_lit = self._rmeta_graph.value(o, hsterms.homepage)
+            if homepage_lit is not None:
+                contributor.homepage = str(homepage_lit)
 
             self.contributors.append(contributor)
 
@@ -558,6 +576,24 @@ class GenericResourceMeta(object):
                     msg = "Creators with type {0} are not supported"
                     msg = msg.format(c.__class__.__name__)
                     raise TypeError(msg)
+        for c in self.contributors:
+            # Add contributors
+            if isinstance(c, GenericResourceMeta.ResourceContributor):
+                kwargs = {}
+                kwargs['content_object'] = resource.metadata
+                kwargs['name'] = c.name
+                kwargs['organization'] = c.organization
+                kwargs['email'] = c.email
+                kwargs['address'] = c.address
+                kwargs['phone'] = c.phone
+                kwargs['homepage'] = c.homepage
+                kwargs['researcherID'] = c.researcherID
+                kwargs['researchGageID'] = c.researchGateID
+                Contributor.create(**kwargs)
+            else:
+                msg = "Contributor with type {0} are not supported"
+                msg = msg.format(c.__class__.__name__)
+                raise TypeError(msg)
         if self.abstract:
             resource.metadata.create_element('description', abstract=self.abstract)
         if self.rights:
