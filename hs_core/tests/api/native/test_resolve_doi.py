@@ -2,25 +2,25 @@ __author__ = 'Pabitra'
 
 import unittest
 
-from django.test import TestCase
-from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import User, Group
+from django.http import Http404
+
 from hs_core import hydroshare
 from hs_core.models import GenericResource
 
-class TestResolveDOIAPI(TestCase):
+
+class TestResolveDOIAPI(unittest.TestCase):
     def setUp(self):
-        pass
+        self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
     def tearDown(self):
+        self.user_creator.uaccess.delete()
         User.objects.all().delete()
         GenericResource.objects.all().delete()
-        pass
 
-    @unittest.skip
     def test_resolve_doi(self):
         # create a user to be used for creating the resource
-        user_creator = hydroshare.create_account(
+        self.user_creator = hydroshare.create_account(
             'creator@usu.edu',
             username='creator',
             first_name='Creator_FirstName',
@@ -32,14 +32,18 @@ class TestResolveDOIAPI(TestCase):
         # create a resource
         new_resource = hydroshare.create_resource(
             'GenericResource',
-            user_creator,
+            self.user_creator,
             'My Test Resource'
         )
 
+        # assign doi to the resource
+        new_resource.doi = 'xyz'
+        new_resource.save()
         # test that the api call resolve_doi() returns the short_id of the resource when we pass the
         # resource doi in this api call
         self.assertEqual(new_resource.short_id, hydroshare.resolve_doi(new_resource.doi))
 
-        # test the exception 'ObjectDoesNotExit' is raised when we make the api call
+        # test the exception 'Http404' is raised when we make the api call
         # passing a random doi ( e.g., '123') that does not exist
-        self.assertRaises(ObjectDoesNotExist, lambda : hydroshare.resolve_doi("123"))
+        with self.assertRaises(Http404):
+            hydroshare.resolve_doi("123")

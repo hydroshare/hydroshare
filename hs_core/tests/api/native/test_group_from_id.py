@@ -13,6 +13,7 @@ from django.contrib.auth.models import Group, User
 
 class TestGroupFromId(TestCase):
     def setUp(self):
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
             'jamy1@gmail.com',
             username='jamy1',

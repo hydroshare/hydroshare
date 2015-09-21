@@ -13,7 +13,7 @@ from rest_framework import status, generics
 from rest_framework.exceptions import *
 
 from hs_core import hydroshare
-from hs_core.models import AbstractResource
+from hs_core.models import AbstractResource, ResourceManager
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
 from hs_core.views import utils as view_utils
 from hs_core.views import serializers
@@ -24,7 +24,7 @@ class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
         creator_name = r.creator.username
 
-        public = True if r.public else False
+        public = True if r.raccess.public else False
 
         bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(r.short_id)
         science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
@@ -157,13 +157,7 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
 
         filtered_res_list = []
 
-        resource_table = hydroshare.get_resource_list(**filter_parms)
-        res = set()
-
-        for resources in resource_table.values():
-            res = res.union(resources)
-
-        for r in res:
+        for r in hydroshare.get_resource_list(**filter_parms):
             resource_list_item = self.resourceToResourceListItem(r)
             filtered_res_list.append(resource_list_item)
 
@@ -383,8 +377,8 @@ class AccessRulesUpdate(APIView):
 
         validated_request_data = access_rules_validator.validated_data
         res = get_resource_by_shortkey(pk)
-        res.public = validated_request_data['public']
-        res.save()
+        res.raccess.public = validated_request_data['public']
+        res.raccess.save()
 
         return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
 

@@ -3,7 +3,7 @@ __author__ = 'shaun'
 from unittest import TestCase
 from django.contrib.contenttypes.models import ContentType
 from hs_core.hydroshare import utils, users, resource
-from hs_core.models import GenericResource, Creator, Contributor, CoreMetaData, \
+from hs_core.models import BaseResource, Creator, Contributor, CoreMetaData, \
     Coverage, Rights, Title, Language, Publisher, Identifier, \
     Type, Subject, Description, Date, Format, Relation, Source
 
