@@ -539,6 +539,7 @@ class GenericResourceMeta(object):
             resource.created = self.creation_date
             resource.save()
         if len(self.coverages) > 0:
+            Coverage.objects.all().delete()
             for c in self.coverages:
                 kwargs = {}
                 kwargs['content_object'] = resource.metadata
@@ -550,11 +551,7 @@ class GenericResourceMeta(object):
                     val['end_date'] = c.end_date.isoformat()
                     val['scheme'] = c.scheme
                     kwargs['value'] = val
-                    cov = resource.metadata.coverages.filter(type=kwargs['type'])
-                    if len(cov) == 0:
-                        Coverage.create(**kwargs)
-                    else:
-                        Coverage.update(cov.first().id, **kwargs)
+                    Coverage.create(**kwargs)
                 elif isinstance(c, GenericResourceMeta.ResourceCoveragePoint):
                     kwargs['type'] = 'point'
                     val = {}
@@ -566,11 +563,7 @@ class GenericResourceMeta(object):
                     val['zunits'] = c.zunits
                     val['projection'] = c.projection
                     kwargs['value'] = val
-                    cov = resource.metadata.coverages.filter(type=kwargs['type'])
-                    if len(cov) == 0:
-                        Coverage.create(**kwargs)
-                    else:
-                        Coverage.update(cov.first().id, **kwargs)
+                    Coverage.create(**kwargs)
                 elif isinstance(c, GenericResourceMeta.ResourceCoverageBox):
                     kwargs['type'] = 'box'
                     val = {}
@@ -585,11 +578,7 @@ class GenericResourceMeta(object):
                     val['downlimit'] = c.downlimit
                     val['zunits'] = c.zunits
                     kwargs['value'] = val
-                    cov = resource.metadata.coverages.filter(type=kwargs['type'])
-                    if len(cov) == 0:
-                        Coverage.create(**kwargs)
-                    else:
-                        Coverage.update(cov.first().id, **kwargs)
+                    Coverage.create(**kwargs)
                 else:
                     msg = "Coverages with type {0} are not supported"
                     msg = msg.format(c.__class__.__name__)
