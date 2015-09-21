@@ -113,7 +113,19 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
 class GenericResourceMeta(object):
     """
     Lightweight class for representing core metadata of Resources, including the
-     ability to read metadata from an un-compressed BagIt archive.
+    ability to read metadata from an un-compressed BagIt archive.
+
+    To support derived resource types, each resource type will have to provide an
+    implementation of hs_core.serialization.GenericResourceMeta. For example for
+    RasterResource, the implementation would need to be defined in the class
+    hs_geo_raster_resource.serialization.RasterResourceMeta (code for class name
+    resolution and class loading is already defined in the factory method
+    read_metadata_from_resource_bag()). Such derived classes would need to define
+    properties to represent resource-specific metadata fields as well override two
+    functions: _read_resource_metadata(), and write_metadata_to_resource() (after
+    first calling the super class's implementation). I plan to write
+    resource-specific GenericResourceMeta implementations after I get your
+    comments and suggestions on this approach.
     """
     root_uri = None
     # From resource map
@@ -173,11 +185,12 @@ class GenericResourceMeta(object):
                 # Instantiate metadata class for resource type
                 rt_root = rt.__module__.split('.')[0]
                 rt_meta = "{0}Meta".format(rt_name)
-                module_root = __import__(rt_root)
+                mod_ser_name = "{root}.serialization".format(root=rt_root)
                 instance = None
                 try:
-                    module_serialization = getattr(module_root, 'serialization')
-                    metadata_class = getattr(module_serialization, rt_meta)
+                    # Use __import__ to make sure mod_ser is compiled on import (else we can't import it)
+                    mod_ser = __import__(mod_ser_name, globals(), locals(), [rt_meta])
+                    metadata_class = getattr(mod_ser, rt_meta)
                     instance = metadata_class()
                 except AttributeError as ae:
                     msg = "Unable to instantiate metadata deserializer for resource type {0}, "
