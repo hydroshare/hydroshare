@@ -1,11 +1,8 @@
 from django.db import models
 from mezzanine.pages.page_processors import processor_for
-from hs_core.models import AbstractResource
-#from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from mezzanine.pages.models import Page
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-import json
 from django.contrib.contenttypes import generic
 
 # Create your models here.
@@ -231,7 +228,6 @@ class GeometryInformation(AbstractMetaDataElement):
 
 
 # Define the Geographic Feature
-#class GeographicFeatureResource(Page, AbstractResource):
 class GeographicFeatureResource(BaseResource):
     objects = ResourceManager()
     @property
@@ -242,25 +238,12 @@ class GeographicFeatureResource(BaseResource):
     @classmethod
     def get_supported_upload_file_types(cls):
     # See Shapefile format: http://resources.arcgis.com/en/help/main/10.2/index.html#//005600000003000000
-    # 3 file types are supported
         return (".zip", ".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg", ".xml", ".fbn", ".fbx", ".ain", ".aih", ".atx", ".ixs", ".mxs")
 
     @classmethod
     def can_have_multiple_files(cls):
         # can have more than one files
         return True
-    #
-    # def can_add(self, request):
-    #     return AbstractResource.can_add(self, request)
-    #
-    # def can_change(self, request):
-    #     return AbstractResource.can_change(self, request)
-    #
-    # def can_delete(self, request):
-    #     return AbstractResource.can_delete(self, request)
-    #
-    # def can_view(self, request):
-    #     return AbstractResource.can_view(self, request)
 
     class Meta:
         verbose_name = 'Geographic Feature (ESRI Shapefiles)'

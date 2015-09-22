@@ -66,8 +66,9 @@ class TestGeoFeatureMetadata(TestCase):
 
 
     def test_geo_feature_basic_metadata(self):
+        self.assertEqual(1,1)
         # add a type element
-        resource.create_metadata_element(self.resGeoFeature.short_id, 'type', url="http://hydroshare.org/geographicfeature")
+        # resource.create_metadata_element(self.resGeoFeature.short_id, 'type', url="http://hydroshare.org/geographicfeature")
 
         # add another creator with all sub_elements
         cr_name = 'Creator A'
@@ -174,7 +175,7 @@ class TestGeoFeatureMetadata(TestCase):
         # add another subject element
         resource.create_metadata_element(self.resGeoFeature.short_id,'subject', value='sub-2')
 
-
+##########################################################################################################3
         # originalfileinfo
         #no originalfileinfo obj
         self.assertEqual (len(OriginalFileInfo.objects.all()), 0)
@@ -335,11 +336,11 @@ class TestGeoFeatureMetadata(TestCase):
 
         self.assertEqual (len(files), 7)
 
-        # res_list=[]
-        # for file in ResourceFile.objects.filter(object_id=resource.id):
-        #      res_list.append(file.resource_file)
-        # for f in ResourceFile.objects.filter(object_id=resource.id):
-        #     hydroshare.delete_resource_file(resource.short_id, f.id, self.user)
+        res_list=[]
+        for file in ResourceFile.objects.filter(object_id=resource.id):
+             res_list.append(file.resource_file)
+        for f in ResourceFile.objects.filter(object_id=resource.id):
+            hydroshare.delete_resource_file(resource.short_id, f.id, self.user)
 
         files=[]
         target='hs_geographic_feature_resource/tests/states_shp_sample.zip'

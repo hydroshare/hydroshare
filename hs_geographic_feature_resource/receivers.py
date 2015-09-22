@@ -142,56 +142,59 @@ def check_uploaded_files_type(files):
         return rslt
 
 def parse_shp_zshp(uploaded_file_type, baseFilename, uploadedFileCount, uploadedFilenameString, shp_full_path):
-    metadata_array=[]
-    metadata_dict={}
+    try:
+        metadata_array=[]
+        metadata_dict={}
 
-    #fileTypeInfo_dict
-    originalFileInfo_dict={}
-    originalFileInfo_dict["fileType"]="SHP" if uploaded_file_type == "shp" else "ZSHP"
-    originalFileInfo_dict["baseFilename"] = baseFilename
-    originalFileInfo_dict["fileCount"]= uploadedFileCount
-    originalFileInfo_dict["filenameString"]=uploadedFilenameString
-    metadata_array.append({"OriginalFileInfo": originalFileInfo_dict})
-    metadata_dict["originalfileinfo"]=originalFileInfo_dict
+        #fileTypeInfo_dict
+        originalFileInfo_dict={}
+        originalFileInfo_dict["fileType"]="SHP" if uploaded_file_type == "shp" else "ZSHP"
+        originalFileInfo_dict["baseFilename"] = baseFilename
+        originalFileInfo_dict["fileCount"]= uploadedFileCount
+        originalFileInfo_dict["filenameString"]=uploadedFilenameString
+        metadata_array.append({"OriginalFileInfo": originalFileInfo_dict})
+        metadata_dict["originalfileinfo"]=originalFileInfo_dict
 
-    # wgs84 extent
-    parsed_md_dict = parse_shp(shp_full_path)
-    if parsed_md_dict["wgs84_extent_dict"]["westlimit"]!=UNKNOWN_STR:
-        coverage_dict={"Coverage": {"type": "box", "value": parsed_md_dict["wgs84_extent_dict"]}}
-        metadata_array.append(coverage_dict)
-        metadata_dict["coverage"]=coverage_dict
+        # wgs84 extent
+        parsed_md_dict = parse_shp(shp_full_path)
+        if parsed_md_dict["wgs84_extent_dict"]["westlimit"]!=UNKNOWN_STR:
+            coverage_dict={"Coverage": {"type": "box", "value": parsed_md_dict["wgs84_extent_dict"]}}
+            metadata_array.append(coverage_dict)
+            metadata_dict["coverage"]=coverage_dict
 
-    #original extent
-    original_coverage_dict ={}
-    original_coverage_dict["originalcoverage"]={"northlimit":parsed_md_dict["origin_extent_dict"]["northlimit"],
-                                                "southlimit":parsed_md_dict["origin_extent_dict"]["southlimit"],
-                                                "westlimit":parsed_md_dict["origin_extent_dict"]["westlimit"],
-                                                "eastlimit":parsed_md_dict["origin_extent_dict"]["eastlimit"],
-                                                "projection_string":parsed_md_dict["origin_projection_string"],
-                                                "projection_name":parsed_md_dict["origin_projection_name"],
-                                                "datum":parsed_md_dict["origin_datum"],
-                                                "unit":parsed_md_dict["origin_unit"]
-                                                }
-    metadata_array.append(original_coverage_dict)
-    metadata_dict["originalcoverage"]=original_coverage_dict
+        #original extent
+        original_coverage_dict ={}
+        original_coverage_dict["originalcoverage"]={"northlimit":parsed_md_dict["origin_extent_dict"]["northlimit"],
+                                                    "southlimit":parsed_md_dict["origin_extent_dict"]["southlimit"],
+                                                    "westlimit":parsed_md_dict["origin_extent_dict"]["westlimit"],
+                                                    "eastlimit":parsed_md_dict["origin_extent_dict"]["eastlimit"],
+                                                    "projection_string":parsed_md_dict["origin_projection_string"],
+                                                    "projection_name":parsed_md_dict["origin_projection_name"],
+                                                    "datum":parsed_md_dict["origin_datum"],
+                                                    "unit":parsed_md_dict["origin_unit"]
+                                                    }
+        metadata_array.append(original_coverage_dict)
+        metadata_dict["originalcoverage"]=original_coverage_dict
 
-    #field
+        #field
 
-    field_info_array=[]
-    field_name_list=parsed_md_dict["field_meta_dict"]['field_list']
-    for field_name in field_name_list:
-        field_info_dict_item={}
-        field_info_dict_item['fieldinformation']=parsed_md_dict["field_meta_dict"]["field_attr_dict"][field_name]
-        field_info_array.append(field_info_dict_item)
-    metadata_array.extend(field_info_array)
-    metadata_dict['field_info_array']=field_info_array
+        field_info_array=[]
+        field_name_list=parsed_md_dict["field_meta_dict"]['field_list']
+        for field_name in field_name_list:
+            field_info_dict_item={}
+            field_info_dict_item['fieldinformation']=parsed_md_dict["field_meta_dict"]["field_attr_dict"][field_name]
+            field_info_array.append(field_info_dict_item)
+        metadata_array.extend(field_info_array)
+        metadata_dict['field_info_array']=field_info_array
 
-    #geometry
-    geometryinformation={"featureCount":parsed_md_dict["feature_count"],"geometryType":parsed_md_dict["geometry_type"]}
-    metadata_array.append({"geometryinformation": geometryinformation})
-    metadata_dict["geometryinformation"]=geometryinformation
+        #geometry
+        geometryinformation={"featureCount":parsed_md_dict["feature_count"],"geometryType":parsed_md_dict["geometry_type"]}
+        metadata_array.append({"geometryinformation": geometryinformation})
+        metadata_dict["geometryinformation"]=geometryinformation
 
-    return (metadata_array, metadata_dict)
+        return (metadata_array, metadata_dict)
+    except:
+        raise Exception("Parse Shapefiles Failed!")
 
 
 
@@ -230,6 +233,8 @@ def geofeature_pre_create_resource(sender, **kwargs):
                     except:
                         res_dublin_core_meta = {}
                         res_type_specific_meta = {}
+                        validate_files_dict['are_files_valid'] = False
+                        validate_files_dict['message'] = 'Uploaded files are invalid or corrupt.'
 
         else:
             validate_files_dict['are_files_valid'] = False
@@ -333,114 +338,117 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
         # for res_f in res_file_list:
         #     n=res_f.resource_file.name
 
-        #for crt_f
-        if ori_file_info and len(ResourceFile.objects.filter(object_id=res_obj.id))>0:#just add non-required files
-            crt_f_str=ori_file_info.filenameString.lower()
-            for f in files:
-                new_f_fullname=f.name.lower()
-                new_f_name, new_f_ext=os.path.splitext(new_f_fullname)
-
-                if new_f_ext in  [".shp", ".shx", ".dbf"]:
-                    validate_files_dict['are_files_valid'] = False
-                    validate_files_dict['message'] = "No more shp, shx, dbf files can be added."
-                    some_new_files_added=False
-                    break
-                elif new_f_name!=ori_file_info.baseFilename:
-                    validate_files_dict['are_files_valid'] = False
-                    validate_files_dict['message'] = "At least one file does not follow the ESRI Shapefile naming convention."
-                    some_new_files_added=False
-                    break
-                elif crt_f_str.find(new_f_fullname)!=-1:
-                    validate_files_dict['are_files_valid'] = False
-                    validate_files_dict['message'] = "At least one file already exits."
-                    some_new_files_added=False
-                    break
-            if some_new_files_added:
+        try:
+            #for crt_f
+            if ori_file_info and len(ResourceFile.objects.filter(object_id=res_obj.id))>0:#just add non-required files
+                crt_f_str=ori_file_info.filenameString.lower()
                 for f in files:
                     new_f_fullname=f.name.lower()
-                    ori_fn_dict=json.loads(ori_file_info.filenameString)
-                    ori_fn_dict[new_f_fullname]="new"
-                res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.id,filenameString=json.dumps(ori_fn_dict))
-        else: # all files has been removed, start it over
-            if files:
-                rslt=check_uploaded_files_type(files)
+                    new_f_name, new_f_ext=os.path.splitext(new_f_fullname)
 
-                tmp_dir = None
-                uploaded_file_type = None
-                baseFilename=None
-                uploadedFileCount=0
-                uploadedFilenameString=None
-                shp_full_path=None
-                validate_files_dict['are_files_valid'] = rslt['are_files_valid']
-                validate_files_dict['message'] = rslt['message']
+                    if new_f_ext in  [".shp", ".shx", ".dbf"]:
+                        validate_files_dict['are_files_valid'] = False
+                        validate_files_dict['message'] = "No more shp, shx, dbf files can be added."
+                        some_new_files_added=False
+                        break
+                    elif new_f_name!=ori_file_info.baseFilename:
+                        validate_files_dict['are_files_valid'] = False
+                        validate_files_dict['message'] = "At least one file does not follow the ESRI Shapefile naming convention."
+                        some_new_files_added=False
+                        break
+                    elif crt_f_str.find(new_f_fullname)!=-1:
+                        validate_files_dict['are_files_valid'] = False
+                        validate_files_dict['message'] = "At least one file already exists."
+                        some_new_files_added=False
+                        break
+                if some_new_files_added:
+                    for f in files:
+                        new_f_fullname=f.name.lower()
+                        ori_fn_dict=json.loads(ori_file_info.filenameString)
+                        ori_fn_dict[new_f_fullname]="new"
+                    res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.id,filenameString=json.dumps(ori_fn_dict))
+            else: # all files has been removed, start it over
+                if files:
+                    rslt=check_uploaded_files_type(files)
 
-                if validate_files_dict['are_files_valid']:
-
-                    if res_obj.metadata.originalfileinfo.all().first():
-                        res_obj.metadata.originalfileinfo.all().delete()
-                    if res_obj.metadata.geometryinformation.all().first():
-                        res_obj.metadata.geometryinformation.all().delete()
-                    if res_obj.metadata.fieldinformation.all().first():
-                        res_obj.metadata.fieldinformation.all().delete()
-                    if res_obj.metadata.originalcoverage.all().first():
-                        res_obj.metadata.originalcoverage.all().delete()
-                    if res_obj.metadata.coverages.all().first():
-                        res_obj.metadata.coverages.all().delete()
-
-                    tmp_dir=rslt['tmp_dir']
-                    baseFilename=rslt['baseFilename']
-                    uploaded_file_type=rslt['uploaded_file_type']
-                    uploadedFileCount=rslt['uploadedFileCount']
-                    uploadedFilenameString=rslt['uploadedFilenameString']
-                    shp_full_path=rslt['shp_full_path']
-                    parsed_md_dict=None
-                    if uploaded_file_type == "shp" or uploaded_file_type == "zipped_shp":
-                        meta_array, meta_dict=parse_shp_zshp(uploaded_file_type, baseFilename, uploadedFileCount, uploadedFilenameString, shp_full_path)
-
-                    #create metadat objects
-                    if meta_dict.has_key("coverage"):
-                        res_obj.metadata.create_element('Coverage', type=meta_dict["coverage"]['Coverage']['type'], value=meta_dict["coverage"]['Coverage']['value'])
-                    res_obj.metadata.create_element('OriginalFileInfo',
-                                                    fileType=meta_dict["originalfileinfo"]['fileType'],
-                                                    baseFilename=meta_dict["originalfileinfo"]['baseFilename'],
-                                                    fileCount=meta_dict["originalfileinfo"]['fileCount'],
-                                                    filenameString=meta_dict["originalfileinfo"]['filenameString'])
-                    res_obj.metadata.create_element('OriginalCoverage',
-                                                    northlimit=meta_dict["originalcoverage"]['originalcoverage']['northlimit'],
-                                                    southlimit =meta_dict["originalcoverage"]['originalcoverage']['southlimit'],
-                                                    westlimit=meta_dict["originalcoverage"]['originalcoverage']['westlimit'],
-                                                    eastlimit=meta_dict["originalcoverage"]['originalcoverage']['eastlimit'],
-                                                    projection_string=meta_dict["originalcoverage"]['originalcoverage']['projection_string'],
-                                                    projection_name=meta_dict["originalcoverage"]['originalcoverage']['projection_name'],
-                                                    datum=meta_dict["originalcoverage"]['originalcoverage']['datum'],
-                                                    unit =meta_dict["originalcoverage"]['originalcoverage']['unit'])
-
-                    field_info_array=meta_dict["field_info_array"]
-                    for field_info in field_info_array:
-                        res_obj.metadata.create_element('FieldInformation',
-                                                    fieldName=field_info["fieldinformation"]['fieldName'],
-                                                    fieldType=field_info["fieldinformation"]['fieldType'],
-                                                    fieldTypeCode =field_info["fieldinformation"]['fieldTypeCode'],
-                                                    fieldWidth=field_info["fieldinformation"]['fieldWidth'],
-                                                    fieldPrecision=field_info["fieldinformation"]['fieldPrecision'])
-
-                    res_obj.metadata.create_element('GeometryInformation',
-                                                    featureCount=meta_dict["geometryinformation"]['featureCount'],
-                                                    geometryType=meta_dict["geometryinformation"]['geometryType']
-                                                    )
-
-
-                else:
-                    validate_files_dict['are_files_valid'] = False
-                    validate_files_dict['message'] = 'Please upload valid file(s).'
-                if tmp_dir is not None:
-                    shutil.rmtree(tmp_dir)
                     tmp_dir = None
+                    uploaded_file_type = None
+                    baseFilename=None
+                    uploadedFileCount=0
+                    uploadedFilenameString=None
+                    shp_full_path=None
+                    validate_files_dict['are_files_valid'] = rslt['are_files_valid']
+                    validate_files_dict['message'] = rslt['message']
+
+                    if validate_files_dict['are_files_valid']:
+
+                        if res_obj.metadata.originalfileinfo.all().first():
+                            res_obj.metadata.originalfileinfo.all().delete()
+                        if res_obj.metadata.geometryinformation.all().first():
+                            res_obj.metadata.geometryinformation.all().delete()
+                        if res_obj.metadata.fieldinformation.all().first():
+                            res_obj.metadata.fieldinformation.all().delete()
+                        if res_obj.metadata.originalcoverage.all().first():
+                            res_obj.metadata.originalcoverage.all().delete()
+                        if res_obj.metadata.coverages.all().first():
+                            res_obj.metadata.coverages.all().delete()
+
+                        tmp_dir=rslt['tmp_dir']
+                        baseFilename=rslt['baseFilename']
+                        uploaded_file_type=rslt['uploaded_file_type']
+                        uploadedFileCount=rslt['uploadedFileCount']
+                        uploadedFilenameString=rslt['uploadedFilenameString']
+                        shp_full_path=rslt['shp_full_path']
+                        parsed_md_dict=None
+                        if uploaded_file_type == "shp" or uploaded_file_type == "zipped_shp":
+                            meta_array, meta_dict=parse_shp_zshp(uploaded_file_type, baseFilename, uploadedFileCount, uploadedFilenameString, shp_full_path)
+
+                        #create metadat objects
+                        if meta_dict.has_key("coverage"):
+                            res_obj.metadata.create_element('Coverage', type=meta_dict["coverage"]['Coverage']['type'], value=meta_dict["coverage"]['Coverage']['value'])
+                        res_obj.metadata.create_element('OriginalFileInfo',
+                                                        fileType=meta_dict["originalfileinfo"]['fileType'],
+                                                        baseFilename=meta_dict["originalfileinfo"]['baseFilename'],
+                                                        fileCount=meta_dict["originalfileinfo"]['fileCount'],
+                                                        filenameString=meta_dict["originalfileinfo"]['filenameString'])
+                        res_obj.metadata.create_element('OriginalCoverage',
+                                                        northlimit=meta_dict["originalcoverage"]['originalcoverage']['northlimit'],
+                                                        southlimit =meta_dict["originalcoverage"]['originalcoverage']['southlimit'],
+                                                        westlimit=meta_dict["originalcoverage"]['originalcoverage']['westlimit'],
+                                                        eastlimit=meta_dict["originalcoverage"]['originalcoverage']['eastlimit'],
+                                                        projection_string=meta_dict["originalcoverage"]['originalcoverage']['projection_string'],
+                                                        projection_name=meta_dict["originalcoverage"]['originalcoverage']['projection_name'],
+                                                        datum=meta_dict["originalcoverage"]['originalcoverage']['datum'],
+                                                        unit =meta_dict["originalcoverage"]['originalcoverage']['unit'])
+
+                        field_info_array=meta_dict["field_info_array"]
+                        for field_info in field_info_array:
+                            res_obj.metadata.create_element('FieldInformation',
+                                                        fieldName=field_info["fieldinformation"]['fieldName'],
+                                                        fieldType=field_info["fieldinformation"]['fieldType'],
+                                                        fieldTypeCode =field_info["fieldinformation"]['fieldTypeCode'],
+                                                        fieldWidth=field_info["fieldinformation"]['fieldWidth'],
+                                                        fieldPrecision=field_info["fieldinformation"]['fieldPrecision'])
+
+                        res_obj.metadata.create_element('GeometryInformation',
+                                                        featureCount=meta_dict["geometryinformation"]['featureCount'],
+                                                        geometryType=meta_dict["geometryinformation"]['geometryType']
+                                                        )
+
+
+                    else:
+                        validate_files_dict['are_files_valid'] = False
+                        validate_files_dict['message'] = 'Please upload valid file(s).'
+                    if tmp_dir is not None:
+                        shutil.rmtree(tmp_dir)
+                        tmp_dir = None
 
 
 
-        #if ori_file_info.fileType=="SHP" or ori_file_info.fileType=="ZSHP":
-
+            #if ori_file_info.fileType=="SHP" or ori_file_info.fileType=="ZSHP":
+        except:
+            validate_files_dict['are_files_valid'] = False
+            validate_files_dict['message'] = "Please upload valid file(s)."
 
     pass
 

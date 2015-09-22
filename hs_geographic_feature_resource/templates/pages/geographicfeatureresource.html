@@ -100,13 +100,13 @@
                     <h4 ><strong>Field Information:</strong></h4>
                     {% if field_information %}
                     <hr style="margin-top: 0px;margin-bottom: 2px">
-                             <table>
+                             <table style="width:100%">
                              <tr class="row">
-                                 <th >Name</th><th class="col-sm-2">Type</th> <th class="col-sm-2">Width</th> <th class="col-sm-2">Precision</th>
+                                 <th >Name</th><th>Type</th> <th>Width</th> <th>Precision</th>
                              </tr>
                             {%for field_item in field_information %}
                             <tr class="row">
-                            <td class="col-sm-2">{{field_item.fieldName}}</td>
+                            <td>{{field_item.fieldName}}</td>
                             <td>{{field_item.fieldType}}</td>
                             <td>{{field_item.fieldWidth}}</td>
                             <td>{{field_item.fieldPrecision}}</td>
@@ -203,7 +203,7 @@
         }
     };
 
-    del_msg_shp_shx_dbf = "Be Careful! The 'shp', 'shx' and 'dbf' are three mandatory files. This operation is about to permanently DELETE ALL EXISTING FILES of this resource!"
+    del_msg_shp_shx_dbf = "<font color='red'>BE CAREFUL!</font> The 'shp', 'shx' and 'dbf' are three mandatory files. Missing of any of them will corrupt data integrity. So this operation is about to permanently <font color='red'>DELETE ALL EXISTING FILES</font> of this resource! You may upload new shapefiles later."
     del_msg_prj = "This operation is about to remove coordinate system metadata!"
     $(document).ready(function(){
 
