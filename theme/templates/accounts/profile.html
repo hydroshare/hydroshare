@@ -111,12 +111,12 @@
 
                                         {% if  res.metadata.description %}
                                             <a data-toggle="collapse"
-                                               href="#collapseExample" aria-expanded="false"
-                                               aria-controls="collapseExample">
+                                               href="#abs-{{res.short_id}}" aria-expanded="false"
+                                               aria-controls="collapseExample" class="show-hide">
                                                 [Show/hide abstract]
                                             </a>
 
-                                            <div class="collapse" id="collapseExample">
+                                            <div class="collapse" id="abs-{{res.short_id}}">
                                                 <p style="color:#757575;">
                                                     <strong>ABSTRACT: </strong>{{ res.metadata.description }}
                                                 </p>
@@ -230,35 +230,76 @@
                     </div>
                 </div>
 
-                <div role="tabpanel" class="tab-pane fade" id="contributions">Contributions</div>
+                <div role="tabpanel" class="tab-pane fade" id="contributions">
+                    <div class="col-sm-12 col-md-6">
+                        <h4 style=" margin-bottom: -15px;">Resources</h4>
+                        {% for res in resources %}
+                            <div class="activity-block">
+                                <div class="icon-resource-type">
+                                    <i class="glyphicon glyphicon-file"></i>
+                                    <span class="text-muted"><strong>{{ res|resource_type }}</strong></span>
+                                </div>
+
+                                <div class="activity-info">
+                                    <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
+                                    <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
+
+                                    <div style="color: #757575;">
+                                        {% for creator in res.metadata.creators.all %}
+                                            {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}{{ creator.name }}
+                                        {% endfor %}
+                                    </div>
+
+                                    {% if res.metadata.description %}
+                                        <a data-toggle="collapse"
+                                           href="#abstract-{{ res.short_id }}" aria-expanded="false"
+                                           aria-controls="collapseExample" class="show-hide">
+                                            [Show/hide abstract]
+                                        </a>
+
+                                        <div class="collapse" id="abstract-{{ res.short_id }}">
+                                            <p style="color:#757575;">
+                                                <strong>ABSTRACT: </strong>{{ res.metadata.description }}
+                                            </p>
+                                        </div>
+
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                </div>
 
                 <div role="tabpanel" class="tab-pane fade" id="social">
 
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">External profile urls</h3>
-                        </div>
-                        <div class="panel-body">
-                            <div class="content social">
-                                <ul>
-                                    <li><a href="#" target="_blank"><i class="fa fa-twitter"></i></a></li>
-
-                                    <li><a href="#" target="_blank"><i class="fa fa-facebook"></i></a></li>
-
-                                    <li><a href="#" target="_blank"><i class="fa fa-pinterest"></i></a></li>
-
-                                    <li><a href="#" target="_blank"><i class="fa fa-youtube"></i></a></li>
-
-                                    <li><a hhref="#" target="_blank"><i class="fa fa-github"></i></a></li>
-
-                                    <li><a href="#" target="_blank"><i class="fa fa-linkedin"></i></a></li>
-
-                                    <li><a href="#" target="_blank"><i class="fa fa-vk"></i></a></li>
-
-                                    <li><a href="#" target="_blank"><i class="fa fa-google-plus"></i></a></li>
-                                </ul>
+                    <div class="col-sm-12 col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">External profile urls</h3>
                             </div>
+                            <div class="panel-body">
+                                <div class="content social">
+                                    <ul>
+                                        <li><a href="#" target="_blank"><i class="fa fa-twitter"></i></a></li>
 
+                                        <li><a href="#" target="_blank"><i class="fa fa-facebook"></i></a></li>
+
+                                        <li><a href="#" target="_blank"><i class="fa fa-pinterest"></i></a></li>
+
+                                        <li><a href="#" target="_blank"><i class="fa fa-youtube"></i></a></li>
+
+                                        <li><a hhref="#" target="_blank"><i class="fa fa-github"></i></a></li>
+
+                                        <li><a href="#" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+
+                                        <li><a href="#" target="_blank"><i class="fa fa-vk"></i></a></li>
+
+                                        <li><a href="#" target="_blank"><i class="fa fa-google-plus"></i></a></li>
+                                    </ul>
+                                </div>
+
+                            </div>
                         </div>
                     </div>
                 </div>
