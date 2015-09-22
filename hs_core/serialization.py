@@ -8,7 +8,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.db import IntegrityError
 
 from hs_core.hydroshare.utils import get_resource_types
-from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso
+from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso, HsDateException
 
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
@@ -422,10 +422,13 @@ class GenericResourceMeta(object):
                 raise GenericResourceMeta.ResourceMetaException(msg)
             try:
                 self.creation_date = hs_date_to_datetime(str(created_lit))
-            except Exception as e:
-                msg = "Unable to parse creation date {0}, error: {1}".format(str(created_lit),
-                                                                             str(e))
-                raise GenericResourceMeta.ResourceMetaException(msg)
+            except HsDateException:
+                try:
+                    self.creation_date = hs_date_to_datetime_iso(str(created_lit))
+                except HsDateException as e:
+                    msg = "Unable to parse creation date {0}, error: {1}".format(str(created_lit),
+                                                                                 str(e))
+                    raise GenericResourceMeta.ResourceMetaException(msg)
 
         print("\t\tCreation date: {0}".format(str(self.creation_date)))
 
@@ -437,10 +440,13 @@ class GenericResourceMeta(object):
                 raise GenericResourceMeta.ResourceMetaException(msg)
             try:
                 self.modification_date = hs_date_to_datetime(str(modified_lit))
-            except Exception as e:
-                msg = "Unable to parse modification date {0}, error: {1}".format(str(modified_lit),
-                                                                                 str(e))
-                raise GenericResourceMeta.ResourceMetaException(msg)
+            except HsDateException:
+                try:
+                    self.modification_date = hs_date_to_datetime_iso(str(modified_lit))
+                except HsDateException as e:
+                    msg = "Unable to parse modification date {0}, error: {1}".format(str(modified_lit),
+                                                                                     str(e))
+                    raise GenericResourceMeta.ResourceMetaException(msg)
 
         print("\t\tModification date: {0}".format(str(self.modification_date)))
 
