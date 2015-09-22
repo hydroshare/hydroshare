@@ -613,7 +613,7 @@ class GenericResourceMeta(object):
             resource.created = self.creation_date
             resource.save()
         if len(self.coverages) > 0:
-            Coverage.objects.all().delete()
+            resource.metadata.coverages.all().delete()
             for c in self.coverages:
                 kwargs = {}
                 kwargs['content_object'] = resource.metadata
@@ -658,7 +658,7 @@ class GenericResourceMeta(object):
                     msg = msg.format(c.__class__.__name__)
                     raise TypeError(msg)
         if len(self.relations) > 0:
-            Relation.objects.all().delete()
+            resource.metadata.relations.all().delete()
             for r in self.relations:
                 if isinstance(r, GenericResourceMeta.ResourceRelation):
                     kwargs = {}
@@ -671,7 +671,7 @@ class GenericResourceMeta(object):
                     msg = msg.format(r.__class__.__name__)
                     raise TypeError(msg)
         if len(self.sources) > 0:
-            Source.objects.all().delete()
+            resource.metadata.sources.all().delete()
             for s in self.sources:
                 if isinstance(s, GenericResourceMeta.ResourceSource):
                     kwargs = {}
