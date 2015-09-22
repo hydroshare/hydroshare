@@ -7,20 +7,28 @@
     {% with u.userprofile as profile %}
 
         <div class="row" style="padding: 40px 0;">
-            {#        Profile picture       #}
             <div class="col-xs-12">
-                {% if profile.picture %}
-                    <div style="background-image: url('{{ profile.picture.url }}'); float:left;" class="profile-pic round-image">
+                {#        Profile picture       #}
+                {% if profile.picture and profile.picture.url %}
+                    <div style="background-image: url('{{ profile.picture.url }}'); float:left;"
+                         class="profile-pic round-image">
                     </div>
                 {% endif %}
 
                 <div style="padding-top:10px;">
-                    <h2>{{ u.first_name }} {{ u.last_name }}</h2>
 
-                <h4 class="text-muted">
-                    {% if profile.organization %}{{ profile.organization }}{% endif %} |
-                    {% if profile.title %}{{ profile.title }}{% endif %}
-                </h4>
+                    {% if u.first_name or u.last_name %}
+                        <h2>{{ u.first_name }} {{ u.last_name }}</h2>
+                    {% else %}
+                        <h2>{{ u.username }}</h2>
+                    {% endif %}
+
+                    {% if profile.organization or profile.title %}
+                    <h4 class="text-muted">
+                        {% if profile.organization %}{{ profile.organization }}|{% endif %}
+                        {% if profile.title %}{{ profile.title }}{% endif %}
+                    </h4>
+                    {% endif %}
                     <table class="overview">
                         <tbody>
                         {% if profile.subject_areas %}
@@ -83,79 +91,96 @@
                                 <h3 class="panel-title">Recent activity</h3>
                             </div>
                             <div class="panel-body">
+                                {% if resources %}
 
                                 {% for res in resources %}
                                     <div class="activity-block">
-                                        <div style="background-image: url('{{ profile.picture.url }}'); float:left;"
-                                             class="profile-pic-thumbnail round-image">
-                                        </div>
-
-                                        <strong>{{ u.first_name }} {{ u.last_name }}</strong><span class="text-muted"> shared <strong>{{ res|resource_type }}: </strong></span>
+                                        {% if profile.picture and profile.picture.url %}
+                                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;"
+                                                 class="profile-pic-thumbnail round-image">
+                                            </div>
+                                        {% endif %}
+                                        {% if u.first_name or u.last_name %}
+                                            <strong>{{ u.first_name }} {{ u.last_name }}</strong>
+                                        {% else %}
+                                            <strong>{{ u.username }}</strong>
+                                        {% endif %}
+                                        <span class="text-muted"> shared <strong>{{ res|resource_type }}: </strong></span>
                                         <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
                                         <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
 
                                         {% if  res.metadata.description %}
-                                        <a data-toggle="collapse"
-                                           href="#collapseExample" aria-expanded="false"
-                                           aria-controls="collapseExample">
-                                            [Show/hide abstract]
-                                        </a>
+                                            <a data-toggle="collapse"
+                                               href="#collapseExample" aria-expanded="false"
+                                               aria-controls="collapseExample">
+                                                [Show/hide abstract]
+                                            </a>
 
-                                        <div class="collapse" id="collapseExample">
-                                            <p style="color:#757575;">
-                                                <strong>ABSTRACT: </strong>{{ res.metadata.description }}
-                                            </p>
-                                        </div>
+                                            <div class="collapse" id="collapseExample">
+                                                <p style="color:#757575;">
+                                                    <strong>ABSTRACT: </strong>{{ res.metadata.description }}
+                                                </p>
+                                            </div>
 
                                         {% endif %}
                                     </div>
                                 {% endfor %}
 
+                                {% else %}
+                                    <span class="text-muted">This user has no recent activity.</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
 
                     <div class="col-md-5">
-
                         {#  CONTACT #}
                         <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">Contact</h3>
-                        </div>
-                        <div class="panel-body">
-                        <table class="overview">
-                            <tbody>
-                            {% if profile.phone_1 %}
-                                <tr>
-                                    <td><span class="text-muted">{% if profile.phone_1_type %}{{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
-                                    <td>{{ profile.phone_1 }}</td>
-                                </tr>
-                            {% endif %}
-                            {% if profile.phone_2 %}
-                                <tr>
-                                    <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
-                                    <td>{{ profile.phone_2 }}</td>
-                                </tr>
-                            {% endif %}
-                            {% if u.email %}
-                                {% if user.pk %}
-                                    <tr>
-                                        <td><span class="text-muted">Email</span></td>
-                                        <td><a href="mailto:{{ u.email }}">send email
-                                            to {{ u.first_name }}</a></td>
-                                    </tr>
-                                {% else %}
-                                    <tr>
-                                        <td><span class="text-muted">Email</span></td>
-                                        <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
-                                    </tr>
-                                {% endif %}
-                            {% endif %}
-                            </tbody>
-                        </table>
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Contact</h3>
+                            </div>
+                            <div class="panel-body">
+                                <table class="overview">
+                                    <tbody>
+                                    {% if profile.phone_1 %}
+                                        <tr>
+                                            <td><span class="text-muted">{% if profile.phone_1_type %}
+                                                {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
+                                            <td>{{ profile.phone_1 }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if profile.phone_2 %}
+                                        <tr>
+                                            <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
+                                            <td>{{ profile.phone_2 }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if u.email %}
+                                        {% if user.pk %}
+                                            <tr>
+                                                <td><span class="text-muted">Email</span></td>
+                                                <td>
+                                                    <a href="mailto:{{ u.email }}">send email to
+                                                        {% if u.first_name or u.last_name %}
+                                                            {{ u.first_name }} {{ u.last_name }}
+                                                        {% else %}
+                                                            {{ u.username }}
+                                                        {% endif %}
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% else %}
+                                            <tr>
+                                                <td><span class="text-muted">Email</span></td>
+                                                <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endif %}
+                                    </tbody>
+                                </table>
 
+                            </div>
                         </div>
-                    </div>
                         {#      AFFILIATIONS     #}
                         <div class="panel panel-default">
                             <div class="panel-heading">
@@ -202,99 +227,44 @@
 
                             </div>
                         </div>
-
-
                     </div>
                 </div>
 
                 <div role="tabpanel" class="tab-pane fade" id="contributions">Contributions</div>
 
                 <div role="tabpanel" class="tab-pane fade" id="social">
+
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <h3 class="panel-title">External profile urls</h3>
                         </div>
                         <div class="panel-body">
+                            <div class="content social">
+                                <ul>
+                                    <li><a href="#" target="_blank"><i class="fa fa-twitter"></i></a></li>
 
+                                    <li><a href="#" target="_blank"><i class="fa fa-facebook"></i></a></li>
+
+                                    <li><a href="#" target="_blank"><i class="fa fa-pinterest"></i></a></li>
+
+                                    <li><a href="#" target="_blank"><i class="fa fa-youtube"></i></a></li>
+
+                                    <li><a hhref="#" target="_blank"><i class="fa fa-github"></i></a></li>
+
+                                    <li><a href="#" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+
+                                    <li><a href="#" target="_blank"><i class="fa fa-vk"></i></a></li>
+
+                                    <li><a href="#" target="_blank"><i class="fa fa-google-plus"></i></a></li>
+                                </ul>
+                            </div>
 
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
 
-
-        <div class="row">
-            <!-- tabs left -->
-            <div id="about-section">
-                <div>
-                    <div class="tabbable tabs-left">
-                        <ul class="nav nav-tabs col-sm-3">
-                            <li class="active"><a class="text-muted" href="#tab-affiliations" data-toggle="tab">
-                                <i class="glyphicon glyphicon-list-alt"></i>&nbsp;&nbsp;Affiliations</a>
-                            </li>
-                            <li><a class="text-muted" href="#tab-contributions" data-toggle="tab">
-                                <i class="glyphicon glyphicon-pushpin"></i>&nbsp;&nbsp;Contributions</a></li>
-
-                            <li><a class="text-muted" href="#tab-contact" data-toggle="tab">
-                                <i class="glyphicon glyphicon-user"></i>&nbsp;&nbsp;Contact</a></li>
-                        </ul>
-                        <div class="tab-content">
-                            {#  ---------- AFFILIATIONS ----------#}
-                            <div class="tab-pane active" id="tab-affiliations">
-
-                            </div>
-                        {#  ---------- CONTRIBUTIONS ----------#}
-                            <div class="tab-pane" id="tab-contributions">
-                                <div class=col-sm-12">
-                                    <div id="list-contributions" class="list-group">
-                                        {% for res in resources %}
-                                            <a href="{{ res.get_absolute_url }}" class="list-group-item">
-                                                <h4 class="list-group-item-heading"><i class="glyphicon glyphicon-file"></i>&nbsp;&nbsp;{{ res.title }}</h4>
-                                                {% if res.metadata.description %}
-                                                    <p class="list-group-item-text quote">{{ res.metadata.description }}</p>
-                                                {% endif %}
-                                            </a>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-
-                        {#  ---------- CONTACT ----------#}
-                            <div class="tab-pane" id="tab-contact">
-                                <div class="col-sm-12">
-                                    <h4>Contact info</h4>
-
-                                    <div class="content social">
-                                        <h4>Additional profile urls</h4>
-                                        <ul>
-                                            <li><a href="#" target="_blank"><i class="fa fa-twitter"></i></a></li>
-
-                                            <li><a href="#" target="_blank"><i class="fa fa-facebook"></i></a></li>
-
-                                            <li><a href="#" target="_blank"><i class="fa fa-pinterest"></i></a></li>
-
-                                            <li><a href="#" target="_blank"><i class="fa fa-youtube"></i></a></li>
-
-                                            <li><a hhref="#" target="_blank"><i class="fa fa-github"></i></a></li>
-
-                                            <li><a href="#" target="_blank"><i class="fa fa-linkedin"></i></a></li>
-
-                                            <li><a href="#" target="_blank"><i class="fa fa-vk"></i></a></li>
-
-                                            <li><a href="#" target="_blank"><i class="fa fa-google-plus"></i></a></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- /tabs -->
-                </div>
-            </div>
-
-        </div>
 
     {% endwith %}
 {% endblock %}

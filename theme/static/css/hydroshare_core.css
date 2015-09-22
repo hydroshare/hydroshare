@@ -8,7 +8,14 @@ html, body {
 }
 body {
 	padding-top: 50px;
+
 }
+
+#page-container {
+    height:100%;
+    overflow:hidden;
+}
+
 h1, h2, h3, h4, h5, h6 {
 	font-family: 'Lato', sans-serif;
 }
@@ -557,12 +564,12 @@ img.media-object{
 
 footer {
     width: 100%;
-	margin-top: 60px;
 	background: #0A91AB;
 	font-weight: 300;
     color: white;
     position: absolute;
     overflow: hidden;
+    bottom: 0;
 }
 footer a {
 	color: #81D685;
@@ -1029,9 +1036,12 @@ span.remove{
 
 
 /* ===== Resource UI changes ===== */
-html, body{
-    height:100%;
-    /*background:#F4F4F4;*/
+html {
+    height: 100%;
+}
+
+body {
+    min-height: 100%;
 }
 
 a[data-toggle='tab']{
@@ -1909,15 +1919,10 @@ ul.resource-search-options {
 	margin-right: -15px;
 }
 
-#page-container {
-	/*Subtract the height of the footer*/
-	height:100%;
-	overflow: hidden;
-}
-
 #page-container > .container {
 	min-height: calc(100% - 277px);
     padding-top: 20px;
+    padding-bottom: 300px;
 }
 
 div.affiliation {
