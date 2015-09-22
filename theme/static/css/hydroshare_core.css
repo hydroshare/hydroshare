@@ -746,6 +746,15 @@ li.account p{
     -webkit-transition: color 0.3s;
     -moz-transition: color 0.3s;
 }
+
+.errorlist {
+    background: rgb(255, 200, 200);
+    border: 1px solid rgb(255, 150, 150);
+}
+.errorlist li:nth-child(1):nth-last-child(1) {
+	list-style: none;
+}
+
 /* ===== Registration form popover ===== */
 
 .signup .popover {
