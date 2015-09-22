@@ -197,10 +197,8 @@ def create_bag(resource):
     # set bag_modified-true AVU pair for on-demand bagging.to indicate the resource bag needs to be created when user clicks on download button
     istorage.setAVU(resource.short_id, "bag_modified", "true")
 
-    # set isPublic metadata AVU isPublic accordingly
     istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
 
-    # set resourceType metadata AVU resourceType accordingly
     istorage.setAVU(resource.short_id, "resourceType", resource._meta.object_name)
 
     # link the zipped bag file in IRODS via bag_url for bag downloading
