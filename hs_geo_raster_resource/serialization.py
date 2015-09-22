@@ -11,7 +11,7 @@ class RasterResourceMeta(GenericResourceMeta):
     Lightweight class for representing metadata of RasterResource instances.
     """
     cell_info = None
-    band_info = None
+    band_info = []
     spatial_reference = None
 
     def __init__(self):
@@ -77,34 +77,35 @@ class RasterResourceMeta(GenericResourceMeta):
 
         # Get BandInformation
         for s, p, o in self._rmeta_graph.triples((None, hsterms.BandInformation, None)):
-            self.band_info = RasterResourceMeta.BandInformation()
+            band_info = RasterResourceMeta.BandInformation()
             # Get name
             name_lit = self._rmeta_graph.value(o, hsterms.name)
             if name_lit is None:
                 msg = "Name for BandInformation was not found for resource {0}".format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
-            self.band_info.name = str(name_lit)
+            band_info.name = str(name_lit)
             # Get variableName
             varname_lit = self._rmeta_graph.value(o, hsterms.variableName)
             if varname_lit is None:
                 msg = "variableName for BandInformation was not found for resource {0}".format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
-            self.band_info.variableName = str(varname_lit)
+            band_info.variableName = str(varname_lit)
             # Get variableUnit
             varunit_lit = self._rmeta_graph.value(o, hsterms.variableUnit)
             if varunit_lit is None:
                 msg = "variableUnit for BandInformation was not found for resource {0}".format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
-            self.band_info.variableUnit = str(varunit_lit)
+            band_info.variableUnit = str(varunit_lit)
             # Get method
             method_lit = self._rmeta_graph.value(o, hsterms.method)
             if method_lit is not None:
-                self.band_info.method = str(method_lit)
+                band_info.method = str(method_lit)
             # Get comment
             comment_lit = self._rmeta_graph.value(o, hsterms.comment)
             if comment_lit is not None:
-                self.band_info.comment = str(comment_lit)
-            print("\t\t{0}".format(self.band_info))
+                band_info.comment = str(comment_lit)
+            print("\t\t{0}".format(band_info))
+            self.band_info.append(band_info)
 
         # Get spatialReference
         for s, p, o in self._rmeta_graph.triples((None, hsterms.spatialReference, None)):
@@ -124,34 +125,22 @@ class RasterResourceMeta(GenericResourceMeta):
         """
         super(RasterResourceMeta, self).write_metadata_to_resource(resource)
 
-        # import sys
-        # sys.path.append("/home/docker/pycharm-debug")
-        # import pydevd
-        # pydevd.settrace('selimnairb.dyndns.org', port=21000, suspend=False)
-
         if self.cell_info:
-            cell_info = resource.metadata._cell_information.all()[0]
-            kwargs = {'name': self.cell_info.name,
-                      'rows': self.cell_info.rows,
-                      'columns': self.cell_info.columns,
-                      'cellSizeXValue': self.cell_info.cellSizeXValue,
-                      'cellSizeYValue': self.cell_info.cellSizeYValue,
-                      'cellDataType': self.cell_info.cellDataType,
-                      'content_object': resource}
-            CellInformation.update(cell_info.id, **kwargs)
-            resource.save()
-        if self.band_info:
-            resource.metadata._band_information.all().delete()
-            kwargs = {'name': self.band_info.name,
-                      'variableName': self.band_info.variableName,
-                      'variableUnit': self.band_info.variableUnit,
-                      'method': self.band_info.method,
-                      'comment': self.band_info.comment,
-                      'content_object': resource}
-            BandInformation.create(**kwargs)
-            resource.save()
+            resource.metadata.cellInformation.delete()
+            resource.metadata.create_element('CellInformation', name=self.cell_info.name,
+                                             rows=self.cell_info.rows, columns=self.cell_info.columns,
+                                             cellSizeXValue=self.cell_info.cellSizeXValue,
+                                             cellSizeYValue=self.cell_info.cellSizeYValue,
+                                             cellDataType=self.cell_info.cellDataType,
+                                             noDataValue=self.cell_info.noDataValue)
+        if len(self.band_info) > 0:
+            for band in resource.metadata.bandInformation:
+                band.delete()
+            for b in self.band_info:
+                resource.metadata.create_element('BandInformation', name=b.name, variableName=b.variableName,
+                                                 variableUnit=b.variableUnit, method=b.method, comment=b.comment)
         if self.spatial_reference:
-            resource.metadata._ori_coverage.all().delete()
+            resource.metadata.originalCoverage.delete()
             values = {'units': self.spatial_reference.units,
                       'northlimit': self.spatial_reference.northlimit,
                       'eastlimit': self.spatial_reference.eastlimit,
@@ -161,7 +150,6 @@ class RasterResourceMeta(GenericResourceMeta):
             kwargs = {'value': values,
                       'content_object': resource}
             OriginalCoverage.create(**kwargs)
-            resource.save()
 
     class CellInformation(object):
         name = None
