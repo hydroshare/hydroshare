@@ -129,36 +129,39 @@ class RasterResourceMeta(GenericResourceMeta):
         # import pydevd
         # pydevd.settrace('selimnairb.dyndns.org', port=21000, suspend=False)
 
-        # if self.cell_info:
-        #     cell_info = CellInformation.objects.all()[0]
-        #     kwargs = {'name': self.cell_info.name,
-        #               'rows': self.cell_info.rows,
-        #               'columns': self.cell_info.columns,
-        #               'cellSizeXValue': self.cell_info.cellSizeXValue,
-        #               'cellSizeYValue': self.cell_info.cellSizeYValue,
-        #               'cellDataType': self.cell_info.cellDataType,
-        #               'content_object': resource}
-        #     CellInformation.create(**kwargs)
-        # if self.band_info:
-        #     BandInformation.objects.all().delete()
-        #     kwargs = {'name': self.band_info.name,
-        #               'variableName': self.band_info.variableName,
-        #               'variableUnit': self.band_info.variableUnit,
-        #               'method': self.band_info.method,
-        #               'comment': self.band_info.comment,
-        #               'content_object': resource}
-        #     BandInformation.create(**kwargs)
-        # if self.spatial_reference:
-        #     OriginalCoverage.objects.all().delete()
-        #     values = {'units': self.spatial_reference.units,
-        #               'northlimit': self.spatial_reference.northlimit,
-        #               'eastlimit': self.spatial_reference.eastlimit,
-        #               'southlimit': self.spatial_reference.southlimit,
-        #               'westlimit': self.spatial_reference.westlimit,
-        #               'projection': self.spatial_reference.projection}
-        #     kwargs = {'value': values,
-        #               'content_object': resource}
-        #     OriginalCoverage.create(**kwargs)
+        if self.cell_info:
+            cell_info = resource.metadata._cell_information.all()[0]
+            kwargs = {'name': self.cell_info.name,
+                      'rows': self.cell_info.rows,
+                      'columns': self.cell_info.columns,
+                      'cellSizeXValue': self.cell_info.cellSizeXValue,
+                      'cellSizeYValue': self.cell_info.cellSizeYValue,
+                      'cellDataType': self.cell_info.cellDataType,
+                      'content_object': resource}
+            CellInformation.update(cell_info.id, **kwargs)
+            resource.save()
+        if self.band_info:
+            resource.metadata._band_information.all().delete()
+            kwargs = {'name': self.band_info.name,
+                      'variableName': self.band_info.variableName,
+                      'variableUnit': self.band_info.variableUnit,
+                      'method': self.band_info.method,
+                      'comment': self.band_info.comment,
+                      'content_object': resource}
+            BandInformation.create(**kwargs)
+            resource.save()
+        if self.spatial_reference:
+            resource.metadata._ori_coverage.all().delete()
+            values = {'units': self.spatial_reference.units,
+                      'northlimit': self.spatial_reference.northlimit,
+                      'eastlimit': self.spatial_reference.eastlimit,
+                      'southlimit': self.spatial_reference.southlimit,
+                      'westlimit': self.spatial_reference.westlimit,
+                      'projection': self.spatial_reference.projection}
+            kwargs = {'value': values,
+                      'content_object': resource}
+            OriginalCoverage.create(**kwargs)
+            resource.save()
 
     class CellInformation(object):
         name = None
