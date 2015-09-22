@@ -28,12 +28,12 @@ PROD_SERVER='uwsgi --socket :8001 --ini uwsgi.ini'
 
 display_usage() {
 	echo "*** HydroShare Control script ***"
-	echo "usage: $0 deploy      # deletes all database and container contents and deploys from scratch"
-	echo "usage: $0 loaddb      # loads database specified in hydroshare-config.yaml into running container"
-	echo "usage: $0 rebuild     # deletes hydroshare container contents only and deploys using exsiting database"
-	echo "usage: $0 restart     # restarts the hydroshare container without rebuilding"
-	echo "usage: $0 start       # attempts to start all containers"
-	echo "usage: $0 stop        # stops all running containers"
+	echo "usage: $0 loaddb         # loads database specified in hydroshare-config.yaml into running container"
+	echo "usage: $0 rebuild        # deletes hydroshare container contents only and deploys using exsiting database"
+	echo "usage: $0 rebuild --db   # deletes all database and container contents and deploys from scratch"
+	echo "usage: $0 restart        # restarts the hydroshare container without rebuilding"
+	echo "usage: $0 start          # attempts to start all containers"
+	echo "usage: $0 stop           # stops all running containers"
 }
 
 start_nginx() {
@@ -126,7 +126,7 @@ preflight_hs() {
     fi
 }
 
-rebuild_hs() {
+rebuild_nodb_hs() {
     echo "*** ${1^^} *** "
     stop_hs STOP
     preflight_hs
@@ -175,7 +175,7 @@ loaddb_hs() {
     docker exec $CID python manage.py migrate
 }
 
-deploy_hs() {
+rebuild_db_hs() {
     echo "*** ${1^^} ***"
     stop_hs STOP
     preflight_hs
@@ -227,16 +227,26 @@ deploy_hs() {
 ### Display usage if exactly one argument is not provided ###
 if [  $# -ne 1 ]
 then
-    display_usage
-    exit 1
+	if [ $1 != "rebuild" ] || [ $2 != "--db" ]
+	then
+	    display_usage
+	    exit 1
+	fi
 fi
 
+rebuild_hs() {
+	if [ "$2" = "--db" ]
+	then
+		rebuild_db_hs $1
+	else
+		rebuild_nodb_hs $1
+	fi
+}
+
 case "$1" in
-    deploy) deploy_hs $1
-        ;;
     loaddb) loaddb_hs $1
         ;;
-    rebuild) rebuild_hs $1
+    rebuild) rebuild_hs $1 $2
         ;;
     restart) restart_hs $1
         ;;
