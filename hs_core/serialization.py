@@ -556,6 +556,16 @@ class GenericResourceMeta(object):
                 break
         return owner_uri
 
+    def set_resource_modification_date(self, resource):
+        if self.modification_date:
+            res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
+            res_modified_date.start_date = self.modification_date
+            res_modified_date.save()
+            # Update creation date representation provided by Mezzanine
+            #   Get around calling save() on the resource, which will overwrite the modification
+            #   date.
+            BaseResource.objects.filter(id=resource.id).update(updated=self.modification_date)
+
     def write_metadata_to_resource(self, resource):
         """
         Write metadata to resource
@@ -690,14 +700,7 @@ class GenericResourceMeta(object):
                     raise TypeError(msg)
 
         # Update modification date last
-        if self.modification_date:
-            res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
-            res_modified_date.start_date = self.modification_date
-            res_modified_date.save()
-            # Update creation date representation provided by Mezzanine
-            #   Get around calling save() on the resource, which will overwrite the modification
-            #   date.
-            BaseResource.objects.filter(id=resource.id).update(updated=self.modification_date)
+        self.set_resource_modification_date(resource)
 
     class ResourceContributor(object):
         uri = None
