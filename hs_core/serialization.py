@@ -624,7 +624,6 @@ class GenericResourceMeta(object):
             resource.metadata.coverages.all().delete()
             for c in self.coverages:
                 kwargs = {}
-                kwargs['content_object'] = resource.metadata
                 if isinstance(c, GenericResourceMeta.ResourceCoveragePeriod):
                     kwargs['type'] = 'period'
                     val = {}
@@ -633,7 +632,7 @@ class GenericResourceMeta(object):
                     val['end'] = c.end_date.isoformat()
                     val['scheme'] = c.scheme
                     kwargs['value'] = val
-                    Coverage.create(**kwargs)
+                    resource.metadata.create_element('coverage', **kwargs)
                 elif isinstance(c, GenericResourceMeta.ResourceCoveragePoint):
                     kwargs['type'] = 'point'
                     val = {}
@@ -645,7 +644,7 @@ class GenericResourceMeta(object):
                     val['zunits'] = c.zunits
                     val['projection'] = c.projection
                     kwargs['value'] = val
-                    Coverage.create(**kwargs)
+                    resource.metadata.create_element('coverage', **kwargs)
                 elif isinstance(c, GenericResourceMeta.ResourceCoverageBox):
                     kwargs['type'] = 'box'
                     val = {}
@@ -660,7 +659,7 @@ class GenericResourceMeta(object):
                     val['downlimit'] = c.downlimit
                     val['zunits'] = c.zunits
                     kwargs['value'] = val
-                    Coverage.create(**kwargs)
+                    resource.metadata.create_element('coverage', **kwargs)
                 else:
                     msg = "Coverages with type {0} are not supported"
                     msg = msg.format(c.__class__.__name__)
