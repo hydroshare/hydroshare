@@ -668,11 +668,9 @@ class GenericResourceMeta(object):
             resource.metadata.relations.all().delete()
             for r in self.relations:
                 if isinstance(r, GenericResourceMeta.ResourceRelation):
-                    kwargs = {}
-                    kwargs['content_object'] = resource.metadata
-                    kwargs['type'] = r.relationship_type
-                    kwargs['value'] = r.uri
-                    Relation.create(**kwargs)
+                    kwargs = {'type': r.relationship_type,
+                              'value': r.uri}
+                    resource.metadata.create_element('relation', **kwargs)
                 else:
                     msg = "Relations with type {0} are not supported"
                     msg = msg.format(r.__class__.__name__)
@@ -681,10 +679,8 @@ class GenericResourceMeta(object):
             resource.metadata.sources.all().delete()
             for s in self.sources:
                 if isinstance(s, GenericResourceMeta.ResourceSource):
-                    kwargs = {}
-                    kwargs['content_object'] = resource.metadata
-                    kwargs['derived_from'] = s.uri
-                    Source.create(**kwargs)
+                    kwargs = {'derived_from': s.uri}
+                    resource.metadata.create_element('source', **kwargs)
                 else:
                     msg = "Sources with type {0} are not supported"
                     msg = msg.format(s.__class__.__name__)
