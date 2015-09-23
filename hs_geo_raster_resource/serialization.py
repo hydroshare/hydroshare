@@ -147,9 +147,8 @@ class RasterResourceMeta(GenericResourceMeta):
                       'southlimit': self.spatial_reference.southlimit,
                       'westlimit': self.spatial_reference.westlimit,
                       'projection': self.spatial_reference.projection}
-            kwargs = {'value': values,
-                      'content_object': resource}
-            OriginalCoverage.create(**kwargs)
+            kwargs = {'value': values}
+            resource.metadata.create_element('OriginalCoverage', **kwargs)
 
     class CellInformation(object):
         name = None
