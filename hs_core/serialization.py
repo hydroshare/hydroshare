@@ -132,15 +132,15 @@ class GenericResourceMeta(object):
     id = None
     res_type = None
     title = None
-    files = []
+    files = None
     # From resource metadata
     abstract = None
-    keywords = []
-    creators = []
-    contributors = []
-    coverages = []
-    relations = []
-    sources = []
+    keywords = None
+    creators = None
+    contributors = None
+    coverages = None
+    relations = None
+    sources = None
     language = None
     rights = None
     creation_date = None
@@ -152,7 +152,13 @@ class GenericResourceMeta(object):
     _rmeta_graph = None
 
     def __init__(self):
-        pass
+        self.files = []
+        self.keywords = []
+        self.creators = []
+        self.contributors = []
+        self.coverages = []
+        self.relations = []
+        self.sources = []
 
     @classmethod
     def read_metadata_from_resource_bag(cls, bag_content_path):
