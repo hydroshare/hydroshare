@@ -185,7 +185,9 @@ class GenericResourceMeta(object):
                 # Instantiate metadata class for resource type
                 rt_root = rt.__module__.split('.')[0]
                 rt_meta = "{0}Meta".format(rt_name)
+                print("rt_meta: {0}".format(rt_meta))
                 mod_ser_name = "{root}.serialization".format(root=rt_root)
+                print("mod_ser_name: {0}".format(mod_ser_name))
                 instance = None
                 try:
                     # Use __import__ to make sure mod_ser is compiled on import (else we can't import it)
@@ -590,17 +592,12 @@ class GenericResourceMeta(object):
         for c in self.contributors:
             # Add contributors
             if isinstance(c, GenericResourceMeta.ResourceContributor):
-                kwargs = {}
-                kwargs['content_object'] = resource.metadata
-                kwargs['name'] = c.name
-                kwargs['organization'] = c.organization
-                kwargs['email'] = c.email
-                kwargs['address'] = c.address
-                kwargs['phone'] = c.phone
-                kwargs['homepage'] = c.homepage
-                kwargs['researcherID'] = c.researcherID
-                kwargs['researchGageID'] = c.researchGateID
-                Contributor.create(**kwargs)
+                kwargs = {'name': c.name, 'organization': c.organization,
+                          'email': c.email, 'address': c.address,
+                          'phone': c.phone, 'homepage': c.homepage,
+                          'researcherID': c.researcherID,
+                          'researchGageID': c.researchGateID}
+                resource.metadata.create_element('contributor', **kwargs)
             else:
                 msg = "Contributor with type {0} are not supported"
                 msg = msg.format(c.__class__.__name__)
