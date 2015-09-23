@@ -576,18 +576,13 @@ class GenericResourceMeta(object):
             if c.order > 1:
                 # Add non-owner creators
                 if isinstance(c, GenericResourceMeta.ResourceCreator):
-                    kwargs = {}
-                    kwargs['content_object'] = resource.metadata
-                    kwargs['order'] = c.order
-                    kwargs['name'] = c.name
-                    kwargs['organization'] = c.organization
-                    kwargs['email'] = c.email
-                    kwargs['address'] = c.address
-                    kwargs['phone'] = c.phone
-                    kwargs['homepage'] = c.homepage
-                    kwargs['researcherID'] = c.researcherID
-                    kwargs['researchGageID'] = c.researchGateID
-                    Creator.create(**kwargs)
+                    kwargs = {'order': c.order, 'name': c.name,
+                              'organization': c.organization,
+                              'email': c.email, 'address': c.address,
+                              'phone': c.phone, 'homepage': c.homepage,
+                              'researcherID': c.researcherID,
+                              'researchGageID': c.researchGateID}
+                    resource.metadata.create_element('creator', **kwargs)
                 else:
                     msg = "Creators with type {0} are not supported"
                     msg = msg.format(c.__class__.__name__)
