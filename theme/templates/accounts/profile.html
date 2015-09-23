@@ -231,8 +231,8 @@
                 </div>
 
                 <div role="tabpanel" class="tab-pane fade" id="contributions">
-                    <div class="col-sm-12 col-md-6">
-                        <h4 style=" margin-bottom: -15px;">Resources</h4>
+                    <div class="col-sm-12 col-md-8">
+                        <h4 style=" margin-bottom: -20px;">Resources</h4>
                         {% for res in resources %}
                             <div class="activity-block">
                                 <div class="icon-resource-type">
@@ -268,39 +268,148 @@
                             </div>
                         {% endfor %}
                     </div>
+                    <div class="col-sm-12 col-md-4">
+                        <h4>Filters</h4>
+                        <table class="table-user-contributions table table-hover">
+                            <tbody>
+                                <tr>
+                                    <td><span>All</span></td>
+                                    <td><span class="badge">30</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span>Generic</span></td>
+                                    <td><span class="badge">5</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span>Geographic Raster</span></td>
+                                    <td><span class="badge">6</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span>HIS Referenced Time Series</span></td>
+                                    <td><span class="badge">3</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span>Model Program</span></td>
+                                    <td><span class="badge">4</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span>SWAT Model Instance</span></td>
+                                    <td><span class="badge">12</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span>Multidomensional (NetCDF)</span></td>
+                                    <td><span class="badge">0</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span>Time Series</span></td>
+                                    <td><span class="badge">1</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
                 </div>
 
                 <div role="tabpanel" class="tab-pane fade" id="social">
 
                     <div class="col-sm-12 col-md-6">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h3 class="panel-title">External profile urls</h3>
-                            </div>
-                            <div class="panel-body">
-                                <div class="content social">
-                                    <ul>
-                                        <li><a href="#" target="_blank"><i class="fa fa-twitter"></i></a></li>
+                        <h4 class="title">Groups</h4>
+                        <strong><span>{% if u.first_name or u.last_name %}
+                            {{ u.first_name }} {{ u.last_name }}
+                        {% else %}
+                            {{ u.username }}
+                        {% endif %}</span></strong>
+                        is a member of:
 
-                                        <li><a href="#" target="_blank"><i class="fa fa-facebook"></i></a></li>
+                        <ul class="list-group" style="list-style-type: none;">
+                            <li><span class="badge">4 members</span> <a href="#">Utah State University</a></li>
+                            <li><span class="badge">7 members</span> <a href="#">Utah Water Research Laboratory</a></li>
+                        </ul>
 
-                                        <li><a href="#" target="_blank"><i class="fa fa-pinterest"></i></a></li>
 
-                                        <li><a href="#" target="_blank"><i class="fa fa-youtube"></i></a></li>
+                        <h4 class="title" style="margin-top:30px;">Following</h4>
 
-                                        <li><a hhref="#" target="_blank"><i class="fa fa-github"></i></a></li>
-
-                                        <li><a href="#" target="_blank"><i class="fa fa-linkedin"></i></a></li>
-
-                                        <li><a href="#" target="_blank"><i class="fa fa-vk"></i></a></li>
-
-                                        <li><a href="#" target="_blank"><i class="fa fa-google-plus"></i></a></li>
-                                    </ul>
+                        <div>
+                            {% if profile.picture and profile.picture.url %}
+                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
+                                     class="profile-pic-thumbnail round-image"
+                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
                                 </div>
-
-                            </div>
+                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
+                                     class="profile-pic-thumbnail round-image"
+                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
+                                </div>
+                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
+                                     class="profile-pic-thumbnail round-image"
+                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
+                                </div>
+                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
+                                     class="profile-pic-thumbnail round-image"
+                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
+                                </div>
+                            {% endif %}
+                        <a href="#" style="float: left;clear: both;margin-top: 10px;">View all</a>
                         </div>
+
+
+                        <h4 class="title" style="margin-top: 120px;">Followers</h4>
+
+                        <div>
+                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
+                                 class="profile-pic-thumbnail round-image"
+                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
+                            </div>
+                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
+                                 class="profile-pic-thumbnail round-image"
+                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
+                            </div>
+                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
+                                 class="profile-pic-thumbnail round-image"
+                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
+                            </div>
+                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
+                                 class="profile-pic-thumbnail round-image"
+                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
+                            </div>
+                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
+                                 class="profile-pic-thumbnail round-image"
+                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
+                            </div>
+                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
+                                 class="profile-pic-thumbnail round-image"
+                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
+                            </div>
+                            <a href="#" style="float: left;clear: both;margin-top: 10px;">View all</a>
+                        </div>
+
+
+
+                    </div>
+
+                    <div class="col-sm-12 col-md-6">
+
+                        <h4>External profile urls</h4>
+
+                        <div class="content social">
+                            <ul>
+                                <li><a href="#" target="_blank"><i class="fa fa-twitter"></i></a></li>
+
+                                <li><a href="#" target="_blank"><i class="fa fa-facebook"></i></a></li>
+
+                                <li><a href="#" target="_blank"><i class="fa fa-pinterest"></i></a></li>
+
+                                <li><a href="#" target="_blank"><i class="fa fa-youtube"></i></a></li>
+
+                                <li><a hhref="#" target="_blank"><i class="fa fa-github"></i></a></li>
+
+                                <li><a href="#" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+
+                                <li><a href="#" target="_blank"><i class="fa fa-vk"></i></a></li>
+
+                                <li><a href="#" target="_blank"><i class="fa fa-google-plus"></i></a></li>
+                            </ul>
+                        </div>
+
                     </div>
                 </div>
             </div>

@@ -1935,7 +1935,7 @@ ul.resource-search-options {
     border-top-right-radius: 5px;
 }
 
-#social > div > div > div.panel-body > div > ul > li {
+#social > div > div > ul > li {
     border: 1px solid #0A91AB;
     background: #FFF;
     -webkit-border-radius: 2px;
@@ -1943,7 +1943,7 @@ ul.resource-search-options {
     border-radius: 2px;
 }
 
-#social > div > div > div.panel-body > div > ul > li:hover {
+#social > div > div > ul > li:hover {
     transition: background 0.1s ;
     -webkit-transition: background 0.1s;
     -moz-transition: background 0.1s;
@@ -2014,4 +2014,18 @@ table.overview tr > td:first-child {
 .icon-resource-type > .glyphicon{
     font-size: 45px;
     color: #35AAC0
+}
+
+.table-user-contributions {
+    border-top:1px solid #ddd;
+}
+
+.table-user-contributions tbody > tr > td {
+    border: 0;
+    cursor:pointer;
+}
+
+h4.title {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 7px;
 }
