@@ -11,11 +11,12 @@ class RasterResourceMeta(GenericResourceMeta):
     Lightweight class for representing metadata of RasterResource instances.
     """
     cell_info = None
-    band_info = []
+    band_info = None
     spatial_reference = None
 
     def __init__(self):
         super(RasterResourceMeta, self).__init__()
+        self.band_info = []
 
     def _read_resource_metadata(self):
         super(RasterResourceMeta, self)._read_resource_metadata()
