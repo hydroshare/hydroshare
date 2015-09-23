@@ -39,6 +39,7 @@ RUN pip install coverage
 # Install haystack and sphinx
 RUN pip install django-haystack
 RUN pip install sphinx
+RUN pip install pysolr
 
 WORKDIR /home/docker/hydroshare
 
