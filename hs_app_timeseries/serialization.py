@@ -6,9 +6,14 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
     """
     Lightweight class for representing metadata of TimeSeriesResource instances.
     """
-
     def __init__(self):
         super(TimeSeriesResourceMeta, self).__init__()
+
+        self.site = None
+        self.variable = None
+        self.method = None
+        self.processing_level = None
+        self.time_series_result = None
 
     def _read_resource_metadata(self):
         super(TimeSeriesResourceMeta, self)._read_resource_metadata()
