@@ -127,38 +127,30 @@ class GenericResourceMeta(object):
     resource-specific GenericResourceMeta implementations after I get your
     comments and suggestions on this approach.
     """
-    root_uri = None
-    # From resource map
-    id = None
-    res_type = None
-    title = None
-    files = None
-    # From resource metadata
-    abstract = None
-    keywords = None
-    creators = None
-    contributors = None
-    coverages = None
-    relations = None
-    sources = None
-    language = None
-    rights = None
-    creation_date = None
-    modification_date = None
-
-    bag_content_path = None
-    root_uri = None
-    res_meta_path = None
-    _rmeta_graph = None
-
     def __init__(self):
+        self.root_uri = None
+        # From resource map
+        self.id = None
+        self.res_type = None
+        self.title = None
         self.files = []
+        # From resource metadata
+        self.abstract = None
         self.keywords = []
         self.creators = []
         self.contributors = []
         self.coverages = []
         self.relations = []
         self.sources = []
+        self.language = None
+        self.rights = None
+        self.creation_date = None
+        self.modification_date = None
+
+        self.bag_content_path = None
+        self.root_uri = None
+        self.res_meta_path = None
+        self._rmeta_graph = None
 
     @classmethod
     def read_metadata_from_resource_bag(cls, bag_content_path):
@@ -696,18 +688,17 @@ class GenericResourceMeta(object):
         self.set_resource_modification_date(resource)
 
     class ResourceContributor(object):
-        uri = None
-        name = None
-        organization = None  # Optional
-        email = None  # Optional
-        address = None  # Optional
-        phone = None  # Optional
-        homepage = None  # Optional
-        researcherID = None  # Optional
-        researchGateID = None  # Optional
 
         def __init__(self):
-            pass
+            self.uri = None
+            self.name = None
+            self.organization = None  # Optional
+            self.email = None  # Optional
+            self.address = None  # Optional
+            self.phone = None  # Optional
+            self.homepage = None  # Optional
+            self.researcherID = None  # Optional
+            self.researchGateID = None  # Optional
 
         def __str__(self):
             msg = "ResourceContributor {uri}, name: {name}, "
@@ -725,10 +716,9 @@ class GenericResourceMeta(object):
 
         Fields beyond URI are ignored for creators that are HydroShare users (i.e. have valid URI).
         """
-        order = None
 
         def __init__(self):
-            pass
+            self.order = None
 
         def __str__(self):
             msg = "ResourceCreator {uri}, name: {name}, "
@@ -743,11 +733,10 @@ class GenericResourceMeta(object):
             return unicode(str(self))
 
     class ResourceRights(object):
-        uri = None
-        statement = None
 
         def __init__(self):
-            pass
+            self.uri = None
+            self.statement = None
 
         def __str__(self):
             msg = "ResourceRights {uri}, statement: {statement}"
@@ -765,10 +754,6 @@ class GenericResourceMeta(object):
         """
         Time period resource coverage.
         """
-        name = None  # Optional
-        start_date = None
-        end_date = None
-        scheme = None
 
         def __str__(self):
             msg = "ResourceCoveragePeriod start_date: {start_date}, "
@@ -781,6 +766,11 @@ class GenericResourceMeta(object):
             return unicode(str(self))
 
         def __init__(self, value_str):
+            self.name = None  # Optional
+            self.start_date = None
+            self.end_date = None
+            self.scheme = None
+
             kvp = value_str.split(';')
             for pair in kvp:
                 (key, value) = pair.split('=')
@@ -819,13 +809,6 @@ class GenericResourceMeta(object):
         """
         Point geographic resource coverage.
         """
-        name = None  # Optional
-        east = None
-        north = None
-        units = None
-        elevation = None  # Optional
-        zunits = None  # Optional
-        projection = None  # Optional
 
         def __str__(self):
             msg = "ResourceCoveragePoint north: {north}, "
@@ -838,6 +821,14 @@ class GenericResourceMeta(object):
             return unicode(str(self))
 
         def __init__(self, value_str):
+            self.name = None  # Optional
+            self.east = None
+            self.north = None
+            self.units = None
+            self.elevation = None  # Optional
+            self.zunits = None  # Optional
+            self.projection = None  # Optional
+
             kvp = value_str.split(';')
             for pair in kvp:
                 (key, value) = pair.split('=')
@@ -887,16 +878,6 @@ class GenericResourceMeta(object):
         """
         Box geographic resource coverage.
         """
-        name = None  # Optional
-        northlimit = None
-        eastlimit = None
-        southlimit = None
-        westlimit = None
-        units = None
-        projection = None  # Optional
-        uplimit = None  # Optional
-        downlimit = None  # Optional
-        zunits = None  # Only present if uplimit or downlimit is present
 
         def __str__(self):
             msg = "ResourceCoverageBox northlimit: {northlimit}, "
@@ -911,6 +892,17 @@ class GenericResourceMeta(object):
             return unicode(str(self))
 
         def __init__(self, value_str):
+            self.name = None  # Optional
+            self.northlimit = None
+            self.eastlimit = None
+            self.southlimit = None
+            self.westlimit = None
+            self.units = None
+            self.projection = None  # Optional
+            self.uplimit = None  # Optional
+            self.downlimit = None  # Optional
+            self.zunits = None  # Only present if uplimit or downlimit is present
+
             kvp = value_str.split(';')
             for pair in kvp:
                 (key, value) = pair.split('=')
@@ -977,9 +969,6 @@ class GenericResourceMeta(object):
         KNOWN_TYPES = {'isParentOf', 'isExecutedBy', 'isCreatedBy',
                        'isVersionOf', 'isDataFor', 'cites'}
 
-        uri = None
-        relationship_type = None
-
         def __str__(self):
             msg = "{classname} {relationship_type}: {uri}"
             msg = msg.format(classname=type(self).__name__,
@@ -991,6 +980,9 @@ class GenericResourceMeta(object):
             return unicode(str(self))
 
         def __init__(self, uri, relationship_uri):
+            self.uri = None
+            self.relationship_type = None
+
             relationship_type = os.path.basename(relationship_uri)
             if relationship_type not in self.KNOWN_TYPES:
                 msg = "Relationship uri {0} is not known.".format(relationship_uri)

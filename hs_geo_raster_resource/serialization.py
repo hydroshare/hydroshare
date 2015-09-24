@@ -10,13 +10,12 @@ class RasterResourceMeta(GenericResourceMeta):
     """
     Lightweight class for representing metadata of RasterResource instances.
     """
-    cell_info = None
-    band_info = None
-    spatial_reference = None
-
     def __init__(self):
         super(RasterResourceMeta, self).__init__()
+
+        self.cell_info = None
         self.band_info = []
+        self.spatial_reference = None
 
     def _read_resource_metadata(self):
         super(RasterResourceMeta, self)._read_resource_metadata()
@@ -152,13 +151,15 @@ class RasterResourceMeta(GenericResourceMeta):
             resource.metadata.create_element('OriginalCoverage', **kwargs)
 
     class CellInformation(object):
-        name = None
-        rows = None
-        columns = None
-        cellSizeXValue = None
-        cellSizeYValue = None
-        cellDataType = None
-        noDataValue = None  # Optional
+
+        def __init__(self):
+            self.name = None
+            self.rows = None
+            self.columns = None
+            self.cellSizeXValue = None
+            self.cellSizeYValue = None
+            self.cellDataType = None
+            self.noDataValue = None  # Optional
 
         def __str__(self):
             msg = "CellInformation name: {name}, "
@@ -175,11 +176,13 @@ class RasterResourceMeta(GenericResourceMeta):
             return unicode(str(self))
 
     class BandInformation(object):
-        name = None
-        variableName = None
-        variableUnit = None
-        method = None  # Optional
-        comment = None  # Optional
+
+        def __init__(self):
+            self.name = None
+            self.variableName = None
+            self.variableUnit = None
+            self.method = None  # Optional
+            self.comment = None  # Optional
 
         def __str__(self):
             msg = "BandInformation name: {name}, "
@@ -194,12 +197,14 @@ class RasterResourceMeta(GenericResourceMeta):
             return unicode(str(self))
 
     class SpatialReference(object):
-        northlimit = None
-        eastlimit = None
-        southlimit = None
-        westlimit = None
-        units = None
-        projection = None  # Optional
+
+        def __init__(self):
+            self.northlimit = None
+            self.eastlimit = None
+            self.southlimit = None
+            self.westlimit = None
+            self.units = None
+            self.projection = None  # Optional
 
         def __str__(self):
             msg = "SpatialReference northlimit: {northlimit}, "
