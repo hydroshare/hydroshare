@@ -39,8 +39,156 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
                 msg = "SiteName for site was not found for resource {0}".format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.site.siteName = str(site_name_lit)
-
+            # Get Elevation_m
+            site_elevation_lit = self._rmeta_graph.value(o, hsterms.Elevation_m)
+            if site_elevation_lit is not None:
+                self.site.elevation_m = float(str(site_elevation_lit))
+            # Get ElevationDatum
+            site_elevation_datum_lit = self._rmeta_graph.value(o, hsterms.ElevationDatum)
+            if site_elevation_datum_lit is not None:
+                self.site.elevationDatum = str(site_elevation_datum_lit)
+            # Get SiteType
+            site_type_lit = self._rmeta_graph.value(o, hsterms.SiteType)
+            if site_type_lit is not None:
+                self.site.siteType = str(site_type_lit)
             print("\t\t{0}".format(self.site))
+
+        # Get variable
+        for s, p, o in self._rmeta_graph.triples((None, hsterms.variable, None)):
+            self.variable = TimeSeriesResourceMeta.Variable()
+            # Get VariableCode
+            var_code_lit = self._rmeta_graph.value(o, hsterms.VariableCode)
+            if var_code_lit is None:
+                msg = "VariableCode for variable was not found for resource {0}".format(self.root_uri)
+                raise GenericResourceMeta.ResourceMetaException(msg)
+            self.variable.variableCode = str(var_code_lit)
+            # Get VariableName
+            var_name_lit = self._rmeta_graph.value(o, hsterms.VariableName)
+            if var_name_lit is None:
+                msg = "VariableName for variable was not found for resource {0}".format(self.root_uri)
+                raise GenericResourceMeta.ResourceMetaException(msg)
+            self.variable.variableName = str(var_name_lit)
+            # Get VariableType
+            var_type_lit = self._rmeta_graph.value(o, hsterms.VariableType)
+            if var_type_lit is None:
+                msg = "VariableType for variable was not found for resource {0}".format(self.root_uri)
+                raise GenericResourceMeta.ResourceMetaException(msg)
+            self.variable.variableType = str(var_type_lit)
+            # Get NoDataValue
+            var_nd_lit = self._rmeta_graph.value(o, hsterms.NoDataValue)
+            if var_nd_lit is None:
+                msg = "NoDataValue for variable was not found for resource {0}".format(self.root_uri)
+                raise GenericResourceMeta.ResourceMetaException(msg)
+            self.variable.noDataValue = str(var_nd_lit)
+            # Get VariableDefinition
+            var_def_lit = self._rmeta_graph.value(o, hsterms.VariableDefinition)
+            if var_def_lit is not None:
+                self.variable.variableDefinition = str(var_def_lit)
+            # Get Speciation
+            var_spec_lit = self._rmeta_graph.value(o, hsterms.Speciation)
+            if var_spec_lit is not None:
+                self.variable.speciation = str(var_spec_lit)
+            print("\t\t{0}".format(self.variable))
+
+            # Get method
+            for s, p, o in self._rmeta_graph.triples((None, hsterms.method, None)):
+                self.method = TimeSeriesResourceMeta.Method()
+                # Get MethodCode
+                method_code_lit = self._rmeta_graph.value(o, hsterms.MethodCode)
+                if method_code_lit is None:
+                    msg = "MethodCode for method was not found for resource {0}".format(self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                self.method.methodCode = str(method_code_lit)
+                # Get MethodName
+                method_name_lit = self._rmeta_graph.value(o, hsterms.MethodName)
+                if method_name_lit is None:
+                    msg = "MethodName for method was not found for resource {0}".format(self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                self.method.methodName = str(method_name_lit)
+                # Get MethodType
+                method_type_lit = self._rmeta_graph.value(o, hsterms.MethodType)
+                if method_type_lit is None:
+                    msg = "MethodType for method was not found for resource {0}".format(self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                self.method.methodType = str(method_type_lit)
+                # Get MethodDescription
+                method_desc_lit = self._rmeta_graph.value(o, hsterms.MethodDescription)
+                if method_desc_lit is not None:
+                    self.method.methodDescription = str(method_desc_lit)
+                # Get MethodLink
+                method_link_lit = self._rmeta_graph.value(o, hsterms.MethodLink)
+                if method_link_lit is not None:
+                    self.method.methodLink = str(method_link_lit)
+                print("\t\t{0}".format(self.method))
+
+            # Get processingLevel
+            for s, p, o in self._rmeta_graph.triples((None, hsterms.processingLevel, None)):
+                self.processing_level = TimeSeriesResourceMeta.ProcessingLevel()
+                # Get ProcessingLevelCode
+                proc_code_lit = self._rmeta_graph.value(o, hsterms.ProcessingLevelCode)
+                if proc_code_lit is None:
+                    msg = "ProcessingLevelCode for ProcessingLevel was not found for resource {0}".format(self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                self.processing_level.processingLevelCode = str(proc_code_lit)
+                # Get Definition
+                method_def_lit = self._rmeta_graph.value(o, hsterms.Definition)
+                if method_def_lit is not None:
+                    self.processing_level.definition = str(method_def_lit)
+                # Get Explanation
+                method_explan_lit = self._rmeta_graph.value(o, hsterms.Explanation)
+                if method_explan_lit is not None:
+                    self.processing_level.explanation = str(method_explan_lit)
+                print("\t\t{0}".format(self.processing_level))
+
+            # Get timeSeriesResult
+            for s, p, o in self._rmeta_graph.triples((None, hsterms.timeSeriesResult, None)):
+                self.time_series_result = TimeSeriesResourceMeta.TimeSeriesResult()
+                # Get units
+                for s1, p1, o1 in self._rmeta_graph.triples((o, hsterms.units, None)):
+                    # Get UnitsType
+                    unit_type_lit = self._rmeta_graph.value(o1, hsterms.UnitsType)
+                    if unit_type_lit is None:
+                        msg = "UnitsType for TimeSeriesResult:units was not found for resource {0}".format(self.root_uri)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
+                    self.time_series_result.unitsType = str(unit_type_lit)
+                    # Get UnitsName
+                    unit_name_lit = self._rmeta_graph.value(o1, hsterms.UnitsName)
+                    if unit_name_lit is None:
+                        msg = "UnitsName for TimeSeriesResult:units was not found for resource {0}".format(self.root_uri)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
+                    self.time_series_result.unitsName = str(unit_name_lit)
+                    # Get UnitsAbbreviation
+                    unit_abbrev_lit = self._rmeta_graph.value(o1, hsterms.UnitsAbbreviation)
+                    if unit_abbrev_lit is None:
+                        msg = "UnitsAbbreviation for TimeSeriesResult:units was not found for resource {0}".format(self.root_uri)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
+                    self.time_series_result.unitsAbbreviation = str(unit_abbrev_lit)
+                # Get Status
+                res_status_lit = self._rmeta_graph.value(o, hsterms.Status)
+                if res_status_lit is None:
+                    msg = "Status for TimeSeriesResult was not found for resource {0}".format(self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                self.time_series_result.status = str(res_status_lit)
+                # Get SampleMedium
+                res_sampmed_lit = self._rmeta_graph.value(o, hsterms.SampleMedium)
+                if res_sampmed_lit is None:
+                    msg = "SampleMedium for TimeSeriesResult was not found for resource {0}".format(self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                self.time_series_result.sampleMedium = str(res_sampmed_lit)
+                # Get ValueCount
+                res_valcount_lit = self._rmeta_graph.value(o, hsterms.ValueCount)
+                if res_valcount_lit is None:
+                    msg = "ValueCount for TimeSeriesResult was not found for resource {0}".format(self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                self.time_series_result.valueCount = int(str(res_valcount_lit))
+                # Get AggregationStatistic
+                res_aggstat_lit = self._rmeta_graph.value(o, hsterms.AggregationStatistic)
+                if res_aggstat_lit is None:
+                    msg = "AggregationStatistic for TimeSeriesResult was not found for resource {0}".format(self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                self.time_series_result.aggregationStatistics = str(res_aggstat_lit)
+                print("\t\t{0}".format(self.time_series_result))
+
 
     def write_metadata_to_resource(self, resource):
         super(TimeSeriesResourceMeta, self).write_metadata_to_resource(resource)
