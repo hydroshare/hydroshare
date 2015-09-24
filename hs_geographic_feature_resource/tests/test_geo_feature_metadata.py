@@ -336,11 +336,11 @@ class TestGeoFeatureMetadata(TestCase):
 
         self.assertEqual (len(files), 7)
 
-        res_list=[]
-        for file in ResourceFile.objects.filter(object_id=resource.id):
-             res_list.append(file.resource_file)
-        for f in ResourceFile.objects.filter(object_id=resource.id):
-            hydroshare.delete_resource_file(resource.short_id, f.id, self.user)
+        # res_list=[]
+        # for file in ResourceFile.objects.filter(object_id=resource.id):
+        #      res_list.append(file.resource_file)
+        # for f in ResourceFile.objects.filter(object_id=resource.id):
+        #     hydroshare.delete_resource_file(resource.short_id, f.id, self.user)
 
         files=[]
         target='hs_geographic_feature_resource/tests/states_shp_sample.zip'
