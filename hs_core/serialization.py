@@ -718,6 +718,7 @@ class GenericResourceMeta(object):
         """
 
         def __init__(self):
+            super(GenericResourceMeta.ResourceCreator, self).__init__()
             self.order = None
 
         def __str__(self):
