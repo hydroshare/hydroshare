@@ -109,7 +109,6 @@ class RasterResourceMeta(GenericResourceMeta):
 
         # Get spatialReference
         for s, p, o in self._rmeta_graph.triples((None, hsterms.spatialReference, None)):
-            print("Subject: {0}\npred: {1}\nobj: {2}\n".format(s, p, o))
             spat_ref_lit = self._rmeta_graph.value(o, rdflib.namespace.RDF.value)
             if spat_ref_lit is None:
                 msg = "Spatial reference value not found for {0}.".format(o)
