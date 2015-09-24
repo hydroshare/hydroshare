@@ -189,9 +189,62 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
                 self.time_series_result.aggregationStatistics = str(res_aggstat_lit)
                 print("\t\t{0}".format(self.time_series_result))
 
-
     def write_metadata_to_resource(self, resource):
+        """
+        Write metadata to resource
+
+        :param resource: TimeSeriesResource instance
+        """
         super(TimeSeriesResourceMeta, self).write_metadata_to_resource(resource)
+
+        if self.site:
+            site = resource.metadata.site
+            if site:
+                site.delete()
+            resource.metadata.create_element('site', site_code=self.site.siteCode,
+                                             site_name=self.site.siteName,
+                                             elevation_m=self.site.elevation_m,
+                                             elevation_datum=self.site.elevationDatum,
+                                             site_type=self.site.siteType)
+        if self.variable:
+            variable = resource.metadata.variable
+            if variable:
+                variable.delete()
+            resource.metadata.create_element('variable', variable_code=self.variable.variableCode,
+                                             variable_name=self.variable.variableName,
+                                             variable_type=self.variable.variableType,
+                                             no_data_value=self.variable.noDataValue,
+                                             variable_definition=self.variable.variableDefinition,
+                                             speciation=self.variable.speciation)
+        if self.method:
+            method = resource.metadata.method
+            if method:
+                method.delete()
+            resource.metadata.create_element('method', method_code=self.method.methodCode,
+                                             method_name=self.method.methodName,
+                                             method_type=self.method.methodType,
+                                             method_description=self.method.methodDescription,
+                                             method_link=self.method.methodLink)
+        if self.processing_level:
+            processing_level = resource.metadata.processing_level
+            if processing_level:
+                processing_level.delete()
+            resource.metadata.create_element('ProcessingLevel',
+                                             processing_level_code=self.processing_level.processingLevelCode,
+                                             definition=self.processing_level.definition,
+                                             explanation=self.processing_level.explanation)
+        if self.time_series_result:
+            time_series_result = resource.metadata.time_series_result
+            if time_series_result:
+                time_series_result.delete()
+            resource.metadata.create_element('TimeSeriesResult',
+                                             units_type=self.time_series_result.unitsType,
+                                             units_name=self.time_series_result.unitsName,
+                                             units_abbreviation=self.time_series_result.unitsAbbreviation,
+                                             status=self.time_series_result.status,
+                                             sample_medium=self.time_series_result.sampleMedium,
+                                             value_count=self.time_series_result.valueCount,
+                                             aggregation_statistics=self.time_series_result.aggregationStatistics)
 
     class Site(object):
 
