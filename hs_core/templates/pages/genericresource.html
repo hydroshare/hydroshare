@@ -259,7 +259,7 @@
             {#        ======= Sharing =======#}
             <div id="sharing-status">
                 <span class="pull-left text-muted">Sharing status:</span>
-                {% if page.perms.change and metadata_form %}
+                {% if page.perms.change and metadata_form and can_change_resource_flags%}
 
                     <div id="status-btn-group" class="btn-group" role="group" aria-label="...">
                         {# -------- PUBLIC -------- #}
@@ -357,85 +357,72 @@
                 {% endif %}
             {% endif %}
         {% else %}
-            <form action="/hsapi/_internal/{{ cm.short_id }}/rights/{{ cm.metadata.rights.id }}/update-metadata/"#}
-                  id="id-rights" method="post">
-                {% csrf_token %}
-                <fieldset>
-                    <p></p>
-
-                    <div class="col-md-6">
-                        <label class="control-label" for="select_license"> Select a license </label>
-                                <span data-toggle="tooltip" data-placement="auto"
-                                      title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
-                                      class="glyphicon glyphicon-info-sign"></span>
-                        <select id="select_license" class="form-control">
-                            <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC
-                                BY
-                            </option>
-                            <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons
-                                Attribution-ShareAlike CC BY-SA
-                            </option>
-                            <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons
-                                Attribution-NoDerivs CC BY-ND
-                            </option>
-                            <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons
-                                Attribution-NoCommercial-ShareAlike CC BY-NC-SA
-                            </option>
-                            <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons
-                                Attribution-NoCommercial CC BY-NC
-                            </option>
-                            <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons
-                                Attribution-NoCommercial-NoDerivs CC BY-NC-ND
-                            </option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <div id="div_id_statement" class="control-group">
-                            <label for="id_statement" class="control-label"> Statement</label>
-
-                            <div class="controls">
-                                        <textarea class="form-control input-sm textarea" cols="40"
-                                                  id="id_statement" name="statement" readonly="True"
-                                                  rows="3"
-                                                  style="background-color:white;">{{ cm.metadata.rights.statement }}</textarea>
-                            </div>
+            <div class="row">
+                <form action="/hsapi/_internal/{{ cm.short_id }}/rights/{{ cm.metadata.rights.id }}/update-metadata/"#}
+                      id="id-rights" method="post">
+                    {% csrf_token %}
+                    <fieldset>
+                        <div class="col-md-6">
+                            <label class="control-label" for="select_license"> Select a license </label>
+                                    <span data-toggle="tooltip" data-placement="auto"
+                                          title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
+                                          class="glyphicon glyphicon-info-sign"></span>
+                            <select id="select_license" class="form-control">
+                                <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option>
+                                <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option>
+                                <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons Attribution-NoDerivs CC BY-ND</option>
+                                <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA</option>
+                                <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NoCommercial CC BY-NC</option>
+                                <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND</option>
+                                <option value="other">Other</option>
+                            </select>
+                                                        <img id="img-badge" class="cc-image"
+                                    {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+                                 src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
+                                    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+                                 src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
+                                    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+                                 src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
+                                    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+                                 src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
+                                    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+                                 src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
+                                    {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+                                 src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
+                                    {% endif %}
+                                    />
                         </div>
-                        <div id="div_id_url" class="control-group">
-                            <label for="id_url" class="control-label">Url</label>
+                        <div class="col-md-6">
+                            <div id="div_id_statement" class="control-group">
+                                <label for="id_statement" class="control-label"> Statement</label>
 
-                            <div class="controls">
-                                <input class="form-control input-sm urlinput" id="id_url"
-                                       maxlength="200" name="url" readonly="True"
-                                       style="background-color:white;" type="url"
-                                       value={{ cm.metadata.rights.url }}>
+                                <div class="controls">
+                                            <textarea class="form-control input-sm textarea" cols="40"
+                                                      id="id_statement" name="statement" readonly="True"
+                                                      rows="3"
+                                                      style="background-color:white;">{{ cm.metadata.rights.statement }}</textarea>
+                                </div>
                             </div>
-                        </div>
-                        <img id="img-badge" class="cc-image"
-                                {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                             src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
-                                {% endif %}
-                                />
-                    </div>
+                            <div id="div_id_url" class="control-group">
+                                <label for="id_url" class="control-label">Url</label>
 
-                    <div style="margin-top:10px">
-                        <button type="button" class="btn btn-primary pull-right"
-                                onclick="metadata_update_ajax_submit('id-rights'); return false;"
-                                style="display: none;">Save changes
-                        </button>
-                    </div>
-                </fieldset>
-            </form>
+                                <div class="controls">
+                                    <input class="form-control input-sm urlinput" id="id_url"
+                                           maxlength="200" name="url" readonly="True"
+                                           style="background-color:white;" type="url"
+                                           value={{ cm.metadata.rights.url }}>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary pull-right"
+                                    onclick="metadata_update_ajax_submit('id-rights'); return false;"
+                                    style="display: none;">Save changes
+                            </button>
+                        </div>
+
+                    </fieldset>
+                </form>
+            </div>
         {% endif %}
         <div id="permission-panel">
             {% if user == cm.user %}
@@ -462,43 +449,46 @@
                     </div>
                     <div id="faq-cat-1-sub-1" class="panel-collapse collapse" style="height: auto;">
                         <div class="panel-body">
-                            <div class="col-md-4">
-                                <div class="custom-well">
-                                    <h5 class="access-panel-title"><strong>Owners with full permissions to do anything
-                                        on this resource</strong></h5>
+                            {% if can_change_resource_flags %}
+                                <div class="col-md-4">
+                                    <div class="custom-well">
+                                        <h5 class="access-panel-title"><strong>Owners with full permissions to do
+                                            anything
+                                            on this resource</strong></h5>
 
-                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                          method="POST">
-                                        {% csrf_token %}
-                                        <select name="designees" id="owners-select" multiple class="form-control"
-                                                size="{{ owners.count }}">
-                                            {% for u in owners %}
-                                                <option value="{{ u.pk }}" selected>{{ u|best_name }}
-                                                    ({{ u.username }})
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                        <input name="t" value="owners" type="hidden"/>
-                                        <button type="submit"
-                                                class="btn btn-update-list pull-left btn-default glyphicon"><span
-                                                class="button-label">&nbspUpdate access list</span></button>
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                              method="POST">
+                                            {% csrf_token %}
+                                            <select name="designees" id="owners-select" multiple class="form-control"
+                                                    size="{{ owners.count }}">
+                                                {% for u in owners %}
+                                                    <option value="{{ u.pk }}" selected>{{ u|best_name }}
+                                                        ({{ u.username }})
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <input name="t" value="owners" type="hidden"/>
+                                            <button type="submit"
+                                                    class="btn btn-update-list pull-left btn-default glyphicon"><span
+                                                    class="button-label">&nbspUpdate access list</span></button>
                                                 <span data-toggle="tooltip" data-placement="auto"
                                                       title='Hold down "Control", or "Command" on a Mac, to select more than one.'
                                                       class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
-                                    </form>
-                                    <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                          method="POST" style="padding-top:0.3em">
-                                        {% csrf_token %}
-                                        <div class="form-group">
-                                            <button type="submit"
-                                                    class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                                    class="button-label">&nbspAdd user</span></button>
-                                            {{ add_owner_user_form.user }}
-                                            <input name="t" value="add_owner" type="hidden"/>
-                                        </div>
-                                    </form>
+                                        </form>
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                              method="POST" style="padding-top:0.3em">
+                                            {% csrf_token %}
+                                            <div class="form-group">
+                                                <button type="submit"
+                                                        class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
+                                                        class="button-label">&nbspAdd user</span></button>
+                                                {{ add_owner_user_form.user }}
+                                                <input name="t" value="add_owner" type="hidden"/>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
-                            </div>
+                            {% endif %}
 
                             <div class="col-md-4">
                                 <div class="custom-well">
