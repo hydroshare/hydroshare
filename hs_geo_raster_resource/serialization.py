@@ -170,7 +170,7 @@ class RasterResourceMeta(GenericResourceMeta):
                              columns=self.columns, cellSizeXValue=self.cellSizeXValue,
                              cellSizeYValue=self.cellSizeYValue, cellDataType=self.cellDataType,
                              noDataValue=self.noDataValue)
-            return msg.format(msg)
+            return msg
 
         def __unicode__(self):
             return unicode(str(self))
@@ -191,7 +191,7 @@ class RasterResourceMeta(GenericResourceMeta):
             msg = msg.format(name=self.name, variableName=self.variableName,
                              variableUnit=self.variableUnit, method=self.method,
                              comment=self.comment)
-            return msg.format(msg)
+            return msg
 
         def __unicode__(self):
             return unicode(str(self))
@@ -213,7 +213,7 @@ class RasterResourceMeta(GenericResourceMeta):
             msg = msg.format(northlimit=self.northlimit, eastlimit=self.eastlimit,
                              southlimit=self.southlimit, westlimit=self.westlimit,
                              units=self.units, projection=self.projection)
-            return msg.format(msg)
+            return msg
 
         def __unicode__(self):
             return unicode(str(self))

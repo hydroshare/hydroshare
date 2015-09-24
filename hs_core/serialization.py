@@ -706,7 +706,7 @@ class GenericResourceMeta(object):
             msg = msg.format(uri=self.uri,
                              name=self.name,
                              email=self.email)
-            return msg.format(msg)
+            return msg
 
         def __unicode__(self):
             return unicode(str(self))
@@ -728,7 +728,7 @@ class GenericResourceMeta(object):
                              name=self.name,
                              order=self.order,
                              email=self.email)
-            return msg.format(msg)
+            return msg
 
         def __unicode__(self):
             return unicode(str(self))
@@ -743,7 +743,7 @@ class GenericResourceMeta(object):
             msg = "ResourceRights {uri}, statement: {statement}"
             msg = msg.format(uri=self.uri,
                              statement=self.statement)
-            return msg.format(msg)
+            return msg
 
         def __unicode__(self):
             return unicode(str(self))
@@ -761,7 +761,7 @@ class GenericResourceMeta(object):
             msg += "end_date: {end_date}, scheme: {scheme}"
             msg = msg.format(start_date=self.start_date, end_date=self.end_date,
                              scheme=self.scheme)
-            return msg.format(msg)
+            return msg
 
         def __unicode__(self):
             return unicode(str(self))
@@ -816,7 +816,7 @@ class GenericResourceMeta(object):
             msg += "east: {east}, units: {units}"
             msg = msg.format(north=self.north, east=self.east,
                              units=self.units)
-            return msg.format(msg)
+            return msg
 
         def __unicode__(self):
             return unicode(str(self))
@@ -887,7 +887,7 @@ class GenericResourceMeta(object):
             msg = msg.format(northlimit=self.northlimit, eastlimit=self.eastlimit,
                              southlimit=self.southlimit, westlimit=self.westlimit,
                              units=self.units)
-            return msg.format(msg)
+            return msg
 
         def __unicode__(self):
             return unicode(str(self))
@@ -975,7 +975,7 @@ class GenericResourceMeta(object):
             msg = msg.format(classname=type(self).__name__,
                              relationship_type=self.relationship_type,
                              uri=self.uri)
-            return msg.format(msg)
+            return msg
 
         def __unicode__(self):
             return unicode(str(self))
