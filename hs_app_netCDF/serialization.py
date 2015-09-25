@@ -1,5 +1,3 @@
-import re
-
 import rdflib
 
 from hs_core.serialization import GenericResourceMeta
