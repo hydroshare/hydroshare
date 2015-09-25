@@ -235,7 +235,7 @@ then
 fi
 
 rebuild_hs() {
-	if [ "$2" = "--db" ]
+	if [ "$2" == "--db" ]
 	then
 		rebuild_db_hs $1
 	else
