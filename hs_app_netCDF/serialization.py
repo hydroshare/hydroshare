@@ -100,7 +100,6 @@ class NetcdfResourceMeta(GenericResourceMeta):
                                                                          crs_repr_type)
             print("\t\t{0}".format(self.spatial_reference))
 
-
     def write_metadata_to_resource(self, resource):
         """
         Write metadata to resource
