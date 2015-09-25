@@ -48,9 +48,15 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
     """
     # Get resource metadata
     resource_files = None
+    rm = None
     try:
         rm = GenericResourceMeta.read_metadata_from_resource_bag(bag_content_path)
-        res_files = [os.path.join(bag_content_path, f) for f in rm.files]
+        # Filter resource files
+        resource_files_filtered = []
+        for f in rm.files:
+            if rm.include_resource_file(f):
+                resource_files_filtered.append(f)
+        res_files = [os.path.join(bag_content_path, f) for f in resource_files_filtered]
         resource_files = _prepare_resource_files_for_creation(res_files)
 
     except GenericResourceMeta.ResourceMetaException as e:
@@ -63,6 +69,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
     try:
         if resource_files is None:
             resource_files = []
+
         page_url_dict, res_title, metadata = resource_pre_create_actions(resource_type=rm.res_type,
                                                                          files=resource_files,
                                                                          resource_title=rm.title,
@@ -151,6 +158,14 @@ class GenericResourceMeta(object):
         self.root_uri = None
         self.res_meta_path = None
         self._rmeta_graph = None
+
+    @staticmethod
+    def include_resource_file(resource_filename):
+        """
+        :param resource_filename: Name of resource filename.
+        :return: True if resource_filename should be included.
+        """
+        return True
 
     @classmethod
     def read_metadata_from_resource_bag(cls, bag_content_path):
