@@ -1,3 +1,4 @@
+import re
 
 import rdflib
 
@@ -13,6 +14,14 @@ class NetcdfResourceMeta(GenericResourceMeta):
 
         self.variables = []
         self.spatial_reference = None
+
+    @staticmethod
+    def include_resource_file(resource_filename):
+        """
+        :param resource_filename: Name of resource filename.
+        :return: True if resource_filename should be included.
+        """
+        return not resource_filename.endswith('_header_info.txt')
 
     def _read_resource_metadata(self):
         super(NetcdfResourceMeta, self)._read_resource_metadata()
@@ -103,7 +112,7 @@ class NetcdfResourceMeta(GenericResourceMeta):
         super(NetcdfResourceMeta, self).write_metadata_to_resource(resource)
 
         if self.spatial_reference:
-            resource.metadata.ori_coverage.delete()
+            resource.metadata.ori_coverage.all().delete()
             values = {'units': self.spatial_reference.unit,
                       'northlimit': self.spatial_reference.northlimit,
                       'eastlimit': self.spatial_reference.eastlimit,
@@ -114,13 +123,12 @@ class NetcdfResourceMeta(GenericResourceMeta):
                                              projection_string_type=self.spatial_reference.crsRepresentationType,
                                              projection_string_text=self.spatial_reference.crsRepresentationText)
         if len(self.variables) > 0:
-            for variable in resource.metadata.variables:
-                variable.delete()
+            resource.metadata.variables.all().delete()
             for v in self.variables:
                 resource.metadata.create_element('variable', name=v.name,
                                                  shape=v.shape, type=v.type,
                                                  unit=v.unit,
-                                                 descriptive_name=v.longNmae,
+                                                 descriptive_name=v.longName,
                                                  method=v.comment,
                                                  missing_value=v.missingValue)
 
