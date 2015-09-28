@@ -24,6 +24,10 @@ class HsDeserializationException(HsSerializationException):
     pass
 
 
+class HsDeserializationDependencyException(HsDeserializationException):
+    pass
+
+
 def _prepare_resource_files_for_creation(file_paths):
     res_files = []
 
