@@ -82,7 +82,7 @@ class ModelInstanceResourceMeta(GenericResourceMeta):
                                                                 or_404=False)
             except BaseResource.DoesNotExist:
                 msg = "ExecutedBy resource {0} does not exist.".format(short_id)
-                raise HsDeserializationDependencyException(msg)
+                raise HsDeserializationDependencyException(short_id, msg)
             executed_by = resource.metadata.executed_by
             if not executed_by:
                 # Create

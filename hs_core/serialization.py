@@ -25,7 +25,26 @@ class HsDeserializationException(HsSerializationException):
 
 
 class HsDeserializationDependencyException(HsDeserializationException):
-    pass
+
+    def __init__(self, dependency_resource_id, message):
+        """
+        :param dependency_resource_id: ID of resource that we depend on.
+        :param message: Message to append onto standard string representation.
+        """
+        super(HsDeserializationDependencyException, self).__init__()
+
+        self.dependency_resource_id = dependency_resource_id
+        self.message = message
+
+    def __str__(self):
+        msg = "{classname} Resource dependency {rid} does not exist: {mesg}"
+        msg = msg.format(classname=type(self).__name__,
+                         rid=self.dependency_resource_id,
+                         mesg=self.message)
+        return msg
+
+    def __unicode__(self):
+        return unicode(str(self))
 
 
 def _prepare_resource_files_for_creation(file_paths):
@@ -118,7 +137,11 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
 
     # Add additional metadata
     assert(resource is not None)
-    rm.write_metadata_to_resource(resource)
+
+    try:
+        rm.write_metadata_to_resource(resource)
+    except HsDeserializationDependencyException as e:
+        print(e.dependency_resource_id)
 
 
 class GenericResourceMeta(object):
