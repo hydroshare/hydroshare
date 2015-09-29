@@ -5,15 +5,22 @@ Tastypie API tests for create_account
 comments- not sure how to implement test_email_function
 
 """
-from tastypie.test import ResourceTestCase, TestApiClient
-from tastypie.serializers import Serializer
+import unittest
+
 from django.contrib.auth.models import User, Group
+
 from hs_core import hydroshare
 
-class CreateAccountTest(ResourceTestCase):
+from hs_access_control.models import UserAccess, UserGroupPrivilege
+
+
+class CreateAccountTest(unittest.TestCase):
     def setUp(self):
-        pass
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+
     def tearDown(self):
+        UserGroupPrivilege.objects.all().delete()
+        UserAccess.objects.all().delete()
         User.objects.all().delete()
         Group.objects.all().delete()
 
@@ -38,7 +45,7 @@ class CreateAccountTest(ResourceTestCase):
         self.assertEqual(user.is_active,db_user.is_active)
 
     def test_basic_user(self):
-        username,first_name,last_name,password = 'shaunjl', 'shaun','joseph','mypass'
+        username, first_name, last_name, password = 'shaunjl', 'shaun','joseph','mypass'
         user = hydroshare.create_account(
             'shaun@gmail.com',
             username=username,
@@ -58,12 +65,9 @@ class CreateAccountTest(ResourceTestCase):
         self.assertEqual(user.is_active,db_user.is_active)
 
     def test_with_groups(self):
-        g0 = hydroshare.create_group(name="group0")
-        g1 = hydroshare.create_group(name="group1")
-        g2 = hydroshare.create_group(name="group2")
-        groups = [g0, g1, g2]
+        groups = []
 
-        username,first_name,last_name,password = 'shaunjl', 'shaun', 'joseph', 'mypass'
+        username, first_name, last_name, password = 'shaunjl', 'shaun', 'joseph', 'mypass'
         user = hydroshare.create_account(
             'shaun@gmail.com',
             username=username,
@@ -71,13 +75,14 @@ class CreateAccountTest(ResourceTestCase):
             last_name=last_name,
             groups=groups
             )
-        new_groups = list(Group.objects.filter(user=user.id))
-        self.assertEqual(groups, new_groups)
+
+        g0 = user.uaccess.create_group('group0')
+        g1 = user.uaccess.create_group('group1')
+        g2 = user.uaccess.create_group('group2')
+        user_groups = list(Group.objects.filter(gaccess__g2ugp__user=user.uaccess))
+        groups = [g0, g1, g2]
+
+        self.assertEqual(groups, user_groups)
 
     def test_email_function(self):
         pass
-
-
-
-
-

@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
-TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+#TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
 
 import os
 import importlib
@@ -279,6 +280,7 @@ INSTALLED_APPS = (
     "ga_resources",
     #"dublincore",
     "hs_core",
+    "hs_access_control",
     "hs_metrics",
     "irods_browser_app",
     #"hs_rhessys_inst_resource",

@@ -157,7 +157,7 @@
                 {% if abstract %}
                     <div class="content-block">
                         <h3>Abstract</h3>
-                        <span class="abstract">{{ abstract }}</span>
+                        <span class="abstract">{{ abstract|linebreaks }}</span>
                     </div>
                 {% endif %}
             {% else %}
@@ -260,11 +260,11 @@
 
                 <div id="sharing-status">
                     <span class="pull-left">Sharing status:</span>
-                    {% if page.perms.change %}
+                    {% if can_change_resource_flags %}
                         <form id="form-sharing" class="pull-left"
                               action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST">
                             {% csrf_token %}
-                            {% if cm.public %}
+                            {% if cm.raccess.public %}
                                 <input name="t" type="hidden" value="make_private"/>
                                 <div class="btn-group" role="group" aria-label="...">
                                     <button id="btn-public" data-toggle="tooltip" data-placement="auto"
@@ -291,7 +291,7 @@
                             {% endif %}
                         </form>
                     {% else %}
-                        {% if cm.public %}
+                        {% if cm.raccess.public %}
                             <strong>&nbspPublic</strong>
                         {% else %}
                             <strong>&nbspPrivate</strong>
@@ -528,7 +528,7 @@
 {#                                </div>#}
 {#                            </div>#}
 
-                            {% if not cm.public %}
+                            {% if not cm.raccess.public %}
                                 <div class="col-md-4">
                                     <div class="custom-well">
                                         <h5 class="access-panel-title"><strong>Users who can view and download the resource</strong></h5>
@@ -616,10 +616,12 @@
 {% block download_list %}
             {#        ======= Content =======#}
             <div>
+                {% if show_content_files %}
                 <h3>Content</h3>
                 <div class="custom-well">
                     {#            {% block extra_content %}#}
                     {#            {% endblock %}#}
+
                     {% if cm.files.all %}
                     <div class="table-container">
                         <table class="table-plain table-striped">
@@ -686,15 +688,18 @@
                         </table>
                     </div>
                     {% endif %}
+
                     <!-- Buttons -->
-                    {% for b in cm.bags.all %}
-                        <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag_url }}">
-                            <span class="glyphicon glyphicon-download-alt">
-                                <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
-                            </span>
-                        </a>
-                    {% endfor %}
-{% endblock download_list %}
+                    {% if show_content_files %}
+                        {% for b in cm.bags.all %}
+                            <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag_url }}">
+                                <span class="glyphicon glyphicon-download-alt">
+                                    <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
+                                </span>
+                            </a>
+                        {% endfor %}
+                    {%  endif %}
+
                     {% if page.perms.change %}
                         <a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal" data-target="#add-file-dialog"
                                multiple="multiple">
@@ -717,8 +722,9 @@
                     {% endif %}
                     <div class="col-lg-12"><a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a></div>
                 </div>
+                {% endif %}
             </div>
-
+{% endblock download_list %}
             <!-- === Tabs begin === -->
             <div class="tab-elements">
             <div class="panel-tabs">
@@ -1062,28 +1068,28 @@
                                 </div>
                                 <div id="div_id_northlimit" class="control-group" style="display: none;"><label
                                         for="id_northlimit" class="control-label requiredField">
-                                    North Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                    North Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_northlimit" name="northlimit" type="text"></div>
                                 </div>
                                 <div id="div_id_eastlimit" class="control-group" style="display: none;"><label
                                         for="id_eastlimit" class="control-label requiredField">
-                                    East Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                    East Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_eastlimit" name="eastlimit" type="text"></div>
                                 </div>
                                 <div id="div_id_southlimit" class="control-group" style="display: none;"><label
                                         for="id_southlimit" class="control-label requiredField">
-                                    South Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                    South Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_southlimit" name="southlimit" type="text"></div>
                                 </div>
                                 <div id="div_id_westlimit" class="control-group" style="display: none;"><label
                                         for="id_westlimit" class="control-label requiredField">
-                                    West Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                    West Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_westlimit" name="westlimit" type="text"></div>
@@ -1168,7 +1174,7 @@
                                 </div>
                                 <div id="div_id_northlimit" class="control-group"><label
                                         for="id_northlimit" class="control-label requiredField">
-                                    North Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                    North Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_northlimit" name="northlimit" type="text"
@@ -1178,7 +1184,7 @@
                                 </div>
                                 <div id="div_id_eastlimit" class="control-group"><label
                                         for="id_eastlimit" class="control-label requiredField">
-                                    East Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                    East Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_eastlimit" name="eastlimit" type="text"
@@ -1187,7 +1193,7 @@
                                 </div>
                                 <div id="div_id_southlimit" class="control-group"><label
                                         for="id_southlimit" class="control-label requiredField">
-                                    South Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                    South Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_southlimit" name="southlimit" type="text"
@@ -1196,7 +1202,7 @@
                                 </div>
                                 <div id="div_id_westlimit" class="control-group"><label
                                         for="id_westlimit" class="control-label requiredField">
-                                    West Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                    West Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_westlimit" name="westlimit" type="text"
@@ -1394,6 +1400,8 @@
                     {%  else %}
                        {%  crispy metadata_form  %}
                     {%  endif %}
+                    {% block extra_section %} {# add extra section for resource landing page #}
+                    {% endblock %}
                     </div>
                     {%  endif %}
                 {%  endif %}
@@ -1416,6 +1424,10 @@
             </div>
             </div>
         <!-- ==== Tabs end ==== -->
+
+
+
+
         <div class="rating">
             {% rating_for cm %}
         </div>
@@ -2577,7 +2589,8 @@
         })
         $(".dateinput").each(function(){
             $(this).datepicker({
-                format: 'mm-dd-yyyy',
+                dateFormat: 'yy-mm-dd',
+                yearRange: "-1000:+1000",
                 changeMonth: true,
                 changeYear: true
              });

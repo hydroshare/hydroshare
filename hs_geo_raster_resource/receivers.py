@@ -22,8 +22,9 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
 
             wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
             # add core metadata coverage - box
-            box = {'coverage': {'type': 'box', 'value': wgs_cov_info }}
-            metadata.append(box)
+            if wgs_cov_info:
+                box = {'coverage': {'type': 'box', 'value': wgs_cov_info}}
+                metadata.append(box)
 
             # Save extended meta to metadata variable
             ori_cov = {'OriginalCoverage': {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }}
@@ -96,7 +97,8 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
             #res.metadata.update_element('coverage', cov_box.id, type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
 
             wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
-            res.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
+            if wgs_cov_info:
+                res.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
 
             # update extended original box coverage
             #ori_cov_box = res.metadata.originalCoverage

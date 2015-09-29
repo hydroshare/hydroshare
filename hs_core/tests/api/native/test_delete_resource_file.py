@@ -1,13 +1,20 @@
 # test file for delete_resource_file   Tian Gan
+
+
 from __future__ import absolute_import
+
+import unittest
 import os
-from unittest import TestCase
+
+from django.contrib.auth.models import User, Group
+
 from hs_core import hydroshare
 from hs_core.models import ResourceFile, GenericResource
-from django.contrib.auth.models import User
 
-class TestDeleteResourceFile(TestCase):
+
+class TestDeleteResourceFile(unittest.TestCase):
     def setUp(self):
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
             'jamy2@gmail.com',
             username='jamy2',
@@ -17,20 +24,24 @@ class TestDeleteResourceFile(TestCase):
             groups=[]
         )
 
-        self.res = GenericResource.objects.create(
-            user=self.user,
-            title='My resource',
-            creator=self.user,
-            last_changed_by=self.user,
-        )
+        self.res = hydroshare.create_resource(resource_type='GenericResource',
+                                              owner=self.user,
+                                              title='Test Resource',
+                                              metadata=[],)
 
-        self.file = open('myfile.txt', "w")
+        open('myfile.txt', "w").close()
         self.file = open('myfile.txt','r')
 
         hydroshare.add_resource_files(self.res.short_id, self.file)
 
     def tearDown(self):
-        User.objects.all().delete()
+        self.user.uaccess.delete()
+        self.user.delete()
+        self.group.delete()
+
+        self.file.close()
+        os.remove(self.file.name)
+
         GenericResource.objects.all().delete()
         ResourceFile.objects.all().delete()
 
@@ -43,9 +54,8 @@ class TestDeleteResourceFile(TestCase):
             msg='the test file is not added to the resource'
         )
 
-
         # test if the added test file is deleted
-        hydroshare.delete_resource_file(self.res.short_id, self.file.name)
+        hydroshare.delete_resource_file(self.res.short_id, self.file.name, self.user)
         resource_file_objects = ResourceFile.objects.filter(object_id=self.res.pk)
         self.assertNotIn(
             self.file.name,

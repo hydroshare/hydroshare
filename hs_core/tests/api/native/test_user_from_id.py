@@ -3,13 +3,17 @@
 # add one test function : test_accept_user_pk(self)
 
 from __future__ import absolute_import
-from unittest import TestCase
+
+import unittest
+
+from django.contrib.auth.models import User, Group
+
 from hs_core import hydroshare
-from django.contrib.auth.models import User
 
 
-class TestUserFromId(TestCase):
+class TestUserFromId(unittest.TestCase):
     def setUp(self):
+        self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
             'jamy2@gmail.com',
             username='jamy2',
@@ -20,7 +24,9 @@ class TestUserFromId(TestCase):
         )
 
     def tearDown(self):
+        self.user.uaccess.delete()
         User.objects.all().delete()
+        self.hydroshare_author_group.delete()
 
     def test_accept_user_instance(self):
         self.assertEquals(

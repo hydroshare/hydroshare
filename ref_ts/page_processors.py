@@ -4,12 +4,12 @@ from models import *
 from hs_core import page_processors
 from hs_core.views import *
 
-@processor_for(RefTimeSeries)
+@processor_for(RefTimeSeriesResource)
 def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
 
-    context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None)
+    context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None, request=request)
     extended_metadata_exists = True
     context['extended_metadata_exists'] = extended_metadata_exists
 

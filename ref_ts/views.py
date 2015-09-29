@@ -6,7 +6,7 @@ from mezzanine.pages.page_processors import processor_for
 from ga_resources.utils import json_or_jsonp
 from hs_core import hydroshare, page_processors
 from . import ts_utils
-from .models import RefTimeSeries
+from .models import RefTimeSeriesResource
 import requests
 from lxml import etree
 import ast
@@ -61,7 +61,7 @@ class GetTSValuesForm(forms.Form):
     variable = forms.CharField(min_length=0, required=False)
 
 ts = None
-preview_name = "prview.png"
+preview_name = "preview.png"
 def time_series_from_service(request):
     f = GetTSValuesForm(request.GET)
     if f.is_valid():
@@ -144,10 +144,11 @@ def create_ref_time_series(request, *args, **kwargs):
         metadata = frm.cleaned_data.get('metadata')
         metadata = ast.literal_eval(metadata)
         res = hydroshare.create_resource(
-            resource_type='RefTimeSeries',
+            resource_type='RefTimeSeriesResource',
             owner=request.user,
             title=frm.cleaned_data.get('title'),
-            metadata=metadata
+            metadata=metadata,
+            content= frm.cleaned_data.get('title')
         )
 
         hydroshare.resource.create_metadata_element(
@@ -191,11 +192,11 @@ def create_ref_time_series(request, *args, **kwargs):
             ts = None
         return HttpResponseRedirect(res.get_absolute_url())
 
-@processor_for(RefTimeSeries)
+@processor_for(RefTimeSeriesResource)
 def add_dublin_core(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
-    context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None)
+    context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None, request=request)
     extended_metadata_exists = False
     if content_model.metadata.sites.all().first() or \
             content_model.metadata.variables.all().first() or \

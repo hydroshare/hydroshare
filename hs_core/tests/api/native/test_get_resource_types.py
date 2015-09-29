@@ -1,7 +1,10 @@
 __author__ = 'Pabitra'
+
+import unittest
+
 from django.test import TestCase
 from hs_core import hydroshare
-from hs_core.models import AbstractResource
+from hs_core.models import AbstractResource, ResourceManager
 from hs_core.hydroshare import resource, users
 from django.contrib.auth.models import User, Group
 
@@ -27,7 +30,7 @@ class TestGetResourceTypesAPI(TestCase):
         for res_type in res_types:
             self.assertEqual(issubclass(res_type, AbstractResource), True)
 
-
+    @unittest.skip
     def test_get_resources_by_type(self):
         # This tests the ability to filter resources by type
         # Note: print statements are for debugging assertion failures only

@@ -38,7 +38,7 @@
     padding-right: 10px;
     border-radius: 10px;
     margin-left: 5px;
-    width: 277px;
+    width: 420px;
 }
 
 #irodsContent #irods_structure #file_struct {
@@ -80,4 +80,16 @@
 
 #irodsContent .ajax-loader, #irodsContent .modal-backdrop.up-load {
     display: none;
+}
+
+.selected {
+    background-color: #cecece;
+}
+
+/* disable default browser shift key text selection highlighting */
+.file {
+    user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
 }

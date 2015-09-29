@@ -10,6 +10,7 @@ from functools import partial, wraps
 
 # page processor to populate raster resource specific metadata into my-resources template page
 @processor_for(RasterResource)
+# TODO: problematic permissions
 def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
@@ -79,7 +80,7 @@ def landing_page(request, page):
                                 cellinfo_layout,
                                 BandInfoLayoutEdit
         )
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
         context['ori_coverage_form'] = ori_coverage_form
         context['cellinfo_form'] = cellinfo_form
         context['bandinfo_formset'] = bandinfo_formset

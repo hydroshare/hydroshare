@@ -1,46 +1,24 @@
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.contrib.contenttypes import generic
-from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
-from hs_core import hydroshare
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.contrib.contenttypes.models import ContentType
+
+from hs_core.models import ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement, BaseResource, ResourceManager
+from hs_core import hydroshare
+
 from mezzanine.pages.models import Page
 from mezzanine.pages.page_processors import processor_for
 
-# def get_resource_names():
-#     names = []
-#     for res in hydroshare.get_resource_types():
-#         names.append(res.__name__)
-#
-#         
-        
-#
-# To create a new resource, use these two super-classes.
-#
-class ToolResource(Page, AbstractResource):
+
+class ToolResource(BaseResource):
+    objects = ResourceManager('ToolResource')
 
     class Meta:
+        proxy = True
         verbose_name = 'Tool Resource'
 
     def extra_capabilities(self):
         return None
-
-    @property
-    def metadata(self):
-        md = ToolMetaData()
-        return self._get_metadata(md)
-
-    def can_add(self, request):
-        return AbstractResource.can_add(self, request)
-
-    def can_change(self, request):
-        return AbstractResource.can_change(self, request)
-
-    def can_delete(self, request):
-        return AbstractResource.can_delete(self, request)
-
-    def can_view(self, request):
-        return AbstractResource.can_view(self, request)
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -52,6 +30,10 @@ class ToolResource(Page, AbstractResource):
         # resource can't have any files
         return False
 
+    @property
+    def metadata(self):
+        md = ToolMetaData()
+        return self._get_metadata(md)
 
 
 processor_for(ToolResource)(resource_processor)
