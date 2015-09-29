@@ -12,6 +12,7 @@ from django.forms.extras.widgets import SelectDateWidget
 from django.utils.safestring import mark_safe
 from functools import partial, wraps
 from hydroshare import utils
+from hs_accounts.models import ExternalProfileLink
 
 class HorizontalRadioRenderer(forms.RadioSelect.renderer):
     def render(self):
@@ -505,7 +506,7 @@ class PartyForm(ModelForm):
         super(PartyForm, self).__init__(*args, **kwargs)
         self.profile_link_formset = None
         self.number = 0
-        
+
     class Meta:
         model = Party
         # fields that will be displayed are specified here - but not necessarily in the same order

@@ -18,7 +18,7 @@ from mezzanine.utils.email import split_addresses, send_mail_template
 from mezzanine.utils.cache import add_cache_bypass
 from mezzanine.conf import settings
 
-from .models import UserProfile
+from hs_accounts.models import UserProfile
 from hs_core.hydroshare.users import create_account
 
 COMMENT_MAX_LENGTH = getattr(settings,'COMMENT_MAX_LENGTH', 3000)

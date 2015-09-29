@@ -280,6 +280,7 @@ INSTALLED_APPS = (
     "ga_resources",
     #"dublincore",
     "hs_core",
+    "hs_accounts",
     "hs_metrics",
     "irods_browser_app",
     #"hs_rhessys_inst_resource",
@@ -412,7 +413,7 @@ else:
     set_dynamic_settings(globals())
 
 #
-AUTH_PROFILE_MODULE = "theme.UserProfile"
+AUTH_PROFILE_MODULE = "hs_accounts.UserProfile"
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',

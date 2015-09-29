@@ -1,41 +1,27 @@
 # Create your views here.
 from django.contrib.auth.models import User
-from django.views.generic import TemplateView
-from hs_core.hydroshare import get_resource_types
-from mezzanine.generic.views import initial_validation
+from django.contrib.messages import info, error
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.utils.translation import ugettext_lazy as _
+from django.views.generic import TemplateView
+
+from hs_core.hydroshare import get_resource_types
+
+from mezzanine.conf import settings
+from mezzanine.generic.views import initial_validation
+from mezzanine.utils.cache import add_cache_bypass
+from mezzanine.utils.email import send_verification_mail, send_approve_mail
+from mezzanine.utils.urls import login_redirect, next_url
+from mezzanine.utils.views import render, set_cookie, is_spam
+
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm
-from mezzanine.utils.views import render, set_cookie, is_spam
-from django.shortcuts import redirect
-from mezzanine.utils.cache import add_cache_bypass
+
 from json import dumps
+from .forms import SignupForm
 
-class UserProfileView(TemplateView):
-    template_name='accounts/profile.html'
 
-    def get_context_data(self, **kwargs):
-        if 'user' in kwargs:
-            try:
-                u = User.objects.get(pk=int(kwargs['user']))
-            except:
-                u = User.objects.get(username=kwargs['user'])
-
-        else:
-            try:
-                u = User.objects.get(pk=int(self.request.GET['user']))
-            except:
-                u = User.objects.get(username=self.request.GET['user'])
-
-        resource_types = get_resource_types()
-        res = []
-        for Resource in resource_types:
-            res.extend([r for r in Resource.objects.filter(user=u)])
-
-        return {
-            'u' : u,
-            'resources' :  res
-        }
 
 # added by Hong Yi to address issue #186 to customize Mezzanine-based commenting form and view
 def comment(request, template="generic/comments.html"):
@@ -94,17 +80,6 @@ def rating(request):
         set_cookie(response, "mezzanine-rating", ratings)
     return response
 
-
-from mezzanine.conf import settings
-from django.contrib.messages import info, error
-from django.shortcuts import get_object_or_404, redirect
-from django.utils.translation import ugettext_lazy as _
-
-from mezzanine.utils.email import send_verification_mail, send_approve_mail
-from mezzanine.utils.urls import login_redirect, next_url
-from mezzanine.utils.views import render
-
-from .forms import SignupForm
 
 def signup(request, template="accounts/account_signup.html"):
     """

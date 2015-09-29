@@ -22,6 +22,8 @@ from languages_iso import languages as iso_languages
 from dateutil import parser
 import json
 
+from hs_accounts.models import ExternalProfileLink
+
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -61,145 +63,6 @@ def validate_user_url(value):
         # check the user exists for the provided user id
         if not User.objects.filter(pk=user_id).exists():
             raise ValidationError(err_message)
-
-
-class Person(models.Model):
-    """
-    A supplement to the django.contrib.auth User with additional fields useful to hydroshare.
-    """
-
-    UNIVERSITY_FACULTY = 1
-    UNIVERSITY_PROFESSIONAL_OR_RESEARCH_STAFF = 2
-    POST_DOCTORAL_FELLOW = 3
-    UNIVERSITY_GRADUATE_STUDENT = 4
-    UNIVERSITY_UNDERGRADUATE_STUDENT = 5
-    COMMERCIAL_OR_PROFESSIONAL = 6
-    GOVERNMENT_OFFICIAL = 7
-    SCHOOL_STUDENT_K_TO_12 = 8
-    SCHOOL_TEACHER_K_TO_12 = 9
-    OTHER = 10
-
-    USER_TYPE_CHOICES = (
-        (UNIVERSITY_FACULTY, 'University Faculty'),
-        (UNIVERSITY_PROFESSIONAL_OR_RESEARCH_STAFF, 'University Professional or Research Staff'),
-        (POST_DOCTORAL_FELLOW, 'Post Doctoral Fellow'),
-        (UNIVERSITY_GRADUATE_STUDENT, 'University Graduate Student'),
-        (UNIVERSITY_UNDERGRADUATE_STUDENT, 'University Undergraduate Student'),
-        (COMMERCIAL_OR_PROFESSIONAL, 'Commercial or Professional'),
-        (GOVERNMENT_OFFICIAL, 'Government Official'),
-        (SCHOOL_STUDENT_K_TO_12, 'School Student Kindergarten to 12th Grade'),
-        (SCHOOL_TEACHER_K_TO_12, 'School Teacher Kindergarten to 12th Grade'),
-        (OTHER, 'Other'),
-    )
-
-    user = models.ForeignKey(User)
-    middle_name = models.CharField(max_length=100, null=True)
-    description = models.CharField(max_length=255, null=True)
-    homepage = models.URLField(null=True)
-    user_type = models.IntegerField(choices=USER_TYPE_CHOICES, default=OTHER)
-    # TODO: add photo field
-    # TODO: add CV field
-
-    def __unicode__(self):
-        return "{0} ({1})".format(user.username, self.user_type)
-
-
-class Organization(models.Model):
-    """
-    University, company, non-profit, or other similar entity that creates, shares, or consumes
-    hydrology data.
-    """
-
-    ANALYTICAL_LABORATORY = 1
-    ASSOCIATION = 2
-    CENTER = 3
-    COLLEGE = 4
-    COMPANY = 5
-    CONSORTIUM = 6
-    DEPARTMENT = 7
-    DIVISION = 8
-    FOUNDATION = 9
-    FUNDING_ORGANIZATION = 10
-    GOVERNMENT_AGENCY = 11
-    INSTITUTE = 12
-    LABORATORY = 13
-    LIBRARY = 14
-    MANUFACTURER = 15
-    MUSEUM = 16
-    PROGRAM = 17
-    PUBLISHER = 18
-    RESEARCH_AGENCY = 19
-    RESEARCH_INSTITUTE = 20
-    RESEARCH_ORGANIZATION = 21
-    SCHOOL = 22
-    STUDENT_ORGANIZATION = 23
-    UNIVERSITY = 24
-    UNKNOWN = 25
-    VENDOR = 26
-
-    ORG_TYPE_CHOICES = (
-       (ANALYTICAL_LABORATORY, 'Analytical laboratory'),
-       (ASSOCIATION, 'Association'),
-       (CENTER , 'Center'),
-       (COLLEGE, 'College'),
-       (COMPANY, 'Company'),
-       (CONSORTIUM, 'Consortium'),
-       (DEPARTMENT, 'Department'),
-       (DIVISION, 'Division'),
-       (FOUNDATION, 'Foundation'),
-       (FUNDING_ORGANIZATION, 'Funding organization'),
-       (GOVERNMENT_AGENCY, 'Government agency'),
-       (INSTITUTE, 'Institute'),
-       (LABORATORY, 'Laboratory'),
-       (LIBRARY, 'Library'),
-       (MANUFACTURER, 'Manufacturer'),
-       (MUSEUM, 'Museum'),
-       (PROGRAM, 'Program'),
-       (PUBLISHER, 'Publisher'),
-       (RESEARCH_AGENCY, 'Research agency'),
-       (RESEARCH_INSTITUTE, 'Research institute'),
-       (RESEARCH_ORGANIZATION, 'Research organization'),
-       (SCHOOL, 'School'),
-       (STUDENT_ORGANIZATION, 'Student organization'),
-       (UNIVERSITY, 'University'),
-       (UNKNOWN, 'Unknown'),
-       (VENDOR, 'Vendor'),
-    )
-
-    org_type = models.IntegerField(choices=ORG_TYPE_CHOICES, default=UNKNOWN)
-    name = models.CharField(max_length=100, null=False)
-    code = models.CharField(max_length=100, null=False)
-    description = models.CharField(max_length=255, null=True)
-    homepage = models.URLField(null=True)
-    # TODO: add logo field
-
-    def __unicode__(self):
-        return "{0}: {1}".format(self.code, self.name)
-
-
-class Affiliation(models.Model):
-    """
-    Annotated relationship between a Person and and Organization with job title, department, and
-    active date information.
-    """
-    organization = models.ForeignKey(Organization)
-    person = models.ForeignKey(Person)
-    job_title = models.CharField(max_length=100, null=True)
-    department_name = models.CharField(max_length=100, null=True)
-    address = models.CharField(max_length=250, null=True)
-    phone = models.CharField(max_length=25, null=True)
-    date_begin = models.DateField(null=True)
-    date_end = models.DateField(null=True)
-    phone = models.CharField(max_length=25, null=True)
-
-    def __unicode__(self):
-        return "{0} {1} ({2} at {3})".format(person.first_name,
-                                             person.last_name,
-                                             self.job_title,
-                                             organization.name)
-
-    class Meta:
-        abstract = True
 
 
 class ResourcePermissionsMixin(Ownable):
@@ -273,7 +136,6 @@ class ResourcePermissionsMixin(Ownable):
                 return False
         else:
             return False
-
 
     def can_change(self, request):
         user = get_user(request)
@@ -378,16 +240,6 @@ class HSAdaptorEditInline(object):
             can_edit = (user in set(cm.edit_users.all())) or (len(set(cm.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
         return can_edit
 
-class ExternalProfileLink(models.Model):
-    type = models.CharField(max_length=50)
-    url = models.URLField()
-
-    object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
-
-    class Meta:
-        unique_together = ("type", "url", "object_id")
 
 class Party(AbstractMetaDataElement):
     description = models.URLField(null=True, blank=True, validators=[validate_user_url])
@@ -597,7 +449,6 @@ class Contributor(Party):
     term = 'Contributor'
 
 
-
 # Example of repeatable metadata element
 class Creator(Party):
     term = "Creator"
@@ -647,6 +498,7 @@ class Description(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Description element of a resource can't be deleted.")
 
+
 class Title(AbstractMetaDataElement):
     term = 'Title'
     value = models.CharField(max_length=300)
@@ -686,6 +538,7 @@ class Title(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Title element of a resource can't be deleted.")
 
+
 class Type(AbstractMetaDataElement):
     term = 'Type'
     url = models.URLField()
@@ -718,6 +571,7 @@ class Type(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("Type element of a resource can't be deleted.")
+
 
 class Date(AbstractMetaDataElement):
     DATE_TYPE_CHOICES=(
@@ -828,6 +682,7 @@ class Date(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No date element was found for id:%d." % element_id)
 
+
 class Relation(AbstractMetaDataElement):
     SOURCE_TYPES= (
         ('isPartOf', 'Part Of'),
@@ -885,6 +740,7 @@ class Relation(AbstractMetaDataElement):
             rel.delete()
         else:
             raise ObjectDoesNotExist("No relation element exists for id:%d." % element_id)
+
 
 class Identifier(AbstractMetaDataElement):
     term = 'Identifier'
@@ -1057,6 +913,7 @@ class Publisher(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No publisher element was found for id:%d." % element_id)
 
+
 class Language(AbstractMetaDataElement):
     term = 'Language'
     code = models.CharField(max_length=3, choices=iso_languages )
@@ -1112,6 +969,7 @@ class Language(AbstractMetaDataElement):
             lang.delete()
         else:
             raise ObjectDoesNotExist("No language element was found for id:%d." % element_id)
+
 
 class Coverage(AbstractMetaDataElement):
     COVERAGE_TYPES = (
@@ -1302,6 +1160,7 @@ class Coverage(AbstractMetaDataElement):
                 if not value_item in value_dict:
                     raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or 'units' is missing.")
 
+
 class Format(AbstractMetaDataElement):
     term = 'Format'
     value = models.CharField(max_length=150)
@@ -1349,6 +1208,7 @@ class Format(AbstractMetaDataElement):
             format.delete()
         else:
             raise ObjectDoesNotExist("No format element was found for id:%d." % element_id)
+
 
 class Subject(AbstractMetaDataElement):
     term = 'Subject'
@@ -1401,6 +1261,7 @@ class Subject(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No subject element was found for id:%d." % element_id)
 
+
 class Source(AbstractMetaDataElement):
     term = 'Source'
     derived_from = models.CharField(max_length=300)
@@ -1449,6 +1310,7 @@ class Source(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No source element was found for id:%d." % element_id)
 
+
 class Rights(AbstractMetaDataElement):
     term = 'Rights'
     statement = models.TextField(null=True, blank=True)
@@ -1487,15 +1349,13 @@ class Rights(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No rights element was found for the provided id:%s" % element_id)
 
-
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("Rights element of a resource can't be deleted.")
 
-
-
 def short_id():
     return uuid4().hex
+
 
 class AbstractResource(ResourcePermissionsMixin):
     """
@@ -1673,7 +1533,6 @@ class AbstractResource(ResourcePermissionsMixin):
         # by default all file types are supported
         return (".*",)
 
-
     @classmethod
     def can_have_multiple_files(cls):
         # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
@@ -1682,7 +1541,6 @@ class AbstractResource(ResourcePermissionsMixin):
         # resource by default can have multiple files
         return True
 
-
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
@@ -1690,12 +1548,14 @@ class AbstractResource(ResourcePermissionsMixin):
 def get_path(instance, filename):
     return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
 
+
 class ResourceFile(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
 
     content_object = generic.GenericForeignKey('content_type', 'object_id')
     resource_file = models.FileField(upload_to=get_path, max_length=500, storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
+
 
 class Bags(models.Model):
     object_id = models.PositiveIntegerField()
@@ -1726,7 +1586,6 @@ class GenericResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
-
     @classmethod
     def get_supported_upload_file_types(cls):
         # all file types are supported
@@ -1739,6 +1598,7 @@ class GenericResource(Page, AbstractResource):
     @classmethod
     def can_have_files(cls):
         return True
+
 
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
@@ -2156,7 +2016,6 @@ def resource_processor(request, page):
     #extra['dc'] = { m.term_name : m.content for m in extra['res'].dublin_metadata.all() }
     return extra
 
-
 @receiver(post_save)
 def resource_creation_signal_handler(sender, instance, created, **kwargs):
     """Create initial dublin core elements"""
@@ -2203,7 +2062,6 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
                 instance.dublin_metadata.create(term='AB', content=instance.content)
         else:
             resource_update_signal_handler(sender, instance, created, **kwargs)
-
 
 def resource_update_signal_handler(sender, instance, created, **kwargs):
     """Add dublin core metadata based on the person who just updated the resource. Handle publishing too..."""

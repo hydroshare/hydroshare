@@ -3,7 +3,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.contrib.auth.models import User
 from mezzanine.generic.models import Rating, ThreadedComment
-from theme.models import UserProfile # fixme switch to party model
+from hs_accounts.models import UserProfile # fixme switch to party model
 from hs_core import hydroshare
 from collections import Counter
 
