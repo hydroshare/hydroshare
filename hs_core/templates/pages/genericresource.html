@@ -526,10 +526,11 @@
                                                     </td>
 
                                                     <td class="user-actions">
-                                                        <form action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with/{{ u.pk }}/"
+                                                        <form id="form-remove-user-{{ u.pk }}" action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with/{{ u.pk }}/"
                                                               method="POST">
                                                             {% csrf_token %}
-                                                            <span class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                                            <span onclick="unshare_resource_ajax_submit('form-remove-user-{{ u.pk }}')"
+                                                                  class="glyphicon glyphicon-remove btn-remove-row"></span>
                                                         </form>
                                                     </td>
                                                 </tr>
@@ -588,10 +589,12 @@
                                                             </span>
                                                     </td>
                                                     <td class="user-actions">
-                                                        <form action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with/{{ u.pk }}"
+                                                        <form id="form-remove-user-{{ u.pk }}"
+                                                              action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with/{{ u.pk }}"
                                                               method="POST">
                                                             {% csrf_token %}
-                                                            <span class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                                            <span onclick="unshare_resource_ajax_submit('form-remove-user-{{ u.pk }}')"
+                                                                  class="glyphicon glyphicon-remove btn-remove-row"></span>
                                                         </form>
                                                     </td>
                                                 </tr>
@@ -650,10 +653,11 @@
                                                     </td>
 
                                                     <td class="user-actions">
-                                                        <form action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with/{{ u.pk }}"
+                                                        <form id="form-remove-user-{{ u.pk }}"
+                                                              action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with/{{ u.pk }}"
                                                               method="POST">
                                                             {% csrf_token %}
-                                                            <span class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                                            <span onclick="unshare_resource_ajax_submit('form-remove-user-{{ u.pk }}')" class="glyphicon glyphicon-remove btn-remove-row"></span>
                                                         </form>
                                                     </td>
                                                 </tr>
@@ -677,15 +681,15 @@
                                                     <button class="btn btn-default dropdown-toggle" type="button"
                                                             id="roles_list" data-toggle="dropdown"
                                                             aria-haspopup="true" aria-expanded="true">
-                                                        <span id="selected_role" data-role="VIEW">Can view</span>
+                                                        <span id="selected_role" data-role="view">Can view</span>
                                                         <span class="caret"></span>
                                                     </button>
 
                                                     <ul id="list-roles" class="dropdown-menu"
                                                         aria-labelledby="roles_list">
-                                                        <li><a data-role="VIEW" href="#">Can view</a></li>
-                                                        <li><a data-role="CHANGE" href="#">Can edit</a></li>
-                                                        <li><a data-role="OWNER" href="#">Is owner</a></li>
+                                                        <li><a data-role="view" href="#">Can view</a></li>
+                                                        <li><a data-role="change" href="#">Can edit</a></li>
+                                                        <li><a data-role="owner" href="#">Is owner</a></li>
                                                     </ul>
                                                 </div>
 
@@ -2500,6 +2504,30 @@
                 {#               update_access_ajax_submit(event, formID);#}
             }
 
+            function unshare_resource_ajax_submit(form_id) {
+                $form = $('#' + form_id);
+                var datastring = $form.serialize();
+                var url = $form.attr('action');
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    dataType: 'html',
+                    data: datastring,
+                    success: function (result) {
+                        var json_response = JSON.parse(result);
+                        if (json_response.status === 'success') {
+                            console.log("Success!");
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        console.log("Error!")
+                    }
+                });
+                //don't submit the form
+                return false;
+            }
+
+
             function share_resource_ajax_submit(form_id) {
                 $form = $('#' + form_id);
                 var datastring = $form.serialize();
@@ -2705,6 +2733,8 @@
                     }
                 });
                 $("#list-roles a").click(onRoleSelect);
+
+{#                $(".user-actions .btn-remove-row").click(unshare_resource_ajax_submit);#}
 
                 // hide add file button if necessary
                 var file_count = $("#file-count").attr('value');
