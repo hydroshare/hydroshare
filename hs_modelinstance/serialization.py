@@ -62,7 +62,7 @@ class ModelInstanceResourceMeta(GenericResourceMeta):
         """
         Write metadata to resource
 
-        :param resource: RasterResource instance
+        :param resource: ModelInstanceResource instance
         """
         super(ModelInstanceResourceMeta, self).write_metadata_to_resource(resource)
 
