@@ -91,6 +91,26 @@ class ToolResourceMeta(GenericResourceMeta):
         """
         super(ToolResourceMeta, self).write_metadata_to_resource(resource)
 
+        if self.url_base:
+            resource.metadata.url_bases.all().delete()
+            resource.metadata.create_element('RequestUrlBase',
+                                             value=self.url_base)
+        if len(self.resource_types) > 0:
+            resource.metadata.res_types.all().delete()
+            for t in self.resource_types:
+                resource.metadata.create_element('ToolResourceType',
+                                                 tool_res_type=t)
+        if len(self.fees) > 0:
+            resource.metadata.fees.all().delete()
+            for f in self.fees:
+                resource.metadata.create_element('Fee',
+                                                 description=f.description,
+                                                 value=f.value)
+        if self.version:
+            resource.metadata.versions.all().delete()
+            resource.metadata.create_element('ToolVersion',
+                                             value=self.version)
+
     class ToolFee(object):
         def __str__(self):
             msg = "{classname} description: {description}, value: {value}"
