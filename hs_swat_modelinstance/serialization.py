@@ -2,7 +2,13 @@
 import rdflib
 
 from hs_core.serialization import GenericResourceMeta
+from hs_swat_modelinstance.models import ExecutedBy, ModelObjective, SimulationType, ModelMethod, \
+    ModelParameter, ModelInput
+from hs_swat_modelinstance.forms import model_objective_choices, parameters_choices
 
+
+MODEL_OBJECTIVE_CHOICES = [c[0] for c in model_objective_choices]
+MODEL_PARAMETER_CHOICES = [p[0] for p in parameters_choices]
 
 class SWATModelInstanceResourceMeta(GenericResourceMeta):
 
@@ -165,6 +171,129 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
         """
         super(SWATModelInstanceResourceMeta, self).write_metadata_to_resource(resource)
 
+        if self.model_output:
+            resource.metadata._model_output.update(includes_output=self.model_output.includes_output)
+        if self.executed_by:
+            executed_by = resource.metadata.executed_by
+            if not executed_by:
+                # Create
+                ExecutedBy.create(content_object=resource.metadata,
+                                  name=self.executed_by.name)
+            else:
+                # Update
+                ExecutedBy.update(executed_by.element_id,
+                                  name=self.executed_by.name)
+        if self.model_objective:
+            swat_model_objectives = []
+            other_objectives = []
+            for obj in self.model_objective.model_objectives:
+                if obj in MODEL_OBJECTIVE_CHOICES:
+                    swat_model_objectives.append(obj)
+                else:
+                    other_objectives.append(obj)
+            other_objectives_str = None
+            if len(other_objectives) > 0:
+                other_objectives_str = ",".join(other_objectives)
+            model_objective = resource.metadata.model_objective
+            if not model_objective:
+                # Create
+                ModelObjective.create(content_object=resource.metadata,
+                                      swat_model_objectives=swat_model_objectives,
+                                      other_objectives=other_objectives_str)
+            else:
+                # Update
+                ModelObjective.update(model_objective.element_id,
+                                      swat_model_objectives=swat_model_objectives,
+                                      other_objectives=other_objectives_str)
+        if self.simulation_type:
+            simulation_type = resource.metadata.simulation_type
+            if not simulation_type:
+                # Create
+                SimulationType.create(content_object=resource.metadata,
+                                      simulation_type_name=self.simulation_type.simulation_type_name)
+            else:
+                # Update
+                SimulationType.update(simulation_type.element_id,
+                                      simulation_type_name=self.simulation_type.simulation_type_name)
+        if self.model_method:
+            model_method = resource.metadata.model_method
+            if not model_method:
+                # Create
+                ModelMethod.create(content_object=resource.metadata,
+                                   runoff_calculation_method=self.model_method.runoff_calculation_method,
+                                   flow_routing_method=self.model_method.flow_routing_method,
+                                   PET_estimation_method=self.model_method.PET_estimation_method)
+            else:
+                #Update
+                ModelMethod.create(model_method.element_id,
+                                   runoff_calculation_method=self.model_method.runoff_calculation_method,
+                                   flow_routing_method=self.model_method.flow_routing_method,
+                                   PET_estimation_method=self.model_method.PET_estimation_method)
+        if self.model_parameter:
+            model_parameters = []
+            other_parameters = []
+            for param in self.model_parameter.model_parameters:
+                if param in MODEL_PARAMETER_CHOICES:
+                    model_parameters.append(param)
+                else:
+                    other_parameters.append(param)
+            other_parameters_str = None
+            if len(other_parameters) > 0:
+                other_parameters_str = ",".join(other_parameters)
+            model_parameter = resource.metadata.model_parameter
+            if not model_parameter:
+                # Create
+                ModelParameter.create(content_object=resource.metadata,
+                                      model_parameters=model_parameters,
+                                      other_parameters=other_parameters_str)
+            else:
+                # Update
+                ModelParameter.update(model_parameter.element_id,
+                                      model_parameters=model_parameters,
+                                      other_parameters=other_parameters_str)
+        if self.model_input:
+            model_input = resource.metadata.model_input
+            if not model_input:
+                # Create
+                ModelInput.create(content_object=resource.metadata,
+                                  warm_up_period=self.model_input.warm_up_period_value,
+                                  rainfall_time_step_type=self.model_input.rainfall_time_step_type,
+                                  rainfall_time_step_value=self.model_input.rainfall_time_step_value,
+                                  routing_time_step_type=self.model_input.routing_time_step_type,
+                                  routing_time_step_value=self.model_input.routing_time_step_value,
+                                  simulation_time_step_type=self.model_input.simulation_time_step_type,
+                                  simulation_time_step_value=self.model_input.simulation_time_step_value,
+                                  watershed_area=self.model_input.watershed_area,
+                                  number_of_subbasins=self.model_input.number_of_subbasins,
+                                  number_of_HRUs=self.model_input.number_of_HRUs,
+                                  DEM_resolution=self.model_input.DEM_resolution,
+                                  DEM_source_name=self.model_input.DEM_source_name,
+                                  DEM_source_URL=self.model_input.DEM_source_URL,
+                                  landUse_data_source_name=self.model_input.landUse_data_source_name,
+                                  landUse_data_source_URL=self.model_input.landUse_data_source_URL,
+                                  soil_data_source_name=self.model_input.soil_data_source_name,
+                                  soil_data_source_URL=self.model_input.soil_data_source_URL)
+            else:
+                # Update
+                ModelInput.update(model_parameter.element_id,
+                                  warm_up_period=self.model_input.warm_up_period_value,
+                                  rainfall_time_step_type=self.model_input.rainfall_time_step_type,
+                                  rainfall_time_step_value=self.model_input.rainfall_time_step_value,
+                                  routing_time_step_type=self.model_input.routing_time_step_type,
+                                  routing_time_step_value=self.model_input.routing_time_step_value,
+                                  simulation_time_step_type=self.model_input.simulation_time_step_type,
+                                  simulation_time_step_value=self.model_input.simulation_time_step_value,
+                                  watershed_area=self.model_input.watershed_area,
+                                  number_of_subbasins=self.model_input.number_of_subbasins,
+                                  number_of_HRUs=self.model_input.number_of_HRUs,
+                                  DEM_resolution=self.model_input.DEM_resolution,
+                                  DEM_source_name=self.model_input.DEM_source_name,
+                                  DEM_source_URL=self.model_input.DEM_source_URL,
+                                  landUse_data_source_name=self.model_input.landUse_data_source_name,
+                                  landUse_data_source_URL=self.model_input.landUse_data_source_URL,
+                                  soil_data_source_name=self.model_input.soil_data_source_name,
+                                  soil_data_source_URL=self.model_input.soil_data_source_URL)
+
     class ModelOutput(object):
 
         def __init__(self):
@@ -198,7 +327,8 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             self.model_objectives = []  # Optional
 
         def __init__(self, model_objects_str):
-            self.model_objectives = model_objects_str.split(',')
+            self.model_objectives = [o.strip() for o in model_objects_str.split(',')]
+
 
         def __str__(self):
             msg = "ModelObjective model_objectives: {model_objectives}"
@@ -246,7 +376,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             self.model_parameters = []  # Optional
 
         def __init__(self, model_parameters_str):
-            self.model_parameters = model_parameters_str.split(',')
+            self.model_parameters = [p.strip() for p in model_parameters_str.split(',')]
 
         def __str__(self):
             msg = "ModelParameter model_parameters: {model_parameters}"
@@ -259,7 +389,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
     class ModelInput(object):
 
         def __init__(self):
-            self.warm_up_period_type = None  # Optional
+            self.warm_up_period_type = None  # Optional; Not implemented in hs_swat_modelinstance.models.ModelInput
             self.warm_up_period_value = None  # Optional
             self.rainfall_time_step_type = None  # Optional
             self.rainfall_time_step_value = None  # Optional
