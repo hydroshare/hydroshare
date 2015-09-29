@@ -14,6 +14,11 @@ def migrate_users(apps, schema_editor):
         ua.save()
 
 
+def undo_migrate_users(apps, schema_editor):
+    # delete all 'UserAccess' records
+    UserAccess.objects.all().delete()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -21,5 +26,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_users),
+        migrations.RunPython(code=migrate_users, reverse_code=undo_migrate_users),
     ]
