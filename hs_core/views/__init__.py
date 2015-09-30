@@ -294,9 +294,11 @@ def change_permissions(request, shortkey, *args, **kwargs):
         frm = AddUserForm(data=request.POST)
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.OWNER)
     elif t == 'make_public':
-        _set_resource_sharing_status(request, user, res, True)
-    elif t == 'make_private':
-        _set_resource_sharing_status(request, user, res, False)
+        _set_resource_sharing_status(request, user, res, is_public=True)
+    elif t == 'make_private' or t == 'make_not_discoverable':
+        _set_resource_sharing_status(request, user, res, is_public=False)
+    elif t == 'make_discoverable':
+        _set_resource_sharing_status(request, user, res, is_public=False, is_discoverable=True)
 
     # due to self unsharing of a private resource the user will have no access to that resource
     # so need to redirect to the resource listing page
@@ -670,12 +672,25 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
     return go_to_resource_listing_page
 
 
-def _set_resource_sharing_status(request, user, resource, is_public):
+def _set_resource_sharing_status(request, user, resource, is_public, is_discoverable=False):
+    if not user.uaccess.can_change_resource_flags(resource):
+        messages.error(request, "You don't have permission to change resource sharing status")
+        return
+
     if is_public and not resource.can_be_public:
         messages.error(request, "Resource may not have sufficient required metadata to be public")
     else:
-        if user.uaccess.can_change_resource_flags(resource):
-            resource.raccess.public = is_public
-            resource.raccess.save()
+        if is_discoverable:
+            if resource.can_be_public:
+                resource.raccess.public = False
+                resource.raccess.discoverable = True
+            else:
+                messages.error(request, "Resource may not have sufficient required metadata to be discoverable")
         else:
-            messages.error(request, "You don't have permission to change resource sharing status")
+            resource.raccess.public = is_public
+            resource.raccess.discoverable = is_public
+
+        resource.raccess.save()
+        # set isPublic metadata AVU accordingly
+        istorage = IrodsStorage()
+        istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
