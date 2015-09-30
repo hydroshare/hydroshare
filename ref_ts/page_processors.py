@@ -1,4 +1,4 @@
-__author__ = 'Shaun'
+__author__ = 'Drew, Jeff & Shaun'
 from mezzanine.pages.page_processors import processor_for
 from models import *
 from hs_core import page_processors
