@@ -19,7 +19,7 @@ hydroshare:
     # hydroshare repository
     - ".:/home/docker/hydroshare"
     # pycharm debugging
-    # - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
+    #- "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
   ports:
     - "1338:22"
     - "8000:8000"
