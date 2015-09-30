@@ -229,7 +229,7 @@ class GeometryInformation(AbstractMetaDataElement):
 
 # Define the Geographic Feature
 class GeographicFeatureResource(BaseResource):
-    objects = ResourceManager()
+    objects = ResourceManager("GeographicFeatureResource")
     @property
     def metadata(self):
         md = GeographicFeatureMetaData()
