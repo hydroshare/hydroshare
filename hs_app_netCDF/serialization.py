@@ -80,22 +80,19 @@ class NetcdfResourceMeta(GenericResourceMeta):
             extent = str(extent_lit)
             # Get crsName
             crs_name_lit = self._rmeta_graph.value(o, hsterms.crsName)
-            if crs_name_lit is None:
-                msg = "crsName not found in spatial reference for resource {0}".format(self.root_uri)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            crs_name = str(crs_name_lit)
+            crs_name = None
+            if crs_name_lit is not None:
+                crs_name = str(crs_name_lit)
             # Get crsRepresentationText
             crs_repr_text_lit = self._rmeta_graph.value(o, hsterms.crsRepresentationText)
-            if crs_repr_text_lit is None:
-                msg = "crsRepresentationText not found in spatial reference for resource {0}".format(self.root_uri)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            crs_repr_text = str(crs_repr_text_lit)
+            crs_repr_text = None
+            if crs_repr_text_lit is not None:
+                crs_repr_text = str(crs_repr_text_lit)
             # Get crsRepresentationType
             crs_repr_type_lit = self._rmeta_graph.value(o, hsterms.crsRepresentationType)
-            if crs_repr_type_lit is None:
-                msg = "crsRepresentationType not found in spatial reference for resource {0}".format(self.root_uri)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            crs_repr_type = str(crs_repr_type_lit)
+            crs_repr_type = None
+            if crs_repr_type_lit is not None:
+                crs_repr_type = str(crs_repr_type_lit)
             self.spatial_reference = NetcdfResourceMeta.SpatialReference(extent, crs_name, crs_repr_text,
                                                                          crs_repr_type)
             print("\t\t{0}".format(self.spatial_reference))
