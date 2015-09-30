@@ -4,6 +4,7 @@ import rdflib
 from rdflib import URIRef
 from rdflib import Graph
 
+from django.contrib.auth.models import User
 from django.core.files.uploadedfile import UploadedFile
 from django.db import IntegrityError
 
@@ -123,6 +124,20 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
         # Get user
         owner_uri = rm.get_owner_uri().strip()
         owner_pk = os.path.basename(owner_uri.strip('/'))
+        print(owner_uri)
+        print(owner_pk)
+        # Make sure user exists
+        try:
+            pk = int(owner_pk)
+        except ValueError:
+            pk = None
+        user = None
+        if pk:
+            user = User.objects.get(pk=owner_pk)
+        if user is None:
+            # Set owner to admin if user doesn't exist
+            print("Owner user {0} does not exist, using user 1".format(owner_pk))
+            owner_pk = 1
 
         resource_id = None
         if preserve_uuid:
@@ -139,6 +154,8 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
                                    short_id=resource_id,
                                    **kwargs)
     except Exception as ex:
+        import traceback
+        traceback.print_exc()
         raise HsDeserializationException(ex.message)
 
     # Add additional metadata
