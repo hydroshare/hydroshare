@@ -129,9 +129,6 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
             resource_id = rm.id
 
         kwargs = {}
-        # if rm.creation_date:
-        #     # This has no effect
-        #     kwargs['created'] = rm.creation_date
         resource = create_resource(resource_type=rm.res_type,
                                    owner=owner_pk,
                                    title=rm.title,
