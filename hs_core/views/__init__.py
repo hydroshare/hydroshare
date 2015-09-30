@@ -691,3 +691,6 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
             resource.raccess.discoverable = is_public
 
         resource.raccess.save()
+        # set isPublic metadata AVU accordingly
+        istorage = IrodsStorage()
+        istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
