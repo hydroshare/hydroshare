@@ -130,14 +130,15 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
         try:
             pk = int(owner_pk)
         except ValueError:
+            # owner_pk is not an integer, and so is not the pk for a Django user (thus the user does not exist).
             pk = None
         user = None
         if pk:
-            user = User.objects.get(pk=owner_pk)
+            user = User.objects.get(pk=pk)
         if user is None:
             # Set owner to admin if user doesn't exist
             print("Owner user {0} does not exist, using user 1".format(owner_pk))
-            owner_pk = 1
+            pk = 1
 
         resource_id = None
         if preserve_uuid:
@@ -145,7 +146,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
 
         kwargs = {}
         resource = create_resource(resource_type=rm.res_type,
-                                   owner=owner_pk,
+                                   owner=pk,
                                    title=rm.title,
                                    keywords=rm.keywords,
                                    metadata=metadata,
