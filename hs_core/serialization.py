@@ -122,7 +122,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
     try:
         # Get user
         owner_uri = rm.get_owner_uri().strip()
-        owner_pk = os.path.basename(owner_uri)
+        owner_pk = os.path.basename(owner_uri.strip('/'))
 
         resource_id = None
         if preserve_uuid:
