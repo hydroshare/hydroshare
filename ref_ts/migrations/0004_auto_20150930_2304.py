@@ -7,11 +7,16 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('hs_access_control', '0003_auto_20150824_2215'),
         ('hs_core', '0006_auto_20150917_1515'),
-        ('ref_ts', '0004_auto_20150924_2249'),
+        ('ref_ts', '0003_reftimeseries'),
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name='reftimeseries',
+            name='baseresource_ptr',
+        ),
         migrations.DeleteModel(
             name='RefTimeSeries',
         ),
