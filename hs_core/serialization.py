@@ -66,7 +66,18 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
     Follows roughly the same pattern as hs_core.views.create_resource().
 
     :param bag_content_path:
-    :return:
+    :return: None if successful.  If the resource associated with the bag
+    depends upon the existence of another resource in order for the dependant
+    resource's metadata to be fully created, this function will return a
+    Tuple<String, ResourceMeta, Resource>), where String is a string
+    representing  the resource ID that the Bagged Resource depends on,
+    ResourceMeta is a subclass of hs_core.serialization.GenericResourceMeta
+    that represents the metadata of the newly created resource, and Resource
+    is a subclass of hs_core.model.BaseResource representing the newly created
+    resource. Once the dependant resource has been created, the caller is
+    responsible for calling ResourceMeta.write_metadata_to_resource(Resource)
+    to ensure that all metadata fields have been populated.
+
     :raises: HsDeserializationException if an error occurred.
     """
     # Get resource metadata
@@ -141,7 +152,9 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
     try:
         rm.write_metadata_to_resource(resource)
     except HsDeserializationDependencyException as e:
-        print(e.dependency_resource_id)
+        return e.dependency_resource_id, rm, resource
+
+    return None
 
 
 class GenericResourceMeta(object):
@@ -624,7 +637,10 @@ class GenericResourceMeta(object):
                               'phone': c.phone, 'homepage': c.homepage,
                               'researcherID': c.researcherID,
                               'researchGageID': c.researchGateID}
-                    resource.metadata.create_element('creator', **kwargs)
+                    try:
+                        resource.metadata.create_element('creator', **kwargs)
+                    except IntegrityError:
+                        pass
                 else:
                     msg = "Creators with type {0} are not supported"
                     msg = msg.format(c.__class__.__name__)
@@ -637,13 +653,20 @@ class GenericResourceMeta(object):
                           'phone': c.phone, 'homepage': c.homepage,
                           'researcherID': c.researcherID,
                           'researchGageID': c.researchGateID}
-                resource.metadata.create_element('contributor', **kwargs)
+                try:
+                    resource.metadata.create_element('contributor', **kwargs)
+                except IntegrityError:
+                    pass
             else:
                 msg = "Contributor with type {0} are not supported"
                 msg = msg.format(c.__class__.__name__)
                 raise TypeError(msg)
         if self.abstract:
-            resource.metadata.create_element('description', abstract=self.abstract)
+            try:
+                resource.metadata.create_element('description', abstract=self.abstract)
+            except IntegrityError:
+                resource.metadata.update_element('description', resource.metadata.description.id,
+                                                 abstract=self.abstract)
         if self.rights:
             try:
                 resource.metadata.create_element('rights', statement=self.rights.statement)
@@ -651,8 +674,11 @@ class GenericResourceMeta(object):
                 resource.metadata.update_element('rights', resource.metadata.rights.id,
                                                  statement=self.rights.statement)
         if self.language:
-            resource.metadata.update_element('language', resource.metadata.language.id,
-                                             code=self.language)
+            try:
+                resource.metadata.update_element('language', resource.metadata.language.id,
+                                                 code=self.language)
+            except IntegrityError:
+                pass
         if self.creation_date:
             res_created_date = resource.metadata.dates.all().filter(type='created')[0]
             res_created_date.start_date = self.creation_date
