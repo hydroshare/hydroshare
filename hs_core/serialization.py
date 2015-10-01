@@ -134,7 +134,10 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
             pk = None
         user = None
         if pk:
-            user = User.objects.get(pk=pk)
+            try:
+                user = User.objects.get(pk=pk)
+            except User.DoesNotExist:
+                pass
         if user is None:
             # Set owner to admin if user doesn't exist
             print("Owner user {0} does not exist, using user 1".format(owner_pk))
