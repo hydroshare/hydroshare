@@ -1836,8 +1836,6 @@ td.user-actions > span:hover {
 	width: 100px;
 }
 
-div.access-table-container {
-    height: 200px;
-    padding-bottom: 100px;
-    overflow-y: auto;
+#templateRow {
+	display:none;
 }
