@@ -20,13 +20,18 @@ def rating_for(context, obj):
     context["rated"] = (rating_string in ratings)
     rating_name = obj.get_ratingfield_name()
     rating_manager = getattr(obj, rating_name)
-    try:
-        user = context["request"].user
-        rating_instance = rating_manager.get(user=user)
-    except Rating.DoesNotExist:
+
+    user = context["request"].user
+    if not user.is_authenticated():
         context["you_rated"] = False
     else:
-        context["you_rated"] = True
+        try:
+            rating_instance = rating_manager.get(user=user)
+        except Rating.DoesNotExist:
+            context["you_rated"] = False
+        else: # rating for the requesting user exists
+            context["you_rated"] = True
+
     for f in ("average", "count", "sum"):
         context["rating_" + f] = getattr(obj, "%s_%s" % (rating_name, f))
     return context
