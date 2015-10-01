@@ -5,7 +5,7 @@ redis:
 rabbitmq:
   image: rabbitmq:3.5
 solr:
-  image: makuk66/docker-solr
+  image: makuk66/docker-solr:4.10.4
   volumes:
     # hydroshare repository
     - "HS_SHARED_VOLUME:/hydroshare"
@@ -22,6 +22,7 @@ hydroshare:
     POSTGIS_DB: postgres
     POSTGIS_USER: postgres
     PGPASSWORD: postgres
+    SOLR_HOST: hydroshare_solr_1
   volumes:
     # hydroshare repository
     - "HS_SHARED_VOLUME:/home/docker/hydroshare"
