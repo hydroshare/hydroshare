@@ -1,4 +1,5 @@
 import os, sys
+import heapq
 
 import rdflib
 from rdflib import URIRef
@@ -142,6 +143,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
             # Set owner to admin if user doesn't exist
             print("Owner user {0} does not exist, using user 1".format(owner_pk))
             pk = 1
+            rm.owner_is_hs_user = False
 
         resource_id = None
         if preserve_uuid:
@@ -200,7 +202,7 @@ class GenericResourceMeta(object):
         # From resource metadata
         self.abstract = None
         self.keywords = []
-        self.creators = []
+        self._creatorsHeap = []
         self.contributors = []
         self.coverages = []
         self.relations = []
@@ -210,10 +212,27 @@ class GenericResourceMeta(object):
         self.creation_date = None
         self.modification_date = None
 
+        self.owner_is_hs_user = True
         self.bag_content_path = None
         self.root_uri = None
         self.res_meta_path = None
         self._rmeta_graph = None
+
+    def add_creator(self, creator):
+        """
+        Add creator to the list of creators, sorting by creator order.
+        :param creator: ResourceCreator object
+        :return: None
+        """
+        heapq.heappush(self._creatorsHeap, (creator.order, creator))
+
+    def get_creators(self):
+        """
+
+        :return: List of creators sorted by order.
+        """
+        local_heap = list(self._creatorsHeap)
+        return [heapq.heappop(local_heap)[1] for i in range(len(local_heap))]
 
     @staticmethod
     def include_resource_file(resource_filename):
@@ -440,9 +459,9 @@ class GenericResourceMeta(object):
             if homepage_lit is not None:
                 creator.homepage = str(homepage_lit)
 
-            self.creators.append(creator)
+            self.add_creator(creator)
 
-        for c in self.creators:
+        for c in self.get_creators():
             print("\t\tCreator: {0}".format(str(c)))
 
         # Get contributors
@@ -618,13 +637,7 @@ class GenericResourceMeta(object):
 
         :return: String representing the URI of the owner of the resource.
         """
-        min_order = sys.maxint
-        owner_uri = None
-        for c in self.creators:
-            if c.order < min_order:
-                min_order = c.order
-                owner_uri = c.uri
-                break
+        owner_uri = self._creatorsHeap[0][1].uri
         return owner_uri
 
     def set_resource_modification_date(self, resource):
@@ -643,24 +656,27 @@ class GenericResourceMeta(object):
 
         :param resource: HydroShare resource instance
         """
-        for c in self.creators:
-            if c.order > 1:
-                # Add non-owner creators
-                if isinstance(c, GenericResourceMeta.ResourceCreator):
-                    kwargs = {'order': c.order, 'name': c.name,
-                              'organization': c.organization,
-                              'email': c.email, 'address': c.address,
-                              'phone': c.phone, 'homepage': c.homepage,
-                              'researcherID': c.researcherID,
-                              'researchGageID': c.researchGateID}
-                    try:
-                        resource.metadata.create_element('creator', **kwargs)
-                    except IntegrityError:
-                        pass
-                else:
-                    msg = "Creators with type {0} are not supported"
-                    msg = msg.format(c.__class__.__name__)
-                    raise TypeError(msg)
+        for c in self.get_creators():
+            if self.owner_is_hs_user and c.order == 1:
+                # Skip the owner if the owner is a HydroShare user
+                # (i.e. they were already added when the resource was
+                # created)
+                continue
+            if isinstance(c, GenericResourceMeta.ResourceCreator):
+                kwargs = {'order': c.order, 'name': c.name,
+                          'organization': c.organization,
+                          'email': c.email, 'address': c.address,
+                          'phone': c.phone, 'homepage': c.homepage,
+                          'researcherID': c.researcherID,
+                          'researchGageID': c.researchGateID}
+                try:
+                    resource.metadata.create_element('creator', **kwargs)
+                except IntegrityError:
+                    pass
+            else:
+                msg = "Creators with type {0} are not supported"
+                msg = msg.format(c.__class__.__name__)
+                raise TypeError(msg)
         for c in self.contributors:
             # Add contributors
             if isinstance(c, GenericResourceMeta.ResourceContributor):
