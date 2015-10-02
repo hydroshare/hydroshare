@@ -217,7 +217,8 @@ class GenericResourceMeta(object):
         self.owner_is_hs_user = True
         self.bag_content_path = None
         self.root_uri = None
-        self.res_meta_path = None
+        self.res_meta_path = None  # Path of resourcemetadata.xml within bag
+        self.rmeta_path = None  # Path of resourcemetadata.xml on file system
         self._rmeta_graph = None
 
     def add_creator(self, creator):
@@ -393,20 +394,20 @@ class GenericResourceMeta(object):
 
         :return: None
         """
-        rmeta_path = os.path.join(self.bag_content_path, self.res_meta_path)
-        if not os.path.isfile(rmeta_path):
+        self.rmeta_path = os.path.join(self.bag_content_path, self.res_meta_path)
+        if not os.path.isfile(self.rmeta_path):
             raise GenericResourceMeta.ResourceMetaException("Resource metadata {0} does not exist".format(rmeta_path))
-        if not os.access(rmeta_path, os.R_OK):
+        if not os.access(self.rmeta_path, os.R_OK):
             raise GenericResourceMeta.ResourceMetaException("Unable to read resource metadata {0}".format(rmeta_path))
 
         # Parse metadata using RDFLib
         self._rmeta_graph = Graph()
-        self._rmeta_graph.parse(rmeta_path)
+        self._rmeta_graph.parse(self.rmeta_path)
 
         # Also parse using SAX so that we can capture certain metadata elements
         # in the same order in which they appear in the RDF+XML serialization.
         SAX_parse_results = GenericResourceSAXHandler()
-        xml.sax.parse(rmeta_path, SAX_parse_results)
+        xml.sax.parse(self.rmeta_path, SAX_parse_results)
 
         hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
         res_uri = URIRef(self.root_uri)
@@ -1176,8 +1177,6 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
             self.contributors[-1].address = str(content)
 
     def startElement(self, name, attrs):
-        print("Name {name}, attrs {attrs}".format(name=name, attrs=attrs))
-
         if name == 'dc:subject':
             if self._get_subject:
                 raise xml.sax.SAXParseException("Error: nested dc:subject elements.")
@@ -1236,8 +1235,6 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                     self.contributors[-1].phone = phone_raw[0]
 
     def endElement(self, name):
-        print("Name {name}".format(name=name))
-
         if name == 'dc:subject':
             if not self._get_subject:
                 msg = "Error: close dc:subject tag without corresponding open tag."
