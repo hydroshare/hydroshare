@@ -1,3 +1,5 @@
+import xml.sax
+
 import rdflib
 
 from hs_core.serialization import GenericResourceMeta
@@ -26,49 +28,59 @@ class NetcdfResourceMeta(GenericResourceMeta):
 
         print("--- NetcdfResourceMeta ---")
 
+        # Also parse using SAX so that we can capture certain metadata elements
+        # in the same order in which they appear in the RDF+XML serialization.
+        SAX_parse_results = NetcdfResourceSAXHandler()
+        xml.sax.parse(self.rmeta_path, SAX_parse_results)
+
         hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
 
         # Get Variable
-        for s, p, o in self._rmeta_graph.triples((None, hsterms.netcdfVariable, None)):
-            var = NetcdfResourceMeta.Variable()
-            # Get name
-            name_lit = self._rmeta_graph.value(o, hsterms.name)
-            if name_lit is None:
-                msg = "Name for Variable was not found for resource {0}".format(self.root_uri)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            var.name = str(name_lit)
-            # Get shape
-            shape_lit = self._rmeta_graph.value(o, hsterms.shape)
-            if shape_lit is None:
-                msg = "Shape for Variable was not found for resource {0}".format(self.root_uri)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            var.shape = str(shape_lit)
-            # Get type
-            type_lit = self._rmeta_graph.value(o, hsterms.type)
-            if type_lit is None:
-                msg = "Type for Variable was not found for resource {0}".format(self.root_uri)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            var.type = str(type_lit)
-            # Get unit
-            unit_lit = self._rmeta_graph.value(o, hsterms.unit)
-            if unit_lit is None:
-                msg = "Unit for Variable was not found for resource {0}".format(self.root_uri)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            var.unit = str(unit_lit)
-            # Get longName
-            long_name_lit = self._rmeta_graph.value(o, hsterms.longName)
-            if long_name_lit:
-                var.longName = str(long_name_lit)
-            # Get comment
-            comment_lit = self._rmeta_graph.value(o, hsterms.comment)
-            if comment_lit:
-                var.comment = str(comment_lit)
-            # Get missingValue
-            missing_val_lit = self._rmeta_graph.value(o, hsterms.missingValue)
-            if missing_val_lit:
-                var.missingValue = str(missing_val_lit)
-            print("\t\t{0}".format(var))
-            self.variables.append(var)
+        if SAX_parse_results:
+            # Use variables from SAX parser
+            self.variables = list(SAX_parse_results.variables)
+        else:
+            for s, p, o in self._rmeta_graph.triples((None, hsterms.netcdfVariable, None)):
+                var = NetcdfResourceMeta.Variable()
+                # Get name
+                name_lit = self._rmeta_graph.value(o, hsterms.name)
+                if name_lit is None:
+                    msg = "Name for Variable was not found for resource {0}".format(self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                var.name = str(name_lit)
+                # Get shape
+                shape_lit = self._rmeta_graph.value(o, hsterms.shape)
+                if shape_lit is None:
+                    msg = "Shape for Variable was not found for resource {0}".format(self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                var.shape = str(shape_lit)
+                # Get type
+                type_lit = self._rmeta_graph.value(o, hsterms.type)
+                if type_lit is None:
+                    msg = "Type for Variable was not found for resource {0}".format(self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                var.type = str(type_lit)
+                # Get unit
+                unit_lit = self._rmeta_graph.value(o, hsterms.unit)
+                if unit_lit is None:
+                    msg = "Unit for Variable was not found for resource {0}".format(self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                var.unit = str(unit_lit)
+                # Get longName
+                long_name_lit = self._rmeta_graph.value(o, hsterms.longName)
+                if long_name_lit:
+                    var.longName = str(long_name_lit)
+                # Get comment
+                comment_lit = self._rmeta_graph.value(o, hsterms.comment)
+                if comment_lit:
+                    var.comment = str(comment_lit)
+                # Get missingValue
+                missing_val_lit = self._rmeta_graph.value(o, hsterms.missingValue)
+                if missing_val_lit:
+                    var.missingValue = str(missing_val_lit)
+                self.variables.append(var)
+        for v in self.variables:
+            print("\t\t{0}".format(str(v)))
 
         # Get spatialReference
         for s, p, o in self._rmeta_graph.triples((None, hsterms.spatialReference, None)):
@@ -199,3 +211,201 @@ class NetcdfResourceMeta(GenericResourceMeta):
 
         def __unicode__(self):
             return unicode(str(self))
+
+
+class NetcdfResourceSAXHandler(xml.sax.ContentHandler):
+    def __init__(self):
+        xml.sax.ContentHandler.__init__(self)
+
+        # Content
+        self.variables = []
+
+        # State variables
+        self._get_var = False
+        self._get_var_details = False
+        self._get_var_name = False
+        self._get_var_shape = False
+        self._get_var_long_name = False
+        self._get_var_missing_val = False
+        self._get_var_type = False
+        self._get_var_comment = False
+        self._get_var_unit = False
+
+    def characters(self, content):
+        if self._get_var_name:
+            if len(self.variables) < 1:
+                msg = "Error: haven't yet encountered variables, "
+                msg += "yet trying to store variable name."
+                raise xml.sax.SAXException(msg)
+            self.variables[-1].name = str(content)
+
+        elif self._get_var_shape:
+            if len(self.variables) < 1:
+                msg = "Error: haven't yet encountered variables, "
+                msg += "yet trying to store variable shape."
+                raise xml.sax.SAXException(msg)
+            self.variables[-1].shape = str(content)
+
+        elif self._get_var_long_name:
+            if len(self.variables) < 1:
+                msg = "Error: haven't yet encountered variables, "
+                msg += "yet trying to store variable long name."
+                raise xml.sax.SAXException(msg)
+            self.variables[-1].longName = str(content)
+
+        elif self._get_var_missing_val:
+            if len(self.variables) < 1:
+                msg = "Error: haven't yet encountered variables, "
+                msg += "yet trying to store variable missing value."
+                raise xml.sax.SAXException(msg)
+            self.variables[-1].missingValue = str(content)
+
+        elif self._get_var_type:
+            if len(self.variables) < 1:
+                msg = "Error: haven't yet encountered variables, "
+                msg += "yet trying to store variable type."
+                raise xml.sax.SAXException(msg)
+            self.variables[-1].type = str(content)
+
+        elif self._get_var_comment:
+            if len(self.variables) < 1:
+                msg = "Error: haven't yet encountered variables, "
+                msg += "yet trying to store variable comment."
+                raise xml.sax.SAXException(msg)
+            self.variables[-1].comment = str(content)
+
+        elif self._get_var_unit:
+            if len(self.variables) < 1:
+                msg = "Error: haven't yet encountered variables, "
+                msg += "yet trying to store variable unit."
+                raise xml.sax.SAXException(msg)
+            self.variables[-1].unit = str(content)
+
+    def startElement(self, name, attrs):
+        if name == 'hsterms:netcdfVariable':
+            if self._get_var:
+                raise xml.sax.SAXException("Error: nested hsterms:netcdfVariable elements.")
+            self._get_var = True
+
+        elif name == 'rdf:Description':
+            if self._get_var:
+                if self._get_var_details:
+                    msg = "Error: nested rdf:Description elements within hsterms:netcdfVariable element."
+                    raise xml.sax.SAXException(msg)
+                # Create new variable
+                self.variables.append(NetcdfResourceMeta.Variable())
+                self._get_var_details = True
+
+        elif name == 'hsterms:name':
+            if self._get_var_details:
+                if self._get_var_name:
+                    raise xml.sax.SAXException("Error: nested hsterms:name elements within hsterms:netcdfVariable.")
+                self._get_var_name = True
+
+        elif name == 'hsterms:shape':
+            if self._get_var_details:
+                if self._get_var_shape:
+                    raise xml.sax.SAXException("Error: nested hsterms:shape elements within hsterms:netcdfVariable.")
+                self._get_var_shape = True
+
+        elif name == 'hsterms:longName':
+            if self._get_var_details:
+                if self._get_var_long_name:
+                    raise xml.sax.SAXException("Error: nested hsterms:longName elements within hsterms:netcdfVariable.")
+                self._get_var_long_name = True
+
+        elif name == 'hsterms:missingValue':
+            if self._get_var_details:
+                if self._get_var_missing_val:
+                    raise xml.sax.SAXException("Error: nested hsterms:missingValue elements within hsterms:netcdfVariable.")
+                self._get_var_missing_val = True
+
+        elif name == 'hsterms:type':
+            if self._get_var_details:
+                if self._get_var_type:
+                    raise xml.sax.SAXException("Error: nested hsterms:type elements within hsterms:netcdfVariable.")
+                self._get_var_type = True
+
+        elif name == 'hsterms:comment':
+            if self._get_var_details:
+                if self._get_var_comment:
+                    raise xml.sax.SAXException("Error: nested hsterms:comment elements within hsterms:netcdfVariable.")
+                self._get_var_comment = True
+
+        elif name == 'hsterms:unit':
+            if self._get_var_details:
+                if self._get_var_unit:
+                    raise xml.sax.SAXException("Error: nested hsterms:unit elements within hsterms:netcdfVariable.")
+                self._get_var_unit = True
+
+    def endElement(self, name):
+        if name == 'hsterms:netcdfVariable':
+            if not self._get_var:
+                msg = "Error: close hsterms:netcdfVariable tag without corresponding open tag."
+                raise xml.sax.SAXException(msg)
+            self._get_var = False
+
+        elif name == 'rdf:Description':
+            if self._get_var:
+                if not self._get_var_details:
+                    msg = "Error: close rdf:Description tag without corresponding open tag "
+                    msg += "within hsterms:netcdfVariable."
+                    raise xml.sax.SAXException(msg)
+                self._get_var_details = False
+
+        elif name == 'hsterms:name':
+            if self._get_var_details:
+                if not self._get_var_name:
+                    msg = "Error: close hsterms:name tag without corresponding open tag "
+                    msg += "within hsterms:netcdfVariable."
+                    raise xml.sax.SAXException(msg)
+                self._get_var_name = False
+
+        elif name == 'hsterms:shape':
+            if self._get_var_details:
+                if not self._get_var_shape:
+                    msg = "Error: close hsterms:shape tag without corresponding open tag "
+                    msg += "within hsterms:netcdfVariable."
+                    raise xml.sax.SAXException(msg)
+                self._get_var_shape = False
+
+        elif name == 'hsterms:longName':
+            if self._get_var_details:
+                if not self._get_var_long_name:
+                    msg = "Error: close hsterms:longName tag without corresponding open tag "
+                    msg += "within hsterms:netcdfVariable."
+                    raise xml.sax.SAXException(msg)
+                self._get_var_long_name = False
+
+        elif name == 'hsterms:missingValue':
+            if self._get_var_details:
+                if not self._get_var_missing_val:
+                    msg = "Error: close hsterms:missingValue tag without corresponding open tag "
+                    msg += "within hsterms:netcdfVariable."
+                    raise xml.sax.SAXException(msg)
+                self._get_var_missing_val = False
+
+        elif name == 'hsterms:type':
+            if self._get_var_details:
+                if not self._get_var_type:
+                    msg = "Error: close hsterms:type tag without corresponding open tag "
+                    msg += "within hsterms:netcdfVariable."
+                    raise xml.sax.SAXException(msg)
+                self._get_var_type = False
+
+        elif name == 'hsterms:comment':
+            if self._get_var_details:
+                if not self._get_var_comment:
+                    msg = "Error: close hsterms:comment tag without corresponding open tag "
+                    msg += "within hsterms:netcdfVariable."
+                    raise xml.sax.SAXException(msg)
+                self._get_var_comment = False
+
+        elif name == 'hsterms:unit':
+            if self._get_var_details:
+                if not self._get_var_unit:
+                    msg = "Error: close hsterms:unit tag without corresponding open tag "
+                    msg += "within hsterms:netcdfVariable."
+                    raise xml.sax.SAXException(msg)
+                self._get_var_unit = False
+
