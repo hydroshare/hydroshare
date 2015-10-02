@@ -1310,11 +1310,15 @@ body > .container{
     width: 100%;
 }
 
-.btn-add-access{
+.btn-add-access {
 	height: 34px;
 	top: 0;
 	border-radius: 0;
 	margin: 0 2px;
+}
+
+.btn-add-access:focus {
+	outline: none;
 }
 
 .access-panel-title{
@@ -1790,12 +1794,7 @@ td.user-roles, td.user-actions {
 
 td.user-roles .dropdown{
     cursor: pointer;
-    padding:4px;
-}
-
-td.user-roles .dropdown:hover {
-    border: 1px solid #CCC;
-    margin: -1px;
+	color: #333;
 }
 
 td.user-roles .caret {
@@ -1838,4 +1837,129 @@ td.user-actions > span:hover {
 
 #templateRow {
 	display:none;
+}
+
+.user-roles button {
+	border: none;
+	background: none;
+	cursor: pointer;
+	width: 100%;
+	text-align: left;
+	padding-left: 20px;
+}
+
+.user-roles li a {
+	color: #333;
+	padding: 10px 20px;
+	font-size: 14px;
+	display: block;
+	clear: both;
+	font-weight: normal;
+	line-height: 1.428571429;
+	white-space: nowrap;
+}
+
+.user-roles li:not(.loading):not(.active) a:hover {
+	background-color: #DDD;
+	-webkit-transition: background-color 200ms linear;
+	-moz-transition: background-color 200ms linear;
+	-o-transition: background-color 200ms linear;
+	-ms-transition: background-color 200ms linear;
+	transition: background-color 200ms linear;
+}
+
+.user-roles li.active {
+	background: #EEE;
+}
+
+.user-roles li.active a {
+	pointer-events: none;
+}
+
+.user-roles li.active a {
+	font-weight:bold;
+}
+
+.user-roles .dropdown-menu{
+	background-color:#FFF;
+}
+
+.user-roles .role-dropdown {
+	padding: 0;
+}
+
+.user-roles li.loading, .access-table tr.loading {
+	animation: grayScaleChange 1s; /* animation-name followed by duration in seconds*/
+	/* you could also use milliseconds (ms) or something like 2.5s */
+	-webkit-animation: grayScaleChange 1s; /* Chrome and Safari */
+	animation-iteration-count:infinite;
+	-webkit-animation-iteration-count:infinite;
+}
+
+button.loading {
+	animation: greenScaleChange 1s; /* animation-name followed by duration in seconds*/
+	/* you could also use milliseconds (ms) or something like 2.5s */
+	-webkit-animation: greenScaleChange 1s; /* Chrome and Safari */
+	animation-iteration-count:infinite;
+	-webkit-animation-iteration-count:infinite;
+}
+
+
+@keyframes greenScaleChange {
+	0% {
+		background: #5cb85c;
+	}
+
+	50% {
+		background: #236F23;
+	}
+
+	100% {
+		background: #5cb85c;
+	}
+}
+
+@-webkit-keyframes greenScaleChange /* Safari and Chrome - necessary duplicate */
+{
+	0% {
+		background: #5cb85c;
+	}
+
+	50% {
+		background: #236F23;
+	}
+
+	100% {
+		background: #5cb85c;
+	}
+}
+
+
+@keyframes grayScaleChange {
+	0% {
+		background: #FFF;
+	}
+
+	50% {
+		background: #EEE;
+	}
+
+	100% {
+		background: #FFF;
+	}
+}
+
+@-webkit-keyframes grayScaleChange /* Safari and Chrome - necessary duplicate */
+{
+	0% {
+		background: #FFF;
+	}
+
+	50% {
+		background: #FFF;
+	}
+
+	100% {
+		background: #FFF;
+	}
 }

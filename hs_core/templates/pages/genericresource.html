@@ -492,25 +492,25 @@
                                                             <span class="caret"></span>
                                                         </span>
                                                         <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                                                            <li>
-                                                                <form class="share-form-view"
+                                                            <li data-access-type="Can view">
+                                                                <form class="share-form-view" data-access-type="Can view"
                                                                       method="POST">
                                                                     {% csrf_token %}
-                                                                    <button type="submit">Can view</button>
+                                                                    <a>Can view</a>
                                                                 </form>
                                                             </li>
-                                                            <li>
-                                                                <form class="share-form-edit"
+                                                            <li data-access-type="Can edit">
+                                                                <form class="share-form-edit" data-access-type="Can edit"
                                                                       method="POST">
                                                                     {% csrf_token %}
-                                                                    <button type="submit">Can edit</button>
+                                                                    <a>Can edit</a>
                                                                 </form>
                                                             </li>
-                                                            <li>
-                                                                <form class="share-form-owner"
+                                                            <li data-access-type="Is owner">
+                                                                <form class="share-form-owner" data-access-type="Is owner"
                                                                       method="POST">
                                                                     {% csrf_token %}
-                                                                    <button type="submit">Is owner</button>
+                                                                    <a>Is owner</a>
                                                                 </form>
                                                             </li>
                                                         </ul>
@@ -526,7 +526,7 @@
                                             </tr>
                                             {# Owners with full permissions to do anything on this resource #}
                                             {% for u in owners %}
-                                                <tr>
+                                                <tr id="row-id-{{ u.pk }}">
                                                     <td>
                                                         <div class="user-scope">
                                                             <span data-col="name" class="user-name">{{ u|best_name }}</span>
@@ -544,28 +544,28 @@
                                                                     <span class="caret"></span>
                                                                 </span>
                                                                 <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                                                                    <li>
-                                                                        <form id="share-view-{{ u.pk }}" class="share-form-view"
+                                                                    <li data-access-type="Can view">
+                                                                        <form id="share-view-{{ u.pk }}" class="share-form-view" data-access-type="Can view"
                                                                               action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/view/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
-                                                                            <button type="submit">Can view</button>
+                                                                            <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can view</a>
                                                                         </form>
                                                                     </li>
-                                                                    <li>
-                                                                        <form id="share-edit-{{ u.pk }}" class="share-form-edit"
+                                                                    <li data-access-type="Can edit">
+                                                                        <form id="share-edit-{{ u.pk }}" class="share-form-edit" data-access-type="Can edit"
                                                                               action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/edit/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
-                                                                            <button type="submit">Can edit</button>
+                                                                            <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can edit</a>
                                                                         </form>
                                                                     </li>
-                                                                    <li>
-                                                                        <form id="share-owner-{{ u.pk }}" class="share-form-owner"
+                                                                    <li class="active" data-access-type="Is owner">
+                                                                        <form id="share-owner-{{ u.pk }}" class="share-form-owner" data-access-type="Is owner"
                                                                               action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/owner/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
-                                                                            <button type="submit">Is owner</button>
+                                                                            <a onclick="change_share_permission_ajax_submit('share-owner-{{ u.pk }}')">Is owner</a>
                                                                         </form>
                                                                     </li>
                                                                 </ul>
@@ -586,7 +586,7 @@
 
                                             {# Users who can edit the content of this resource #}
                                             {% for u in edit_users %}
-                                                <tr>
+                                                <tr id="row-id-{{ u.pk }}">
                                                     <td>
                                                         <div class="user-scope">
                                                                     <span value="{{ u.pk }}"
@@ -605,28 +605,28 @@
                                                                     <span class="caret"></span>
                                                                 </span>
                                                                 <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                                                                    <li>
-                                                                        <form id="share-view-{{ u.pk }}" class="share-form-view"
+                                                                    <li data-access-type="Can view">
+                                                                        <form id="share-view-{{ u.pk }}" class="share-form-view" data-access-type="Can view"
                                                                               action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/view/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
-                                                                            <button type="submit">Can view</button>
+                                                                            <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can view</a>
                                                                         </form>
                                                                     </li>
-                                                                    <li>
-                                                                        <form id="share-edit-{{ u.pk }}" class="share-form-edit"
+                                                                    <li class="active" data-access-type="Can edit">
+                                                                        <form id="share-edit-{{ u.pk }}" class="share-form-edit" data-access-type="Can edit"
                                                                               action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/edit/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
-                                                                            <button type="submit">Can edit</button>
+                                                                            <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can edit</a>
                                                                         </form>
                                                                     </li>
-                                                                    <li>
-                                                                        <form id="share-owner-{{ u.pk }}" class="share-form-owner"
+                                                                    <li data-access-type="Is owner">
+                                                                        <form id="share-owner-{{ u.pk }}" class="share-form-owner" data-access-type="Is owner"
                                                                               action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/owner/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
-                                                                            <button type="submit">Is owner</button>
+                                                                            <a onclick="change_share_permission_ajax_submit('share-owner-{{ u.pk }}')">Is owner</a>
                                                                         </form>
                                                                     </li>
                                                                 </ul>
@@ -646,7 +646,7 @@
 
                                             {# Users who can view the content of this resource #}
                                             {% for u in view_users %}
-                                                <tr>
+                                                <tr id="row-id-{{ u.pk }}">
                                                     <td>
                                                         <div class="user-scope">
                                                                     <span value="{{ u.pk }}"
@@ -665,28 +665,28 @@
                                                                     <span class="caret"></span>
                                                                 </span>
                                                                 <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                                                                    <li>
-                                                                        <form id="share-view-{{ u.pk }}" class="share-form-view"
+                                                                    <li class="active" data-access-type="Can view">
+                                                                        <form id="share-view-{{ u.pk }}" class="share-form-view" data-access-type="Can view"
                                                                               action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/view/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
-                                                                            <button type="submit">Can view</button>
+                                                                            <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can view</a>
                                                                         </form>
                                                                     </li>
-                                                                    <li>
-                                                                        <form id="share-edit-{{ u.pk }}" class="share-form-edit"
+                                                                    <li data-access-type="Can edit">
+                                                                        <form id="share-edit-{{ u.pk }}" class="share-form-edit" data-access-type="Can edit"
                                                                               action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/edit/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
-                                                                            <button type="submit">Can edit</button>
+                                                                            <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can edit</a>
                                                                         </form>
                                                                     </li>
-                                                                    <li>
-                                                                        <form id="share-owner-{{ u.pk }}" class="share-form-owner"
+                                                                    <li data-access-type="Is owner">
+                                                                        <form id="share-owner-{{ u.pk }}" class="share-form-owner" data-access-type="Is owner"
                                                                               action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/owner/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
-                                                                            <button type="submit">Is owner</button>
+                                                                            <a onclick="change_share_permission_ajax_submit('share-owner-{{ u.pk }}')">Is owner</a>
                                                                         </form>
                                                                     </li>
                                                                 </ul>
@@ -721,7 +721,7 @@
                                                 <div class="dropdown">
                                                     <button class="btn btn-default dropdown-toggle" type="button"
                                                             id="roles_list" data-toggle="dropdown"
-                                                            aria-haspopup="true" aria-expanded="true">
+                                                            aria-haspopup="true">
                                                         <span id="selected_role" data-role="view">Can view</span>
                                                         <span class="caret"></span>
                                                     </button>
@@ -734,7 +734,7 @@
                                                     </ul>
                                                 </div>
 
-                                                <button type="button" onclick="share_resource_ajax_submit('add-access-form'); return false;"
+                                                <button id="btn-invite" type="button" onclick="share_resource_ajax_submit('add-access-form'); return false;"
                                                         class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
                                                         class="button-label">&nbspAdd</span></button>
                                             </form>
@@ -2549,6 +2549,7 @@
                 $form = $('#' + form_id);
                 var datastring = $form.serialize();
                 var url = $form.attr('action');
+                $form.parent().closest("tr").addClass("loading");
                 $.ajax({
                     type: "POST",
                     url: url,
@@ -2560,11 +2561,37 @@
                         });
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        console.log("Error!")
+                        console.log("Error!");
+                        $form.parent().closest("tr").addClass("loading");
                     }
                 });
                 //don't submit the form
                 return false;
+            }
+
+            function change_share_permission_ajax_submit(form_id) {
+                $form = $('#' + form_id);
+                var datastring = $form.serialize();
+                var url = $form.attr('action');
+
+                $form.parent().closest(".user-roles").find("li[data-access-type='" + $form.attr("data-access-type") + "']").addClass("loading");
+
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    dataType: 'html',
+                    data: datastring,
+                    success: function (result) {
+                        $form.parent().closest(".user-roles").find(".dropdown-toggle").text($form.attr("data-access-type"));
+                        $form.parent().closest(".user-roles").find(".dropdown-toggle").append(" <span class='caret'></span>");
+                        $form.parent().closest(".user-roles").find("li").removeClass("active");
+                        $form.parent().closest(".user-roles").find("li").removeClass("loading");
+                        $form.parent().closest(".user-roles").find("li[data-access-type='" + $form.attr("data-access-type") + "']").addClass("active");
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        console.log("Error!")
+                    }
+                });
             }
 
 
@@ -2574,6 +2601,7 @@
                 var share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
                 var access_type = $("#selected_role")[0].getAttribute("data-role");
                 var url = $form.attr('action') + access_type + "/" + share_with + "/";
+                $("#btn-invite").addClass("loading");
 
                 $.ajax({
                     type: "POST",
@@ -2581,9 +2609,11 @@
                     dataType: 'html',
                     data: datastring,
                     success: function (result) {
+                        $("#btn-invite").removeClass("loading");
+                        $(".access-table #row-id-" + share_with).remove(); // Remove previous entry if it exists
+
                         // Get a copy of the user row template
                         var rowTemplate = $("#templateRow").clone();
-                        rowTemplate.removeAttr("id");
 
                         // Form actions
                         var unshareUrl = $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user") + share_with + "/";
@@ -2592,38 +2622,47 @@
                         var ownerUrl = $form.attr('action') + "owner" + "/" + share_with + "/";
 
                         rowTemplate.find(".remove-user-form").attr('action', unshareUrl);
+                        rowTemplate.find(".remove-user-form").attr('id', 'form-remove-user-' + share_with);
+                        rowTemplate.find(".remove-user-form .btn-remove-row").attr("onclick","unshare_resource_ajax_submit('form-remove-user-" + share_with + "')")
 
-                        // Set form urls and ids
+                        // Set form urls, ids, and onclick methods
                         rowTemplate.find(".share-form-view").attr('action', viewUrl);
                         rowTemplate.find(".share-form-view").attr("id", "share-view-" + share_with);
+                        rowTemplate.find(".share-form-view").attr("data-access-type", "Can view");
+                        rowTemplate.find(".share-form-view a").attr("onclick","change_share_permission_ajax_submit('share-view-" + share_with + "')");
 
                         rowTemplate.find(".share-form-edit").attr('action', changeUrl);
                         rowTemplate.find(".share-form-edit").attr("id", "share-edit-" + share_with);
+                        rowTemplate.find(".share-form-edit").attr("data-access-type", "Can edit");
+                        rowTemplate.find(".share-form-edit a").attr("onclick","change_share_permission_ajax_submit('share-edit-" + share_with + "')");
 
                         rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
                         rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
+                        rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
+                        rowTemplate.find(".share-form-owner a").attr("onclick","change_share_permission_ajax_submit('share-owner-" + share_with + "')");
 
                         rowTemplate.find("span[data-col='name'").text("Juan Caraballo");
                         rowTemplate.find("span[data-col='user-name'").text("Juan");
 
                         if (access_type == "view"){
                             rowTemplate.find("span[data-col='current-access'").text("Can view");
-                            rowTemplate.find("span[data-col='current-access'").append("<span class='caret'></span>");
+                            rowTemplate.find("span[data-col='current-access'").append(" <span class='caret'></span>");
                         }
                         else if (access_type == "edit"){
                             rowTemplate.find("span[data-col='current-access'").text("Can edit");
-                            rowTemplate.find("span[data-col='current-access'").append("<span class='caret'></span>");
+                            rowTemplate.find("span[data-col='current-access'").append(" <span class='caret'></span>");
                         }
                         else if (access_type == "owner"){
                             rowTemplate.find("span[data-col='current-access'").text("Is owner");
-                            rowTemplate.find("span[data-col='current-access'").append("<span class='caret'></span>");
+                            rowTemplate.find("span[data-col='current-access'").append(" <span class='caret'></span>");
                         }
 
-                        $(".access-table tbody").append($("<tr>" + rowTemplate.html() + "</tr>").hide().fadeIn(1000));
+                        $(".access-table tbody").append($("<tr id='row-id-" + share_with +"'>" + rowTemplate.html() + "</tr>").hide().fadeIn(1000));
 
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         console.log("Error!")
+                        $("#btn-invite").removeClass("loading");
                     }
                 });
                 //don't submit the form
