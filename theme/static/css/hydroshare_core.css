@@ -1963,3 +1963,8 @@ button.loading {
 		background: #FFF;
 	}
 }
+
+.first-modal {
+	height: 400px;
+	overflow: auto;
+}

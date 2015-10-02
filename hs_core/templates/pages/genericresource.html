@@ -469,7 +469,7 @@
                                             aria-hidden="true">&times;</button>
                                     <h4 class="modal-title">Manage access</h4>
                                 </div>
-                                <div class="modal-body">
+                                <div class="modal-body first-modal">
                                     <p>Who has access</p>
                                     <table class="table access-table">
                                             <tbody>
@@ -706,11 +706,13 @@
                                             {% endfor %}
                                             </tbody>
                                         </table>
+                                </div>
 
-                                    <div class="custom-well">
+                                <div class="modal-body">
+                                    <div >
                                         <p>Invite people:</p>
 
-                                        <div class="input-group">
+                                        <div class="input-group" style="width:100%">
                                             <form id="add-access-form"
                                                   action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/"
                                                   method="POST">
