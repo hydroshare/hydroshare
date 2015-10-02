@@ -1152,46 +1152,46 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
             if len(self.contributors) < 1:
                 msg = "Error: haven't yet encountered contributor, "
                 msg += "yet trying to store contributor name."
-                raise xml.sax.SAXParseException(msg)
+                raise xml.sax.SAXException(msg)
             self.contributors[-1].name = str(content)
 
         elif self._get_contributor_organization:
             if len(self.contributors) < 1:
                 msg = "Error: haven't yet encountered contributor, "
                 msg += "yet trying to store contributor organization."
-                raise xml.sax.SAXParseException(msg)
+                raise xml.sax.SAXException(msg)
             self.contributors[-1].organization = str(content)
 
         elif self._get_contributor_email:
             if len(self.contributors) < 1:
                 msg = "Error: haven't yet encountered contributor, "
                 msg += "yet trying to store contributor email."
-                raise xml.sax.SAXParseException(msg)
+                raise xml.sax.SAXException(msg)
             self.contributors[-1].email = str(content)
 
         elif self._get_contributor_address:
             if len(self.contributors) < 1:
                 msg = "Error: haven't yet encountered contributor, "
                 msg += "yet trying to store contributor address."
-                raise xml.sax.SAXParseException(msg)
+                raise xml.sax.SAXException(msg)
             self.contributors[-1].address = str(content)
 
     def startElement(self, name, attrs):
         if name == 'dc:subject':
             if self._get_subject:
-                raise xml.sax.SAXParseException("Error: nested dc:subject elements.")
+                raise xml.sax.SAXException("Error: nested dc:subject elements.")
             self._get_subject = True
 
         elif name == 'dc:contributor':
             if self._get_contributor:
-                raise xml.sax.SAXParseException("Error: nested dc:contributor elements.")
+                raise xml.sax.SAXException("Error: nested dc:contributor elements.")
             self._get_contributor = True
 
         elif name == 'rdf:Description':
             if self._get_contributor:
                 if self._get_contributor_details:
                     msg = "Error: nested rdf:Description elements within dc:contributor element."
-                    raise xml.sax.SAXParseException(msg)
+                    raise xml.sax.SAXException(msg)
                 # Create new contributor
                 contributor = GenericResourceMeta.ResourceContributor()
                 if attrs.has_key('rdf:about'):
@@ -1202,32 +1202,32 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
         elif name == 'hsterms:name':
             if self._get_contributor_details:
                 if self._get_contributor_name:
-                    raise xml.sax.SAXParseException("Error: nested hsterms:name elements within dc:contributor.")
+                    raise xml.sax.SAXException("Error: nested hsterms:name elements within dc:contributor.")
                 self._get_contributor_name = True
 
         elif name == 'hsterms:organization':
             if self._get_contributor_details:
                 if self._get_contributor_organization:
-                    raise xml.sax.SAXParseException("Error: nested hsterms:organization elements within dc:contributor.")
+                    raise xml.sax.SAXException("Error: nested hsterms:organization elements within dc:contributor.")
                 self._get_contributor_organization = True
 
         elif name == 'hsterms:email':
             if self._get_contributor_details:
                 if self._get_contributor_email:
-                    raise xml.sax.SAXParseException("Error: nested hsterms:email elements within dc:contributor.")
+                    raise xml.sax.SAXException("Error: nested hsterms:email elements within dc:contributor.")
                 self._get_contributor_email = True
 
         elif name == 'hsterms:address':
             if self._get_contributor_details:
                 if self._get_contributor_address:
-                    raise xml.sax.SAXParseException("Error: nested hsterms:address elements within dc:contributor.")
+                    raise xml.sax.SAXException("Error: nested hsterms:address elements within dc:contributor.")
                 self._get_contributor_address = True
 
         elif name == 'hsterms:phone':
             if self._get_contributor_details:
                 if not attrs.has_key('rdf:resource'):
                     msg = "Error: hsterms:phone within dc:contributor element has no phone number."
-                    raise xml.sax.SAXParseException(msg)
+                    raise xml.sax.SAXException(msg)
                 phone_raw = str(attrs.getValue('rdf:resource')).split(':')
                 if len(phone_raw) > 1:
                     self.contributors[-1].phone = phone_raw[1]
@@ -1238,13 +1238,13 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
         if name == 'dc:subject':
             if not self._get_subject:
                 msg = "Error: close dc:subject tag without corresponding open tag."
-                raise xml.sax.SAXParseException(msg)
+                raise xml.sax.SAXException(msg)
             self._get_subject = False
 
         elif name == 'dc:contributor':
             if not self._get_contributor:
                 msg = "Error: close dc:contributor tag without corresponding open tag."
-                raise xml.sax.SAXParseException(msg)
+                raise xml.sax.SAXException(msg)
             self._get_contributor = False
 
         elif name == 'rdf:Description':
@@ -1252,7 +1252,7 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                 if not self._get_contributor_details:
                     msg = "Error: close rdf:Description tag without corresponding open tag "
                     msg += "within dc:contributor."
-                    raise xml.sax.SAXParseException(msg)
+                    raise xml.sax.SAXException(msg)
                 self._get_contributor_details = False
 
         elif name == 'hsterms:name':
@@ -1260,7 +1260,7 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                 if not self._get_contributor_name:
                     msg = "Error: close hsterms:name tag without corresponding open tag "
                     msg += "within dc:contributor."
-                    raise xml.sax.SAXParseException(msg)
+                    raise xml.sax.SAXException(msg)
                 self._get_contributor_name = False
 
         elif name == 'hsterms:organization':
@@ -1268,7 +1268,7 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                 if not self._get_contributor_organization:
                     msg = "Error: close hsterms:organization tag without corresponding open tag "
                     msg += "within dc:contributor."
-                    raise xml.sax.SAXParseException(msg)
+                    raise xml.sax.SAXException(msg)
                 self._get_contributor_organization = False
 
         elif name == 'hsterms:email':
@@ -1276,7 +1276,7 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                 if not self._get_contributor_email:
                     msg = "Error: close hsterms:email tag without corresponding open tag "
                     msg += "within dc:contributor."
-                    raise xml.sax.SAXParseException(msg)
+                    raise xml.sax.SAXException(msg)
                 self._get_contributor_email = False
 
         elif name == 'hsterms:address':
@@ -1284,5 +1284,5 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                 if not self._get_contributor_address:
                     msg = "Error: close hsterms:address tag without corresponding open tag "
                     msg += "within dc:contributor."
-                    raise xml.sax.SAXParseException(msg)
+                    raise xml.sax.SAXException(msg)
                 self._get_contributor_address = False
