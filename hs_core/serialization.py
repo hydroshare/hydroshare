@@ -1,5 +1,6 @@
 import os
 import heapq
+import xml.sax
 
 import rdflib
 from rdflib import URIRef
@@ -398,8 +399,14 @@ class GenericResourceMeta(object):
         if not os.access(rmeta_path, os.R_OK):
             raise GenericResourceMeta.ResourceMetaException("Unable to read resource metadata {0}".format(rmeta_path))
 
+        # Parse metadata using RDFLib
         self._rmeta_graph = Graph()
         self._rmeta_graph.parse(rmeta_path)
+
+        # Also parse using SAX so that we can capture certain metadata elements
+        # in the same order in which they appear in the RDF+XML serialization.
+        SAX_parse_results = GenericResourceSAXHandler()
+        xml.sax.parse(rmeta_path, SAX_parse_results)
 
         hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
         res_uri = URIRef(self.root_uri)
@@ -466,41 +473,46 @@ class GenericResourceMeta(object):
             print("\t\tCreator: {0}".format(str(c)))
 
         # Get contributors
-        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.contributor, None)):
-            contributor = GenericResourceMeta.ResourceContributor()
-            contributor.uri = o
-            # Get name
-            name_lit = self._rmeta_graph.value(o, hsterms.name)
-            if name_lit is None:
-                msg = "Name for contributor {0} was not found.".format(o)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            contributor.name = str(name_lit)
-            # Get email
-            email_lit = self._rmeta_graph.value(o, hsterms.email)
-            if email_lit is not None:
-                contributor.email = str(email_lit)
-            # Get organization
-            org_lit = self._rmeta_graph.value(o, hsterms.organization)
-            if org_lit is not None:
-                contributor.organization = str(org_lit)
-            # Get address
-            addy_lit = self._rmeta_graph.value(o, hsterms.address)
-            if addy_lit is not None:
-                contributor.address = str(addy_lit)
-            # Get phone
-            phone_lit = self._rmeta_graph.value(o, hsterms.phone)
-            if phone_lit is not None:
-                phone_raw = str(phone_lit).split(':')
-                if len(phone_raw) > 1:
-                    contributor.phone = phone_raw[1]
-                else:
-                    contributor.phone = phone_raw[0]
-            # Get homepage
-            homepage_lit = self._rmeta_graph.value(o, hsterms.homepage)
-            if homepage_lit is not None:
-                contributor.homepage = str(homepage_lit)
+        if SAX_parse_results:
+            # Use contributors from SAX parser
+            self.contributors = list(SAX_parse_results.contributors)
+        else:
+            # Get contributors from RDF
+            for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.contributor, None)):
+                contributor = GenericResourceMeta.ResourceContributor()
+                contributor.uri = o
+                # Get name
+                name_lit = self._rmeta_graph.value(o, hsterms.name)
+                if name_lit is None:
+                    msg = "Name for contributor {0} was not found.".format(o)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                contributor.name = str(name_lit)
+                # Get email
+                email_lit = self._rmeta_graph.value(o, hsterms.email)
+                if email_lit is not None:
+                    contributor.email = str(email_lit)
+                # Get organization
+                org_lit = self._rmeta_graph.value(o, hsterms.organization)
+                if org_lit is not None:
+                    contributor.organization = str(org_lit)
+                # Get address
+                addy_lit = self._rmeta_graph.value(o, hsterms.address)
+                if addy_lit is not None:
+                    contributor.address = str(addy_lit)
+                # Get phone
+                phone_lit = self._rmeta_graph.value(o, hsterms.phone)
+                if phone_lit is not None:
+                    phone_raw = str(phone_lit).split(':')
+                    if len(phone_raw) > 1:
+                        contributor.phone = phone_raw[1]
+                    else:
+                        contributor.phone = phone_raw[0]
+                # Get homepage
+                homepage_lit = self._rmeta_graph.value(o, hsterms.homepage)
+                if homepage_lit is not None:
+                    contributor.homepage = str(homepage_lit)
 
-            self.contributors.append(contributor)
+                self.contributors.append(contributor)
 
         for c in self.contributors:
             print("\t\tContributor: {0}".format(str(c)))
@@ -567,8 +579,13 @@ class GenericResourceMeta(object):
         print("\t\tRights: {0}".format(self.rights))
 
         # Get keywords
-        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.subject, None)):
-            self.keywords.append(str(o))
+        if SAX_parse_results:
+            # Use keywords from SAX parser
+            self.keywords = list(SAX_parse_results.subjects)
+        else:
+            # Get keywords from RDF
+            for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.subject, None)):
+                self.keywords.append(str(o))
 
         print("\t\tKeywords: {0}".format(str(self.keywords)))
 
@@ -1107,3 +1124,168 @@ class GenericResourceMeta(object):
 
     class ResourceMetaException(Exception):
         pass
+
+
+class GenericResourceSAXHandler(xml.sax.ContentHandler):
+    def __init__(self):
+        xml.sax.ContentHandler.__init__(self)
+
+        # Content
+        self.subjects = []
+        self.contributors = []
+
+        # State variables
+        self._get_subject = False
+        self._get_contributor = False
+        self._get_contributor_details = False
+        self._get_contributor_name = False
+        self._get_contributor_organization = False
+        self._get_contributor_email = False
+        self._get_contributor_address = False
+
+    def characters(self, content):
+        if self._get_subject:
+            self.subjects.append(str(content))
+
+        elif self._get_contributor_name:
+            if len(self.contributors) < 1:
+                msg = "Error: haven't yet encountered contributor, "
+                msg += "yet trying to store contributor name."
+                raise xml.sax.SAXParseException(msg)
+            self.contributors[-1].name = str(content)
+
+        elif self._get_contributor_organization:
+            if len(self.contributors) < 1:
+                msg = "Error: haven't yet encountered contributor, "
+                msg += "yet trying to store contributor organization."
+                raise xml.sax.SAXParseException(msg)
+            self.contributors[-1].organization = str(content)
+
+        elif self._get_contributor_email:
+            if len(self.contributors) < 1:
+                msg = "Error: haven't yet encountered contributor, "
+                msg += "yet trying to store contributor email."
+                raise xml.sax.SAXParseException(msg)
+            self.contributors[-1].email = str(content)
+
+        elif self._get_contributor_address:
+            if len(self.contributors) < 1:
+                msg = "Error: haven't yet encountered contributor, "
+                msg += "yet trying to store contributor address."
+                raise xml.sax.SAXParseException(msg)
+            self.contributors[-1].address = str(content)
+
+    def startElement(self, name, attrs):
+        print("Name {name}, attrs {attrs}".format(name=name, attrs=attrs))
+
+        if name == 'dc:subject':
+            if self._get_subject:
+                raise xml.sax.SAXParseException("Error: nested dc:subject elements.")
+            self._get_subject = True
+
+        elif name == 'dc:contributor':
+            if self._get_contributor:
+                raise xml.sax.SAXParseException("Error: nested dc:contributor elements.")
+            self._get_contributor = True
+
+        elif name == 'rdf:Description':
+            if self._get_contributor:
+                if self._get_contributor_details:
+                    msg = "Error: nested rdf:Description elements within dc:contributor element."
+                    raise xml.sax.SAXParseException(msg)
+                # Create new contributor
+                contributor = GenericResourceMeta.ResourceContributor()
+                if attrs.has_key('rdf:about'):
+                    contributor.uri = attrs.getValue('rdf:about')
+                self.contributors.append(contributor)
+                self._get_contributor_details = True
+
+        elif name == 'hsterms:name':
+            if self._get_contributor_details:
+                if self._get_contributor_name:
+                    raise xml.sax.SAXParseException("Error: nested hsterms:name elements within dc:contributor.")
+                self._get_contributor_name = True
+
+        elif name == 'hsterms:organization':
+            if self._get_contributor_details:
+                if self._get_contributor_organization:
+                    raise xml.sax.SAXParseException("Error: nested hsterms:organization elements within dc:contributor.")
+                self._get_contributor_organization = True
+
+        elif name == 'hsterms:email':
+            if self._get_contributor_details:
+                if self._get_contributor_email:
+                    raise xml.sax.SAXParseException("Error: nested hsterms:email elements within dc:contributor.")
+                self._get_contributor_email = True
+
+        elif name == 'hsterms:address':
+            if self._get_contributor_details:
+                if self._get_contributor_address:
+                    raise xml.sax.SAXParseException("Error: nested hsterms:address elements within dc:contributor.")
+                self._get_contributor_address = True
+
+        elif name == 'hsterms:phone':
+            if self._get_contributor_details:
+                if not attrs.has_key('rdf:resource'):
+                    msg = "Error: hsterms:phone within dc:contributor element has no phone number."
+                    raise xml.sax.SAXParseException(msg)
+                phone_raw = str(attrs.getValue('rdf:resource')).split(':')
+                if len(phone_raw) > 1:
+                    self.contributors[-1].phone = phone_raw[1]
+                else:
+                    self.contributors[-1].phone = phone_raw[0]
+
+    def endElement(self, name):
+        print("Name {name}".format(name=name))
+
+        if name == 'dc:subject':
+            if not self._get_subject:
+                msg = "Error: close dc:subject tag without corresponding open tag."
+                raise xml.sax.SAXParseException(msg)
+            self._get_subject = False
+
+        elif name == 'dc:contributor':
+            if not self._get_contributor:
+                msg = "Error: close dc:contributor tag without corresponding open tag."
+                raise xml.sax.SAXParseException(msg)
+            self._get_contributor = False
+
+        elif name == 'rdf:Description':
+            if self._get_contributor:
+                if not self._get_contributor_details:
+                    msg = "Error: close rdf:Description tag without corresponding open tag "
+                    msg += "within dc:contributor."
+                    raise xml.sax.SAXParseException(msg)
+                self._get_contributor_details = False
+
+        elif name == 'hsterms:name':
+            if self._get_contributor_details:
+                if not self._get_contributor_name:
+                    msg = "Error: close hsterms:name tag without corresponding open tag "
+                    msg += "within dc:contributor."
+                    raise xml.sax.SAXParseException(msg)
+                self._get_contributor_name = False
+
+        elif name == 'hsterms:organization':
+            if self._get_contributor_details:
+                if not self._get_contributor_organization:
+                    msg = "Error: close hsterms:organization tag without corresponding open tag "
+                    msg += "within dc:contributor."
+                    raise xml.sax.SAXParseException(msg)
+                self._get_contributor_organization = False
+
+        elif name == 'hsterms:email':
+            if self._get_contributor_details:
+                if not self._get_contributor_email:
+                    msg = "Error: close hsterms:email tag without corresponding open tag "
+                    msg += "within dc:contributor."
+                    raise xml.sax.SAXParseException(msg)
+                self._get_contributor_email = False
+
+        elif name == 'hsterms:address':
+            if self._get_contributor_details:
+                if not self._get_contributor_address:
+                    msg = "Error: close hsterms:address tag without corresponding open tag "
+                    msg += "within dc:contributor."
+                    raise xml.sax.SAXParseException(msg)
+                self._get_contributor_address = False
