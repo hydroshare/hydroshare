@@ -13,6 +13,10 @@ HS_DATE_ISO_PATT += "[T\s](?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-
 HS_DATE_ISO_PATT += "(?P<tz>\S+)$"
 HS_DATE_ISO_RE = re.compile(HS_DATE_ISO_PATT)
 
+HS_DATE_NOTZ_PATT = "^(?P<year>[0-9]{4})-(?P<month>[0-9]{2})-(?P<day>[0-9]{2})"
+HS_DATE_NOTZ_PATT += "T(?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})$"
+HS_DATE_NOTZ_RE = re.compile(HS_DATE_NOTZ_PATT)
+
 
 def hs_date_to_datetime(datestr):
     """
@@ -68,6 +72,33 @@ def hs_date_to_datetime_iso(datestr):
                                      minute=int(m.group('minute')),
                                      second=int(m.group('second')),
                                      microsecond=microsecond,
+                                     tzinfo=pytz.utc)
+    except Exception as e:
+        msg = "Unable to parse date {0}, error {1}.".format(datestr,
+                                                            str(e))
+        raise HsDateException(msg)
+
+    return ret_date
+
+
+def hs_date_to_datetime_notz(datestr):
+    """
+    Parse HydroShare (HS) formatted datetime (without timezone information) from a String
+    to a datetime.datetime.
+    :param datestr: String representing the date in HS format (without timezone information)
+    :return: datetime.datetime with timezone set to UTC
+    """
+    m = HS_DATE_NOTZ_RE.match(datestr)
+    if m is None:
+        msg = "Unable to parse date {0}.".format(datestr)
+        raise HsDateException(msg)
+    try:
+        ret_date = datetime.datetime(year=int(m.group('year')),
+                                     month=int(m.group('month')),
+                                     day=int(m.group('day')),
+                                     hour=int(m.group('hour')),
+                                     minute=int(m.group('minute')),
+                                     second=int(m.group('second')),
                                      tzinfo=pytz.utc)
     except Exception as e:
         msg = "Unable to parse date {0}, error {1}.".format(datestr,

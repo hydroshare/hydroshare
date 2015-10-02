@@ -10,7 +10,8 @@ from django.core.files.uploadedfile import UploadedFile
 from django.db import IntegrityError
 
 from hs_core.hydroshare.utils import get_resource_types
-from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso, HsDateException
+from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso, hs_date_to_datetime_notz,\
+    HsDateException
 
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
@@ -885,16 +886,22 @@ class GenericResourceMeta(object):
                     try:
                         self.start_date = hs_date_to_datetime_iso(value)
                     except Exception as e:
-                        msg = "Unable to parse start date {0}, error: {1}".format(value,
-                                                                                  str(e))
-                        raise GenericResourceMeta.ResourceMetaException(msg)
+                        try:
+                            self.start_date = hs_date_to_datetime_notz(value)
+                        except Exception as e:
+                            msg = "Unable to parse start date {0}, error: {1}".format(value,
+                                                                                      str(e))
+                            raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'end':
                     try:
                         self.end_date = hs_date_to_datetime_iso(value)
                     except Exception as e:
-                        msg = "Unable to parse end date {0}, error: {1}".format(value,
-                                                                                str(e))
-                        raise GenericResourceMeta.ResourceMetaException(msg)
+                        try:
+                            self.end_date = hs_date_to_datetime_notz(value)
+                        except Exception as e:
+                            msg = "Unable to parse end date {0}, error: {1}".format(value,
+                                                                                    str(e))
+                            raise GenericResourceMeta.ResourceMetaException(msg)
                 elif key == 'scheme':
                     self.scheme = value
                 elif key == 'name':
