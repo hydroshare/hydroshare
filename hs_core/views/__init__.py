@@ -264,6 +264,7 @@ def change_permissions(request, shortkey, *args, **kwargs):
     t = request.POST['t']
     values = [int(k) for k in request.POST.getlist('designees', [])]
     go_to_resource_listing_page = False
+    is_share_resource = False
     if t == 'owners':
         go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'owner')
     elif t == 'edit_users':
@@ -276,9 +277,11 @@ def change_permissions(request, shortkey, *args, **kwargs):
     #     res.view_groups = Group.objects.in_bulk(values)
     elif t == 'add_view_user':
         frm = AddUserForm(data=request.POST)
+        is_share_resource = True
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.VIEW)
     elif t == 'add_edit_user':
         frm = AddUserForm(data=request.POST)
+        is_share_resource = True
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.CHANGE)
     # elif t == 'add_view_group':
     #     frm = AddGroupForm(data=request.POST)
@@ -290,11 +293,19 @@ def change_permissions(request, shortkey, *args, **kwargs):
     #         res.edit_groups.add(frm.cleaned_data['group'])
     elif t == 'add_owner':
         frm = AddUserForm(data=request.POST)
+        is_share_resource = True
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.OWNER)
     elif t == 'make_public':
         _set_resource_sharing_status(request, user, res, True)
     elif t == 'make_private':
         _set_resource_sharing_status(request, user, res, False)
+
+    if request.is_ajax and is_share_resource:
+        # TODO: use try catch
+        ajax_response_data = {'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username}
+        return HttpResponse(json.dumps(ajax_response_data))
+    # else:
+    #     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     # due to self unsharing of a private resource the user will have no access to that resource
     # so need to redirect to the resource listing page
@@ -329,12 +340,14 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     else:
         status = 'error'
 
-    if status == 'success':
-        messages.success(request, "Resource sharing was successful")
-    else:
-        messages.error(request, err_message)
+    picture_url = 'No picture provided'
+    if user_to_share_with.userprofile.picture:
+        picture_url = user_to_share_with.userprofile.picture.url
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
+                          'username': user_to_share_with.username, 'privilege': privilege, 'profile_pic': picture_url,
+                          'error_msg': err_message}
+    return HttpResponse(json.dumps(ajax_response_data))
 
 
 # Needed for new access control UI functionality being developed by Mauriel

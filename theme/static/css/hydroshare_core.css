@@ -977,6 +977,8 @@ span.remove{
     height: 100% !important;
     background: #EEE;
     top: 0;
+	border: 1px solid #FFF;
+	border-right: none;
 }
 
 .form-control{
@@ -1792,6 +1794,9 @@ td.user-roles, td.user-actions {
     color: #428bca;
 }
 
+td.user-roles {
+	width: 30%;
+}
 td.user-roles .dropdown{
     cursor: pointer;
 	color: #333;
@@ -1803,7 +1808,10 @@ td.user-roles .caret {
 
 td.user-actions span {
     cursor: pointer;
-    color: #999;
+}
+
+td.user-actions .btn-remove-row {
+	color:#d9534f;
 }
 
 td.user-actions > span:hover {
@@ -1813,6 +1821,14 @@ td.user-actions > span:hover {
 
 .access-table tr:last-child {
     border-bottom: 1px solid #ddd;
+}
+
+.access-table tr.hide-actions .remove-user-form, .access-table tr.hide-actions .caret {
+	display:none;
+}
+
+.access-table tr.hide-actions .user-roles {
+	pointer-events: none;
 }
 
 #manage-access .custom-well > .input-group {
@@ -1869,15 +1885,12 @@ td.user-actions > span:hover {
 }
 
 .user-roles li.active {
-	background: #EEE;
-}
-
-.user-roles li.active a {
 	pointer-events: none;
+	cursor: default;
 }
 
 .user-roles li.active a {
-	font-weight:bold;
+	font-weight: bold;
 }
 
 .user-roles .dropdown-menu{
@@ -1894,6 +1907,11 @@ td.user-actions > span:hover {
 	-webkit-animation: grayScaleChange 1s; /* Chrome and Safari */
 	animation-iteration-count:infinite;
 	-webkit-animation-iteration-count:infinite;
+	pointer-events: none;
+}
+
+.user-roles.no-caret .caret{
+	display:none;
 }
 
 button.loading {
@@ -1902,6 +1920,7 @@ button.loading {
 	-webkit-animation: greenScaleChange 1s; /* Chrome and Safari */
 	animation-iteration-count:infinite;
 	-webkit-animation-iteration-count:infinite;
+	pointer-events: none;
 }
 
 
@@ -1967,4 +1986,8 @@ button.loading {
 .first-modal {
 	height: 400px;
 	overflow: auto;
+}
+
+.modal {
+	overflow-y: auto;
 }

@@ -524,48 +524,61 @@
                                                     </form>
                                                 </td>
                                             </tr>
+
                                             {# Owners with full permissions to do anything on this resource #}
                                             {% for u in owners %}
-                                                <tr id="row-id-{{ u.pk }}">
+                                                <tr id="row-id-{{ u.pk }}" {% if owners|length == 1 %}class="hide-actions"{% endif %}>
                                                     <td>
                                                         <div class="user-scope">
-                                                            <span data-col="name" class="user-name">{{ u|best_name }}</span>
+                                                            <span data-col="name"
+                                                                  class="user-name">{{ u|best_name }}</span>
                                                             <br>
-                                                            <span data-col="user-name" class="user-username-content">{{ u.username }}</span>
+                                                            <span data-col="user-name"
+                                                                  class="user-username-content">{{ u.username }}</span>
                                                         </div>
                                                     </td>
 
                                                     <td class="user-roles">
                                                             <span class="dropdown role-dropdown">
                                                                 <span class="dropdown-toggle" data-col="current-access"
-                                                                      id="roles-menu" data-toggle="dropdown"
+                                                                      id="roles-menu"
+                                                                      data-toggle="dropdown"
                                                                       aria-haspopup="true" aria-expanded="true">
                                                                     Is owner
                                                                     <span class="caret"></span>
                                                                 </span>
                                                                 <ul class="dropdown-menu" aria-labelledby="roles-menu">
                                                                     <li data-access-type="Can view">
-                                                                        <form id="share-view-{{ u.pk }}" class="share-form-view" data-access-type="Can view"
+                                                                        <form id="share-view-{{ u.pk }}"
+                                                                              class="share-form-view"
+                                                                              data-access-type="Can view"
                                                                               action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/view/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
-                                                                            <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can view</a>
+                                                                            <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can
+                                                                                view</a>
                                                                         </form>
                                                                     </li>
                                                                     <li data-access-type="Can edit">
-                                                                        <form id="share-edit-{{ u.pk }}" class="share-form-edit" data-access-type="Can edit"
+                                                                        <form id="share-edit-{{ u.pk }}"
+                                                                              class="share-form-edit"
+                                                                              data-access-type="Can edit"
                                                                               action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/edit/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
-                                                                            <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can edit</a>
+                                                                            <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can
+                                                                                edit</a>
                                                                         </form>
                                                                     </li>
                                                                     <li class="active" data-access-type="Is owner">
-                                                                        <form id="share-owner-{{ u.pk }}" class="share-form-owner" data-access-type="Is owner"
+                                                                        <form id="share-owner-{{ u.pk }}"
+                                                                              class="share-form-owner"
+                                                                              data-access-type="Is owner"
                                                                               action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/owner/{{ u.pk }}/"
                                                                               method="POST">
                                                                             {% csrf_token %}
-                                                                            <a onclick="change_share_permission_ajax_submit('share-owner-{{ u.pk }}')">Is owner</a>
+                                                                            <a onclick="change_share_permission_ajax_submit('share-owner-{{ u.pk }}')">Is
+                                                                                owner</a>
                                                                         </form>
                                                                     </li>
                                                                 </ul>
@@ -573,7 +586,8 @@
                                                     </td>
 
                                                     <td class="user-actions">
-                                                        <form id="form-remove-user-{{ u.pk }}" class="remove-user-form"
+                                                        <form id="form-remove-user-{{ u.pk }}"
+                                                              class="remove-user-form"
                                                               action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
                                                               method="POST">
                                                             {% csrf_token %}
@@ -2589,13 +2603,21 @@
                         $form.parent().closest(".user-roles").find("li").removeClass("active");
                         $form.parent().closest(".user-roles").find("li").removeClass("loading");
                         $form.parent().closest(".user-roles").find("li[data-access-type='" + $form.attr("data-access-type") + "']").addClass("active");
+                        $(".role-dropdown").removeClass("open");
+                        // If an owner was added, enable dropdown menu and the remove icon for other owner entries
+                        if ($form.attr("data-access-type") == "Is owner"){
+                            $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
+                        }
+
+                        if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
+                            $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
+                        }
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         console.log("Error!")
                     }
                 });
             }
-
 
             function share_resource_ajax_submit(form_id) {
                 $form = $('#' + form_id);
@@ -2613,6 +2635,9 @@
                     success: function (result) {
                         $("#btn-invite").removeClass("loading");
                         $(".access-table #row-id-" + share_with).remove(); // Remove previous entry if it exists
+                        $(".hilight > span").click(); // Clears the search field
+
+                        json_response = JSON.parse(result);
 
                         // Get a copy of the user row template
                         var rowTemplate = $("#templateRow").clone();
@@ -2643,20 +2668,26 @@
                         rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
                         rowTemplate.find(".share-form-owner a").attr("onclick","change_share_permission_ajax_submit('share-owner-" + share_with + "')");
 
-                        rowTemplate.find("span[data-col='name'").text("Juan Caraballo");
-                        rowTemplate.find("span[data-col='user-name'").text("Juan");
+                        rowTemplate.find("span[data-col='name'").text(json_response.name);
+                        rowTemplate.find("span[data-col='user-name'").text(json_response.username);
 
                         if (access_type == "view"){
                             rowTemplate.find("span[data-col='current-access'").text("Can view");
                             rowTemplate.find("span[data-col='current-access'").append(" <span class='caret'></span>");
+                            rowTemplate.find(".share-form-view").parent().addClass("active");
                         }
                         else if (access_type == "edit"){
                             rowTemplate.find("span[data-col='current-access'").text("Can edit");
                             rowTemplate.find("span[data-col='current-access'").append(" <span class='caret'></span>");
+                            rowTemplate.find(".share-form-edit").parent().addClass("active");
                         }
                         else if (access_type == "owner"){
                             rowTemplate.find("span[data-col='current-access'").text("Is owner");
                             rowTemplate.find("span[data-col='current-access'").append(" <span class='caret'></span>");
+                            rowTemplate.find(".share-form-owner").parent().addClass("active");
+
+                            // Enable dropdown menu for other owner entries
+                            $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
                         }
 
                         $(".access-table tbody").append($("<tr id='row-id-" + share_with +"'>" + rowTemplate.html() + "</tr>").hide().fadeIn(1000));
