@@ -1,4 +1,4 @@
-import os, sys
+import os
 import heapq
 
 import rdflib
@@ -16,7 +16,7 @@ from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetim
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
-from hs_core.models import BaseResource, Coverage, Relation, Source, Creator, Contributor
+from hs_core.models import BaseResource
 
 
 class HsSerializationException(Exception):
