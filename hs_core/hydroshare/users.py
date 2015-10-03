@@ -7,7 +7,7 @@ from django.core import exceptions
 from django.core import signing
 from django.db.models import Q
 
-from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject, Description, Title
+from hs_core.models import GroupOwnership, BaseResource, Party, Contributor, Creator, Subject, Description, Title
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
 
 
@@ -595,121 +595,107 @@ def get_resource_list(creator=None,
     if not any((creator, group, user, owner, from_date, to_date, start, count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
-    resource_types = get_resource_types()
+    #resource_types = get_resource_types()
 
     # filtering based on resource type.
+    # if type:
+    #     queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in type)
+    # else:
+    #     queries = dict((el, []) for el in resource_types)
+    q = []
+
     if type:
-        queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in type)
+        q.append(Q(resource_type=type[0]))
+
+    if published:
+        q.append(Q(doi__isnull=False))
+
+    if author:
+        author_parties = (
+            #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
+            (Creator.objects.filter(email__in=author) | Creator.objects.filter(name__in=author))
+        )
+        # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
+        # assert author_parties, Creator.objects.all().values_list('name', flat=True)
+        # assert False, author_parties.values_list('id', flat=True)
+        # if t is GenericResource:
+        #     assert False,objects.all().values_list('object_id', flat=True)
+        q.append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
+
+    if contributor:
+        contributor_parties = (
+            #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
+            (Contributor.objects.filter(email__in=contributor) | Contributor.objects.filter(name__in=contributor))
+        )
+        # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
+        # assert author_parties, Creator.objects.all().values_list('name', flat=True)
+        # assert False, author_parties.values_list('id', flat=True)
+        # if t is GenericResource:
+        #     assert False, BaseResource.objects.all().values_list('object_id', flat=True)
+        q.append(Q(object_id__in=contributor_parties.values_list('object_id', flat=True)))
+
+    if edit_permission:
+        if group:
+            group = group_from_id(group)
+            q.append(Q(gaccess__resource__in=group.gaccess.get_editable_resources()))
+
+        q, public = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=True,
+                                                               query=q, is_public=public)
+
     else:
-        queries = dict((el, []) for el in resource_types)
+        if creator:
+            creator = user_from_id(creator)
+            q.append(Q(creator=creator))
 
-    for t, q in queries.items():
-        if published:
-            queries[t].append(Q(doi__isnull=False))
+        if group:
+            group = group_from_id(group)
+            q.append(Q(gaccess__resource__in=group.gaccess.get_held_resources()))
 
-        if author:
-            author_parties = (
-                #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
-                (Creator.objects.filter(email__in=author) | Creator.objects.filter(name__in=author))
-            )
-            # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
-            # assert author_parties, Creator.objects.all().values_list('name', flat=True)
-            # assert False, author_parties.values_list('id', flat=True)
-            # if t is GenericResource:
-            #     assert False, t.objects.all().values_list('object_id', flat=True)
-            queries[t].append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
+        q, public = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False,
+                                                               query=q, is_public=public)
 
-        if contributor:
-            contributor_parties = (
-                #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
-                (Contributor.objects.filter(email__in=contributor) | Contributor.objects.filter(name__in=contributor))
-            )
-            # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
-            # assert author_parties, Creator.objects.all().values_list('name', flat=True)
-            # assert False, author_parties.values_list('id', flat=True)
-            # if t is GenericResource:
-            #     assert False, t.objects.all().values_list('object_id', flat=True)
-            queries[t].append(Q(object_id__in=contributor_parties.values_list('object_id', flat=True)))
+    if from_date and to_date:
+        q.append(Q(created__range=(from_date, to_date)))
+    elif from_date:
+        q.append(Q(created__gte=from_date))
+    elif to_date:
+        q.append(Q(created__lte=to_date))
 
-        if edit_permission:
-            if group:
-                group = group_from_id(group)
-                queries[t].append(Q(gaccess__resource__in=group.gaccess.get_editable_resources()))
+    if subject:
+        subjects = Subject.objects.filter(value__in=subject)
+        q.append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
 
-            queries, public = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=True,
-                                                                   queries=queries, resource_type=t, is_public=public)
 
-        else:
-            if creator:
-                creator = user_from_id(creator)
-                queries[t].append(Q(creator=creator))
-
-            if group:
-                group = group_from_id(group)
-                queries[t].append(Q(gaccess__resource__in=group.gaccess.get_held_resources()))
-
-            queries, public = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False,
-                                                                   queries=queries, resource_type=t, is_public=public)
-
-        if from_date and to_date:
-            queries[t].append(Q(created__range=(from_date, to_date)))
-        elif from_date:
-            queries[t].append(Q(created__gte=from_date))
-        elif to_date:
-            queries[t].append(Q(created__lte=to_date))
-
-        if subject:
-            subjects = Subject.objects.filter(value__in=subject)
-            queries[t].append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
-
-        flt = t.objects.all()
-        for q in queries[t]:
-            flt = flt.filter(q)
-
-        if public:
-            flt = flt.filter(raccess__public=True)
+    flt = BaseResource.objects.all()
+    for q in q:
+        flt = flt.filter(q)
 
         if full_text_search:
-            fts_qs = flt.search(full_text_search)
-            description_matching = Description.objects.filter(abstract__icontains=full_text_search).\
-                values_list('object_id', flat=True)
-            title_matching = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
+            flt = flt.search(full_text_search)
+            flt = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+            flt = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
 
-            if description_matching:
-                desc_qs = flt.filter(object_id__in=description_matching)
+    qcnt = 0
+    if flt:
+        qcnt = len(flt);
+
+    if start is not None and count is not None:
+        if qcnt > start:
+            if qcnt >= start + count:
+                flt = flt[start:start+count]
             else:
-                desc_qs = t.objects.none()
+                flt = flt[start:qcnt]
+    elif start is not None:
+        if qcnt >= start:
+            flt = flt[start:qcnt]
+    elif count is not None:
+        if qcnt > count:
+            flt = flt[0:count]
 
-            if title_matching:
-                title_qs = flt.filter(object_id__in=title_matching)
-            else:
-                title_qs = t.objects.none()
-
-            flt = fts_qs.distinct() | desc_qs.distinct() | title_qs.distinct()
-
-        queries[t] = flt
-
-        qcnt = 0
-        if queries[t]:
-            qcnt = queries[t].__len__()
-
-        if start is not None and count is not None:
-            if qcnt > start:
-                if qcnt >= start + count:
-                    queries[t] = queries[t][start:start+count]
-                else:
-                    queries[t] = queries[t][start:qcnt]
-        elif start is not None:
-            if qcnt >= start:
-                queries[t] = queries[t][start:qcnt]
-        elif count is not None:
-            if qcnt > count:
-                queries[t] = queries[t][0:count]
-
-    return queries
+    return flt
 
 
-def _filter_resources_for_user_and_owner(user, owner, is_editable, queries, resource_type, is_public):
+def _filter_resources_for_user_and_owner(user, owner, is_editable, query, is_public):
     if user:
         user = user_from_id(user)
         if owner:
@@ -718,15 +704,17 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, queries, reso
             except User.DoesNotExist:
                 pass
             else:
-                queries[resource_type].append(Q(raccess__resource__in=owner.uaccess.get_owned_resources()))
+                query.append(Q(pk__in=owner.uaccess.get_owned_resources()))
 
                 if user != owner:
                     is_public = True
         else:
             if is_editable:
-                queries[resource_type].append(Q(raccess__resource__in=user.uaccess.get_editable_resources()))
+                query.append(Q(pk__in=user.uaccess.get_editable_resources()))
             else:
-                queries[resource_type].append(Q(raccess__resource__in=user.uaccess.get_held_resources())|
+                query.append(Q(pk__in=user.uaccess.get_held_resources())|
                                               Q(raccess__public=True))
+    else:
+        query.append(Q(raccess__public=True) | Q(raccess__discoverable=True))
 
-    return queries, is_public
+    return query, is_public

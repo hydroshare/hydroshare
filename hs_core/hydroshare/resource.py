@@ -4,14 +4,16 @@ import os
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
+from django.db import transaction
+
 from mezzanine.generic.models import Keyword, AssignedKeyword
-from hs_access_control.models import ResourceAccess, PrivilegeCodes, UserResourcePrivilege
 
 from hs_core.hydroshare import hs_bagit
 from hs_core.hydroshare.utils import get_resource_types
-from hs_core.models import ResourceFile
+from hs_core.models import ResourceFile, BaseResource
 from hs_core import signals
 from hs_core.hydroshare import utils
+from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 
 file_size_limit = 10*(1024 ** 3)
 file_size_limit_for_display = '10G'
@@ -54,7 +56,7 @@ def get_resource(pk):
     # 3.F.2. Serialize the resource to disk using TastyPie.
     # 3.F.3. Create a bagit file from the serialized resource.
     # 3.F.4. Return the bagit file
-    return utils.get_resource_by_shortkey(pk).bags.first()
+    return utils.get_resource_by_shortkey(pk).baseresource.bags.first()
 
 
 def get_science_metadata(pk):
@@ -301,7 +303,7 @@ def check_resource_type(resource_type):
 def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=None, metadata=None, content=None,
+        keywords=(), metadata=None, content=None,
         files=(), res_type_cls=None, resource=None, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
@@ -348,12 +350,13 @@ def create_resource(
 
     :return: a new resource which is an instance of resource_type.
     """
-    try:
+    with transaction.atomic():
         cls = check_resource_type(resource_type)
         owner = utils.user_from_id(owner)
 
         # create the resource
         resource = cls.objects.create(
+            resource_type=resource_type,
             user=owner,
             creator=owner,
             title=title,
@@ -362,6 +365,10 @@ def create_resource(
             **kwargs
         )
 
+        resource.resource_type = resource_type
+
+        # by default make resource private
+        #resource.content_model = "baseresource"
         resource.set_slug('resource{0}{1}'.format('/', resource.short_id))
         resource.save()
 
@@ -396,13 +403,6 @@ def create_resource(
                 group = utils.group_from_id(group)
                 owner.uaccess.share_resource_with_group(resource, group, PrivilegeCodes.VIEW)
 
-        if keywords:
-            ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
-            ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
-
-            for k in ks:
-                AssignedKeyword.objects.create(content_object=resource, keyword=k)
-
         # prepare default metadata
         utils.prepare_resource_default_metadata(resource=resource, metadata=metadata, res_title=title)
 
@@ -412,16 +412,10 @@ def create_resource(
             k, v = element.items()[0]
             resource.metadata.create_element(k, **v)
 
-        # add the subject elements from the AssignedKeywords (new metadata implementation)
-        for akw in AssignedKeyword.objects.filter(object_pk=resource.id).all():
-            resource.metadata.create_element('subject', value=akw.keyword.title)
-
+        for keyword in keywords:
+            resource.metadata.create_element('subject', value=keyword)
+        
         hs_bagit.create_bag(resource)
-
-    except Exception as ex:
-        if resource:
-            resource.delete()
-        raise Exception(ex.message)
 
     return resource
 
@@ -429,7 +423,7 @@ def create_resource(
 def update_resource(
         pk,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=None, metadata=None,
+        keywords=(), metadata=None,
         *files, **kwargs):
     """
     Called by clients to update a resource in HydroShare.
@@ -473,48 +467,48 @@ def update_resource(
                 content_object=resource,
                 resource_file=File(file) if not isinstance(file, UploadedFile) else file
             )
-    # TODO: use Alva's access control here
-    # if 'owner' in kwargs:
-    #     owner = utils.user_from_id(kwargs['owner'])
-    #     resource.owners.add(owner)
-    #
-    # if edit_users:
-    #     resource.edit_users.clear()
-    #     for user in edit_users:
-    #         user = utils.user_from_id(user)
-    #         resource.edit_users.add(user)
-    #         resource.view_users.add(user)
-    #
-    # if view_users:
-    #     resource.view_users.clear()
-    #     for user in view_users:
-    #         user = utils.user_from_id(user)
-    #         resource.view_users.add(user)
-    #
-    # if edit_groups:
-    #     resource.edit_groups.clear()
-    #     for group in edit_groups:
-    #         group = utils.group_from_id(group)
-    #         resource.edit_groups.add(group)
-    #         resource.view_groups.add(group)
-    #
-    # if view_groups:
-    #     resource.edit_groups.clear()
-    #     for group in view_groups:
-    #         group = utils.group_from_id(group)
-    #         resource.view_groups.add(group)
-    #
-    # if keywords:
-    #     AssignedKeyword.objects.filter(object_pk=resource.id).delete()
-    #     ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
-    #     ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
-    #
-    #     for k in ks:
-    #         AssignedKeyword.objects.create(content_object=resource, keyword=k)
+
+    if 'owner' in kwargs:
+        owner = utils.user_from_id(kwargs['owner'])
+        resource.owners.add(owner)
+
+    if edit_users:
+        resource.edit_users.clear()
+        for user in edit_users:
+            user = utils.user_from_id(user)
+            resource.edit_users.add(user)
+            resource.view_users.add(user)
+
+    if view_users:
+        resource.view_users.clear()
+        for user in view_users:
+            user = utils.user_from_id(user)
+            resource.view_users.add(user)
+
+    if edit_groups:
+        resource.edit_groups.clear()
+        for group in edit_groups:
+            group = utils.group_from_id(group)
+            resource.edit_groups.add(group)
+            resource.view_groups.add(group)
+
+    if view_groups:
+        resource.edit_groups.clear()
+        for group in view_groups:
+            group = utils.group_from_id(group)
+            resource.view_groups.add(group)
+
+    if keywords:
+        AssignedKeyword.objects.filter(object_pk=resource.id).delete()
+        ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
+        ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
+
+        for k in ks:
+            AssignedKeyword.objects.create(content_object=resource, keyword=k)
 
     # for creating metadata elements based on the new metadata implementation
     if metadata:
-        _update_science_metadata(resource, metadata)
+        _update_science_metadata(resource, metadata, keywords=keywords)
 
     return resource
 
@@ -572,7 +566,7 @@ def update_system_metadata(pk, **kwargs):
     return update_science_metadata(pk, **kwargs)
 
 
-def update_science_metadata(pk, metadata=None, keywords=None, **kwargs):
+def update_science_metadata(pk, metadata=None, keywords=(), **kwargs):
     """
     Called by clients to update the science metadata for a resource in HydroShare.
 
@@ -609,17 +603,9 @@ def update_science_metadata(pk, metadata=None, keywords=None, **kwargs):
     """
     resource = utils.get_resource_by_shortkey(pk)
 
-    if keywords:
-        AssignedKeyword.objects.filter(object_pk=resource.id).delete()
-        ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
-        ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
-
-        for k in ks:
-            AssignedKeyword.objects.create(content_object=resource.id, keyword=k)
-
     # for creating metadata elements based on the new metadata implementation
     if metadata:
-        _update_science_metadata(resource, metadata)
+        _update_science_metadata(resource, metadata, keywords=keywords)
 
     if kwargs:
         for field, value in kwargs.items():
@@ -853,9 +839,8 @@ def _update_science_metadata(resource, metadata):
 
     # TODO: add the type element (once we have an url for the resource type
 
-    # add the subject elements from the AssignedKeywords
-    for akw in AssignedKeyword.objects.filter(object_pk=resource.id).all():
-        resource.metadata.create_element('subject', value=akw.keyword.title)
+    for keyword in keywords:
+        resource.metadata.create_element('subject', value=keyword)
 
     # then create the rest of the elements form the user provided data
     for element in metadata:

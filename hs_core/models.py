@@ -13,8 +13,8 @@ from mezzanine.pages.page_processors import processor_for
 from uuid import uuid4
 from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
+from mezzanine.generic.fields import KeywordsField
 from mezzanine.conf import settings as s
-from mezzanine.generic.models import Keyword, AssignedKeyword
 import os.path
 from django_irods.storage import IrodsStorage
 from django.conf import settings
@@ -110,7 +110,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_view(self, request):
         user = get_user(request)
 
-        if self.raccess.public:
+        if self.raccess.public or self.raccess.discoverable:
             return True
         if user.is_authenticated():
             if user.is_superuser:
@@ -484,15 +484,17 @@ class Title(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         title = Title.objects.get(id=element_id)
-        # get matching resource
-        resource = GenericResource.objects.filter(object_id=title.content_object.id).first()
         if title:
             if 'value' in kwargs:
                 title.value = kwargs['value']
                 title.save()
+                # This way of updating the resource title field does not work
+                # so updating code is in the view
                 # sync resource title with title in metadata
-                resource.title = title.value
-                resource.save()
+                # get matching resource
+                # resource = BaseResource.objects.filter(object_id=title.content_object.id).first()
+                # resource.title = title.value
+                # resource.save()
             else:
                 raise ValidationError('Value for title is missing.')
         else:
@@ -557,7 +559,7 @@ class Date(AbstractMetaDataElement):
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
             dt = Date.objects.filter(type= kwargs['type'], object_id=metadata_obj.id, content_type=metadata_type).first()
             # get matching resource
-            resource = GenericResource.objects.filter(object_id=metadata_obj.id).first()
+            resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
             if dt:
                 raise ValidationError('Date type:%s already exists' % kwargs['type'])
             if not kwargs['type'] in ['created', 'modified', 'valid', 'available', 'published']:
@@ -714,7 +716,7 @@ class Identifier(AbstractMetaDataElement):
         if 'name' in kwargs:
             metadata_obj = kwargs['content_object']
             # get matching resource
-            resource = GenericResource.objects.filter(object_id=metadata_obj.id).first()
+            resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
             # check the identifier name doesn't already exist - identifier name needs to be unique per resource
             idf = Identifier.objects.filter(name__iexact= kwargs['name'], object_id=metadata_obj.id,
@@ -780,7 +782,7 @@ class Identifier(AbstractMetaDataElement):
     def remove(cls, element_id):
         idf = Identifier.objects.get(id=element_id)
         # get matching resource
-        resource = GenericResource.objects.filter(object_id=idf.content_object.id).first()
+        resource = BaseResource.objects.filter(object_id=idf.content_object.id).first()
         if idf:
             if idf.name.lower() == 'hydroshareidentifier':
                 raise ValidationError("Hydroshare identifier:%s can't be deleted." % idf.name)
@@ -807,7 +809,7 @@ class Publisher(AbstractMetaDataElement):
         if 'name' in kwargs:
             metadata_obj = kwargs['content_object']
             # get matching resource
-            resource = GenericResource.objects.filter(object_id=metadata_obj.id).first()
+            resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
             if 'url' in kwargs:
                 if not resource.raccess.public and resource.raccess.published:
                     raise ValidationError("Publisher element can't be created for a resource that is not shared nor "
@@ -831,7 +833,7 @@ class Publisher(AbstractMetaDataElement):
         pub = Publisher.objects.get(id=element_id)
         metadata_obj = kwargs['content_object']
         # get matching resource
-        resource = GenericResource.objects.filter(object_id=metadata_obj.id).first()
+        resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
 
         if resource.raccess.immutable:
             raise ValidationError("Resource metadata can't be edited when the resource is in frozen state.")
@@ -871,7 +873,7 @@ class Publisher(AbstractMetaDataElement):
     def remove(cls, element_id):
         pub = Publisher.objects.get(id=element_id)
         # get matching resource
-        resource = GenericResource.objects.filter(object_id=pub.content_object.id).first()
+        resource = BaseResource.objects.filter(object_id=pub.content_object.id).first()
 
         if resource.raccess.immutable:
             raise ValidationError("Resource metadata can't be edited when the resource is in frozen state.")
@@ -1332,6 +1334,26 @@ class Rights(AbstractMetaDataElement):
 def short_id():
     return uuid4().hex
 
+
+from mezzanine.pages.managers import PageManager
+class ResourceManager(PageManager):
+
+    def __init__(self, resource_type=None, *args, **kwargs):
+        self.resource_type = resource_type
+        super(ResourceManager, self).__init__(*args, **kwargs)
+
+    def create(self, *args, **kwargs):
+        if self.resource_type is None:
+            kwargs.pop('resource_type', None)
+        return super(ResourceManager, self).create(*args, **kwargs)
+
+    def get_queryset(self):
+        qs = super(ResourceManager, self).get_queryset()
+        if self.resource_type:
+            qs = qs.filter(resource_type=self.resource_type)
+        return qs
+
+
 class AbstractResource(ResourcePermissionsMixin):
     """
     All hydroshare objects inherit from this mixin.  It defines things that must
@@ -1345,6 +1367,7 @@ class AbstractResource(ResourcePermissionsMixin):
         class MyResourceContentType(pages.Page, hs_core.AbstractResource):
             ...
     """
+
     content = models.TextField() # the field added for use by Django inplace editing
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
@@ -1357,8 +1380,8 @@ class AbstractResource(ResourcePermissionsMixin):
     #     help_text='The dublin core metadata of the resource'
     # )
 
-    files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource')
-    bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource')
+    files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource', for_concrete_model=True)
+    bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
@@ -1370,6 +1393,8 @@ class AbstractResource(ResourcePermissionsMixin):
     object_id = models.PositiveIntegerField(null=True, blank=True)
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
+
+    #keywords = KeywordsField(verbose_name="Keywords", for_concrete_model=False)
 
     @classmethod
     def bag_url(cls, resource_id):
@@ -1541,11 +1566,14 @@ class Bags(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
 
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = generic.GenericForeignKey('content_type', 'object_id', for_concrete_model=False)
     timestamp = models.DateTimeField(default=now, db_index=True)
 
     class Meta:
         ordering = ['-timestamp']
+
+    def get_content_model(self):
+        return self.content_object.get_content_model()
 
 
 class PublicResourceManager(models.Manager):
@@ -1560,7 +1588,9 @@ class DiscoverableResourceManager(models.Manager):
 
 
 # remove RichText parent class from the parameters for Django inplace editing to work; otherwise, get internal edit error when saving changes
-class GenericResource(Page, AbstractResource):
+class BaseResource(Page, AbstractResource):
+
+    resource_type = models.CharField(max_length=50, default="GenericResource")
 
     objects = models.Manager()
     public_resources = PublicResourceManager()
@@ -1568,6 +1598,7 @@ class GenericResource(Page, AbstractResource):
 
     class Meta:
         verbose_name = 'Generic'
+        db_table = 'hs_core_genericresource'
 
     def can_add(self, request):
         return AbstractResource.can_add(self, request)
@@ -1581,7 +1612,6 @@ class GenericResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
-
     @classmethod
     def get_supported_upload_file_types(cls):
         # all file types are supported
@@ -1594,6 +1624,26 @@ class GenericResource(Page, AbstractResource):
     @classmethod
     def can_have_files(cls):
         return True
+
+
+class GenericResource(BaseResource):
+    objects = ResourceManager('GenericResource')
+
+    class Meta:
+        verbose_name = 'Generic'
+        proxy = True
+
+
+old_get_content_model = Page.get_content_model
+def new_get_content_model(self):
+    from hs_core.hydroshare.utils import get_resource_types
+    content_model = self.content_model
+    if content_model.endswith('resource'):
+        rt = [rt for rt in get_resource_types() if rt._meta.model_name == content_model][0]
+        return rt.objects.get(id=self.id)
+    return old_get_content_model(self)
+Page.get_content_model = new_get_content_model
+
 
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):

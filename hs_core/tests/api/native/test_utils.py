@@ -3,14 +3,17 @@ import unittest
 from django.contrib.auth.models import Group, User
 
 from hs_core.hydroshare import utils
-from hs_core.models import GenericResource
+from hs_core.models import GenericResource, BaseResource
 from hs_core import hydroshare
 
 
 class TestUtils(unittest.TestCase):
     def setUp(self):
+        # try:
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         try:
-            self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+            self.user = User.objects.get(username='user1')
+        except User.DoesNotExist:
             self.user = hydroshare.create_account(
                 'user1@nowhere.com',
                 username='user1',
@@ -20,18 +23,15 @@ class TestUtils(unittest.TestCase):
                 groups=[self.group]
             )
 
-            # create dublin core elements
-            self.dublin_metadata = []
-
-        except:
-            self.tearDown()
-            self.user = User.objects.create_user('user1', email='user1@nowhere.com')
+        # except:
+        #     self.tearDown()
+        #     self.user = User.objects.create_user('user1', email='user1@nowhere.com')
 
         self.res = hydroshare.create_resource(
             'GenericResource',
             self.user,
-            'resource'
-            )
+            'resource',
+        )
         self.res.doi = 'doi1000100010001'
         self.res.save()
 

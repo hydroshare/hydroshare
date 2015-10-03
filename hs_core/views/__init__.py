@@ -28,7 +28,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods
-from hs_core.models import GenericResource, resource_processor, CoreMetaData
+from hs_core.models import BaseResource, GenericResource, resource_processor, CoreMetaData
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -186,6 +186,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 element_data_dict = response['element_data_dict']
                 res.metadata.update_element(element_name, element_id, **element_data_dict)
                 if element_name == 'title':
+                    res.title = res.metadata.title.value
+                    res.save()
                     if res.raccess.public:
                         if not res.can_be_public:
                             res.raccess.public = False
@@ -296,9 +298,11 @@ def change_permissions(request, shortkey, *args, **kwargs):
         is_share_resource = True
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.OWNER)
     elif t == 'make_public':
-        _set_resource_sharing_status(request, user, res, True)
-    elif t == 'make_private':
-        _set_resource_sharing_status(request, user, res, False)
+        _set_resource_sharing_status(request, user, res, is_public=True)
+    elif t == 'make_private' or t == 'make_not_discoverable':
+        _set_resource_sharing_status(request, user, res, is_public=False)
+    elif t == 'make_discoverable':
+        _set_resource_sharing_status(request, user, res, is_public=False, is_discoverable=True)
 
     if request.is_ajax and is_share_resource:
         # TODO: use try catch
@@ -493,13 +497,8 @@ def my_resources(request, page):
             for item_type in ("type", "author", "contributor", "subject")
         )
 
-        # TODO: Restricting resource listing to GenericResource as no other resource type is currently aware of
-        # Alva's access control objects - this needs be removed after resource model refactoring
-        search_items['type'] = ['GenericResource']
-
         # TODO ten separate SQL queries for basically the same data
-        res = set()
-        for lst in get_resource_list(
+        reslst = get_resource_list(
             user=user,
             owner=owner,
             published=published,
@@ -508,11 +507,8 @@ def my_resources(request, page):
             full_text_search=words,
             public=public,
             **search_items
-        ).values():
-            res = res.union(lst)
-        total_res_cnt = len(res)
-
-        reslst = list(res)
+        )
+        total_res_cnt = len(reslst)
 
         # need to return total number of resources as 'ct' so have to get all resources
         # and then filter by start and count
@@ -605,19 +601,18 @@ def create_resource(request, *args, **kwargs):
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
 
-    try:
-        resource = hydroshare.create_resource(
-                resource_type=request.POST['resource-type'],
-                owner=request.user,
-                title=res_title,
-                keywords=None,
-                metadata=metadata,
-                files=resource_files,
-                content=res_title
-        )
-    except Exception as ex:
-        context = {'resource_creation_error': ex.message }
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+    # try:
+    resource = hydroshare.create_resource(
+            resource_type=request.POST['resource-type'],
+            owner=request.user,
+            title=res_title,
+            metadata=metadata,
+            files=resource_files,
+            content=res_title
+    )
+    # except Exception as ex:
+    #     context = {'resource_creation_error': ex.message }
+    #     return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     try:
         utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)
@@ -690,12 +685,25 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
     return go_to_resource_listing_page
 
 
-def _set_resource_sharing_status(request, user, resource, is_public):
+def _set_resource_sharing_status(request, user, resource, is_public, is_discoverable=False):
+    if not user.uaccess.can_change_resource_flags(resource):
+        messages.error(request, "You don't have permission to change resource sharing status")
+        return
+
     if is_public and not resource.can_be_public:
         messages.error(request, "Resource may not have sufficient required metadata to be public")
     else:
-        if user.uaccess.can_change_resource_flags(resource):
-            resource.raccess.public = is_public
-            resource.raccess.save()
+        if is_discoverable:
+            if resource.can_be_public:
+                resource.raccess.public = False
+                resource.raccess.discoverable = True
+            else:
+                messages.error(request, "Resource may not have sufficient required metadata to be discoverable")
         else:
-            messages.error(request, "You don't have permission to change resource sharing status")
+            resource.raccess.public = is_public
+            resource.raccess.discoverable = is_public
+
+        resource.raccess.save()
+        # set isPublic metadata AVU accordingly
+        istorage = IrodsStorage()
+        istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))

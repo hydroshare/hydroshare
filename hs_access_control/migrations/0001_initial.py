@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('auth', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('hs_core', '0003_auto_20150811_2213'),
+        ('hs_core', '0004_auto_20150721_1125'),
     ]
 
     operations = [
@@ -129,7 +129,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resourceaccess',
             name='resource',
-            field=models.OneToOneField(related_query_name=b'raccess', related_name='raccess', null=True, editable=False, to='hs_core.GenericResource'),
+            field=models.OneToOneField(related_query_name=b'raccess', related_name='raccess', null=True, editable=False, to='hs_core.BaseResource'),
             preserve_default=True,
         ),
         migrations.AddField(

@@ -111,4 +111,3 @@ class TestUpdateResourceFileAPI(unittest.TestCase):
             ObjectDoesNotExist,
             lambda: hydroshare.update_resource_file(new_res.short_id, 'file_not_in_resource.txt', new_file)
         )
-

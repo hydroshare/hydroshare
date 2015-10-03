@@ -13,7 +13,7 @@ from rest_framework import status, generics
 from rest_framework.exceptions import *
 
 from hs_core import hydroshare
-from hs_core.models import AbstractResource
+from hs_core.models import AbstractResource, ResourceManager
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
 from hs_core.views import utils as view_utils
 from hs_core.views import serializers
@@ -157,13 +157,7 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
 
         filtered_res_list = []
 
-        resource_table = hydroshare.get_resource_list(**filter_parms)
-        res = set()
-
-        for resources in resource_table.values():
-            res = res.union(resources)
-
-        for r in res:
+        for r in hydroshare.get_resource_list(**filter_parms):
             resource_list_item = self.resourceToResourceListItem(r)
             filtered_res_list.append(resource_list_item)
 

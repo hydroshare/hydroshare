@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import Q
 from django.conf import settings
 
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 
 
 ######################################
@@ -1063,7 +1063,7 @@ class UserAccess(models.Model):
 
         :return: List of resource objects accessible (in any form) to user.
         """
-        return GenericResource.objects.filter(Q(raccess__holding_users=self) | Q(raccess__holding_groups__members=self))
+        return BaseResource.objects.filter(Q(raccess__holding_users=self) | Q(raccess__holding_groups__members=self))
 
     def get_number_of_held_resources(self):
         """
@@ -1081,7 +1081,7 @@ class UserAccess(models.Model):
         :return: List of resource objects owned by this user.
         """
 
-        return GenericResource.objects.filter(raccess__r2urp__user=self,
+        return BaseResource.objects.filter(raccess__r2urp__user=self,
                                               raccess__r2urp__privilege=PrivilegeCodes.OWNER).distinct()
 
     def get_number_of_owned_resources(self):
@@ -1101,7 +1101,7 @@ class UserAccess(models.Model):
 
         :return: List of resource objects that can be edited  by this user.
         """
-        return GenericResource.objects.filter(raccess__r2urp__user=self, raccess__immutable=False,
+        return BaseResource.objects.filter(raccess__r2urp__user=self, raccess__immutable=False,
                                               raccess__r2urp__privilege__lte=PrivilegeCodes.CHANGE).distinct()
 
     #############################################
@@ -1120,7 +1120,7 @@ class UserAccess(models.Model):
         privilege. It is thus necessary to check that one can change something
         explicitly, using UserAccess.can_change_resource()
         """
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1148,7 +1148,7 @@ class UserAccess(models.Model):
         would return two types depending upon conditions -- Boolean for simple queries and
         QuerySet for complex queries.
         """
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1179,7 +1179,7 @@ class UserAccess(models.Model):
 
         This is not enforced. It is up to the programmer to obey this restriction.
         """
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
 
         return self.active and (self.admin or self.owns_resource(this_resource))
@@ -1193,7 +1193,7 @@ class UserAccess(models.Model):
 
         Note that one can view resources that are public, that one does not own.
         """
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1223,7 +1223,7 @@ class UserAccess(models.Model):
         :return: True if user can delete the resource, otherwise false.
 
         """
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
 
         return self.active and (self.admin or self.owns_resource(this_resource))
@@ -1244,7 +1244,7 @@ class UserAccess(models.Model):
         One can share with self, which can only downgrade privilege.
         """
         # translate into ResourceAccess object
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1292,7 +1292,7 @@ class UserAccess(models.Model):
         This function returns False exactly when share_resource_with_group will raise
         an exception if called.
         """
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1320,7 +1320,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Grantee is not a group")
         access_group = this_group.gaccess
 
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1420,7 +1420,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Grantee is not a user")
         access_user = this_user.uaccess
 
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1513,7 +1513,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Grantee is not a user")
         access_user = this_user.uaccess
 
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1601,7 +1601,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Grantee is not a user")
         access_user = this_user.uaccess
 
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1700,7 +1700,7 @@ class UserAccess(models.Model):
         """
 
         # check for user error
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1743,7 +1743,7 @@ class UserAccess(models.Model):
     def __handle_unshare_resource_with_group(self, this_resource, this_group, command=CommandCodes.CHECK):
         # first check for usage error
 
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1821,7 +1821,7 @@ class UserAccess(models.Model):
         :param this_resource: resource to check.
         :return: list of users granted access by self.
         """
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1868,7 +1868,7 @@ class UserAccess(models.Model):
         # b) self is resource owner: everyone.
         # c) self is beneficiary: self only
 
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1901,7 +1901,7 @@ class UserAccess(models.Model):
             3. User owns the group -- *not implemented*
             4. User is an administrator
         """
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -1920,7 +1920,7 @@ class UserAccess(models.Model):
 
         This is a list of groups for which unshare_resource_with_group will work for this user.
         """
-        if not isinstance(this_resource, GenericResource):
+        if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
@@ -2000,7 +2000,7 @@ class GroupAccess(models.Model):
 
         :return: List of resource objects held by group.
         """
-        return GenericResource.objects.filter(raccess__holding_groups=self)
+        return BaseResource.objects.filter(raccess__holding_groups=self)
 
     def get_number_of_held_resources(self):
         """
@@ -2017,7 +2017,7 @@ class GroupAccess(models.Model):
 
         :return: List of resource objects that can be edited  by this group.
         """
-        return GenericResource.objects.filter(raccess__r2grp__group=self, raccess__immutable=False,
+        return BaseResource.objects.filter(raccess__r2grp__group=self, raccess__immutable=False,
                                               raccess__r2grp__privilege__lte=PrivilegeCodes.CHANGE).distinct()
 
     def get_owners(self):
@@ -2087,7 +2087,7 @@ class ResourceAccess(models.Model):
     # model variables
     #############################################
 
-    resource = models.OneToOneField(GenericResource,
+    resource = models.OneToOneField(BaseResource,
                                     editable=False,
                                     null=True,
                                     related_name='raccess',
