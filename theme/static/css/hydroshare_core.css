@@ -1889,6 +1889,12 @@ td.user-actions > span:hover {
 	cursor: default;
 }
 
+.user-roles li.disabled a {
+	color: #aaa;
+	text-shadow: 0 1px 0 #FFF;
+	pointer-events: none;
+}
+
 .user-roles li.active a {
 	font-weight: bold;
 }
