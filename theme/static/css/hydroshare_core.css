@@ -1969,9 +1969,9 @@ td.user-actions > span:hover {
 }
 
 button.loading {
-	animation: greenScaleChange 1s; /* animation-name followed by duration in seconds*/
+	animation: greenScaleChange 2s; /* animation-name followed by duration in seconds*/
 	/* you could also use milliseconds (ms) or something like 2.5s */
-	-webkit-animation: greenScaleChange 1s; /* Chrome and Safari */
+	-webkit-animation: greenScaleChange 2s; /* Chrome and Safari */
 	animation-iteration-count:infinite;
 	-webkit-animation-iteration-count:infinite;
 	pointer-events: none;

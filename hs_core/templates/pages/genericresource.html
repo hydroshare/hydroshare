@@ -2549,7 +2549,11 @@
             }
 
             function share_resource_ajax_submit(form_id) {
+                if (!$("#id_user-deck > .hilight").length) {
+                    return; // If no user selected, ignore the request
+                }
                 $form = $('#' + form_id);
+
                 var datastring = $form.serialize();
                 var share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
                 var access_type = $("#selected_role")[0].getAttribute("data-role");
