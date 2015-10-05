@@ -2044,3 +2044,40 @@ button.loading {
 .modal {
 	overflow-y: auto;
 }
+
+.list-separator {
+	color: #333;
+}
+
+.round-image {
+	-webkit-border-radius: 50%;
+	-moz-border-radius: 50%;
+	border-radius: 50%;
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: 50% 50%;
+}
+
+
+.profile-pic-row {
+	width: 40px;
+}
+
+.profile-pic-thumbnail {
+	width: 40px;
+	height: 40px;
+	float: left;
+	margin-right: 10px;
+}
+
+.user-icon:before {
+	content: "\e008";
+	font-family: "Glyphicons Halflings";
+	line-height: 0.6;
+	margin-left: 5px;
+	margin-top: 10px;
+	float: left;
+	font-size: 30px;
+
+	color: #A0A0A0;
+}

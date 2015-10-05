@@ -113,18 +113,20 @@
                 <table>
                     <tr><th>Authors:</th><td id="authors">
                         {% for cr in creators %}
-                            {% if cr.description %}<a href="{{ cr.description }}">{{ cr.name }}</a><span class="comma">,&nbsp;</span>
-                            {% else %}<span>{{ cr.name }}</span><span class="comma">,&nbsp;</span>{% endif %}
+                            {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
+                            {% if cr.description %}<a href="{{ cr.description }}">{{ cr.name }}</a>
+                            {% else %}<span>{{ cr.name }}</span>{% endif %}
                         {% endfor %}
                     </td></tr>
                     <tr><th>Owners:</th><td>
                         {% for u in owners %}
-                            <span>{{ u|contact|safe }}</span>&nbsp;&nbsp;
+                            {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                            <span>{{ u|contact|safe }}</span>
                         {% endfor %}
                     </td></tr>
                     <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
                     <tr><th>Created:</th><td>{{ cm.created }}</td></tr>
-                    <tr><th>Last updated:</th><td> {{ cm.updated }} by {%  if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
+                    <tr><th>Last updated:</th><td> {{ cm.updated }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
                 </table>
             </div>
             {% else %}
@@ -133,23 +135,27 @@
                         <tr>
                             <th>Authors:</th>
                             <td><span id="authors">
+
                                     {% for author in creator_formset.initial %}
-                                        {% if author.description %}<a href="{{ author.description }}">
-                                            {{ author.name }}</a><span class="comma">,&nbsp</span>
-                                            {% else %}<span>{{ author.name }}</span>
-                                            <span class="comma">,&nbsp</span>{% endif %}
+                                        {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                                        {% if author.description %}
+                                            <a href="{{ author.description }}">{{ author.name }}</a>
+                                        {% else %}
+                                            <span>{{ author.name }}</span>
+                                        {% endif %}
                                     {% endfor %}
                                 </span>
                             </td>
                         </tr>
                         <tr><th>Owners:</th><td>
                             {% for u in owners %}
-                                <span>{{ u|contact|safe }}</span>&nbsp;&nbsp;
+                                {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                                <span>{{ u|contact|safe }}</span>
                             {% endfor %}
                         </td></tr>
                         <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
                         <tr><th>Created:</th><td>{{ cm.created }}</td></tr>
-                        <tr><th>Last updated:</th><td> {{ cm.updated }} by {%  if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
+                        <tr><th>Last updated:</th><td> {{ cm.updated }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
                     </table>
                 </div>
             {% endif %}
@@ -458,6 +464,7 @@
                                             {# Empty row used as template to generate subsequent rows #}
                                             <tr id="templateRow">
                                                 <td>
+                                                    <div class="profile-pic-thumbnail round-image user-icon"></div>
                                                     <div class="user-scope">
                                                         <span data-col="name" class="user-name"></span>
                                                         <br>
@@ -512,6 +519,15 @@
                                                 <tr id="row-id-{{ u.pk }}" {% if owners|length == 1 %}class="hide-actions"{% endif %}>
                                                     <td>
                                                         <div class="user-scope">
+                                                            <div
+                                                            {% if u.userprofile.picture %}
+                                                                style="background-image: url('{{ u.userprofile.picture.url }}');"
+                                                                class="profile-pic-thumbnail round-image"
+                                                            {% else %}
+                                                                 class="profile-pic-thumbnail round-image user-icon"
+                                                            {% endif %}
+                                                            >
+                                                            </div>
                                                             <span data-col="name"
                                                                   class="user-name">{{ u|best_name }}</span>
                                                             {% if u.pk == current_user.pk %}
@@ -588,6 +604,15 @@
                                                 <tr id="row-id-{{ u.pk }}">
                                                     <td>
                                                         <div class="user-scope">
+                                                            <div
+                                                            {% if u.userprofile.picture %}
+                                                                style="background-image: url('{{ u.userprofile.picture.url }}');"
+                                                                class="profile-pic-thumbnail round-image"
+                                                            {% else %}
+                                                                 class="profile-pic-thumbnail round-image user-icon"
+                                                            {% endif %}
+                                                            >
+                                                            </div>
                                                             <span value="{{ u.pk }}" class="user-name">{{ u|best_name }}</span>
                                                             {% if u.pk == current_user.pk %}
                                                                 <span class="text-muted">(You)</span>
@@ -650,6 +675,15 @@
                                                 <tr id="row-id-{{ u.pk }}">
                                                     <td>
                                                         <div class="user-scope">
+                                                            <div
+                                                                {% if u.userprofile.picture %}
+                                                                    style="background-image: url('{{ u.userprofile.picture.url }}');"
+                                                                    class="profile-pic-thumbnail round-image"
+                                                                {% else %}
+                                                                    class="profile-pic-thumbnail round-image user-icon"
+                                                                {% endif %}
+                                                                >
+                                                            </div>
                                                             <span value="{{ u.pk }}" class="user-name">{{ u|best_name }}</span>
                                                             {% if u.pk == current_user.pk %}
                                                                 <span class="text-muted">(You)</span>
@@ -2439,6 +2473,7 @@
                 $("#selected_role").text(el.text());
                 $("#selected_role")[0].setAttribute("data-role", el[0].getAttribute("data-role"));
             }
+
             function onRowRemove(event) {
                 var el = $(event.target);
                 var pk = el[0].getAttribute("data-pk");
@@ -2447,6 +2482,7 @@
                 form.submit();
                 {#               update_access_ajax_submit(event, formID);#}
             }
+
             function unshare_resource_ajax_submit(form_id) {
                 $form = $('#' + form_id);
                 var datastring = $form.serialize();
@@ -2473,6 +2509,7 @@
                 //don't submit the form
                 return false;
             }
+
             function change_share_permission_ajax_submit(form_id) {
                 $form = $('#' + form_id);
                 var datastring = $form.serialize();
@@ -2503,6 +2540,7 @@
                     }
                 });
             }
+
             function share_resource_ajax_submit(form_id) {
                 $form = $('#' + form_id);
                 var datastring = $form.serialize();
@@ -2545,6 +2583,12 @@
                         rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
                         rowTemplate.find("span[data-col='name'").text(json_response.name);
                         rowTemplate.find("span[data-col='user-name'").text(json_response.username);
+
+                        if (json_response.profile_pic != "No picture provided"){
+                            rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
+                            rowTemplate.find(".profile-pic-thumbnail").removeClass("user-icon");
+                        }
+
                         if (access_type == "view") {
                             rowTemplate.find("span[data-col='current-access'").text("Can view");
                             rowTemplate.find("span[data-col='current-access'").append(" <span class='caret'></span>");
@@ -2572,6 +2616,7 @@
                 //don't submit the form
                 return false;
             }
+
             function onRemoveKeyword(event) {
                 $($(this).closest(".tags").parent().find(".btn-primary")[0]).show();    // Show save button
                 $(event.target).closest(".tag").remove();
@@ -2719,6 +2764,12 @@
                     $("#sign-in-info").text(sessionStorage.signininfo);
                     $("#btn-select-irods-file").show();
                 }
+
+                $(".list-separator").parent().hover(function(){
+                    $(this).css("text-decoration", "none");
+                    $(this).css("pointer-events", "none");
+                });
+
                 var keywordString = "{% for k, v in subjects_form.initial.iteritems  %}{{ v }}{% endfor %}";
                 $("#id-subject").find("#id_value").val(keywordString);
 
