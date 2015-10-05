@@ -971,12 +971,14 @@ span.remove{
     height: 155px;
 }
 
-span.remove{
-    position: absolute;
-    left: 0;
-    height: 100% !important;
-    background: #EEE;
-    top: 0;
+span.remove {
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: calc(100% - 2px) !important;
+	background: #EEE;
+	background-position-y: 7px !important;
+	margin: 1px;
 }
 
 .form-control{
@@ -1138,11 +1140,10 @@ a[data-toggle='tab']{
 }
 
 span.hilight {
-    background: #EEE;
-    margin-left: 14px;
-    width: calc(100% - 14px);
-    height: 100%;
-    display: block;
+	background: #EEE;
+	margin-left: 16px;
+	width: calc(100% - 16px);
+	height: 100%;
 }
 
 #form-sharing{
@@ -2058,7 +2059,6 @@ button.loading {
 	background-position: 50% 50%;
 }
 
-
 .profile-pic-row {
 	width: 40px;
 }
@@ -2078,6 +2078,14 @@ button.loading {
 	margin-top: 10px;
 	float: left;
 	font-size: 30px;
-
 	color: #A0A0A0;
+}
+
+#div-invite-people .label-danger {
+	font-size: 12px;
+}
+
+#list-roles > li > a {
+	font-size: 14px;
+	cursor: pointer;
 }

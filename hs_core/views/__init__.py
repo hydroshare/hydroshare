@@ -266,7 +266,6 @@ def change_permissions(request, shortkey, *args, **kwargs):
     t = request.POST['t']
     values = [int(k) for k in request.POST.getlist('designees', [])]
     go_to_resource_listing_page = False
-    is_share_resource = False
     if t == 'owners':
         go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'owner')
     elif t == 'edit_users':
@@ -279,11 +278,9 @@ def change_permissions(request, shortkey, *args, **kwargs):
     #     res.view_groups = Group.objects.in_bulk(values)
     elif t == 'add_view_user':
         frm = AddUserForm(data=request.POST)
-        is_share_resource = True
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.VIEW)
     elif t == 'add_edit_user':
         frm = AddUserForm(data=request.POST)
-        is_share_resource = True
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.CHANGE)
     # elif t == 'add_view_group':
     #     frm = AddGroupForm(data=request.POST)
@@ -295,7 +292,6 @@ def change_permissions(request, shortkey, *args, **kwargs):
     #         res.edit_groups.add(frm.cleaned_data['group'])
     elif t == 'add_owner':
         frm = AddUserForm(data=request.POST)
-        is_share_resource = True
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.OWNER)
     elif t == 'make_public':
         _set_resource_sharing_status(request, user, res, is_public=True)
@@ -303,13 +299,6 @@ def change_permissions(request, shortkey, *args, **kwargs):
         _set_resource_sharing_status(request, user, res, is_public=False)
     elif t == 'make_discoverable':
         _set_resource_sharing_status(request, user, res, is_public=False, is_discoverable=True)
-
-    if request.is_ajax and is_share_resource:
-        # TODO: use try catch
-        ajax_response_data = {'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username}
-        return HttpResponse(json.dumps(ajax_response_data))
-    # else:
-    #     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     # due to self unsharing of a private resource the user will have no access to that resource
     # so need to redirect to the resource listing page
