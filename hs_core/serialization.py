@@ -418,8 +418,10 @@ class GenericResourceMeta(object):
             title = str(title_lit)
             if title != self.title:
                 msg = "Title from resource metadata {0} "
-                msg += "does not match title from resource map {1}".format(title, self.title)
-                raise GenericResourceMeta.ResourceMetaException(msg)
+                msg += "does not match title from resource map {1}, using {2}."
+                msg = msg.format(title, self.title, title)
+                self.title = title
+                print("Warning {0}".format(msg))
 
         # Get abstract
         for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DCTERMS.abstract, None)):
