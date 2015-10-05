@@ -24,26 +24,30 @@ def is_shapefiles(files):
 def check_fn_for_shp(files):
 #used by is_shapefiles
 #check a list of filenames contains valid shapefiles (shp, shx, dbf)
-    shp, shx, dbf = False , False, False
+    shp, shx, dbf = False, False, False
     all_have_same_filename = False
     shp_filename, shx_filename, dbf_filename =None, None, None
+    dir_count=0 # can have 0 or 1 folder
     if len(files) >= 3: # at least have 3 files: shp, shx, dbf
         for file in files:
-            fileName, fileExtension = os.path.splitext(file)
-            if ".shp" == fileExtension:
-                shp_filename = fileName
-                shp=True
-            elif ".shx" == fileExtension:
-                shx_filename = fileName
-                shx=True
-            elif ".dbf" == fileExtension:
-                dbf_filename = fileName
-                dbf=True
+            if file[len(file)-1]=='/':
+                dir_count+=1
+            else:
+                fileName, fileExtension = os.path.splitext(file)
+                if ".shp" == fileExtension:
+                    shp_filename = fileName
+                    shp=True
+                elif ".shx" == fileExtension:
+                    shx_filename = fileName
+                    shx=True
+                elif ".dbf" == fileExtension:
+                    dbf_filename = fileName
+                    dbf=True
 
         if shp_filename == shx_filename and shp_filename == dbf_filename:
             all_have_same_filename = True
 
-    if shp & shx & dbf & all_have_same_filename:
+    if shp & shx & dbf & all_have_same_filename & (dir_count<=1):
         return True
     else:
         return False
@@ -77,10 +81,13 @@ def check_uploaded_files_type(files):
             #create a temp foler and copy shapefiles
             tmp_dir=tempfile.mkdtemp()
             rslt["tmp_dir"]=tmp_dir
+            baseFilename=None
             files_list_for_extract_metadata = []
             for file in files:
                 source = file.file.name
                 fileName, fileExtension = os.path.splitext(file.name.lower())
+                if fileExtension == ".shp":
+                    baseFilename=fileName
                 #target = tmp_dir + "/" + res_titile_fn + fileExtension
                 target = tmp_dir + "/" + fileName + fileExtension
                 shutil.copy(source, target)
@@ -88,7 +95,7 @@ def check_uploaded_files_type(files):
             #shp_full_path = tmp_dir + "/" + res_titile_fn + ".shp"
             shp_full_path = tmp_dir + "/" + fileName + ".shp"
             rslt['shp_full_path']=shp_full_path
-            baseFilename=fileName
+
             rslt["baseFilename"]=baseFilename
             uploadedFileCount=len(files)
             rslt["uploadedFileCount"]=uploadedFileCount
@@ -110,27 +117,38 @@ def check_uploaded_files_type(files):
             fn_list = zf.namelist()
             zf.extractall(path=tmp_dir)
             zf.close()
+            baseFilename=None
+            shp_full_path=None
+            dir_count=0
             from django.core.files.uploadedfile import UploadedFile
             del files[:]
+            folder_ids_arr=[]
             for old_fn in fn_list:
                 source = tmp_dir + '/' +old_fn
-                fileName, fileExtension = os.path.splitext(old_fn)
-                #target = tmp_dir + "/" + res_titile_fn + fileExtension
-                target = tmp_dir + "/" + fileName + fileExtension
-                #shutil.copy(source, target)
-                #files.append(UploadedFile(file=open(target, 'r'), name=res_titile_fn + fileExtension))
-                files.append(UploadedFile(file=open(target, 'r'), name=fileName + fileExtension))
+                if os.path.isfile(source): #only add files, filter out folders
+                    fileName, fileExtension = os.path.splitext(old_fn)
 
-            #shp_full_path = tmp_dir + "/" + res_titile_fn + ".shp"
-            shp_full_path = tmp_dir + "/" + fileName + ".shp"
+                    if '/' in fileName:
+                        path_and_filename=fileName.split('/')
+                        fileName= path_and_filename[len(path_and_filename)-1]
+                    if fileExtension==".shp":
+                        baseFilename=fileName
+                        shp_full_path=source
+                    #target = tmp_dir + "/" + fileName + fileExtension
+                    files.append(UploadedFile(file=open(source, 'r'), name=fileName + fileExtension))
+                else:
+                    dir_count+=1
+
+            #shp_full_path = tmp_dir + "/" + fileName + ".shp"
             rslt['shp_full_path']=shp_full_path
-            baseFilename = fileName
+
             rslt["baseFilename"]=baseFilename
-            uploadedFileCount=len(fn_list)
+            uploadedFileCount=len(fn_list)-dir_count
             rslt["uploadedFileCount"]=uploadedFileCount
             uploadedFilenameString_dict={}
             for i in range(len(fn_list)):
-                uploadedFilenameString_dict[fn_list[i]]=str(i)
+                if not (fn_list[i]).endswith('/'):#not a folder
+                    uploadedFilenameString_dict[fn_list[i]]=str(i)
             uploadedFilenameString = json.dumps(uploadedFilenameString_dict)
             rslt["uploadedFilenameString"]=uploadedFilenameString
             rslt["are_files_valid"] = True
