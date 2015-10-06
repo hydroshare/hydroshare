@@ -706,8 +706,10 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, query):
 
                 if user != owner:
                     # if some authenticated user is asking for resources owned by another user then
-                    # get other user's owned resources that are public or discoverable
-                    query.append(Q(raccess__public=True) | Q(raccess__discoverable=True))
+                    # get other user's owned resources that are public or discoverable, or if requesting user
+                    # has access to those private resources
+                    query.append(Q(pk__in=user.uaccess.get_held_resources()) | Q(raccess__public=True) |
+                                 Q(raccess__discoverable=True))
         else:
             if is_editable:
                 query.append(Q(pk__in=user.uaccess.get_editable_resources()))
