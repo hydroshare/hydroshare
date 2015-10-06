@@ -30,11 +30,21 @@ class UserProfileView(TemplateView):
             except:
                 u = User.objects.get(username=self.request.GET['user'])
 
-        res = BaseResource.objects.filter(user=u)
+        # get all resources the profile user has created
+        resources = BaseResource.objects.filter(user=u)
+
+        # if requesting user is not the profile user, then show only resources that the requesting user has access
+        if self.request.user != u:
+            if self.request.user.is_authenticated():
+                # filter out any resources the requesting user doesn't have view permission
+                resources = [res for res in resources if self.request.user.uaccess.can_view_resource(res)]
+            else:
+                # for anonymous requesting user show only resources that are either public or discoverable
+                resources = [res for res in resources if res.raccess.public or res.raccess.discoverable]
 
         return {
             'u': u,
-            'resources': res,
+            'resources': resources,
         }
 
 # added by Hong Yi to address issue #186 to customize Mezzanine-based commenting form and view
