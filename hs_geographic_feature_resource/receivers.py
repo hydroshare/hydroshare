@@ -115,40 +115,42 @@ def check_uploaded_files_type(files):
             zipfile_path=files[0].file.name
             zf = zipfile.ZipFile(zipfile_path, 'r')
             fn_list = zf.namelist()
-            zf.extractall(path=tmp_dir)
+            zf.extractall(path=tmp_dir) #extract all zip contents (files and folders) to tmp_dir (/tmp/tmpXXXXXX/)
             zf.close()
             baseFilename=None
             shp_full_path=None
             dir_count=0
+            uploadedFileCount=0
             from django.core.files.uploadedfile import UploadedFile
             del files[:]
-            folder_ids_arr=[]
+            uploadedFilenameString_dict={}
             for old_fn in fn_list:
                 source = tmp_dir + '/' +old_fn
-                if os.path.isfile(source): #only add files, filter out folders
+                target = tmp_dir
+                if os.path.isfile(source): #only add files, filter out folders (should be 0 or 1 folder)
                     fileName, fileExtension = os.path.splitext(old_fn)
 
-                    if '/' in fileName:
+                    if '/' in fileName: #if the file is inside a folder, move it to the root of tmp_dir
                         path_and_filename=fileName.split('/')
                         fileName= path_and_filename[len(path_and_filename)-1]
-                    if fileExtension==".shp":
-                        baseFilename=fileName
-                        shp_full_path=source
-                    #target = tmp_dir + "/" + fileName + fileExtension
-                    files.append(UploadedFile(file=open(source, 'r'), name=fileName + fileExtension))
-                else:
-                    dir_count+=1
+                        target=tmp_dir + '/' + fileName + fileExtension
+                        shutil.move(source,target)
+                    else:
+                        target = source
 
-            #shp_full_path = tmp_dir + "/" + fileName + ".shp"
+                    if fileExtension==".shp": #save the real path to .shp file
+                        baseFilename=fileName #save the name of .shp as the baseFileName
+                        shp_full_path=target
+                    files.append(UploadedFile(file=open(target, 'r'), name=fileName + fileExtension))
+                    uploadedFileCount+=1
+                    uploadedFilenameString_dict[fileName + fileExtension]=str(1)
+                else:
+                    dir_count+=1 #folder count +1 (should be 0 or 1 folder)
+
             rslt['shp_full_path']=shp_full_path
 
             rslt["baseFilename"]=baseFilename
-            uploadedFileCount=len(fn_list)-dir_count
             rslt["uploadedFileCount"]=uploadedFileCount
-            uploadedFilenameString_dict={}
-            for i in range(len(fn_list)):
-                if not (fn_list[i]).endswith('/'):#not a folder
-                    uploadedFilenameString_dict[fn_list[i]]=str(i)
             uploadedFilenameString = json.dumps(uploadedFilenameString_dict)
             rslt["uploadedFilenameString"]=uploadedFilenameString
             rslt["are_files_valid"] = True
@@ -369,7 +371,9 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                         validate_files_dict['message'] = "No more shp, shx, dbf files can be added."
                         some_new_files_added=False
                         break
-                    elif new_f_name!=ori_file_info.baseFilename:
+                    elif (new_f_name!=ori_file_info.baseFilename) and \
+                            (not (new_f_name == ori_file_info.baseFilename+".shp" and new_f_ext==".xml")):
+                        #need to check if is ShapefileBaseName.shp.xml
                         validate_files_dict['are_files_valid'] = False
                         validate_files_dict['message'] = "At least one file does not follow the ESRI Shapefile naming convention."
                         some_new_files_added=False
@@ -380,9 +384,9 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                         some_new_files_added=False
                         break
                 if some_new_files_added:
+                    ori_fn_dict=json.loads(ori_file_info.filenameString)
                     for f in files:
                         new_f_fullname=f.name.lower()
-                        ori_fn_dict=json.loads(ori_file_info.filenameString)
                         ori_fn_dict[new_f_fullname]="new"
                     res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.id,filenameString=json.dumps(ori_fn_dict))
             else: # all files has been removed, start it over
@@ -502,7 +506,8 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                 fileName, fileExtension = os.path.splitext(f_fullname)
                 target = tmp_dir + "/" + fileName + fileExtension
                 shutil.copy(source, target)
-            shp_full_path = tmp_dir + "/" + fileName + ".shp"
+            ori_file_info=resource.metadata.originalfileinfo.all().first()
+            shp_full_path = tmp_dir + "/" + ori_file_info.baseFilename + ".shp"
             parsed_md_dict = parse_shp(shp_full_path)
 
             originalcoverage_obj=resource.metadata.originalcoverage.all().first()
