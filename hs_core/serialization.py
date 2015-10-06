@@ -323,7 +323,7 @@ class GenericResourceMeta(object):
          as expected.
         """
         rmap_path = os.path.join(bag_content_path, 'data', 'resourcemap.xml')
-        if not os.path.isfile(rmap_path):
+        if not os.path.exists(rmap_path):
             raise GenericResourceMeta.ResourceMetaException("Resource map {0} does not exist".format(rmap_path))
         if not os.access(rmap_path, os.R_OK):
             raise GenericResourceMeta.ResourceMetaException("Unable to read resource map {0}".format(rmap_path))
@@ -395,10 +395,10 @@ class GenericResourceMeta(object):
         :return: None
         """
         self.rmeta_path = os.path.join(self.bag_content_path, self.res_meta_path)
-        if not os.path.isfile(self.rmeta_path):
-            raise GenericResourceMeta.ResourceMetaException("Resource metadata {0} does not exist".format(rmeta_path))
+        if not os.path.exists(self.rmeta_path):
+            raise GenericResourceMeta.ResourceMetaException("Resource metadata {0} does not exist".format(self.rmeta_path))
         if not os.access(self.rmeta_path, os.R_OK):
-            raise GenericResourceMeta.ResourceMetaException("Unable to read resource metadata {0}".format(rmeta_path))
+            raise GenericResourceMeta.ResourceMetaException("Unable to read resource metadata {0}".format(self.rmeta_path))
 
         # Parse metadata using RDFLib
         self._rmeta_graph = Graph()
@@ -524,7 +524,7 @@ class GenericResourceMeta(object):
         for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.created)):
             created_lit = self._rmeta_graph.value(s, rdflib.namespace.RDF.value)
             if created_lit is None:
-                msg = "Resource metadata {0} does not contain a creation date.".format(rmeta_path)
+                msg = "Resource metadata {0} does not contain a creation date.".format(self.rmeta_path)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             try:
                 self.creation_date = hs_date_to_datetime(str(created_lit))
@@ -542,7 +542,7 @@ class GenericResourceMeta(object):
         for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.modified)):
             modified_lit = self._rmeta_graph.value(s, rdflib.namespace.RDF.value)
             if modified_lit is None:
-                msg = "Resource metadata {0} does not contain a modification date.".format(rmeta_path)
+                msg = "Resource metadata {0} does not contain a modification date.".format(self.rmeta_path)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             try:
                 self.modification_date = hs_date_to_datetime(str(modified_lit))
@@ -563,18 +563,18 @@ class GenericResourceMeta(object):
             # License URI
             rights_uri = self._rmeta_graph.value(o, hsterms.URL)
             if rights_uri is None:
-                msg = "Resource metadata {0} does not contain rights URI.".format(rmeta_path)
+                msg = "Resource metadata {0} does not contain rights URI.".format(self.rmeta_path)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             resource_rights.uri = str(rights_uri)
             # Rights statement
             rights_stmt_lit = self._rmeta_graph.value(o, hsterms.rightsStatement)
             if rights_stmt_lit is None:
-                msg = "Resource metadata {0} does not contain rights statement.".format(rmeta_path)
+                msg = "Resource metadata {0} does not contain rights statement.".format(self.rmeta_path)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             resource_rights.statement = str(rights_stmt_lit)
 
         if resource_rights is None:
-            msg = "Resource metadata {0} does not contain rights.".format(rmeta_path)
+            msg = "Resource metadata {0} does not contain rights.".format(self.rmeta_path)
             raise GenericResourceMeta.ResourceMetaException(msg)
 
         self.rights = resource_rights
