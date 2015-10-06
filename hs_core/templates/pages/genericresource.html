@@ -2621,7 +2621,7 @@
                                 // Enable dropdown menu for other owner entries
                                 $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
                             }
-                            $(".access-table tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>").hide().fadeIn(1000));
+                            $(".access-table tbody").append($("<tr id='row-id-" + share_with + "' style='display:table-row'>" + rowTemplate.html() + "</tr>").hide().fadeIn(1000));
                         }
                         else if (json_response.status == "error") {
                             $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
