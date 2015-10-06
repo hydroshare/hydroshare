@@ -36,6 +36,7 @@ urlpatterns = i18n_patterns("",
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
+    url('^search/', include('haystack.urls')),
 )
 
 # Filebrowser admin media library.

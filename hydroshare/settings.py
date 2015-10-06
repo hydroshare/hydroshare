@@ -194,7 +194,18 @@ DATABASES = {
     }
 }
 
+#######################
+# HAYSTACK CONNECTION #
+#######################
 
+
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
+        'URL': 'http://hydroshare_solr_1.bridge:8983/solr/resource_core',
+        'TIMEOUT': 5*60,
+    },
+}
 #########
 # PATHS #
 #########
@@ -260,6 +271,7 @@ INSTALLED_APPS = (
     "inplaceeditform",
     "django_nose",
     "django_irods",
+    "haystack",
     "theme",
     "theme.blog_mods",
     "mezzanine.boot",
