@@ -12,3 +12,4 @@ nginx/config-files/hs-nginx.conf
 config/hydroshare-config.sh
 config/hydroshare-config.yaml
 docker-compose.yml
+schema.xml
