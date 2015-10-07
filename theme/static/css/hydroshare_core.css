@@ -1899,8 +1899,12 @@ td.user-actions > span:hover {
 	width: 100px;
 }
 
+.access-table tr {
+    display: table-row !important;
+}
+
 #templateRow {
-	display:none;
+	display:none !important;
 }
 
 .user-roles button {

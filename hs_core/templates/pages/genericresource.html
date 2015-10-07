@@ -2596,8 +2596,9 @@
                             rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
                             rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
                             rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
-                            rowTemplate.find("span[data-col='name'").text(json_response.name);
-                            rowTemplate.find("span[data-col='user-name'").text(json_response.username);
+                            rowTemplate.find("span[data-col='name']").text(json_response.name);
+                            rowTemplate.find("span[data-col='user-name']").text(json_response.username);
+
 
                             if (json_response.profile_pic != "No picture provided") {
                                 rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
@@ -2605,18 +2606,18 @@
                             }
 
                             if (access_type == "view") {
-                                rowTemplate.find("span[data-col='current-access'").text("Can view");
-                                rowTemplate.find("span[data-col='current-access'").append(" <span class='caret'></span>");
+                                rowTemplate.find("span[data-col='current-access']").text("Can view");
+                                rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
                                 rowTemplate.find(".share-form-view").parent().addClass("active");
                             }
                             else if (access_type == "edit") {
-                                rowTemplate.find("span[data-col='current-access'").text("Can edit");
-                                rowTemplate.find("span[data-col='current-access'").append(" <span class='caret'></span>");
+                                rowTemplate.find("span[data-col='current-access']").text("Can edit");
+                                rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
                                 rowTemplate.find(".share-form-edit").parent().addClass("active");
                             }
                             else if (access_type == "owner") {
-                                rowTemplate.find("span[data-col='current-access'").text("Is owner");
-                                rowTemplate.find("span[data-col='current-access'").append(" <span class='caret'></span>");
+                                rowTemplate.find("span[data-col='current-access']").text("Is owner");
+                                rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
                                 rowTemplate.find(".share-form-owner").parent().addClass("active");
                                 // Enable dropdown menu for other owner entries
                                 $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
