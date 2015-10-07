@@ -2494,10 +2494,8 @@
                     dataType: 'html',
                     data: datastring,
                     success: function (result) {
-                        $form.parent().closest("tr").fadeOut("normal", function () {
-                            $(this).remove();
-                        });
-                        if ($(".access-table li.active[data-access-type='Is owner']").length == 2) {
+                        $form.parent().closest("tr").remove();
+                        if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
                             $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
                         }
                     },
@@ -2531,14 +2529,14 @@
                             $form.parent().closest(".user-roles").find("li").removeClass("loading");
                             $form.parent().closest(".user-roles").find("li[data-access-type='" + $form.attr("data-access-type") + "']").addClass("active");
                             $(".role-dropdown").removeClass("open");
-                            // If an owner was added, enable dropdown menu and the remove icon for other owner entries
-                            if ($form.attr("data-access-type") == "Is owner") {
-                                $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
-                            }
 
                             // If only one owner listed, disable actions for that entry
                             if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
                                 $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
+                            }
+                            else{
+                                // Enable actions for owner rows
+                                $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
                             }
                         }
                         else if (json_response.status == "error") {
@@ -2622,7 +2620,7 @@
                                 // Enable dropdown menu for other owner entries
                                 $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
                             }
-                            $(".access-table tbody").append($("<tr id='row-id-" + share_with + "' style='display:table-row'>" + rowTemplate.html() + "</tr>").hide().fadeIn(1000));
+                            $(".access-table tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
                         }
                         else if (json_response.status == "error") {
                             $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");

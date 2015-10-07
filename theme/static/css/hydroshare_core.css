@@ -1899,7 +1899,7 @@ td.user-actions > span:hover {
 	width: 100px;
 }
 
-.access-table tr {
+.access-table tbody > tr {
     display: table-row !important;
 }
 
