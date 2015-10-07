@@ -1,6 +1,27 @@
 {% load mezzanine_tags rating_tags i18n future %}
 <h3>{% trans "Ratings" %}</h3>
 <span id="rating-{{ rating_object.id }}">
+    {% if rating_sum <= 0 %}
+        Be the first one to&nbsp;
+    {% endif %}
+    {% if request.user.is_authenticated %}
+        <form class="form-inline" role="form" method="post" action="/rating/">
+            {% nevercache %}
+                {% csrf_token %}
+            {% endnevercache %}
+            {{ rating_form.content_type }}
+            {{ rating_form.object_pk }}
+            {{ rating_form.timestamp }}
+            {{ rating_form.security_hash }}
+            <input value="1" name="value" type="hidden"/>
+            <input type="submit" class="btn btn-default btn-sm" value={% if you_rated %} "Withdraw +1" {% else %} "+1" {% endif %}/>
+        </form>
+        {% if rating_sum <= 0 %}
+            &nbsp;this.
+        {% endif %}
+    {%  elif rating_sum <= 0 %}
+        +1 this.
+    {% endif %}
     {% if rating_sum > 0 %}
         {% if you_rated %}
             {% if rating_sum == 1 %}
@@ -17,24 +38,8 @@
                 {{ rating_sum }} others +1 this. &nbsp;
             {% endif %}
         {% endif %}
-    {% else %}
-        Be the first one to&nbsp;
     {% endif %}
-
-    {% if not rated or request.user.is_authenticated %}
-        <form class="form-inline" role="form" method="post" action="/rating/">
-        {% nevercache %}
-            {% csrf_token %}
-        {% endnevercache %}
-        {{ rating_form.content_type }}
-        {{ rating_form.object_pk }}
-        {{ rating_form.timestamp }}
-        {{ rating_form.security_hash }}
-        <input value="1" name="value" type="hidden"/>
-        <input type="submit" class="btn btn-default btn-sm" value={% if you_rated %} "Withdraw +1" {% else %} "+1" {% endif %}/>
-        </form>
-        {% if rating_sum <= 0 %}
-            &nbsp;this.
-        {% endif %}
+    {% if not request.user.is_authenticated %}
+        &nbsp;(<a href="{% url 'login' %}">You need to be logged in to rate this.</a>)
     {% endif %}
 </span>
