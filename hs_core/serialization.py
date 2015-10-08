@@ -848,6 +848,7 @@ class GenericResourceMeta(object):
     class ResourceContributor(object):
 
         def __init__(self):
+            # HydroShare user ID of user specified by self.url (set by self.set_uri)
             self.id = None
             # Relative version of self.uri (applies only to HydroShare user URIs; set by self.set_uri)
             self.rel_uri = None
