@@ -110,6 +110,11 @@ def create_bag_files(resource):
     a._citoterms.isDocumentedBy = metadata_url
     a._ore.isDescribedBy = res_map_url
 
+    res_type_aggregation = AggregatedResource(resource.metadata.type.url)
+    res_type_aggregation._rdfs.label = resource._meta.verbose_name
+    res_type_aggregation._rdfs.isDefinedBy = current_site_url + "/terms"
+    a.add_resource(res_type_aggregation)
+
     #Create a description of the metadata document that describes the whole resource and add it to the aggregation
     resMetaFile = AggregatedResource(metadata_url)
     resMetaFile._dc.title = "Dublin Core science metadata document describing the HydroShare resource"
