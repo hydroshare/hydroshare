@@ -8,6 +8,7 @@ from hs_core import hydroshare
 import tempfile
 import shutil
 import os
+import pprint
 from hs_geographic_feature_resource.parse_lib import *
 from hs_geographic_feature_resource.forms import *
 import zipfile, json
@@ -64,13 +65,13 @@ def is_zipped_shapefiles(files):
     return False
 
 
-
-def is_spatialite(files):
-# check for sqlite
-    for file in files:
-        if ".sqlite" in file.name:
-            return True
-    return False
+#
+# def is_spatialite(files):
+# # check for sqlite
+#     for file in files:
+#         if ".sqlite" in file.name:
+#             return True
+#     return False
 
 
 def check_uploaded_files_type(files):
@@ -211,6 +212,9 @@ def parse_shp_zshp(uploaded_file_type, baseFilename, uploadedFileCount, uploaded
         geometryinformation={"featureCount":parsed_md_dict["feature_count"],"geometryType":parsed_md_dict["geometry_type"]}
         metadata_array.append({"geometryinformation": geometryinformation})
         metadata_dict["geometryinformation"]=geometryinformation
+        print "\n"
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint (metadata_array)
 
         return (metadata_array, metadata_dict)
     except:
@@ -222,46 +226,38 @@ def parse_shp_zshp(uploaded_file_type, baseFilename, uploadedFileCount, uploaded
 @receiver(pre_create_resource, sender=GeographicFeatureResource)
 def geofeature_pre_create_resource(sender, **kwargs):
     if sender is GeographicFeatureResource:
-        files = kwargs['files']
-        metadata = kwargs['metadata']
-        validate_files_dict = kwargs['validate_files']
-        res_title = kwargs['title']
         tmp_dir = None
-        uploaded_file_type = None
-        baseFilename=None
-        uploadedFileCount=0
-        uploadedFilenameString=None
-        shp_full_path=None
+        try:
+            files = kwargs['files']
+            metadata = kwargs['metadata']
+            validate_files_dict = kwargs['validate_files']
 
-        if files:
-            rslt=check_uploaded_files_type(files)
+            if files:
+                rslt = check_uploaded_files_type(files)
+                validate_files_dict['are_files_valid'] = rslt['are_files_valid']
+                validate_files_dict['message'] = rslt['message']
 
-            validate_files_dict['are_files_valid'] = rslt['are_files_valid']
-            validate_files_dict['message'] = rslt['message']
-
-            if validate_files_dict['are_files_valid']:
-                tmp_dir=rslt['tmp_dir']
-                baseFilename=rslt['baseFilename']
-                uploaded_file_type=rslt['uploaded_file_type']
-                uploadedFileCount=rslt['uploadedFileCount']
-                uploadedFilenameString=rslt['uploadedFilenameString']
-                shp_full_path=rslt['shp_full_path']
-                if uploaded_file_type == "shp" or uploaded_file_type == "zipped_shp":
-                    try:
+                if validate_files_dict['are_files_valid']:
+                    tmp_dir=rslt['tmp_dir']
+                    baseFilename=rslt['baseFilename']
+                    uploaded_file_type=rslt['uploaded_file_type']
+                    uploadedFileCount=rslt['uploadedFileCount']
+                    uploadedFilenameString=rslt['uploadedFilenameString']
+                    shp_full_path=rslt['shp_full_path']
+                    if uploaded_file_type == "shp" or uploaded_file_type == "zipped_shp":
                         meta_array, meta_dict=parse_shp_zshp(uploaded_file_type, baseFilename, uploadedFileCount, uploadedFilenameString, shp_full_path)
                         metadata.extend(meta_array)
-                    except:
-                        res_dublin_core_meta = {}
-                        res_type_specific_meta = {}
-                        validate_files_dict['are_files_valid'] = False
-                        validate_files_dict['message'] = 'Uploaded files are invalid or corrupt.'
-
-        else:
+            else:
+                validate_files_dict['are_files_valid'] = False
+                validate_files_dict['message'] = 'Please upload valid file(s).'
+        except:
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = 'Please upload valid file(s).'
-        if tmp_dir is not None:
-            shutil.rmtree(tmp_dir)
-            temp_dir = None
+            validate_files_dict['message'] = 'Uploaded files are invalid or corrupt.'
+        finally:
+            if tmp_dir is not None:
+                shutil.rmtree(tmp_dir)
+                tmp_dir = None
+
 
 # This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_create, sender=GeographicFeatureResource)
@@ -457,15 +453,12 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                                                         geometryType=meta_dict["geometryinformation"]['geometryType']
                                                         )
 
-
                     else:
                         validate_files_dict['are_files_valid'] = False
                         validate_files_dict['message'] = 'Please upload valid file(s).'
                     if tmp_dir is not None:
                         shutil.rmtree(tmp_dir)
                         tmp_dir = None
-
-
 
             #if ori_file_info.fileType=="SHP" or ori_file_info.fileType=="ZSHP":
         except:
@@ -529,8 +522,4 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
             if tmp_dir is not None:
                 shutil.rmtree(tmp_dir)
                 tmp_dir = None
-    pass
-
-@receiver(post_create_resource, sender=GeographicFeatureResource)
-def geofeature_post_create_resource_handler(sender, **kwargs):
     pass
