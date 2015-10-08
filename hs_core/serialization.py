@@ -1,6 +1,7 @@
 import os
 import heapq
 import xml.sax
+import urlparse
 
 import rdflib
 from rdflib import URIRef
@@ -9,6 +10,7 @@ from rdflib import Graph
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import UploadedFile
 from django.db import IntegrityError
+from django.core.exceptions import ValidationError
 
 from hs_core.hydroshare.utils import get_resource_types
 from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso, hs_date_to_datetime_notz,\
@@ -17,7 +19,7 @@ from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetim
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, validate_user_url
 from hs_core.hydroshare.hs_bagit import create_bag_files
 
 
@@ -126,25 +128,16 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
     resource = None
     try:
         # Get user
-        owner_uri = rm.get_owner_uri().strip()
-        owner_pk = os.path.basename(owner_uri.strip('/'))
-        print(owner_uri)
-        print(owner_pk)
-        # Make sure user exists
-        try:
-            pk = int(owner_pk)
-        except ValueError:
-            # owner_pk is not an integer, and so is not the pk for a Django user (thus the user does not exist).
-            pk = None
-        user = None
-        if pk:
-            try:
-                user = User.objects.get(pk=pk)
-            except User.DoesNotExist:
-                pass
-        if user is None:
+        owner = rm.get_owner()
+        print(owner.uri)
+        print(owner.id)
+
+        pk = owner.id
+        if pk is not None:
+            rm.owner_is_hs_user = True
+        else:
             # Set owner to admin if user doesn't exist
-            print("Owner user {0} does not exist, using user 1".format(owner_pk))
+            print("Owner user {0} does not exist, using user 1".format(pk))
             pk = 1
             rm.owner_is_hs_user = False
 
@@ -435,7 +428,7 @@ class GenericResourceMeta(object):
         # Get creators
         for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.creator, None)):
             creator = GenericResourceMeta.ResourceCreator()
-            creator.uri = o
+            creator.set_uri(o)
             # Get order
             order_lit = self._rmeta_graph.value(o, hsterms.creatorOrder)
             if order_lit is None:
@@ -486,7 +479,7 @@ class GenericResourceMeta(object):
             # Get contributors from RDF
             for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.contributor, None)):
                 contributor = GenericResourceMeta.ResourceContributor()
-                contributor.uri = o
+                contributor.set_uri(o)
                 # Get name
                 name_lit = self._rmeta_graph.value(o, hsterms.name)
                 if name_lit is None:
@@ -655,14 +648,13 @@ class GenericResourceMeta(object):
         for r in self.sources:
             print("\t\t\t{0}".format(str(r)))
 
-    def get_owner_uri(self):
+    def get_owner(self):
         """
         Return the creator with the lowest order.
 
-        :return: String representing the URI of the owner of the resource.
+        :return: ResourceCreator object representing the owner of the resource.
         """
-        owner_uri = self._creatorsHeap[0][1].uri
-        return owner_uri
+        return self._creatorsHeap[0][1]
 
     def set_resource_modification_date(self, resource):
         if self.modification_date:
@@ -681,22 +673,59 @@ class GenericResourceMeta(object):
         :param resource: HydroShare resource instance
         """
         for c in self.get_creators():
-            if self.owner_is_hs_user and c.order == 1:
-                # Skip the owner if the owner is a HydroShare user
-                # (i.e. they were already added when the resource was
-                # created)
-                continue
             if isinstance(c, GenericResourceMeta.ResourceCreator):
-                kwargs = {'order': c.order, 'name': c.name,
-                          'organization': c.organization,
-                          'email': c.email, 'address': c.address,
-                          'phone': c.phone, 'homepage': c.homepage,
-                          'researcherID': c.researcherID,
-                          'researchGageID': c.researchGateID}
-                try:
-                    resource.metadata.create_element('creator', **kwargs)
-                except IntegrityError:
-                    pass
+                if self.owner_is_hs_user and c.order == 1:
+                    # Use metadata from bag for owner if the owner is a HydroShare user
+                    # (because the metadata were inheritted from the user profile when we
+                    # called create_resource above)
+
+                    # Find the owner in the creators metadata
+                    owner_metadata = None
+                    for rc in resource.metadata.creators.all():
+                        if rc.order == 1:
+                            owner_metadata = rc
+                            break
+                    if owner_metadata is None:
+                        msg = "Unable to find owner metadata for created resource {0}".format(resource.short_id)
+                        raise GenericResourceMeta.ResourceMetaException(msg)
+
+                    # Set required metadata fields from bag metadata
+                    kwargs = {'name': c.name}
+                    # Determine which optional fields need updating
+                    if owner_metadata.description is not None:
+                        if c.rel_uri:
+                            # HydroShare user URIs are stored as relative not absolute URIs
+                            kwargs['description'] = c.rel_uri
+                        else:
+                            kwargs['description'] = c.uri
+                    if owner_metadata.organization is not None:
+                        kwargs['organization'] = c.organization
+                    if owner_metadata.email is not None:
+                        kwargs['email'] = c.email
+                    if owner_metadata.address is not None:
+                        kwargs['address'] = c.address
+                    if owner_metadata.homepage is not None:
+                        kwargs['homepage'] = c.homepage
+                    if owner_metadata.phone is not None:
+                        kwargs['phone'] = c.phone
+                    resource.metadata.update_element('Creator', owner_metadata.id, **kwargs)
+
+                else:
+                    kwargs = {'order': c.order, 'name': c.name,
+                              'organization': c.organization,
+                              'email': c.email, 'address': c.address,
+                              'phone': c.phone, 'homepage': c.homepage,
+                              'researcherID': c.researcherID,
+                              'researchGageID': c.researchGateID}
+                    if c.rel_uri:
+                        # HydroShare user URIs are stored as relative not absolute URIs
+                        kwargs['description'] = c.rel_uri
+                    else:
+                        kwargs['description'] = c.uri
+                    try:
+                        resource.metadata.create_element('creator', **kwargs)
+                    except IntegrityError:
+                        pass
             else:
                 msg = "Creators with type {0} are not supported"
                 msg = msg.format(c.__class__.__name__)
@@ -705,6 +734,7 @@ class GenericResourceMeta(object):
             # Add contributors
             if isinstance(c, GenericResourceMeta.ResourceContributor):
                 kwargs = {'name': c.name, 'organization': c.organization,
+                          'description': c.uri,
                           'email': c.email, 'address': c.address,
                           'phone': c.phone, 'homepage': c.homepage,
                           'researcherID': c.researcherID,
@@ -818,6 +848,10 @@ class GenericResourceMeta(object):
     class ResourceContributor(object):
 
         def __init__(self):
+            self.id = None
+            # Relative version of self.uri (applies only to HydroShare user URIs; set by self.set_uri)
+            self.rel_uri = None
+
             self.uri = None
             self.name = None
             self.organization = None  # Optional
@@ -838,6 +872,43 @@ class GenericResourceMeta(object):
 
         def __unicode__(self):
             return unicode(str(self))
+
+        def set_uri(self, uri):
+            """
+            Set URI for contributor and parse user ID from URI
+
+            :param uri: String representing the user URI (e.g. http://www.hydroshare.org/user/3/)
+
+            :raise: GenericResourceMeta.ResourceMetaException if the user URI is malformed.
+            """
+            # Make sure this is a HydroShare user URI
+            is_hs_user_uri = False
+            try:
+                validate_user_url(uri)
+                is_hs_user_uri = True
+            except ValidationError:
+                pass
+
+            if is_hs_user_uri:
+                # Parse URI
+                parsed_uri = urlparse.urlparse(uri)
+                # Set rel_uri
+                self.rel_uri = parsed_uri.path
+
+                # Separate out the user ID for HydroShare users
+                contributor_pk = os.path.basename(self.rel_uri.strip('/'))
+                pk = None
+                try:
+                    pk = int(contributor_pk)
+                except ValueError:
+                    msg = "User ID {0} is not an integer. User URI was {1}."
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+
+                assert(pk is not None)
+                self.id = pk
+
+            self.uri = uri
+
 
     class ResourceCreator(ResourceContributor):
         """
@@ -1200,7 +1271,7 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                 # Create new contributor
                 contributor = GenericResourceMeta.ResourceContributor()
                 if attrs.has_key('rdf:about'):
-                    contributor.uri = attrs.getValue('rdf:about')
+                    contributor.set_uri(attrs.getValue('rdf:about'))
                 self.contributors.append(contributor)
                 self._get_contributor_details = True
 
