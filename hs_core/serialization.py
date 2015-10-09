@@ -1193,50 +1193,56 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
 
         # State variables
         self._get_subject = False
+        self._subject = None
         self._get_contributor = False
         self._get_contributor_details = False
         self._get_contributor_name = False
+        self._contributor_name = None
         self._get_contributor_organization = False
+        self._contributor_organization = None
         self._get_contributor_email = False
+        self._contributor_email = None
         self._get_contributor_address = False
+        self._contributor_address = None
 
     def characters(self, content):
         if self._get_subject:
-            self.subjects.append(str(content))
+            self._subject.append(content)
 
         elif self._get_contributor_name:
             if len(self.contributors) < 1:
                 msg = "Error: haven't yet encountered contributor, "
                 msg += "yet trying to store contributor name."
                 raise xml.sax.SAXException(msg)
-            self.contributors[-1].name = str(content)
+            self._contributor_name.append(content)
 
         elif self._get_contributor_organization:
             if len(self.contributors) < 1:
                 msg = "Error: haven't yet encountered contributor, "
                 msg += "yet trying to store contributor organization."
                 raise xml.sax.SAXException(msg)
-            self.contributors[-1].organization = str(content)
+            self._contributor_organization.append(content)
 
         elif self._get_contributor_email:
             if len(self.contributors) < 1:
                 msg = "Error: haven't yet encountered contributor, "
                 msg += "yet trying to store contributor email."
                 raise xml.sax.SAXException(msg)
-            self.contributors[-1].email = str(content)
+            self._contributor_email.append(content)
 
         elif self._get_contributor_address:
             if len(self.contributors) < 1:
                 msg = "Error: haven't yet encountered contributor, "
                 msg += "yet trying to store contributor address."
                 raise xml.sax.SAXException(msg)
-            self.contributors[-1].address = str(content)
+            self._contributor_address.append(content)
 
     def startElement(self, name, attrs):
         if name == 'dc:subject':
             if self._get_subject:
                 raise xml.sax.SAXException("Error: nested dc:subject elements.")
             self._get_subject = True
+            self._subject = []
 
         elif name == 'dc:contributor':
             if self._get_contributor:
@@ -1260,24 +1266,28 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                 if self._get_contributor_name:
                     raise xml.sax.SAXException("Error: nested hsterms:name elements within dc:contributor.")
                 self._get_contributor_name = True
+                self._contributor_name = []
 
         elif name == 'hsterms:organization':
             if self._get_contributor_details:
                 if self._get_contributor_organization:
                     raise xml.sax.SAXException("Error: nested hsterms:organization elements within dc:contributor.")
                 self._get_contributor_organization = True
+                self._contributor_organization = []
 
         elif name == 'hsterms:email':
             if self._get_contributor_details:
                 if self._get_contributor_email:
                     raise xml.sax.SAXException("Error: nested hsterms:email elements within dc:contributor.")
                 self._get_contributor_email = True
+                self._contributor_email = []
 
         elif name == 'hsterms:address':
             if self._get_contributor_details:
                 if self._get_contributor_address:
                     raise xml.sax.SAXException("Error: nested hsterms:address elements within dc:contributor.")
                 self._get_contributor_address = True
+                self._contributor_address = []
 
         elif name == 'hsterms:phone':
             if self._get_contributor_details:
@@ -1295,6 +1305,8 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
             if not self._get_subject:
                 msg = "Error: close dc:subject tag without corresponding open tag."
                 raise xml.sax.SAXException(msg)
+            self.subjects.append("".join(self._subject))
+            self._subject = None
             self._get_subject = False
 
         elif name == 'dc:contributor':
@@ -1317,6 +1329,8 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                     msg = "Error: close hsterms:name tag without corresponding open tag "
                     msg += "within dc:contributor."
                     raise xml.sax.SAXException(msg)
+                self.contributors[-1].name = "".join(self._contributor_name)
+                self._contributor_name = None
                 self._get_contributor_name = False
 
         elif name == 'hsterms:organization':
@@ -1325,6 +1339,8 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                     msg = "Error: close hsterms:organization tag without corresponding open tag "
                     msg += "within dc:contributor."
                     raise xml.sax.SAXException(msg)
+                self.contributors[-1].organization = "".join(self._contributor_organization)
+                self._contributor_organization = None
                 self._get_contributor_organization = False
 
         elif name == 'hsterms:email':
@@ -1333,6 +1349,8 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                     msg = "Error: close hsterms:email tag without corresponding open tag "
                     msg += "within dc:contributor."
                     raise xml.sax.SAXException(msg)
+                self.contributors[-1].email = "".join(self._contributor_email)
+                self._contributor_email = None
                 self._get_contributor_email = False
 
         elif name == 'hsterms:address':
@@ -1341,4 +1359,6 @@ class GenericResourceSAXHandler(xml.sax.ContentHandler):
                     msg = "Error: close hsterms:address tag without corresponding open tag "
                     msg += "within dc:contributor."
                     raise xml.sax.SAXException(msg)
+                self.contributors[-1].address = "".join(self._contributor_address)
+                self._contributor_address = None
                 self._get_contributor_address = False
