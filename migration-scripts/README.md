@@ -67,11 +67,13 @@ The **Target** system should have iRODS iCommands and fuse properly installed on
 	git clone https://github.com/hydroshare/hydroshare.git
 	cd hydroshare
 	# update config/hydroshare-config.yaml
-	# update hydroshare/local_setting.py
+	# update hydroshare/local_settings.py
 	cd migration-scripts
 	./preLoadMigrationFiles http://LOCATION_ACCESSIBLE_TO_TARGET_BY_WGET/migration-files-MM-DD-YY.tar.gz
 	cd ../
-	./LoadMigrationFiles
+	./hsctl deploy
+	# verify that the site is running with the pg.development.sql database installed
+	./loadMigrationFiles
 	cd migration-scripts
 	./postLoadMigrationFiles
 	```

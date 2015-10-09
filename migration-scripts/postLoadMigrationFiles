@@ -13,8 +13,10 @@ rm ../loadCommentsFromJSON.py
 rm ../loadThreadedCommentsFromJSON.py
 rm ../loadRatingsFromJSON.py
 rm ../loadMigrationFiles
+rm ../bag_ingest.py
 echo "*** remove load files from hydroshare directory ***"
 rm ../comments.json
+rm ../new_resources.json
 rm ../rating.json
 rm ../resources.json
 rm ../threaded_comments.json

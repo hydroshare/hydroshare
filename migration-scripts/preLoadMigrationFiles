@@ -32,11 +32,21 @@ cp loadCommentsFromJSON.py ../
 cp loadThreadedCommentsFromJSON.py ../
 cp loadRatingsFromJSON.py ../
 cp loadMigrationFiles ../
+cp bag_ingest.py ../
 
 echo "*** wget ${tar_file} and unpack the contents ***"
 cd ../
 wget ${tar_file_url}
 tar -xzf ${tar_file}
+echo "*** create static directory and install media files ***"
+if [[ ! -d hydroshare/static ]]; then
+    echo "*** creating directory: hydroshare/static ***"
+    mkdir hydroshare/static
+    tar -xzf media.migration.tar.gz
+    cp -r media_files/media hydroshare/static;
+else
+    echo "*** WARNING: hydroshare/static directory already exists! Please verify contents manually ***";
+fi
 echo "*** create the irods_resources directory for fuse if it does not exist ***"
 if [[ ! -d irods_resources ]]; then
     echo "*** creating directory: irods_resources ***"

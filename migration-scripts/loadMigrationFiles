@@ -19,10 +19,10 @@ docker exec hydroshare_hydroshare_1 python manage.py migrate hs_access_control
 echo ""
 echo ""
 
-echo -n "Update the deployed Site setting to be www.hydroshare.org, Enter yes when completed [no]: "
+echo -n "Update the deployed Site setting to be www.hydroshare.org, Enter yes when completed [yes/no]: "
 read site_updated
 while [ $site_updated -ne "yes" ]; do
-    echo -n "Update the deployed Site setting to be www.hydroshare.org, Enter yes when completed [no]: "
+    echo -n "Update the deployed Site setting to be www.hydroshare.org, Enter yes when completed [yes/no]: "
     read site_updated
 done;
 
@@ -31,7 +31,7 @@ irodsFs -o allow_root irods_resources
 echo "*** restart the application to allow the fuse mount to be picked up ***"
 ./hsctl restart
 echo "*** ingest the bags from the fuse mounted vault (this can take up to 30 minutes) ***"
-docker exec hydroshare_hydroshare_1 python bag_ingest.py irods_resources > migration-files-`date +"%m-%d-%y"`.tar.gz
+docker exec hydroshare_hydroshare_1 python bag_ingest.py irods_resources > migration-`date +"%m-%d-%y"`.log
 # takes some time to run
 echo "*** dump the new resource data as new_resources.json ***"
 docker exec hydroshare_hydroshare_1 python dumpNewResourceToJSON.py
