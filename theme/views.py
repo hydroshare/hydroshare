@@ -32,7 +32,7 @@ class UserProfileView(TemplateView):
                 u = User.objects.get(username=self.request.GET['user'])
 
         # get all resources the profile user owns
-        resources = BaseResource.objects.filter(pk__in=u.uaccess.get_owned_resources())
+        resources = u.uaccess.get_owned_resources()
 
         # if requesting user is not the profile user, then show only resources that the requesting user has access
         if self.request.user != u:
