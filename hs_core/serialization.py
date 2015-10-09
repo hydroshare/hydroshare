@@ -712,7 +712,7 @@ class GenericResourceMeta(object):
                               'email': c.email, 'address': c.address,
                               'phone': c.phone, 'homepage': c.homepage,
                               'researcherID': c.researcherID,
-                              'researchGageID': c.researchGateID}
+                              'researchGateID': c.researchGateID}
                     if c.rel_uri:
                         # HydroShare user URIs are stored as relative not absolute URIs
                         kwargs['description'] = c.rel_uri
@@ -734,7 +734,7 @@ class GenericResourceMeta(object):
                           'email': c.email, 'address': c.address,
                           'phone': c.phone, 'homepage': c.homepage,
                           'researcherID': c.researcherID,
-                          'researchGageID': c.researchGateID}
+                          'researchGateID': c.researchGateID}
                 try:
                     resource.metadata.create_element('contributor', **kwargs)
                 except IntegrityError:
