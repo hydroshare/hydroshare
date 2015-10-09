@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# postLoadMigrationFiles
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
+### How to use
+# from the migration-scripts directory: $ ./postLoadMigrationFiles
+
+echo "*** remove load scripts from hydroshare directory ***"
+rm ../dumpNewResourceToJSON.py
+rm ../loadAccessControlFromJSON.py
+rm ../loadCommentsFromJSON.py
+rm ../loadThreadedCommentsFromJSON.py
+rm ../loadRatingsFromJSON.py
+rm ../loadMigrationFiles
+echo "*** remove load files from hydroshare directory ***"
+rm ../comments.json
+rm ../rating.json
+rm ../resources.json
+rm ../threaded_comments.json
+rm ../user.json
+rm ../userprofile.json
+rm ../media.migration.tar.gz
+rm ../pg.migration.sql
+echo "*** unmount the fuse directory ***"
+cd ../
+fusermount -uz irods_resources
+cd -
+
+exit 0;

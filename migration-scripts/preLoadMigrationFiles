@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+# preLoadMigrationFiles
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
+### How to use
+# from the migration-scripts directory: $ ./preLoadMigrationFiles URL_TO_MIGRATION_TAR_FILE
+
+if [  $# -ne 1 ]
+then
+    echo "Must run as: ./preLoadMigrationFiles URL_TO_MIGRATION_TAR_FILE in order to proceed"
+    exit 1;
+fi
+
+tar_file_url=$1
+tar_file=$(echo $tar_file_url | rev | cut -d '/' -f 1 | rev)
+
+echo "*** URL is: ${tar_file_url} ***"
+echo "*** MIGRATION_TAR_FILE is: ${tar_file} ***"
+echo ""
+echo -n "Is this the correct migration file? [yes/no]: "
+read correct_file
+if [ "${correct_file,,}" != "yes" ]; then
+    echo "*** Incorrect migrations file given, now exiting ***"
+    exit 1;
+fi
+
+echo "*** copy dump scripts to main hydroshare directory ***"
+cp dumpNewResourceToJSON.py ../
+cp loadAccessControlFromJSON.py ../
+cp loadCommentsFromJSON.py ../
+cp loadThreadedCommentsFromJSON.py ../
+cp loadRatingsFromJSON.py ../
+cp loadMigrationFiles ../
+
+echo "*** wget ${tar_file} and unpack the contents ***"
+cd ../
+wget ${tar_file_url}
+tar -xzf ${tar_file}
+echo "*** create the irods_resources directory for fuse if it does not exist ***"
+if [[ ! -d irods_resources ]]; then
+    echo "*** creating directory: irods_resources ***"
+    mkdir irods_resources;
+fi
+cd -
+
+exit 0;

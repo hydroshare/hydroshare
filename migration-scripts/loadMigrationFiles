@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+# loadMigraionFiles
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
+### How to use
+# from the main hydroshare directory: $ ./loadMigrationFiles
+
+echo "*** load user data from user.json ***"
+docker exec hydroshare_hydroshare_1 python manage.py loaddata user.json
+echo "*** delete remnant user profile information ***"
+docker exec hydroshare_postgis_1 psql -c 'DELETE FROM theme_userprofile;'
+echo "*** load user profile data from userprofile.json ***"
+docker exec hydroshare_hydroshare_1 python manage.py loaddata userprofile.json
+echo "*** roll back prior access control settings ***"
+docker exec hydroshare_hydroshare_1 python manage.py migrate hs_access_control zero
+echo "*** apply access control settings to all loaded users ***"
+docker exec hydroshare_hydroshare_1 python manage.py migrate hs_access_control
+echo ""
+echo ""
+
+echo -n "Update the deployed Site setting to be www.hydroshare.org, Enter yes when completed [no]: "
+read site_updated
+while [ $site_updated -ne "yes" ]; do
+    echo -n "Update the deployed Site setting to be www.hydroshare.org, Enter yes when completed [no]: "
+    read site_updated
+done;
+
+echo "*** fuse mount the irods_resources directory containing the vault to be migrated from ***"
+irodsFs -o allow_root irods_resources
+echo "*** restart the application to allow the fuse mount to be picked up ***"
+./hsctl restart
+echo "*** ingest the bags from the fuse mounted vault (this can take up to 30 minutes) ***"
+docker exec hydroshare_hydroshare_1 python bag_ingest.py irods_resources > migration-files-`date +"%m-%d-%y"`.tar.gz
+# takes some time to run
+echo "*** dump the new resource data as new_resources.json ***"
+docker exec hydroshare_hydroshare_1 python dumpNewResourceToJSON.py
+echo "*** load access control data from resources.json ***"
+docker exec hydroshare_hydroshare_1 python loadAccessControlFromJSON.py resources.json
+echo "*** load ratings data from rating.json resources.json new_resources.json ***"
+docker exec hydroshare_hydroshare_1 python loadRatingsFromJSON.py rating.json resources.json new_resources.json
+echo "*** load comments data from comments.json resources.json new_resources.json ***"
+docker exec hydroshare_hydroshare_1 python loadCommentsFromJSON.py comments.json resources.json new_resources.json
+echo "*** load threaded comments data from threaded_comments.json resources.json new_resources.json ***"
+docker exec hydroshare_hydroshare_1 python loadThreadedCommentsFromJSON.py threaded_comments.json resources.json new_resources.json
+
+exit 0;
