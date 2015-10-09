@@ -674,6 +674,19 @@ class GenericResourceMeta(object):
         """
         for c in self.get_creators():
             if isinstance(c, GenericResourceMeta.ResourceCreator):
+                # Set creator metadata, from bag metadata, to be used in create or update as needed (see below)
+                kwargs = {'order': c.order, 'name': c.name,
+                          'organization': c.organization,
+                          'email': c.email, 'address': c.address,
+                          'phone': c.phone, 'homepage': c.homepage,
+                          'researcherID': c.researcherID,
+                          'researchGateID': c.researchGateID}
+                if c.rel_uri:
+                    # HydroShare user URIs are stored as relative not absolute URIs
+                    kwargs['description'] = c.rel_uri
+                else:
+                    kwargs['description'] = None
+
                 if self.owner_is_hs_user and c.order == 1:
                     # Use metadata from bag for owner if the owner is a HydroShare user
                     # (because the metadata were inheritted from the user profile when we
@@ -684,40 +697,10 @@ class GenericResourceMeta(object):
                     if owner_metadata is None:
                         msg = "Unable to find owner metadata for created resource {0}".format(resource.short_id)
                         raise GenericResourceMeta.ResourceMetaException(msg)
-
-                    # Set required metadata fields from bag metadata
-                    kwargs = {'name': c.name}
-                    # Determine which optional fields need updating
-                    if owner_metadata.description is not None:
-                        if c.rel_uri:
-                            # HydroShare user URIs are stored as relative not absolute URIs
-                            kwargs['description'] = c.rel_uri
-                        else:
-                            kwargs['description'] = c.uri
-                    if owner_metadata.organization is not None:
-                        kwargs['organization'] = c.organization
-                    if owner_metadata.email is not None:
-                        kwargs['email'] = c.email
-                    if owner_metadata.address is not None:
-                        kwargs['address'] = c.address
-                    if owner_metadata.homepage is not None:
-                        kwargs['homepage'] = c.homepage
-                    if owner_metadata.phone is not None:
-                        kwargs['phone'] = c.phone
+                    # Update owner's creator metadata entry with what came from the bag metadata
                     resource.metadata.update_element('Creator', owner_metadata.id, **kwargs)
-
                 else:
-                    kwargs = {'order': c.order, 'name': c.name,
-                              'organization': c.organization,
-                              'email': c.email, 'address': c.address,
-                              'phone': c.phone, 'homepage': c.homepage,
-                              'researcherID': c.researcherID,
-                              'researchGateID': c.researchGateID}
-                    if c.rel_uri:
-                        # HydroShare user URIs are stored as relative not absolute URIs
-                        kwargs['description'] = c.rel_uri
-                    else:
-                        kwargs['description'] = c.uri
+                    # For the non-owner creators, just create new metadata elements for them.
                     try:
                         resource.metadata.create_element('creator', **kwargs)
                     except IntegrityError:
