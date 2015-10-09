@@ -74,4 +74,7 @@ with open(sys.argv[1]) as old_res_file:
                 old_res_file.close()
                 sys.exit()
 
+        # check whether the initial res_creator is in owner_user_objs list, and remove it if not
+        if not res_creator in owner_user_objs:
+            res_creator.uaccess.unshare_resource_with_user(res, res_creator)
     old_res_file.close()

@@ -1,3 +1,7 @@
+# usage: python bag_ingest.py content_path_dir_name
+# where content_path_dir_name is the directory that contain all 
+# resource content files to be read and ingest back into target system
+# Author: Hong Yi
 import os
 import sys
 
