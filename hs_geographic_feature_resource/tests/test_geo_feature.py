@@ -173,6 +173,7 @@ class TestGeoFeatureMetadata(TestCase):
 
         # add another subject element
         resource.create_metadata_element(self.resGeoFeature.short_id,'subject', value='sub-2')
+        pass
 
 ##########################################################################################################3
 
@@ -320,6 +321,7 @@ class TestGeoFeatureMetadata(TestCase):
 
         #test receivers.py
         #test geofeature_pre_create_resource(sender, **kwargs):
+        pass
 
 
     def test_geofeature_pre_create_resource(self):
@@ -357,9 +359,7 @@ class TestGeoFeatureMetadata(TestCase):
                 self.assertEqual(dict["originalcoverage"]['westlimit'],-178.21759836236586)
                 self.assertEqual(dict["originalcoverage"]['unit'],'Degree')
                 self.assertEqual(dict["originalcoverage"]['projection_name'],'GCS_North_American_1983')
-
-
-
+        pass
 
 
     def test_geofeature_pre_add_files_to_resource(self):
@@ -377,6 +377,7 @@ class TestGeoFeatureMetadata(TestCase):
         files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06_with_folder.zip'))
         hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
 
+        self.assertEqual(len(files),5)
         self.assertNotEqual(self.resGeoFeature.metadata.originalfileinfo.all().first(), None)
         self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().baseFilename, "gis.osm_adminareas_v06")
         self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().fileCount, 5)
@@ -397,12 +398,157 @@ class TestGeoFeatureMetadata(TestCase):
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().first().projection_name, 'GCS_WGS_1984')
 
 
+        pass
 
 
-        # hydroshare.utils.resource_file_add_process(resource, files, self.user, )
+    def test_geofeature_pre_delete_file(self):
+
+    # ResourceFileObj.resource_file.file.name
+    # '/tmp/tmp7rsGzV'
+    # ResourceFileObj.resource_file.name
+    # u'dab1f89d9b2a4082aae083c9d0937d15/data/contents/states.sbx'
+
+        #test: del .shp file (all files will be removed)
+        for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
+            f.resource_file.delete()
+            f.delete()
+        #add files first
+        files=[]
+        target='hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
+        files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06_with_folder.zip'))
+        hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
+
+        hydroshare.add_resource_files(self.resGeoFeature.short_id, *files)
+        self.assertEqual(len(ResourceFile.objects.filter(object_id=self.resGeoFeature.id)),5)
+
+        shp_Res_File_obj=None
+        for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
+
+            del_f_fullname=res_f_obj.resource_file.name.lower()
+            del_f_fullname= del_f_fullname[del_f_fullname.rfind('/')+1:]
+            del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
+
+            if del_f_ext == ".shp":
+                shp_Res_File_obj=res_f_obj
+                hydroshare.delete_resource_file(self.resGeoFeature.short_id, res_f_obj.id, self.user)
+                self.assertEqual(len(ResourceFile.objects.filter(object_id=self.resGeoFeature.id)),0)
+
+        ##########################
+        #test: del .prj file
+        for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
+            f.resource_file.delete()
+            f.delete()
+        files=[]
+        target='hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
+        files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06_with_folder.zip'))
+        hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
+
+        hydroshare.add_resource_files(self.resGeoFeature.short_id, *files)
+        self.assertEqual(len(ResourceFile.objects.filter(object_id=self.resGeoFeature.id)),5)
+
+        shp_Res_File_obj=None
+        for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
+
+            del_f_fullname=res_f_obj.resource_file.name.lower()
+            del_f_fullname= del_f_fullname[del_f_fullname.rfind('/')+1:]
+            del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
+
+            if del_f_ext == ".prj":
+                shp_Res_File_obj=res_f_obj
+                hydroshare.delete_resource_file(self.resGeoFeature.short_id, res_f_obj.id, self.user)
+                self.assertEqual(len(ResourceFile.objects.filter(object_id=self.resGeoFeature.id)),4)
+                for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
+
+                    del_f_fullname=res_f_obj.resource_file.name.lower()
+                    del_f_fullname= del_f_fullname[del_f_fullname.rfind('/')+1:]
+                    del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
+                    self.assertNotEqual(del_f_ext,".prj")
+                    originalcoverage_obj=self.resGeoFeature.metadata.originalcoverage.all().first()
+                    self.assertEqual(originalcoverage_obj.projection_string,UNKNOWN_STR)
+                    self.assertEqual(len(self.resGeoFeature.metadata.coverages.all()),0)
+
+        ##########################
+        #test: del .xml file
+
+        for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
+            f.resource_file.delete()
+            f.delete()
+
+        files=[]
+        target='hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
+        files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06_with_folder.zip'))
+        hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
+
+        hydroshare.add_resource_files(self.resGeoFeature.short_id, *files)
+        self.assertEqual(len(ResourceFile.objects.filter(object_id=self.resGeoFeature.id)),5)
+
+        shp_Res_File_obj=None
+        for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
+
+            del_f_fullname=res_f_obj.resource_file.name.lower()
+            del_f_fullname= del_f_fullname[del_f_fullname.rfind('/')+1:]
+            del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
+
+            if del_f_ext == ".xml":
+                shp_Res_File_obj=res_f_obj
+                hydroshare.delete_resource_file(self.resGeoFeature.short_id, res_f_obj.id, self.user)
+                self.assertEqual(len(ResourceFile.objects.filter(object_id=self.resGeoFeature.id)),4)
+                for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
+
+                    del_f_fullname=res_f_obj.resource_file.name.lower()
+                    del_f_fullname= del_f_fullname[del_f_fullname.rfind('/')+1:]
+                    del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
+                    self.assertNotEqual(del_f_ext,".xml")
+
+        pass
 
 
+    def test_post_add_files_to_resource(self):
+
+        #test: add all files
+        for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
+            f.resource_file.delete()
+            f.delete()
+        #add files first
+        files=[]
+        target='hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
+        files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06_with_folder.zip'))
+        hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
+
+        hydroshare.add_resource_files(self.resGeoFeature.short_id, *files)
+        self.assertEqual(len(ResourceFile.objects.filter(object_id=self.resGeoFeature.id)),5)
+
+        #remove .prj
+        shp_Res_File_obj=None
+        for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
+
+            del_f_fullname=res_f_obj.resource_file.name.lower()
+            del_f_fullname= del_f_fullname[del_f_fullname.rfind('/')+1:]
+            del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
+
+            if del_f_ext == ".prj":
+                shp_Res_File_obj=res_f_obj
+                hydroshare.delete_resource_file(self.resGeoFeature.short_id, res_f_obj.id, self.user)
+                self.assertEqual(len(ResourceFile.objects.filter(object_id=self.resGeoFeature.id)),4)
+                for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
+
+                    del_f_fullname=res_f_obj.resource_file.name.lower()
+                    del_f_fullname= del_f_fullname[del_f_fullname.rfind('/')+1:]
+                    del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
+                    self.assertNotEqual(del_f_ext,".prj")
+                    originalcoverage_obj=self.resGeoFeature.metadata.originalcoverage.all().first()
+                    self.assertEqual(originalcoverage_obj.projection_string,UNKNOWN_STR)
+                    self.assertEqual(len(self.resGeoFeature.metadata.coverages.all()),0)
+
+        # add .prj
+        add_files=[]
+        target='hs_geographic_feature_resource/tests/gis.osm_adminareas_v06/gis.osm_adminareas_v06.prj'
+        add_files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06.prj'))
+        hydroshare.add_resource_files(self.resGeoFeature.short_id, *add_files)
+        self.assertEqual(len(ResourceFile.objects.filter(object_id=self.resGeoFeature.id)),5)
+        geofeature_post_add_files_to_resource_handler(sender=GeographicFeatureResource,resource=self.resGeoFeature,files=add_files)
+        originalcoverage_obj=self.resGeoFeature.metadata.originalcoverage.all().first()
+        self.assertNotEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
 
 
-
-
+        pass
