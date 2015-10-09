@@ -680,11 +680,7 @@ class GenericResourceMeta(object):
                     # called create_resource above)
 
                     # Find the owner in the creators metadata
-                    owner_metadata = None
-                    for rc in resource.metadata.creators.all():
-                        if rc.order == 1:
-                            owner_metadata = rc
-                            break
+                    owner_metadata = resource.metadata.creators.filter(order=1).first()
                     if owner_metadata is None:
                         msg = "Unable to find owner metadata for created resource {0}".format(resource.short_id)
                         raise GenericResourceMeta.ResourceMetaException(msg)
