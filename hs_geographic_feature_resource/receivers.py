@@ -487,7 +487,6 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
 
         res_file_list = resource.files.all() if resource.files.all() else None
         if res_file_list:
-            print("1111111@#$@#$@#$@##$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$")
             tmp_dir=tempfile.mkdtemp()
             for res_f in res_file_list:
                 source = res_f.resource_file.file.name
@@ -500,11 +499,8 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
             ori_file_info=resource.metadata.originalfileinfo.all().first()
             shp_full_path = tmp_dir + "/" + ori_file_info.baseFilename + ".shp"
             parsed_md_dict = parse_shp(shp_full_path)
-            pp = pprint.PrettyPrinter(indent=4)
-            pp.pprint (parsed_md_dict)
             originalcoverage_obj=resource.metadata.originalcoverage.all().first()
             if originalcoverage_obj:
-                print("2222222@#$@#$@#$@##$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$")
                 print(parsed_md_dict["origin_projection_string"])
                 resource.metadata.update_element('OriginalCoverage', element_id=originalcoverage_obj.id,
                                              projection_string=parsed_md_dict["origin_projection_string"],
