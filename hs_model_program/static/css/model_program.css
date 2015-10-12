@@ -1,0 +1,57 @@
+
+.popover {
+    max-width: 60%;
+    font-size: 13px;
+    font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+    word-break: break-all;
+    word-wrap: break-word;
+    white-space: pre;
+    min-width: 30%;
+
+    }
+
+/*.row{*/
+    /*height: 1px;*/
+    /*padding: 2px 2px 2px 2px;*/
+/*}*/
+
+/*MP Element Style*/
+.mpElement{
+    font-weight: bold;
+    padding: 2px 2px 2px 2px;
+}
+
+/* unvisited link */
+a.mpElement:link {
+    color: black;
+    text-decoration: none;
+}
+/* selected link */
+a.mpElement:active {
+    color: black;
+}
+
+/*visited link*/
+a.mpElement:visited {
+    color: black;
+}
+
+/* mouse over link */
+a.mpElement:hover {
+    color: black;
+    font-size: 16px;
+}
+
+a.mpElement::after {
+    display:block;
+    /*content:attr(title);*/
+    font-weight:bold;
+    height:2px;
+    color:transparent;
+    overflow:hidden;
+    visibility:hidden;
+}
+
+div#mp.row {
+    height: 28px;
+}
