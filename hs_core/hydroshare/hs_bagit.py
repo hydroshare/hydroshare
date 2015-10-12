@@ -2,15 +2,25 @@ import arrow
 import os
 import shutil
 import errno
+import tempfile
+import mimetypes
+import zipfile
 
-from foresite import *
-from rdflib import URIRef, Namespace
+from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
+from rdflib import Namespace
+
+import bagit
 
 from mezzanine.conf import settings
 
 from hs_core.models import Bags, ResourceFile
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
+
+
+class HsBagitException(Exception):
+    pass
+
 
 def delete_bag(resource):
     """
@@ -35,6 +45,7 @@ def delete_bag(resource):
     # delete the bags table
     for bag in resource.bags.all():
         bag.delete()
+
 
 def create_bag_files(resource):
     """
@@ -145,6 +156,7 @@ def create_bag_files(resource):
 
     return istorage
 
+
 def create_bag_by_irods(resource_id, istorage = None):
     """
     create a resource bag on iRODS side by running the bagit rule followed by ibun zipping operation
@@ -177,6 +189,7 @@ def create_bag_by_irods(resource_id, istorage = None):
         except SessionException:
             pass
 
+
 def create_bag(resource):
     """
     Modified to implement the new bagit workflow. The previous workflow was to create a bag from the current filesystem
@@ -197,6 +210,10 @@ def create_bag(resource):
     # set bag_modified-true AVU pair for on-demand bagging.to indicate the resource bag needs to be created when user clicks on download button
     istorage.setAVU(resource.short_id, "bag_modified", "true")
 
+    istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
+
+    istorage.setAVU(resource.short_id, "resourceType", resource._meta.object_name)
+
     # link the zipped bag file in IRODS via bag_url for bag downloading
     b = Bags.objects.create(
         content_object=resource.baseresource,
@@ -204,3 +221,39 @@ def create_bag(resource):
     )
 
     return b
+
+
+def read_bag(bag_path):
+    """
+
+    :param bag_path:
+    :return:
+    """
+    #import pdb; pdb.set_trace()
+    tmpdir = None
+    unpacked_bag_path = None
+
+    try:
+        if not os.path.exists(bag_path):
+            raise HsBagitException('Bag does not exist')
+        if os.path.isdir(bag_path):
+            unpacked_bag_path = bag_path
+        else:
+            mtype = mimetypes.guess_type(bag_path)
+            if mtype[0] != 'application/zip':
+                msg = "Expected bag to have MIME type application/zip, but it has {0} instead.".format(mtype[0])
+                raise HsBagitException(msg)
+            tmpdir = tempfile.mkdtemp()
+            zfile = zipfile.ZipFile(bag_path)
+            zroot = zfile.namelist()[0].split(os.sep)[0]
+            zfile.extractall(tmpdir)
+            unpacked_bag_path = os.path.join(tmpdir, zroot)
+
+        bag = bagit.Bag(unpacked_bag_path)
+        if not bag.is_valid():
+            msg = "Bag is not valid"
+            raise HsBagitException(msg)
+
+    finally:
+        if tmpdir:
+            shutil.rmtree(tmpdir)
