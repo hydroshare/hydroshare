@@ -135,9 +135,18 @@ class ResourcePermissionsMixin(Ownable):
 def page_permissions_page_processor(request, page):
     cm = page.get_content_model()
     can_change_resource_flags = False
+    is_owner_user = False
+    is_edit_user = False
+    is_view_user = False
     if request.user.is_authenticated():
         if request.user.uaccess.can_change_resource_flags(cm):
             can_change_resource_flags = True
+
+        is_owner_user = cm.raccess.owners.filter(pk=request.user.pk).exists()
+        if not is_owner_user:
+            is_edit_user = cm.raccess.edit_users.filter(pk=request.user.pk).exists()
+            if not is_edit_user:
+                is_view_user = cm.raccess.view_users.filter(pk=request.user.pk).exists()
 
     owners = set(cm.raccess.owners.all())
     editors = set(cm.raccess.edit_users.all()) - owners
@@ -152,6 +161,9 @@ def page_permissions_page_processor(request, page):
         "edit_users": editors,
         "view_users": viewers,
         "owners": owners,
+        "is_owner_user": is_owner_user,
+        "is_edit_user": is_edit_user,
+        "is_view_user": is_view_user,
         "can_change_resource_flags": can_change_resource_flags
     }
 
