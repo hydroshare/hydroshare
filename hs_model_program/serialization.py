@@ -1,5 +1,7 @@
 import rdflib
 
+from django.db import transaction
+
 from hs_core.serialization import GenericResourceMeta
 from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso, HsDateException
 
@@ -114,6 +116,7 @@ class ModelProgramResourceMeta(GenericResourceMeta):
                     self.source_code = None
             print("\t\t{0}".format(str(self)))
 
+    @transaction.atomic
     def write_metadata_to_resource(self, resource):
         """
         Write metadata to resource

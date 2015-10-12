@@ -1,6 +1,8 @@
 
 import rdflib
 
+from django.db import transaction
+
 from hs_core.serialization import GenericResourceMeta
 
 
@@ -189,6 +191,7 @@ class TimeSeriesResourceMeta(GenericResourceMeta):
                 self.time_series_result.aggregationStatistics = str(res_aggstat_lit)
                 print("\t\t{0}".format(self.time_series_result))
 
+    @transaction.atomic
     def write_metadata_to_resource(self, resource):
         """
         Write metadata to resource
