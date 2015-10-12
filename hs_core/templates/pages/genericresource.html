@@ -52,64 +52,66 @@
             {% endif %}
 
             {# ======= Title ======= #}
-            {% if not metadata_form %}
-            <h2>{{ title }}</h2>
-            {% else %}
-            <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
-                  id="id-title"
-                  method="post">
-                {% csrf_token %}
-                <fieldset>
-                    <div id="div_id_value" class="control-group">
-                        <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                     id="txt-title"
-                                                     maxlength="300" name="value" type="text"
-                                                     value="{{ cm.metadata.title }}"></div>
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-primary pull-right"
-                                onclick="metadata_update_ajax_submit('id-title'); return false;"
-                                style="display: none;">
-                            Save changes
-                        </button>
-                    </div>
-                </fieldset>
-            </form>
-        {% endif %}
+            <div class="col-sm-12">
+                {% if not metadata_form %}
+                <h2>{{ title }}</h2>
+                {% else %}
+                <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
+                      id="id-title"
+                      method="post">
+                    {% csrf_token %}
+                    <fieldset>
+                        <div id="div_id_value" class="control-group">
+                            <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                         id="txt-title"
+                                                         maxlength="300" name="value" type="text"
+                                                         value="{{ cm.metadata.title }}"></div>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-primary pull-right"
+                                    onclick="metadata_update_ajax_submit('id-title'); return false;"
+                                    style="display: none;">
+                                Save changes
+                            </button>
+                        </div>
+                    </fieldset>
+                </form>
+                {% endif %}
+            </div>
         {#        ======= Top right buttons =======#}
+        <div class="col-sm-12">
+                <div class="lined-wrapper"></div>
         {% if not metadata_form %}
-            <div class="lined-wrapper">
-            {% if page.perms.change %}
-                    <div class="custom-btn-toolbar">
-                        <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
-                            {% csrf_token %}
-                            {% if page.perms.delete %}
-                            <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
-                            <span data-toggle="tooltip" data-placement="auto" title="Delete this resource"
-                                  class="glyphicon glyphicon-trash icon-button btn-remove"></span>
-                            </a>
-                            {% endif %}
-                            <input name="resource-mode" type="hidden" value="edit"/>
-                            <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
-                                    title="Edit this resource" class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
-                        </form>
-                    </div>
-            {% endif %}
-             </div>
-        {% else %}
-            <div class="lined-wrapper">
+                {% if page.perms.change %}
+                        <div class="custom-btn-toolbar">
+                            <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
+                                {% csrf_token %}
+                                {% if page.perms.delete %}
+                                <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
+                                <span data-toggle="tooltip" data-placement="auto" title="Delete this resource"
+                                      class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                                </a>
+                                {% endif %}
+                                <input name="resource-mode" type="hidden" value="edit"/>
+                                <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
+                                        title="Edit this resource" class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
+                            </form>
+                        </div>
+                {% endif %}
+            {% else %}
                 <div class="custom-btn-toolbar">
                     <a href="{{ cm.get_absolute_url }}">
                         <span data-toggle="tooltip" data-placement="auto" title="View resource"
                               class="glyphicon glyphicon-circle-arrow-left icon-button btn-edit"></span>
                     </a>
                 </div>
-                </div>
             {% endif %}
+            </div>
+
 
             {#        ======= Authors =======#}
             {% if not metadata_form %}
-            <div class="info-group">
+            <div class="info-group col-sm-12">
                 <table>
                     <tr><th>Authors:</th><td id="authors">
                         {% for cr in creators %}
@@ -130,7 +132,7 @@
                 </table>
             </div>
             {% else %}
-                <div class="info-group">
+                <div class="info-group col-sm-12">
                     <table>
                         <tr>
                             <th>Authors:</th>
@@ -163,13 +165,13 @@
             {#        ======= Abstract =======#}
             {% if not metadata_form %}
                 {% if abstract %}
-                    <div class="content-block">
+                    <div class="col-sm-12 content-block">
                         <h3>Abstract</h3>
                         <span class="abstract">{{ abstract|linebreaks }}</span>
                     </div>
                 {% endif %}
             {% else %}
-                <div class="content-block">
+                <div class="col-sm-12 content-block">
                     <h3>Abstract</h3>
                     {% if cm.metadata.description %}
                     <form action="/hsapi/_internal/{{ cm.short_id }}/description/{{ cm.metadata.description.id }}/update-metadata/"
@@ -213,7 +215,7 @@
             {#        ======= Subjects =======#}
             {% if not metadata_form %}
                 {% if keywords %}
-                <div class="content-block">
+                <div class="col-sm-12 content-block">
                     <h3>Subject</h3>
 
                     <p id="keywords">{{ keywords }}</p>
@@ -225,7 +227,7 @@
                 </div>
                 {% endif %}
             {% else %}
-                <div class="content-block">
+                <div class="col-sm-12 content-block">
                     <h3>Subject</h3>
                     <form action="/hsapi/_internal/{{ cm.short_id }}/subject/add-metadata/" id="id-subject"
                           method="post">
@@ -259,87 +261,86 @@
             {% endif %}
 
             {#        ======= Citation =======#}
-            <div class="content-block">
+            <div class="col-sm-12 content-block">
                 <h3>How to cite</h3>
                 <span id="citation-text">{{ citation }}</span>
-            </div>
 
-            {#        ======= Sharing =======#}
-            <div id="sharing-status">
-                <span class="pull-left text-muted">Sharing status:</span>
-                {% if page.perms.change and metadata_form and can_change_resource_flags%}
+                {#        ======= Sharing =======#}
+                <div id="sharing-status">
+                    <span class="pull-left text-muted">Sharing status:</span>
+                    {% if page.perms.change and metadata_form and can_change_resource_flags%}
 
-                    <div id="status-btn-group" class="btn-group" role="group" aria-label="...">
-                        {# -------- PUBLIC -------- #}
-                        {% if cm.raccess.public and discoverable %}
-                            <button id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                    title='Can be viewed and downloaded by anyone.' type="button"
-                                    class="btn btn-default active">Public
-                            </button>
-                        {% else %}
-                            <form class="pull-left"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST">
-                                {% csrf_token %}
-                                <input name="t" type="hidden" value="make_public"/>
-                                <button {% if metadata_status == 'Insufficient to make public' %} disabled {% endif %}
-                                        id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                        title='Can be viewed and downloaded by anyone.' type="submit"
-                                        class="btn btn-default">Public
+                        <div id="status-btn-group" class="btn-group" role="group" aria-label="...">
+                            {# -------- PUBLIC -------- #}
+                            {% if cm.raccess.public and discoverable %}
+                                <button id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                        title='Can be viewed and downloaded by anyone.' type="button"
+                                        class="btn btn-default active">Public
                                 </button>
-                            </form>
-                        {% endif %}
+                            {% else %}
+                                <form class="pull-left"
+                                      action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                      method="POST">
+                                    {% csrf_token %}
+                                    <input name="t" type="hidden" value="make_public"/>
+                                    <button {% if metadata_status == 'Insufficient to make public' %} disabled {% endif %}
+                                            id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                            title='Can be viewed and downloaded by anyone.' type="submit"
+                                            class="btn btn-default">Public
+                                    </button>
+                                </form>
+                            {% endif %}
 
-                        {# -------- DISCOVERABLE -------- #}
-                        {% if not cm.raccess.public and discoverable %}
-                            <button id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                    title='Metadata is public but data is protected.' type="button"
-                                    class="btn btn-default active">Discoverable
-                            </button>
-                        {% else %}
-                            <form class="pull-left"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST">
-                                <input name="t" type="hidden" value="make_discoverable"/>
-                                {% csrf_token %}
-                                <button {% if metadata_status == 'Insufficient to make public' %} disabled {% endif %}
-                                        id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                        title='Metadata is public but data is protected.' type="submit"
-                                        class="btn btn-default">Discoverable
+                            {# -------- DISCOVERABLE -------- #}
+                            {% if not cm.raccess.public and discoverable %}
+                                <button id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
+                                        title='Metadata is public but data is protected.' type="button"
+                                        class="btn btn-default active">Discoverable
                                 </button>
-                            </form>
-                        {% endif %}
+                            {% else %}
+                                <form class="pull-left"
+                                      action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                      method="POST">
+                                    <input name="t" type="hidden" value="make_discoverable"/>
+                                    {% csrf_token %}
+                                    <button {% if metadata_status == 'Insufficient to make public' %} disabled {% endif %}
+                                            id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
+                                            title='Metadata is public but data is protected.' type="submit"
+                                            class="btn btn-default">Discoverable
+                                    </button>
+                                </form>
+                            {% endif %}
 
-                        {# -------- PRIVATE -------- #}
-                        {% if not cm.raccess.public and not discoverable %}
-                            <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                    title='Can be viewed and downloaded only by designated users or research groups.'
-                                    type="button" class="btn btn-default active">Private
-                            </button>
-                        {% else %}
-                            <form class="pull-left"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST">
-                                <input name="t" type="hidden" value="make_private"/>
-                                {% csrf_token %}
+                            {# -------- PRIVATE -------- #}
+                            {% if not cm.raccess.public and not discoverable %}
                                 <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                        title='Can be viewed and downloaded only by designated users or research groups.' type="submit"
-                                        class="btn btn-default">Private
+                                        title='Can be viewed and downloaded only by designated users or research groups.'
+                                        type="button" class="btn btn-default active">Private
                                 </button>
-                            </form>
+                            {% else %}
+                                <form class="pull-left"
+                                      action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                      method="POST">
+                                    <input name="t" type="hidden" value="make_private"/>
+                                    {% csrf_token %}
+                                    <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                            title='Can be viewed and downloaded only by designated users or research groups.' type="submit"
+                                            class="btn btn-default">Private
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        {% if cm.raccess.public and discoverable %}
+                            <strong style="color:#5cb85c">&nbspPublic</strong>
+                        {% elif not cm.raccess.public and discoverable %}
+                            <strong style="color:#f0ad4e">&nbspDiscoverable</strong>
+                        {% elif not cm.raccess.public and not discoverable %}
+                            <strong style="color:#d9534f">&nbspPrivate</strong>
                         {% endif %}
-                    </div>
-                {% else %}
-                    {% if cm.raccess.public and discoverable %}
-                        <strong style="color:#5cb85c">&nbspPublic</strong>
-                    {% elif not cm.raccess.public and discoverable %}
-                        <strong style="color:#f0ad4e">&nbspDiscoverable</strong>
-                    {% elif not cm.raccess.public and not discoverable %}
-                        <strong style="color:#d9534f">&nbspPrivate</strong>
                     {% endif %}
-                {% endif %}
-            </div>
-        {% if not metadata_form %}
+                </div>
+                {% if not metadata_form %}
             {% if rights.statement or rights.url %}
                 <div id="rights">
                     {% if rights.statement %}
@@ -429,7 +430,7 @@
                 </form>
             </div>
         {% endif %}
-        <div id="permission-panel">
+                <div id="permission-panel">
             {% if can_change_resource_flags %}
                 <p>You are the owner of this resource.</p>
             {% elif is_edit_user %}
@@ -789,11 +790,15 @@
                     {#======= Manage access modal  window ends =======#}
                 {% endif %}
             </div>
+            </div>
+
+
+
 
 
         {#        ======= Content =======#}
 
-        <div class="content-block">
+        <div class="col-sm-12 content-block">
             <h3>Content</h3>
 
             {% if show_content_files  %}
@@ -912,7 +917,7 @@
             {% endif %}
         </div>
 
-        <div class="content-block">
+        <div class="col-sm-12">
             <!-- === Tabs begin === -->
             <div class="tab-elements">
                 <div class="panel-tabs">
@@ -1678,10 +1683,13 @@
             <!-- ==== Tabs end ==== -->
         </div>
 
-        <div class="rating content-block">
+        <div class="rating col-sm-12 content-block">
             {% rating_for cm %}
         </div>
-        {% comments_for cm %}
+
+        <div class="rating col-sm-12 content-block">
+            {% comments_for cm %}
+        </div>
         {#                #}
         {# dialogs follow #}
         {#                #}
