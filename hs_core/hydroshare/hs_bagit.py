@@ -96,8 +96,6 @@ def create_bag_files(resource):
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
 
     ##make the resource map:
-    # utils.namespaces['hsterms'] = Namespace('{hs_url}/hsterms/'.format(hs_url=current_site_url))
-    # utils.namespaceSearchOrder.append('hsterms')
     utils.namespaces['citoterms'] = Namespace('http://purl.org/spar/cito/')
     utils.namespaceSearchOrder.append('citoterms')
 
@@ -150,6 +148,10 @@ def create_bag_files(resource):
 
     # change the namespace for the 'creator' element from 'dcterms' to 'dc'
     xml_string = remdoc.data.replace('dcterms:creator', 'dc:creator')
+
+    # delete this extra element
+    #<ore:aggregates rdf:resource="[hydroshare domain]/terms/[Resource class name]"/>
+    xml_string = xml_string.replace('<ore:aggregates rdf:resource="%s"/>\n' % resource.metadata.type.url, '')
 
     # create resourcemap.xml and upload it to iRODS
     from_file_name = os.path.join(bagit_path, 'resourcemap.xml')
