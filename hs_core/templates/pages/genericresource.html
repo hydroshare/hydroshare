@@ -263,7 +263,14 @@
             {#        ======= Citation =======#}
             <div class="col-sm-12 content-block">
                 <h3>How to cite</h3>
-                <span id="citation-text">{{ citation }}</span>
+{#                <span id="citation-text">{{ citation }}</span>#}
+
+                <div class="input-group">
+                    <input readonly id="citation-text" style="background:#FFF; cursor:default;" type="text"
+                           class="form-control" aria-describedby="basic-addon1" value="{{ citation }}">
+                    <span class="input-group-addon "><span class="glyphicon glyphicon-book"
+                            data-toggle="tooltip" data-placement="bottom" title="Click on the text to select all"></span></span>
+                </div>
 
                 {#        ======= Sharing =======#}
                 <div id="sharing-status">
@@ -2478,6 +2485,10 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/irods.js"></script>
         <script type="text/javascript">
 
+            $("#citation-text").on("click", function(e){
+                $(this).select();
+            });
+
             // Prevents form submission when pressing the enter key on the search box.
             $('#id_user-autocomplete').keypress(function(e){
                 e = e || event;
@@ -2816,6 +2827,10 @@
                     $("#sign-in-info").text(sessionStorage.signininfo);
                     $("#btn-select-irods-file").show();
                 }
+
+                // Apply theme to comment's submit button
+                $("#comment input[type='submit']").removeClass()
+                $("#comment input[type='submit']").addClass("btn btn-default");
 
                 $(".list-separator").parent().hover(function(){
                     $(this).css("text-decoration", "none");

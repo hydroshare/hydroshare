@@ -418,6 +418,17 @@ a.sign-out-inline:hover {
 	border-bottom: 1px dotted #ddd;
 }
 
+#comments .rating > h3 {
+	display: none;
+}
+
+#comments .rating {
+	border-top: 1px solid #ddd;
+	padding-top: 9px;
+	margin: 0;
+	margin-bottom: 20px;
+
+}
 /* ===== About Us block ===== */
 
 img.img-about {
@@ -1150,12 +1161,14 @@ span.hilight {
     margin-right: 5px;
 }
 
-.file-icon{
-    margin-right: 5px;
-    font-size: 28px;
-    color: #8c8c8c;
-    float:left;
-    top: 6px;
+.file-icon {
+	margin-right: 5px;
+	font-size: 20px;
+	line-height: 1.5em;
+	color: #8c8c8c;
+	float: left;
+	top: 4px;
+	left: 2px;
 }
 
 table.table-plain {
@@ -1352,6 +1365,12 @@ body > .container{
 	margin: 0 2px;
 }
 
+.btn-default {
+	background-color: #eee;
+    background-image: -webkit-linear-gradient(#fcfcfc, #eee);
+    background-image: linear-gradient(#fcfcfc, #eee)
+}
+
 .btn-add-access:focus,#btn-discoverable:focus, #btn-public:focus, #btn-private:focus {
 	outline: none;
 }
@@ -1438,6 +1457,12 @@ body > .container{
     /*width:90%;*/
 }
 
+#citation-text:focus {
+	/*border: 1px solid #ccc;*/
+	/*-webkit-box-shadow: none;*/
+	/*box-shadow: none;*/
+}
+
 #citation-text a, .rights-url a{
     word-break:break-word;
 }
@@ -1457,11 +1482,9 @@ body > .container{
     overflow: hidden;
 }
 
-
-
 div#sharing-status {
     height: 34px;
-	margin-top: 40px;
+	margin-top: 20px;
 }
 
 .info-group {
