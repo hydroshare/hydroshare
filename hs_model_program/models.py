@@ -15,52 +15,51 @@ class MpMetadata(AbstractMetaDataElement):
     term = "MpMetadata"
 
     # version
-    software_version = models.CharField(verbose_name='Version ', null=True, blank=True, max_length=255, default='',
-                                        help_text='The software version of the model')
+    modelVersion = models.CharField(verbose_name='Version ', null=True, blank=True, max_length=255, default='',
+                                        help_text='The software version or build number of the model')
 
     # program language
-    software_language = models.CharField(verbose_name="Language", null=True, blank=True, max_length=100,default='',
-                                         help_text="The programming language(s) that the model was written in")
+    modelProgramLanguage = models.CharField(verbose_name="Language", null=True, blank=True, max_length=100,default='',
+                                         help_text="The programming language(s) that the model is written in")
 
     # operating system
-    operating_sys = models.CharField(verbose_name='Operating System', null=True, blank=True,default='',
-                                     max_length=255, help_text='Compatible operating systems')
+    modelOperatingSystem = models.CharField(verbose_name='Operating System', null=True, blank=True,default='',
+                                     max_length=255, help_text='Compatible operating systems to setup and run the model')
 
     # release date
-    date_released = models.DateTimeField(verbose_name='Release Date', null=True, blank=True,
-                                         help_text='The date of the software release (m/d/Y H:M)')
+    modelReleaseDate = models.DateTimeField(verbose_name='Release Date', null=True, blank=True,
+                                         help_text='The date that this version of the model was released')
 
     # web page
-    program_website = models.CharField(verbose_name='Website', null=True, blank=True, max_length=255,default='',
-                                       help_text='A URL providing addition information about the software')
+    modelWebsite = models.CharField(verbose_name='Website', null=True, blank=True, max_length=255,default='',
+                                       help_text='A URL to the website maintained by the model developers')
 
     # repository
-    software_repo = models.CharField(verbose_name='Software Repository', null=True, blank=True,default='',
+    modelCodeRepository = models.CharField(verbose_name='Software Repository', null=True, blank=True,default='',
                                      max_length=255,
-                                     help_text='A URL for the source code repository (e.g. git, mecurial, svn)')
+                                     help_text='A URL to the source code repository (e.g. git, mercurial, svn)')
 
     # release notes
-    release_notes = models.CharField(verbose_name="Release Notes", null=True, blank=True, max_length=400,default='',
-                                     help_text="Notes about the software release (e.g. bug fixes, new functionality)",
+    modelReleaseNotes = models.CharField(verbose_name="Notes", null=True, blank=True, max_length=400,default='',
+                                     help_text="Notes regarding the software release (e.g. bug fixes, new functionality, readme)",
                                      choices=(('-', '    '),))
 
-    # user manual
-    user_manual = models.CharField(verbose_name='User Manual', name='user_manual', null=True, blank=True,default='',
+    # documentation
+    modelDocumentation = models.CharField(verbose_name='Documentation', name='modelDocumentation', null=True, blank=True,default='',
                                    max_length=400,
-                                   help_text='User manual for the model program (e.g. .doc, .md, .rtf, .pdf',
+                                   help_text='Documentation for the model (e.g. User manuals, theoretical manuals, reports, notes, etc.)',
                                    choices=(('-', '    '),))
 
-    # theoretical manual
-    theoretical_manual = models.CharField(verbose_name='Theoretical Manual', name='theoretical_manual', null=True,default='',
+    # software
+    modelSoftware = models.CharField(verbose_name='Software', name='modelSoftware', null=True,default='',
                                           blank=True, max_length=400,
-                                          help_text='Theoretical manual for the model program (e.g. .doc, .md, .rtf, .pdf',
+                                          help_text='Uploaded archive containing model software (source code, executable, etc.)' ,
                                           choices=(('-', '    '),))
 
-    # source code
-    source_code = models.CharField(verbose_name='Source Code', name='source_code', null=True, blank=True,default='',
-                                   max_length=400,
-                                   help_text='Archive of the  source code for the model (e.g. .zip, .tar)',
-                                   choices=(('-', '    '),))
+
+
+
+
     def __unicode__(self):
         self.software_version
 
@@ -99,7 +98,8 @@ class ModelProgramResource(BaseResource):
     @property
     def metadata(self):
         md = ModelProgramMetaData()
-        return self._get_metadata(md)
+        meta = self._get_metadata(md)
+        return meta
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -150,16 +150,16 @@ class ModelProgramMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         # inject raster resource specific metadata elements into container element
-        fields = ['software_version',
-                  'software_language',
-                  'operating_sys',
-                  'date_released',
-                  'program_website',
-                  'software_repo',
-                  'release_notes',
-                  'user_manual',
-                  'theoretical_manual',
-                  'source_code']
+        fields = [  'modelSoftware',
+                    'modelDocumentation',
+                    'modelReleaseNotes',
+                    'modelReleaseDate',
+                    'modelVersion',
+                    'modelWebsite',
+                    'modelProgramLanguage',
+                    'modelOperatingSystem',
+                    'modelCodeRepository',
+                    ]
 
         model_program_object = self.program
         self.add_metadata_element_to_xml(container, model_program_object, fields)
