@@ -773,9 +773,9 @@
                                                     </ul>
                                                 </div>
 
-                                                <button id="btn-invite" type="button" onclick="share_resource_ajax_submit('add-access-form'); return false;"
+                                                <a id="btn-invite" onclick="share_resource_ajax_submit('add-access-form'); return false;"
                                                         class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                                        class="button-label">&nbspAdd</span></button>
+                                                        class="button-label">&nbspAdd</span></a>
                                             </form>
                                         </div>
                                     </div>
@@ -2468,6 +2468,14 @@
     {% block extra_js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/irods.js"></script>
         <script type="text/javascript">
+
+            // Prevents form submission when pressing the enter key on the search box.
+            $('#id_user-autocomplete').keypress(function(e){
+                e = e || event;
+                var txtArea = /textarea/i.test((e.target || e.srcElement).tagName);
+                return txtArea || (e.keyCode || e.which || e.charCode || 0) !== 13;
+            });
+
             function onRoleSelect(event) {
                 var el = $(event.target);
                 $("#selected_role").text(el.text());
@@ -2480,7 +2488,6 @@
                 el.closest("tr").remove();
                 var form = $(event.target).closest("form");
                 form.submit();
-                {#               update_access_ajax_submit(event, formID);#}
             }
 
             // Toggles pointer events on and off for the access control interface
