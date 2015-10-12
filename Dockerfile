@@ -34,7 +34,7 @@ RUN rm irods-runtime.deb
 RUN rm irods-icommands.deb
 
 # Install test coverage module
-RUN pip install coverage
+RUN pip install coverage==3.7.1
 
 WORKDIR /home/docker/hydroshare
 
