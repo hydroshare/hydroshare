@@ -1169,9 +1169,6 @@ table.table-plain td{
     padding-right: 10px;
 }
 
-.tab-elements{
-    border:0;
-}
 
 .tab-elements > .panel-tabs > .nav-tabs{
     margin-bottom: 0;
@@ -1247,7 +1244,7 @@ table.table-plain td{
 
 body > .container{
     /*Substract the height of the footer*/
-    min-height: calc(100% - 277px);
+    min-height: calc(100% - 307px);
     padding-top: 20px;
     /*background: #FFF;*/
     /*margin-top: 20px;*/
@@ -1572,16 +1569,18 @@ img.profile-picture {
     background-color:#ddd;
 }
 
-span.name-label{
+span.name-label {
     font-size: 18px;
     font-weight: bold;
     display: table;
 }
 
-.tab-elements{
+.tab-elements {
     max-height:441px;
     overflow-x:auto;
     overflow-y:hidden;
+	margin-top: 20px;
+	border:0;
 }
 
 .tab-elements .panel-tabs, .tab-elements .tabs-body{
@@ -1595,7 +1594,7 @@ span.name-label{
 
 
 
-.tab-elements .table td, .tab-elements .table th{
+.tab-elements .table td, .tab-elements .table th {
     border:0;
 }
 
@@ -1603,7 +1602,7 @@ span.name-label{
     border: 1px solid #ddd;
 }
 
-.tab-elements .nav-tabs>li.active>a {
+.tab-elements .nav-tabs > li.active>a {
     border-bottom-color: transparent;
 }
 /* ===== Responsive CSS ===== */
