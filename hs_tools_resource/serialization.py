@@ -2,6 +2,8 @@ import decimal
 
 import rdflib
 
+from django.db import transaction
+
 from hs_core.serialization import GenericResourceMeta
 
 
@@ -83,6 +85,7 @@ class ToolResourceMeta(GenericResourceMeta):
 
         print("\t\t{0}".format((str(self))))
 
+    @transaction.atomic
     def write_metadata_to_resource(self, resource):
         """
         Write metadata to resource
