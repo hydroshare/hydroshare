@@ -947,8 +947,6 @@ span.remove{
 }
 
 #comments{
-    border: 1px solid #ddd;
-    padding: 0 15px;
     padding-bottom: 15px;
     margin-top: 20px;
 }
@@ -1272,36 +1270,28 @@ body > .container{
     border-radius: 3px;
     background-color: #FFF;
     border: 1px solid#adadad;
+
 }
 
 .custom-btn-toolbar .icon-button:hover {
     box-shadow: 0px 0px 5px #B2B2B2;
 }
 
-
-.custom-btn-toolbar{
-    display: block;
-    float: right;
-    background: #FFF;
-    height: auto;
-    padding: 8px 4px;
-    border: 1px solid #D3D3D3;
-    border-top: 1px solid #FFF;
-    /* -webkit-border-radius: 6px; */
-    margin-top: -1px;
-    margin-right: 20px;
-
+.custom-btn-toolbar {
+	float: right;
+	background: #FFF;
+	padding: 8px 4px;
+	border: 1px solid #D3D3D3;
+	border-top: 1px solid #FFF;
+	margin-top: -1px;
+	margin-right: 20px;
+	display: block;
 }
 
-.custom-btn-toolbar, .lined-wrapper{
-    box-shadow: 1px 1px 1px #E0E0E0;
-}
-
-.lined-wrapper{
-    width: 100%;
-    border-top: 1px solid rgb(204, 204, 204);
-    margin-top: 5px;
-    margin-bottom: 5px;
+.lined-wrapper {
+	border-top: 1px solid rgb(204, 204, 204);
+	margin-top: 5px;
+	margin-bottom: 5px;
 }
 
 #success-alert, #error-alert{
@@ -1405,10 +1395,14 @@ body > .container{
     color:#428bca;
 }
 
-.content-block{
-    margin-bottom:5px;
-    display: table;
-    width:100%;
+.content-block {
+	display: table;
+	width: 100%;
+}
+
+.content-block h3, #comments h3 {
+	padding-bottom: 9px;
+	border-bottom: 1px solid #eee;
 }
 
 .sharing-public{
