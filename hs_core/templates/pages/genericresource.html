@@ -2483,10 +2483,23 @@
                 {#               update_access_ajax_submit(event, formID);#}
             }
 
+            // Toggles pointer events on and off for the access control interface
+            function setPointerEvents(flag) {
+                if (!flag) {
+                    $(".access-table").css("pointer-events", "none");   // Disable pointer events until the call has finished
+                    $("#manage-access .modal-content").css("pointer-events", "none");
+                }
+                else {
+                    $(".access-table").css("pointer-events", "auto");
+                    $("#manage-access .modal-content").css("pointer-events", "auto");
+                }
+            }
+
             function unshare_resource_ajax_submit(form_id) {
                 $form = $('#' + form_id);
                 var datastring = $form.serialize();
                 var url = $form.attr('action');
+                setPointerEvents(false);
                 $form.parent().closest("tr").addClass("loading");
                 $.ajax({
                     type: "POST",
@@ -2498,10 +2511,10 @@
                         if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
                             $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
                         }
+                        setPointerEvents(true);
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        console.log("Error!");
-                        $form.parent().closest("tr").addClass("loading");
+                        setPointerEvents(true);
                     }
                 });
                 //don't submit the form
@@ -2513,6 +2526,7 @@
                 var datastring = $form.serialize();
                 var url = $form.attr('action');
                 $form.parent().closest(".user-roles").find("li[data-access-type='" + $form.attr("data-access-type") + "']").addClass("loading");
+                setPointerEvents(false);
                 $.ajax({
                     type: "POST",
                     url: url,
@@ -2526,9 +2540,10 @@
                             $form.parent().closest(".user-roles").find(".dropdown-toggle").text($form.attr("data-access-type"));
                             $form.parent().closest(".user-roles").find(".dropdown-toggle").append(" <span class='caret'></span>");
                             $form.parent().closest(".user-roles").find("li").removeClass("active");
-                            $form.parent().closest(".user-roles").find("li").removeClass("loading");
+
                             $form.parent().closest(".user-roles").find("li[data-access-type='" + $form.attr("data-access-type") + "']").addClass("active");
                             $(".role-dropdown").removeClass("open");
+                            $form.parent().closest(".user-roles").find("li").removeClass("loading");
 
                             // If only one owner listed, disable actions for that entry
                             if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
@@ -2538,10 +2553,13 @@
                                 // Enable actions for owner rows
                                 $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
                             }
+
+                            setPointerEvents(true);
                         }
                         else if (json_response.status == "error") {
                             $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
-                            $form.parent().closest(".user-roles").find("li[data-access-type='" + $form.attr("data-access-type") + "']").removeClass("loading");
+                            $form.parent().closest(".user-roles").find("li").removeClass("loading");
+                            setPointerEvents(true);
                         }
                     }
                 });
@@ -2549,7 +2567,7 @@
 
             function share_resource_ajax_submit(form_id) {
                 if (!$("#id_user-deck > .hilight").length) {
-                    return; // If no user selected, ignore the request
+                    return false; // If no user selected, ignore the request
                 }
                 $form = $('#' + form_id);
 
@@ -2557,7 +2575,7 @@
                 var share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
                 var access_type = $("#selected_role")[0].getAttribute("data-role");
                 var url = $form.attr('action') + access_type + "/" + share_with + "/";
-                $("#btn-invite").addClass("loading");
+                setPointerEvents(false);
                 $.ajax({
                     type: "POST",
                     url: url,
@@ -2567,12 +2585,12 @@
                         $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
                         json_response = JSON.parse(result);
                         if (json_response.status == "success") {
-                            $("#btn-invite").removeClass("loading");
                             $(".access-table #row-id-" + share_with).remove(); // Remove previous entry if it exists
                             $(".hilight > span").click(); // Clears the search field
 
                             // Get a copy of the user row template
                             var rowTemplate = $("#templateRow").clone();
+
                             // Form actions
                             var unshareUrl = $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user") + share_with + "/";
                             var viewUrl = $form.attr('action') + "view" + "/" + share_with + "/";
@@ -2625,8 +2643,7 @@
                         else if (json_response.status == "error") {
                             $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
                         }
-
-                        $("#btn-invite").removeClass("loading");
+                        setPointerEvents(true);
                     }
 
                 });
