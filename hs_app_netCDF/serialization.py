@@ -227,12 +227,19 @@ class NetcdfResourceSAXHandler(xml.sax.ContentHandler):
         self._get_var = False
         self._get_var_details = False
         self._get_var_name = False
+        self._var_name = None
         self._get_var_shape = False
+        self._var_shape = None
         self._get_var_long_name = False
+        self._var_long_name = None
         self._get_var_missing_val = False
+        self._var_missing_val = None
         self._get_var_type = False
+        self._var_type = None
         self._get_var_comment = False
+        self._var_comment = None
         self._get_var_unit = False
+        self._var_unit = None
 
     def characters(self, content):
         if self._get_var_name:
@@ -240,49 +247,49 @@ class NetcdfResourceSAXHandler(xml.sax.ContentHandler):
                 msg = "Error: haven't yet encountered variables, "
                 msg += "yet trying to store variable name."
                 raise xml.sax.SAXException(msg)
-            self.variables[-1].name = str(content)
+            self._var_name.append(content)
 
         elif self._get_var_shape:
             if len(self.variables) < 1:
                 msg = "Error: haven't yet encountered variables, "
                 msg += "yet trying to store variable shape."
                 raise xml.sax.SAXException(msg)
-            self.variables[-1].shape = str(content)
+            self._var_shape.append(content)
 
         elif self._get_var_long_name:
             if len(self.variables) < 1:
                 msg = "Error: haven't yet encountered variables, "
                 msg += "yet trying to store variable long name."
                 raise xml.sax.SAXException(msg)
-            self.variables[-1].longName = str(content)
+            self._var_long_name.append(content)
 
         elif self._get_var_missing_val:
             if len(self.variables) < 1:
                 msg = "Error: haven't yet encountered variables, "
                 msg += "yet trying to store variable missing value."
                 raise xml.sax.SAXException(msg)
-            self.variables[-1].missingValue = str(content)
+            self._var_missing_val.append(content)
 
         elif self._get_var_type:
             if len(self.variables) < 1:
                 msg = "Error: haven't yet encountered variables, "
                 msg += "yet trying to store variable type."
                 raise xml.sax.SAXException(msg)
-            self.variables[-1].type = str(content)
+            self._var_type.append(content)
 
         elif self._get_var_comment:
             if len(self.variables) < 1:
                 msg = "Error: haven't yet encountered variables, "
                 msg += "yet trying to store variable comment."
                 raise xml.sax.SAXException(msg)
-            self.variables[-1].comment = str(content)
+            self._var_comment.append(content)
 
         elif self._get_var_unit:
             if len(self.variables) < 1:
                 msg = "Error: haven't yet encountered variables, "
                 msg += "yet trying to store variable unit."
                 raise xml.sax.SAXException(msg)
-            self.variables[-1].unit = str(content)
+            self._var_unit.append(content)
 
     def startElement(self, name, attrs):
         if name == 'hsterms:netcdfVariable':
@@ -304,42 +311,49 @@ class NetcdfResourceSAXHandler(xml.sax.ContentHandler):
                 if self._get_var_name:
                     raise xml.sax.SAXException("Error: nested hsterms:name elements within hsterms:netcdfVariable.")
                 self._get_var_name = True
+                self._var_name = []
 
         elif name == 'hsterms:shape':
             if self._get_var_details:
                 if self._get_var_shape:
                     raise xml.sax.SAXException("Error: nested hsterms:shape elements within hsterms:netcdfVariable.")
                 self._get_var_shape = True
+                self._var_shape = []
 
         elif name == 'hsterms:longName':
             if self._get_var_details:
                 if self._get_var_long_name:
                     raise xml.sax.SAXException("Error: nested hsterms:longName elements within hsterms:netcdfVariable.")
                 self._get_var_long_name = True
+                self._var_long_name = []
 
         elif name == 'hsterms:missingValue':
             if self._get_var_details:
                 if self._get_var_missing_val:
                     raise xml.sax.SAXException("Error: nested hsterms:missingValue elements within hsterms:netcdfVariable.")
                 self._get_var_missing_val = True
+                self._var_missing_val = []
 
         elif name == 'hsterms:type':
             if self._get_var_details:
                 if self._get_var_type:
                     raise xml.sax.SAXException("Error: nested hsterms:type elements within hsterms:netcdfVariable.")
                 self._get_var_type = True
+                self._var_type = []
 
         elif name == 'hsterms:comment':
             if self._get_var_details:
                 if self._get_var_comment:
                     raise xml.sax.SAXException("Error: nested hsterms:comment elements within hsterms:netcdfVariable.")
                 self._get_var_comment = True
+                self._var_comment = []
 
         elif name == 'hsterms:unit':
             if self._get_var_details:
                 if self._get_var_unit:
                     raise xml.sax.SAXException("Error: nested hsterms:unit elements within hsterms:netcdfVariable.")
                 self._get_var_unit = True
+                self._var_unit = []
 
     def endElement(self, name):
         if name == 'hsterms:netcdfVariable':
@@ -362,6 +376,8 @@ class NetcdfResourceSAXHandler(xml.sax.ContentHandler):
                     msg = "Error: close hsterms:name tag without corresponding open tag "
                     msg += "within hsterms:netcdfVariable."
                     raise xml.sax.SAXException(msg)
+                self.variables[-1].name = "".join(self._var_name)
+                self._var_name = None
                 self._get_var_name = False
 
         elif name == 'hsterms:shape':
@@ -370,6 +386,8 @@ class NetcdfResourceSAXHandler(xml.sax.ContentHandler):
                     msg = "Error: close hsterms:shape tag without corresponding open tag "
                     msg += "within hsterms:netcdfVariable."
                     raise xml.sax.SAXException(msg)
+                self.variables[-1].shape = "".join(self._var_shape)
+                self._var_shape = None
                 self._get_var_shape = False
 
         elif name == 'hsterms:longName':
@@ -378,6 +396,8 @@ class NetcdfResourceSAXHandler(xml.sax.ContentHandler):
                     msg = "Error: close hsterms:longName tag without corresponding open tag "
                     msg += "within hsterms:netcdfVariable."
                     raise xml.sax.SAXException(msg)
+                self.variables[-1].longName = "".join(self._var_long_name)
+                self._var_long_name = None
                 self._get_var_long_name = False
 
         elif name == 'hsterms:missingValue':
@@ -386,6 +406,8 @@ class NetcdfResourceSAXHandler(xml.sax.ContentHandler):
                     msg = "Error: close hsterms:missingValue tag without corresponding open tag "
                     msg += "within hsterms:netcdfVariable."
                     raise xml.sax.SAXException(msg)
+                self.variables[-1].missingValue = "".join(self._var_missing_val)
+                self._var_missing_val = None
                 self._get_var_missing_val = False
 
         elif name == 'hsterms:type':
@@ -394,6 +416,8 @@ class NetcdfResourceSAXHandler(xml.sax.ContentHandler):
                     msg = "Error: close hsterms:type tag without corresponding open tag "
                     msg += "within hsterms:netcdfVariable."
                     raise xml.sax.SAXException(msg)
+                self.variables[-1].type = "".join(self._var_type)
+                self._var_type = None
                 self._get_var_type = False
 
         elif name == 'hsterms:comment':
@@ -402,6 +426,8 @@ class NetcdfResourceSAXHandler(xml.sax.ContentHandler):
                     msg = "Error: close hsterms:comment tag without corresponding open tag "
                     msg += "within hsterms:netcdfVariable."
                     raise xml.sax.SAXException(msg)
+                self.variables[-1].comment = "".join(self._var_comment)
+                self._var_comment = None
                 self._get_var_comment = False
 
         elif name == 'hsterms:unit':
@@ -410,5 +436,7 @@ class NetcdfResourceSAXHandler(xml.sax.ContentHandler):
                     msg = "Error: close hsterms:unit tag without corresponding open tag "
                     msg += "within hsterms:netcdfVariable."
                     raise xml.sax.SAXException(msg)
+                self.variables[-1].unit = "".join(self._var_unit)
+                self._var_unit = None
                 self._get_var_unit = False
 
