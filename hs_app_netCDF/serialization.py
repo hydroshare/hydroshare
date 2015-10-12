@@ -2,6 +2,8 @@ import xml.sax
 
 import rdflib
 
+from django.db import transaction
+
 from hs_core.serialization import GenericResourceMeta
 
 
@@ -109,6 +111,7 @@ class NetcdfResourceMeta(GenericResourceMeta):
                                                                          crs_repr_type)
             print("\t\t{0}".format(self.spatial_reference))
 
+    @transaction.atomic
     def write_metadata_to_resource(self, resource):
         """
         Write metadata to resource

@@ -2,6 +2,8 @@ import xml.sax
 
 import rdflib
 
+from django.db import transaction
+
 from hs_core.serialization import GenericResourceMeta
 
 from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage
@@ -128,6 +130,7 @@ class RasterResourceMeta(GenericResourceMeta):
             self.spatial_reference = RasterResourceMeta.SpatialReference(str(spat_ref_lit))
             print("\t\t{0}".format(self.spatial_reference))
 
+    @transaction.atomic
     def write_metadata_to_resource(self, resource):
         """
         Write metadata to resource
