@@ -12,7 +12,7 @@ from hs_geographic_feature_resource.receivers import *
 from django.contrib.auth.models import Group, User
 from hs_core import hydroshare
 from django.core.files.uploadedfile import UploadedFile
-
+from django.http import HttpRequest, QueryDict
 
 class TestGeoFeatureMetadata(TestCase):
     def setUp(self):
@@ -363,14 +363,6 @@ class TestGeoFeatureMetadata(TestCase):
 
 
     def test_geofeature_pre_add_files_to_resource(self):
-        # res_list=[]
-        # for file in ResourceFile.objects.filter(object_id=resource.id):
-        #      res_list.append(file.resource_file)
-
-        # self.assertEqual (len(ResourceFile.objects.filter(object_id=self.resGeoFeature.id)), 7)
-
-        # for f in ResourceFile.objects.filter(object_id=resource.id):
-        #     hydroshare.delete_resource_file(resource.short_id, f.id, self.user)
 
         files=[]
         target='hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
@@ -469,7 +461,6 @@ class TestGeoFeatureMetadata(TestCase):
 
         ##########################
         #test: del .xml file
-
         for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
             f.resource_file.delete()
             f.delete()
@@ -509,6 +500,7 @@ class TestGeoFeatureMetadata(TestCase):
         for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
             f.resource_file.delete()
             f.delete()
+        #################
         #add files first
         files=[]
         target='hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
@@ -518,6 +510,7 @@ class TestGeoFeatureMetadata(TestCase):
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *files)
         self.assertEqual(len(ResourceFile.objects.filter(object_id=self.resGeoFeature.id)),5)
 
+        #################
         #remove .prj
         shp_Res_File_obj=None
         for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
@@ -539,7 +532,7 @@ class TestGeoFeatureMetadata(TestCase):
                     originalcoverage_obj=self.resGeoFeature.metadata.originalcoverage.all().first()
                     self.assertEqual(originalcoverage_obj.projection_string,UNKNOWN_STR)
                     self.assertEqual(len(self.resGeoFeature.metadata.coverages.all()),0)
-
+        #################
         # add .prj
         add_files=[]
         target='hs_geographic_feature_resource/tests/gis.osm_adminareas_v06/gis.osm_adminareas_v06.prj'
@@ -549,6 +542,39 @@ class TestGeoFeatureMetadata(TestCase):
         geofeature_post_add_files_to_resource_handler(sender=GeographicFeatureResource,resource=self.resGeoFeature,files=add_files)
         originalcoverage_obj=self.resGeoFeature.metadata.originalcoverage.all().first()
         self.assertNotEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
+        pass
 
+
+    def test_metadata_element_pre_create_and_update(self):
+        request=HttpRequest()
+
+        #originalcoverage
+        request.POST={"northlimit":123,"eastlimit":234,
+                      "southlimit":345,"westlimit":456,
+                      "projection_string":"proj str", "projection_name":"prj name",
+                      "datum":"dam", "unit":"u1"
+                      }
+        data=metadata_element_pre_create_handler(sender=GeographicFeatureResource, element_name="originalcoverage", request=request)
+        self.assertTrue(data["is_valid"])
+        data=metadata_element_pre_update_handler(sender=GeographicFeatureResource, element_name="originalcoverage", request=request)
+        self.assertTrue(data["is_valid"])
+
+        #fieldinformation
+        request.POST={"fieldName":"fieldName 1","fieldType":"fieldType 1",
+                      "fieldTypeCode":"fieldTypeCode 1",
+                      "fieldWidth ":5, "fieldPrecision ":1
+                      }
+        data=metadata_element_pre_create_handler(sender=GeographicFeatureResource, element_name="fieldinformation", request=request)
+        self.assertTrue(data["is_valid"])
+        data=metadata_element_pre_update_handler(sender=GeographicFeatureResource, element_name="fieldinformation", request=request)
+        self.assertTrue(data["is_valid"])
+
+        #geometryinformation
+        request.POST={"featureCount":12,"geometryType":"geometryType 1"
+                      }
+        data=metadata_element_pre_create_handler(sender=GeographicFeatureResource, element_name="geometryinformation", request=request)
+        self.assertTrue(data["is_valid"])
+        data=metadata_element_pre_update_handler(sender=GeographicFeatureResource, element_name="geometryinformation", request=request)
+        self.assertTrue(data["is_valid"])
 
         pass
