@@ -2493,10 +2493,12 @@
             // Toggles pointer events on and off for the access control interface
             function setPointerEvents(flag) {
                 if (!flag) {
-                    $(".access-table").css("pointer-events", "none");   // Disable pointer events until the call has finished
+                    // Disable pointer events
+                    $(".access-table").css("pointer-events", "none");
                     $("#manage-access .modal-content").css("pointer-events", "none");
                 }
                 else {
+                    // Enable pointer events
                     $(".access-table").css("pointer-events", "auto");
                     $("#manage-access .modal-content").css("pointer-events", "auto");
                 }
