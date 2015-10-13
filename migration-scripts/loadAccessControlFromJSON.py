@@ -49,7 +49,6 @@ with open(sys.argv[1]) as old_res_file:
 
         res_creator = res.creator
 
-        # get current owner
         for view_user in view_user_objs:
             try:
                 res_creator.uaccess.share_resource_with_user(res, view_user, PrivilegeCodes.VIEW)
@@ -77,14 +76,23 @@ with open(sys.argv[1]) as old_res_file:
         # check whether the initial res_creator is in owner_user_objs list, and remove it if not
         if not res_creator in owner_user_objs:
             res_creator.uaccess.unshare_resource_with_user(res, res_creator)
+            res.creator = owner_user_objs[0]
             res.last_changed_by = owner_user_objs[0]
+            res.save()
 
         # delete admin from creators and contributors metadata elements to remove artifacts triggered
         # by bag ingestion code for resources with all creators being non-HydroShare users
-        admin_creator = res.metadata.creators.filter(name='admin').first()
+        admin_creator = res.metadata.creators.filter(name='HydroShare (Admin)').first()
         if admin_creator:
             res.metadata.delete_element('creator', admin_creator.id)
-        admin_contributor = res.metadata.contributors.filter(name='admin').first()
+        admin_contributor = res.metadata.contributors.filter(name='HydroShare (Admin)').first()
         if admin_contributor:
             res.metadata.delete_element('contributor', admin_contributor.id)
+
+        # double make sure admin is indeed replaced by the first owner of the resource in case there is some issue with previoius calls
+        if res.creator.username == 'admin':
+            res.creator = owner_user_objs[0]
+            res.last_changed_by = owner_user_objs[0]
+            res.save()
+
     old_res_file.close()
