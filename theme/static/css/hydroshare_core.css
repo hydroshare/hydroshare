@@ -1982,3 +1982,9 @@ ul.resource-search-options {
     background-color: #aab;
     color: white;
 }
+
+/*Google map css*/
+#coverageMap {
+	height: 350px;
+	border:1px solid #DDD;
+}

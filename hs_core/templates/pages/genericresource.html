@@ -788,7 +788,7 @@
                     </li>
                     {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
                         <li class="col-xs-2 col-md-2">
-                            <a href="#coverageTab" data-toggle="tab">
+                            <a id="coverageTabBtn" href="#coverageTab" data-toggle="tab">
                                 <span class="glyphicon glyphicon-globe"></span>
                                 &nbspCoverage
                             </a>
@@ -972,9 +972,14 @@
                     <!-- ========= COVERAGE TAB ========= -->
                     {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
                         <div class="tab-pane" id="coverageTab">
+
+
+
                             {% if not metadata_form %}
                                 {% if spatial_coverage.north or spatial_coverage.northlimit %}
                                     <h4><strong>Spatial</strong></h4>
+                                    <div class="col-sm-6" id="coverageMap"></div>
+                                    <div class="col-sm-6" id="coverageMap"></div>
                                     <hr style="margin-top: 0px;margin-bottom: 2px">
 
 
@@ -1080,12 +1085,14 @@
                                 {% endif %}
                             {% else %}
                                 <div class="form-group col-md-6 col-sm-12 col-xs-12" id="coverage-spatial">
+                                    <legend>Spatial</legend>
+                                    <div id="coverageMap"></div>
+
                                     {% if not coverage_spatial_form.initial.north and not coverage_spatial_form.initial.northlimit %}
                                         <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
                                               id="id-coverage-spatial" method="post">
                                             {% csrf_token %}
                                             <fieldset>
-                                                <legend>Spatial</legend>
                                                 <div id="div_id_type" class="control-group">
                                                     <div class="controls">
                                                         <label class="radio control-label">
@@ -1199,7 +1206,6 @@
                                               id="id-coverage-spatial" method="post">
                                             {% csrf_token %}
                                             <fieldset>
-                                                <legend>Spatial</legend>
                                                 <div id="div_id_type" class="control-group">
                                                     <div class="controls">
                                                         <label class="radio control-label">
@@ -2463,6 +2469,99 @@ function metadata_update_ajax_submit(form_id){
         return false;
     }
 
+    // Map js
+    var coverageMap;
+    var allOverlays = [];
+    function initMap() {
+        coverageMap = new google.maps.Map(document.getElementById('coverageMap'), {
+            center: {lat: 41.850033, lng: -87.6500523},
+            color:"#DDD",
+            zoom: 5
+        });
+
+        var drawingManager = new google.maps.drawing.DrawingManager({
+            drawingMode: google.maps.drawing.OverlayType.MARKER,
+            drawingControl: true,
+            drawingControlOptions: {
+                position: google.maps.ControlPosition.TOP_CENTER,
+                drawingModes: [
+                    google.maps.drawing.OverlayType.MARKER,
+                    google.maps.drawing.OverlayType.POLYGON
+                ]
+            },
+            markerOptions: {
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 5
+                }
+            },
+            circleOptions: {
+                fillColor: '#ffff00',
+                fillOpacity: 1,
+                strokeWeight: 5,
+                clickable: false,
+                editable: true,
+                zIndex: 1
+            },
+            polygonOptions: {
+                strokeWeight: 0,
+                fillOpacity: 0.45,
+                editable: true,
+                fillColor:'#1E90FF',
+                strokeColor: '#FF0000',
+            }
+        });
+        drawingManager.setMap(coverageMap);
+
+        google.maps.event.addListener(drawingManager, 'polygoncomplete', function (polygon) {
+            var coordinates = (polygon.getPath().getArray());
+            processDrawing(coordinates, "polygon");
+        });
+
+        google.maps.event.addListener(drawingManager, 'markercomplete', function (marker) {
+            var coordinates = (marker.getPosition());
+            processDrawing (coordinates, "marker");
+        });
+
+        google.maps.event.addListener(drawingManager, 'overlaycomplete', function (e) {
+            allOverlays.push(e);
+        });
+
+        function processDrawing (coordinates, shape) {
+            if ((shape == "polygon" && coordinates.length == 4) || shape == "marker"){
+                // Delete previous drawings
+                if (allOverlays.length > 1){
+                    for (var i = 1; i < allOverlays.length; i++){
+                        allOverlays[i-1].overlay.setMap(null);
+                    }
+                    allOverlays.shift();
+                }
+                if (shape == "polygon"){
+                    console.log("New 4-polygon added: ");
+                    for (var i = 0; i < coordinates.length; i++){
+                        console.log(coordinates[i].lat()+ ", " + coordinates[i].lng());
+                    }
+                    console.log("");
+                }
+                else{
+                    console.log("New point added: ");
+                    console.log(coordinates.lat() + ", " + coordinates.lng());
+                    console.log("");
+                }
+            }
+            else {
+                deleteAllShape();
+            }
+        }
+    }
+
+    function deleteAllShape() {
+        for (var i = 0; i < allOverlays.length; i++) {
+            allOverlays[i].overlay.setMap(null);
+        }
+        allOverlays = [];
+    }
+
     function customAlert(msg,duration){
         var el = document.createElement("div");
         var top = ($(window).height() / 2) - 25;
@@ -2477,6 +2576,13 @@ function metadata_update_ajax_submit(form_id){
     }
 
     $(document).ready(function () {
+        $("#coverageTabBtn").click(function(){
+            setTimeout( function(){
+                google.maps.event.trigger(coverageMap, "resize");
+                coverageMap.setCenter(new google.maps.LatLng(41.850033, -87.6500523));
+            }, 100 );
+        });
+
         if (sessionStorage.signininfo) {
             $("#sign-in-info").text(sessionStorage.signininfo);
             $("#btn-select-irods-file").show();
@@ -2509,7 +2615,7 @@ function metadata_update_ajax_submit(form_id){
         var file_count = $("#file-count").attr('value');
         //set allowed file types
         var file_types = $("#supported-file-types").attr('value');
-        console.log(file_types)
+{#        console.log(file_types)#}
         if(file_types!= ".*"){
             var display_file_types = file_types.substring(0, file_types.length-2) + ').'
             $("#file-types").text("Only the listed file types can be uploaded: " + display_file_types);
