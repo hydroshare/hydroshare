@@ -77,6 +77,7 @@ with open(sys.argv[1]) as old_res_file:
         # check whether the initial res_creator is in owner_user_objs list, and remove it if not
         if not res_creator in owner_user_objs:
             res_creator.uaccess.unshare_resource_with_user(res, res_creator)
+            res.last_changed_by = owner_user_objs[0]
 
         # delete admin from creators and contributors metadata elements to remove artifacts triggered
         # by bag ingestion code for resources with all creators being non-HydroShare users
