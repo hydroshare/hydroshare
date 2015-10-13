@@ -507,7 +507,7 @@ def my_resources(request, page):
         if(start+res_cnt > total_res_cnt):
             res_cnt = total_res_cnt-start
 
-        reslst = reslst[start:start+res_cnt]
+        reslst = reslst[start : start + res_cnt]
 
         # TODO sorts should be in SQL not python
         res = sorted(reslst, key=lambda x: x.title)
