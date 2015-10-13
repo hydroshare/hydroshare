@@ -1418,7 +1418,7 @@ body > .container{
 	width: 100%;
 }
 
-#comment {
+#comment, .comment-reply-form {
 	width: 100%;
 }
 
