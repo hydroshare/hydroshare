@@ -5,10 +5,6 @@
 
 <body>
 
-<h1>Search</h1>
-
-
-
 
 {% block content %}
     <h2>Search</h2>
@@ -26,7 +22,6 @@
 
         {% if query %}
             <h3>Results</h3>
-            <p> {{ page.object_list }} </p>
             {% for result in page.object_list %}
                 <p>
                     <a href="{{ result.object.get_absolute_url }}">{{ result.object.title }}</a>
@@ -44,7 +39,6 @@
                 </div>
             {% endif %}
         {% else %}
-            <p> hi</p>
             {# Show some example queries to run, maybe query syntax, something else? #}
         {% endif %}
     </form>

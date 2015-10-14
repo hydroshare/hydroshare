@@ -1,1 +1,9 @@
-{{ object.title }}
+{{ object.metadata.title }}
+{{ object.first_creator }}
+{{ object.metadata.description }}
+{% for creator in object.metadata.creators.all %}
+{{ creator }}
+{% endfor %}
+{% for subject in object.metadata.subjects.all %}
+{{ subject }}
+{% endfor %}

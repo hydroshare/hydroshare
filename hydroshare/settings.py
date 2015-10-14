@@ -194,18 +194,7 @@ DATABASES = {
     }
 }
 
-#######################
-# HAYSTACK CONNECTION #
-#######################
 
-
-HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        'URL': 'http://hydroshare_solr_1.bridge:8983/solr/resource_core',
-        'TIMEOUT': 5*60,
-    },
-}
 #########
 # PATHS #
 #########
@@ -271,7 +260,6 @@ INSTALLED_APPS = (
     "inplaceeditform",
     "django_nose",
     "django_irods",
-    "haystack",
     "theme",
     "theme.blog_mods",
     "mezzanine.boot",
@@ -286,6 +274,7 @@ INSTALLED_APPS = (
     "mezzanine.accounts",
     "mezzanine.mobile",
     "autocomplete_light",
+    "haystack",
     "jquery_ui",
     "rest_framework",
     "ga_ows",
@@ -436,4 +425,16 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     )
+}
+
+
+SOLR_HOST = os.environ.get('SOLR_HOST', 'hydroshare_solr_1')
+SOLR_PORT = os.environ.get('SOLR_PORT', '8983')
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
+        'URL': 'http://{SOLR_HOST}:{SOLR_PORT}/solr'.format(**globals()),
+        # ...or for multicore...
+        # 'URL': 'http://127.0.0.1:8983/solr/mysite',
+    },
 }
