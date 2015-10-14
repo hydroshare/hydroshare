@@ -1,6 +1,7 @@
 {{ object.metadata.title }}
 {{ object.first_creator }}
 {{ object.metadata.description }}
+{{ object.metadata.pulisher.name }}
 {% for creator in object.metadata.creators.all %}
 {{ creator }}
 {% endfor %}

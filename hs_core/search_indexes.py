@@ -9,6 +9,7 @@ class GenericResourceIndex(indexes.SearchIndex, indexes.Indexable):
     abstract = indexes.CharField(model_attr='description')
     creators = indexes.MultiValueField()
     subjects = indexes.MultiValueField(faceted=True)
+    publisher = indexes.CharField(model_attr='publisher');
     def get_model(self):
         return GenericResource
 
