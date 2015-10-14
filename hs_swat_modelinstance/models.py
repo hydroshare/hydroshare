@@ -395,7 +395,7 @@ class ModelInput(AbstractMetaDataElement):
 
 #SWAT Model Instance Resource type
 class SWATModelInstanceResource(BaseResource):
-    objects = ResourceManager()
+    objects = ResourceManager("SWATModelInstanceResource")
 
     class Meta:
         verbose_name = 'SWAT Model Instance Resource'
