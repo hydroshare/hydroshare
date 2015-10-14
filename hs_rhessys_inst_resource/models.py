@@ -27,7 +27,7 @@ from .forms import InputForm
 
 
 class InstResource(BaseResource):
-    objects = ResourceManager()
+    objects = ResourceManager("InstResource")
 
     class Meta:
         verbose_name = 'RHESSys Instance Resource'
