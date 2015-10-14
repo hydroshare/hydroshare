@@ -9,6 +9,7 @@ solr:
   volumes:
     # hydroshare repository
     - "/home/hydro/hydroshare:/hydroshare"
+    - ".:/hydroshare"
   ports:
     - "8983:8983"
 hydroshare:

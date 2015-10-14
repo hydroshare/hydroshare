@@ -150,6 +150,11 @@ rebuild_hs() {
         sleep 1
     done
     echo
+    echo "*** setting up solr schema ***"
+    docker-compose run --rm hydroshare python manage.py build_solr_schema -f schema.xml
+    tar -cf /tmp/solr_conf.tar schema.xml
+    docker cp /tmp/solr_conf.tar $(docker-compose ps -q solr):/tmp/solr_conf.tar
+    docker exec $(docker-compose ps -q solr) tar -xf /tmp/solr_conf.tar -C /opt/solr/example/solr/collection1/conf/
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
