@@ -7,6 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 
 
+
 class RefTimeSeriesResource(BaseResource):
     objects = ResourceManager("RefTimeSeriesResource")
 

@@ -1654,9 +1654,10 @@ class CoreMetaData(models.Model):
 <!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
 "http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">'''
 
-    NAMESPACES = {'rdf':"http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    NAMESPACES = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                  'rdfs1': "http://www.w3.org/2001/01/rdf-schema#",
                   'dc': "http://purl.org/dc/elements/1.1/",
-                  'dcterms':"http://purl.org/dc/terms/",
+                  'dcterms': "http://purl.org/dc/terms/",
                   'hsterms': "http://hydroshare.org/terms/"}
 
     id = models.AutoField(primary_key=True)
@@ -1785,14 +1786,20 @@ class CoreMetaData(models.Model):
 
     def get_xml(self, pretty_print=True):
         from lxml import etree
+        # importing here to avoid circular import problem
+        from hydroshare.utils import current_site_url, get_resource_types
 
         RDF_ROOT = etree.Element('{%s}RDF' % self.NAMESPACES['rdf'], nsmap=self.NAMESPACES)
         # create the Description element -this is not exactly a dc element
         rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' % self.NAMESPACES['rdf'])
 
-        #resource_uri = self.HYDROSHARE_URL + '/resource/' + self.resource.short_id
         resource_uri = self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
         rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], resource_uri)
+
+        # get the resource object associated with this metadata container object - needed to get the verbose_name
+        resource = BaseResource.objects.filter(object_id=self.id).first()
+        rt = [rt for rt in get_resource_types() if rt._meta.object_name == resource.resource_type][0]
+        resource = rt.objects.get(id=resource.id)
 
         # create the title element
         if self.title:
@@ -1934,6 +1941,14 @@ class CoreMetaData(models.Model):
                 dc_subject.set('{%s}resource' % self.NAMESPACES['rdf'], sub.value)
             else:
                 dc_subject.text = sub.value
+
+        # resource type related additional attributes
+        rdf_Description_resource = etree.SubElement(RDF_ROOT, '{%s}Description' % self.NAMESPACES['rdf'])
+        rdf_Description_resource.set('{%s}about' % self.NAMESPACES['rdf'], self.type.url)
+        rdfs1_label = etree.SubElement(rdf_Description_resource, '{%s}label' % self.NAMESPACES['rdfs1'])
+        rdfs1_label.text = resource._meta.verbose_name
+        rdfs1_isDefinedBy = etree.SubElement(rdf_Description_resource, '{%s}isDefinedBy' % self.NAMESPACES['rdfs1'])
+        rdfs1_isDefinedBy.text = current_site_url() + "/terms"
 
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 

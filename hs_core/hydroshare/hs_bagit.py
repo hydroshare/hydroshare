@@ -2,15 +2,25 @@ import arrow
 import os
 import shutil
 import errno
+import tempfile
+import mimetypes
+import zipfile
 
-from foresite import *
-from rdflib import URIRef, Namespace
+from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
+from rdflib import Namespace, URIRef
+
+import bagit
 
 from mezzanine.conf import settings
 
 from hs_core.models import Bags, ResourceFile
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
+
+
+class HsBagitException(Exception):
+    pass
+
 
 def delete_bag(resource):
     """
@@ -35,6 +45,7 @@ def delete_bag(resource):
     # delete the bags table
     for bag in resource.bags.all():
         bag.delete()
+
 
 def create_bag_files(resource):
     """
@@ -85,8 +96,6 @@ def create_bag_files(resource):
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
 
     ##make the resource map:
-    # utils.namespaces['hsterms'] = Namespace('{hs_url}/hsterms/'.format(hs_url=current_site_url))
-    # utils.namespaceSearchOrder.append('hsterms')
     utils.namespaces['citoterms'] = Namespace('http://purl.org/spar/cito/')
     utils.namespaceSearchOrder.append('citoterms')
 
@@ -95,9 +104,15 @@ def create_bag_files(resource):
 
     #Set properties of the aggregation
     a._dc.title = resource.title
-    a._dcterms.type = resource._meta.object_name
+    a._dcterms.type = URIRef(resource.metadata.type.url)
     a._citoterms.isDocumentedBy = metadata_url
     a._ore.isDescribedBy = res_map_url
+
+    res_type_aggregation = AggregatedResource(resource.metadata.type.url)
+    res_type_aggregation._rdfs.label = resource._meta.verbose_name
+    res_type_aggregation._rdfs.isDefinedBy = current_site_url + "/terms"
+
+    a.add_resource(res_type_aggregation)
 
     #Create a description of the metadata document that describes the whole resource and add it to the aggregation
     resMetaFile = AggregatedResource(metadata_url)
@@ -134,6 +149,10 @@ def create_bag_files(resource):
     # change the namespace for the 'creator' element from 'dcterms' to 'dc'
     xml_string = remdoc.data.replace('dcterms:creator', 'dc:creator')
 
+    # delete this extra element
+    #<ore:aggregates rdf:resource="[hydroshare domain]/terms/[Resource class name]"/>
+    xml_string = xml_string.replace('<ore:aggregates rdf:resource="%s"/>\n' % resource.metadata.type.url, '')
+
     # create resourcemap.xml and upload it to iRODS
     from_file_name = os.path.join(bagit_path, 'resourcemap.xml')
     with open(from_file_name, 'w') as out:
@@ -144,6 +163,7 @@ def create_bag_files(resource):
     shutil.rmtree(bagit_path)
 
     return istorage
+
 
 def create_bag_by_irods(resource_id, istorage = None):
     """
@@ -177,6 +197,7 @@ def create_bag_by_irods(resource_id, istorage = None):
         except SessionException:
             pass
 
+
 def create_bag(resource):
     """
     Modified to implement the new bagit workflow. The previous workflow was to create a bag from the current filesystem
@@ -208,3 +229,39 @@ def create_bag(resource):
     )
 
     return b
+
+
+def read_bag(bag_path):
+    """
+
+    :param bag_path:
+    :return:
+    """
+    #import pdb; pdb.set_trace()
+    tmpdir = None
+    unpacked_bag_path = None
+
+    try:
+        if not os.path.exists(bag_path):
+            raise HsBagitException('Bag does not exist')
+        if os.path.isdir(bag_path):
+            unpacked_bag_path = bag_path
+        else:
+            mtype = mimetypes.guess_type(bag_path)
+            if mtype[0] != 'application/zip':
+                msg = "Expected bag to have MIME type application/zip, but it has {0} instead.".format(mtype[0])
+                raise HsBagitException(msg)
+            tmpdir = tempfile.mkdtemp()
+            zfile = zipfile.ZipFile(bag_path)
+            zroot = zfile.namelist()[0].split(os.sep)[0]
+            zfile.extractall(tmpdir)
+            unpacked_bag_path = os.path.join(tmpdir, zroot)
+
+        bag = bagit.Bag(unpacked_bag_path)
+        if not bag.is_valid():
+            msg = "Bag is not valid"
+            raise HsBagitException(msg)
+
+    finally:
+        if tmpdir:
+            shutil.rmtree(tmpdir)

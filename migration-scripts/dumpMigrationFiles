@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# dumpMigraionFiles
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
+### How to use
+# from the main hydroshare directory: $ ./dumpMigrationFiles
+
+echo "*** dump resources to resources.json ***"
+docker exec hydroshare_hydroshare_1 python dumpResourceToJSON.py
+echo "*** dump comments to comments.json ***"
+docker exec hydroshare_hydroshare_1 python dumpCommentsToJSON.py
+echo "*** dump threaded comments to threaded_comments.json ***"
+docker exec hydroshare_hydroshare_1 python dumpThreadedCommentsToJSON.py
+echo "*** dump ratings to ratings.json ***"
+docker exec hydroshare_hydroshare_1 python dumpRatingsToJSON.py
+echo "*** dump users to user.json ***"
+docker exec hydroshare_hydroshare_1 python manage.py dumpdata auth.user --indent 4 > user.json
+echo "*** dump profiles to user_profile.json ***"
+docker exec hydroshare_hydroshare_1 python manage.py dumpdata theme.userprofile --indent 4 > userprofile.json
+echo "*** dump media files and database to media.migration.tar.gz and pg.migration.sql ***"
+scripts/backup-hs
+cp ~/backup/media.deploy.tar.gz ./media.migration.tar.gz
+cp ~/backup/pg.deploy.sql ./pg.migration.sql
+echo "*** tar up all dumped files as date stamped archive ***"
+tar -czf migration-files-`date +"%m-%d-%y"`.tar.gz comments.json rating.json resources.json threaded_comments.json user.json userprofile.json media.migration.tar.gz pg.migration.sql
+
+exit 0;
+
