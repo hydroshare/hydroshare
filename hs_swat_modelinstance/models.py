@@ -12,6 +12,7 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
 from hs_model_program.models import ModelProgramResource
 from hs_core.hydroshare import utils
 
+
 # extended metadata elements for SWAT Model Instance resource type
 class ModelOutput(AbstractMetaDataElement):
     term = 'ModelOutput'
@@ -58,9 +59,6 @@ class ExecutedBy(AbstractMetaDataElement):
                                           model_name=title,
                                           content_object=metadata_obj)
         return mp_fk
-                                          model_name=title,
-                                          content_object=metadata_obj)
-        return mp_fk
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -70,7 +68,6 @@ class ExecutedBy(AbstractMetaDataElement):
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
 
         kwargs['model_program_fk'] = obj
-
 
         executed_by = ExecutedBy.objects.get(id=element_id)
         if executed_by:
@@ -513,7 +510,6 @@ class SWATModelInstanceMetaData(CoreMetaData):
 
 
     def get_xml(self, pretty_print=True):
-
 
         # get the xml string representation of the core metadata elements
         xml_string = super(SWATModelInstanceMetaData, self).get_xml(pretty_print=False)
