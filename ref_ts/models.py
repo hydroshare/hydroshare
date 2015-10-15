@@ -8,7 +8,7 @@ from django.contrib.contenttypes import generic
 
 
 class RefTimeSeries(BaseResource):
-    objects = ResourceManager()
+    objects = ResourceManager("RefTimeSeries")
 
     class Meta:
         verbose_name = "HIS Referenced Time Series"
