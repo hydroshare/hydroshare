@@ -61,7 +61,7 @@ class ExecutedByFormHelper(BaseFormHelper):
                 <tr><td>Version: </td><td></td></tr>
                 <tr><td>Language: </td><td></td></tr>
                 <tr><td>Operating System: </td><td></td></tr>
-                <tr><td>Url: </td><td></td></tr>
+                <tr><td>URI: </td><td></td></tr>
             </table>
             </div>
             """),
