@@ -1,5 +1,5 @@
 from mezzanine.pages.models import Page, RichText
-from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from mezzanine.pages.page_processors import processor_for
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -7,45 +7,46 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 
 
-class RefTimeSeries(Page, AbstractResource):
+class RefTimeSeries(BaseResource):
+    objects = ResourceManager("RefTimeSeries")
 
-        class Meta:
-                verbose_name = "HIS Referenced Time Series"
+    class Meta:
+        verbose_name = "HIS Referenced Time Series"
+        proxy = False
 
-        def extra_capabilities(self):
-            return None
+    reference_type = models.CharField(max_length=4, null=False, blank=True, default='')
+    url = models.URLField(null=False, blank=True, default='',
+                          verbose_name='Web Services Url')
 
-        @property
-        def metadata(self):
-            md = RefTSMetadata()
-            return self._get_metadata(md)
+    def extra_capabilities(self):
+        return None
 
-        reference_type = models.CharField(max_length=4, null=False, blank=True, default='')
+    @property
+    def metadata(self):
+        md = RefTSMetadata()
+        return self._get_metadata(md)
 
-        url = models.URLField(null=False, blank=True, default='',
-                              verbose_name='Web Services Url')
+    def can_add(self, request):
+        return super(RefTimeSeries, self).can_add(request)
 
-        def can_add(self, request):
-                return AbstractResource.can_add(self, request)
+    def can_change(self, request):
+        return super(RefTimeSeries, self).can_change(request)
 
-        def can_change(self, request):
-                return AbstractResource.can_change(self, request)
+    def can_delete(self, request):
+        return super(RefTimeSeries, self).can_delete(request)
 
-        def can_delete(self, request):
-                return AbstractResource.can_delete(self, request)
+    def can_view(self, request):
+        return super(RefTimeSeries, self).can_view(request)
 
-        def can_view(self, request):
-                return AbstractResource.can_view(self, request)
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # no file types are supported
+        return ()
 
-        @classmethod
-        def get_supported_upload_file_types(cls):
-            # no file types are supported
-            return ()
-
-        @classmethod
-        def can_have_multiple_files(cls):
-            # resource can't have any files
-            return False
+    @classmethod
+    def can_have_multiple_files(cls):
+        # resource can't have any files
+        return False
 
 
 processor_for(RefTimeSeries)(resource_processor)

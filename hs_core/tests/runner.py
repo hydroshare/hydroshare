@@ -25,7 +25,9 @@ class CustomTestSuiteRunner(NoseTestSuiteRunner):
                 'django_irods',
                 'crispy_forms',
                 'autocomplete_light',
-                'widget_tweaks'
+                'widget_tweaks',
+                'hs_tools_resource',  #TODO: remove this app from this testing black list after resource class refactoring
+                'ref_ts'    #TODO: remove this app from this testing black list after resource class refactoring
                 # etc...
             )
 

@@ -7,7 +7,7 @@ from tastypie.test import TestApiClient
 from django.test import Client
 from django.contrib.auth.models import User, Group
 from hs_core import hydroshare
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 from tastypie.serializers import Serializer
 import urllib
 import logging

@@ -1,11 +1,14 @@
 import json
+
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.contrib.contenttypes import generic
+
 from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
-from hs_core.models import AbstractResource
+
+from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 
 
@@ -213,7 +216,8 @@ class Variable(AbstractMetaDataElement):
             raise ObjectDoesNotExist("No variable element was found for id:%d." % element_id)
 
 # Define the netCDF resource
-class NetcdfResource(Page, AbstractResource):
+class NetcdfResource(BaseResource):
+    objects = ResourceManager("NetcdfResource")
 
     @property
     def metadata(self):
@@ -230,20 +234,9 @@ class NetcdfResource(Page, AbstractResource):
         # can have only 1 file
         return False
 
-    def can_add(self, request):
-        return AbstractResource.can_add(self, request)
-
-    def can_change(self, request):
-        return AbstractResource.can_change(self, request)
-
-    def can_delete(self, request):
-        return AbstractResource.can_delete(self, request)
-
-    def can_view(self, request):
-        return AbstractResource.can_view(self, request)
-
     class Meta:
-            verbose_name = 'Multidimensional (NetCDF)'
+        verbose_name = 'Multidimensional (NetCDF)'
+        proxy = True
 
 processor_for(NetcdfResource)(resource_processor)
 

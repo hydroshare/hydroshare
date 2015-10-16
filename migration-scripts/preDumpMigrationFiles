@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# preDumpMigrationFiles
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
+### How to use
+# from the migration-scripts directory: $ ./preDumpMigrationFiles
+
+echo "*** copy dump scripts to main hydroshare directory ***"
+cp dumpResourceToJSON.py ../
+cp dumpCommentsToJSON.py ../
+cp dumpThreadedCommentsToJSON.py ../
+cp dumpRatingsToJSON.py ../
+cp dumpMigrationFiles ../
+
+exit 0;
