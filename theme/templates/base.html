@@ -158,7 +158,9 @@
 {#    </div>#}
     <div class="container">
         <div class="row">
-            {% block main %}{% endblock %}
+            <div class="{% block main_cols %}col-md-12{% endblock %}">
+                {% block main %}{% endblock %}
+            </div>
             {% block after_main %}{% endblock %}
         </div>
     </div>
