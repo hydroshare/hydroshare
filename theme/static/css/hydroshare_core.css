@@ -1093,6 +1093,10 @@ span.remove {
     padding-left: 15px;
 }
 
+.glyphicon-info-sign {
+    top: 2px;
+}
+
 #resourceSpecificTab {
     overflow-x: hidden;
 }

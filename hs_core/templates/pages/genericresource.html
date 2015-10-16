@@ -366,7 +366,7 @@
                             <label class="control-label" for="select_license"> Select a license </label>
                                     <span data-toggle="tooltip" data-placement="auto"
                                           title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
-                                          class="glyphicon glyphicon-info-sign"></span>
+                                          class="glyphicon glyphicon-info-sign text-muted"></span>
                             <select id="select_license" class="form-control">
                                 <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option>
                                 <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option>
@@ -591,7 +591,7 @@
                                                 <span class="button-label">&nbspUpdate access list</span></button>
                                                     <span data-toggle="tooltip" data-placement="auto"
                                                           title='Hold down "Control", or "Command" on a Mac, to select more than one.'
-                                                          class="pull-right glyphicon glyphicon-info-sign info-icon"></span>
+                                                          class="pull-right glyphicon glyphicon-info-sign info-icon text-muted"></span>
                                         </form>
                                         <form action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
                                               method="POST" style="padding-top:0.3em">
@@ -1110,8 +1110,7 @@
                                                             value="{% if coverage_spatial_form.initial.projection %}{{ coverage_spatial_form.initial.projection }}{% else %}WGS 84 EPSG:4326{% endif %}">
                                                      <input id="id_units" maxlength="50" name="units"
                                                             style="display:none"
-                                                            type="text" value="
-                                                            {% if coverage_spatial_form.initial.units %}{{ coverage_spatial_form.initial.units }}{% endif %}">
+                                                            type="text" value="{% if coverage_spatial_form.initial.units %}{{ coverage_spatial_form.initial.units }}{% endif %}">
 
                                                      <div id="div_id_type">
                                                          <label class="radio-inline">
@@ -1136,8 +1135,12 @@
                                                     <div class="col-sm-6">
                                                         <div id="div_id_east" class="control-group">
                                                             <label for="id_east" class="control-label requiredField">
-                                                                Latitude (WGS 84 decimal degrees)<span
-                                                                    class="asteriskField">*</span></label>
+                                                                Latitude<span class="asteriskField">*</span>
+                                                            </label>
+                                                            <span data-toggle="tooltip" data-placement="auto"
+                                                                  title="WGS 84 decimal degrees"
+                                                                  class="glyphicon glyphicon-info-sign text-muted"
+                                                                  style="float:right"></span>
 
                                                             <div class="controls">
                                                                 <input class="form-control input-sm textinput textInput"
@@ -1147,7 +1150,12 @@
                                                         </div>
                                                         <div id="div_id_north" class="control-group">
                                                             <label for="id_north" class="control-label requiredField">
-                                                                Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                                                Longitude<span class="asteriskField">*</span>
+                                                            </label>
+                                                            <span data-toggle="tooltip" data-placement="auto"
+                                                                  title="WGS 84 decimal degrees"
+                                                                  class="glyphicon glyphicon-info-sign text-muted"
+                                                                  style="float:right"></span>
 
                                                             <div class="controls"><input
                                                                     class="form-control input-sm textinput textInput"
@@ -1155,9 +1163,14 @@
                                                                     value="{% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north }}{% endif %}">
                                                             </div>
                                                         </div>
-                                                        <div id="div_id_northlimit" class="control-group"><label
-                                                                for="id_northlimit" class="control-label requiredField">
-                                                            North Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                                        <div id="div_id_northlimit" class="control-group">
+                                                            <label for="id_northlimit" class="control-label requiredField">
+                                                                North Latitude<span class="asteriskField">*</span>
+                                                            </label>
+                                                            <span data-toggle="tooltip" data-placement="auto"
+                                                                  title="WGS 84 decimal degrees"
+                                                                  class="glyphicon glyphicon-info-sign text-muted"
+                                                                  style="float:right"></span>
 
                                                             <div class="controls"><input
                                                                     class="form-control input-sm textinput textInput"
@@ -1165,9 +1178,14 @@
                                                                     value="{% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit }}{% endif %}">
                                                             </div>
                                                         </div>
-                                                        <div id="div_id_eastlimit" class="control-group"><label
-                                                                for="id_eastlimit" class="control-label requiredField">
-                                                            East Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                                        <div id="div_id_eastlimit" class="control-group">
+                                                            <label for="id_eastlimit" class="control-label requiredField">
+                                                                East Longitude<span class="asteriskField">*</span>
+                                                            </label>
+                                                            <span data-toggle="tooltip" data-placement="auto"
+                                                                  title="WGS 84 decimal degrees"
+                                                                  class="glyphicon glyphicon-info-sign text-muted"
+                                                                  style="float:right"></span>
 
                                                             <div class="controls"><input
                                                                     class="form-control input-sm textinput textInput"
@@ -1175,9 +1193,14 @@
                                                                     value="{% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit }}{% endif %}">
                                                             </div>
                                                         </div>
-                                                        <div id="div_id_southlimit" class="control-group"><label
-                                                                for="id_southlimit" class="control-label requiredField">
-                                                            South Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                                        <div id="div_id_southlimit" class="control-group">
+                                                            <label for="id_southlimit" class="control-label requiredField">
+                                                                South Latitude<span class="asteriskField">*</span>
+                                                            </label>
+                                                            <span data-toggle="tooltip" data-placement="auto"
+                                                                  title="WGS 84 decimal degrees"
+                                                                  class="glyphicon glyphicon-info-sign text-muted"
+                                                                  style="float:right"></span>
 
                                                             <div class="controls"><input
                                                                     class="form-control input-sm textinput textInput"
@@ -1185,9 +1208,14 @@
                                                                     value="{% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit }}{% endif %}">
                                                             </div>
                                                         </div>
-                                                        <div id="div_id_westlimit" class="control-group"><label
-                                                                for="id_westlimit" class="control-label requiredField">
-                                                            West Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
+                                                        <div id="div_id_westlimit" class="control-group">
+                                                            <label for="id_westlimit" class="control-label requiredField">
+                                                                West Longitude<span class="asteriskField">*</span>
+                                                            </label>
+                                                            <span data-toggle="tooltip" data-placement="auto"
+                                                                  title="WGS 84 decimal degrees"
+                                                                  class="glyphicon glyphicon-info-sign text-muted"
+                                                                  style="float:right"></span>
 
                                                             <div class="controls"><input
                                                                     class="form-control input-sm textinput textInput"
