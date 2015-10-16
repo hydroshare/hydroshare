@@ -1073,253 +1073,129 @@
                                 {% endif %}
                             {% else %}
                                 <div class="form-group" id="coverage-spatial">
-                                    <div class="col-md-10 col-sm-12 col-xs-12">
-                                        <legend>Spatial</legend>
-                                        <div id="coverageMap" class="col-md-6 col-sm-12 col-xs-12"></div>
-                                        <div class="col-md-6 col-sm-12 col-xs-12">
-                                        {% if not coverage_spatial_form.initial.north and not coverage_spatial_form.initial.northlimit %}
-                                            <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
+                                    <div class="col-md-9 col-sm-12 col-xs-12">
+                                        <div class="row">
+                                            <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{% if not coverage_spatial_form.initial.north and not coverage_spatial_form.initial.northlimit %}add-metadata/{% else %}{{ coverage_spatial_form.initial.id }}/update-metadata/{% endif %}"
                                                   id="id-coverage-spatial" method="post">
                                                 {% csrf_token %}
-                                                <fieldset>
-                                                    <div id="div_id_type" class="control-group">
-                                                        <div class="controls">
-                                                            <label class="radio control-label">
-                                                                <input type="radio" name="type" id="id_type_1" value="box">Box
-                                                            </label>
-                                                            <label class="radio control-label"><input type="radio"
-                                                                                                      checked="checked"
-                                                                                                      name="type"
-                                                                                                      id="id_type_2"
-                                                                                                      value="point">Point</label>
-                                                        </div>
-                                                    </div>
-                                                    <div id="div_id_name" class="control-group">
-                                                        <label for="id_name" class="control-label">Place/Area Name</label>
+                                                 <div class="col-sm-12">
+                                                    <legend>Spatial</legend>
+                                                    <div class="info-group" style="margin-top: -20px; margin-bottom:20px;">
+                                                         <table>
+                                                             <tbody>
+                                                                 <tr>
+                                                                     <th class="text-muted">Coordinate System/Geographic Projection</th>
+                                                                     <td>WGS 84 EPSG:4326</td>
+                                                                 </tr>
+                                                                 <tr>
+                                                                     <th class="text-muted">Coordinate Units</th>
+                                                                     <td>Decimal degrees</td>
+                                                                 </tr>
+                                                             </tbody>
+                                                         </table>
+                                                     </div>
 
-                                                        <div class="controls">
-                                                            <input class="form-control input-sm textinput textInput"
-                                                                   id="id_name" maxlength="200" name="name" type="text">
-                                                        </div>
-                                                    </div>
-                                                    <div id="div_id_projection" class="control-group">
-                                                        <label for="id_projection" class="control-label">Coordinate
-                                                            System/Geographic Projection</label>
-
-                                                        <div class="controls">
-                                                            <input class="form-control input-sm textinput textInput"
-                                                                   id="id_projection" maxlength="100" name="projection"
-                                                                   readonly="True" style="background-color:white;"
-                                                                   type="text" value="WGS 84 EPSG:4326">
-                                                        </div>
-                                                    </div>
-                                                    <div id="div_id_east" class="control-group">
-                                                        <label for="id_east" class="control-label requiredField">
-                                                            Latitude (WGS 84 decimal degrees)<span
-                                                                class="asteriskField">*</span></label>
-
-                                                        <div class="controls">
-                                                            <input class="form-control input-sm textinput textInput"
-                                                                   id="id_east" name="east" type="text">
-                                                        </div>
-                                                    </div>
-                                                    <div id="div_id_north" class="control-group">
-                                                        <label for="id_north" class="control-label requiredField">
-                                                            Longitude (WGS 84 decimal degrees)<span
-                                                                class="asteriskField">*</span></label>
-
-                                                        <div class="controls"><input
-                                                                class="form-control input-sm textinput textInput"
-                                                                id="id_north" name="north" type="text"></div>
-                                                    </div>
-                                                    <div id="div_id_northlimit" class="control-group"
-                                                         style="display: none;"><label
-                                                            for="id_northlimit" class="control-label requiredField">
-                                                        North Latitude (WGS 84 decimal degrees)<span
-                                                            class="asteriskField">*</span></label>
-
-                                                        <div class="controls"><input
-                                                                class="form-control input-sm textinput textInput"
-                                                                id="id_northlimit" name="northlimit" type="text"></div>
-                                                    </div>
-                                                    <div id="div_id_eastlimit" class="control-group" style="display: none;">
-                                                        <label
-                                                                for="id_eastlimit" class="control-label requiredField">
-                                                            East Longitude (WGS 84 decimal degrees)<span
-                                                                class="asteriskField">*</span></label>
-
-                                                        <div class="controls"><input
-                                                                class="form-control input-sm textinput textInput"
-                                                                id="id_eastlimit" name="eastlimit" type="text"></div>
-                                                    </div>
-                                                    <div id="div_id_southlimit" class="control-group"
-                                                         style="display: none;"><label
-                                                            for="id_southlimit" class="control-label requiredField">
-                                                        South Latitude (WGS 84 decimal degrees)<span
-                                                            class="asteriskField">*</span></label>
-
-                                                        <div class="controls"><input
-                                                                class="form-control input-sm textinput textInput"
-                                                                id="id_southlimit" name="southlimit" type="text"></div>
-                                                    </div>
-                                                    <div id="div_id_westlimit" class="control-group" style="display: none;">
-                                                        <label
-                                                                for="id_westlimit" class="control-label requiredField">
-                                                            West Longitude (WGS 84 decimal degrees)<span
-                                                                class="asteriskField">*</span></label>
-
-                                                        <div class="controls"><input
-                                                                class="form-control input-sm textinput textInput"
-                                                                id="id_westlimit" name="westlimit" type="text"></div>
-                                                    </div>
-                                                    <div id="div_id_units" class="control-group"><label for="id_units"
-                                                                                                        class="control-label requiredField">
-                                                        Coordinate Units<span class="asteriskField">*</span></label>
-
-                                                        <div class="controls"><input
-                                                                class="form-control input-sm textinput textInput"
-                                                                id="id_units" maxlength="50" name="units"
-                                                                readonly="True" style="background-color:white;"
-                                                                type="text" value="Decimal degrees"></div>
-                                                    </div>
-                                                    <div style="margin-top:10px">
-                                                        <button type="button" class="btn btn-primary pull-right"
-                                                                onclick="metadata_update_ajax_submit('id-coverage-spatial'); return false;"
-                                                                style="display: none;">Save changes
-                                                        </button>
-                                                    </div>
-                                                </fieldset>
-                                            </form>
-                                        {% else %}
-                                            <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{{ coverage_spatial_form.initial.id }}/update-metadata/"
-                                                  id="id-coverage-spatial" method="post">
-                                                {% csrf_token %}
-                                                <fieldset>
-                                                    <div id="div_id_type" class="control-group">
-                                                        <div class="controls">
-                                                            <label class="radio control-label">
-                                                                <input type="radio"
-                                                                        {% if coverage_spatial_form.initial.type == "box" %}
-                                                                       checked="checked"
-                                                                        {% endif %}
-                                                                       name="type" id="id_type_1" value="box">Box
-                                                            </label>
-                                                            <label class="radio control-label">
-                                                                <input type="radio"
-                                                                        {% if coverage_spatial_form.initial.type == "point" %}
-                                                                       checked="checked"
-                                                                        {% endif %}
-                                                                       name="type" id="id_type_2" value="point">Point
-                                                            </label>
-                                                        </div>
-                                                    </div>
                                                     <div id="div_id_name" class="control-group">
                                                         <label for="id_name" class="control-label">Place/Area Name</label>
 
                                                         <div class="controls">
                                                             <input class="form-control input-sm textinput textInput"
                                                                    id="id_name" maxlength="200" name="name" type="text"
-                                                                   value="
-                                                                           {% if coverage_spatial_form.initial.name %}{{ coverage_spatial_form.initial.name }}{% endif %}">
+                                                                   value="{% if coverage_spatial_form.initial.name %}{{ coverage_spatial_form.initial.name }}{% endif %}">
                                                         </div>
                                                     </div>
-                                                    <div id="div_id_projection" class="control-group">
-                                                        <label for="id_projection" class="control-label">Coordinate
-                                                            System/Geographic Projection</label>
 
-                                                        <div class="controls">
-                                                            <input class="form-control input-sm textinput textInput"
-                                                                   id="id_projection" maxlength="100" name="projection"
-                                                                   readonly="True" style="background-color:white;"
-                                                                   type="text" value="WGS 84 EPSG:4326"
-                                                                   value="
-                                                                           {% if coverage_spatial_form.initial.projection %}{{ coverage_spatial_form.initial.projection }}{% endif %}">
-                                                        </div>
+                                                     <input id="id_projection" maxlength="100" name="projection"
+                                                            type="text" style="display:none"
+                                                            value="{% if coverage_spatial_form.initial.projection %}{{ coverage_spatial_form.initial.projection }}{% else %}WGS 84 EPSG:4326{% endif %}">
+                                                     <input id="id_units" maxlength="50" name="units"
+                                                            style="display:none"
+                                                            type="text" value="
+                                                            {% if coverage_spatial_form.initial.units %}{{ coverage_spatial_form.initial.units }}{% endif %}">
+
+                                                     <div id="div_id_type">
+                                                         <label class="radio-inline">
+                                                             <input type="radio"
+                                                                    {% if coverage_spatial_form.initial.type == "box" %}checked="checked"{% endif %}
+                                                                    name="type" id="id_type_1"
+                                                                    value="box">Box</label>
+
+                                                         <label class="radio-inline">
+                                                             <input type="radio"
+                                                                    {% if coverage_spatial_form.initial.type == "point" %}checked="checked"{% endif %}
+                                                                    name="type" id="id_type_2"
+                                                                    value="point">Point</label>
+                                                     </div>
+                                                 </div>
+
+                                                <fieldset>
+                                                    <div class="col-sm-6">
+                                                        <div id="coverageMap"></div>
                                                     </div>
-                                                    <div id="div_id_east" class="control-group">
-                                                        <label for="id_east" class="control-label requiredField">
-                                                            Latitude (WGS 84 decimal degrees)<span
-                                                                class="asteriskField">*</span></label>
 
-                                                        <div class="controls">
-                                                            <input class="form-control input-sm textinput textInput"
-                                                                   id="id_east" name="east" type="text"
-                                                                   value="
-                                                                           {% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east }}{% endif %}">
-                                                        </div>
-                                                    </div>
-                                                    <div id="div_id_north" class="control-group">
-                                                        <label for="id_north" class="control-label requiredField">
-                                                            Longitude (WGS 84 decimal degrees)<span
-                                                                class="asteriskField">*</span></label>
+                                                    <div class="col-sm-6">
+                                                        <div id="div_id_east" class="control-group">
+                                                            <label for="id_east" class="control-label requiredField">
+                                                                Latitude (WGS 84 decimal degrees)<span
+                                                                    class="asteriskField">*</span></label>
 
-                                                        <div class="controls"><input
-                                                                class="form-control input-sm textinput textInput"
-                                                                id="id_north" name="north" type="text"
-                                                                value="
-                                                                        {% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north }}{% endif %}">
+                                                            <div class="controls">
+                                                                <input class="form-control input-sm textinput textInput"
+                                                                       id="id_east" name="east" type="text"
+                                                                       value="{% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east }}{% endif %}">
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div id="div_id_northlimit" class="control-group"><label
-                                                            for="id_northlimit" class="control-label requiredField">
-                                                        North Latitude (WGS 84 decimal degrees)<span
-                                                            class="asteriskField">*</span></label>
+                                                        <div id="div_id_north" class="control-group">
+                                                            <label for="id_north" class="control-label requiredField">
+                                                                Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
-                                                        <div class="controls"><input
-                                                                class="form-control input-sm textinput textInput"
-                                                                id="id_northlimit" name="northlimit" type="text"
-                                                                value="
-                                                                        {% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit }}{% endif %}"
-                                                                >
+                                                            <div class="controls"><input
+                                                                    class="form-control input-sm textinput textInput"
+                                                                    id="id_north" name="north" type="text"
+                                                                    value="{% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north }}{% endif %}">
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div id="div_id_eastlimit" class="control-group"><label
-                                                            for="id_eastlimit" class="control-label requiredField">
-                                                        East Longitude (WGS 84 decimal degrees)<span
-                                                            class="asteriskField">*</span></label>
+                                                        <div id="div_id_northlimit" class="control-group"><label
+                                                                for="id_northlimit" class="control-label requiredField">
+                                                            North Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
-                                                        <div class="controls"><input
-                                                                class="form-control input-sm textinput textInput"
-                                                                id="id_eastlimit" name="eastlimit" type="text"
-                                                                value="
-                                                                        {% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit }}{% endif %}">
+                                                            <div class="controls"><input
+                                                                    class="form-control input-sm textinput textInput"
+                                                                    id="id_northlimit" name="northlimit" type="text"
+                                                                    value="{% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit }}{% endif %}">
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div id="div_id_southlimit" class="control-group"><label
-                                                            for="id_southlimit" class="control-label requiredField">
-                                                        South Latitude (WGS 84 decimal degrees)<span
-                                                            class="asteriskField">*</span></label>
+                                                        <div id="div_id_eastlimit" class="control-group"><label
+                                                                for="id_eastlimit" class="control-label requiredField">
+                                                            East Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
-                                                        <div class="controls"><input
-                                                                class="form-control input-sm textinput textInput"
-                                                                id="id_southlimit" name="southlimit" type="text"
-                                                                value="
-                                                                        {% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit }}{% endif %}">
+                                                            <div class="controls"><input
+                                                                    class="form-control input-sm textinput textInput"
+                                                                    id="id_eastlimit" name="eastlimit" type="text"
+                                                                    value="{% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit }}{% endif %}">
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div id="div_id_westlimit" class="control-group"><label
-                                                            for="id_westlimit" class="control-label requiredField">
-                                                        West Longitude (WGS 84 decimal degrees)<span
-                                                            class="asteriskField">*</span></label>
+                                                        <div id="div_id_southlimit" class="control-group"><label
+                                                                for="id_southlimit" class="control-label requiredField">
+                                                            South Latitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
-                                                        <div class="controls"><input
-                                                                class="form-control input-sm textinput textInput"
-                                                                id="id_westlimit" name="westlimit" type="text"
-                                                                value="
-                                                                        {% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit }}{% endif %}">
+                                                            <div class="controls"><input
+                                                                    class="form-control input-sm textinput textInput"
+                                                                    id="id_southlimit" name="southlimit" type="text"
+                                                                    value="{% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit }}{% endif %}">
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div id="div_id_units" class="control-group">
-                                                        <label for="id_units" class="control-label requiredField">
-                                                            Coordinate Units<span class="asteriskField">*</span></label>
+                                                        <div id="div_id_westlimit" class="control-group"><label
+                                                                for="id_westlimit" class="control-label requiredField">
+                                                            West Longitude (WGS 84 decimal degrees)<span class="asteriskField">*</span></label>
 
-                                                        <div class="controls"><input
-                                                                class="form-control input-sm textinput textInput"
-                                                                id="id_units" maxlength="50" name="units"
-                                                                readonly="True" style="background-color:white;"
-                                                                type="text" value="
-                                                                {% if coverage_spatial_form.initial.units %}{{ coverage_spatial_form.initial.units }}{% endif %}">
+                                                            <div class="controls"><input
+                                                                    class="form-control input-sm textinput textInput"
+                                                                    id="id_westlimit" name="westlimit" type="text"
+                                                                    value="{% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit }}{% endif %}">
+                                                            </div>
                                                         </div>
+
                                                     </div>
                                                     <div style="margin-top:10px">
                                                         <button type="button" class="btn btn-primary pull-right"
@@ -1329,11 +1205,11 @@
                                                     </div>
                                                 </fieldset>
                                             </form>
-                                        {% endif %}
+
                                         </div>
                                     </div>
 
-                                    <div class="form-group col-md-2 col-sm-12 col-xs-12" id="coverage-temporal">
+                                    <div class="form-group col-md-3 col-sm-12 col-xs-12" id="coverage-temporal">
                                     {% if not coverage_temporal_form.initial.start %}
                                         <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
                                               id="id-coverage-temporal" method="post">
@@ -2605,7 +2481,7 @@ function metadata_update_ajax_submit(form_id){
             setTimeout( function(){
                 google.maps.event.trigger(coverageMap, "resize");
                 coverageMap.setCenter(new google.maps.LatLng(41.850033, -87.6500523));
-            }, 100 );
+            }, 200 );
         });
 
         if (sessionStorage.signininfo) {
