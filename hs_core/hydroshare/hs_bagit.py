@@ -7,7 +7,7 @@ import mimetypes
 import zipfile
 
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
-from rdflib import Namespace
+from rdflib import Namespace, URIRef
 
 import bagit
 
@@ -96,8 +96,6 @@ def create_bag_files(resource):
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
 
     ##make the resource map:
-    # utils.namespaces['hsterms'] = Namespace('{hs_url}/hsterms/'.format(hs_url=current_site_url))
-    # utils.namespaceSearchOrder.append('hsterms')
     utils.namespaces['citoterms'] = Namespace('http://purl.org/spar/cito/')
     utils.namespaceSearchOrder.append('citoterms')
 
@@ -106,9 +104,15 @@ def create_bag_files(resource):
 
     #Set properties of the aggregation
     a._dc.title = resource.title
-    a._dcterms.type = resource._meta.object_name
+    a._dcterms.type = URIRef(resource.metadata.type.url)
     a._citoterms.isDocumentedBy = metadata_url
     a._ore.isDescribedBy = res_map_url
+
+    res_type_aggregation = AggregatedResource(resource.metadata.type.url)
+    res_type_aggregation._rdfs.label = resource._meta.verbose_name
+    res_type_aggregation._rdfs.isDefinedBy = current_site_url + "/terms"
+
+    a.add_resource(res_type_aggregation)
 
     #Create a description of the metadata document that describes the whole resource and add it to the aggregation
     resMetaFile = AggregatedResource(metadata_url)
@@ -144,6 +148,10 @@ def create_bag_files(resource):
 
     # change the namespace for the 'creator' element from 'dcterms' to 'dc'
     xml_string = remdoc.data.replace('dcterms:creator', 'dc:creator')
+
+    # delete this extra element
+    #<ore:aggregates rdf:resource="[hydroshare domain]/terms/[Resource class name]"/>
+    xml_string = xml_string.replace('<ore:aggregates rdf:resource="%s"/>\n' % resource.metadata.type.url, '')
 
     # create resourcemap.xml and upload it to iRODS
     from_file_name = os.path.join(bagit_path, 'resourcemap.xml')

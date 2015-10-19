@@ -39,5 +39,5 @@ class TestGenericResourceMeta(unittest.TestCase):
         self.assertEqual(creators[1].name, creator1.name)
         self.assertEqual(creators[2].name, creator2.name)
 
-        owner_uri = rmeta.get_owner_uri()
+        owner_uri = rmeta.get_owner().uri
         self.assertEqual(owner_uri, creator3.uri)

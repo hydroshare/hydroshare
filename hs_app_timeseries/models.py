@@ -194,7 +194,7 @@ class TimeSeriesResult(AbstractMetaDataElement):
 #
 
 class TimeSeriesResource(BaseResource):
-    objects = ResourceManager()
+    objects = ResourceManager("TimeSeriesResource")
 
     class Meta:
         verbose_name = 'Time Series'
