@@ -148,16 +148,13 @@ def page_permissions_page_processor(request, page):
             if not is_edit_user:
                 is_view_user = cm.raccess.view_users.filter(pk=request.user.pk).exists()
 
-    owners = set(cm.raccess.owners.all())
-    editors = set(cm.raccess.edit_users.all()) - owners
-    viewers = set(cm.raccess.view_users.all()) - editors - owners
+    owners = cm.raccess.owners.all()
+    editors = cm.raccess.edit_users.exclude(pk__in=owners)
+    viewers = cm.raccess.view_users.exclude(pk__in=editors).exclude(pk__in=owners)
 
     return {
         'resource_type': cm._meta.verbose_name,
         'bag': cm.bags.first(),
-        'groups': Group.objects.all(),
-        "edit_groups": set(cm.raccess.edit_groups.all()),
-        "view_groups": set(cm.raccess.view_groups.all()),
         "edit_users": editors,
         "view_users": viewers,
         "owners": owners,
