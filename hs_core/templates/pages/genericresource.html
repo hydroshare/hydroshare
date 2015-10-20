@@ -376,7 +376,7 @@
                                 <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND</option>
                                 <option value="other">Other</option>
                             </select>
-                                                        <img id="img-badge" class="cc-image"
+                            <img id="img-badge" class="cc-image"
                                     {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
                                  src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
                                     {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
@@ -976,7 +976,7 @@
                                 {% if spatial_coverage.north or spatial_coverage.northlimit %}
                                     <h4><strong>Spatial</strong></h4>
                                     <div class="col-sm-6" id="coverageMap"></div>
-                                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                                    <hr style="margin-top: 0;margin-bottom: 2px">
 
                                     {% if spatial_coverage.type == 'point' %}
                                         {% if spatial_coverage.name %}
@@ -1061,7 +1061,7 @@
 
                                 {% if temporal_coverage %}
                                     <h4><strong>Temporal</strong></h4>
-                                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                                    <hr style="margin-top: 0;margin-bottom: 2px">
                                     <div class="row">
                                         <div class="col-sm-4"><strong>Start Date:</strong></div>
                                         <div class="col-sm-8">{{ temporal_coverage.start_date }}</div>
@@ -1072,8 +1072,8 @@
                                     </div>
                                 {% endif %}
                             {% else %}
-                                <div class="form-group" id="coverage-spatial">
-                                    <div class="col-md-9 col-sm-12 col-xs-12">
+                                <div class="form-group">
+                                    <div class="col-md-9 col-sm-12 col-xs-12" id="coverage-spatial">
                                         <div class="row">
                                             <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{% if not coverage_spatial_form.initial.north and not coverage_spatial_form.initial.northlimit %}add-metadata/{% else %}{{ coverage_spatial_form.initial.id }}/update-metadata/{% endif %}"
                                                   id="id-coverage-spatial" method="post">
@@ -1224,12 +1224,11 @@
                                                             </div>
                                                         </div>
 
-                                                    </div>
-                                                    <div style="margin-top:10px">
-                                                        <button type="button" class="btn btn-primary pull-right"
+                                                    <button type="button" class="btn btn-primary pull-right"
                                                                 onclick="metadata_update_ajax_submit('id-coverage-spatial'); return false;"
                                                                 style="display: none;">Save changes
                                                         </button>
+
                                                     </div>
                                                 </fieldset>
                                             </form>
@@ -1320,7 +1319,7 @@
                             {% if not metadata_form %}
                                 {% if sources %}
                                     <h4><strong>Sources</strong></h4>
-                                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                                    <hr style="margin-top: 0;margin-bottom: 2px">
                                     {% for source in sources %}
                                         <div class="row">
                                             <div class="col-sm-4"><strong>Derived From:</strong></div>
@@ -1331,7 +1330,7 @@
                                 {% if relations %}
                                     <hr style="border: 0;">
                                     <h4><strong>Relations</strong></h4>
-                                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                                    <hr style="margin-top: 0;margin-bottom: 2px">
                                     {% for relation in relations %}
                                         <div class="row">
                                             <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
@@ -2285,83 +2284,83 @@
         $("#id-subject").find("#id_value").val(keywords);
     }
 
-function metadata_update_ajax_submit(form_id){
-            $alert_success = '<div class="alert alert-success" id="success-alert"> \
-                <button type="button" class="close" data-dismiss="alert">x</button> \
-                <strong>Success! </strong> \
-                Metadata updated.\
-            </div>'
-            $alert_error = '<div class="alert alert-danger" id="error-alert"> \
-                <button type="button" class="close" data-dismiss="alert">x</button> \
-                <strong>Error! </strong> \
-                Metadata failed to update.\
-            </div>'
-            $form=$('#' + form_id);
-            var datastring = $form.serialize();
-            $.ajax({
-                type: "POST",
-                url: $form.attr('action'),
-                dataType: 'html',
-                data: datastring,
-                success: function(result)
+    function metadata_update_ajax_submit(form_id){
+        $alert_success = '<div class="alert alert-success" id="success-alert"> \
+            <button type="button" class="close" data-dismiss="alert">x</button> \
+            <strong>Success! </strong> \
+            Metadata updated.\
+        </div>'
+        $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+            <button type="button" class="close" data-dismiss="alert">x</button> \
+            <strong>Error! </strong> \
+            Metadata failed to update.\
+        </div>'
+        $form=$('#' + form_id);
+        var datastring = $form.serialize();
+        $.ajax({
+            type: "POST",
+            url: $form.attr('action'),
+            dataType: 'html',
+            data: datastring,
+            success: function(result)
+            {
+                /* The div contains now the updated form */
+                //$('#' + form_id).html(result);
+                console.log(result);
+                json_response = JSON.parse(result);
+                console.log(json_response);
+                if (json_response.status === 'success')
                 {
-                    /* The div contains now the updated form */
-                    //$('#' + form_id).html(result);
-                    console.log(result);
-                    json_response = JSON.parse(result);
-                    console.log(json_response);
-                    if (json_response.status === 'success')
-                    {
-                        $form.find("button").hide();
-                        if (json_response.hasOwnProperty('element_id')){
-                            form_update_action = $form.attr('action');
-                            res_short_id = form_update_action.split('/')[3];
-                            update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/"
-                            $form.attr('action', update_url);
+                    $form.find("button").hide();
+                    if (json_response.hasOwnProperty('element_id')){
+                        form_update_action = $form.attr('action');
+                        res_short_id = form_update_action.split('/')[3];
+                        update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/"
+                        $form.attr('action', update_url);
+                    }
+                    if (json_response.hasOwnProperty('element_name')){
+                        if(json_response.element_name === 'title'){
+                            $res_title = $(".section-header").find("span").first();
+                            field_name_value = $res_title.text();
+                            console.log(field_name_value);
+                            updated_title = $form.find("#id_value").val();
+                            $res_title.text(updated_title);
                         }
-                        if (json_response.hasOwnProperty('element_name')){
-                            if(json_response.element_name === 'title'){
-                                $res_title = $(".section-header").find("span").first();
-                                field_name_value = $res_title.text();
-                                console.log(field_name_value);
-                                updated_title = $form.find("#id_value").val();
-                                $res_title.text(updated_title);
+                    }
+                    if (json_response.hasOwnProperty('metadata_status')) {
+                        if (json_response.metadata_status !== $('#metadata-status').text()) {
+                            $('#metadata-status').text(json_response.metadata_status);
+                            if (json_response.metadata_status == "Sufficient to make public") {
+                                customAlert("Metadata Status:Sufficient to make public", 3000);
+                                $("#btn-public").prop("disabled", false);
+                                $("#btn-discoverable").prop("disabled", false);
                             }
-                        }
-                        if (json_response.hasOwnProperty('metadata_status')) {
-                            if (json_response.metadata_status !== $('#metadata-status').text()) {
-                                $('#metadata-status').text(json_response.metadata_status);
-                                if (json_response.metadata_status == "Sufficient to make public") {
-                                    customAlert("Metadata Status:Sufficient to make public", 3000);
-                                    $("#btn-public").prop("disabled", false);
-                                    $("#btn-discoverable").prop("disabled", false);
-                                }
 
-                            }
                         }
-                        $('body > .container').append($alert_success);
-                        $('#error-alert').each(function(){
-                            this.remove();
-                        });
-                        $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
-                            $(".alert-success").alert('close');
-                        });
                     }
-                    else{
-                        $('body > .container').append($alert_error);
-                        $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
-                            $(".alert-danger").alert('close');
-                        });
-                    }
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown)
-                {
-                    $('#' + form_id).before($alert_error)
-                    $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
-                        $(".alert-error").alert('close');
+                    $('body > .container').append($alert_success);
+                    $('#error-alert').each(function(){
+                        this.remove();
+                    });
+                    $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
+                        $(".alert-success").alert('close');
                     });
                 }
-            });
+                else{
+                    $('body > .container').append($alert_error);
+                    $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
+                        $(".alert-danger").alert('close');
+                    });
+                }
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                $('#' + form_id).before($alert_error)
+                $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-error").alert('close');
+                });
+            }
+        });
         //don't submit the form
         return false;
     }
@@ -2369,6 +2368,9 @@ function metadata_update_ajax_submit(form_id){
     // Map js
     var coverageMap;
     var allOverlays = [];
+    var allShapes = []; // Keeps track of shapes added by text change events
+    var drawingManager;
+
     function initMap() {
         coverageMap = new google.maps.Map(document.getElementById('coverageMap'), {
             center: {lat: 41.850033, lng: -87.6500523},
@@ -2384,7 +2386,7 @@ function metadata_update_ajax_submit(form_id){
             }
         });
 
-        var drawingManager = new google.maps.drawing.DrawingManager({
+        drawingManager = new google.maps.drawing.DrawingManager({
             drawingControl: true,
             drawingControlOptions: {
                 position: google.maps.ControlPosition.TOP_CENTER,
@@ -2393,26 +2395,9 @@ function metadata_update_ajax_submit(form_id){
                     google.maps.drawing.OverlayType.RECTANGLE
                 ]
             },
-            markerOptions: {
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 5
-                }
-            },
-            circleOptions: {
-                fillColor: '#ffff00',
-                fillOpacity: 1,
-                strokeWeight: 5,
-                clickable: false,
-                editable: true,
-                zIndex: 1
-            },
             rectangleOptions: {
-                strokeWeight: 0,
-                fillOpacity: 0.45,
                 editable: true,
-                fillColor:'#1E90FF',
-                strokeColor: '#FF0000',
+                draggable: true
             }
         });
         drawingManager.setMap(coverageMap);
@@ -2435,60 +2420,139 @@ function metadata_update_ajax_submit(form_id){
         google.maps.event.addListener(drawingManager, 'overlaycomplete', function (e) {
             allOverlays.push(e);
         });
+    }
 
-        function processDrawing (coordinates, shape) {
+    // Draw marker on text change
+    $("#id_east").bind('input', drawMarkerOnTextChange);
+    $("#id_north").bind('input', drawMarkerOnTextChange);
 
-                // Delete previous drawings
-                if (allOverlays.length > 1){
-                    for (var i = 1; i < allOverlays.length; i++){
-                        allOverlays[i-1].overlay.setMap(null);
-                    }
-                    allOverlays.shift();
-                }
-                if (shape == "rectangle"){
-                    document.getElementById("id_type_1").checked = true;
-                    $("#div_id_north").hide();
-                    $("#div_id_east").hide();
-                    $("#div_id_elevation").hide();
+    function drawMarkerOnTextChange(){
+        var myLatLng = {lat: parseFloat($("#id_east").val()), lng: parseFloat($("#id_north").val())};
 
-                    $("#div_id_northlimit").show();
-                    $("#div_id_eastlimit").show();
-                    $("#div_id_southlimit").show();
-                    $("#div_id_westlimit").show();
-                    $("#div_id_uplimit").show();
-                    $("#div_id_downlimit").show();
+        // Delete previous drawings
+        deleteAllShapes();
+        deleteAllOverlays();
 
-                    $("#id_northlimit").val(coordinates.getNorthEast().lat());
-                    $("#id_eastlimit").val(coordinates.getNorthEast().lng());
-                    $("#id_southlimit").val(coordinates.getSouthWest().lat());
-                    $("#id_westlimit").val(coordinates.getSouthWest().lng());
-                }
-                else {
-                    document.getElementById("id_type_2").checked = true;
-                    $("#div_id_north").show();
-                    $("#div_id_east").show();
-                    $("#div_id_elevation").show();
 
-                    $("#div_id_northlimit").hide();
-                    $("#div_id_eastlimit").hide();
-                    $("#div_id_southlimit").hide();
-                    $("#div_id_westlimit").hide();
-                    $("#div_id_uplimit").hide();
-                    $("#div_id_downlimit").hide();
+        if (!myLatLng.lat || !myLatLng.lng) {
+            return;
+        }
 
-                    console.log("New point added: ");
-                    console.log(coordinates.lat() + ", " + coordinates.lng());
-                    console.log("");
-                }
+        // Define the rectangle and set its editable property to true.
+        var marker = new google.maps.Marker({
+            position: myLatLng,
+            map: coverageMap
+        });
 
+        allShapes.push(marker);
+    }
+
+    // Draw rectangle on text change
+    $("#id_northlimit").bind('input', drawRectangleOnTextChange);
+    $("#id_eastlimit").bind('input', drawRectangleOnTextChange);
+    $("#id_southlimit").bind('input', drawRectangleOnTextChange);
+    $("#id_westlimit").bind('input', drawRectangleOnTextChange);
+
+    function drawRectangleOnTextChange(){
+        var bounds = {
+            north: parseFloat($("#id_northlimit").val()),
+            south: parseFloat($("#id_southlimit").val()),
+            east: parseFloat($("#id_eastlimit").val()),
+            west: parseFloat($("#id_westlimit").val())
+        };
+
+        // Delete previous drawings
+        deleteAllShapes();
+        deleteAllOverlays();
+
+
+        if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
+            return;
+        }
+
+        // Define the rectangle and set its editable property to true.
+        var rectangle = new google.maps.Rectangle({
+            bounds: bounds,
+            editable: true,
+            draggable: true
+        });
+
+        rectangle.setMap(coverageMap);
+
+        rectangle.addListener('bounds_changed', function () {
+            var coordinates = (rectangle.getBounds());
+            processDrawing(coordinates, "rectangle");
+        });
+
+        allShapes.push(rectangle);
+    }
+
+    function processDrawing (coordinates, shape) {
+        // Delete previous drawings
+        if (allOverlays.length > 1){
+            for (var i = 1; i < allOverlays.length; i++){
+                allOverlays[i-1].overlay.setMap(null);
+            }
+            allOverlays.shift();
+        }
+
+        if (allOverlays.length > 0) {
+            deleteAllShapes();
+        }
+
+        // Show save changes button
+        $("#coverage-spatial").find(".btn-primary").show();
+
+
+        if (shape == "rectangle"){
+            document.getElementById("id_type_1").checked = true;
+            $("#div_id_north").hide();
+            $("#div_id_east").hide();
+            $("#div_id_elevation").hide();
+
+            $("#div_id_northlimit").show();
+            $("#div_id_eastlimit").show();
+            $("#div_id_southlimit").show();
+            $("#div_id_westlimit").show();
+            $("#div_id_uplimit").show();
+            $("#div_id_downlimit").show();
+
+            $("#id_northlimit").val(coordinates.getNorthEast().lat());
+            $("#id_eastlimit").val(coordinates.getNorthEast().lng());
+            $("#id_southlimit").val(coordinates.getSouthWest().lat());
+            $("#id_westlimit").val(coordinates.getSouthWest().lng());
+        }
+        else {
+            document.getElementById("id_type_2").checked = true;
+            $("#div_id_north").show();
+            $("#div_id_east").show();
+            $("#div_id_elevation").show();
+
+            $("#div_id_northlimit").hide();
+            $("#div_id_eastlimit").hide();
+            $("#div_id_southlimit").hide();
+            $("#div_id_westlimit").hide();
+            $("#div_id_uplimit").hide();
+            $("#div_id_downlimit").hide();
+
+            $("#id_east").val(coordinates.lat());
+            $("#id_north").val(coordinates.lng());
         }
     }
 
-    function deleteAllShape() {
+    function deleteAllOverlays() {
         for (var i = 0; i < allOverlays.length; i++) {
             allOverlays[i].overlay.setMap(null);
         }
         allOverlays = [];
+    }
+
+    function deleteAllShapes(){
+        for (var i = 0; i < allShapes.length; i++) {
+            allShapes[i].setMap(null);
+        }
+
+        allShapes = [];
     }
 
     function customAlert(msg,duration){
@@ -2510,6 +2574,38 @@ function metadata_update_ajax_submit(form_id){
                 google.maps.event.trigger(coverageMap, "resize");
                 coverageMap.setCenter(new google.maps.LatLng(41.850033, -87.6500523));
             }, 200 );
+        });
+
+        $("#id-coverage-spatial input:radio").change(function () {
+            if ($(this).val() == "point") {
+                $("#div_id_north").show();
+                $("#div_id_east").show();
+                $("#div_id_elevation").show();
+                $("#div_id_northlimit").hide();
+                $("#div_id_eastlimit").hide();
+                $("#div_id_southlimit").hide();
+                $("#div_id_westlimit").hide();
+                $("#div_id_uplimit").hide();
+                $("#div_id_downlimit").hide();
+                drawMarkerOnTextChange();
+                drawingManager.setDrawingMode(google.maps.drawing.OverlayType.MARKER);
+            }
+            else {
+                $("#div_id_north").hide();
+                $("#div_id_east").hide();
+                $("#div_id_elevation").hide();
+                $("#div_id_northlimit").show();
+                $("#div_id_eastlimit").show();
+                $("#div_id_southlimit").show();
+                $("#div_id_westlimit").show();
+                $("#div_id_uplimit").show();
+                $("#div_id_downlimit").show();
+                drawRectangleOnTextChange();
+                drawingManager.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
+
+            }
+            // Show save changes button
+            $("#coverage-spatial").find(".btn-primary").show();
         });
 
         if (sessionStorage.signininfo) {
@@ -2736,30 +2832,7 @@ function metadata_update_ajax_submit(form_id){
             });
         });
 
-        $("#id-coverage-spatial input:radio").change(function () {
-            if ($(this).val() == "point") {
-                $("#div_id_north").show();
-                $("#div_id_east").show();
-                $("#div_id_elevation").show();
-                $("#div_id_northlimit").hide();
-                $("#div_id_eastlimit").hide();
-                $("#div_id_southlimit").hide();
-                $("#div_id_westlimit").hide();
-                $("#div_id_uplimit").hide();
-                $("#div_id_downlimit").hide();
-            }
-            else {
-                $("#div_id_north").hide();
-                $("#div_id_east").hide();
-                $("#div_id_elevation").hide();
-                $("#div_id_northlimit").show();
-                $("#div_id_eastlimit").show();
-                $("#div_id_southlimit").show();
-                $("#div_id_westlimit").show();
-                $("#div_id_uplimit").show();
-                $("#div_id_downlimit").show();
-            }
-        });
+
     });
     </script>
 {% endblock %}

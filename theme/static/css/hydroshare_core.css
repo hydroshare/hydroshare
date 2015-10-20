@@ -1335,7 +1335,7 @@ table.table-plain td {
 }
 
 .tab-elements > .tabs-body {
-    max-height: 400px;
+    /*max-height: 400px;*/
     min-height: 150px;
     border: 1px solid #ddd;
     padding: 10px;
@@ -1719,7 +1719,7 @@ i.no-access-icon {
 }
 
 .tab-elements {
-    max-height: 441px;
+    /*max-height: 441px;*/
     overflow-x: auto;
     overflow-y: hidden;
     margin-top: 20px;
@@ -1934,7 +1934,7 @@ i.no-access-icon {
 }
 
 .resource-search ul {
-    margin: 7px 0px 0px;
+    margin: 7px 0 0;
     padding-left: 2px;
 }
 
@@ -1960,7 +1960,7 @@ i.no-access-icon {
 
 .resource-search-items ul {
     position: absolute;
-    top: 0px;
+    top: 0;
 }
 
 .resource-search-items li {
@@ -1968,7 +1968,7 @@ i.no-access-icon {
 }
 
 ul.resource-search-options {
-    margin: 40px 0px 0px;
+    margin: 40px 0 0;
     padding-left: 2px;
     border: 1px solid lightgrey;
     border-top: none;
@@ -1987,8 +1987,12 @@ ul.resource-search-options {
     color: white;
 }
 
-/*Google map css*/
+/*  =============== Coverage Tab - Google map css ================ */
 #coverageMap {
 	height:350px;
 	border:1px solid #DDD;
+}
+
+#id_name {
+    max-width: 390px;
 }
