@@ -217,7 +217,7 @@ class Variable(AbstractMetaDataElement):
 
 # Define the netCDF resource
 class NetcdfResource(BaseResource):
-    objects = ResourceManager()
+    objects = ResourceManager("NetcdfResource")
 
     @property
     def metadata(self):

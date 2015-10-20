@@ -2,6 +2,8 @@ import os
 
 import rdflib
 
+from django.db import transaction
+
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException
@@ -58,6 +60,7 @@ class ModelInstanceResourceMeta(GenericResourceMeta):
                 raise GenericResourceMeta.ResourceMetaException(msg)
         print("\t\t{0}".format(str(self)))
 
+    @transaction.atomic
     def write_metadata_to_resource(self, resource):
         """
         Write metadata to resource
