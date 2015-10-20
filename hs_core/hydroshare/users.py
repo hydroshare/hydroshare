@@ -190,7 +190,7 @@ def create_account(
     # make the user a member of the Hydroshare role group
     u.groups.add(Group.objects.get(name='Hydroshare Author'))
 
-    user_access = UserAccess(user=u, admin=False)
+    user_access = UserAccess(user=u)
     user_access.save()
     return u
 

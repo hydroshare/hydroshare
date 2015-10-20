@@ -85,7 +85,7 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
             username='alva',
             first_name='alva',
             last_name='couch',
-            superuser=True,
+            superuser=False,
             groups=[]
         )
 
@@ -95,6 +95,15 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
             first_name='george',
             last_name='miller',
             superuser=False,
+            groups=[]
+        )
+
+        self.admin = hydroshare.create_account(
+            'admin@gmail.com',
+            username='admin',
+            first_name='first_name_admin',
+            last_name='last_name_admin',
+            superuser=True,
             groups=[]
         )
 
@@ -116,6 +125,7 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.bikes.raccess.get_effective_privilege(self.alva) == PrivilegeCodes.NONE)
         self.george.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.OWNER)
         self.assertTrue(self.bikes.raccess.get_number_of_users() == 2)
+
         # junk = self.bikes.raccess.get_holders().all()
         # for j in junk:
         #     print ("  user="+j.first_name)
@@ -158,6 +168,40 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         # test the resource 'bikes' is not one of the editable resources for the group 'harpers
         self.assertFalse(self.bikes in self.harpers.gaccess.get_editable_resources())
 
+        self.george.uaccess.unshare_group_with_user(self.bikers, self.alva)
+
+        # test for django admin - admin has not been given any permission on any resource by any user
+
+        # test django admin has ownership over any resource
+        self.assertTrue(self.bikes.raccess.get_combined_privilege(self.admin) == PrivilegeCodes.OWNER)
+        self.assertTrue(self.bikes.raccess.get_effective_privilege(self.admin) == PrivilegeCodes.OWNER)
+
+        # test django admin can always view/change or delete any resource
+        self.assertTrue(self.admin.uaccess.can_view_resource(self.bikes))
+        self.assertTrue(self.admin.uaccess.can_change_resource(self.bikes))
+        self.assertTrue(self.admin.uaccess.can_delete_resource(self.bikes))
+
+        # test django admin can change resource flags
+        self.assertTrue(self.admin.uaccess.can_change_resource_flags(self.bikes))
+
+        # test django admin can share any resource with all possible permission types
+        self.assertTrue(self.admin.uaccess.can_share_resource(self.bikes, PrivilegeCodes.OWNER))
+        self.assertTrue(self.admin.uaccess.can_share_resource(self.bikes, PrivilegeCodes.CHANGE))
+        self.assertTrue(self.admin.uaccess.can_share_resource(self.bikes, PrivilegeCodes.VIEW))
+
+        # test django admin can share a resource with a specific user
+        self.admin.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.OWNER)
+        self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.OWNER)
+
+        self.admin.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.CHANGE)
+        self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.CHANGE)
+
+        self.admin.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.VIEW)
+        self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.VIEW)
+
+        # test django admin can unshare a resource with a specific user
+        self.assertTrue(self.admin.uaccess.unshare_resource_with_user(self.bikes, self.alva))
+        self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.NONE)
 
 def match_lists(l1, l2):
     """ return true if two lists contain the same content
@@ -200,8 +244,6 @@ class T01CreateUser(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.admin.uaccess.user.username, 'admin')
         self.assertEqual(self.admin.uaccess.user.first_name, 'administrator')
         self.assertTrue(self.admin.uaccess.active)
-        # super user is not necessarily an admin for access control
-        self.assertFalse(self.admin.uaccess.admin)
 
         # start as privileged user
         self.assertEqual(self.admin.uaccess.get_number_of_owned_resources(), 0)
@@ -213,7 +255,6 @@ class T01CreateUser(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.cat.uaccess.user.username, 'cat')
         self.assertEqual(self.cat.uaccess.user.first_name, 'not a dog')
         self.assertTrue(self.cat.uaccess.active)
-        self.assertFalse(self.cat.uaccess.admin)
 
         # check that user cat owns and holds nothing
         self.assertEqual(self.cat.uaccess.get_number_of_owned_resources(), 0)
