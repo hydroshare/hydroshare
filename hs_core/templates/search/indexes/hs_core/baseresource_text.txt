@@ -1,1 +1,18 @@
-{{ object.title }}
+{{ object.short_id }}
+{{ object.doi }}
+{{ object.metadata.title }}
+{{ object.first_creator }}
+{{ object.metadata.description }}
+{% for creator in object.metadata.creators.all %}
+{{ creator.name }}
+{% endfor %}
+{% for subject in object.metadata.subjects.all %}
+{{ subject }}
+{% endfor %}
+{{ object.first_creator.organization }}
+{{ object.first_creator.email }}
+{{ object.public }}
+{{ object.discoverable }}
+{{ object.created }}
+{{ object.modified }}
+{{ object.rating_sum }}

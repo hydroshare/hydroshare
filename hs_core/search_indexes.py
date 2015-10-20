@@ -1,17 +1,27 @@
 from haystack import indexes
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 
 
-class GenericResourceIndex(indexes.SearchIndex, indexes.Indexable):
+class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
+    short_id = indexes.CharField(model_attr='short_id')
+    doi = indexes.CharField(model_attr='doi', null=True)
     author = indexes.CharField(model_attr='first_creator', faceted=True)
     title = indexes.CharField(model_attr='title')
     abstract = indexes.CharField(model_attr='description')
     creators = indexes.MultiValueField()
     subjects = indexes.MultiValueField(faceted=True)
-    publisher = indexes.CharField(model_attr='publisher');
+    public = indexes.BooleanField(model_attr='raccess__public', faceted=True)
+    discoverable = indexes.BooleanField(faceted=True)
+    created = indexes.DateTimeField(model_attr='created')
+    modified = indexes.DateTimeField(model_attr='updated')
+    organization = indexes.CharField(faceted=True, null=True)
+    author_email = indexes.CharField()
+    #publisher = indexes.CharField(faceted=True)
+    rating = indexes.IntegerField(model_attr='rating_sum')
+
     def get_model(self):
-        return GenericResource
+        return BaseResource
 
     def index_queryset(self, using=None):
         return self.get_model().objects.all()
@@ -21,3 +31,20 @@ class GenericResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_subjects(self, obj):
         return obj.metadata.subjects.values_list('value', flat=True)
+
+    def prepare_organization(self, obj):
+        return obj.first_creator.organization
+
+    def prepare_author_email(self, obj):
+       # print(obj.rating_sum)
+        return obj.first_creator.email
+
+    #def prepare_publisher(self, obj):
+    #    print(obj.metadata.publisher)
+    #    return obj.metadata.publisher.name
+
+    def prepare_discoverable(self, obj):
+        if(obj.raccess.public | obj.raccess.discoverable):
+            return True
+        else:
+            return False
