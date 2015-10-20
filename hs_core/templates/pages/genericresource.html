@@ -972,94 +972,93 @@
                     <!-- ========= COVERAGE TAB ========= -->
                     {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
                         <div class="tab-pane" id="coverageTab">
-                            {% if not metadata_form %}
-                                {% if spatial_coverage.north or spatial_coverage.northlimit %}
-                                    <h4><strong>Spatial</strong></h4>
-                                    <div class="col-sm-6" id="coverageMap"></div>
-                                    <hr style="margin-top: 0;margin-bottom: 2px">
+                        {% if not metadata_form %}
+                            <div class="col-md-9 col-sm-12 col-xs-12" id="coverage-spatial">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <legend>Spatial</legend>
+                                    <div class="info-group" style="margin-top: -20px; margin-bottom:20px;">
+                                        <table>
+                                            <tbody>
+                                                {% if spatial_coverage.name %}
+                                                <tr>
+                                                    <th class="text-muted">Place/Area Name</th>
+                                                    <td>{{ spatial_coverage.name }}</td>
+                                                </tr>
+                                                {% endif %}
+                                                {% if spatial_coverage.projection %}
+                                                <tr>
+                                                    <th class="text-muted">Coordinate System/Geographic Projection
+                                                    </th>
+                                                    <td>WGS 84 EPSG:4326</td>
+                                                </tr>
+                                                {% endif %}
+                                                {% if spatial_coverage.units %}
+                                                <tr>
+                                                    <th class="text-muted">Coordinate Units</th>
+                                                    <td>Decimal degrees</td>
+                                                </tr>
+                                                {% endif %}
 
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-6">
+                                    <div id="coverageMap" data-shape-type="{{ spatial_coverage.type }}"></div>
+                                </div>
+
+                                <div class="col-sm-6">
+                                    {% if spatial_coverage.north or spatial_coverage.northlimit %}
                                     {% if spatial_coverage.type == 'point' %}
-                                        {% if spatial_coverage.name %}
-                                            <div class="row">
-                                                <div class="col-sm-4"><strong>Place/Area Name:</strong></div>
-                                                <div class="col-sm-8">{{ spatial_coverage.name }}</div>
-                                            </div>
-                                        {% endif %}
-                                        {% if spatial_coverage.projection %}
-                                            <div class="row">
-                                                <div class="col-sm-4"><strong>Coordinate System/Geographic
-                                                    Projection:</strong></div>
-                                                <div class="col-sm-8">{{ spatial_coverage.projection }}</div>
-                                            </div>
-                                        {% endif %}
                                         {% if spatial_coverage.east %}
                                             <div class="row">
                                                 <div class="col-sm-4"><strong>Longitude:</strong></div>
-                                                <div class="col-sm-8">{{ spatial_coverage.east }}</div>
+                                                <div id="cov_east" class="col-sm-8">{{ spatial_coverage.east }}</div>
                                             </div>
                                         {% endif %}
                                         {% if spatial_coverage.north %}
                                             <div class="row">
                                                 <div class="col-sm-4"><strong>Latitude:</strong></div>
-                                                <div class="col-sm-8">{{ spatial_coverage.north }}</div>
-                                            </div>
-                                        {% endif %}
-                                        {% if spatial_coverage.units %}
-                                            <div class="row">
-                                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
-                                                <div class="col-sm-8">{{ spatial_coverage.units }}</div>
+                                                <div id="cov_north" class="col-sm-8">{{ spatial_coverage.north }}</div>
                                             </div>
                                         {% endif %}
                                     {% else %}
-                                        {% if spatial_coverage.name %}
-                                            <div class="row">
-                                                <div class="col-sm-4"><strong>CPlace/Area Name:</strong></div>
-                                                <div class="col-sm-8">{{ spatial_coverage.name }}</div>
-                                            </div>
-                                        {% endif %}
-                                        {% if spatial_coverage.projection %}
-                                            <div class="row">
-                                                <div class="col-sm-4"><strong>Coordinate System/Geographic
-                                                    Projection:</strong></div>
-                                                <div class="col-sm-8">{{ spatial_coverage.projection }}</div>
-                                            </div>
-                                        {% endif %}
                                         {% if spatial_coverage.northlimit %}
                                             <div class="row">
                                                 <div class="col-sm-4"><strong>North Latitude:</strong></div>
-                                                <div class="col-sm-8">{{ spatial_coverage.northlimit }}</div>
+                                                <div id="cov_northlimit" class="col-sm-8">{{ spatial_coverage.northlimit }}</div>
                                             </div>
                                         {% endif %}
                                         {% if spatial_coverage.eastlimit %}
                                             <div class="row">
                                                 <div class="col-sm-4"><strong>East Longitude:</strong></div>
-                                                <div class="col-sm-8">{{ spatial_coverage.eastlimit }}</div>
+                                                <div id="cov_eastlimit" class="col-sm-8">{{ spatial_coverage.eastlimit }}</div>
                                             </div>
                                         {% endif %}
                                         {% if spatial_coverage.southlimit %}
                                             <div class="row">
                                                 <div class="col-sm-4"><strong>South Latitude:</strong></div>
-                                                <div class="col-sm-8">{{ spatial_coverage.southlimit }}</div>
+                                                <div id="cov_southlimit" class="col-sm-8">{{ spatial_coverage.southlimit }}</div>
                                             </div>
                                         {% endif %}
                                         {% if spatial_coverage.westlimit %}
                                             <div class="row">
                                                 <div class="col-sm-4"><strong>West Longitude:</strong></div>
-                                                <div class="col-sm-8">{{ spatial_coverage.westlimit }}</div>
-                                            </div>
-                                        {% endif %}
-                                        {% if spatial_coverage.units %}
-                                            <div class="row">
-                                                <div class="col-sm-4"><strong>Coordinate Units:</strong></div>
-                                                <div class="col-sm-8">{{ spatial_coverage.units }}</div>
+                                                <div id="cov_westlimit" class="col-sm-8">{{ spatial_coverage.westlimit }}</div>
                                             </div>
                                         {% endif %}
 
+                                        <div class="text-muted" style="margin-top:20px;">WGS 84 decimal degrees</div>
                                     {% endif %}
-                                    <hr style="border: 0;">
-                                {% endif %}
+                                    {% endif %}
+                                </div>
 
-                                {% if temporal_coverage %}
+                            </div>
+                            </div>
+                            {% if temporal_coverage %}
+                                <div class="col-sm-3">
                                     <h4><strong>Temporal</strong></h4>
                                     <hr style="margin-top: 0;margin-bottom: 2px">
                                     <div class="row">
@@ -1070,7 +1069,9 @@
                                         <div class="col-sm-4"><strong>End Date:</strong></div>
                                         <div class="col-sm-8">{{ temporal_coverage.end_date }}</div>
                                     </div>
+                                </div>
                                 {% endif %}
+
                             {% else %}
                                 <div class="form-group">
                                     <div class="col-md-9 col-sm-12 col-xs-12" id="coverage-spatial">
@@ -2372,10 +2373,12 @@
     var drawingManager;
 
     function initMap() {
+        var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+
         coverageMap = new google.maps.Map(document.getElementById('coverageMap'), {
-            center: {lat: 41.850033, lng: -87.6500523},
+            center: {lat: 39.0959629363055, lng: -96.767578125},
             color:"#DDD",
-            zoom: 5,
+            zoom: 3,
             streetViewControl: false,
             mapTypeControl: true,
             mapTypeControlOptions: {
@@ -2386,40 +2389,78 @@
             }
         });
 
-        drawingManager = new google.maps.drawing.DrawingManager({
-            drawingControl: true,
-            drawingControlOptions: {
-                position: google.maps.ControlPosition.TOP_CENTER,
-                drawingModes: [
-                    google.maps.drawing.OverlayType.MARKER,
-                    google.maps.drawing.OverlayType.RECTANGLE
-                ]
-            },
-            rectangleOptions: {
-                editable: true,
-                draggable: true
-            }
-        });
-        drawingManager.setMap(coverageMap);
+        if (!shapeType) {
+            drawingManager = new google.maps.drawing.DrawingManager({
+                drawingControl: true,
+                drawingControlOptions: {
+                    position: google.maps.ControlPosition.TOP_CENTER,
+                    drawingModes: [
+                        google.maps.drawing.OverlayType.MARKER,
+                        google.maps.drawing.OverlayType.RECTANGLE
+                    ]
+                },
+                rectangleOptions: {
+                    editable: true,
+                    draggable: true
+                }
+            });
+            drawingManager.setMap(coverageMap);
 
-        google.maps.event.addListener(drawingManager, 'rectanglecomplete', function (rectangle) {
-            var coordinates = (rectangle.getBounds());
-            processDrawing(coordinates, "rectangle");
-
-            rectangle.addListener('bounds_changed', function(){
+            google.maps.event.addListener(drawingManager, 'rectanglecomplete', function (rectangle) {
                 var coordinates = (rectangle.getBounds());
                 processDrawing(coordinates, "rectangle");
+
+                rectangle.addListener('bounds_changed', function () {
+                    var coordinates = (rectangle.getBounds());
+                    processDrawing(coordinates, "rectangle");
+                });
             });
-        });
 
-        google.maps.event.addListener(drawingManager, 'markercomplete', function (marker) {
-            var coordinates = (marker.getPosition());
-            processDrawing (coordinates, "marker");
-        });
+            google.maps.event.addListener(drawingManager, 'markercomplete', function (marker) {
+                var coordinates = (marker.getPosition());
+                processDrawing(coordinates, "marker");
+            });
 
-        google.maps.event.addListener(drawingManager, 'overlaycomplete', function (e) {
-            allOverlays.push(e);
-        });
+            google.maps.event.addListener(drawingManager, 'overlaycomplete', function (e) {
+                allOverlays.push(e);
+            });
+        }
+        else{
+            if (shapeType == "point") {
+                var myLatLng = {lat: parseFloat($("#cov_east").text()), lng: parseFloat($("#cov_north").text())};
+
+                if (!myLatLng.lat || !myLatLng.lng) {
+                    return;
+                }
+
+                // Define the rectangle and set its editable property to true.
+                var marker = new google.maps.Marker({
+                    position: myLatLng,
+                    map: coverageMap
+                });
+            }
+            else if (shapeType == "box") {
+                var bounds = {
+                    north: parseFloat($("#cov_northlimit").text()),
+                    south: parseFloat($("#cov_southlimit").text()),
+                    east: parseFloat($("#cov_eastlimit").text()),
+                    west: parseFloat($("#cov_westlimit").text())
+                };
+
+                if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
+                    return;
+                }
+
+                // Define the rectangle and set its editable property to true.
+                var rectangle = new google.maps.Rectangle({
+                    bounds: bounds,
+                    editable: false,
+                    draggable: false
+                });
+
+                rectangle.setMap(coverageMap);
+            }
+        }
     }
 
     // Draw marker on text change
@@ -2573,6 +2614,14 @@
             setTimeout( function(){
                 google.maps.event.trigger(coverageMap, "resize");
                 coverageMap.setCenter(new google.maps.LatLng(41.850033, -87.6500523));
+                if ($("#id_type_1").is(":checked")){
+                    drawRectangleOnTextChange();
+                }
+                else{
+                    drawMarkerOnTextChange();
+                }
+
+
             }, 200 );
         });
 
