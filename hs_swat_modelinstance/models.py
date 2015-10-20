@@ -490,20 +490,12 @@ class SWATModelInstanceMetaData(CoreMetaData):
     def has_all_required_elements(self):
         if not super(SWATModelInstanceMetaData, self).has_all_required_elements():
             return False
-        if not self.model_output:
-            return False
-        if not self.executed_by:
-            return False
         if not self.model_objective:
             return False
         return True
 
     def get_required_missing_elements(self):
         missing_required_elements = super(SWATModelInstanceMetaData, self).get_required_missing_elements()
-        if not self.model_output:
-            missing_required_elements.append('ModelOutput')
-        if not self.executed_by:
-            missing_required_elements.append('ExecutedBy')
         if not self.model_objective:
             missing_required_elements.append('ModelObjective')
         return missing_required_elements
@@ -523,7 +515,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
         if self.model_output:
             hsterms_model_output = etree.SubElement(container, '{%s}ModelOutput' % self.NAMESPACES['hsterms'])
             hsterms_model_output_rdf_Description = etree.SubElement(hsterms_model_output, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_model_output_value = etree.SubElement(hsterms_model_output_rdf_Description, '{%s}IncludesModelOutput' % self.NAMESPACES['hsterms'])
+            hsterms_model_output_value = etree.SubElement(hsterms_model_output_rdf_Description, '{%s}includesModelOutput' % self.NAMESPACES['hsterms'])
 
 
         if self.model_output.includes_output == True: hsterms_model_output_value.text = "Yes"
@@ -532,14 +524,13 @@ class SWATModelInstanceMetaData(CoreMetaData):
         if self.executed_by:
             hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
             hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}ModelProgramName' % self.NAMESPACES['hsterms'])
-            # hsterms_executed_by_name.text = self.executed_by.name
+            hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}modelProgramName' % self.NAMESPACES['hsterms'])
 
             title = self.executed_by.model_program_fk.title if self.executed_by.model_program_fk else "Unspecified"
             hsterms_executed_by_name.text = title
 
             hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description,
-                                                       '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
+                                                       '{%s}modelProgramIdentifier' % self.NAMESPACES['hsterms'])
 
             url = '%s%s' % (utils.current_site_url(), self.executed_by.model_program_fk.get_absolute_url()) if self.executed_by.model_program_fk else "None"
 
@@ -547,7 +538,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
 
 
         if self.model_objective:
-            hsterms_model_objective = etree.SubElement(container, '{%s}ModelObjective' % self.NAMESPACES['hsterms'])
+            hsterms_model_objective = etree.SubElement(container, '{%s}modelObjective' % self.NAMESPACES['hsterms'])
 
             if self.model_objective.other_objectives:
                 hsterms_model_objective.text = ', '.join([objective.description for objective in self.model_objective.swat_model_objectives.all()]) + ', ' + self.model_objective.other_objectives
@@ -556,7 +547,7 @@ class SWATModelInstanceMetaData(CoreMetaData):
 
 
         if self.simulation_type:
-            hsterms_simulation_type = etree.SubElement(container, '{%s}SimulationType' % self.NAMESPACES['hsterms'])
+            hsterms_simulation_type = etree.SubElement(container, '{%s}simulationType' % self.NAMESPACES['hsterms'])
             hsterms_simulation_type.text = self.simulation_type.simulation_type_name
 
 
@@ -567,12 +558,12 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_methods_runoff_calculation_method.text = self.model_method.runoff_calculation_method
             hsterms_model_methods_flow_routing_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}flowRoutingMethod' % self.NAMESPACES['hsterms'])
             hsterms_model_methods_flow_routing_method.text = self.model_method.flow_routing_method
-            hsterms_model_methods_PET_estimation_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}PETEstimationMethod' % self.NAMESPACES['hsterms'])
+            hsterms_model_methods_PET_estimation_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}petEstimationMethod' % self.NAMESPACES['hsterms'])
             hsterms_model_methods_PET_estimation_method.text = self.model_method.PET_estimation_method
 
 
         if self.model_parameter:
-            hsterms_swat_model_parameters = etree.SubElement(container, '{%s}ModelParameter' % self.NAMESPACES['hsterms'])
+            hsterms_swat_model_parameters = etree.SubElement(container, '{%s}modelParameter' % self.NAMESPACES['hsterms'])
 
             if self.model_parameter.other_parameters:
                 hsterms_swat_model_parameters.text = ', '.join([parameter.description for parameter in self.model_parameter.model_parameters.all()]) + ', ' + self.model_parameter.other_parameters
@@ -605,11 +596,11 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_input_number_of_subbasins.text = self.model_input.number_of_subbasins
             hsterms_model_input_number_of_HRUs = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}numberOfHRUs' % self.NAMESPACES['hsterms'])
             hsterms_model_input_number_of_HRUs.text = self.model_input.number_of_HRUs
-            hsterms_model_input_DEM_resolution = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMResolution' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_DEM_resolution = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}demResolution' % self.NAMESPACES['hsterms'])
             hsterms_model_input_DEM_resolution.text = self.model_input.DEM_resolution
-            hsterms_model_input_DEM_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMSourceName' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_DEM_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}demSourceName' % self.NAMESPACES['hsterms'])
             hsterms_model_input_DEM_source_name.text = self.model_input.DEM_source_name
-            hsterms_model_input_DEM_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}DEMSourceURL' % self.NAMESPACES['hsterms'])
+            hsterms_model_input_DEM_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}demSourceURL' % self.NAMESPACES['hsterms'])
             hsterms_model_input_DEM_source_URL.text = self.model_input.DEM_source_URL
             hsterms_model_input_landUse_data_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}landUseDataSourceName' % self.NAMESPACES['hsterms'])
             hsterms_model_input_landUse_data_source_name.text = self.model_input.landUse_data_source_name
