@@ -158,22 +158,22 @@ class ModelInstanceMetaData(CoreMetaData):
                 hsterms_model_output_value.text = "Yes"
             else:
                 hsterms_model_output_value.text = "No"
+
+        hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
+        hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by,
+                                                               '{%s}Description' % self.NAMESPACES['rdf'])
+        hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description,
+                                                    '{%s}modelProgramName' % self.NAMESPACES['hsterms'])
+        hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description,
+                                                   '{%s}modelProgramIdentifier' % self.NAMESPACES['hsterms'])
         if self.executed_by:
-            hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by,
-                                                                   '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description,
-                                                        '{%s}modelProgramName' % self.NAMESPACES['hsterms'])
-
-            title = self.executed_by.model_program_fk.title if self.executed_by.model_program_fk else "Unspecified"
-            hsterms_executed_by_name.text = title
-
-            hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description,
-                                                       '{%s}modelProgramIdentifier' % self.NAMESPACES['hsterms'])
-
-            url = '%s%s' % (utils.current_site_url(), self.executed_by.model_program_fk.get_absolute_url()) if self.executed_by.model_program_fk else "None"
-
-            hsterms_executed_by_url.text = url
+            title = self.executed_by.model_program_fk.title
+            url = '%s%s' % (utils.current_site_url(), self.executed_by.model_program_fk.get_absolute_url())
+        else:
+            title = "Unspecified"
+            url = "None"
+        hsterms_executed_by_url.text = url
+        hsterms_executed_by_name.text = title
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
