@@ -2,6 +2,7 @@
 HS_PATH: /home/hydro/hydroshare
 HOST_SSL_DIR: /home/hydro/hs-certs
 HS_DATABASE: pg.development.sql
+HS_LOG_FILES: /home/hydro/log
 
 ### Deployment Options ###
 USE_NGINX: false

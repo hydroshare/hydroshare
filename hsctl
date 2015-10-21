@@ -94,13 +94,18 @@ stop_hs() {
 
 preflight_hs() {
     yes | cp -rf ${HS_PATH}/docker-compose.template ${HS_PATH}/docker-compose.yml
-    sed -i 's!HS_SHARED_VOLUME!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
+    sed -i 's!HS_PATH!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
+    sed -i 's!HS_LOG_FILES!'${HS_LOG_FILES}'!g' ${HS_PATH}/docker-compose.yml
     if [ "${USE_NGINX,,}" = true ]; then
         echo "*** Using nginx: USE_NGINX = ${USE_NGINX} ***"
         # create hs-certs directory if it doesn't exist
         if [[ ! -d ${HOST_SSL_DIR} ]]; then
             echo "*** creating directory: ${HOST_SSL_DIR} ***"
             mkdir ${HOST_SSL_DIR};
+        fi
+        if [[ ! -d ${HS_LOG_FILES} ]]; then
+            echo "*** creating directory: ${HS_LOG_FILES} ***"
+            mkdir ${HS_LOG_FILES};
         fi
         # generate nginx configuration file
         if [ "${USE_SSL,,}" = true ]; then
