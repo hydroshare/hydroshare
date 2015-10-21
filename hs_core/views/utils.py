@@ -30,6 +30,9 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     :param zone: iRODS login zone used to download irods data object for uploading
     :param irods_fnames: the data object file name to download to local for uploading
     :param res_files: list of files for uploading to create resources
+    :raises SessionException(proc.returncode, stdout, stderr) defined in django_irods/icommands.py
+            to capture iRODS exceptions raised from iRODS icommand subprocess run triggered from
+            any method calls from IrodsStorage() if an error or exception ever occurs
     :return: None, but the downloaded file from the iRODS will be appended to res_files list for uploading
     """
     irods_storage = IrodsStorage()
