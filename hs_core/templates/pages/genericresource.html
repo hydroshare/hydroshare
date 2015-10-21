@@ -973,8 +973,8 @@
                     {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
                         <div class="tab-pane" id="coverageTab">
                         {% if not metadata_form %}
-                            <div class="col-md-9 col-sm-12 col-xs-12" id="coverage-spatial">
-                            <div class="row">
+                            <div class="{% if temporal_coverage %}col-md-8{% endif %} col-sm-12 col-xs-12" id="coverage-spatial">
+                                <div class="row">
                                 <div class="col-sm-12">
                                     <legend>Spatial</legend>
                                     <div class="info-group" style="margin-top: -20px; margin-bottom:20px;">
@@ -1005,62 +1005,57 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-6">
+                                <div class="col-sm-8">
                                     <div id="coverageMap" data-shape-type="{{ spatial_coverage.type }}"></div>
                                 </div>
 
-                                <div class="col-sm-6">
+                                <div class="col-sm-4">
                                     {% if spatial_coverage.north or spatial_coverage.northlimit %}
-                                    {% if spatial_coverage.type == 'point' %}
-                                        {% if spatial_coverage.east %}
-                                            <div class="row">
-                                                <div class="col-sm-4"><strong>Longitude:</strong></div>
-                                                <div id="cov_east" class="col-sm-8">{{ spatial_coverage.east }}</div>
-                                            </div>
-                                        {% endif %}
-                                        {% if spatial_coverage.north %}
-                                            <div class="row">
-                                                <div class="col-sm-4"><strong>Latitude:</strong></div>
-                                                <div id="cov_north" class="col-sm-8">{{ spatial_coverage.north }}</div>
-                                            </div>
-                                        {% endif %}
-                                    {% else %}
-                                        {% if spatial_coverage.northlimit %}
-                                            <div class="row">
-                                                <div class="col-sm-4"><strong>North Latitude:</strong></div>
-                                                <div id="cov_northlimit" class="col-sm-8">{{ spatial_coverage.northlimit }}</div>
-                                            </div>
-                                        {% endif %}
-                                        {% if spatial_coverage.eastlimit %}
-                                            <div class="row">
-                                                <div class="col-sm-4"><strong>East Longitude:</strong></div>
-                                                <div id="cov_eastlimit" class="col-sm-8">{{ spatial_coverage.eastlimit }}</div>
-                                            </div>
-                                        {% endif %}
-                                        {% if spatial_coverage.southlimit %}
-                                            <div class="row">
-                                                <div class="col-sm-4"><strong>South Latitude:</strong></div>
-                                                <div id="cov_southlimit" class="col-sm-8">{{ spatial_coverage.southlimit }}</div>
-                                            </div>
-                                        {% endif %}
-                                        {% if spatial_coverage.westlimit %}
-                                            <div class="row">
-                                                <div class="col-sm-4"><strong>West Longitude:</strong></div>
-                                                <div id="cov_westlimit" class="col-sm-8">{{ spatial_coverage.westlimit }}</div>
-                                            </div>
-                                        {% endif %}
+                                        <ul class="list-group">
+                                            {% if spatial_coverage.type == 'point' %}
+                                                {% if spatial_coverage.east %}
+                                                    <li class="list-group-item"><strong>Longitude</strong>
+                                                        <div id="cov_east">{{ spatial_coverage.east }}</div>
+                                                    </li>
+                                                {% endif %}
+                                                {% if spatial_coverage.north %}
+                                                    <li class="list-group-item"><strong>Latitude</strong>
+                                                        <div id="cov_north">{{ spatial_coverage.north }}</div>
+                                                    </li>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if spatial_coverage.northlimit %}
+                                                    <li class="list-group-item"><strong>North Latitude</strong>
+                                                        <div id="cov_northlimit">{{ spatial_coverage.northlimit }}</div>
+                                                    </li>
+                                                {% endif %}
+                                                {% if spatial_coverage.eastlimit %}
+                                                    <li class="list-group-item"><strong>East Longitude</strong>
+                                                        <div id="cov_eastlimit">{{ spatial_coverage.eastlimit }}</div>
+                                                    </li>
+                                                {% endif %}
+                                                {% if spatial_coverage.southlimit %}
+                                                    <li class="list-group-item"><strong>South Latitude</strong>
+                                                        <div id="cov_southlimit">{{ spatial_coverage.southlimit }}</div>
+                                                    </li>
+                                                {% endif %}
+                                                {% if spatial_coverage.westlimit %}
+                                                    <li class="list-group-item"><strong>West Longitude</strong>
+                                                        <div id="cov_westlimit">{{ spatial_coverage.westlimit }}</div>
+                                                    </li>
+                                                {% endif %}
 
-                                        <div class="text-muted" style="margin-top:20px;">WGS 84 decimal degrees</div>
-                                    {% endif %}
+                                                <div class="text-muted" style="margin-top:20px;">WGS 84 decimal degrees</div>
+                                            {% endif %}
+                                        </ul>
                                     {% endif %}
                                 </div>
 
                             </div>
                             </div>
                             {% if temporal_coverage %}
-                                <div class="col-sm-3">
-                                    <h4><strong>Temporal</strong></h4>
-                                    <hr style="margin-top: 0;margin-bottom: 2px">
+                                <div class="col-sm-4">
+                                    <legend>Temporal</legend>
                                     <div class="row">
                                         <div class="col-sm-4"><strong>Start Date:</strong></div>
                                         <div class="col-sm-8">{{ temporal_coverage.start_date }}</div>
@@ -1074,7 +1069,7 @@
 
                             {% else %}
                                 <div class="form-group">
-                                    <div class="col-md-9 col-sm-12 col-xs-12" id="coverage-spatial">
+                                    <div class="col-md-8 col-sm-12 col-xs-12" id="coverage-spatial">
                                         <div class="row">
                                             <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{% if not coverage_spatial_form.initial.north and not coverage_spatial_form.initial.northlimit %}add-metadata/{% else %}{{ coverage_spatial_form.initial.id }}/update-metadata/{% endif %}"
                                                   id="id-coverage-spatial" method="post">
@@ -1129,11 +1124,11 @@
                                                  </div>
 
                                                 <fieldset>
-                                                    <div class="col-sm-6">
+                                                    <div class="col-sm-8">
                                                         <div id="coverageMap"></div>
                                                     </div>
 
-                                                    <div class="col-sm-6">
+                                                    <div class="col-sm-4">
                                                         <div id="div_id_east" class="control-group">
                                                             <label for="id_east" class="control-label requiredField">
                                                                 Latitude<span class="asteriskField">*</span>
@@ -1237,7 +1232,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="form-group col-md-3 col-sm-12 col-xs-12" id="coverage-temporal">
+                                    <div class="form-group col-md-4 col-sm-12 col-xs-12" id="coverage-temporal">
                                     {% if not coverage_temporal_form.initial.start %}
                                         <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
                                               id="id-coverage-temporal" method="post">
@@ -1271,7 +1266,6 @@
                                             </fieldset>
                                         </form>
                                     {% else %}
-
                                         <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{{ coverage_temporal_form.initial.id }}/update-metadata/"
                                               id="id-coverage-temporal" method="post">
                                             {% csrf_token %}
