@@ -19,6 +19,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     author_email = indexes.CharField()
     #publisher = indexes.CharField(faceted=True)
     rating = indexes.IntegerField(model_attr='rating_sum')
+    type = indexes.CharField()
 
     def get_model(self):
         return BaseResource
@@ -36,15 +37,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return obj.first_creator.organization
 
     def prepare_author_email(self, obj):
-       # print(obj.rating_sum)
         return obj.first_creator.email
-
-    #def prepare_publisher(self, obj):
-    #    print(obj.metadata.publisher)
-    #    return obj.metadata.publisher.name
 
     def prepare_discoverable(self, obj):
         if(obj.raccess.public | obj.raccess.discoverable):
             return True
         else:
             return False
+
+    def prepare_type(self, obj):
+        return obj.metadata.type

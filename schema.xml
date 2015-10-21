@@ -189,6 +189,8 @@
 
     <field name="public_exact" type="boolean" indexed="true" stored="true" multiValued="false" />
 
+    <field name="type" type="text_en" indexed="true" stored="true" multiValued="false" />
+
     <field name="public" type="boolean" indexed="true" stored="true" multiValued="false" />
 
   </fields>

@@ -16,3 +16,4 @@
 {{ object.created }}
 {{ object.modified }}
 {{ object.rating_sum }}
+{{ object.metadata.type }}
