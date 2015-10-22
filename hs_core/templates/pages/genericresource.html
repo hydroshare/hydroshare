@@ -2327,7 +2327,7 @@
                         if (json_response.metadata_status !== $('#metadata-status').text()) {
                             $('#metadata-status').text(json_response.metadata_status);
                             if (json_response.metadata_status == "Sufficient to make public") {
-                                customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to make public", 300000);
+                                customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to make public", 3000);
                                 $("#btn-public").prop("disabled", false);
                                 $("#btn-discoverable").prop("disabled", false);
                             }
@@ -2371,7 +2371,6 @@
         var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
 
         coverageMap = new google.maps.Map(document.getElementById('coverageMap'), {
-            center: {lat: 39.0959629363055, lng: -96.767578125},
             color:"#DDD",
             zoom: 3,
             streetViewControl: false,
@@ -2421,42 +2420,6 @@
                 allOverlays.push(e);
             });
         }
-        else{
-            if (shapeType == "point") {
-                var myLatLng = {lat: parseFloat($("#cov_east").text()), lng: parseFloat($("#cov_north").text())};
-
-                if (!myLatLng.lat || !myLatLng.lng) {
-                    return;
-                }
-
-                // Define the rectangle and set its editable property to true.
-                var marker = new google.maps.Marker({
-                    position: myLatLng,
-                    map: coverageMap
-                });
-            }
-            else if (shapeType == "box") {
-                var bounds = {
-                    north: parseFloat($("#cov_northlimit").text()),
-                    south: parseFloat($("#cov_southlimit").text()),
-                    east: parseFloat($("#cov_eastlimit").text()),
-                    west: parseFloat($("#cov_westlimit").text())
-                };
-
-                if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
-                    return;
-                }
-
-                // Define the rectangle and set its editable property to true.
-                var rectangle = new google.maps.Rectangle({
-                    bounds: bounds,
-                    editable: false,
-                    draggable: false
-                });
-
-                rectangle.setMap(coverageMap);
-            }
-        }
     }
 
     // Draw marker on text change
@@ -2500,6 +2463,9 @@
             position: myLatLng,
             map: coverageMap
         });
+
+        // Center map at new market
+        coverageMap.setCenter(marker.getPosition());
 
         allShapes.push(marker);
     }
@@ -2578,6 +2544,11 @@
             processDrawing(coordinates, "rectangle");
         });
 
+        // Center map at new rectangle
+        var latCenter = (bounds.north + bounds.south) / 2;
+        var lngCenter = (bounds.west + bounds.east) / 2;
+        coverageMap.setCenter(new google.maps.LatLng(latCenter,lngCenter));
+
         allShapes.push(rectangle);
     }
 
@@ -2629,8 +2600,8 @@
             $("#div_id_uplimit").hide();
             $("#div_id_downlimit").hide();
 
-            $("#id_east").val(coordinates.lat());
-            $("#id_north").val(coordinates.lng());
+            $("#id_east").val(coordinates.lng());
+            $("#id_north").val(coordinates.lat());
         }
     }
 
@@ -2667,14 +2638,70 @@
         $("#coverageTabBtn").click(function(){
             setTimeout( function(){
                 google.maps.event.trigger(coverageMap, "resize");
-                if ($("#id_type_1").is(":checked")){
-                    drawRectangleOnTextChange();
-                }
-                else{
-                    drawMarkerOnTextChange();
-                }
 
+                // This field is populated if the page is in view mode
+                var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
 
+                // Center the map
+                if (shapeType) {
+                    deleteAllShapes();
+                    if (shapeType == "point") {
+                        var myLatLng = {
+                            lat: parseFloat($("#cov_north").text()),
+                            lng: parseFloat($("#cov_east").text())
+                        };
+
+                        if (!myLatLng.lat || !myLatLng.lng) {
+                            return;
+                        }
+
+                        // Define the rectangle and set its editable property to true.
+                        var marker = new google.maps.Marker({
+                            position: myLatLng,
+                            map: coverageMap
+                        });
+
+                        allShapes.push(marker);
+
+                        // Center map at new market
+                        coverageMap.setCenter(marker.getPosition());
+                    }
+                    else if (shapeType == "box") {
+                        var bounds = {
+                            north: parseFloat($("#cov_northlimit").text()),
+                            south: parseFloat($("#cov_southlimit").text()),
+                            east: parseFloat($("#cov_eastlimit").text()),
+                            west: parseFloat($("#cov_westlimit").text())
+                        };
+
+                        if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
+                            return;
+                        }
+
+                        // Define the rectangle and set its editable property to true.
+                        var rectangle = new google.maps.Rectangle({
+                            bounds: bounds,
+                            editable: false,
+                            draggable: false
+                        });
+
+                        rectangle.setMap(coverageMap);
+                        allShapes.push(rectangle);
+
+                        // Center map at new rectangle
+                        var latCenter = (bounds.north + bounds.south) / 2;
+                        var lngCenter = (bounds.west + bounds.east) / 2;
+                        coverageMap.setCenter(new google.maps.LatLng(latCenter, lngCenter));
+                    }
+                }
+                else {
+                    if ($("#id_type_1").is(":checked")) {
+                        drawRectangleOnTextChange();
+                    }
+                    else {
+                        drawMarkerOnTextChange();
+                    }
+                }
             }, 200 );
         });
 
