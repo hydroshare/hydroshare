@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
                 ('southlimit', models.FloatField()),
                 ('westlimit', models.FloatField()),
                 ('eastlimit', models.FloatField()),
-                ('projection_string', models.TextField(max_length=1024, null=True, blank=True)),
+                ('projection_string', models.TextField(null=True, blank=True)),
                 ('projection_name', models.TextField(max_length=256, null=True, blank=True)),
                 ('datum', models.TextField(max_length=256, null=True, blank=True)),
                 ('unit', models.TextField(max_length=256, null=True, blank=True)),
@@ -78,7 +78,7 @@ class Migration(migrations.Migration):
                 ('fileType', models.TextField(default=None, max_length=128, choices=[(None, b'Unknown'), (b'SHP', b'ESRI Shapefiles'), (b'ZSHP', b'Zipped ESRI Shapefiles'), (b'KML', b'KML'), (b'KMZ', b'KMZ'), (b'GML', b'GML'), (b'SQLITE', b'SQLite')])),
                 ('baseFilename', models.TextField(max_length=256)),
                 ('fileCount', models.IntegerField(default=0)),
-                ('filenameString', models.TextField(max_length=2048, null=True, blank=True)),
+                ('filenameString', models.TextField(null=True, blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_geographic_feature_resource_originalfileinfo_related', to='contenttypes.ContentType')),
             ],
             options={

@@ -1,30 +1,30 @@
 from django.db import models
-from mezzanine.pages.page_processors import processor_for
-from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
-from mezzanine.pages.models import Page
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.contrib.contenttypes import generic
 
+from mezzanine.pages.page_processors import processor_for
+
+from hs_core.models import BaseResource, ResourceManager, resource_processor,\
+                           CoreMetaData, AbstractMetaDataElement
+
 # Create your models here.
-
-
 class OriginalFileInfo(AbstractMetaDataElement):
 
     term = 'OriginalFileInfo'
 
-    fileTypeEnum=(  (None, 'Unknown'),
+    fileTypeEnum = (
+                    (None, 'Unknown'),
                     ("SHP", "ESRI Shapefiles"),
                     ("ZSHP", "Zipped ESRI Shapefiles"),
                     ("KML", "KML"),
                     ("KMZ", "KMZ"),
                     ("GML", "GML"),
                     ("SQLITE", "SQLite")
-                 )
-    fileType=models.TextField(max_length=128, choices=fileTypeEnum, default=None)
-    baseFilename=models.TextField(max_length=256, null=False, blank=False)
-    fileCount=models.IntegerField(null=False, blank=False, default=0)
-
-    filenameString = models.TextField(max_length=2048, null=True, blank=True)
+                   )
+    fileType = models.TextField(max_length=128, choices=fileTypeEnum, default=None)
+    baseFilename = models.TextField(max_length=256, null=False, blank=False)
+    fileCount = models.IntegerField(null=False, blank=False, default=0)
+    filenameString = models.TextField(null=True, blank=True)
 
     class Meta:
         # OriginalFileInfo element is not repeatable
@@ -38,9 +38,10 @@ class OriginalFileInfo(AbstractMetaDataElement):
                 raise ValidationError("For OriginalFileInfo meta, one or more attribute is missing.")
 
         metadata_obj = kwargs['content_object']
-        ori_file_info = OriginalFileInfo.objects.create(fileType=kwargs['fileType'], baseFilename=kwargs['baseFilename'],
-                                                  fileCount=kwargs['fileCount'],
-                                                 content_object=metadata_obj,)
+        ori_file_info = OriginalFileInfo.objects.create(fileType=kwargs['fileType'],
+                                                        baseFilename=kwargs['baseFilename'],
+                                                        fileCount=kwargs['fileCount'],
+                                                        content_object=metadata_obj)
         # save filenameString info
         for key, value in kwargs.iteritems():
             if key in ('filenameString'):
@@ -69,21 +70,16 @@ class OriginalFileInfo(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No OriginalFileInfo element exists for id: %d."%element_id)
 
-#
 # Define original spatial coverage metadata info
 class OriginalCoverage(AbstractMetaDataElement):
 
     term = 'OriginalCoverage'
 
-    #original extent
-    #_extent = models.CharField(max_length=1024, null=False, blank=False)
     northlimit = models.FloatField(null=False, blank=False)
     southlimit = models.FloatField(null=False, blank=False)
     westlimit = models.FloatField(null=False, blank=False)
     eastlimit = models.FloatField(null=False, blank=False)
-
-    #eg., prj string
-    projection_string = models.TextField(max_length=1024, null=True, blank=True)
+    projection_string = models.TextField(null=True, blank=True)
     projection_name = models.TextField(max_length=256, null=True, blank=True)
     datum = models.TextField(max_length=256, null=True, blank=True)
     unit = models.TextField(max_length=256, null=True, blank=True)
@@ -91,7 +87,6 @@ class OriginalCoverage(AbstractMetaDataElement):
     class Meta:
         # OriginalCoverage element is not repeatable
         unique_together = ("content_type", "object_id")
-
 
     @classmethod
     def create(cls, **kwargs):
@@ -101,11 +96,13 @@ class OriginalCoverage(AbstractMetaDataElement):
                 raise ValidationError("For original coverage meta, one or more bounding box limits is missing.")
 
         metadata_obj = kwargs['content_object']
-        ori_cov = OriginalCoverage.objects.create(northlimit=kwargs['northlimit'], southlimit=kwargs['southlimit'],
-                                                  westlimit=kwargs['westlimit'],eastlimit=kwargs['eastlimit'],
+        ori_cov = OriginalCoverage.objects.create(northlimit=kwargs['northlimit'],
+                                                  southlimit=kwargs['southlimit'],
+                                                  westlimit=kwargs['westlimit'],
+                                                  eastlimit=kwargs['eastlimit'],
                                                   content_object=metadata_obj,)
 
-        # # update projection string info
+        # update projection string info
         for key, value in kwargs.iteritems():
             if key in ('projection_string','projection_name','datum','unit'):
                 setattr(ori_cov, key, value)
@@ -117,9 +114,16 @@ class OriginalCoverage(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         ori_cov = OriginalCoverage.objects.get(id=element_id)
         if ori_cov:
-            # # update projection string info
+            # update projection string info
             for key, value in kwargs.iteritems():
-                if key in ('projection_string','projection_name','datum','unit', 'northlimit', 'southlimit', 'eastlimit', 'westlimit'):
+                if key in ('projection_string',
+                           'projection_name',
+                           'datum',
+                           'unit',
+                           'northlimit',
+                           'southlimit',
+                           'eastlimit',
+                           'westlimit'):
                     setattr(ori_cov, key, value)
                     ori_cov.save()
         else:
@@ -133,7 +137,6 @@ class OriginalCoverage(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No original coverage element exists for id: %d."%element_id)
 
-
 class FieldInformation(AbstractMetaDataElement):
     term = 'FieldInformation'
 
@@ -145,6 +148,7 @@ class FieldInformation(AbstractMetaDataElement):
 
     def __unicode__(self):
         self.fieldName
+
     @classmethod
     def create(cls, **kwargs):
         if 'fieldName' in kwargs:
@@ -152,7 +156,9 @@ class FieldInformation(AbstractMetaDataElement):
                 raise ValidationError("fieldType of FieldInformation is missing.")
 
             metadata_obj = kwargs['content_object']
-            field_info = FieldInformation.objects.create(fieldName = kwargs['fieldName'], fieldType=kwargs['fieldType'],content_object=metadata_obj,)
+            field_info = FieldInformation.objects.create(fieldName = kwargs['fieldName'],
+                                                         fieldType=kwargs['fieldType'],
+                                                         content_object=metadata_obj,)
 
             for key, value in kwargs.iteritems():
                 if key in ('fieldTypeCode', 'fieldWidth', 'fieldPrecision'):
@@ -179,8 +185,8 @@ class FieldInformation(AbstractMetaDataElement):
         if field_info:
             field_info.delete()
         else:
-            raise ValidationError("FieldInformation element of the geographic feature resource cannot be deleted: %d."%element_id)
-
+            raise ValidationError("FieldInformation element of the geographic feature resource cannot be deleted: %d."\
+                                  % element_id)
 
 class GeometryInformation(AbstractMetaDataElement):
     term = 'GeometryInformation'
@@ -194,6 +200,7 @@ class GeometryInformation(AbstractMetaDataElement):
 
     def __unicode__(self):
         self.fieldName
+
     @classmethod
     def create(cls, **kwargs):
 
@@ -202,7 +209,9 @@ class GeometryInformation(AbstractMetaDataElement):
                 raise ValidationError("featureCount of GeometryInformation is missing.")
 
             metadata_obj = kwargs['content_object']
-            geom_info = GeometryInformation.objects.create(geometryType = kwargs['geometryType'], featureCount=kwargs['featureCount'],content_object=metadata_obj,)
+            geom_info = GeometryInformation.objects.create(geometryType=kwargs['geometryType'],
+                                                           featureCount=kwargs['featureCount'],
+                                                           content_object=metadata_obj,)
             return geom_info
         else:
             raise ValidationError("geometryType of GeometryInformation is missing.")
@@ -216,7 +225,8 @@ class GeometryInformation(AbstractMetaDataElement):
                     setattr(geom_info, key, value)
             geom_info.save()
         else:
-            raise ObjectDoesNotExist("No GeometryInformation element can be found for the provided id: %s" % kwargs['id'])
+            raise ObjectDoesNotExist("No GeometryInformation element can be found for the provided id: %s"\
+                                     % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
@@ -224,12 +234,14 @@ class GeometryInformation(AbstractMetaDataElement):
         if geom_info:
             geom_info.delete()
         else:
-            raise ObjectDoesNotExist("GeometryInformation element of the geographic feature resource cannot be deleted: %d."%element_id)
-
+            raise ObjectDoesNotExist("GeometryInformation element of the geographic feature resource cannot be\
+                                    deleted: %d." % element_id)
 
 # Define the Geographic Feature
 class GeographicFeatureResource(BaseResource):
+
     objects = ResourceManager("GeographicFeatureResource")
+
     @property
     def metadata(self):
         md = GeographicFeatureMetaData()
@@ -237,8 +249,9 @@ class GeographicFeatureResource(BaseResource):
 
     @classmethod
     def get_supported_upload_file_types(cls):
-    # See Shapefile format: http://resources.arcgis.com/en/help/main/10.2/index.html#//005600000003000000
-        return (".zip", ".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg", ".xml", ".fbn", ".fbx", ".ain", ".aih", ".atx", ".ixs", ".mxs")
+        # See Shapefile format: http://resources.arcgis.com/en/help/main/10.2/index.html#//005600000003000000
+        return (".zip", ".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg", ".xml", ".fbn", ".fbx", ".ain",
+                ".aih", ".atx", ".ixs", ".mxs")
 
     @classmethod
     def can_have_multiple_files(cls):
@@ -270,32 +283,33 @@ class GeographicFeatureMetaData(CoreMetaData):
         return elements
 
     def has_all_required_elements(self):
-        if not super(GeographicFeatureMetaData, self).has_all_required_elements():  # check required meta
-            return False
-        if not self.originalfileinfo.all().first():
-            return False
-        if not self.fieldinformation.all().first():
-            return False
-        if not self.originalcoverage.all().first():
-            return False
-        if not self.geometryinformation.all().first():
-            return False
-        if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
+        # if not super(GeographicFeatureMetaData, self).has_all_required_elements():  # check required meta
+        #     return False
+        # if not self.originalfileinfo.all().first():
+        #     return False
+        # if not self.fieldinformation.all().first():
+        #     return False
+        # if not self.originalcoverage.all().first():
+        #     return False
+        # if not self.geometryinformation.all().first():
+        #     return False
+        # if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
+        #     return False
+        # return True
+        if self.get_required_missing_elements() != "":
             return False
         return True
 
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(GeographicFeatureMetaData, self).get_required_missing_elements()
-        if not self.coverages.all().filter(type='box').first():
-            missing_required_elements.append('Spatial Coverage: Box')
+        if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
+            missing_required_elements.append('Spatial Coverage')
         if not self.originalcoverage.all().first():
             missing_required_elements.append('Spatial Reference')
         if not self.geometryinformation.all().first():
             missing_required_elements.append('Geometry Information')
         if not self.originalfileinfo.all().first():
-            missing_required_elements.append('Original File Information')
-        # if not self.field_info.all().first():
-        #     missing_required_elements.append('FieldInformation')
+            missing_required_elements.append('Resource File Information')
 
         return missing_required_elements
 
@@ -367,24 +381,5 @@ class GeographicFeatureMetaData(CoreMetaData):
                 hsterms_field_info_fieldPrecision.text = str(field.fieldPrecision)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
-
-    # What does this func do?
-    def add_metadata_element_to_xml(self, root, md_element, md_fields):
-        from lxml import etree
-        element_name = md_fields.get('md_element') if md_fields.get('md_element') else md_element.term
-
-        hsterms_newElem = etree.SubElement(root,
-                                           "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'],
-                                                                          new_element=element_name))
-        hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
-                                                    "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
-        for md_field in md_fields.keys():
-            if hasattr(md_element, md_field):
-                attr = getattr(md_element, md_field)
-                if attr:
-                    field = etree.SubElement(hsterms_newElem_rdf_Desc,
-                                             "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
-                                                                      field=md_fields[md_field]))
-                    field.text = str(attr)
 
 import receivers # never delete this otherwise non of the receiver function will work

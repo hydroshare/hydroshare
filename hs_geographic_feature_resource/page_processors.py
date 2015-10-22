@@ -1,11 +1,13 @@
 __author__ = 'drew'
 
 from mezzanine.pages.page_processors import processor_for
-from models import *
+
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
+
 from hs_core import page_processors
 from hs_core.views import *
-from hs_geographic_feature_resource.forms import *
+from hs_geographic_feature_resource.forms import OriginalCoverageForm, GeometryInformationForm
+from models import GeographicFeatureResource
 
 @processor_for(GeographicFeatureResource)
 # when the resource is created this page will be shown
@@ -13,26 +15,24 @@ def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
 
-    if not edit_resource: # not editing mode
+    if not edit_resource: # non-edit mode
         # get the context from hs_core
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None, request=request)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
+                                                   extended_metadata_layout=None, request=request)
         extended_metadata_exists = False
 
-        if content_model.metadata.originalcoverage.all() :
+        if content_model.metadata.originalcoverage.all():
             extended_metadata_exists = True
 
         context['extended_metadata_exists'] = extended_metadata_exists
 
         # add the original coverage context
-        geom_info_for_view={}
+        geom_info_for_view = {}
         geom_info = content_model.metadata.geometryinformation.all().first()
         if geom_info:
             geom_info_for_view['geometryType'] = geom_info.geometryType
             geom_info_for_view['featureCount'] = geom_info.featureCount
             context['geometry_information'] = geom_info_for_view
-        else:
-            context['geometry_information'] = None
-
 
         ori_cov_dict = {}
         ori_cov_obj = content_model.metadata.originalcoverage.all().first()
@@ -47,24 +47,21 @@ def landing_page(request, page):
             ori_cov_dict['unit'] = ori_cov_obj.unit
 
             context['original_coverage'] = ori_cov_dict
-        else:
-            context['original_coverage'] = None
 
-        field_info_list= content_model.metadata.fieldinformation.all()
-        field_info_list_context=[]
+        field_info_list = content_model.metadata.fieldinformation.all()
+        field_info_list_context = []
         for field_info in field_info_list:
-            field_info_dict_item={}
-            field_info_dict_item["fieldName"]=field_info.fieldName
-            field_info_dict_item["fieldType"]=field_info.fieldType
-            field_info_dict_item["fieldTypeCode"]=field_info.fieldTypeCode
-            field_info_dict_item["fieldWidth"]=field_info.fieldWidth
-            field_info_dict_item["fieldPrecision"]=field_info.fieldPrecision
+            field_info_dict_item = {}
+            field_info_dict_item["fieldName"] = field_info.fieldName
+            field_info_dict_item["fieldType"] = field_info.fieldType
+            field_info_dict_item["fieldTypeCode"] = field_info.fieldTypeCode
+            field_info_dict_item["fieldWidth"] = field_info.fieldWidth
+            field_info_dict_item["fieldPrecision"] = field_info.fieldPrecision
             field_info_list_context.append(field_info_dict_item)
         context['field_information'] = field_info_list_context
 
     else: # editing mode
-
-        geom_info_for_view={}
+        geom_info_for_view = {}
         geom_info = content_model.metadata.geometryinformation.all().first()
         if geom_info:
             geom_info_for_view['geometryType'] = geom_info.geometryType
@@ -76,11 +73,11 @@ def landing_page(request, page):
                                                         res_short_id=content_model.short_id,
                                                         allow_edit=edit_resource,
                                                         element_id=geom_info.id if geom_info else None)
-        geom_information_layout = HTML('<div class="form-group col-lg-6 col-xs-12" id="geometryinformation"> '
-                                   '{% load crispy_forms_tags %} '
-                                   '{% crispy geom_information_form %} '
-                                   '</div>')
 
+        geom_information_layout = HTML('<div class="form-group col-lg-6 col-xs-12" id="geometryinformation">'
+                                   '{% load crispy_forms_tags %}'
+                                   '{% crispy geom_information_form %}'
+                                   '</div>')
 
         # origina coverage_form
         ori_cov_obj = content_model.metadata.originalcoverage.all().first()
@@ -98,19 +95,17 @@ def landing_page(request, page):
             ori_coverage_data_dict = None
 
         ori_coverage_form = OriginalCoverageForm(initial=ori_coverage_data_dict,
-                                                        res_short_id=content_model.short_id,
-                                                        allow_edit=edit_resource,
-                                                        element_id=ori_cov_obj.id if ori_cov_obj else None)
+                                                res_short_id=content_model.short_id,
+                                                allow_edit=edit_resource,
+                                                element_id=ori_cov_obj.id if ori_cov_obj else None)
         ori_coverage_layout = HTML('<div class="form-group col-lg-6 col-xs-12" id="originalcoverage"> '
                                    '{% load crispy_forms_tags %} '
                                    '{% crispy ori_coverage_form %} '
                                    '</div>')
-        ext_md_layout = Layout(
-                                geom_information_layout,
-                                ori_coverage_layout,
-                                )
+        ext_md_layout = Layout(geom_information_layout, ori_coverage_layout,)
 
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
+                                                   extended_metadata_layout=ext_md_layout, request=request)
         context['ori_coverage_form'] = ori_coverage_form
         context['geom_information_form'] = geom_information_form
 
