@@ -4,6 +4,7 @@ import string
 from django.http import HttpResponse, HttpResponseRedirect
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
+from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.views.utils import authorize, upload_from_irods
 from hs_core.hydroshare import utils
@@ -64,6 +65,7 @@ def login(request):
             response_data['login_message'] = 'iRODS login failed'
             response_data['irods_file_names'] = ''
             response_data['error'] = "iRODS collection does not exist"
+            irods_sess.cleanup()
             return HttpResponse(
                 json.dumps(response_data),
                 content_type="application/json"
@@ -77,6 +79,7 @@ def login(request):
             response_data['datastore'] = datastore
             response_data['irods_loggedin'] = True
             response_data['irods_file_names'] = ''
+            irods_sess.cleanup()
             return HttpResponse(
                 json.dumps(response_data),
                 content_type = "application/json"
@@ -98,9 +101,10 @@ def store(request):
 
     return_object['files'] = store['files']
     return_object['folder'] = store['folder']
-
+    jsondump = json.dumps(return_object)
+    irods_sess.cleanup()
     return HttpResponse(
-        json.dumps(return_object),
+        jsondump,
         content_type = "application/json"
     )
 
@@ -159,8 +163,8 @@ def upload_add(request):
         try:
             upload_from_irods(username=user, password=password, host=host, port=port,
                               zone=zone, irods_fnames=irods_fnames, res_files=res_files)
-        except Exception as ex:
-            request.session['file_validation_error'] = ex.message
+        except SessionException as ex:
+            request.session['file_validation_error'] = ex.stderr
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:

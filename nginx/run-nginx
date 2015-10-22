@@ -12,6 +12,8 @@ NGINX_DOCKER_CNTR='web-nginx'
 
 display_usage() {
 	echo "*** run-nginx control script ***"
+	echo "usage: $0 maint_off   # removes maintenance page"
+	echo "usage: $0 maint_on    # displays maintenance page"
 	echo "usage: $0 restart     # restarts docker nginx"
 	echo "usage: $0 start       # starts docker nginx"
 	echo "usage: $0 stop        # stops docker nginx"
@@ -87,6 +89,16 @@ restart_nginx() {
     start_nginx START
 }
 
+maint_on_nginx() {
+    echo "*** ${1^^} ***"
+    cp maintenance_on.html ../hydroshare/static/maintenance_on.html
+}
+
+maint_off_nginx() {
+    echo "*** ${1^^} ***"
+    rm ../hydroshare/static/maintenance_on.html
+}
+
 ### Display usage if exactly one argument is not provided ###
 if [  $# -ne 1 ]
 then
@@ -100,6 +112,10 @@ case "$1" in
     start) start_nginx $1
         ;;
     stop) stop_nginx $1
+        ;;
+    maint_on) maint_on_nginx $1
+        ;;
+    maint_off) maint_off_nginx $1
         ;;
     *) display_usage
         ;;

@@ -639,8 +639,7 @@ def get_resource_list(creator=None,
             group = group_from_id(group)
             q.append(Q(gaccess__resource__in=group.gaccess.get_editable_resources()))
 
-        q, public = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=True,
-                                                               query=q, is_public=public)
+        q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=True, query=q)
 
     else:
         if creator:
@@ -651,8 +650,7 @@ def get_resource_list(creator=None,
             group = group_from_id(group)
             q.append(Q(gaccess__resource__in=group.gaccess.get_held_resources()))
 
-        q, public = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False,
-                                                               query=q, is_public=public)
+        q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False, query=q)
 
     if from_date and to_date:
         q.append(Q(created__range=(from_date, to_date)))
@@ -671,9 +669,17 @@ def get_resource_list(creator=None,
         flt = flt.filter(q)
 
         if full_text_search:
-            flt = flt.search(full_text_search)
-            flt = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
-            flt = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
+            desc_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+            title_ids = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
+
+            # Full text search must match within the title or abstract
+            if desc_ids:
+                flt = flt.filter(object_id__in=desc_ids)
+            elif title_ids:
+                flt = flt.filter(object_id__in=title_ids)
+            else:
+                # No matches on title or abstract, so treat as no results of search
+                flt = flt.none()
 
     qcnt = 0
     if flt:
@@ -695,7 +701,7 @@ def get_resource_list(creator=None,
     return flt
 
 
-def _filter_resources_for_user_and_owner(user, owner, is_editable, query, is_public):
+def _filter_resources_for_user_and_owner(user, owner, is_editable, query):
     if user:
         user = user_from_id(user)
         if owner:
@@ -707,14 +713,18 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, query, is_pub
                 query.append(Q(pk__in=owner.uaccess.get_owned_resources()))
 
                 if user != owner:
-                    is_public = True
+                    # if some authenticated user is asking for resources owned by another user then
+                    # get other user's owned resources that are public or discoverable, or if requesting user
+                    # has access to those private resources
+                    query.append(Q(pk__in=user.uaccess.get_held_resources()) | Q(raccess__public=True) |
+                                 Q(raccess__discoverable=True))
         else:
             if is_editable:
                 query.append(Q(pk__in=user.uaccess.get_editable_resources()))
             else:
-                query.append(Q(pk__in=user.uaccess.get_held_resources())|
-                                              Q(raccess__public=True))
+                query.append(Q(pk__in=user.uaccess.get_held_resources()) | Q(raccess__public=True) |
+                             Q(raccess__discoverable=True))
     else:
         query.append(Q(raccess__public=True) | Q(raccess__discoverable=True))
 
-    return query, is_public
+    return query
