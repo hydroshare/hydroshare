@@ -2586,10 +2586,17 @@
             $("#div_id_uplimit").show();
             $("#div_id_downlimit").show();
 
+            // Update fields
             $("#id_northlimit").val(coordinates.getNorthEast().lat());
             $("#id_eastlimit").val(coordinates.getNorthEast().lng());
             $("#id_southlimit").val(coordinates.getSouthWest().lat());
             $("#id_westlimit").val(coordinates.getSouthWest().lng());
+
+            // Remove red borders
+            $("#id_northlimit").removeClass("invalid-input");
+            $("#id_eastlimit").removeClass("invalid-input");
+            $("#id_southlimit").removeClass("invalid-input");
+            $("#id_westlimit").removeClass("invalid-input");
         }
         else {
             document.getElementById("id_type_2").checked = true;
@@ -2606,6 +2613,10 @@
 
             $("#id_east").val(coordinates.lng());
             $("#id_north").val(coordinates.lat());
+
+            // Remove red borders
+            $("#id_east").removeClass("invalid-input");
+            $("#id_north").removeClass("invalid-input");
         }
     }
 
@@ -2633,9 +2644,10 @@
         el.setAttribute("class", "custom-alert");
         el.innerHTML = msg;
         setTimeout(function () {
-            el.parentNode.removeChild(el);
+            $(el).fadeOut(300, function() { $(this).remove(); });
         }, duration);
         document.body.appendChild(el);
+        $(el).hide().fadeIn(400);
     }
 
     $(document).ready(function () {
