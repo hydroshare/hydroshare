@@ -1128,8 +1128,8 @@
                                                     </div>
 
                                                     <div class="col-sm-4">
-                                                        <div id="div_id_east" class="control-group">
-                                                            <label for="id_east" class="control-label requiredField">
+                                                        <div id="div_id_north" class="control-group">
+                                                            <label for="id_north" class="control-label requiredField">
                                                                 Latitude<span class="asteriskField">*</span>
                                                             </label>
                                                             <span data-toggle="tooltip" data-placement="auto"
@@ -1138,13 +1138,14 @@
                                                                   style="float:right"></span>
 
                                                             <div class="controls">
-                                                                <input class="form-control input-sm textinput textInput"
-                                                                       id="id_east" name="east" type="text"
-                                                                       value="{% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east }}{% endif %}">
+                                                                <input placeholder="-90 to 90"
+                                                                    class="form-control input-sm textinput textInput"
+                                                                    id="id_north" name="north" type="text"
+                                                                    value="{% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north }}{% endif %}">
                                                             </div>
                                                         </div>
-                                                        <div id="div_id_north" class="control-group">
-                                                            <label for="id_north" class="control-label requiredField">
+                                                        <div id="div_id_east" class="control-group">
+                                                            <label for="id_east" class="control-label requiredField">
                                                                 Longitude<span class="asteriskField">*</span>
                                                             </label>
                                                             <span data-toggle="tooltip" data-placement="auto"
@@ -1152,10 +1153,11 @@
                                                                   class="glyphicon glyphicon-info-sign text-muted"
                                                                   style="float:right"></span>
 
-                                                            <div class="controls"><input
+                                                            <div class="controls">
+                                                                <input  placeholder="-180 to 180"
                                                                     class="form-control input-sm textinput textInput"
-                                                                    id="id_north" name="north" type="text"
-                                                                    value="{% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north }}{% endif %}">
+                                                                    id="id_east" name="east" type="text"
+                                                                    value="{% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east }}{% endif %}">
                                                             </div>
                                                         </div>
                                                         <div id="div_id_northlimit" class="control-group">
@@ -1167,7 +1169,7 @@
                                                                   class="glyphicon glyphicon-info-sign text-muted"
                                                                   style="float:right"></span>
 
-                                                            <div class="controls"><input
+                                                            <div class="controls"><input placeholder="-90 to 90"
                                                                     class="form-control input-sm textinput textInput"
                                                                     id="id_northlimit" name="northlimit" type="text"
                                                                     value="{% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit }}{% endif %}">
@@ -1182,7 +1184,7 @@
                                                                   class="glyphicon glyphicon-info-sign text-muted"
                                                                   style="float:right"></span>
 
-                                                            <div class="controls"><input
+                                                            <div class="controls"><input placeholder="-180 to 180"
                                                                     class="form-control input-sm textinput textInput"
                                                                     id="id_eastlimit" name="eastlimit" type="text"
                                                                     value="{% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit }}{% endif %}">
@@ -1197,7 +1199,7 @@
                                                                   class="glyphicon glyphicon-info-sign text-muted"
                                                                   style="float:right"></span>
 
-                                                            <div class="controls"><input
+                                                            <div class="controls"><input placeholder="-90 to 90"
                                                                     class="form-control input-sm textinput textInput"
                                                                     id="id_southlimit" name="southlimit" type="text"
                                                                     value="{% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit }}{% endif %}">
@@ -1212,7 +1214,7 @@
                                                                   class="glyphicon glyphicon-info-sign text-muted"
                                                                   style="float:right"></span>
 
-                                                            <div class="controls"><input
+                                                            <div class="controls"><input placeholder="-180 to 180"
                                                                     class="form-control input-sm textinput textInput"
                                                                     id="id_westlimit" name="westlimit" type="text"
                                                                     value="{% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit }}{% endif %}">
@@ -2325,7 +2327,7 @@
                         if (json_response.metadata_status !== $('#metadata-status').text()) {
                             $('#metadata-status').text(json_response.metadata_status);
                             if (json_response.metadata_status == "Sufficient to make public") {
-                                customAlert("Metadata Status:Sufficient to make public", 3000);
+                                customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to make public", 300000);
                                 $("#btn-public").prop("disabled", false);
                                 $("#btn-discoverable").prop("disabled", false);
                             }
@@ -2462,16 +2464,36 @@
     $("#id_north").bind('input', drawMarkerOnTextChange);
 
     function drawMarkerOnTextChange(){
-        var myLatLng = {lat: parseFloat($("#id_east").val()), lng: parseFloat($("#id_north").val())};
+        var myLatLng = {lat: parseFloat($("#id_north").val()), lng: parseFloat($("#id_east").val())};
 
         // Delete previous drawings
         deleteAllShapes();
         deleteAllOverlays();
 
+        // Bounds validation
+        var badInput = false;
 
-        if (!myLatLng.lat || !myLatLng.lng) {
+        // Lat
+        if (myLatLng.lat > 90 || myLatLng.lat < -90) {
+            $("#id_north").addClass("invalid-input");
+            badInput = true;
+        }
+        else {
+            $("#id_north").removeClass("invalid-input");
+        }
+
+        if (myLatLng.lng > 180 || myLatLng.lng < -180) {
+            $("#id_east").addClass("invalid-input");
+            badInput = true;
+        }
+        else {
+            $("#id_east").removeClass("invalid-input");
+        }
+
+        if (badInput || isNaN(myLatLng.lat) || isNaN(myLatLng.lng)) {
             return;
         }
+
 
         // Define the rectangle and set its editable property to true.
         var marker = new google.maps.Marker({
@@ -2500,8 +2522,45 @@
         deleteAllShapes();
         deleteAllOverlays();
 
+        // Bounds validation
+        var badInput = false;
+        // North
+        if (bounds.north > 90 || bounds.north < -90) {
+            $("#id_northlimit").addClass("invalid-input");
+            badInput = true;
+        }
+        else {
+            $("#id_northlimit").removeClass("invalid-input");
+        }
 
-        if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
+        // East
+        if (bounds.east > 180 || bounds.east < -180) {
+            badInput = true;
+            $("#id_eastlimit").addClass("invalid-input");
+        }
+        else {
+            $("#id_eastlimit").removeClass("invalid-input");
+        }
+
+        // South
+        if (bounds.south < -90 || bounds.south > 90) {
+            badInput = true;
+            $("#id_southlimit").addClass("invalid-input");
+        }
+        else {
+            $("#id_southlimit").removeClass("invalid-input");
+        }
+
+        // West
+        if (bounds.west < -180 || bounds.west > 180) {
+            badInput = true;
+            $("#id_westlimit").addClass("invalid-input");
+        }
+        else {
+            $("#id_westlimit").removeClass("invalid-input");
+        }
+
+        if (badInput || isNaN(bounds.north) || isNaN(bounds.south) || isNaN(bounds.east) || isNaN(bounds.west)) {
             return;
         }
 
@@ -2590,16 +2649,17 @@
         allShapes = [];
     }
 
-    function customAlert(msg,duration){
+    function customAlert(msg, duration) {
         var el = document.createElement("div");
-        var top = ($(window).height() / 2) - 25;
+        var top = 200;
         var left = ($(window).width() / 2) - 150;
-        var style = "position:fixed;top:" + top + "px;left:" + left + "px;background-color:lightgreen; width:300px; height:50px; text-align:center; line-height:50px";
-        el.setAttribute("style",style);
+        var style = "top:" + top + "px;left:" + left + "px";
+        el.setAttribute("style", style);
+        el.setAttribute("class", "custom-alert");
         el.innerHTML = msg;
-        setTimeout(function(){
-        el.parentNode.removeChild(el);
-    },duration);
+        setTimeout(function () {
+            el.parentNode.removeChild(el);
+        }, duration);
         document.body.appendChild(el);
     }
 
@@ -2607,7 +2667,6 @@
         $("#coverageTabBtn").click(function(){
             setTimeout( function(){
                 google.maps.event.trigger(coverageMap, "resize");
-                coverageMap.setCenter(new google.maps.LatLng(41.850033, -87.6500523));
                 if ($("#id_type_1").is(":checked")){
                     drawRectangleOnTextChange();
                 }

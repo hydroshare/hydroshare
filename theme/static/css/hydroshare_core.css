@@ -1450,6 +1450,23 @@ body > .container {
     top: 60px;
 }
 
+.custom-alert {
+	position: fixed;
+	background-color: lightgreen;
+	padding: 0 10px;
+	text-align: center;
+	line-height: 50px;
+	border: 1px solid #16E716;
+	text-shadow: 1px -1px #BEFFBE;
+}
+
+.custom-alert-icon {
+	font-size: 24px;
+	color: #337133;
+	top: 5px;
+	margin-right: 10px;
+}
+
 .cc-image {
     width: 88px;
     height: 31px;
@@ -1995,4 +2012,13 @@ ul.resource-search-options {
 
 #id_name {
     max-width: 467px;
+}
+
+.invalid-input {
+	border-color: #F00 !important;
+}
+
+.invalid-input:focus {
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(233, 102, 102, 0.6);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(233, 102, 102, 0.6);
 }
