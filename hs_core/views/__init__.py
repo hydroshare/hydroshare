@@ -24,6 +24,7 @@ from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes, HSAccessException
 
+from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
@@ -294,9 +295,11 @@ def change_permissions(request, shortkey, *args, **kwargs):
         frm = AddUserForm(data=request.POST)
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.OWNER)
     elif t == 'make_public':
-        _set_resource_sharing_status(request, user, res, True)
-    elif t == 'make_private':
-        _set_resource_sharing_status(request, user, res, False)
+        _set_resource_sharing_status(request, user, res, is_public=True)
+    elif t == 'make_private' or t == 'make_not_discoverable':
+        _set_resource_sharing_status(request, user, res, is_public=False)
+    elif t == 'make_discoverable':
+        _set_resource_sharing_status(request, user, res, is_public=False, is_discoverable=True)
 
     # due to self unsharing of a private resource the user will have no access to that resource
     # so need to redirect to the resource listing page
@@ -505,7 +508,7 @@ def my_resources(request, page):
         if(start+res_cnt > total_res_cnt):
             res_cnt = total_res_cnt-start
 
-        reslst = reslst[start:start+res_cnt]
+        reslst = reslst[start : start + res_cnt]
 
         # TODO sorts should be in SQL not python
         res = sorted(reslst, key=lambda x: x.title)
@@ -561,8 +564,8 @@ def create_resource(request, *args, **kwargs):
         except utils.ResourceFileSizeException as ex:
             context = {'file_size_error': ex.message}
             return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
-        except Exception as ex:
-            context = {'resource_creation_error': ex.message}
+        except SessionException as ex:
+            context = {'resource_creation_error': ex.stderr}
             return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     url_key = "page_redirect_url"
@@ -670,12 +673,25 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
     return go_to_resource_listing_page
 
 
-def _set_resource_sharing_status(request, user, resource, is_public):
+def _set_resource_sharing_status(request, user, resource, is_public, is_discoverable=False):
+    if not user.uaccess.can_change_resource_flags(resource):
+        messages.error(request, "You don't have permission to change resource sharing status")
+        return
+
     if is_public and not resource.can_be_public:
         messages.error(request, "Resource may not have sufficient required metadata to be public")
     else:
-        if user.uaccess.can_change_resource_flags(resource):
-            resource.raccess.public = is_public
-            resource.raccess.save()
+        if is_discoverable:
+            if resource.can_be_public:
+                resource.raccess.public = False
+                resource.raccess.discoverable = True
+            else:
+                messages.error(request, "Resource may not have sufficient required metadata to be discoverable")
         else:
-            messages.error(request, "You don't have permission to change resource sharing status")
+            resource.raccess.public = is_public
+            resource.raccess.discoverable = is_public
+
+        resource.raccess.save()
+        # set isPublic metadata AVU accordingly
+        istorage = IrodsStorage()
+        istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))

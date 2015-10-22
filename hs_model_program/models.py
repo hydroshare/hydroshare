@@ -90,7 +90,7 @@ class MpMetadata(AbstractMetaDataElement):
 
 
 class ModelProgramResource(BaseResource):
-    objects = ResourceManager()
+    objects = ResourceManager("ModelProgramResource")
 
     class Meta:
         verbose_name = 'Model Program Resource'
