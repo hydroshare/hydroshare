@@ -371,7 +371,7 @@
 
                     <div id="status-btn-group" class="btn-group" role="group" aria-label="...">
                         {# -------- PUBLIC -------- #}
-                        {% if cm.raccess.public and discoverable %}
+                        {% if cm.raccess.public %}
                             <button id="btn-public" data-toggle="tooltip" data-placement="auto"
                                     title='Can be viewed and downloaded by anyone.' type="button"
                                     class="btn btn-default active">Public
@@ -430,7 +430,7 @@
                         {% endif %}
                     </div>
                 {% else %}
-                    {% if cm.raccess.public and discoverable %}
+                    {% if cm.raccess.public %}
                         <strong style="color:#5cb85c">&nbspPublic</strong>
                     {% elif not cm.raccess.public and discoverable %}
                         <strong style="color:#f0ad4e">&nbspDiscoverable</strong>
