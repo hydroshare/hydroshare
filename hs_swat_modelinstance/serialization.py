@@ -1,6 +1,8 @@
 
 import rdflib
 
+from django.db import transaction
+
 from hs_core.serialization import GenericResourceMeta
 from hs_swat_modelinstance.models import ExecutedBy, ModelObjective, SimulationType, ModelMethod, \
     ModelParameter, ModelInput
@@ -163,6 +165,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
                 self.model_input.soil_data_source_URL = str(soil_data_source_URL_lit)
             print("\t\t{0}".format(self.model_input))
 
+    @transaction.atomic
     def write_metadata_to_resource(self, resource):
         """
         Write metadata to resource

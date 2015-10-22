@@ -9,8 +9,8 @@ from rdflib import Graph
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import UploadedFile
-from django.db import IntegrityError
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from hs_core.hydroshare.utils import get_resource_types
 from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso, hs_date_to_datetime_notz,\
@@ -666,6 +666,7 @@ class GenericResourceMeta(object):
             #   date.
             BaseResource.objects.filter(id=resource.id).update(updated=self.modification_date)
 
+    @transaction.atomic
     def write_metadata_to_resource(self, resource):
         """
         Write metadata to resource
@@ -701,10 +702,7 @@ class GenericResourceMeta(object):
                     resource.metadata.update_element('Creator', owner_metadata.id, **kwargs)
                 else:
                     # For the non-owner creators, just create new metadata elements for them.
-                    try:
-                        resource.metadata.create_element('creator', **kwargs)
-                    except IntegrityError:
-                        pass
+                    resource.metadata.create_element('creator', **kwargs)
             else:
                 msg = "Creators with type {0} are not supported"
                 msg = msg.format(c.__class__.__name__)
@@ -718,32 +716,19 @@ class GenericResourceMeta(object):
                           'phone': c.phone, 'homepage': c.homepage,
                           'researcherID': c.researcherID,
                           'researchGateID': c.researchGateID}
-                try:
-                    resource.metadata.create_element('contributor', **kwargs)
-                except IntegrityError:
-                    pass
+                resource.metadata.create_element('contributor', **kwargs)
             else:
                 msg = "Contributor with type {0} are not supported"
                 msg = msg.format(c.__class__.__name__)
                 raise TypeError(msg)
         if self.abstract:
-            try:
-                resource.metadata.create_element('description', abstract=self.abstract)
-            except IntegrityError:
-                resource.metadata.update_element('description', resource.metadata.description.id,
-                                                 abstract=self.abstract)
+            resource.metadata.create_element('description', abstract=self.abstract)
         if self.rights:
-            try:
-                resource.metadata.create_element('rights', statement=self.rights.statement)
-            except IntegrityError:
-                resource.metadata.update_element('rights', resource.metadata.rights.id,
-                                                 statement=self.rights.statement)
+            resource.metadata.update_element('rights', resource.metadata.rights.id,
+                                             statement=self.rights.statement)
         if self.language:
-            try:
-                resource.metadata.update_element('language', resource.metadata.language.id,
-                                                 code=self.language)
-            except IntegrityError:
-                pass
+            resource.metadata.update_element('language', resource.metadata.language.id,
+                                             code=self.language)
         if self.creation_date:
             res_created_date = resource.metadata.dates.all().filter(type='created')[0]
             res_created_date.start_date = self.creation_date

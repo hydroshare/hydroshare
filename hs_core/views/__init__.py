@@ -24,6 +24,7 @@ from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes, HSAccessException
 
+from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
@@ -509,7 +510,7 @@ def my_resources(request, page):
         if(start+res_cnt > total_res_cnt):
             res_cnt = total_res_cnt-start
 
-        reslst = reslst[start:start+res_cnt]
+        reslst = reslst[start : start + res_cnt]
 
         # TODO sorts should be in SQL not python
         res = sorted(reslst, key=lambda x: x.title)
@@ -565,8 +566,8 @@ def create_resource(request, *args, **kwargs):
         except utils.ResourceFileSizeException as ex:
             context = {'file_size_error': ex.message}
             return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
-        except Exception as ex:
-            context = {'resource_creation_error': ex.message}
+        except SessionException as ex:
+            context = {'resource_creation_error': ex.stderr}
             return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     url_key = "page_redirect_url"
