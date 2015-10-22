@@ -2368,7 +2368,11 @@
     var drawingManager;
 
     function initMap() {
-        var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+        var shapeType;
+
+        if ($("#coverageMap")[0]) {
+            shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+        }
 
         coverageMap = new google.maps.Map(document.getElementById('coverageMap'), {
             color:"#DDD",
@@ -2964,6 +2968,7 @@
 
     });
     </script>
-{% endblock %}
 
+    {% endblock %}
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCG8oE0dNOkKju0PeMK63rwQR7gB7kdJ7w&libraries=drawing&callback=initMap"></script>
 {% endblock %}
