@@ -266,88 +266,14 @@
         <div class="col-sm-12 content-block">
             <h3>How to cite</h3>
 
-            <div class="input-group">
-                <input readonly id="citation-text" style="background:#FFF; cursor:default;" type="text"
+            <div class="input-group" style="margin-bottom: 30px">
+                <input readonly id="citation-text" style="cursor:default;" type="text"
                        class="form-control" aria-describedby="basic-addon1" value="{{ citation }}">
                 <span class="input-group-addon "><span class="glyphicon glyphicon-book"
                         data-toggle="tooltip" data-placement="bottom" title="Click on the text to select all"></span></span>
             </div>
 
             {#        ======= Sharing =======#}
-            <div id="sharing-status">
-                <span class="pull-left text-muted">Sharing status:</span>
-                {% if page.perms.change and metadata_form and can_change_resource_flags%}
-
-                    <div id="status-btn-group" class="btn-group" role="group" aria-label="...">
-                        {# -------- PUBLIC -------- #}
-                        {% if cm.raccess.public and discoverable %}
-                            <button id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                    title='Can be viewed and downloaded by anyone.' type="button"
-                                    class="btn btn-default active">Public
-                            </button>
-                        {% else %}
-                            <form class="pull-left"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST">
-                                {% csrf_token %}
-                                <input name="t" type="hidden" value="make_public"/>
-                                <button {% if metadata_status == 'Insufficient to make public' %} disabled {% endif %}
-                                        id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                        title='Can be viewed and downloaded by anyone.' type="submit"
-                                        class="btn btn-default">Public
-                                </button>
-                            </form>
-                        {% endif %}
-
-                        {# -------- DISCOVERABLE -------- #}
-                        {% if not cm.raccess.public and discoverable %}
-                            <button id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                    title='Metadata is public but data is protected.' type="button"
-                                    class="btn btn-default active">Discoverable
-                            </button>
-                        {% else %}
-                            <form class="pull-left"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST">
-                                <input name="t" type="hidden" value="make_discoverable"/>
-                                {% csrf_token %}
-                                <button {% if metadata_status == 'Insufficient to make public' %} disabled {% endif %}
-                                        id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                        title='Metadata is public but data is protected.' type="submit"
-                                        class="btn btn-default">Discoverable
-                                </button>
-                            </form>
-                        {% endif %}
-
-                        {# -------- PRIVATE -------- #}
-                        {% if not cm.raccess.public and not discoverable %}
-                            <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                    title='Can be viewed and downloaded only by designated users or research groups.'
-                                    type="button" class="btn btn-default active">Private
-                            </button>
-                        {% else %}
-                            <form class="pull-left"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
-                                  method="POST">
-                                <input name="t" type="hidden" value="make_private"/>
-                                {% csrf_token %}
-                                <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                        title='Can be viewed and downloaded only by designated users or research groups.' type="submit"
-                                        class="btn btn-default">Private
-                                </button>
-                            </form>
-                        {% endif %}
-                    </div>
-                {% else %}
-                    {% if cm.raccess.public and discoverable %}
-                        <strong style="color:#5cb85c">&nbspPublic</strong>
-                    {% elif not cm.raccess.public and discoverable %}
-                        <strong style="color:#f0ad4e">&nbspDiscoverable</strong>
-                    {% elif not cm.raccess.public and not discoverable %}
-                        <strong style="color:#d9534f">&nbspPrivate</strong>
-                    {% endif %}
-                {% endif %}
-            </div>
             {% if not metadata_form %}
         {% if rights.statement or rights.url %}
             <div id="rights">
@@ -439,6 +365,80 @@
         </div>
     {% endif %}
             <div id="permission-panel">
+                <div id="sharing-status">
+                <span class="pull-left text-muted">Sharing status:</span>
+                {% if page.perms.change and metadata_form and can_change_resource_flags%}
+
+                    <div id="status-btn-group" class="btn-group" role="group" aria-label="...">
+                        {# -------- PUBLIC -------- #}
+                        {% if cm.raccess.public and discoverable %}
+                            <button id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                    title='Can be viewed and downloaded by anyone.' type="button"
+                                    class="btn btn-default active">Public
+                            </button>
+                        {% else %}
+                            <form class="pull-left"
+                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                  method="POST">
+                                {% csrf_token %}
+                                <input name="t" type="hidden" value="make_public"/>
+                                <button {% if metadata_status == 'Insufficient to make public' %} disabled {% endif %}
+                                        id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                        title='Can be viewed and downloaded by anyone.' type="submit"
+                                        class="btn btn-default">Public
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        {# -------- DISCOVERABLE -------- #}
+                        {% if not cm.raccess.public and discoverable %}
+                            <button id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
+                                    title='Metadata is public but data is protected.' type="button"
+                                    class="btn btn-default active">Discoverable
+                            </button>
+                        {% else %}
+                            <form class="pull-left"
+                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                  method="POST">
+                                <input name="t" type="hidden" value="make_discoverable"/>
+                                {% csrf_token %}
+                                <button {% if metadata_status == 'Insufficient to make public' %} disabled {% endif %}
+                                        id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
+                                        title='Metadata is public but data is protected.' type="submit"
+                                        class="btn btn-default">Discoverable
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        {# -------- PRIVATE -------- #}
+                        {% if not cm.raccess.public and not discoverable %}
+                            <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                    title='Can be viewed and downloaded only by designated users or research groups.'
+                                    type="button" class="btn btn-default active">Private
+                            </button>
+                        {% else %}
+                            <form class="pull-left"
+                                  action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                                  method="POST">
+                                <input name="t" type="hidden" value="make_private"/>
+                                {% csrf_token %}
+                                <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                        title='Can be viewed and downloaded only by designated users or research groups.' type="submit"
+                                        class="btn btn-default">Private
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    {% if cm.raccess.public and discoverable %}
+                        <strong style="color:#5cb85c">&nbspPublic</strong>
+                    {% elif not cm.raccess.public and discoverable %}
+                        <strong style="color:#f0ad4e">&nbspDiscoverable</strong>
+                    {% elif not cm.raccess.public and not discoverable %}
+                        <strong style="color:#d9534f">&nbspPrivate</strong>
+                    {% endif %}
+                {% endif %}
+            </div>
         {% if can_change_resource_flags %}
             <p>You are the owner of this resource.</p>
         {% elif is_edit_user %}

@@ -1321,10 +1321,6 @@ body > .container{
 	height: 31px;
 }
 
-#permission-panel {
-	margin: 30px 0;
-}
-
 #permission-panel .custom-well {
 	background: #F7F7F7;
 	margin-top: 30px;
@@ -1452,15 +1448,7 @@ body > .container{
 #citation-text {
     display: inline-block;
     float: left;
-    /*font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;*/
-    /*margin-left:10px;*/
-    /*width:90%;*/
-}
-
-#citation-text:focus {
-	/*border: 1px solid #ccc;*/
-	/*-webkit-box-shadow: none;*/
-	/*box-shadow: none;*/
+	background:#EEE;
 }
 
 #citation-text a, .rights-url a{
