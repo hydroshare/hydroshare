@@ -460,24 +460,12 @@ LOGGING = {
             'maxBytes': 1024*1024*15, # 15MB
             'backupCount': 10,
         },
-        'appslog': {
-            'level': 'DEBUG',
-            'class':'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/hydroshare/apps.log',
-            'formatter': 'verbose',
-            'maxBytes': 1024*1024*15, # 15MB
-            'backupCount': 10,
-        },
     },
     'loggers': {
         'django': {
             'handlers':['syslog', 'djangolog'],
             'propagate': True,
             'level':'DEBUG',
-        },
-        'apps': {
-            'handlers': ['syslog', 'appslog'],
-            'level': 'DEBUG',
         },
     }
 }
