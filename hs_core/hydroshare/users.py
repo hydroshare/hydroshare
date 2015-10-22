@@ -669,9 +669,17 @@ def get_resource_list(creator=None,
         flt = flt.filter(q)
 
         if full_text_search:
-            flt = flt.search(full_text_search)
-            flt = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
-            flt = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
+            desc_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+            title_ids = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
+
+            # Full text search must match within the title or abstract
+            if desc_ids:
+                flt = flt.filter(object_id__in=desc_ids)
+            elif title_ids:
+                flt = flt.filter(object_id__in=title_ids)
+            else:
+                # No matches on title or abstract, so treat as no results of search
+                flt = flt.none()
 
     qcnt = 0
     if flt:
