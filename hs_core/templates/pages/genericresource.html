@@ -1044,10 +1044,9 @@
                                                         <div id="cov_westlimit">{{ spatial_coverage.westlimit }}</div>
                                                     </li>
                                                 {% endif %}
-
-                                                <div class="text-muted" style="margin-top:20px;">WGS 84 decimal degrees</div>
                                             {% endif %}
                                         </ul>
+                                        <div class="text-muted" style="margin-top:20px;">WGS 84 decimal degrees</div>
                                     {% endif %}
                                 </div>
 
@@ -1057,11 +1056,11 @@
                                 <div class="col-sm-4">
                                     <legend>Temporal</legend>
                                     <div class="row">
-                                        <div class="col-sm-4"><strong>Start Date:</strong></div>
+                                        <div class="col-sm-4"><strong class="text-muted">Start Date</strong></div>
                                         <div class="col-sm-8">{{ temporal_coverage.start_date }}</div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-sm-4"><strong>End Date:</strong></div>
+                                        <div class="col-sm-4"><strong class="text-muted">End Date</strong></div>
                                         <div class="col-sm-8">{{ temporal_coverage.end_date }}</div>
                                     </div>
                                 </div>
@@ -2378,7 +2377,8 @@
             mapTypeControlOptions: {
                 style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
                 mapTypeIds: [
-                    google.maps.MapTypeId.ROADMAP
+                    google.maps.MapTypeId.ROADMAP,
+                    google.maps.MapTypeId.SATELLITE
                 ]
             }
         });
