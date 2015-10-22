@@ -1,35 +1,38 @@
-from django.contrib.contenttypes import generic
-from django.contrib.auth.models import User, Group
-from django.db import models
-from mezzanine.pages.models import Page, RichText
-from mezzanine.core.models import Ownable
-from hs_core.models import AbstractResource, resource_processor
-from django_docker_processes import signals
-from django_docker_processes.models import DockerProcess
-from django_docker_processes.models import DockerProfile
-from django_docker_processes import tasks
-from django.shortcuts import get_object_or_404
-import django.dispatch
-from .forms import InputForm
-from mezzanine.pages.page_processors import processor_for
-#from hs_core.hydroshare.resource import post_create_resource
-from hs_core.signals import *
-from hs_core import page_processors
-#from hs_core.views import pre_describe_resource
-from django.utils.timezone import now
-from django.dispatch import receiver
 import zipfile
 import ConfigParser
 import cStringIO as StringIO
 import os
 
-#
-# To create a new resource, use these two super-classes.
-#
-# TODO: doesnt have a page_processors.py????
-class InstResource(Page, AbstractResource):
+from django.contrib.contenttypes import generic
+from django.contrib.auth.models import User, Group
+from django.db import models
+from django_docker_processes import signals
+from django_docker_processes.models import DockerProcess
+from django_docker_processes.models import DockerProfile
+from django_docker_processes import tasks
+from django.shortcuts import get_object_or_404
+from django.utils.timezone import now
+from django.dispatch import receiver
+import django.dispatch
+
+from mezzanine.pages.models import Page, RichText
+from mezzanine.core.models import Ownable
+from mezzanine.pages.page_processors import processor_for
+
+from hs_core.models import BaseResource, ResourceManager, resource_processor
+from hs_core.signals import *
+from hs_core import page_processors
+
+from .forms import InputForm
+
+
+class InstResource(BaseResource):
+    objects = ResourceManager("InstResource")
+
     class Meta:
         verbose_name = 'RHESSys Instance Resource'
+        proxy = False
+
     name = models.CharField(max_length=50)
     git_repo = models.URLField()
     git_username = models.CharField(max_length=50)
@@ -42,17 +45,6 @@ class InstResource(Page, AbstractResource):
     model_command_line_parameters = models.CharField(max_length=500)
     project_name = models.CharField(max_length=100)
 
-    def can_add(self, request):
-        return AbstractResource.can_add(self, request)
-
-    def can_change(self, request):
-        return AbstractResource.can_change(self, request)
-
-    def can_delete(self, request):
-        return AbstractResource.can_delete(self, request)
-
-    def can_view(self, request):
-        return AbstractResource.can_view(self, request)
 
 def when_my_process_ends(sender, instance, result_text=None, result_data=None, files=None, logs=None, **kw):
     # make something out of the result data - result_data is a dict, result_text is plaintext

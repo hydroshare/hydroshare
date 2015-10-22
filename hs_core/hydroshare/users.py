@@ -5,11 +5,13 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.core import signing
+from django.db.models import Q
 
-from hs_core.models import GroupOwnership, GenericResource, Party, Contributor, Creator, Subject, Description, Title
+from hs_core.models import GroupOwnership, BaseResource, Party, Contributor, Creator, Subject, Description, Title
 from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
 
 
+# TODO: Only used in a skipped unit test - if needs to be used than Alva's new access control logic needs to be used
 def set_resource_owner(pk, user):
     """
     Changes ownership of the specified resource to the user specified by a userID.
@@ -33,8 +35,9 @@ def set_resource_owner(pk, user):
     """
 
     res = get_resource_by_shortkey(pk)
-    res.owners = [user]
-    res.save()
+    # TODO: Use Alva's new access logic here
+    # res.owners = [user]
+    # res.save()
     return pk
 
 
@@ -43,7 +46,7 @@ EDIT = 'edit'
 VIEW = 'view'
 PUBLIC = 'public'
 
-
+# TODO: this method is not used except in broken tests - if need to be used then new access control rules need to apply
 def set_access_rules(pk, user=None, group=None, access=None, allow=False):
     """
     Set the access permissions for an object identified by pid. Triggers a change in the system metadata. Successful
@@ -91,47 +94,49 @@ def set_access_rules(pk, user=None, group=None, access=None, allow=False):
         res = pk  # user passed in the resource instance instead of hte primary key
 
     if access == DO_NOT_DISTRIBUTE:
-        res.do_not_distribute = allow
-        res.save()
+        res.raccess.shareable = allow
+        res.raccess.save()
     elif access == PUBLIC:
-        res.public = allow
-        res.save()
-    elif access == EDIT:
-        if user:
-            if allow:
-                if not res.edit_users.filter(pk=user.pk).exists():
-                    res.edit_users.add(user)
-            else:
-                if res.edit_users.filter(pk=user.pk).exists():
-                    res.edit_users.filter(pk=user.pk).delete()
-        elif group:
-            if allow:
-                if not res.edit_groups.filter(pk=group.pk).exists():
-                    res.edit_groups.add(group)
-            else:
-                if res.edit_groups.filter(pk=group.pk).exists():
-                    res.edit_groups.filter(pk=group.pk).delete()
-        else:
-            raise TypeError('Tried to edit access permissions without specifying a user or group')
-    elif access == VIEW:
-        if user:
-            if allow:
-                if not res.view_users.filter(pk=user.pk).exists():
-                    res.view_users.add(user)
-            else:
-                if res.view_users.filter(pk=user.pk).exists():
-                    res.view_users.filter(pk=user.pk).delete()
-        elif group:
-            if allow:
-                if not res.view_groups.filter(pk=group.pk).exists():
-                    res.view_groups.add(group)
-            else:
-                if res.view_groups.filter(pk=group.pk).exists():
-                    res.view_groups.filter(pk=group.pk).delete()
-        else:
-            raise TypeError('Tried to view access permissions without specifying a user or group')
-    else:
-        raise TypeError('access was none of {donotdistribute, public, edit, view}  ')
+        res.raccess.public = allow
+        res.raccess.save()
+
+    # TODO: Alva's new access control logic need to be used here
+    # elif access == EDIT:
+    #     if user:
+    #         if allow:
+    #             if not res.edit_users.filter(pk=user.pk).exists():
+    #                 res.edit_users.add(user)
+    #         else:
+    #             if res.edit_users.filter(pk=user.pk).exists():
+    #                 res.edit_users.filter(pk=user.pk).delete()
+    #     elif group:
+    #         if allow:
+    #             if not res.edit_groups.filter(pk=group.pk).exists():
+    #                 res.edit_groups.add(group)
+    #         else:
+    #             if res.edit_groups.filter(pk=group.pk).exists():
+    #                 res.edit_groups.filter(pk=group.pk).delete()
+    #     else:
+    #         raise TypeError('Tried to edit access permissions without specifying a user or group')
+    # elif access == VIEW:
+    #     if user:
+    #         if allow:
+    #             if not res.view_users.filter(pk=user.pk).exists():
+    #                 res.view_users.add(user)
+    #         else:
+    #             if res.view_users.filter(pk=user.pk).exists():
+    #                 res.view_users.filter(pk=user.pk).delete()
+    #     elif group:
+    #         if allow:
+    #             if not res.view_groups.filter(pk=group.pk).exists():
+    #                 res.view_groups.add(group)
+    #         else:
+    #             if res.view_groups.filter(pk=group.pk).exists():
+    #                 res.view_groups.filter(pk=group.pk).delete()
+    #     else:
+    #         raise TypeError('Tried to view access permissions without specifying a user or group')
+    # else:
+    #     raise TypeError('access was none of {donotdistribute, public, edit, view}  ')
 
     return res
 
@@ -152,19 +157,11 @@ def create_account(
     """
 
     from django.contrib.auth.models import User, Group
-    from django.contrib.sites.models import Site
-    from django.conf import settings
+    from hs_access_control.models import UserAccess
 
     username = username if username else email
 
-    # useirods = getattr(settings,'USE_IRODS', False)
-    # if useirods:
-    #    from django_irods import account
-    #    iaccount = account.IrodsAccount()
-    #    iaccount.create(username)
-    #    iaccount.setPassward(username, password)
-
-    groups = groups if groups else Group.objects.all()
+    groups = groups if groups else []
     groups = Group.objects.in_bulk(*groups) if groups and isinstance(groups[0], int) else groups
 
     if superuser:
@@ -185,11 +182,16 @@ def create_account(
 
     u.is_staff = False
     if not active:
-        u.is_active=False
+        u.is_active = False
     u.save()
 
     u.groups = groups
 
+    # make the user a member of the Hydroshare role group
+    u.groups.add(Group.objects.get(name='Hydroshare Author'))
+
+    user_access = UserAccess(user=u, admin=False)
+    user_access.save()
     return u
 
 
@@ -356,8 +358,8 @@ def create_group(name, members=None, owners=None):
     verification step to avoid automated creation of fake groups. The creating user would automatically be set as the
     owner of the created group.
     """
-    g = Group.objects.create(name=name)
 
+    g = Group.objects.create(name=name)
 
     if owners:
         owners = [user_from_id(owner) for owner in owners]
@@ -498,6 +500,48 @@ def delete_group_owner(group, user):
     GroupOwnership.objects.filter(group=group, owner=user).delete()
 
 
+def get_discoverable_groups():
+        """
+        Get a list of all groups marked discoverable or public.
+
+        :return: List of discoverable groups.
+
+        A user can view owners and abstract for a discoverable group.
+        Usage:
+        ------
+            # fetch information about each discoverable or public group
+            groups = GroupAccess.get_discoverable_groups()
+            for g in groups:
+                owners = g.get_owners()
+                # abstract = g.abstract
+                if g.public:
+                    # expose group list
+                    members = g.members.all()
+                else:
+                    members = [] # can't see them.
+        """
+        return Group.objects.filter(Q(gaccess__discoverable=True) | Q(gaccess__public=True))
+
+
+def get_public_groups():
+        """
+        Get a list of all groups marked public.
+
+        :return: List of public groups.
+
+        All users can list the members of a public group.  Public implies discoverable but not vice-versa.
+        Usage:
+        ------
+            # fetch information about each public group
+            groups = GroupAccess.get_public_groups()
+            for g in groups:
+                owners = g.get_owners()
+                # abstract = g.abstract
+                members = g.members.all()
+                # now display member information
+        """
+        return Group.objects.filter(gaccess__public=True)
+
 def get_resource_list(creator=None,
         group=None, user=None, owner=None,
         from_date=None, to_date=None,
@@ -547,131 +591,140 @@ def get_resource_list(creator=None,
         subject = list of subject
         type = list of resource type names, used for filtering
     """
-    from django.db.models import Q
 
     if not any((creator, group, user, owner, from_date, to_date, start, count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
-    resource_types = get_resource_types()
+    #resource_types = get_resource_types()
 
     # filtering based on resource type.
+    # if type:
+    #     queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in type)
+    # else:
+    #     queries = dict((el, []) for el in resource_types)
+    q = []
+
     if type:
-        queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in type)
+        q.append(Q(resource_type=type[0]))
+
+    if published:
+        q.append(Q(doi__isnull=False))
+
+    if author:
+        author_parties = (
+            #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
+            (Creator.objects.filter(email__in=author) | Creator.objects.filter(name__in=author))
+        )
+        # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
+        # assert author_parties, Creator.objects.all().values_list('name', flat=True)
+        # assert False, author_parties.values_list('id', flat=True)
+        # if t is GenericResource:
+        #     assert False,objects.all().values_list('object_id', flat=True)
+        q.append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
+
+    if contributor:
+        contributor_parties = (
+            #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
+            (Contributor.objects.filter(email__in=contributor) | Contributor.objects.filter(name__in=contributor))
+        )
+        # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
+        # assert author_parties, Creator.objects.all().values_list('name', flat=True)
+        # assert False, author_parties.values_list('id', flat=True)
+        # if t is GenericResource:
+        #     assert False, BaseResource.objects.all().values_list('object_id', flat=True)
+        q.append(Q(object_id__in=contributor_parties.values_list('object_id', flat=True)))
+
+    if edit_permission:
+        if group:
+            group = group_from_id(group)
+            q.append(Q(gaccess__resource__in=group.gaccess.get_editable_resources()))
+
+        q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=True, query=q)
+
     else:
-        queries = dict((el, []) for el in resource_types)
+        if creator:
+            creator = user_from_id(creator)
+            q.append(Q(creator=creator))
 
-    for t, q in queries.items():
-        if published:
-            queries[t].append(Q(doi__isnull=False))
+        if group:
+            group = group_from_id(group)
+            q.append(Q(gaccess__resource__in=group.gaccess.get_held_resources()))
 
-        if author:
-            author_parties = (
-                #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
-                (Creator.objects.filter(email__in=author) | Creator.objects.filter(name__in=author))
-            )
-            # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
-            # assert author_parties, Creator.objects.all().values_list('name', flat=True)
-            # assert False, author_parties.values_list('id', flat=True)
-            # if t is GenericResource:
-            #     assert False, t.objects.all().values_list('object_id', flat=True)
-            queries[t].append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
+        q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False, query=q)
 
-        if contributor:
-            contributor_parties = (
-                #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
-                (Contributor.objects.filter(email__in=contributor) | Contributor.objects.filter(name__in=contributor))
-            )
-            # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
-            # assert author_parties, Creator.objects.all().values_list('name', flat=True)
-            # assert False, author_parties.values_list('id', flat=True)
-            # if t is GenericResource:
-            #     assert False, t.objects.all().values_list('object_id', flat=True)
-            queries[t].append(Q(object_id__in=contributor_parties.values_list('object_id', flat=True)))
+    if from_date and to_date:
+        q.append(Q(created__range=(from_date, to_date)))
+    elif from_date:
+        q.append(Q(created__gte=from_date))
+    elif to_date:
+        q.append(Q(created__lte=to_date))
 
-        if edit_permission:
-            if group:
-                group = group_from_id(group)
-                queries[t].append(Q(edit_groups=group))
-
-            if user:
-                user = user_from_id(user)
-                queries[t].append(Q(edit_users=user) | Q(owners=user))
-        else:
-            if creator:
-                creator = user_from_id(creator)
-                queries[t].append(Q(creator=creator))
-
-            if group:
-                group = group_from_id(group)
-                queries[t].append(Q(edit_groups=group) | Q(view_groups=group))
-
-            if user:
-                user = user_from_id(user)
-                if owner:
-                    try:
-                        owner = user_from_id(owner, raise404=False)
-                    except User.DoesNotExist:
-                        queries[t].append(Q(owners__isnull=True))
-                    else:
-                        queries[t].append(Q(owners=owner))
-                        if user != owner:
-                            public = True
-                else:
-                    queries[t].append(Q(edit_users=user) | Q(view_users=user) | Q(owners=user) | Q(public=True))
-
-        if from_date and to_date:
-            queries[t].append(Q(created__range=(from_date, to_date)))
-        elif from_date:
-            queries[t].append(Q(created__gte=from_date))
-        elif to_date:
-            queries[t].append(Q(created__lte=to_date))
-
-        if subject:
-            subjects = Subject.objects.filter(value__in=subject)
-            queries[t].append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
+    if subject:
+        subjects = Subject.objects.filter(value__in=subject)
+        q.append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
 
 
-        flt = t.objects.all()
-        for q in queries[t]:
-            flt = flt.filter(q)
-
-        if public:
-            flt = flt.filter(public=True)
+    flt = BaseResource.objects.all()
+    for q in q:
+        flt = flt.filter(q)
 
         if full_text_search:
-            fts_qs = flt.search(full_text_search)
-            description_matching = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
-            title_matching = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
+            desc_ids = Description.objects.filter(abstract__icontains=full_text_search).values_list('object_id', flat=True)
+            title_ids = Title.objects.filter(value__icontains=full_text_search).values_list('object_id', flat=True)
 
-            if description_matching:
-                desc_qs = flt.filter(object_id__in=description_matching)
+            # Full text search must match within the title or abstract
+            if desc_ids:
+                flt = flt.filter(object_id__in=desc_ids)
+            elif title_ids:
+                flt = flt.filter(object_id__in=title_ids)
             else:
-                desc_qs = t.objects.none()
+                # No matches on title or abstract, so treat as no results of search
+                flt = flt.none()
 
-            if title_matching:
-                title_qs = flt.filter(object_id__in=title_matching)
+    qcnt = 0
+    if flt:
+        qcnt = len(flt);
+
+    if start is not None and count is not None:
+        if qcnt > start:
+            if qcnt >= start + count:
+                flt = flt[start:start+count]
             else:
-                title_qs = t.objects.none()
+                flt = flt[start:qcnt]
+    elif start is not None:
+        if qcnt >= start:
+            flt = flt[start:qcnt]
+    elif count is not None:
+        if qcnt > count:
+            flt = flt[0:count]
 
-            flt = fts_qs.distinct() | desc_qs.distinct() | title_qs.distinct()
+    return flt
 
-        queries[t] = flt
 
-        qcnt = 0
-        if queries[t]:
-            qcnt = queries[t].__len__();
+def _filter_resources_for_user_and_owner(user, owner, is_editable, query):
+    if user:
+        user = user_from_id(user)
+        if owner:
+            try:
+                owner = user_from_id(owner, raise404=False)
+            except User.DoesNotExist:
+                pass
+            else:
+                query.append(Q(pk__in=owner.uaccess.get_owned_resources()))
 
-        if start is not None and count is not None:
-            if qcnt > start:
-                if qcnt >= start + count:
-                    queries[t] = queries[t][start:start+count]
-                else:
-                    queries[t] = queries[t][start:qcnt]
-        elif start is not None:
-            if qcnt >= start:
-                queries[t] = queries[t][start:qcnt]
-        elif count is not None:
-            if qcnt > count:
-                queries[t] = queries[t][0:count]
+                if user != owner:
+                    # if some authenticated user is asking for resources owned by another user then
+                    # get other user's owned resources that are public or discoverable, or if requesting user
+                    # has access to those private resources
+                    query.append(Q(pk__in=user.uaccess.get_held_resources()) | Q(raccess__public=True) |
+                                 Q(raccess__discoverable=True))
+        else:
+            if is_editable:
+                query.append(Q(pk__in=user.uaccess.get_editable_resources()))
+            else:
+                query.append(Q(pk__in=user.uaccess.get_held_resources()) | Q(raccess__public=True) |
+                             Q(raccess__discoverable=True))
+    else:
+        query.append(Q(raccess__public=True) | Q(raccess__discoverable=True))
 
-    return queries
+    return query

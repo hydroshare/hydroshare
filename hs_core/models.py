@@ -1,7 +1,9 @@
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group
+from django.contrib.auth import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django import forms
@@ -11,8 +13,8 @@ from mezzanine.pages.page_processors import processor_for
 from uuid import uuid4
 from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
+from mezzanine.generic.fields import KeywordsField
 from mezzanine.conf import settings as s
-from mezzanine.generic.models import Keyword, AssignedKeyword
 import os.path
 from django_irods.storage import IrodsStorage
 from django.conf import settings
@@ -21,7 +23,6 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from languages_iso import languages as iso_languages
 from dateutil import parser
 import json
-
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -69,52 +70,6 @@ class ResourcePermissionsMixin(Ownable):
                                 help_text='This is the person who first uploaded the resource',
                                 )
 
-    public = models.BooleanField(
-        help_text='If this is true, the resource is viewable and downloadable by anyone',
-        default=True
-    )
-
-    owners = models.ManyToManyField(User,
-                                    related_name='owns_%(app_label)s_%(class)s',
-                                    help_text='The person who has total ownership of the resource'
-    )
-    frozen = models.BooleanField(
-        help_text='If this is true, the resource should not be modified',
-        default=False
-    )
-    do_not_distribute = models.BooleanField(
-        help_text='If this is true, the resource owner has to designate viewers',
-        default=False
-    )
-    discoverable = models.BooleanField(
-        help_text='If this is true, it will turn up in searches.',
-        default=True
-    )
-    published_and_frozen = models.BooleanField(
-        help_text="Once this is true, no changes can be made to the resource",
-        default=False
-    )
-
-    view_users = models.ManyToManyField(User,
-                                        related_name='user_viewable_%(app_label)s_%(class)s',
-                                        help_text='This is the set of Hydroshare Users who can view the resource',
-                                        null=True, blank=True)
-
-    view_groups = models.ManyToManyField(Group,
-                                         related_name='group_viewable_%(app_label)s_%(class)s',
-                                         help_text='This is the set of Hydroshare Groups who can view the resource',
-                                         null=True, blank=True)
-
-    edit_users = models.ManyToManyField(User,
-                                        related_name='user_editable_%(app_label)s_%(class)s',
-                                        help_text='This is the set of Hydroshare Users who can edit the resource',
-                                        null=True, blank=True)
-
-    edit_groups = models.ManyToManyField(Group,
-                                         related_name='group_editable_%(app_label)s_%(class)s',
-                                         help_text='This is the set of Hydroshare Groups who can edit the resource',
-                                         null=True, blank=True)
-
     class Meta:
         abstract = True
 
@@ -128,13 +83,12 @@ class ResourcePermissionsMixin(Ownable):
     def can_delete(self, request):
         user = get_user(request)
         if user.is_authenticated():
-            if user.is_superuser or self.owners.filter(pk=user.pk).exists():
+            if user.is_superuser or self.raccess.owners.filter(pk=user.pk).exists():
                 return True
             else:
                 return False
         else:
             return False
-
 
     def can_change(self, request):
         user = get_user(request)
@@ -142,11 +96,11 @@ class ResourcePermissionsMixin(Ownable):
         if user.is_authenticated():
             if user.is_superuser:
                 return True
-            elif self.owners.filter(pk=user.pk).exists():
+            elif self.raccess.owners.filter(pk=user.pk).exists():
                 return True
-            elif self.edit_users.filter(pk=user.pk).exists():
+            elif self.raccess.edit_users.filter(pk=user.pk).exists():
                 return True
-            elif self.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
+            elif self.raccess.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
                 return True
             else:
                 return False
@@ -156,20 +110,20 @@ class ResourcePermissionsMixin(Ownable):
     def can_view(self, request):
         user = get_user(request)
 
-        if self.public:
+        if self.raccess.public or self.raccess.discoverable:
             return True
         if user.is_authenticated():
             if user.is_superuser:
                 return True
-            elif self.owners.filter(pk=user.pk).exists():
+            elif self.raccess.owners.filter(pk=user.pk).exists():
                 return True
-            elif self.edit_users.filter(pk=user.pk).exists():
+            elif self.raccess.edit_users.filter(pk=user.pk).exists():
                 return True
-            elif self.view_users.filter(pk=user.pk).exists():
+            elif self.raccess.view_users.filter(pk=user.pk).exists():
                 return True
-            elif self.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
+            elif self.raccess.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
                 return True
-            elif self.view_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
+            elif self.raccess.view_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
                 return True
             else:
                 return False
@@ -179,18 +133,28 @@ class ResourcePermissionsMixin(Ownable):
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
 def page_permissions_page_processor(request, page):
-    page = page.get_content_model()
-    user = get_user(request)
+    cm = page.get_content_model()
+    can_change_resource_flags = False
+    if request.user.is_authenticated():
+        if request.user.uaccess.can_change_resource_flags(cm):
+            can_change_resource_flags = True
+
+    owners = set(cm.raccess.owners.all())
+    editors = set(cm.raccess.edit_users.all()) - owners
+    viewers = set(cm.raccess.view_users.all()) - editors - owners
 
     return {
-        "edit_groups": set(page.edit_groups.all()),
-        "view_groups": set(page.view_groups.all()),
-        "edit_users": set(page.edit_users.all()),
-        "view_users": set(page.view_users.all()),
-        "owners": set(page.owners.all()),
-        "can_edit": (user in set(page.edit_users.all())) \
-                    or (len(set(page.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
+        'resource_type': cm._meta.verbose_name,
+        'bag': cm.bags.first(),
+        'groups': Group.objects.all(),
+        "edit_groups": set(cm.raccess.edit_groups.all()),
+        "view_groups": set(cm.raccess.view_groups.all()),
+        "edit_users": editors,
+        "view_users": viewers,
+        "owners": owners,
+        "can_change_resource_flags": can_change_resource_flags
     }
+
 
 class AbstractMetaDataElement(models.Model):
     term = None
@@ -225,19 +189,10 @@ class AbstractMetaDataElement(models.Model):
 class HSAdaptorEditInline(object):
     @classmethod
     def can_edit(cls, adaptor_field):
-        #from hs_core.views.utils import authorize
-        user = adaptor_field.request.user
-        can_edit = False
-        if user.is_anonymous():
-            pass
-        elif user.is_superuser:
-            can_edit = True
-        else:
-            obj = adaptor_field.obj
-            cm = obj.get_content_model()
-            #_, can_edit, _ = authorize(adaptor_field.request, res_id, edit=True, full=True) - need to know res_id
-            can_edit = (user in set(cm.edit_users.all())) or (len(set(cm.edit_groups.all()).intersection(set(user.groups.all()))) > 0)
-        return can_edit
+        obj = adaptor_field.obj
+        cm = obj.get_content_model()
+        return cm.can_change(adaptor_field.request)
+
 
 class ExternalProfileLink(models.Model):
     type = models.CharField(max_length=50)
@@ -534,10 +489,12 @@ class Title(AbstractMetaDataElement):
                 title.value = kwargs['value']
                 title.save()
                 # This way of updating the resource title field does not work
-                # so updating code is in in resource.py
-                # res = title.content_object.resource
-                # res.title = title.value
-                # res.save()
+                # so updating code is in the view
+                # sync resource title with title in metadata
+                # get matching resource
+                # resource = BaseResource.objects.filter(object_id=title.content_object.id).first()
+                # resource.title = title.value
+                # resource.save()
             else:
                 raise ValidationError('Value for title is missing.')
         else:
@@ -601,17 +558,19 @@ class Date(AbstractMetaDataElement):
             metadata_obj = kwargs['content_object']
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
             dt = Date.objects.filter(type= kwargs['type'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            # get matching resource
+            resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
             if dt:
                 raise ValidationError('Date type:%s already exists' % kwargs['type'])
             if not kwargs['type'] in ['created', 'modified', 'valid', 'available', 'published']:
                 raise ValidationError('Invalid date type:%s' % kwargs['type'])
 
             if kwargs['type'] == 'published':
-                if not metadata_obj.resource.published_and_frozen:
+                if not resource.raccess.published:
                     raise ValidationError("Resource is not published yet.")
 
             if kwargs['type'] == 'available':
-                if not metadata_obj.resource.public:
+                if not resource.raccess.public:
                     raise ValidationError("Resource has not been shared yet.")
 
             if 'start_date' in kwargs:
@@ -756,14 +715,18 @@ class Identifier(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if 'name' in kwargs:
             metadata_obj = kwargs['content_object']
+            # get matching resource
+            resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
             # check the identifier name doesn't already exist - identifier name needs to be unique per resource
-            idf = Identifier.objects.filter(name__iexact= kwargs['name'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            idf = Identifier.objects.filter(name__iexact= kwargs['name'], object_id=metadata_obj.id,
+                                            content_type=metadata_type).first()
             if idf:
                 raise ValidationError('Identifier name:%s already exists' % kwargs['name'])
             if kwargs['name'].lower() == 'doi':
-                if not metadata_obj.resource.doi:
-                    raise ValidationError("Identifier of 'DOI' type can't be created for a resource that has not been assign a DOI yet.")
+                if not resource.doi:
+                    raise ValidationError("Identifier of 'DOI' type can't be created for a resource that has not been "
+                                          "assigned a DOI yet.")
 
             if 'url' in kwargs:
                 idf = Identifier.objects.create(name=kwargs['name'], url=kwargs['url'], content_object=metadata_obj)
@@ -818,13 +781,16 @@ class Identifier(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         idf = Identifier.objects.get(id=element_id)
+        # get matching resource
+        resource = BaseResource.objects.filter(object_id=idf.content_object.id).first()
         if idf:
             if idf.name.lower() == 'hydroshareidentifier':
                 raise ValidationError("Hydroshare identifier:%s can't be deleted." % idf.name)
 
             if idf.name.lower() == 'doi':
-                if idf.content_object.resource.doi:
-                    raise ValidationError("Hydroshare identifier:%s can't be deleted for a resource that has been assigned a DOI." % idf.name)
+                if resource.doi:
+                    raise ValidationError("Hydroshare identifier:%s can't be deleted for a resource that has been "
+                                          "assigned a DOI." % idf.name)
             idf.delete()
         else:
             raise ObjectDoesNotExist("No identifier element was found for id:%d." % element_id)
@@ -842,12 +808,16 @@ class Publisher(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if 'name' in kwargs:
             metadata_obj = kwargs['content_object']
+            # get matching resource
+            resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
             if 'url' in kwargs:
-                if not metadata_obj.resource.public and metadata_obj.resource.published_and_frozen:
-                    raise ValidationError("Publisher element can't be created for a resource that is not shared nor published.")
+                if not resource.raccess.public and resource.raccess.published:
+                    raise ValidationError("Publisher element can't be created for a resource that is not shared nor "
+                                          "published.")
                 if kwargs['name'].lower() == 'hydroshare':
-                    if not  metadata_obj.resource.files.all():
-                        raise ValidationError("Hydroshare can't be the publisher for a resource that has no content files.")
+                    if not resource.files.all():
+                        raise ValidationError("Hydroshare can't be the publisher for a resource that has no content "
+                                              "files.")
                     else:
                         kwargs['name'] = 'HydroShare'
                         kwargs['url'] = 'http://hydroshare.org'
@@ -862,24 +832,28 @@ class Publisher(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         pub = Publisher.objects.get(id=element_id)
         metadata_obj = kwargs['content_object']
+        # get matching resource
+        resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
 
-        if metadata_obj.resource.frozen:
+        if resource.raccess.immutable:
             raise ValidationError("Resource metadata can't be edited when the resource is in frozen state.")
 
-        if metadata_obj.resource.published_and_frozen:
+        if resource.raccess.published:
             raise ValidationError("Resource metadata can't be edited once the resource has been published.")
 
         if pub:
             if 'name' in kwargs:
                 if pub.name.lower() != kwargs['name'].lower():
                     if pub.name.lower() == 'hydroshare':
-                        if metadata_obj.resource.files.all():
-                            raise ValidationError("Publisher 'HydroShare' can't be changed for a resource that has content files.")
+                        if resource.files.all():
+                            raise ValidationError("Publisher 'HydroShare' can't be changed for a resource that has "
+                                                  "content files.")
                     elif kwargs['name'].lower() == 'hydroshare':
-                        if not metadata_obj.resource.files.all():
-                            raise ValidationError("'HydroShare' can't be a publisher for a resource that has no content files.")
+                        if not resource.files.all():
+                            raise ValidationError("'HydroShare' can't be a publisher for a resource that has no "
+                                                  "content files.")
 
-                    if metadata_obj.resource.files.all():
+                    if resource.files.all():
                         pub.name = 'HydroShare'
                     else:
                         pub.name = kwargs['name']
@@ -898,21 +872,23 @@ class Publisher(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         pub = Publisher.objects.get(id=element_id)
+        # get matching resource
+        resource = BaseResource.objects.filter(object_id=pub.content_object.id).first()
 
-        if pub.content_object.resource.frozen:
+        if resource.raccess.immutable:
             raise ValidationError("Resource metadata can't be edited when the resource is in frozen state.")
 
-        if pub.content_object.resource.published_and_frozen:
+        if resource.raccess.published:
             raise ValidationError("Resource metadata can't be edited once the resource has been published.")
 
-        if pub.content_object.resource.public:
+        if resource.raccess.public:
             raise ValidationError("Resource publisher can't be deleted for shared resource.")
 
         if pub:
             if pub.name.lower() == 'hydroshare':
-                if pub.content_object.resource.files.all():
+                if resource.files.all():
                     raise ValidationError("Publisher HydroShare can't be deleted for a resource that has content files.")
-            if pub.content_object.resource.public:
+            if resource.raccess.public:
                 raise ValidationError("Publisher can't be deleted for a public resource.")
             pub.delete()
         else:
@@ -1358,6 +1334,26 @@ class Rights(AbstractMetaDataElement):
 def short_id():
     return uuid4().hex
 
+
+from mezzanine.pages.managers import PageManager
+class ResourceManager(PageManager):
+
+    def __init__(self, resource_type=None, *args, **kwargs):
+        self.resource_type = resource_type
+        super(ResourceManager, self).__init__(*args, **kwargs)
+
+    def create(self, *args, **kwargs):
+        if self.resource_type is None:
+            kwargs.pop('resource_type', None)
+        return super(ResourceManager, self).create(*args, **kwargs)
+
+    def get_queryset(self):
+        qs = super(ResourceManager, self).get_queryset()
+        if self.resource_type:
+            qs = qs.filter(resource_type=self.resource_type)
+        return qs
+
+
 class AbstractResource(ResourcePermissionsMixin):
     """
     All hydroshare objects inherit from this mixin.  It defines things that must
@@ -1371,6 +1367,7 @@ class AbstractResource(ResourcePermissionsMixin):
         class MyResourceContentType(pages.Page, hs_core.AbstractResource):
             ...
     """
+
     content = models.TextField() # the field added for use by Django inplace editing
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
@@ -1383,8 +1380,8 @@ class AbstractResource(ResourcePermissionsMixin):
     #     help_text='The dublin core metadata of the resource'
     # )
 
-    files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource')
-    bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource')
+    files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource', for_concrete_model=True)
+    bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
@@ -1396,6 +1393,8 @@ class AbstractResource(ResourcePermissionsMixin):
     object_id = models.PositiveIntegerField(null=True, blank=True)
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
+
+    #keywords = KeywordsField(verbose_name="Keywords", for_concrete_model=False)
 
     @classmethod
     def bag_url(cls, resource_id):
@@ -1412,7 +1411,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
     def delete(self, using=None):
         from hydroshare import hs_bagit
-
+        from hs_access_control.models import UserResourcePrivilege, GroupResourcePrivilege
         for fl in self.files.all():
             fl.resource_file.delete()
 
@@ -1420,6 +1419,11 @@ class AbstractResource(ResourcePermissionsMixin):
 
         self.metadata.delete_all_elements()
         self.metadata.delete()
+
+        access_resource = self.raccess
+        UserResourcePrivilege.objects.filter(resource=access_resource).delete()
+        GroupResourcePrivilege.objects.filter(resource=access_resource).delete()
+        access_resource.delete()
 
         super(AbstractResource, self).delete()
 
@@ -1562,18 +1566,39 @@ class Bags(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
 
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = generic.GenericForeignKey('content_type', 'object_id', for_concrete_model=False)
     timestamp = models.DateTimeField(default=now, db_index=True)
 
     class Meta:
         ordering = ['-timestamp']
 
+    def get_content_model(self):
+        return self.content_object.get_content_model()
+
+
+class PublicResourceManager(models.Manager):
+    def get_queryset(self):
+        return super(PublicResourceManager, self).get_queryset().filter(raccess__public=True)
+
+
+class DiscoverableResourceManager(models.Manager):
+    def get_queryset(self):
+        return super(DiscoverableResourceManager, self).get_queryset().filter(Q(raccess__discoverable=True) |
+                                                                              Q(raccess__public=True))
+
 
 # remove RichText parent class from the parameters for Django inplace editing to work; otherwise, get internal edit error when saving changes
-class GenericResource(Page, AbstractResource):
+class BaseResource(Page, AbstractResource):
+
+    resource_type = models.CharField(max_length=50, default="GenericResource")
+
+    objects = models.Manager()
+    public_resources = PublicResourceManager()
+    discoverable_resources = DiscoverableResourceManager()
 
     class Meta:
         verbose_name = 'Generic'
+        db_table = 'hs_core_genericresource'
 
     def can_add(self, request):
         return AbstractResource.can_add(self, request)
@@ -1586,7 +1611,6 @@ class GenericResource(Page, AbstractResource):
 
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
-
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -1601,6 +1625,26 @@ class GenericResource(Page, AbstractResource):
     def can_have_files(cls):
         return True
 
+
+class GenericResource(BaseResource):
+    objects = ResourceManager('GenericResource')
+
+    class Meta:
+        verbose_name = 'Generic'
+        proxy = True
+
+
+old_get_content_model = Page.get_content_model
+def new_get_content_model(self):
+    from hs_core.hydroshare.utils import get_resource_types
+    content_model = self.content_model
+    if content_model.endswith('resource'):
+        rt = [rt for rt in get_resource_types() if rt._meta.model_name == content_model][0]
+        return rt.objects.get(id=self.id)
+    return old_get_content_model(self)
+Page.get_content_model = new_get_content_model
+
+
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
     #from django.contrib.sites.models import Site
@@ -1610,9 +1654,10 @@ class CoreMetaData(models.Model):
 <!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
 "http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">'''
 
-    NAMESPACES = {'rdf':"http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    NAMESPACES = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                  'rdfs1': "http://www.w3.org/2001/01/rdf-schema#",
                   'dc': "http://purl.org/dc/elements/1.1/",
-                  'dcterms':"http://purl.org/dc/terms/",
+                  'dcterms': "http://purl.org/dc/terms/",
                   'hsterms': "http://hydroshare.org/terms/"}
 
     id = models.AutoField(primary_key=True)
@@ -1741,14 +1786,20 @@ class CoreMetaData(models.Model):
 
     def get_xml(self, pretty_print=True):
         from lxml import etree
+        # importing here to avoid circular import problem
+        from hydroshare.utils import current_site_url, get_resource_types
 
         RDF_ROOT = etree.Element('{%s}RDF' % self.NAMESPACES['rdf'], nsmap=self.NAMESPACES)
         # create the Description element -this is not exactly a dc element
         rdf_Description = etree.SubElement(RDF_ROOT, '{%s}Description' % self.NAMESPACES['rdf'])
 
-        #resource_uri = self.HYDROSHARE_URL + '/resource/' + self.resource.short_id
         resource_uri = self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
         rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], resource_uri)
+
+        # get the resource object associated with this metadata container object - needed to get the verbose_name
+        resource = BaseResource.objects.filter(object_id=self.id).first()
+        rt = [rt for rt in get_resource_types() if rt._meta.object_name == resource.resource_type][0]
+        resource = rt.objects.get(id=resource.id)
 
         # create the title element
         if self.title:
@@ -1891,6 +1942,14 @@ class CoreMetaData(models.Model):
             else:
                 dc_subject.text = sub.value
 
+        # resource type related additional attributes
+        rdf_Description_resource = etree.SubElement(RDF_ROOT, '{%s}Description' % self.NAMESPACES['rdf'])
+        rdf_Description_resource.set('{%s}about' % self.NAMESPACES['rdf'], self.type.url)
+        rdfs1_label = etree.SubElement(rdf_Description_resource, '{%s}label' % self.NAMESPACES['rdfs1'])
+        rdfs1_label.text = resource._meta.verbose_name
+        rdfs1_isDefinedBy = etree.SubElement(rdf_Description_resource, '{%s}isDefinedBy' % self.NAMESPACES['rdfs1'])
+        rdfs1_isDefinedBy.text = current_site_url() + "/terms"
+
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
@@ -2011,71 +2070,25 @@ class CoreMetaData(models.Model):
         allowed_elements = [el.lower() for el in self.get_supported_element_names()]
         return element_name.lower() in allowed_elements
 
+
 def resource_processor(request, page):
     extra = page_permissions_page_processor(request, page)
-    extra['res'] = page.get_content_model()
-    #extra['dc'] = { m.term_name : m.content for m in extra['res'].dublin_metadata.all() }
     return extra
 
 
 @receiver(post_save)
 def resource_creation_signal_handler(sender, instance, created, **kwargs):
-    """Create initial dublin core elements"""
+    """  for now this is just a placeholder for some actions to be taken when a resource gets saved  """
     if isinstance(instance, AbstractResource):
         if created:
             pass
-            # from hs_core.hydroshare import utils
-            # import json
-            # instance.metadata.create_element('title', value=instance.title)
-            # if instance.content:
-            #     instance.metadata.create_element('description', abstract=instance.content)
-            # else:
-            #     instance.metadata.create_element('description', abstract=instance.description)
-
-            # TODO: With the current VM the get_user_info() method fails. So we can't get the resource uri for
-            # the user now.
-            # creator_dict = users.get_user_info(instance.creator)
-            # instance.metadata.create_element('creator', name=instance.creator.get_full_name(),
-            #                                  email=instance.creator.email,
-            #                                  description=creator_dict['resource_uri'])
-
-            #instance.metadata.create_element('creator', name=instance.creator.get_full_name(), email=instance.creator.email)
-
-            # TODO: The element 'Type' can't be created as we do not have an URI for specific resource types yet
-
-            # instance.metadata.create_element('date', type='created', start_date=instance.created)
-            # instance.metadata.create_element('date', type='modified', start_date=instance.updated)
-
-            # res_json = utils.serialize_science_metadata(instance)
-            # res_dict = json.loads(res_json)
-            #instance.metadata.create_element('identifier', name='hydroShareIdentifier', url='http://hydroshare.org/resource{0}{1}'.format('/', instance.short_id))
-            instance.set_slug('resource{0}{1}'.format('/', instance.short_id))
-        else:
-            resource_update_signal_handler(sender, instance, created, **kwargs)
-
-    if isinstance(AbstractResource, sender):
-        if created:
-            instance.dublin_metadata.create(term='T', content=instance.title)
-            instance.dublin_metadata.create(term='CR', content=instance.user.username)
-            if instance.last_updated_by:
-                instance.dublin_metadata.create(term='CN', content=instance.last_updated_by.username)
-            instance.dublin_metadata.create(term='DT', content=instance.created)
-            if instance.content:
-                instance.dublin_metadata.create(term='AB', content=instance.content)
         else:
             resource_update_signal_handler(sender, instance, created, **kwargs)
 
 
 def resource_update_signal_handler(sender, instance, created, **kwargs):
-    """Add dublin core metadata based on the person who just updated the resource. Handle publishing too..."""
+    pass
 
-@receiver(post_save, sender=User)
-def user_creation_signal_handler(sender, instance, created, **kwargs):
-    if created:
-        if not instance.is_staff:
-            instance.is_staff = True
-            instance.save()
-            instance.groups.add(Group.objects.get(name='Hydroshare Author'))
 
 # this import statement is necessary in models.py to receive signals
 # any hydroshare app that needs to listen to signals from hs_core also needs to

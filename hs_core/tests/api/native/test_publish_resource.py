@@ -8,16 +8,17 @@ __author__ = 'Tian Gan'
 
 import unittest
 
-from django.test import TestCase
 from django.contrib.auth.models import User, Group
+
 from hs_core import hydroshare
 from hs_core.models import GenericResource
 
 
-class TestPublishResource(TestCase):
+class TestPublishResource(unittest.TestCase):
     def setUp(self):
-        # create two users
-        self.user1 = hydroshare.create_account(
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        # create a user
+        self.user = hydroshare.create_account(
             'creator@usu.edu',
             username='creator',
             first_name='Creator_FirstName',
@@ -26,37 +27,19 @@ class TestPublishResource(TestCase):
             groups=[]
         )
 
-        self.user2 = hydroshare.create_account(
-            'creator2@usu.edu',
-            username='creator2',
-            first_name='Creator2_FirstName',
-            last_name='Creator2_LastName',
-            superuser=False,
-            groups=[]
-        )
-
-        # create a group
-        self.group = hydroshare.create_group(
-            'Test group',
-            members=[],
-            owners=[self.user1]
-        )
-
         # create a resource
         self.res = hydroshare.create_resource(
             'GenericResource',
-            self.user1,
-            'Test Resource',
-            #edit_groups=[self.group],
-            edit_users=[self.user1, self.user2]
+            self.user,
+            'Test Resource'
         )
 
     def tearDown(self):
+        self.user.uaccess.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
         GenericResource.objects.all().delete()
 
-    @unittest.skip
     def test_publish_resource(self):
         # publish resource
         hydroshare.publish_resource(self.res.short_id)
@@ -64,28 +47,14 @@ class TestPublishResource(TestCase):
 
         # test publish state
         self.assertTrue(
-            self.pub_res.published_and_frozen,
-            msg='The resoruce is not published and frozen'
+            self.pub_res.raccess.published,
+            msg='The resoruce is not published'
         )
 
         # test frozen state
         self.assertTrue(
-            self.pub_res.frozen,
+            self.pub_res.raccess.immutable,
             msg='The resource is not frozen'
-        )
-
-        # test if resource has edit users
-        self.assertListEqual(
-            list(self.pub_res.edit_users.all()),
-            [],
-            msg='edit users list is not empty'
-        )
-
-        # test if resource has edit groups
-        self.assertListEqual(
-            list(self.pub_res.edit_groups.all()),
-            [],
-            msg='edit groups is not empty'
         )
 
         # test if doi is assigned
