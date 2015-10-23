@@ -37,9 +37,13 @@ class UserProfileView(TemplateView):
         # if requesting user is not the profile user, then show only resources that the requesting user has access
         if self.request.user != u:
             if self.request.user.is_authenticated():
-                # filter out any resources the requesting user doesn't have access
-                resources = resources.filter(Q(pk__in=self.request.user.uaccess.get_held_resources()) |
-                                             Q(raccess__public=True) | Q(raccess__discoverable=True))
+                if self.request.user.is_superuser:
+                    # admin can see all resources owned by profile user
+                    pass
+                else:
+                    # filter out any resources the requesting user doesn't have access
+                    resources = resources.filter(Q(pk__in=self.request.user.uaccess.get_held_resources()) |
+                                                 Q(raccess__public=True) | Q(raccess__discoverable=True))
 
             else:
                 # for anonymous requesting user show only resources that are either public or discoverable
