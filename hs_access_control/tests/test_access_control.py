@@ -12,7 +12,7 @@ from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
     PrivilegeCodes, HSAccessException, HSAUsageException, HSAIntegrityException
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource
+from hs_core.models import GenericResource, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 def global_reset():
@@ -23,7 +23,8 @@ def global_reset():
     ResourceAccess.objects.all().delete()
     GroupAccess.objects.all().delete()
     Group.objects.all().delete()
-
+    User.objects.all().delete()
+    BaseResource.objects.all().delete()
 
 class T00Attributes(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
@@ -126,9 +127,6 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.george.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.OWNER)
         self.assertTrue(self.bikes.raccess.get_number_of_users() == 2)
 
-        # junk = self.bikes.raccess.get_holders().all()
-        # for j in junk:
-        #     print ("  user="+j.first_name)
         self.assertTrue(self.bikes.raccess.get_number_of_holders() == 2)
         self.assertTrue(self.bikes.raccess.get_number_of_groups() == 0)
         self.assertTrue(self.alva.uaccess.owns_resource(self.bikes))
@@ -172,7 +170,8 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
 
         # test for django admin - admin has not been given any permission on any resource by any user
 
-        # test django admin has ownership over any resource
+        # test django admin has ownership permission over any resource even when not owning a resource
+        self.assertFalse(self.admin.uaccess.owns_resource(self.bikes))
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.admin) == PrivilegeCodes.OWNER)
         self.assertTrue(self.bikes.raccess.get_effective_privilege(self.admin) == PrivilegeCodes.OWNER)
 
@@ -202,6 +201,34 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         # test django admin can unshare a resource with a specific user
         self.assertTrue(self.admin.uaccess.unshare_resource_with_user(self.bikes, self.alva))
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.NONE)
+
+        # test django admin can share a group with a user
+        self.assertTrue(self.bikers.gaccess.get_members().count(), 1)
+        self.assertFalse(self.admin.uaccess.owns_group(self.bikers))
+        self.admin.uaccess.share_group_with_user(self.bikers, self.alva, PrivilegeCodes.OWNER)
+        self.assertEqual(self.alva.uaccess.get_number_of_owned_groups(), 1)
+        self.assertTrue(self.bikers.gaccess.get_members().count(), 2)
+
+        # test django admin can share resource with a group
+        self.assertFalse(self.admin.uaccess.can_share_resource_with_group(self.bikes, self.harpers,
+                                                                          PrivilegeCodes.OWNER))
+
+        self.assertTrue(self.admin.uaccess.can_share_resource_with_group(self.bikes, self.harpers,
+                                                                         PrivilegeCodes.CHANGE))
+        self.admin.uaccess.share_resource_with_group(self.bikes, self.harpers, PrivilegeCodes.CHANGE)
+        self.assertTrue(self.bikes in self.harpers.gaccess.get_editable_resources())
+
+        self.assertTrue(self.admin.uaccess.can_share_resource_with_group(self.bikes, self.harpers,
+                                                                         PrivilegeCodes.VIEW))
+        self.admin.uaccess.share_resource_with_group(self.bikes, self.harpers, PrivilegeCodes.VIEW)
+        self.assertTrue(self.bikes in self.harpers.gaccess.get_held_resources())
+
+        # test django admin can unshare a user with a group
+        self.assertTrue(self.admin.uaccess.can_unshare_group_with_user(self.bikers, self.alva))
+        self.admin.uaccess.unshare_group_with_user(self.bikers, self.alva)
+        self.assertTrue(self.bikers.gaccess.get_members().count(), 1)
+        self.assertEqual(self.alva.uaccess.get_number_of_owned_groups(), 0)
+
 
 def match_lists(l1, l2):
     """ return true if two lists contain the same content
@@ -295,7 +322,6 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
             superuser=False,
             groups=[]
         )
-
 
     def test_01_create(self):
         """Resource creator has appropriate access"""
@@ -447,6 +473,16 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
+        # django admin access
+        self.assertFalse(self.admin.uaccess.owns_resource(holes))
+        self.assertFalse(self.admin.uaccess.can_change_resource(holes))
+        self.assertTrue(self.admin.uaccess.can_view_resource(holes))
+        self.assertTrue(self.admin.uaccess.can_change_resource_flags(holes))
+        self.assertTrue(self.admin.uaccess.can_delete_resource(holes))
+        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
+        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+
         # now no longer immutable
         holes.raccess.immutable = False
         holes.raccess.save()
@@ -513,7 +549,6 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists([holes], GenericResource.discoverable_resources.all()))
         self.assertTrue(match_lists([], GenericResource.public_resources.all()))
 
-
         # metadata state
         self.assertEqual(holes.title, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
@@ -557,6 +592,13 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+
+        # django admin should have full access to any not discoverable  resource
+        self.assertTrue(self.admin.uaccess.can_change_resource_flags(holes))
+        self.assertTrue(self.admin.uaccess.can_delete_resource(holes))
+        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
+        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # TODO: test get_discoverable_resources and get_public_resources
 
@@ -614,6 +656,17 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+
+        # django admin access for published resource
+        self.assertFalse(self.admin.uaccess.owns_resource(holes))
+        self.assertTrue(self.admin.uaccess.can_change_resource(holes))
+        self.assertTrue(self.admin.uaccess.can_view_resource(holes))
+
+        self.assertTrue(self.admin.uaccess.can_change_resource_flags(holes))
+        self.assertTrue(self.admin.uaccess.can_delete_resource(holes))
+        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
+        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # make it not published
         holes.raccess.published = False
@@ -728,6 +781,13 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
+        # django admin should have full access to any private resource
+        self.assertFalse(self.admin.uaccess.owns_resource(holes))
+        self.assertTrue(self.admin.uaccess.can_change_resource_flags(holes))
+        self.assertTrue(self.admin.uaccess.can_delete_resource(holes))
+        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
+        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
 class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
 
@@ -762,14 +822,16 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-
     def test_02_create(self):
         """Create a new group"""
         dog = self.dog
         cat = self.cat
         self.assertEqual(dog.uaccess.get_number_of_owned_groups(), 0)
         self.assertEqual(dog.uaccess.get_number_of_held_groups(), 0)
+
+        # user 'dog' create a new group called 'arfers'
         arfers = dog.uaccess.create_group('arfers')
+
         self.assertEqual(dog.uaccess.get_number_of_owned_groups(), 1)
         self.assertEqual(dog.uaccess.get_number_of_held_groups(), 1)
 
@@ -782,7 +844,7 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
                         "error in group listing")
 
         # check membership list
-        self.assertEqual(arfers.gaccess.get_number_of_members(),1)
+        self.assertEqual(arfers.gaccess.get_number_of_members(), 1)
 
         # metadata state
         self.assertEqual(arfers.name, 'arfers')
@@ -820,12 +882,17 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         # membership for other user
         self.assertTrue(cat not in arfers.gaccess.get_members())
 
-    # def test_02_change_name(self):
-    #     """Owner can change the name of a group"""
-    #     arfers = dog.uaccess.create_group('arfers')
-    #     self.assertEqual(arfers.name, 'arfers')
-    #     dog.uaccess.set_group_title(arfers, 'not about dogs')
-    #     self.assertEqual(arfers.name, 'not about dogs')
+        # test django admin's group access permissions - admin has not been given any access over the group by anyone
+        # even though admin does not own the group, admin can do anything to a group
+        self.assertFalse(self.admin.uaccess.owns_group(arfers))
+        self.assertTrue(self.admin.uaccess.can_change_group(arfers))
+        self.assertTrue(self.admin.uaccess.can_change_group_flags(arfers))
+        self.assertTrue(self.admin.uaccess.can_view_group(arfers))
+        self.assertTrue(self.admin.uaccess.can_share_group(arfers, PrivilegeCodes.OWNER))
+        self.assertTrue(self.admin.uaccess.can_share_group(arfers, PrivilegeCodes.CHANGE))
+        self.assertTrue(self.admin.uaccess.can_share_group(arfers, PrivilegeCodes.VIEW))
+        self.assertTrue(self.admin.uaccess.can_delete_group(arfers))
+        self.admin.uaccess.delete_group(arfers)
 
     def test_04_retract_group(self):
         """Owner can retract a group"""
@@ -852,6 +919,7 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         # check that it got destroyed according to statistics
         self.assertEqual(dog.uaccess.get_number_of_owned_groups(), 0)
         self.assertEqual(dog.uaccess.get_number_of_held_groups(), 0)
+
 
 class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
@@ -987,6 +1055,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_resource(holes))
         self.assertTrue(cat.uaccess.can_change_resource(holes))
         self.assertTrue(cat.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
@@ -998,6 +1067,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.owns_resource(holes))
         self.assertFalse(dog.uaccess.can_change_resource(holes))
         self.assertFalse(dog.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertFalse(dog.uaccess.can_change_resource_flags(holes))
         self.assertFalse(dog.uaccess.can_delete_resource(holes))
@@ -1043,6 +1113,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_resource(holes))
         self.assertTrue(cat.uaccess.can_change_resource(holes))
         self.assertTrue(cat.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
@@ -1054,6 +1125,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.owns_resource(holes))
         self.assertTrue(dog.uaccess.can_change_resource(holes))
         self.assertTrue(dog.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertTrue(dog.uaccess.can_change_resource_flags(holes))
         self.assertTrue(dog.uaccess.can_delete_resource(holes))
@@ -1082,6 +1154,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_resource(holes))
         self.assertTrue(cat.uaccess.can_change_resource(holes))
         self.assertTrue(cat.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
@@ -1093,6 +1166,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.owns_resource(holes))
         self.assertTrue(dog.uaccess.can_change_resource(holes))
         self.assertTrue(dog.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertTrue(dog.uaccess.can_change_resource_flags(holes))
         self.assertTrue(dog.uaccess.can_delete_resource(holes))
@@ -1108,11 +1182,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(holes.raccess.immutable)
         self.assertTrue(holes.raccess.shareable)
 
-        # # try to use owner privilege to change title
-        # dog.uaccess.set_resource_title(holes, 'all about dogs')
-        #
-        # # new metadata state
-        # self.assertEqual(holes.title, 'all about dogs')
 
     def test_03_share_resource_rw(self):
         """Resources can be shared as CHANGE by owner"""
@@ -1139,6 +1208,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_resource(holes))
         self.assertTrue(cat.uaccess.can_change_resource(holes))
         self.assertTrue(cat.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
@@ -1150,6 +1220,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.owns_resource(holes))
         self.assertFalse(dog.uaccess.can_change_resource(holes))
         self.assertFalse(dog.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertFalse(dog.uaccess.can_change_resource_flags(holes))
         self.assertFalse(dog.uaccess.can_delete_resource(holes))
@@ -1164,11 +1235,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # share with dog at rw privilege
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
-
-        # junk = cat.uaccess.get_resource_undo_users(holes)
-        # print("cat undo users:")
-        # for j in junk:
-        #     print ("   first name="+j.first_name)
 
         self.assertTrue(cat.uaccess.can_undo_share_resource_with_user(holes, dog))
         self.assertTrue(cat.uaccess.can_unshare_resource_with_user(holes, dog))
@@ -1285,6 +1351,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_resource(holes))
         self.assertTrue(cat.uaccess.can_change_resource(holes))
         self.assertTrue(cat.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
@@ -1296,6 +1363,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.owns_resource(holes))
         self.assertFalse(dog.uaccess.can_change_resource(holes))
         self.assertFalse(dog.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertFalse(dog.uaccess.can_change_resource_flags(holes))
         self.assertFalse(dog.uaccess.can_delete_resource(holes))
@@ -1325,6 +1393,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_resource(holes))
         self.assertTrue(cat.uaccess.can_change_resource(holes))
         self.assertTrue(cat.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
@@ -1336,6 +1405,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.owns_resource(holes))
         self.assertFalse(dog.uaccess.can_change_resource(holes))
         self.assertTrue(dog.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertFalse(dog.uaccess.can_change_resource_flags(holes))
         self.assertFalse(dog.uaccess.can_delete_resource(holes))
@@ -1364,6 +1434,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_resource(holes))
         self.assertTrue(cat.uaccess.can_change_resource(holes))
         self.assertTrue(cat.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
@@ -1375,6 +1446,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.owns_resource(holes))
         self.assertFalse(dog.uaccess.can_change_resource(holes))
         self.assertTrue(dog.uaccess.can_view_resource(holes))
+
         # composite django state
         self.assertFalse(dog.uaccess.can_change_resource_flags(holes))
         self.assertFalse(dog.uaccess.can_delete_resource(holes))
@@ -1606,6 +1678,15 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
+        # django admin should be able to downgrade privilege
+        self.cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.OWNER)
+        self.assertTrue(dog.uaccess.can_change_resource_flags(holes))
+        self.assertTrue(dog.uaccess.owns_resource(holes))
+
+        self.admin.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
+        self.assertFalse(dog.uaccess.can_change_resource_flags(holes))
+        self.assertFalse(dog.uaccess.owns_resource(holes))
+
     def test_06_group_unshared_state(self):
         """Groups cannot be accessed by users with no access"""
         # dog should not have sharing privileges
@@ -1674,6 +1755,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.owns_group(meowers))
         self.assertFalse(dog.uaccess.can_change_group(meowers))
         self.assertTrue(dog.uaccess.can_view_group(meowers))
+
         # composite django state
         self.assertFalse(dog.uaccess.can_change_group_flags(meowers))
         self.assertFalse(dog.uaccess.can_delete_group(meowers))
@@ -1699,6 +1781,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_group(meowers))
         self.assertTrue(cat.uaccess.can_change_group(meowers))
         self.assertTrue(cat.uaccess.can_view_group(meowers))
+
         # composite django state
         self.assertTrue(cat.uaccess.can_change_group_flags(meowers))
         self.assertTrue(cat.uaccess.can_delete_group(meowers))
@@ -1710,6 +1793,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.owns_group(meowers))
         self.assertTrue(dog.uaccess.can_change_group(meowers))
         self.assertTrue(dog.uaccess.can_view_group(meowers))
+
         # composite django state
         self.assertTrue(dog.uaccess.can_change_group_flags(meowers))
         self.assertTrue(dog.uaccess.can_delete_group(meowers))
@@ -1735,6 +1819,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_group(meowers))
         self.assertTrue(cat.uaccess.can_change_group(meowers))
         self.assertTrue(cat.uaccess.can_view_group(meowers))
+
         # composite django state
         self.assertTrue(cat.uaccess.can_change_group_flags(meowers))
         self.assertTrue(cat.uaccess.can_delete_group(meowers))
@@ -1746,6 +1831,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.owns_group(meowers))
         self.assertTrue(dog.uaccess.can_change_group(meowers))
         self.assertTrue(dog.uaccess.can_view_group(meowers))
+
         # composite django state
         self.assertTrue(dog.uaccess.can_change_group_flags(meowers))
         self.assertTrue(dog.uaccess.can_delete_group(meowers))
@@ -2241,6 +2327,15 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_share_group(meowers, PrivilegeCodes.CHANGE))
         self.assertFalse(dog.uaccess.can_share_group(meowers, PrivilegeCodes.VIEW))
 
+        # admin too should be able to downgrade (e.g. from OWNER to CHANGE)
+        cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.OWNER)
+        self.assertTrue(dog.uaccess.owns_group(meowers))
+        self.assertTrue(dog.uaccess.can_change_group_flags(meowers))
+
+        self.admin.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.CHANGE)
+        self.assertFalse(dog.uaccess.can_change_group_flags(meowers))
+        self.assertFalse(dog.uaccess.owns_group(meowers))
+
     def test_11_resource_sharing_with_group(self):
         """Group cannot own a resource"""
         meowers = self.meowers
@@ -2322,6 +2417,15 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         except HSAccessException as e:
             self.assertEqual(e.message, "Groups cannot own resources",
                              "Invalid exception was '"+e.message+"'")
+
+        # even django admin can't make a group as the owner of a resource
+        try:
+            self.admin.uaccess.share_resource_with_group(holes, meowers, PrivilegeCodes.OWNER)
+            self.fail("groups should not be able to own resources")
+        except HSAccessException as e:
+            self.assertEqual(e.message, "Groups cannot own resources",
+                             "Invalid exception was '"+e.message+"'")
+
 
     def test_12_resource_sharing_rw_with_group(self):
         """Resource can be shared as CHANGE with a group"""
@@ -2420,7 +2524,6 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         "Initial group state is correct"
 
         cat = self.cat
-        dog = self.dog
         polyamory = cat.uaccess.create_group('polyamory')
 
         # flag state
@@ -2550,169 +2653,6 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(bat.uaccess.can_share_group(polyamory, PrivilegeCodes.VIEW))
 
 
-# class T07InviteToGroup(MockIRODSTestCaseMixin, TestCase):
-#     def setUp(self):
-#         super(T07InviteToGroup, self).setUp()
-#         global_reset()
-#         self.admin = UserAccess.create_user('admin', 'administrator', True)
-#         self.cat = UserAccess.create_user('cat', 'not a dog', False)
-#         self.dog = UserAccess.create_user('dog', 'a random arfer', False)
-#
-#     def test(self):
-#         "Can invite a user to a group"
-#         cat = self.cat
-#         dog = self.dog
-#
-#         ha = startup('dog')
-#         operas = ha.assert_group('operas')  # groups are public by default
-#
-#         ha.invite_user_to_group(operas, cat, PrivilegeCodes.VIEW)  # dog invites cat to operas
-#         invites = ha.get_group_invitations_for_user()
-#         self.assertEqual(len(invites), 0)
-#
-#         ha = startup('cat')
-#         invites = ha.get_group_invitations_for_user()
-#
-#         # check that invitation itself is valid
-#         self.assertEqual(len(invites), 1)
-#         self.assertEqual(invites[0]['group_uuid'], operas)
-#         self.assertEqual(invites[0]['inviting_user_uuid'], dog)
-#         self.assertEqual(invites[0]['group_privilege'], PrivilegeCodes.VIEW)
-#
-#         # check that invitation has not been acted upon
-#         self.assertFalse(ha.user_is_in_group(operas))
-#         self.assertFalse(ha.group_is_owned(operas))
-#         self.assertFalse(ha.group_is_readwrite(operas))
-#         self.assertTrue(ha.group_is_readable(operas))  # group is public
-#
-#         # accept invitation
-#         ha.accept_invitation_to_group(invites[0]['group_uuid'], invites[0]['inviting_user_uuid'])
-#
-#         # invitation is no longer present
-#         self.assertEqual(len(ha.get_group_invitations_for_user()), 0)
-#
-#         # check that invitation powers are granted
-#         self.assertTrue(ha.user_is_in_group(operas))
-#
-#         self.assertFalse(ha.group_is_owned(operas))
-#         self.assertFalse(ha.group_is_readwrite(operas))
-#         self.assertTrue(ha.group_is_readable(operas))
-#
-#         # now try a reject operation
-#         group_carnivores = ha.assert_group('carnivores')
-#         carnivores = group_carnivores
-#         ha.invite_user_to_group(group_carnivores, dog, PrivilegeCodes.OWNER)
-#
-#         # check that there is no invite crosstalk
-#         invites = ha.get_group_invitations_for_user()
-#         self.assertEqual(len(invites), 0)
-#
-#         ha = startup('dog')
-#         invites = ha.get_group_invitations_for_user()
-#         self.assertEqual(len(invites), 1)
-#         self.assertEqual(invites[0]['group_uuid'], group_carnivores)
-#         self.assertEqual(invites[0]['inviting_user_uuid'], cat)
-#         self.assertEqual(invites[0]['group_privilege'], PrivilegeCodes.OWNER)
-#
-#         # test that invitation has not taken hold
-#         self.assertFalse(ha.user_is_in_group(group_carnivores))
-#         self.assertFalse(ha.group_is_owned(group_carnivores))
-#         self.assertFalse(ha.group_is_readwrite(group_carnivores))
-#         self.assertTrue(ha.group_is_readable(group_carnivores))
-#
-#         # reject invitation
-#         ha.refuse_invitation_to_group(invites[0]['group_uuid'], invites[0]['inviting_user_uuid'])
-#
-#         # check that invitation has been deleted
-#         self.assertEqual(len(ha.get_group_invitations_for_user()), 0)
-#
-#         # test that invitation has not taken hold
-#         self.assertFalse(ha.user_is_in_group(group_carnivores))
-#         self.assertFalse(ha.group_is_owned(group_carnivores))
-#         self.assertFalse(ha.group_is_readwrite(group_carnivores))
-#         self.assertTrue(ha.group_is_readable(group_carnivores))
-#
-#
-# class T07InviteToResource(MockIRODSTestCaseMixin, TestCase):
-#     def setUp(self):
-#         super(T07InviteToResource, self).setUp()
-#         global_reset()
-#         self.admin = UserAccess.create_user('admin', 'administrator', True)
-#         self.cat = UserAccess.create_user('cat', 'not a dog', False)
-#         self.dog = UserAccess.create_user('dog', 'a random arfer', False)
-#
-#     def test(self):
-#         "Can invite a user to a resource"
-#         cat = self.cat
-#         dog = self.dog
-#
-#         ha = startup('dog')
-#         weber = ha.assert_resource('/dog/weber', 'Andrew Lloyd Weber')
-#         # resources are public by default
-#
-#         ha.invite_user_to_resource(weber, cat, PrivilegeCodes.VIEW)
-#         # dog invites cat to weber
-#         invites = ha.get_resource_invitations_for_user()
-#         self.assertEqual(len(invites), 0)
-#
-#         ha = startup('cat')
-#         invites = ha.get_resource_invitations_for_user()
-#
-#         # check that invitation itself is valid
-#         self.assertEqual(len(invites), 1)
-#         self.assertEqual(invites[0]['resource_uuid'], weber)
-#         self.assertEqual(invites[0]['inviting_user_uuid'], dog)
-#         self.assertEqual(invites[0]['resource_privilege'], PrivilegeCodes.VIEW)
-#
-#         # check that invitation has not been acted upon
-#         self.assertFalse(ha.resource_is_owned(weber))
-#         self.assertFalse(ha.resource_is_readwrite(weber))
-#         self.assertFalse(ha.resource_is_readable(weber))  # resource is not public
-#
-#         # accept invitation
-#         ha.accept_invitation_to_resource(invites[0]['resource_uuid'], invites[0]['inviting_user_uuid'])
-#
-#         # invitation is no longer present
-#         self.assertEqual(len(ha.get_resource_invitations_for_user()), 0)
-#
-#         # check that invitation powers are granted
-#         self.assertFalse(ha.resource_is_owned(weber))
-#         self.assertFalse(ha.resource_is_readwrite(weber))
-#         self.assertTrue(ha.resource_is_readable(weber))
-#
-#         # now try a reject operation
-#         resource_familiars = ha.assert_resource('/cat/familiars', 'familiars')
-#         familiars = resource_familiars
-#         ha.invite_user_to_resource(resource_familiars, dog, PrivilegeCodes.OWNER)
-#
-#         # check that there is no invite crosstalk
-#         invites = ha.get_resource_invitations_for_user()
-#         self.assertEqual(len(invites), 0)
-#
-#         ha = startup('dog')
-#         invites = ha.get_resource_invitations_for_user()
-#         self.assertEqual(len(invites), 1)
-#         self.assertEqual(invites[0]['resource_uuid'], resource_familiars)
-#         self.assertEqual(invites[0]['inviting_user_uuid'], cat)
-#         self.assertEqual(invites[0]['resource_privilege'], PrivilegeCodes.OWNER)
-#
-#         # test that invitation has not taken hold
-#         self.assertFalse(ha.resource_is_owned(resource_familiars))
-#         self.assertFalse(ha.resource_is_readwrite(resource_familiars))
-#         self.assertFalse(ha.resource_is_readable(resource_familiars))
-#
-#         # reject invitation
-#         ha.refuse_invitation_to_resource(invites[0]['resource_uuid'], invites[0]['inviting_user_uuid'])
-#
-#         # check that invitation has been deleted
-#         self.assertEqual(len(ha.get_resource_invitations_for_user()), 0)
-#
-#         # test that invitation has not taken hold
-#         self.assertFalse(ha.resource_is_owned(resource_familiars))
-#         self.assertFalse(ha.resource_is_readwrite(resource_familiars))
-#         self.assertFalse(ha.resource_is_readable(resource_familiars))
-
-
 class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(T08ResourceFlags, self).setUp()
@@ -2809,6 +2749,9 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(cat.uaccess.can_change_resource(bones))
         self.assertTrue(cat.uaccess.can_view_resource(bones))
 
+        # django admin should be able share even if shareable is False
+        self.admin.uaccess.share_resource_with_user(bones, cat, PrivilegeCodes.CHANGE)
+
     def test_03_not_shareable(self):
         "Resource that is not shareable cannot be shared by non-owner"
         cat = self.cat
@@ -2827,6 +2770,9 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         except HSAccessException as e:
             self.assertEqual(e.message, "User must own resource or have sharing privilege",
                              "Invalid exception was '"+e.message+"'")
+
+        # django admin still can share
+        self.admin.uaccess.share_resource_with_user(bones, bat, PrivilegeCodes.VIEW)
 
     def test_04_transitive_sharing(self):
         """Resource shared with one user can be shared with another"""
@@ -2907,6 +2853,9 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_change_resource(bones))
         self.assertTrue(dog.uaccess.can_view_resource(bones))
 
+        # even django admin should not be able to change an immutable resource
+        self.assertFalse(self.admin.uaccess.can_change_resource(bones))
+        self.assertTrue(self.admin.uaccess.can_view_resource(bones))
 
         # another user shouldn't be able to read it unless it's also public
         self.assertFalse(nobody.uaccess.owns_resource(bones))
@@ -2998,7 +2947,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         # test whether we can retract a resource
         resource_short_id = chewies.short_id
         hydroshare.delete_resource(chewies.short_id)
-        #dog.uaccess.delete_resource(chewies)
+
         with self.assertRaises(Http404):
             hydroshare.get_resource(resource_short_id)
 
@@ -3293,6 +3242,11 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(felines not in hydroshare.get_discoverable_groups())
         self.assertTrue(felines not in hydroshare.get_public_groups())
 
+        # django admin has access to private and not discoverable group
+        self.assertFalse(self.admin.uaccess.owns_group(felines))
+        self.assertTrue(self.admin.uaccess.can_change_group(felines))
+        self.assertTrue(self.admin.uaccess.can_view_group(felines))
+
         # can an unrelated user do anything with the group?
         nobody = self.nobody
         self.assertEqual(hydroshare.get_discoverable_groups().count(), 0)
@@ -3337,6 +3291,11 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(felines.gaccess.discoverable)
         self.assertTrue(felines.gaccess.active)
         self.assertFalse(felines.gaccess.shareable)
+
+        # django admin still has full access to the unshared group
+        self.assertFalse(self.admin.uaccess.owns_group(felines))
+        self.assertTrue(self.admin.uaccess.can_change_group(felines))
+        self.assertTrue(self.admin.uaccess.can_view_group(felines))
 
         felines.gaccess.shareable = True
         felines.gaccess.save()
@@ -3512,13 +3471,13 @@ class T13Delete(MockIRODSTestCaseMixin, TestCase):
         """Delete works for resources: privileges are deleted with resource"""
         verdi = self.verdi
         dog = self.dog
-        # self.assertTrue(dog.uaccess.can_delete_resource(verdi))
-        # hydroshare.delete_resource(verdi.short_id)
-        # self.assertFalse(dog.uaccess.can_delete_resource(verdi))
+        self.assertTrue(dog.uaccess.can_delete_resource(verdi))
+        hydroshare.delete_resource(verdi.short_id)
+        self.assertFalse(dog.uaccess.can_delete_resource(verdi))
 
     def test_02_delete_group(self):
         """Delete works for groups: privileges are deleted with group"""
-        return
+
         dog = self.dog
         singers = self.singers
         self.assertTrue(dog.uaccess.can_delete_group(singers))
@@ -3589,7 +3548,6 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
     def test_03_change_group_not_public(self):
         """Can make a group not public"""
         dog = self.dog
-        cat = self.cat
         meowers = self.meowers
         self.assertFalse(dog.uaccess.owns_group(meowers))
         self.assertFalse(dog.uaccess.can_change_group(meowers))
@@ -3610,10 +3568,15 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_change_group(meowers))
         self.assertFalse(dog.uaccess.can_view_group(meowers))
 
+        # django admin can still have access to the private group
+        self.assertFalse(self.admin.uaccess.owns_group(meowers))
+        self.assertTrue(self.admin.uaccess.can_change_group(meowers))
+        self.assertTrue(self.admin.uaccess.can_view_group(meowers))
+
+
     def test_03_change_group_not_discoverable(self):
         """Can make a group not discoverable"""
         dog = self.dog
-        cat = self.cat
         meowers = self.meowers
         self.assertFalse(dog.uaccess.owns_group(meowers))
         self.assertFalse(dog.uaccess.can_change_group(meowers))
@@ -3633,3 +3596,8 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_view_group(meowers))
         self.assertFalse(dog.uaccess.can_change_group(meowers))
         self.assertFalse(dog.uaccess.owns_group(meowers))
+
+        # django admin has access to not discoverable group
+        self.assertTrue(self.admin.uaccess.can_view_group(meowers))
+        self.assertTrue(self.admin.uaccess.can_change_group(meowers))
+        self.assertFalse(self.admin.uaccess.owns_group(meowers))

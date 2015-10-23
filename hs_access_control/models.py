@@ -476,6 +476,9 @@ class UserAccess(models.Model):
         if not self.active:
             return False
 
+        if self.user.is_superuser:
+            return True
+
         if UserGroupPrivilege.objects.filter(group=access_group,
                                              privilege__lte=PrivilegeCodes.CHANGE,
                                              user=self):
@@ -500,9 +503,14 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a group")
         access_group = this_group.gaccess
 
+
         # allow access to public resources even if user is not logged in.
         if not self.active:
             return False
+
+        if self.user.is_superuser:
+            return True
+
         if access_group.public:
             return True
 
@@ -623,6 +631,9 @@ class UserAccess(models.Model):
         if not self.active:
             return False
 
+        if self.user.is_superuser:
+            return True
+
         if not self.owns_group(this_group) and not access_group.shareable:
             return False
 
@@ -677,13 +688,13 @@ class UserAccess(models.Model):
         if not self.active:
             raise HSAccessException("User is not active")
 
-        if not self.owns_group(this_group) and not access_group.shareable:
+        if not self.owns_group(this_group) and not access_group.shareable and not self.user.is_superuser:
             raise HSAccessException("User is not group owner and group is not shareable")
 
         # must have a this_privilege greater than or equal to what we want to assign
-        if not UserGroupPrivilege.objects.filter(group=access_group,
-                                                 user=self,
-                                                 privilege__lte=this_privilege):
+        if not self.user.is_superuser and not UserGroupPrivilege.objects.filter(group=access_group,
+                                                                                user=self,
+                                                                                privilege__lte=this_privilege):
             raise HSAccessException("User has insufficient privilege over group")
 
         # user is authorized and privilege is appropriate
@@ -708,6 +719,10 @@ class UserAccess(models.Model):
                                user=access_user,
                                privilege=this_privilege,
                                grantor=self).save()
+
+            # if there exists any higher privileges granted by someone else then those need to be deleted
+            UserGroupPrivilege.objects.filter(group=access_group, user=access_user,
+                                              privilege__lt=this_privilege).all().delete()
 
     def __handle_unshare_group_with_user(self, this_group, this_user, command=CommandCodes.CHECK):
         if not isinstance(this_group, Group):
@@ -1313,7 +1328,7 @@ class UserAccess(models.Model):
         if not self.can_share_resource(this_resource, this_privilege):
             return False
 
-        if self not in this_group.members:
+        if self not in this_group.gaccess.get_members() and not self.user.is_superuser:
             return False
 
         return True
@@ -1486,13 +1501,9 @@ class UserAccess(models.Model):
                                   privilege=this_privilege,
                                   grantor=self).save()
 
-        # TODO: Check with Alva on this 'if statement' that I (Pabitra) added is in fact needed
-        # Reason: If the user is down grading his own access to a resource then any higher privileges that he/she
-        # might have been granted previously (by anyone) must be deleted
-        # With this change all Alva's unit tests still pass
-        if access_user == self:
-            UserResourcePrivilege.objects.filter(resource=access_resource, user=access_user,
-                                                 privilege__lt=this_privilege).all().delete()
+        # if there exists higher privilege granted by someone else then those needs to be deleted
+        UserResourcePrivilege.objects.filter(resource=access_resource, user=access_user,
+                                             privilege__lt=this_privilege).all().delete()
 
     def __handle_unshare_resource_with_user(self, this_resource, this_user, command=CommandCodes.CHECK):
 
@@ -1722,7 +1733,7 @@ class UserAccess(models.Model):
         if not self.can_share_resource(this_resource, this_privilege):
             raise HSAccessException("User has insufficient sharing privilege over resource")
 
-        if self not in access_group.members.all():
+        if self not in access_group.members.all() and not self.user.is_superuser:
             raise HSAccessException("User is not a member of the group")
 
         # user is authorized and privilege is appropriate
