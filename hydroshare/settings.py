@@ -425,3 +425,6 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     )
 }
+
+# customized value for password reset token and email verification link token to expire in 1 day
+PASSWORD_RESET_TIMEOUT_DAYS = 1
