@@ -2038,7 +2038,6 @@ ul.resource-search-options {
 }
 
 #resetZoomBtn:hover {
-    background-color :#EEE;
     cursor:pointer;
     color: #353535;
 }
