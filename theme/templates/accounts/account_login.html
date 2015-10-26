@@ -31,7 +31,6 @@
                 {% include "includes/checkbox_field.html" with field=form.password  field_classes="col-md-12" %}
             </div>
 
-            <!-- robline: putting this here to test oauth login -->
             <input type="hidden" name="next" value="{{ request.GET.next }}" />
 
             {% block account_form_actions %}
