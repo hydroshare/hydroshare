@@ -11,9 +11,66 @@
 </form>
 
 {% if query %}
+    <!-- Begin faceting. -->
+    <h2>By Author</h2>
+
+    <div>
+        <dl>
+            {% if facets.fields.author %}
+                <dt>Author</dt>
+                {# Provide only the top 5 authors #}
+                {% for author in facets.fields.author|slice:":5" %}
+                    {{ author }}
+                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=author_exact:{{ author.0|urlencode }}">{{ author.0 }}</a> ({{ author.1 }})</dd>
+                {% endfor %}
+            {% else %}
+                <p>No author facets.</p>
+            {% endif %}
+        </dl>
+    </div>
+
+    <h2>By Creators</h2>
+
+    <div>
+        <dl>
+            {% if facets.fields.creators %}
+                <dt>Creators</dt>
+                {# Provide only the top 5 authors #}
+                {% for creator in facets.fields.creators %}
+                    {{ creator }}
+                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=creators_exact:{{ creator.0|urlencode }}">{{ creator.0 }}</a> ({{ creator.1 }})</dd>
+                {% endfor %}
+            {% else %}
+                <p>No creators facets.</p>
+            {% endif %}
+        </dl>
+    </div>
+
+
+    <h2>By Subjects</h2>
+
+    <div>
+        <dl>
+            {% if facets.fields.subjects %}
+                <dt>Subjects</dt>
+                {# Provide only the top 5 authors #}
+                {% for subject in facets.fields.subjects%}
+                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=subjects_exact:{{ subjects.0|urlencode }}">{{ subject.0 }}</a> ({{ subject.1 }})</dd>
+                {% endfor %}
+            {% else %}
+                <p>No subjects facets.</p>
+            {% endif %}
+        </dl>
+    </div>
+
+    <!-- End faceting -->
+
+    <!-- Display results... -->
+    <h2>Resource Results</h2>
     {% for result in page.object_list %}
         <div class="search_result">
             <h3><a href="{{ result.object.get_absolute_url }}">{{ result.object.title }}</a></h3>
+
             <p>{{ result.object.body|truncatewords:80 }}</p>
         </div>
     {% empty %}

@@ -10,13 +10,20 @@ from mezzanine.conf import settings
 from theme import views as theme
 import autocomplete_light
 
-
+from haystack.forms import FacetedSearchForm
+from haystack.query import SearchQuerySet
+from haystack.views import FacetedSearchView
 autocomplete_light.autodiscover()
 admin.autodiscover()
 
 # Add the urlpatterns for any custom Django applications here.
 # You can also change the ``home`` view to add your own functionality
 # to the project's homepage.
+#faceted_sqs = SearchQuerySet().facet('contributors')
+faceted_sqs = SearchQuerySet()
+facet_list = ('author', 'creators', 'subjects')
+for item in facet_list:
+    faceted_sqs = faceted_sqs.facet(item)
 
 urlpatterns = i18n_patterns("",
 
@@ -36,7 +43,9 @@ urlpatterns = i18n_patterns("",
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url('^search/', include('haystack.urls')),
+    url(r'^search/$', FacetedSearchView(form_class=FacetedSearchForm,searchqueryset=faceted_sqs),
+        name='haystack_search'),
+    #url('^search/', include('haystack.urls')),
 )
 
 # Filebrowser admin media library.
@@ -45,7 +54,6 @@ if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
         ("^admin/media-library/", include("%s.urls" %
                                         settings.PACKAGE_NAME_FILEBROWSER)),
     )
-
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += patterns('',
     url('^hsapi/', include('hs_core.urls')),
@@ -57,6 +65,7 @@ urlpatterns += patterns('',
     url('^hs_metrics/', include('hs_metrics.urls')),
     url('^hsapi/', include('hs_model_program.urls')),
 )
+
 
 if settings.DEBUG is False:   #if DEBUG is True it will be served automatically
   urlpatterns += patterns('',

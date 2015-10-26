@@ -10,6 +10,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     title = indexes.CharField(model_attr='title')
     abstract = indexes.CharField(model_attr='description')
     creators = indexes.MultiValueField()
+    contributors = indexes.MultiValueField()
     subjects = indexes.MultiValueField(faceted=True)
     public = indexes.BooleanField(model_attr='raccess__public', faceted=True)
     discoverable = indexes.BooleanField(faceted=True)
@@ -19,7 +20,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     author_email = indexes.CharField()
     #publisher = indexes.CharField(faceted=True)
     rating = indexes.IntegerField(model_attr='rating_sum')
-    type = indexes.CharField()
+    coverages = indexes.MultiValueField()
+    formats = indexes.MultiValueField()
+    identifiers = indexes.MultiValueField()
+    language = indexes.CharField()
+    sources = indexes.MultiValueField()
+    relations = indexes.MultiValueField()
+    #type = indexes.CharField()
 
     def get_model(self):
         return BaseResource
@@ -29,6 +36,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_creators(self, obj):
         return obj.metadata.creators.values_list('name', flat=True)
+
+    def prepare_contributors(self, obj):
+        return obj.metadata.contributors.values_list('name', flat=True)
 
     def prepare_subjects(self, obj):
         return obj.metadata.subjects.values_list('value', flat=True)
@@ -45,5 +55,23 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return False
 
-    def prepare_type(self, obj):
-        return obj.metadata.type
+    def prepare_coverages(self, obj):
+        return obj.metadata.coverages.values_list('_value', flat=True)
+
+    def prepare_formates(self, obj):
+        return obj.metadata.formats.values_list('value', flat=True)
+
+    def prepare_identifiers(self, obj):
+        return obj.metadata.identifiers.values_list('name', flat=True)
+
+    def prepare_language(self, obj):
+        return obj.metadata.language.code
+
+    def prepare_sources(self, obj):
+        return obj.metadata.sources.values_list('derived_from', flat=True)
+
+
+    def prepare_relations(self, obj):
+        return obj.metadata.relations.values_list('value', flat=True)
+    #def prepare_type(self, obj):
+    #    return obj.metadata.typ
