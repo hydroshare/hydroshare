@@ -429,12 +429,8 @@
                 <p>You are the owner of this resource.</p>
             {% elif is_edit_user %}
                 <p>You have been given specific permission to edit this resource.</p>
-{#            {% elif in_edit_group %}#}
-{#                Your research group(s) have been given specific permission to edit this resource.</p>#}
             {% elif is_view_user %}
                 <p>You have been given specific permission to view this resource.</p>
-{#            {% elif in_view_group %}#}
-{#                <p>Your research group(s) have been given specific permission to view this resource.</p>#}
             {% endif %}
 
             {% if page.perms.change and metadata_form %}
