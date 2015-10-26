@@ -21,7 +21,7 @@ admin.autodiscover()
 # to the project's homepage.
 #faceted_sqs = SearchQuerySet().facet('contributors')
 faceted_sqs = SearchQuerySet()
-facet_list = ('author', 'creators', 'subjects')
+facet_list = ('author', 'creators', 'subjects', 'public', 'discoverable', 'language')
 for item in facet_list:
     faceted_sqs = faceted_sqs.facet(item)
 

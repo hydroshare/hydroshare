@@ -155,6 +155,8 @@
 
     <field name="identifiers" type="text_en" indexed="true" stored="true" multiValued="true" />
 
+    <field name="language_exact" type="string" indexed="true" stored="true" multiValued="false" />
+
     <field name="contributors" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="discoverable_exact" type="boolean" indexed="true" stored="true" multiValued="false" />
@@ -162,8 +164,6 @@
     <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="abstract" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="organization_exact" type="string" indexed="true" stored="true" multiValued="false" />
 
     <field name="sources" type="text_en" indexed="true" stored="true" multiValued="true" />
 
@@ -197,7 +197,7 @@
 
     <field name="formats" type="text_en" indexed="true" stored="true" multiValued="true" />
 
-    <field name="organization" type="text_en" indexed="true" stored="true" multiValued="false" />
+    <field name="creators_exact" type="string" indexed="true" stored="true" multiValued="true" />
 
     <field name="public_exact" type="boolean" indexed="true" stored="true" multiValued="false" />
 

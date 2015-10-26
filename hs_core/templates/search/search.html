@@ -12,7 +12,21 @@
 
 {% if query %}
     <!-- Begin faceting. -->
-    <h2>By Author</h2>
+
+        <!-- Display results... -->
+    <h2>Resource Results</h2>
+    {% for result in page.object_list %}
+        <div class="search_result">
+            <h3><a href="{{ result.object.get_absolute_url }}">{{ result.object.title }}</a></h3>
+
+            <p>{{ result.object.body|truncatewords:80 }}</p>
+        </div>
+    {% empty %}
+        <p>Sorry, no results found.</p>
+    {% endfor %}
+
+    <h2>Faceted Search</h2>
+    <h4>By Author</h4>
 
     <div>
         <dl>
@@ -20,7 +34,6 @@
                 <dt>Author</dt>
                 {# Provide only the top 5 authors #}
                 {% for author in facets.fields.author|slice:":5" %}
-                    {{ author }}
                     <dd><a href="{{ request.get_full_path }}&amp;selected_facets=author_exact:{{ author.0|urlencode }}">{{ author.0 }}</a> ({{ author.1 }})</dd>
                 {% endfor %}
             {% else %}
@@ -37,7 +50,6 @@
                 <dt>Creators</dt>
                 {# Provide only the top 5 authors #}
                 {% for creator in facets.fields.creators %}
-                    {{ creator }}
                     <dd><a href="{{ request.get_full_path }}&amp;selected_facets=creators_exact:{{ creator.0|urlencode }}">{{ creator.0 }}</a> ({{ creator.1 }})</dd>
                 {% endfor %}
             {% else %}
@@ -47,7 +59,7 @@
     </div>
 
 
-    <h2>By Subjects</h2>
+    <h4>By Subjects</h4>
 
     <div>
         <dl>
@@ -63,17 +75,52 @@
         </dl>
     </div>
 
+    <h4>By Public</h4>
+
+    <div>
+        <dl>
+            {% if facets.fields.public %}
+                <dt>Public</dt>
+                {# Provide only the top 5 authors #}
+                {% for public in facets.fields.public%}
+                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=public_exact:{{ public.0|urlencode }}">{{ public.0 }}</a> ({{ public.1 }})</dd>
+                {% endfor %}
+            {% else %}
+                <p>No public facets.</p>
+            {% endif %}
+        </dl>
+    </div>
+
+    <h4>By Discoverable</h4>
+    <div>
+        <dl>
+            {% if facets.fields.discoverable %}
+                <dt>Discoverable</dt>
+                {# Provide only the top 5 authors #}
+                {% for discoverable in facets.fields.discoverable%}
+                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=discoverable_exact:{{ discoverable.0|urlencode }}">{{ discoverable.0 }}</a> ({{ discoverable.1 }})</dd>
+                {% endfor %}
+            {% else %}
+                <p>No discoverable facets.</p>
+            {% endif %}
+        </dl>
+    </div>
+
+    <h4>By Languages</h4>
+    <div>
+        <dl>
+            {% if facets.fields.language %}
+                <dt>Language</dt>
+                {# Provide only the top 5 authors #}
+                {% for language in facets.fields.language%}
+                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=language_exact:{{ language.0|urlencode }}">{{ language.0 }}</a> ({{ language.1 }})</dd>
+                {% endfor %}
+            {% else %}
+                <p>No languages facets.</p>
+            {% endif %}
+        </dl>
+    </div>
     <!-- End faceting -->
 
-    <!-- Display results... -->
-    <h2>Resource Results</h2>
-    {% for result in page.object_list %}
-        <div class="search_result">
-            <h3><a href="{{ result.object.get_absolute_url }}">{{ result.object.title }}</a></h3>
 
-            <p>{{ result.object.body|truncatewords:80 }}</p>
-        </div>
-    {% empty %}
-        <p>Sorry, no results found.</p>
-    {% endfor %}
 {% endif %}
