@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.db.models import Q
 
 from mezzanine.generic.views import initial_validation
 from mezzanine.utils.views import render, set_cookie, is_spam
@@ -30,11 +31,23 @@ class UserProfileView(TemplateView):
             except:
                 u = User.objects.get(username=self.request.GET['user'])
 
-        res = BaseResource.objects.filter(user=u)
+        # get all resources the profile user owns
+        resources = u.uaccess.get_owned_resources()
+
+        # if requesting user is not the profile user, then show only resources that the requesting user has access
+        if self.request.user != u:
+            if self.request.user.is_authenticated():
+                # filter out any resources the requesting user doesn't have access
+                resources = resources.filter(Q(pk__in=self.request.user.uaccess.get_held_resources()) |
+                                             Q(raccess__public=True) | Q(raccess__discoverable=True))
+
+            else:
+                # for anonymous requesting user show only resources that are either public or discoverable
+                resources = resources.filter(Q(raccess__public=True) | Q(raccess__discoverable=True))
 
         return {
             'u': u,
-            'resources': res,
+            'resources': resources,
         }
 
 # added by Hong Yi to address issue #186 to customize Mezzanine-based commenting form and view
