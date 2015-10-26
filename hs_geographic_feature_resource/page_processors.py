@@ -65,8 +65,6 @@ def landing_page(request, page):
         if geom_info:
             geom_info_for_view['geometryType'] = geom_info.geometryType
             geom_info_for_view['featureCount'] = geom_info.featureCount
-        else:
-            geom_info_for_view = None
 
         geom_information_form = GeometryInformationForm(initial=geom_info_for_view,
                                                         res_short_id=content_model.short_id,

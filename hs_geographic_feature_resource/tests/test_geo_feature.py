@@ -1,18 +1,28 @@
 __author__ = 'drew'
 
+import os
 from unittest import TestCase
+
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import Group, User
+from django.core.files.uploadedfile import UploadedFile
+from django.http import HttpRequest, QueryDict
+
 from hs_core.hydroshare import utils, users, resource
 from hs_core.models import GenericResource, Creator, Contributor, CoreMetaData, \
     Coverage, Rights, Title, Language, Publisher, Identifier, \
-    Type, Subject, Description, Date, Format, Relation, Source
-
-from hs_geographic_feature_resource.models import *
-from hs_geographic_feature_resource.receivers import *
-from django.contrib.auth.models import Group, User
+    Type, Subject, Description, Date, Format, Relation, Source, ResourceFile
 from hs_core import hydroshare
-from django.core.files.uploadedfile import UploadedFile
-from django.http import HttpRequest, QueryDict
+
+from hs_geographic_feature_resource.models import GeographicFeatureResource, OriginalCoverage, \
+                                                GeometryInformation, FieldInformation, OriginalFileInfo
+from hs_geographic_feature_resource.receivers import geofeature_post_add_files_to_resource_handler,\
+                                            metadata_element_pre_create_handler,\
+                                            metadata_element_pre_update_handler,\
+                                            UNKNOWN_STR
+
+
+
 
 class TestGeoFeature(TestCase):
     def setUp(self):
@@ -466,14 +476,14 @@ class TestGeoFeature(TestCase):
 
             if del_f_ext == ".prj":
                 hydroshare.delete_resource_file(self.resGeoFeature.short_id, res_f_obj.id, self.user)
-                self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 4)
-                for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
+                self.assertEqual(ResourceFile.objects.filter(object_id=self. resGeoFeature.id).count(), 4)
+                for res_f_obj in ResourceFile.objects.filter(object_id=self. resGeoFeature.id):
                     del_f_fullname = res_f_obj.resource_file.name.lower()
                     del_f_fullname = del_f_fullname[del_f_fullname.rfind('/')+1:]
                     del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
                     self.assertNotEqual(del_f_ext, ".prj")
                     originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage.all().first()
-                    self.assertEqual(originalcoverage_obj.projection_string,UNKNOWN_STR)
+                    self.assertEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
                     self.assertEqual(self.resGeoFeature.metadata.coverages.all().count(), 0)
         # add .prj
         add_files = []
