@@ -1008,6 +1008,8 @@
 
                                     <div class="col-sm-8">
                                         <div id="coverageMap" data-shape-type="{{ spatial_coverage.type }}"></div>
+                                        <i id="resetZoomBtn" class="glyphicon glyphicon-record" data-toggle="tooltip"
+                                           data-placement="left" title="Recenter on selected area/point"></i>
                                     </div>
 
                                     <div class="col-sm-4">
@@ -1126,6 +1128,8 @@
                                                     <fieldset>
                                                         <div class="col-sm-8">
                                                             <div id="coverageMap"></div>
+                                                            <i id="resetZoomBtn" class="glyphicon glyphicon-record" data-toggle="tooltip"
+                                                                data-placement="left" title="Recenter on selected area/point"></i>
                                                         </div>
 
                                                         <div class="col-sm-4">
@@ -2290,9 +2294,7 @@
             {
                 /* The div contains now the updated form */
                 //$('#' + form_id).html(result);
-                console.log(result);
                 json_response = JSON.parse(result);
-                console.log(json_response);
                 if (json_response.status === 'success')
                 {
                     $form.find("button").hide();
@@ -2306,7 +2308,6 @@
                         if(json_response.element_name === 'title'){
                             $res_title = $(".section-header").find("span").first();
                             field_name_value = $res_title.text();
-                            console.log(field_name_value);
                             updated_title = $form.find("#id_value").val();
                             $res_title.text(updated_title);
                         }
@@ -2319,7 +2320,6 @@
                                 $("#btn-public").prop("disabled", false);
                                 $("#btn-discoverable").prop("disabled", false);
                             }
-
                         }
                     }
                     $('body > .container').append($alert_success);
@@ -2405,6 +2405,7 @@
 
             google.maps.event.addListener(drawingManager, 'markercomplete', function (marker) {
                 var coordinates = (marker.getPosition());
+                // Set onClick event for recenter button
                 processDrawing(coordinates, "marker");
             });
 
@@ -2458,6 +2459,12 @@
 
         // Center map at new market
         coverageMap.setCenter(marker.getPosition());
+
+        // Set onClick event for recenter button
+        $("#resetZoomBtn").click(function(){
+            coverageMap.setCenter(marker.getPosition());
+        });
+
 
         allShapes.push(marker);
     }
@@ -2536,10 +2543,11 @@
             processDrawing(coordinates, "rectangle");
         });
 
-        // Center map at new rectangle
-        var latCenter = (bounds.north + bounds.south) / 2;
-        var lngCenter = (bounds.west + bounds.east) / 2;
-        coverageMap.setCenter(new google.maps.LatLng(latCenter,lngCenter));
+        zoomCoverageMap(bounds);
+
+        $("#resetZoomBtn").click(function(){
+            zoomCoverageMap(bounds);
+        });
 
         allShapes.push(rectangle);
     }
@@ -2560,7 +2568,6 @@
         // Show save changes button
         $("#coverage-spatial").find(".btn-primary").show();
 
-
         if (shape == "rectangle"){
             document.getElementById("id_type_1").checked = true;
             $("#div_id_north").hide();
@@ -2574,17 +2581,28 @@
             $("#div_id_uplimit").show();
             $("#div_id_downlimit").show();
 
+            var bounds = {
+                north: parseFloat(coordinates.getNorthEast().lat()),
+                south: parseFloat(coordinates.getSouthWest().lat()),
+                east: parseFloat(coordinates.getNorthEast().lng()),
+                west: parseFloat(coordinates.getSouthWest().lng())
+            };
+
             // Update fields
-            $("#id_northlimit").val(coordinates.getNorthEast().lat());
-            $("#id_eastlimit").val(coordinates.getNorthEast().lng());
-            $("#id_southlimit").val(coordinates.getSouthWest().lat());
-            $("#id_westlimit").val(coordinates.getSouthWest().lng());
+            $("#id_northlimit").val(bounds.north);
+            $("#id_eastlimit").val(bounds.east);
+            $("#id_southlimit").val(bounds.south);
+            $("#id_westlimit").val(bounds.west);
 
             // Remove red borders
             $("#id_northlimit").removeClass("invalid-input");
             $("#id_eastlimit").removeClass("invalid-input");
             $("#id_southlimit").removeClass("invalid-input");
             $("#id_westlimit").removeClass("invalid-input");
+
+            $("#resetZoomBtn").click(function(){
+                zoomCoverageMap(bounds);
+            });
         }
         else {
             document.getElementById("id_type_2").checked = true;
@@ -2605,6 +2623,10 @@
             // Remove red borders
             $("#id_east").removeClass("invalid-input");
             $("#id_north").removeClass("invalid-input");
+
+            $("#resetZoomBtn").click(function () {
+                coverageMap.setCenter(coordinates);
+            });
         }
     }
 
@@ -2621,6 +2643,32 @@
         }
 
         allShapes = [];
+    }
+
+    function zoomCoverageMap(bounds) {
+        // Zoom in on the shape
+        var GLOBE_WIDTH = 256; // a constant in Google's map projection
+        var c_west = bounds.west * 8;    // Zooms out on the shape a little so that we can see it
+        var c_east = bounds.east * 8;
+        var angle = c_east - c_west;
+        var pixelWidth = parseInt($("#coverageMap").width());
+        if (angle < 0) {
+            angle += 360;
+        }
+        var zoom = Math.round(Math.log(pixelWidth * 360 / angle / GLOBE_WIDTH) / Math.LN2);
+        if (!isNaN(zoom)){
+            coverageMap.setZoom(Math.max(3, zoom)); // Allow minumum zoom level of 3
+        }
+        else{
+            return;
+        }
+
+        // Center map at new rectangle
+        var latCenter = (bounds.north + bounds.south) / 2;
+        var lngCenter = (bounds.west + bounds.east) / 2;
+        coverageMap.setCenter(new google.maps.LatLng(latCenter, lngCenter));
+
+
     }
 
     function customAlert(msg, duration) {
@@ -2643,6 +2691,7 @@
     $(document).ready(function () {
         $("#coverageTabBtn").click(function(){
             setTimeout( function(){
+                // Call resize to re-render the map since it wasn't visible during load.
                 google.maps.event.trigger(coverageMap, "resize");
 
                 // This field is populated if the page is in view mode
@@ -2671,6 +2720,9 @@
 
                         // Center map at new market
                         coverageMap.setCenter(marker.getPosition());
+                        $("#resetZoomBtn").click(function () {
+                            coverageMap.setCenter(marker.getPosition());
+                        });
                     }
                     else if (shapeType == "box") {
                         var bounds = {
@@ -2694,10 +2746,10 @@
                         rectangle.setMap(coverageMap);
                         allShapes.push(rectangle);
 
-                        // Center map at new rectangle
-                        var latCenter = (bounds.north + bounds.south) / 2;
-                        var lngCenter = (bounds.west + bounds.east) / 2;
-                        coverageMap.setCenter(new google.maps.LatLng(latCenter, lngCenter));
+                        zoomCoverageMap(bounds);
+                        $("#resetZoomBtn").click(function () {
+                            zoomCoverageMap(bounds);
+                        });
                     }
                 }
                 else {
@@ -2775,9 +2827,8 @@
         var file_count = $("#file-count").attr('value');
         //set allowed file types
         var file_types = $("#supported-file-types").attr('value');
-{#        console.log(file_types)#}
         if(file_types!= ".*"){
-            var display_file_types = file_types.substring(0, file_types.length-2) + ').'
+            var display_file_types = file_types.substring(0, file_types.length-2) + ').';
             $("#file-types").text("Only the listed file types can be uploaded: " + display_file_types);
             $("#file-types-irods").text("Only the listed file types can be uploaded: " + display_file_types);
         }
@@ -2932,7 +2983,6 @@
          if (value_exists == false) {
             // set the selected license type to 'other'
             $("#select_license").val('other');
-{#            console.log($("#select_license").attr('readonly'));#}
             if ($("#select_license").attr('readonly') == undefined) {
                 $("#select_license").closest("form").find("#id_statement").first().attr('readonly', false);
                 $("#select_license").closest("form").find("#id_url").first().attr('readonly', false);
@@ -2966,11 +3016,10 @@
                 $(this).closest("form").find("button").show();
             });
         });
-
-
     });
     </script>
 
     {% endblock %}
+
     <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=drawing&callback=initMap"></script>
 {% endblock %}
