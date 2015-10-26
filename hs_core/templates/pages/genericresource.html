@@ -1368,8 +1368,7 @@
                                                         <div class="controls">
                                                             <input class="form-control input-sm textinput textInput"
                                                                    id="id_name" maxlength="200" name="name" type="text"
-                                                                   value="
-                                                                           {% if coverage_spatial_form.initial.name %}{{ coverage_spatial_form.initial.name }}{% endif %}">
+                                                                   value="{% if coverage_spatial_form.initial.name %}{{ coverage_spatial_form.initial.name }}{% endif %}">
                                                         </div>
                                                     </div>
                                                     <div id="div_id_projection" class="control-group">
@@ -1381,8 +1380,7 @@
                                                                    id="id_projection" maxlength="100" name="projection"
                                                                    readonly="True" style="background-color:white;"
                                                                    type="text" value="WGS 84 EPSG:4326"
-                                                                   value="
-                                                                           {% if coverage_spatial_form.initial.projection %}{{ coverage_spatial_form.initial.projection }}{% endif %}">
+                                                                   value="{% if coverage_spatial_form.initial.projection %}{{ coverage_spatial_form.initial.projection }}{% endif %}">
                                                         </div>
                                                     </div>
                                                     <div id="div_id_east" class="control-group">
@@ -1393,8 +1391,7 @@
                                                         <div class="controls">
                                                             <input class="form-control input-sm textinput textInput"
                                                                    id="id_east" name="east" type="text"
-                                                                   value="
-                                                                           {% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east }}{% endif %}">
+                                                                   value="{% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east }}{% endif %}">
                                                         </div>
                                                     </div>
                                                     <div id="div_id_north" class="control-group">
@@ -1405,8 +1402,7 @@
                                                         <div class="controls"><input
                                                                 class="form-control input-sm textinput textInput"
                                                                 id="id_north" name="north" type="text"
-                                                                value="
-                                                                        {% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north }}{% endif %}">
+                                                                value="{% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north }}{% endif %}">
                                                         </div>
                                                     </div>
                                                     <div id="div_id_northlimit" class="control-group"><label
@@ -1417,8 +1413,7 @@
                                                         <div class="controls"><input
                                                                 class="form-control input-sm textinput textInput"
                                                                 id="id_northlimit" name="northlimit" type="text"
-                                                                value="
-                                                                        {% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit }}{% endif %}"
+                                                                value="{% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit }}{% endif %}"
                                                                 >
                                                         </div>
                                                     </div>
@@ -1430,8 +1425,7 @@
                                                         <div class="controls"><input
                                                                 class="form-control input-sm textinput textInput"
                                                                 id="id_eastlimit" name="eastlimit" type="text"
-                                                                value="
-                                                                        {% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit }}{% endif %}">
+                                                                value="{% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit }}{% endif %}">
                                                         </div>
                                                     </div>
                                                     <div id="div_id_southlimit" class="control-group"><label
@@ -1442,8 +1436,7 @@
                                                         <div class="controls"><input
                                                                 class="form-control input-sm textinput textInput"
                                                                 id="id_southlimit" name="southlimit" type="text"
-                                                                value="
-                                                                        {% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit }}{% endif %}">
+                                                                value="{% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit }}{% endif %}">
                                                         </div>
                                                     </div>
                                                     <div id="div_id_westlimit" class="control-group"><label
@@ -1454,8 +1447,7 @@
                                                         <div class="controls"><input
                                                                 class="form-control input-sm textinput textInput"
                                                                 id="id_westlimit" name="westlimit" type="text"
-                                                                value="
-                                                                        {% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit }}{% endif %}">
+                                                                value="{% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit }}{% endif %}">
                                                         </div>
                                                     </div>
                                                     <div id="div_id_units" class="control-group">
