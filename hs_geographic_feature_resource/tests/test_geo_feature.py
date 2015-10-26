@@ -154,10 +154,6 @@ class TestGeoFeature(TestCase):
         # no originalfileinfo obj
         self.assertEqual(OriginalFileInfo.objects.all().count(), 0)
 
-        # create originalfileinfo obj without a required para: southlimit
-        with self.assertRaises(Exception):
-            resource.create_metadata_element(self.resGeoFeature.short_id, 'OriginalFileInfo', fileType='SHP')
-
         # no originalfileinfo obj
         self.assertEqual(OriginalFileInfo.objects.all().count(), 0)
 
@@ -231,10 +227,6 @@ class TestGeoFeature(TestCase):
         # no GeometryInformation obj
         self.assertEqual(GeometryInformation.objects.all().count(), 0)
 
-        # create GeometryInformation obj without a required para: geometryType
-        with self.assertRaises(Exception):
-            resource.create_metadata_element(self.resGeoFeature.short_id, 'GeometryInformation', featureCount='1')
-
         # no GeometryInformation obj
         self.assertEqual(GeometryInformation.objects.all().count(), 0)
 
@@ -263,10 +255,6 @@ class TestGeoFeature(TestCase):
         # FieldInformation
         # no FieldInformation obj
         self.assertEqual(FieldInformation.objects.all().count(), 0)
-
-        # create FieldInformation obj without a required para: geometryType
-        with self.assertRaises(Exception):
-            resource.create_metadata_element(self.resGeoFeature.short_id, 'FieldInformation', fieldName='fieldName0')
 
         # no FieldInformation obj
         self.assertEqual(FieldInformation.objects.all().count(), 0)

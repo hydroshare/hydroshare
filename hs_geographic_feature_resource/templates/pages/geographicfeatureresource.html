@@ -17,41 +17,40 @@
                         {% if geometry_information.geometryType %}
                             <div class="row">
                                 <div class="col-sm-4"><strong>Geometry Type:</strong></div>
-                                <div class="col-sm-8">{{ geometry_information.geometryType}}</div>
+                                <div class="col-sm-8">{{ geometry_information.geometryType }}</div>
                             </div>
                         {% endif %}
 
                         {% if geometry_information.featureCount %}
                             <div class="row">
                                 <div class="col-sm-4"><strong>Feature Count:</strong></div>
-                                <div class="col-sm-8">{{ geometry_information.featureCount}}</div>
+                                <div class="col-sm-8">{{ geometry_information.featureCount }}</div>
                             </div>
                         {% endif %}
                     {% else %}
-                        <p>Geometry information is not provided. </p>
+                        <p>Geometry information is not provided.</p>
                     {% endif %}
 
                      {# Add the original coverage meta #}
                     <h4 ><strong>Spatial Reference:</strong></h4>
                     {% if original_coverage %}
                         <hr style="margin-top: 0px;margin-bottom: 2px">
-
                         {% if original_coverage.projection_string %}
                             <div class="row">
                                 <div class="col-sm-4"><strong>Coordinate Reference System:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.projection_name}}</div>
+                                <div class="col-sm-8">{{ original_coverage.projection_name }}</div>
                             </div>
                             <div class="row">
                                 <div class="col-sm-4"><strong>Datum:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.datum}}</div>
+                                <div class="col-sm-8">{{ original_coverage.datum }}</div>
                             </div>
                             <div class="row">
                                 <div class="col-sm-4"><strong>Unit:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.unit}}</div>
+                                <div class="col-sm-8">{{ original_coverage.unit }}</div>
                             </div>
                             <div class="row">
                                 <div class="col-sm-4"><strong>Coordinate String:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.projection_string}}</div>
+                                <div class="col-sm-8">{{ original_coverage.projection_string }}</div>
                             </div>
                         {% endif %}
                         <div class="row">
@@ -82,7 +81,7 @@
                         {% if original_coverage.westlimit %}
                             <div class="row">
                                 <div class="col-sm-4" style="text-indent:40px"><strong>West:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.westlimit}}</div>
+                                <div class="col-sm-8">{{ original_coverage.westlimit }}</div>
                             </div>
                         {% endif %}
                         </hr>
@@ -99,20 +98,20 @@
                                  <tr class="row">
                                      <th >Name</th><th>Type</th> <th>Width</th> <th>Precision</th>
                                  </tr>
-                                {%for field_item in field_information %}
+                                {% for field_item in field_information %}
                                     <tr class="row">
-                                        <td>{{field_item.fieldName}}</td>
-                                        <td>{{field_item.fieldType}}</td>
-                                        <td>{{field_item.fieldWidth}}</td>
-                                        <td>{{field_item.fieldPrecision}}</td>
+                                        <td>{{ field_item.fieldName }}</td>
+                                        <td>{{ field_item.fieldType }}</td>
+                                        <td>{{ field_item.fieldWidth }}</td>
+                                        <td>{{ field_item.fieldPrecision }}</td>
                                     </tr>
                                 {% endfor %}
                             </table>
                     {% else %}
-                        <p> Metadata information is not provided. </p>
+                        <p> Metadata information is not provided.</p>
                     {% endif %} {# variable section end #}
 
-                {%  endif %}{# extended meta section end #}
+                {% endif %}{# extended meta section end #}
 
                 {# Add the view mode html code for resource extended meta tababove #}
                 </div>
@@ -134,26 +133,26 @@
             "Missing of any of them will corrupt data integrity. So this operation is about to permanently " +
             "<font color='red'>DELETE ALL EXISTING FILES</font> of this resource! You may upload new shapefiles later."
 
-    del_msg_prj = "This operation is about to remove coordinate system metadata!"
+    del_msg_prj = "This operation is about to <font color='red'>REMOVE COORDINATE SYSTEM METADATA!</font>"
 
     $(document).ready(function(){
 
          $('.label-file-name').each( //iterate
                  function()
                  {
-                     filename = $(this).text()
-                     extension = filename.substring(filename.length-4, filename.length)
+                     var filename = $(this).text()
+                     var extension = filename.substring(filename.length-4, filename.length)
                      if (extension == ".shp" || extension == ".shx" || extension == ".dbf")
                      {
-                         tag_id=$(this).parent().parent().next().children().find("span[title='Delete']").attr('data-target')
-                         tag_id2= tag_id.substring(1, tag_id.length)
-                         $("div[id='"+tag_id2+"']").children().find("div[class='modal-body']").html(del_msg_shp_shx_dbf)
+                         var tag_id = $(this).parent().parent().next().children().find("span[title='Delete']").attr('data-target')
+                         var tag_id2 = tag_id.substring(1, tag_id.length)
+                         $("#" + tag_id2).children().find("div[class='modal-body']").html(del_msg_shp_shx_dbf)
                      }//if
                      else if (extension == ".prj")
-                     {
-                         tag_id=$(this).parent().parent().next().children().find("span[title='Delete']").attr('data-target')
-                         tag_id2= tag_id.substring(1, tag_id.length)
-                         $("div[id='"+tag_id2+"']").children().find("div[class='modal-body']").html(del_msg_prj)
+                     {l
+                         var tag_id = $(this).parent().parent().next().children().find("span[title='Delete']").attr('data-target')
+                         var tag_id2 = tag_id.substring(1, tag_id.length)
+                         $("#" + tag_id2).children().find("div[class='modal-body']").html(del_msg_prj)
                      }
                  }//function
          )//each

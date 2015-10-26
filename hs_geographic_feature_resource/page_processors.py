@@ -45,7 +45,6 @@ def landing_page(request, page):
             ori_cov_dict['projection_name'] = ori_cov_obj.projection_name
             ori_cov_dict['datum'] = ori_cov_obj.datum
             ori_cov_dict['unit'] = ori_cov_obj.unit
-
             context['original_coverage'] = ori_cov_dict
 
         field_info_list = content_model.metadata.fieldinformation.all()
@@ -91,8 +90,6 @@ def landing_page(request, page):
             ori_coverage_data_dict['eastlimit'] = ori_cov_obj.eastlimit
             ori_coverage_data_dict['southlimit'] = ori_cov_obj.southlimit
             ori_coverage_data_dict['westlimit'] = ori_cov_obj.westlimit
-        else:
-            ori_coverage_data_dict = None
 
         ori_coverage_form = OriginalCoverageForm(initial=ori_coverage_data_dict,
                                                 res_short_id=content_model.short_id,

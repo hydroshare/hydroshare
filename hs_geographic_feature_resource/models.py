@@ -30,46 +30,6 @@ class OriginalFileInfo(AbstractMetaDataElement):
         # OriginalFileInfo element is not repeatable
         unique_together = ("content_type", "object_id")
 
-    @classmethod
-    def create(cls, **kwargs):
-
-        for limit in ['fileType', 'baseFilename', 'fileCount']:
-            if not limit in kwargs:
-                raise ValidationError("For OriginalFileInfo meta, one or more attribute is missing.")
-
-        metadata_obj = kwargs['content_object']
-        ori_file_info = OriginalFileInfo.objects.create(fileType=kwargs['fileType'],
-                                                        baseFilename=kwargs['baseFilename'],
-                                                        fileCount=kwargs['fileCount'],
-                                                        content_object=metadata_obj)
-        # save filenameString info
-        for key, value in kwargs.iteritems():
-            if key in ('filenameString'):
-                setattr(ori_file_info, key, value)
-                ori_file_info.save()
-
-        return ori_file_info
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        ori_file_info = OriginalFileInfo.objects.get(id=element_id)
-        if ori_file_info:
-            # save filenameString info
-            for key, value in kwargs.iteritems():
-                if key in ('fileType', 'baseFilename', 'fileCount', 'filenameString'):
-                    setattr(ori_file_info, key, value)
-                    ori_file_info.save()
-        else:
-            raise ObjectDoesNotExist("No OriginalFileInfo was found for the provided id: %d" % element_id)
-
-    @classmethod
-    def remove(cls, element_id):
-        ori_file_info = OriginalFileInfo.objects.get(id=element_id)
-        if ori_file_info:
-            ori_file_info.delete()
-        else:
-            raise ObjectDoesNotExist("No OriginalFileInfo element exists for id: %d."%element_id)
-
 # Define original spatial coverage metadata info
 class OriginalCoverage(AbstractMetaDataElement):
 
@@ -88,55 +48,6 @@ class OriginalCoverage(AbstractMetaDataElement):
         # OriginalCoverage element is not repeatable
         unique_together = ("content_type", "object_id")
 
-    @classmethod
-    def create(cls, **kwargs):
-
-        for limit in ['northlimit', 'southlimit', 'westlimit', 'eastlimit']:
-            if not limit in kwargs:
-                raise ValidationError("For original coverage meta, one or more bounding box limits is missing.")
-
-        metadata_obj = kwargs['content_object']
-        ori_cov = OriginalCoverage.objects.create(northlimit=kwargs['northlimit'],
-                                                  southlimit=kwargs['southlimit'],
-                                                  westlimit=kwargs['westlimit'],
-                                                  eastlimit=kwargs['eastlimit'],
-                                                  content_object=metadata_obj,)
-
-        # update projection string info
-        for key, value in kwargs.iteritems():
-            if key in ('projection_string','projection_name','datum','unit'):
-                setattr(ori_cov, key, value)
-                ori_cov.save()
-
-        return ori_cov
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        ori_cov = OriginalCoverage.objects.get(id=element_id)
-        if ori_cov:
-            # update projection string info
-            for key, value in kwargs.iteritems():
-                if key in ('projection_string',
-                           'projection_name',
-                           'datum',
-                           'unit',
-                           'northlimit',
-                           'southlimit',
-                           'eastlimit',
-                           'westlimit'):
-                    setattr(ori_cov, key, value)
-                    ori_cov.save()
-        else:
-            raise ObjectDoesNotExist("No coverage element was found for the provided id: %d" % element_id)
-
-    @classmethod
-    def remove(cls, element_id):
-        ori_cov = OriginalCoverage.objects.get(id=element_id)
-        if ori_cov:
-            ori_cov.delete()
-        else:
-            raise ObjectDoesNotExist("No original coverage element exists for id: %d."%element_id)
-
 class FieldInformation(AbstractMetaDataElement):
     term = 'FieldInformation'
 
@@ -145,48 +56,6 @@ class FieldInformation(AbstractMetaDataElement):
     fieldTypeCode = models.CharField(max_length=50, null=True, blank=True)
     fieldWidth = models.IntegerField(null=True, blank=True)
     fieldPrecision = models.IntegerField(null=True, blank=True)
-
-    def __unicode__(self):
-        self.fieldName
-
-    @classmethod
-    def create(cls, **kwargs):
-        if 'fieldName' in kwargs:
-            if not 'fieldType' in kwargs:
-                raise ValidationError("fieldType of FieldInformation is missing.")
-
-            metadata_obj = kwargs['content_object']
-            field_info = FieldInformation.objects.create(fieldName = kwargs['fieldName'],
-                                                         fieldType=kwargs['fieldType'],
-                                                         content_object=metadata_obj,)
-
-            for key, value in kwargs.iteritems():
-                if key in ('fieldTypeCode', 'fieldWidth', 'fieldPrecision'):
-                    setattr(field_info, key, value)
-                    field_info.save()
-            return field_info
-        else:
-            raise ValidationError("fieldName of FieldInformation is missing.")
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        field_info = FieldInformation.objects.get(id=element_id)
-        if field_info:
-            for key, value in kwargs.iteritems():
-                if key in ('fieldName', 'fieldTypeCode', 'fieldType', 'fieldWidth', 'fieldPrecision'):
-                    setattr(field_info, key, value)
-            field_info.save()
-        else:
-            raise ObjectDoesNotExist("No FieldInformation element can be found for the provided id: %s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        field_info = FieldInformation.objects.get(id=element_id)
-        if field_info:
-            field_info.delete()
-        else:
-            raise ValidationError("FieldInformation element of the geographic feature resource cannot be deleted: %d."\
-                                  % element_id)
 
 class GeometryInformation(AbstractMetaDataElement):
     term = 'GeometryInformation'
@@ -197,45 +66,6 @@ class GeometryInformation(AbstractMetaDataElement):
     class Meta:
         # GeometryInformation element is not repeatable
         unique_together = ("content_type", "object_id")
-
-    def __unicode__(self):
-        self.fieldName
-
-    @classmethod
-    def create(cls, **kwargs):
-
-        if 'geometryType' in kwargs:
-            if not 'featureCount' in kwargs:
-                raise ValidationError("featureCount of GeometryInformation is missing.")
-
-            metadata_obj = kwargs['content_object']
-            geom_info = GeometryInformation.objects.create(geometryType=kwargs['geometryType'],
-                                                           featureCount=kwargs['featureCount'],
-                                                           content_object=metadata_obj,)
-            return geom_info
-        else:
-            raise ValidationError("geometryType of GeometryInformation is missing.")
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        geom_info = GeometryInformation.objects.get(id=element_id)
-        if geom_info:
-            for key, value in kwargs.iteritems():
-                if key in ('geometryType', 'featureCount'):
-                    setattr(geom_info, key, value)
-            geom_info.save()
-        else:
-            raise ObjectDoesNotExist("No GeometryInformation element can be found for the provided id: %s"\
-                                     % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        geom_info = GeometryInformation.objects.get(id=element_id)
-        if geom_info:
-            geom_info.delete()
-        else:
-            raise ObjectDoesNotExist("GeometryInformation element of the geographic feature resource cannot be\
-                                    deleted: %d." % element_id)
 
 # Define the Geographic Feature
 class GeographicFeatureResource(BaseResource):
@@ -283,19 +113,6 @@ class GeographicFeatureMetaData(CoreMetaData):
         return elements
 
     def has_all_required_elements(self):
-        # if not super(GeographicFeatureMetaData, self).has_all_required_elements():  # check required meta
-        #     return False
-        # if not self.originalfileinfo.all().first():
-        #     return False
-        # if not self.fieldinformation.all().first():
-        #     return False
-        # if not self.originalcoverage.all().first():
-        #     return False
-        # if not self.geometryinformation.all().first():
-        #     return False
-        # if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
-        #     return False
-        # return True
         if self.get_required_missing_elements() != "":
             return False
         return True
