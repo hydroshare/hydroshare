@@ -1,11 +1,12 @@
 from django.db import models
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.contrib.contenttypes import generic
 
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor,\
                            CoreMetaData, AbstractMetaDataElement
+
+from lxml import etree
 
 # Create your models here.
 class OriginalFileInfo(AbstractMetaDataElement):
@@ -131,7 +132,6 @@ class GeographicFeatureMetaData(CoreMetaData):
         return missing_required_elements
 
     def get_xml(self):
-        from lxml import etree
         # get the xml string representation of the core metadata elements
         xml_string = super(GeographicFeatureMetaData, self).get_xml(pretty_print=False)
 
@@ -141,62 +141,51 @@ class GeographicFeatureMetaData(CoreMetaData):
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
+        if self.originalfileinfo.all().first():
+            originalfileinfo_fields = ['fileType', 'fileCount', 'baseFilename', 'filenameString']
+            self.add_metadata_element_to_xml(container,
+                                             self.originalfileinfo.all().first(),
+                                             originalfileinfo_fields)
+
+        if self.geometryinformation.all().first():
+            geometryinformation_fields = ['geometryType', 'featureCount']
+            self.add_metadata_element_to_xml(container,
+                                             self.geometryinformation.all().first(),
+                                             geometryinformation_fields)
+
+        for field_info in self.fieldinformation.all():
+            field_info_fields = ['fieldName', 'fieldType', 'fieldTypeCode', 'fieldWidth', 'fieldPrecision']
+            self.add_metadata_element_to_xml(container, field_info, field_info_fields)
+
         if self.originalcoverage.all().first():
-            hsterms_ori_cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
-            hsterms_ori_cov_rdf_Description = etree.SubElement(hsterms_ori_cov, '{%s}Description' % self.NAMESPACES['rdf'])
-            ori_cov_obj = self.originalcoverage.all().first()
+            ori_coverage = self.originalcoverage.all().first();
+            cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
+            cov_term = '{%s}' + 'box'
+            coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
+            rdf_coverage_value = etree.SubElement(coverage_terms, '{%s}value' % self.NAMESPACES['rdf'])
+            # original coverage is of box type
+            cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                        % (ori_coverage.northlimit, ori_coverage.eastlimit, \
+                          ori_coverage.southlimit, ori_coverage.westlimit, ori_coverage.unit)
 
-            # add extent info
-            if ori_cov_obj.northlimit:
-                cov_box = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s' \
-                        %(ori_cov_obj.northlimit, ori_cov_obj.eastlimit,
-                          ori_cov_obj.southlimit, ori_cov_obj.westlimit)
+            cov_value = cov_value \
+                        + '; projection_name=%s' % ori_coverage.projection_name \
+                        + '; datum=%s' % ori_coverage.datum \
+                        + '; projection_string=%s' % ori_coverage.projection_string
 
-                hsterms_ori_cov_box = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}extent' % self.NAMESPACES['hsterms'])
-                hsterms_ori_cov_box.text = str(cov_box)
-            if ori_cov_obj.projection_string:
-                hsterms_ori_cov_projection = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}crsRepresentationText' % self.NAMESPACES['hsterms'])
-                hsterms_ori_cov_projection.text = str(ori_cov_obj.projection_string)
-
-        hsterms_ori_file_info = etree.SubElement(container, '{%s}originalFileInfo' % self.NAMESPACES['hsterms'])
-        hsterms_ori_file_info_rdf_Description = etree.SubElement(hsterms_ori_file_info, '{%s}Description' % self.NAMESPACES['rdf'])
-        ori_file_info = self.originalfileinfo.all().first()
-        if ori_file_info:
-            hsterms_ori_file_info_file_type = etree.SubElement(hsterms_ori_file_info_rdf_Description, '{%s}fileType' % self.NAMESPACES['hsterms'])
-            hsterms_ori_file_info_file_type.text = str(ori_file_info.fileType)
-            hsterms_ori_file_info_file_count = etree.SubElement(hsterms_ori_file_info_rdf_Description, '{%s}fileCount' % self.NAMESPACES['hsterms'])
-            hsterms_ori_file_info_file_count.text = str(ori_file_info.fileCount)
-            hsterms_ori_file_info_filename_string = etree.SubElement(hsterms_ori_file_info_rdf_Description, '{%s}filenameString' % self.NAMESPACES['hsterms'])
-            hsterms_ori_file_info_filename_string.text = str(ori_file_info.filenameString)
-            hsterms_ori_file_info_base_filename = etree.SubElement(hsterms_ori_file_info_rdf_Description, '{%s}baseFilename' % self.NAMESPACES['hsterms'])
-            hsterms_ori_file_info_base_filename.text = str(ori_file_info.baseFilename)
-
-
-        hsterms_geom_info = etree.SubElement(container, '{%s}geometryInformation' % self.NAMESPACES['hsterms'])
-        hsterms_geom_info_rdf_Description = etree.SubElement(hsterms_geom_info, '{%s}Description' % self.NAMESPACES['rdf'])
-        geom_info_obj = self.geometryinformation.all().first()
-        if geom_info_obj:
-            hsterms_geom_info_geom_type = etree.SubElement(hsterms_geom_info_rdf_Description, '{%s}geometryType' % self.NAMESPACES['hsterms'])
-            hsterms_geom_info_geom_type.text = str(geom_info_obj.geometryType)
-            hsterms_geom_info_fea_count = etree.SubElement(hsterms_geom_info_rdf_Description, '{%s}featureCount' % self.NAMESPACES['hsterms'])
-            hsterms_geom_info_fea_count.text = str(geom_info_obj.featureCount)
-
-        hsterms_field_info = etree.SubElement(container, '{%s}fieldInformation' % self.NAMESPACES['hsterms'])
-        field_info_obj_list = self.fieldinformation.all()
-        if field_info_obj_list:
-            for field in field_info_obj_list:
-                hsterms_field_info_rdf_Description = etree.SubElement(hsterms_field_info, '{%s}Description' % self.NAMESPACES['rdf'])
-                hsterms_field_info_fieldName = etree.SubElement(hsterms_field_info_rdf_Description, '{%s}fieldName' % self.NAMESPACES['hsterms'])
-                hsterms_field_info_fieldName.text = str(field.fieldName)
-                hsterms_field_info_fieldType = etree.SubElement(hsterms_field_info_rdf_Description, '{%s}fieldType' % self.NAMESPACES['hsterms'])
-                hsterms_field_info_fieldType.text = str(field.fieldType)
-                hsterms_field_info_fieldTypeCode = etree.SubElement(hsterms_field_info_rdf_Description, '{%s}fieldTypeCode' % self.NAMESPACES['hsterms'])
-                hsterms_field_info_fieldTypeCode.text = str(field.fieldTypeCode)
-                hsterms_field_info_fieldWidth = etree.SubElement(hsterms_field_info_rdf_Description, '{%s}fieldWidth' % self.NAMESPACES['hsterms'])
-                hsterms_field_info_fieldWidth.text = str(field.fieldWidth)
-                hsterms_field_info_fieldPrecision = etree.SubElement(hsterms_field_info_rdf_Description, '{%s}fieldPrecision' % self.NAMESPACES['hsterms'])
-                hsterms_field_info_fieldPrecision.text = str(field.fieldPrecision)
+            rdf_coverage_value.text = cov_value
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
+
+    def delete_all_elements(self):
+        if self.geometryinformation.all().first():
+            self.geometryinformation.all().delete()
+        if self.fieldinformation.all().first():
+            self.fieldinformation.all().delete()
+        if self.originalcoverage.all().first():
+            self.originalcoverage.all().delete()
+        if self.originalfileinfo.all().first():
+            self.originalfileinfo.all().delete()
+        super(GeographicFeatureMetaData, self).delete_all_elements()
 
 import receivers # never delete this otherwise non of the receiver function will work
