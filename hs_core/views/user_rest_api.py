@@ -1,10 +1,12 @@
-__author__ = 'Pabitra'
-
-from django.contrib.auth import authenticate
-from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.exceptions import *
-import serializers
-from hs_core.views import utils
+
+
+class UserInfo(APIView):
+    def get(self, request):
+        user_info = {"username": request.user.username}
+        if request.user.email:
+            user_info['email'] = request.user.email
+
+        return Response(user_info)
 
