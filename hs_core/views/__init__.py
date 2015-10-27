@@ -334,12 +334,14 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     else:
         status = 'error'
 
-    if status == 'success':
-        messages.success(request, "Resource sharing was successful")
-    else:
-        messages.error(request, err_message)
+    picture_url = 'No picture provided'
+    if user_to_share_with.userprofile.picture:
+        picture_url = user_to_share_with.userprofile.picture.url
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
+                          'username': user_to_share_with.username, 'privilege': privilege, 'profile_pic': picture_url,
+                          'error_msg': err_message}
+    return HttpResponse(json.dumps(ajax_response_data))
 
 
 # Needed for new access control UI functionality being developed by Mauriel
