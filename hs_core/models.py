@@ -178,6 +178,7 @@ class AbstractMetaDataElement(models.Model):
         element = cls.objects.get(id=element_id)
         for key, value in kwargs.iteritems():
                 setattr(element, key, value)
+        element.save()
         return element
 
     # could not name this method as 'delete' since the parent 'Model' class has such a method
@@ -2031,8 +2032,6 @@ class CoreMetaData(models.Model):
             if issubclass(model_type.model_class(), AbstractMetaDataElement):
                 kwargs['content_object'] = self
                 element = model_type.model_class().create(**kwargs)
-                if element:
-                    element.save()
                 return element
             else:
                 raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
@@ -2049,9 +2048,7 @@ class CoreMetaData(models.Model):
         if model_type:
             if issubclass(model_type.model_class(), AbstractMetaDataElement):
                 kwargs['content_object'] = self
-                element = model_type.model_class().update(element_id, **kwargs)
-                if element:
-                    element.save()
+                model_type.model_class().update(element_id, **kwargs)
             else:
                 raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
         else:

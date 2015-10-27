@@ -113,7 +113,7 @@ class GeographicFeatureMetaData(CoreMetaData):
         return elements
 
     def has_all_required_elements(self):
-        if self.get_required_missing_elements() != "":
+        if self.get_required_missing_elements():
             return False
         return True
 

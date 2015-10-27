@@ -476,8 +476,8 @@ class TestGeoFeature(TestCase):
 
             if del_f_ext == ".prj":
                 hydroshare.delete_resource_file(self.resGeoFeature.short_id, res_f_obj.id, self.user)
-                self.assertEqual(ResourceFile.objects.filter(object_id=self. resGeoFeature.id).count(), 4)
-                for res_f_obj in ResourceFile.objects.filter(object_id=self. resGeoFeature.id):
+                self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 4)
+                for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
                     del_f_fullname = res_f_obj.resource_file.name.lower()
                     del_f_fullname = del_f_fullname[del_f_fullname.rfind('/')+1:]
                     del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
