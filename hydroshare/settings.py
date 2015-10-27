@@ -454,6 +454,10 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+        'oauth2_provider.ext.rest_framework.OAuth2Authentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
     )
 }
 
@@ -497,6 +501,11 @@ LOGGING = {
             'handlers':['syslog', 'djangolog'],
             'propagate': True,
             'level':'DEBUG',
+        },
+        'django.db.backends': {
+            'handlers': ['syslog'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
     }
 }
