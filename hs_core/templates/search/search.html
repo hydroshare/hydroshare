@@ -26,8 +26,8 @@
     {% endfor %}
 
     <h2>Faceted Search</h2>
-    <h4>By Author</h4>
 
+    <h4>By Author</h4>
     <div>
         <dl>
             {% if facets.fields.author %}
@@ -98,7 +98,7 @@
                 <dt>Discoverable</dt>
                 {# Provide only the top 5 authors #}
                 {% for discoverable in facets.fields.discoverable%}
-                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=discoverable_exact:{{ discoverable.0|urlencode }}">{{ discoverable.0 }}</a> ({{ discoverable.1 }})</dd>
+                    <dd><a class="facet" href="{{ request.get_full_path }}&amp;selected_facets=discoverable_exact:{{ discoverable.0|urlencode }}">{{ discoverable.0 }}</a> ({{ discoverable.1 }})</dd>
                 {% endfor %}
             {% else %}
                 <p>No discoverable facets.</p>
