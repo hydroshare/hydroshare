@@ -190,7 +190,7 @@ def create_account(
     # make the user a member of the Hydroshare role group
     u.groups.add(Group.objects.get(name='Hydroshare Author'))
 
-    user_access = UserAccess(user=u, admin=False)
+    user_access = UserAccess(user=u)
     user_access.save()
     return u
 
@@ -713,13 +713,20 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, query):
                 query.append(Q(pk__in=owner.uaccess.get_owned_resources()))
 
                 if user != owner:
-                    # if some authenticated user is asking for resources owned by another user then
-                    # get other user's owned resources that are public or discoverable, or if requesting user
-                    # has access to those private resources
-                    query.append(Q(pk__in=user.uaccess.get_held_resources()) | Q(raccess__public=True) |
-                                 Q(raccess__discoverable=True))
+                    if user.is_superuser:
+                        # admin user sees all owned resources of owner (another user)
+                        pass
+                    else:
+                        # if some non-admin authenticated user is asking for resources owned by another user then
+                        # get other user's owned resources that are public or discoverable, or if requesting user
+                        # has access to those private resources
+                        query.append(Q(pk__in=user.uaccess.get_held_resources()) | Q(raccess__public=True) |
+                                     Q(raccess__discoverable=True))
         else:
-            if is_editable:
+            if user.is_superuser:
+                # admin sees all resources
+                pass
+            elif is_editable:
                 query.append(Q(pk__in=user.uaccess.get_editable_resources()))
             else:
                 query.append(Q(pk__in=user.uaccess.get_held_resources()) | Q(raccess__public=True) |
