@@ -1734,7 +1734,7 @@ class UserAccess(models.Model):
             raise HSAccessException("User has insufficient sharing privilege over resource")
 
         if self not in access_group.members.all() and not self.user.is_superuser:
-            raise HSAccessException("User is not a member of the group")
+            raise HSAccessException("User is not a member of the group and not an admin")
 
         # user is authorized and privilege is appropriate
         # proceed to change the record if present
