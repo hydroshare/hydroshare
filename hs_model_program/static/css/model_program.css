@@ -55,3 +55,34 @@ a.mpElement::after {
 div#mp.row {
     height: 28px;
 }
+
+option:checked{
+    background: #0073ea;
+}
+table{
+    padding: 2px;
+    width:100%;
+}
+
+#div_section_table{
+    padding-top: 5px;
+    padding-bottom: 5px;
+    width: 100%;
+}
+#section_table{
+    width: 50%;
+}
+
+.div-multi-select{
+    width:100%;
+}
+.btn-group{
+    width: 50%;
+}
+.multiselect{
+    width: 100%;
+    text-align: right;
+}
+/*.dropdown-menu{*/
+
+/*}*/
