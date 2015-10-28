@@ -155,8 +155,6 @@
 
     <field name="identifiers" type="text_en" indexed="true" stored="true" multiValued="true" />
 
-    <field name="language_exact" type="string" indexed="true" stored="true" multiValued="false" />
-
     <field name="contributors" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="discoverable_exact" type="boolean" indexed="true" stored="true" multiValued="false" />
@@ -165,17 +163,11 @@
 
     <field name="abstract" type="text_en" indexed="true" stored="true" multiValued="false" />
 
+    <field name="organization_exact" type="string" indexed="true" stored="true" multiValued="false" />
+
     <field name="sources" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="discoverable" type="boolean" indexed="true" stored="true" multiValued="false" />
-
-    <field name="creators" type="text_en" indexed="true" stored="true" multiValued="true" />
-
-    <field name="coverages" type="text_en" indexed="true" stored="true" multiValued="true" />
-
-    <field name="doi" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="language" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="short_id" type="text_en" indexed="true" stored="true" multiValued="false" />
 
@@ -183,27 +175,45 @@
 
     <field name="author_email" type="text_en" indexed="true" stored="true" multiValued="false" />
 
+    <field name="relations" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="subjects" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="creators_exact" type="string" indexed="true" stored="true" multiValued="true" />
+
+    <field name="public" type="boolean" indexed="true" stored="true" multiValued="false" />
+
+    <field name="language_exact" type="string" indexed="true" stored="true" multiValued="false" />
+
+    <field name="title_exact" type="string" indexed="true" stored="true" multiValued="false" />
+
+    <field name="publisher_exact" type="string" indexed="true" stored="true" multiValued="false" />
+
+    <field name="coverages" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="publisher" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="doi" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="language" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="created" type="date" indexed="true" stored="true" multiValued="false" />
+
     <field name="title" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="modified" type="date" indexed="true" stored="true" multiValued="false" />
 
-    <field name="relations" type="text_en" indexed="true" stored="true" multiValued="true" />
-
-    <field name="created" type="date" indexed="true" stored="true" multiValued="false" />
-
     <field name="subjects_exact" type="string" indexed="true" stored="true" multiValued="true" />
-
-    <field name="subjects" type="text_en" indexed="true" stored="true" multiValued="true" />
-
-    <field name="formats" type="text_en" indexed="true" stored="true" multiValued="true" />
-
-    <field name="creators_exact" type="string" indexed="true" stored="true" multiValued="true" />
 
     <field name="public_exact" type="boolean" indexed="true" stored="true" multiValued="false" />
 
-    <field name="author_exact" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="formats" type="text_en" indexed="true" stored="true" multiValued="true" />
 
-    <field name="public" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="organization" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="creators" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="author_exact" type="string" indexed="true" stored="true" multiValued="false" />
 
   </fields>
 

@@ -12,6 +12,7 @@
 {% for subject in object.metadata.subjects.all %}
 {{ subject }}
 {% endfor %}
+{{ object.metadata.publisher.name }}
 {{ object.first_creator.organization }}
 {{ object.first_creator.email }}
 {{ object.public }}

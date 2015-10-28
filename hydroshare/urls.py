@@ -21,7 +21,7 @@ admin.autodiscover()
 # to the project's homepage.
 #faceted_sqs = SearchQuerySet().facet('contributors')
 faceted_sqs = SearchQuerySet()
-facet_list = ('author', 'creators', 'subjects', 'public', 'discoverable', 'language')
+facet_list = ('author', 'creators', 'subjects', 'public', 'discoverable', 'language', 'title')
 for item in facet_list:
     faceted_sqs = faceted_sqs.facet(item)
 
@@ -43,11 +43,12 @@ urlpatterns = i18n_patterns("",
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url(r'^search/$', FacetedSearchView(form_class=FacetedSearchForm,searchqueryset=faceted_sqs),
-        name='haystack_search'),
+    url(r'^search/$', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=faceted_sqs),name='haystack_search'),
     #url('^search/', include('haystack.urls')),
 )
-
+#urlpatterns = patterns('haystack.views',
+#    url(r'^search/$', FacetedSearchView(form_class=FacetedSearchForm, facet_fields=['author']), name='haystack_search'),
+#)
 # Filebrowser admin media library.
 if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
     urlpatterns += i18n_patterns("",

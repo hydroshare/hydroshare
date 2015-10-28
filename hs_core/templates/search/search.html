@@ -27,6 +27,21 @@
 
     <h2>Faceted Search</h2>
 
+    <h4>By Titles</h4>
+    <div>
+        <dl>
+            {% if facets.fields.title %}
+                <dt>Titles</dt>
+                {# Provide only the top 5 authors #}
+                {% for title in facets.fields.title%}
+                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=title_exact:{{ title.0|urlencode }}">{{ title.0 }}</a> ({{ title.1 }})</dd>
+                {% endfor %}
+            {% else %}
+                <p>No titles facets.</p>
+            {% endif %}
+        </dl>
+    </div>
+
     <h4>By Author</h4>
     <div>
         <dl>
@@ -42,7 +57,7 @@
         </dl>
     </div>
 
-    <h2>By Creators</h2>
+    <h4>By Creators</h4>
 
     <div>
         <dl>
