@@ -74,15 +74,15 @@ table{
 }
 
 .div-multi-select{
-    width:100%;
+    max-width:400px;
 }
 .btn-group{
-    width: 50%;
+    width: 100%;
 }
 .multiselect{
     width: 100%;
     text-align: right;
 }
-/*.dropdown-menu{*/
-
-/*}*/
+.input-sm{
+    max-width:550px;
+}
