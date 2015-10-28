@@ -35,19 +35,63 @@
                             <div class="col-sm-4">
                                 <a class="mpElement" href="#" data-content="{{ mphelptext.modelSoftware}}" data-toggle="popover" data-trigger="hover"> Software </a>
                             </div>
-                            <div class="col-sm-8">{{ mpmetadata.modelSoftware }}</div>
+
+                            <div class="col-sm-8">
+                                <table>
+                                    {% for path in mpmetadata.get_software_list %}
+                                        <tr>
+                                            <td>
+                                                <a id="permalink"
+                                                   href="http://{{ request.get_host }}/resource/{{ path }}"
+                                                   target="_blank">{{ path }}</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            </div>
                         </div>
+
+
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelDocumentation}}" data-toggle="popover" data-trigger="hover">Documentation:</a>
+                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelDocumentation }}"
+                                   data-toggle="popover" data-trigger="hover">Documentation:</a>
                             </div>
-                            <div class="col-sm-8">{{ mpmetadata.modelDocumentation }}</div>
+                            <div class="col-sm-8">
+                            <table>
+                                    {% for path in mpmetadata.get_documentation_list %}
+                                        <tr>
+                                            <td>
+                                                <a id="permalink"
+                                                   href="http://{{ request.get_host }}/resource/{{ path }}"
+                                                   target="_blank">{{ path }}</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                            </table>
+                            </div>
+                            {#                            <div class="col-sm-8">{{ mpmetadata.modelDocumentation }}</div>#}
                         </div>
+
+
+
                         <div class="row" id="mp">
                             <div class="col-sm-4">
                                 <a class="mpElement" href="#" data-content="{{ mphelptext.modelReleaseNotes}}" data-toggle="popover" data-trigger="hover">Release Notes:</a>
                             </div>
-                            <div class="col-sm-8">{{ mpmetadata.modelReleaseNotes }}</div>
+                            <div class="col-sm-8">
+                                <table>
+                                    {% for path in mpmetadata.get_releasenotes_list %}
+                                        <tr>
+                                            <td>
+                                                <a id="permalink"
+                                                   href="http://{{ request.get_host }}/resource/{{ path }}"
+                                                   target="_blank">{{ path }}</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            </div>
                         </div>
 
                         <hr>
