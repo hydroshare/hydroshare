@@ -30,10 +30,6 @@ class mp_form_helper(BaseFormHelper):
                                 ' <select class="multi-select" id="multi-select" multiple="multiple">'
                                         + options +
                                 '</select>'
-                                '<div id="div_section_table" style="display:none">'
-                                    '<table class="table table-condensed table-hover table-bordered" id="section_table">'
-                                    '</table>'
-                                '</div>'
                             '</div>')
 
 
