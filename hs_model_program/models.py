@@ -134,6 +134,13 @@ class MpMetadata(AbstractMetaDataElement):
         metadata = MpMetadata.objects.get(id=element_id)
         metadata.delete()
 
+    def get_software_list(self):
+        return self.modelSoftware.split(';')
+    def get_documentation_list(self):
+        return self.modelDocumentation.split(';')
+    def get_releasenotes_list(self):
+        return self.modelReleaseNotes.split(';')
+
 
 class ModelProgramResource(BaseResource):
     objects = ResourceManager("ModelProgramResource")
