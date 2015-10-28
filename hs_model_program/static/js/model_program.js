@@ -5,12 +5,23 @@
 
 $(document).ready(function () {
 
-    // initialize help text popover
+    // load jquery generated elements
+    loadWidgets();
+
+});
+
+function loadWidgets(){
+
+        // initialize help text popover
     $('[data-toggle="popover"]').popover({
         container: 'body'
     });
 
-    // initialize bindings for multiselect boxes
+
+    // destroy any existing multiselect widgets
+    $('.multi-select').multiselect('destroy');
+
+    // rebuild the multiselect elements
     $('.multi-select').multiselect({
         // bind to the on close event
         onDropdownHide: function (event, checked) {
@@ -26,7 +37,18 @@ $(document).ready(function () {
            dd[i].className += ' pull-right';
         }
     }
+}
+
+$(document).bind("submit-success", function(event){
+    // reload dynamically generated widgets
+    loadWidgets();
 });
+
+$(document).bind("submit-error", function(event){
+    // reload dynamicall generated widgets
+    loadWidgets();
+});
+
 
 function populate_dropdown_table(e, checked){
 
@@ -42,7 +64,7 @@ function populate_dropdown_table(e, checked){
 
     // grab all of the selected values
     for(var i=0; i<selected.length; i++){
-        values.push(selected[i].value+':'+selected[i].innerHTML);
+        values.push(selected[i].value);
     }
 
     // get parent metadata term
@@ -52,7 +74,7 @@ function populate_dropdown_table(e, checked){
     var meta = document.getElementById("id_"+parent_meta_term);
 
     // set the value for this hidden field
-    meta.value = values.join();
+    meta.value = values.join(';');
 
     // activate the save button
     $("#resourceSpecificTab").find('.btn-primary').show();

@@ -2441,12 +2441,14 @@ function metadata_update_ajax_submit(form_id){
                             this.remove();
                         });
                         $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
+                            $(document).trigger(jQuery.Event("submit-success"));
                             $(".alert-success").alert('close');
                         });
                     }
                     else{
                         $('body > .container').append($alert_error);
                         $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
+                            $(document).trigger(jQuery.Event("submit-error"));
                             $(".alert-danger").alert('close');
                         });
                     }
@@ -2455,6 +2457,7 @@ function metadata_update_ajax_submit(form_id){
                 {
                     $('#' + form_id).before($alert_error)
                     $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                        $(document).trigger(jQuery.Event("submit-error"));
                         $(".alert-error").alert('close');
                     });
                 }
