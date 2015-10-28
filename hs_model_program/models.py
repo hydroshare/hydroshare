@@ -6,16 +6,62 @@ from django.db import models
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
-
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.signals import *
+from django.core import validators, checks
+from django.utils import six
+from django.utils.encoding import smart_text
 
+# class SeparatedValuesField(models.Field):
+#     # description = _("String (up to %(max_length)s)")
+#
+#     def __init__(self, *args, **kwargs):
+#         self.token = kwargs.pop('token', ',')
+#         super(SeparatedValuesField, self).__init__(*args, **kwargs)
+#         self.validators.append(validators.MaxLengthValidator(self.max_length))
+#
+#     def check(self, **kwargs):
+#         errors = super(SeparatedValuesField, self).check(**kwargs)
+#         return errors
+#
+#     def get_internal_type(self):
+#         return "SeparatedValuesField"
+#
+#     def to_python(self, value):
+#         if not value: return
+#         if isinstance(value, list):
+#             return value
+#         return value.split(self.token)
+#
+#         # if isinstance(value, six.string_types) or value is None:
+#         #     return value
+#         # return smart_text(value)
+#
+#     def get_prep_value(self, value):
+#         if not value: return
+#         assert(isinstance(value, list) or isinstance(value, tuple))
+#         return self.token.join([unicode(s) for s in value])
+# #         value = super(SeparatedValuesField, self).get_prep_value(value)
+# #         return self.to_python(value)
+#
+#     # def value_to_string(self, obj):
+#     #     value = self._get_val_from_obj(obj)
+#     #     return self.get_db_prep_value(value)
+#
+#     # def get_db_prep_value(self, value):
+#     #     if not value: return
+#     #     assert(isinstance(value, list) or isinstance(value, tuple))
+#     #     return self.token.join([unicode(s) for s in value])
+#
+#     def value_to_string(self, obj):
+#         value = self._get_val_from_obj(obj)
+#         return self.get_prep_value(value)
 
 class MpMetadata(AbstractMetaDataElement):
     term = "MpMetadata"
 
     # version
-    modelVersion = models.CharField(verbose_name='Version ', null=True, blank=True, max_length=255, default='',
+    modelVersion = models.CharField(verbose_name='Version', null=True, blank=True, max_length=255, default='',
                                         help_text='The software version or build number of the model')
 
     # program language
@@ -41,20 +87,21 @@ class MpMetadata(AbstractMetaDataElement):
 
     # release notes
     modelReleaseNotes = models.CharField(verbose_name="Notes", null=True, blank=True, max_length=400,default='',
-                                     help_text="Notes regarding the software release (e.g. bug fixes, new functionality, readme)",
-                                     choices=(('-', '    '),))
+                                     help_text="Notes regarding the software release (e.g. bug fixes, new functionality, readme)")
+                                     # choices=(('-', '    '),))
 
     # documentation
-    modelDocumentation = models.CharField(verbose_name='Documentation', name='modelDocumentation', null=True, blank=True,default='',
-                                   max_length=400,
-                                   help_text='Documentation for the model (e.g. User manuals, theoretical manuals, reports, notes, etc.)',
-                                   choices=(('-', '    '),))
+    modelDocumentation = models.CharField(verbose_name='Documentation', name="modelDocumentation", null=True,
+                                          blank=True, default='',
+                                          max_length=400,
+                                          help_text='Documentation for the model (e.g. User manuals, theoretical manuals, reports, notes, etc.)')
+                                          # choices=(('-', '    '),))
 
     # software
     modelSoftware = models.CharField(verbose_name='Software', name='modelSoftware', null=True,default='',
                                           blank=True, max_length=400,
-                                          help_text='Uploaded archive containing model software (source code, executable, etc.)' ,
-                                          choices=(('-', '    '),))
+                                          help_text='Uploaded archive containing model software (source code, executable, etc.)' )
+                                          # choices=(('-', '    '),))
 
 
 
