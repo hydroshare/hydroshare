@@ -78,6 +78,8 @@ function populate_dropdown_table(e, checked){
     // set the value for this hidden field
     meta.value = values.join();
 
+    // activate the save button
+    $("#resourceSpecificTab").find('.btn-primary').show();
 }
 
 //
