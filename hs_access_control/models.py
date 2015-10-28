@@ -2276,11 +2276,12 @@ class ResourceAccess(models.Model):
 
         if not isinstance(this_user, User):
             raise HSAUsageException("Grantee is not a user")
-        access_user = this_user.uaccess
 
         if this_user.is_superuser:
             return PrivilegeCodes.OWNER
 
+        access_user = this_user.uaccess
+        
         # compute simple user privilege over resource
         user_priv = UserResourcePrivilege.objects\
             .filter(user=access_user,
