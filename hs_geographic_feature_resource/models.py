@@ -178,14 +178,10 @@ class GeographicFeatureMetaData(CoreMetaData):
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
     def delete_all_elements(self):
-        if self.geometryinformation.all().first():
-            self.geometryinformation.all().delete()
-        if self.fieldinformation.all().first():
-            self.fieldinformation.all().delete()
-        if self.originalcoverage.all().first():
-            self.originalcoverage.all().delete()
-        if self.originalfileinfo.all().first():
-            self.originalfileinfo.all().delete()
         super(GeographicFeatureMetaData, self).delete_all_elements()
+        self.geometryinformation.all().delete()
+        self.fieldinformation.all().delete()
+        self.originalcoverage.all().delete()
+        self.originalfileinfo.all().delete()
 
 import receivers # never delete this otherwise non of the receiver function will work
