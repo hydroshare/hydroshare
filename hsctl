@@ -16,9 +16,10 @@ sed -i '/^\s*$/d' $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat $CONFIG_DIRECTORY/hydroshare-config.sh)
 
 ### Docker Variables ###
-HS_DOCKER_CONTAINERS=(hydroshare_hydroshare_1 hydroshare_dockerworker_1 hydroshare_defaultworker_1 )
-HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_dockerworker hydroshare_defaultworker)
-OTHER_DOCKER_CONTAINERS=(hydroshare_postgis_1 hydroshare_rabbitmq_1 hydroshare_redis_1 )
+DIR_PREFIX=$(pwd | rev | cut -d '/' -f 1 | rev | sed 's/[\._-]//g')
+HS_DOCKER_CONTAINERS=(${DIR_PREFIX}_hydroshare_1 ${DIR_PREFIX}_dockerworker_1 ${DIR_PREFIX}_defaultworker_1 )
+HS_DOCKER_IMAGES=(${DIR_PREFIX}_hydroshare ${DIR_PREFIX}_dockerworker ${DIR_PREFIX}_defaultworker)
+OTHER_DOCKER_CONTAINERS=(${DIR_PREFIX}_postgis_1 ${DIR_PREFIX}_rabbitmq_1 ${DIR_PREFIX}_redis_1 )
 
 ### Pre-flight Variables ###
 HTTP_RECAPTCHA='http://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
@@ -31,8 +32,8 @@ display_usage() {
 	echo "usage: $0 loaddb         # loads database specified in hydroshare-config.yaml into running container"
 	echo "usage: $0 rebuild        # deletes hydroshare container contents only and deploys using exsiting database"
 	echo "usage: $0 rebuild --db   # deletes all database and container contents and deploys from scratch"
-	echo "usage: $0 maint_off   # removes maintenance page (only if USE_NGINX = true)"
-	echo "usage: $0 maint_on    # displays maintenance page (only if USE_NGINX = true)"
+	echo "usage: $0 maint_off      # removes maintenance page (only if USE_NGINX = true)"
+	echo "usage: $0 maint_on       # displays maintenance page (only if USE_NGINX = true)"
 	echo "usage: $0 restart        # restarts the hydroshare container without rebuilding"
 	echo "usage: $0 start          # attempts to start all containers"
 	echo "usage: $0 stop           # stops all running containers"
@@ -56,8 +57,8 @@ restart_hs() {
     echo "*** ${1^^} ***"
     stop_nginx
     preflight_hs
-    docker stop hydroshare_hydroshare_1
-    docker start hydroshare_hydroshare_1
+    docker stop ${DIR_PREFIX}_hydroshare_1
+    docker start ${DIR_PREFIX}_hydroshare_1
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
@@ -185,7 +186,7 @@ rebuild_nodb_hs() {
 loaddb_hs() {
     echo "*** ${1^^} ***"
     echo "*** load clean pg.development.sql database from the running hydroshare container ***"
-    CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
+    CID=$(docker ps -a | grep ${DIR_PREFIX}_hydroshare_1 | cut -d ' ' -f 1)
     echo "*** drop existing database ***"
     docker exec $CID dropdb -U postgres -h postgis postgres
     echo "*** create new database ***"
