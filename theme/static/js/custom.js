@@ -107,9 +107,4 @@ $(document).ready(function() {
         $("#citation-text").text(citationText.replace(citationUrl, ""));                                // Remove the url
         $("#citation-text").append("<a href='" + citationUrl + "'>" + citationUrl + "</a>");        // Append the clickable url
     }
-
-    // Remove last comma from authors list
-	//===================
-    var authors = $("#authors");
-    $(authors).find(".comma").last().remove();
 });

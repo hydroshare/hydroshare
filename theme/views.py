@@ -37,9 +37,13 @@ class UserProfileView(TemplateView):
         # if requesting user is not the profile user, then show only resources that the requesting user has access
         if self.request.user != u:
             if self.request.user.is_authenticated():
-                # filter out any resources the requesting user doesn't have access
-                resources = resources.filter(Q(pk__in=self.request.user.uaccess.get_held_resources()) |
-                                             Q(raccess__public=True) | Q(raccess__discoverable=True))
+                if self.request.user.is_superuser:
+                    # admin can see all resources owned by profile user
+                    pass
+                else:
+                    # filter out any resources the requesting user doesn't have access
+                    resources = resources.filter(Q(pk__in=self.request.user.uaccess.get_held_resources()) |
+                                                 Q(raccess__public=True) | Q(raccess__discoverable=True))
 
             else:
                 # for anonymous requesting user show only resources that are either public or discoverable
@@ -112,6 +116,7 @@ from mezzanine.conf import settings
 from django.contrib.messages import info, error
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import ugettext_lazy as _
+from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 
 from mezzanine.utils.email import send_verification_mail, send_approve_mail
 from mezzanine.utils.urls import login_redirect, next_url
@@ -125,20 +130,24 @@ def signup(request, template="accounts/account_signup.html"):
     """
     form = SignupForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
-        new_user = form.save()
-        if not new_user.is_active:
-            if settings.ACCOUNTS_APPROVAL_REQUIRED:
-                send_approve_mail(request, new_user)
-                info(request, _("Thanks for signing up! You'll receive "
-                                "an email when your account is activated."))
-            else:
-                send_verification_mail(request, new_user, "signup_verify")
-                info(request, _("A verification email has been sent with "
-                                "a link for activating your account."))
-            return redirect(next_url(request) or "/")
+        try:
+            new_user = form.save()
+        except ValidationError as e:
+            form.add_error(None, e.message)
         else:
-            info(request, _("Successfully signed up"))
-            auth_login(request, new_user)
-            return login_redirect(request)
+            if not new_user.is_active:
+                if settings.ACCOUNTS_APPROVAL_REQUIRED:
+                    send_approve_mail(request, new_user)
+                    info(request, _("Thanks for signing up! You'll receive "
+                                    "an email when your account is activated."))
+                else:
+                    send_verification_mail(request, new_user, "signup_verify")
+                    info(request, _("A verification email has been sent with "
+                                    "a link for activating your account."))
+                return redirect(next_url(request) or "/")
+            else:
+                info(request, _("Successfully signed up"))
+                auth_login(request, new_user)
+                return login_redirect(request)
     context = {"form": form, "title": _("Sign up")}
     return render(request, template, context)
