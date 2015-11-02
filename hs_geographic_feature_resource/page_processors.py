@@ -2,10 +2,10 @@ __author__ = 'drew'
 
 from mezzanine.pages.page_processors import processor_for
 
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
+from crispy_forms.layout import Layout, HTML
 
 from hs_core import page_processors
-from hs_core.views import *
+from hs_core.views import add_generic_context
 from hs_geographic_feature_resource.forms import OriginalCoverageForm, GeometryInformationForm
 from models import GeographicFeatureResource
 

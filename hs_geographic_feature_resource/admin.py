@@ -1,6 +1,8 @@
 # Register your models here.
-from mezzanine.pages.admin import PageAdmin
 from django.contrib.gis import admin
-from .models import *
+
+from mezzanine.pages.admin import PageAdmin
+
+from .models import GeographicFeatureResource
 
 admin.site.register(GeographicFeatureResource, PageAdmin)
