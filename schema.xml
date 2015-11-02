@@ -153,6 +153,8 @@
 
     <field name="rating" type="long" indexed="true" stored="true" multiValued="false" />
 
+    <field name="owners_logins_exact" type="string" indexed="true" stored="true" multiValued="true" />
+
     <field name="identifiers" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="contributors" type="text_en" indexed="true" stored="true" multiValued="true" />
@@ -163,57 +165,95 @@
 
     <field name="abstract" type="text_en" indexed="true" stored="true" multiValued="false" />
 
-    <field name="organization_exact" type="string" indexed="true" stored="true" multiValued="false" />
+    <field name="viewers_logins" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="viewers_count_exact" type="long" indexed="true" stored="true" multiValued="false" />
+
+    <field name="owners_names_exact" type="string" indexed="true" stored="true" multiValued="true" />
 
     <field name="sources" type="text_en" indexed="true" stored="true" multiValued="true" />
 
+    <field name="author_emails" type="text_en" indexed="true" stored="true" multiValued="true" />
+
     <field name="discoverable" type="boolean" indexed="true" stored="true" multiValued="false" />
 
-    <field name="short_id" type="text_en" indexed="true" stored="true" multiValued="false" />
+    <field name="editors_logins" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="owners_count" type="long" indexed="true" stored="true" multiValued="false" />
+
+    <field name="owners_logins" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="resource_type_exact" type="string" indexed="true" stored="true" multiValued="false" />
+
+    <field name="owners_count_exact" type="long" indexed="true" stored="true" multiValued="false" />
 
     <field name="author" type="text_en" indexed="true" stored="true" multiValued="false" />
 
-    <field name="author_email" type="text_en" indexed="true" stored="true" multiValued="false" />
+    <field name="viewers_names" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="editors_count" type="long" indexed="true" stored="true" multiValued="false" />
+
+    <field name="viewers_count" type="long" indexed="true" stored="true" multiValued="false" />
+
+    <field name="owners_names" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="relations" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="subjects" type="text_en" indexed="true" stored="true" multiValued="true" />
 
+    <field name="editors_names" type="text_en" indexed="true" stored="true" multiValued="true" />
+
+    <field name="viewers_names_exact" type="string" indexed="true" stored="true" multiValued="true" />
+
     <field name="creators_exact" type="string" indexed="true" stored="true" multiValued="true" />
+
+    <field name="public_exact" type="boolean" indexed="true" stored="true" multiValued="false" />
 
     <field name="public" type="boolean" indexed="true" stored="true" multiValued="false" />
 
     <field name="language_exact" type="string" indexed="true" stored="true" multiValued="false" />
 
+    <field name="publisher" type="text_en" indexed="true" stored="true" multiValued="false" />
+
     <field name="title_exact" type="string" indexed="true" stored="true" multiValued="false" />
+
+    <field name="editors_count_exact" type="long" indexed="true" stored="true" multiValued="false" />
 
     <field name="publisher_exact" type="string" indexed="true" stored="true" multiValued="false" />
 
     <field name="coverages" type="text_en" indexed="true" stored="true" multiValued="true" />
 
-    <field name="publisher" type="text_en" indexed="true" stored="true" multiValued="false" />
+    <field name="organizations" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="doi" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="short_id" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="language" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="created" type="date" indexed="true" stored="true" multiValued="false" />
 
-    <field name="title" type="text_en" indexed="true" stored="true" multiValued="false" />
+    <field name="organizations_exact" type="string" indexed="true" stored="true" multiValued="true" />
+
+    <field name="editors_names_exact" type="string" indexed="true" stored="true" multiValued="true" />
 
     <field name="modified" type="date" indexed="true" stored="true" multiValued="false" />
 
     <field name="subjects_exact" type="string" indexed="true" stored="true" multiValued="true" />
 
-    <field name="public_exact" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="viewers_logins_exact" type="string" indexed="true" stored="true" multiValued="true" />
+
+    <field name="editors_logins_exact" type="string" indexed="true" stored="true" multiValued="true" />
 
     <field name="formats" type="text_en" indexed="true" stored="true" multiValued="true" />
 
-    <field name="organization" type="text_en" indexed="true" stored="true" multiValued="false" />
+    <field name="title" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="creators" type="text_en" indexed="true" stored="true" multiValued="true" />
 
     <field name="author_exact" type="string" indexed="true" stored="true" multiValued="false" />
+
+    <field name="resource_type" type="text_en" indexed="true" stored="true" multiValued="false" />
 
   </fields>
 

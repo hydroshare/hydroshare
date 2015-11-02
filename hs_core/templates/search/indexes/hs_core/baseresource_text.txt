@@ -13,8 +13,12 @@
 {{ subject }}
 {% endfor %}
 {{ object.metadata.publisher.name }}
-{{ object.first_creator.organization }}
-{{ object.first_creator.email }}
+{% for creator in object.metadata.creators.all %}
+{{ creator.organization }}
+{% endfor %}
+{% for creator in object.metadata.creators.all %}
+{{ creator.email }}
+{% endfor %}
 {{ object.public }}
 {{ object.discoverable }}
 {{ object.created }}
@@ -36,3 +40,25 @@
 {% for relation in object.metadata.relations.all %}
 {{ relation.value }}
 {% endfor %}
+{{ object.resource_type }}
+{% for owner_login in object.owners_logins.all %}
+{{ owner_login }}
+{% endfor %}
+{% for owner_name in object.owners_names.all %}
+{{ owner_name }}
+{% endfor %}
+{{ object.owners_count }}
+{% for viewer_login in object.viewers_logins.all %}
+{{ viewer_login }}
+{% endfor %}
+{% for viewer_name in object.viewers_names.all %}
+{{ viewer_name }}
+{% endfor %}
+{{ object.viewers_count }}
+{% for editor_login in object.editors_logins.all %}
+{{ editor_login }}
+{% endfor %}
+{% for editor_name in object.editors_names.all %}
+{{ editor_name }}
+{% endfor %}
+{{ object.editors_count }}

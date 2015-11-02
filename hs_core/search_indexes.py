@@ -16,8 +16,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     discoverable = indexes.BooleanField(faceted=True)
     created = indexes.DateTimeField(model_attr='created')
     modified = indexes.DateTimeField(model_attr='updated')
-    organization = indexes.CharField(faceted=True, null=True)
-    author_email = indexes.CharField()
+    organizations = indexes.MultiValueField(faceted=True)
+    author_emails = indexes.MultiValueField()
     publisher = indexes.CharField(faceted=True)
     rating = indexes.IntegerField(model_attr='rating_sum')
     coverages = indexes.MultiValueField()
@@ -26,7 +26,18 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     language = indexes.CharField(faceted=True)
     sources = indexes.MultiValueField()
     relations = indexes.MultiValueField()
-    #type = indexes.CharField()
+    resource_type = indexes.CharField(model_attr='resource_type', faceted=True)
+    #comments = indexes.CharField(model_attr='comments')
+    owners_logins = indexes.MultiValueField(faceted=True)
+    owners_names = indexes.MultiValueField(faceted=True)
+    owners_count = indexes.IntegerField(faceted=True)
+    viewers_logins = indexes.MultiValueField(faceted=True)
+    viewers_names = indexes.MultiValueField(faceted=True)
+    viewers_count = indexes.IntegerField(faceted=True)
+    editors_logins = indexes.MultiValueField(faceted=True)
+    editors_names = indexes.MultiValueField(faceted=True)
+    editors_count = indexes.IntegerField(faceted=True)
+
 
     def get_model(self):
         return BaseResource
@@ -43,12 +54,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_subjects(self, obj):
         return [subject.value for subject in obj.metadata.subjects.all()]
 
-    def prepare_organization(self, obj):
-        organization = obj.first_creator.organization
-        if(organization is not None):
-            return organization
-        else:
-            return 'none'
+    def prepare_organizations(self, obj):
+        organizations = []
+        for creator in obj.metadata.creators.all():
+            if(creator.organization is not None):
+                organizations.append(creator.organization)
+            else:
+                organizations.append('none')
+        return organizations
 
     def prepare_publisher(self, obj):
         publisher = obj.metadata.publisher
@@ -58,8 +71,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return 'none'
         #return foo
 
-    def prepare_author_email(self, obj):
-        return obj.first_creator.email
+    def prepare_author_emails(self, obj):
+        return [creator.email for creator in obj.metadata.creators.all()]
 
     def prepare_discoverable(self, obj):
         if(obj.raccess.public | obj.raccess.discoverable):
@@ -70,7 +83,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_coverages(self, obj):
         return [coverage._value for coverage in obj.metadata.coverages.all()]
 
-    def prepare_formates(self, obj):
+    def prepare_formats(self, obj):
         return [format.value for format in obj.metadata.formats.all()]
 
     def prepare_identifiers(self, obj):
@@ -84,3 +97,42 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_relations(self, obj):
         return [relation.value for relation in obj.metadata.relations.all()]
+
+    def prepare_owners_logins(self, obj):
+        return [owner.username for owner in obj.raccess.owners.all()]
+
+    def prepare_owners_names(self, obj):
+        names = []
+        for owner in obj.raccess.owners.all():
+            name = owner.first_name + ' ' + owner.last_name
+            names.append(name)
+        return names
+
+    def prepare_owners_count(self, obj):
+        return obj.raccess.owners.all().count()
+
+    def prepare_viewers_logins(self, obj):
+        return [viewer.username for viewer in obj.raccess.view_users.all()]
+
+    def prepare_viewers_names(self, obj):
+        names = []
+        for viewer in obj.raccess.view_users.all():
+            name = viewer.first_name + ' ' + viewer.last_name
+            names.append(name)
+        return names
+
+    def prepare_viewers_count(self, obj):
+        return obj.raccess.view_users.all().count()
+
+    def prepare_editors_logins(self, obj):
+        return [editor.username for editor in obj.raccess.edit_users.all()]
+
+    def prepare_editors_names(self, obj):
+        names = []
+        for editor in obj.raccess.edit_users.all():
+            name = editor.first_name + ' ' + editor.last_name
+            names.append(name)
+        return names
+
+    def prepare_editors_count(self, obj):
+        return obj.raccess.edit_users.all().count()
