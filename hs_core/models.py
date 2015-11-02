@@ -180,16 +180,21 @@ class AbstractMetaDataElement(models.Model):
 
     @classmethod
     def create(cls, **kwargs):
-        raise NotImplementedError("Please implement this method")
+        return cls.objects.create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        raise NotImplementedError("Please implement this method")
+        element = cls.objects.get(id=element_id)
+        for key, value in kwargs.iteritems():
+                setattr(element, key, value)
+        element.save()
+        return element
 
     # could not name this method as 'delete' since the parent 'Model' class has such a method
     @classmethod
     def remove(cls, element_id):
-        raise NotImplementedError("Please implement this method")
+        element = cls.objects.get(id=element_id)
+        element.delete()
 
     class Meta:
         abstract = True
@@ -324,7 +329,6 @@ class Party(AbstractMetaDataElement):
                                 if res_cr.order > party.order:
                                     res_cr.order -= 1
                                     res_cr.save()
-
 
                         party.order = kwargs['order']
 
@@ -2037,7 +2041,6 @@ class CoreMetaData(models.Model):
             if issubclass(model_type.model_class(), AbstractMetaDataElement):
                 kwargs['content_object'] = self
                 element = model_type.model_class().create(**kwargs)
-                element.save()
                 return element
             else:
                 raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
@@ -2053,7 +2056,7 @@ class CoreMetaData(models.Model):
 
         if model_type:
             if issubclass(model_type.model_class(), AbstractMetaDataElement):
-                kwargs['content_object']= self
+                kwargs['content_object'] = self
                 model_type.model_class().update(element_id, **kwargs)
             else:
                 raise ValidationError("Metadata element type:%s is not supported." % element_model_name)

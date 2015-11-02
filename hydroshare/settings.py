@@ -295,6 +295,7 @@ INSTALLED_APPS = (
     "hs_modelinstance",
     "hs_tools_resource",
     "hs_swat_modelinstance",
+    "hs_geographic_feature_resource",
 )
 
 # List of processors used by RequestContext to populate the context.
