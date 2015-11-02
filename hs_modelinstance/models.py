@@ -1,46 +1,19 @@
 from django.contrib.contenttypes import generic
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.contrib.auth.models import User, Group
 from django.db import models
-from django.contrib.sites.models import get_current_site
 
-from mezzanine.pages.models import Page, RichText
-from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
-from hs_model_program.models import ModelProgramResource
-from hs_core.signals import *
 from hs_core.hydroshare import utils
 
+from hs_model_program.models import ModelProgramResource
+
+from lxml import etree
 
 # extended metadata elements for Model Instance resource type
 class ModelOutput(AbstractMetaDataElement):
     term = 'ModelOutput'
     includes_output = models.BooleanField(default=False)
-
-    @classmethod
-    def create(cls, **kwargs):
-        if not 'includes_output' in kwargs:
-            raise ValidationError("ModelOutput includesOutput is missing.")
-        metadata_obj = kwargs['content_object']
-        return ModelOutput.objects.create(includes_output=kwargs['includes_output'], content_object=metadata_obj)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        model_output = ModelOutput.objects.get(id=element_id)
-        if model_output:
-            for key, value in kwargs.iteritems():
-                setattr(model_output, key, value)
-            model_output.save()
-        else:
-            raise ObjectDoesNotExist("No ModelOutput element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("ModelOutput element of a resource can't be deleted.")
-
 
 class ExecutedBy(AbstractMetaDataElement):
 
@@ -65,9 +38,7 @@ class ExecutedBy(AbstractMetaDataElement):
         mp_fk = ExecutedBy.objects.create(model_program_fk=obj,
                                           model_name=title,
                                           content_object=metadata_obj)
-
         return mp_fk
-
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -82,17 +53,7 @@ class ExecutedBy(AbstractMetaDataElement):
         if executed_by:
             for key, value in kwargs.iteritems():
                 setattr(executed_by, key, value)
-
             executed_by.save()
-
-        else:
-            raise ObjectDoesNotExist("No ExecutedBy element was found for the provided id:%s" % kwargs['id'])
-
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("ExecutedBy element of a resource can't be deleted.")
-
 
 # Model Instance Resource type
 class ModelInstanceResource(BaseResource):
@@ -137,8 +98,6 @@ class ModelInstanceMetaData(CoreMetaData):
         return elements
 
     def get_xml(self, pretty_print=True):
-        from lxml import etree
-
         # get the xml string representation of the core metadata elements
         xml_string = super(ModelInstanceMetaData, self).get_xml(pretty_print=False)
 
@@ -176,5 +135,10 @@ class ModelInstanceMetaData(CoreMetaData):
         hsterms_executed_by_name.text = title
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
+
+    def delete_all_elements(self):
+        super(ModelInstanceMetaData, self).delete_all_elements()
+        self._model_output.all().delete()
+        self._executed_by.all().delete()
 
 import receivers

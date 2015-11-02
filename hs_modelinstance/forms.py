@@ -1,12 +1,14 @@
 __author__ = 'Mohamed Morsy'
 from django.forms import ModelForm
 from django import forms
-from crispy_forms import *
-from crispy_forms.layout import *
-from crispy_forms.bootstrap import *
-from hs_modelinstance.models import *
+
+from crispy_forms import layout
+from crispy_forms.layout import Layout, Field, HTML
+
 from hs_core.forms import BaseFormHelper
 from hs_core.hydroshare import users
+
+from hs_modelinstance.models import ModelInstanceResource, ModelOutput, ExecutedBy
 
 class MetadataField(layout.Field):
           def __init__(self, *args, **kwargs):
@@ -94,4 +96,3 @@ class ExecutedByForm(ModelForm):
 class ExecutedByValidationForm(forms.Form):
     model_name = forms.CharField(max_length=200)
     model_program_fk = forms
-
