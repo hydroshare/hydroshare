@@ -31,6 +31,8 @@
                 {% include "includes/checkbox_field.html" with field=form.password  field_classes="col-md-12" %}
             </div>
 
+            <input type="hidden" name="next" value="{{ request.GET.next }}" />
+
             {% block account_form_actions %}
                 <div class="row">
                     <div class="col-md-12">
