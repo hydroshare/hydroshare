@@ -25,25 +25,31 @@
 
         {# ======= Missing fields notification =======#}
         {% if not metadata_form and page.perms.change %}
-            {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" %}
+            {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
                 <div class="col-sm-12">
                     <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                                 aria-hidden="true">&times;</span></button>
-                        {% if just_created %}
-                            <strong>Congratulations! </strong>
-                            <span>Now that your resource has been created the following metadata are still required to make it public or discoverable:</span>
-                        {% else %}
-                            <span>The following metadata are still required to make the resource public or discoverable:</span>
-                        {% endif %}
-                        <ul>
-                            {% for element in missing_metadata_elements %}
-                                <li>{{ element }}</li>
-                            {% endfor %}
-                            {% if title|stringformat:"s" == "Untitled resource" %}
-                               <li>Title: needs to be changed</li>
+                        {% if missing_metadata_elements  %}
+                            {% if just_created %}
+                                <strong>Congratulations! </strong>
+                                <span>Now that your resource has been created the following metadata are still required to make it public or discoverable:</span>
+                            {% else %}
+                                <span>The following metadata are still required to make the resource public or discoverable:</span>
                             {% endif %}
-                        </ul>
+                            <ul>
+                                {% for element in missing_metadata_elements %}
+                                    <li>{{ element }}</li>
+                                {% endfor %}
+                                {% if title|stringformat:"s" == "Untitled resource" %}
+                                   <li>Title: needs to be changed</li>
+                                {% endif %}
+                            </ul>
+                        {%  endif %}
+                        {%  if not cm.has_required_content_files %}
+                                <br>
+                                <span>Content file(s) is missing. Content file(s) is required to make the resource public.</span>
+                        {% endif %}
                         <hr>
                         <span class="glyphicon glyphicon-question-sign"></span>
                         <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
@@ -382,7 +388,7 @@
                                   method="POST">
                                 {% csrf_token %}
                                 <input name="t" type="hidden" value="make_public"/>
-                                <button {% if metadata_status == 'Insufficient to make public' %} disabled {% endif %}
+                                <button {% if not cm.can_be_public %} disabled {% endif %}
                                         id="btn-public" data-toggle="tooltip" data-placement="auto"
                                         title='Can be viewed and downloaded by anyone.' type="submit"
                                         class="btn btn-default">Public

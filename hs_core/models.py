@@ -1537,7 +1537,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @property
     def can_be_public(self):
-        if self.metadata.has_all_required_elements():
+        if self.metadata.has_all_required_elements() and self.has_required_content_files():
             return True
 
         return False
@@ -1551,7 +1551,6 @@ class AbstractResource(ResourcePermissionsMixin):
         # by default all file types are supported
         return (".*",)
 
-
     @classmethod
     def can_have_multiple_files(cls):
         # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
@@ -1560,6 +1559,16 @@ class AbstractResource(ResourcePermissionsMixin):
         # resource by default can have multiple files
         return True
 
+    def has_required_content_files(self):
+        # Any subclass of this class may need to override this function
+        # to apply specific requirements as it relates to resource content files
+        if len(self.get_supported_upload_file_types()) > 0:
+            if self.files.all().count() > 0:
+                return True
+            else:
+                return False
+        else:
+            return True
 
     class Meta:
         abstract = True
