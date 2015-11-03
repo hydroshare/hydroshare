@@ -295,6 +295,7 @@ INSTALLED_APPS = (
     "hs_modelinstance",
     "hs_tools_resource",
     "hs_swat_modelinstance",
+    "hs_geographic_feature_resource",
 )
 
 # List of processors used by RequestContext to populate the context.
@@ -424,4 +425,51 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     )
+}
+
+# customized value for password reset token and email verification link token to expire in 1 day
+PASSWORD_RESET_TIMEOUT_DAYS = 1
+
+####################
+# LOGGING SETTINGS #
+####################
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
+        'simple': {
+            'format': '[%(asctime)s] %(levelname)s %(message)s',
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
+    },
+    'handlers': {
+        'syslog': {
+            'level': 'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/hydroshare/system.log',
+            'formatter': 'simple',
+            'maxBytes': 1024*1024*15, # 15MB
+            'backupCount': 10,
+        },
+        'djangolog': {
+            'level': 'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/hydroshare/django.log',
+            'formatter': 'verbose',
+            'maxBytes': 1024*1024*15, # 15MB
+            'backupCount': 10,
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers':['syslog', 'djangolog'],
+            'propagate': True,
+            'level':'DEBUG',
+        },
+    }
 }

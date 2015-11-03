@@ -24,6 +24,7 @@ from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes, HSAccessException
 
+from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
@@ -333,12 +334,14 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     else:
         status = 'error'
 
-    if status == 'success':
-        messages.success(request, "Resource sharing was successful")
-    else:
-        messages.error(request, err_message)
+    picture_url = 'No picture provided'
+    if user_to_share_with.userprofile.picture:
+        picture_url = user_to_share_with.userprofile.picture.url
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
+                          'username': user_to_share_with.username, 'privilege': privilege, 'profile_pic': picture_url,
+                          'error_msg': err_message}
+    return HttpResponse(json.dumps(ajax_response_data))
 
 
 # Needed for new access control UI functionality being developed by Mauriel
@@ -563,8 +566,8 @@ def create_resource(request, *args, **kwargs):
         except utils.ResourceFileSizeException as ex:
             context = {'file_size_error': ex.message}
             return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
-        except Exception as ex:
-            context = {'resource_creation_error': ex.message}
+        except SessionException as ex:
+            context = {'resource_creation_error': ex.stderr}
             return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     url_key = "page_redirect_url"

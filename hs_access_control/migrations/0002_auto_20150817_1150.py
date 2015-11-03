@@ -10,7 +10,7 @@ def migrate_users(apps, schema_editor):
     # create a 'UserAccess' record for each existing user - needed for the new access control to work
     UserAccess.objects.all().delete()
     for u in User.objects.all():
-        ua = UserAccess(user=u, admin=False)
+        ua = UserAccess(user=u)
         ua.save()
 
 

@@ -289,7 +289,6 @@ class UserAccess(models.Model):
                                 related_query_name='uaccess')
 
     active = models.BooleanField(default=True, editable=False, help_text='whether user is currently capable of action')
-    admin = models.BooleanField(default=False, editable=False, help_text='whether user is an administrator')
 
     # syntactic sugar: make some queries easier to write
     # related names are not used by our application, but trying to
@@ -345,7 +344,7 @@ class UserAccess(models.Model):
         :param this_group: Group to delete.
         :return: None
 
-        To delete a group a user must be owner or administrator of the group.
+        To delete a group a user must be owner or administrator.
         Deleting a group deletes all membership and sharing information.
         There is no undo.
         """
@@ -353,7 +352,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Grantee is not a group")
         access_group = this_group.gaccess
 
-        if self.admin or self.owns_group(this_group):
+        if self.user.is_superuser or self.owns_group(this_group):
             # delete all references to group_id
             # default is CASCADE; this is probably unnecessary
 
@@ -477,6 +476,9 @@ class UserAccess(models.Model):
         if not self.active:
             return False
 
+        if self.user.is_superuser:
+            return True
+
         if UserGroupPrivilege.objects.filter(group=access_group,
                                              privilege__lte=PrivilegeCodes.CHANGE,
                                              user=self):
@@ -501,9 +503,14 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a group")
         access_group = this_group.gaccess
 
+
         # allow access to public resources even if user is not logged in.
         if not self.active:
             return False
+
+        if self.user.is_superuser:
+            return True
+
         if access_group.public:
             return True
 
@@ -568,7 +575,7 @@ class UserAccess(models.Model):
         if not isinstance(this_group, Group):
             raise HSAUsageException("Target is not a group")
 
-        return self.active and (self.admin or self.owns_group(this_group))
+        return self.active and (self.user.is_superuser or self.owns_group(this_group))
 
     def can_delete_group(self, this_group):
         """
@@ -591,7 +598,7 @@ class UserAccess(models.Model):
         if not isinstance(this_group, Group):
             raise HSAUsageException("Target is not a group")
 
-        return self.active and (self.admin or self.owns_group(this_group))
+        return self.active and (self.user.is_superuser or self.owns_group(this_group))
 
     ####################################
     # sharing permission checking
@@ -623,6 +630,9 @@ class UserAccess(models.Model):
 
         if not self.active:
             return False
+
+        if self.user.is_superuser:
+            return True
 
         if not self.owns_group(this_group) and not access_group.shareable:
             return False
@@ -678,13 +688,13 @@ class UserAccess(models.Model):
         if not self.active:
             raise HSAccessException("User is not active")
 
-        if not self.owns_group(this_group) and not access_group.shareable:
+        if not self.owns_group(this_group) and not access_group.shareable and not self.user.is_superuser:
             raise HSAccessException("User is not group owner and group is not shareable")
 
         # must have a this_privilege greater than or equal to what we want to assign
-        if not UserGroupPrivilege.objects.filter(group=access_group,
-                                                 user=self,
-                                                 privilege__lte=this_privilege):
+        if not self.user.is_superuser and not UserGroupPrivilege.objects.filter(group=access_group,
+                                                                                user=self,
+                                                                                privilege__lte=this_privilege):
             raise HSAccessException("User has insufficient privilege over group")
 
         # user is authorized and privilege is appropriate
@@ -709,6 +719,10 @@ class UserAccess(models.Model):
                                user=access_user,
                                privilege=this_privilege,
                                grantor=self).save()
+
+            # if there exists any higher privileges granted by someone else then those need to be deleted
+            UserGroupPrivilege.objects.filter(group=access_group, user=access_user,
+                                              privilege__lt=this_privilege).all().delete()
 
     def __handle_unshare_group_with_user(self, this_group, this_user, command=CommandCodes.CHECK):
         if not isinstance(this_group, Group):
@@ -738,9 +752,9 @@ class UserAccess(models.Model):
         #   Admin
         #   Owner of group
         #   Modifying privileges for self
-        if self.admin \
+        if self.user.is_superuser \
             or self.owns_group(this_group) \
-            or access_user==self:
+            or access_user == self:
             # if there is a different owner,  we're fine
             if UserGroupPrivilege.objects.filter(group=access_group,
                                                  privilege=PrivilegeCodes.OWNER).exclude(user=access_user):
@@ -836,7 +850,7 @@ class UserAccess(models.Model):
                 else:
                     return False
 
-            if not self.owns_group(this_group) and not self.admin:
+            if not self.owns_group(this_group) and not self.user.is_superuser:
                 if command == CommandCodes.DO:
                     raise HSAccessException("Self must be owner or admin")
                 else:
@@ -965,7 +979,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a group")
         access_group = this_group.gaccess
 
-        if self.admin or self.owns_group(this_group):
+        if self.user.is_superuser or self.owns_group(this_group):
 
             if access_group.get_number_of_owners()>1:
                 # every possible undo is permitted, including self-undo
@@ -1021,7 +1035,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a group")
         access_group = this_group.gaccess
 
-        if self.admin or self.owns_group(this_group):
+        if self.user.is_superuser or self.owns_group(this_group):
             # everyone who holds this resource, minus potential sole owners
             if access_group.get_number_of_owners() == 1:
                 # get list of owners to exclude from main list
@@ -1082,7 +1096,7 @@ class UserAccess(models.Model):
         """
 
         return BaseResource.objects.filter(raccess__r2urp__user=self,
-                                              raccess__r2urp__privilege=PrivilegeCodes.OWNER).distinct()
+                                           raccess__r2urp__privilege=PrivilegeCodes.OWNER).distinct()
 
     def get_number_of_owned_resources(self):
         """
@@ -1158,6 +1172,9 @@ class UserAccess(models.Model):
         if access_resource.immutable:
             return False
 
+        if self.user.is_superuser:
+            return True
+
         if UserResourcePrivilege.objects.filter(resource=access_resource,
                                                 privilege__lte=PrivilegeCodes.CHANGE,
                                                 user=self):
@@ -1182,7 +1199,7 @@ class UserAccess(models.Model):
         if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
 
-        return self.active and (self.admin or self.owns_resource(this_resource))
+        return self.active and (self.user.is_superuser or self.owns_resource(this_resource))
 
     def can_view_resource(self, this_resource):
         """
@@ -1201,6 +1218,9 @@ class UserAccess(models.Model):
             return False
 
         if access_resource.public:
+            return True
+
+        if self.user.is_superuser:
             return True
 
         if UserResourcePrivilege.objects.filter(resource=access_resource,
@@ -1226,7 +1246,7 @@ class UserAccess(models.Model):
         if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
 
-        return self.active and (self.admin or self.owns_resource(this_resource))
+        return self.active and (self.user.is_superuser or self.owns_resource(this_resource))
 
     ##########################################
     # check sharing rights
@@ -1258,7 +1278,7 @@ class UserAccess(models.Model):
         whom_priv = access_resource.get_combined_privilege(self.user)
 
         # check for user authorization
-        if self.admin:
+        if self.user.is_superuser:
             pass  # admin can do anything
 
         elif whom_priv == PrivilegeCodes.OWNER:
@@ -1308,7 +1328,7 @@ class UserAccess(models.Model):
         if not self.can_share_resource(this_resource, this_privilege):
             return False
 
-        if self not in this_group.members:
+        if self not in this_group.gaccess.get_members() and not self.user.is_superuser:
             return False
 
         return True
@@ -1334,7 +1354,7 @@ class UserAccess(models.Model):
 
             access_grantor = this_grantor.uaccess
 
-            if not self.owns_resource(this_resource) and not self.admin:
+            if not self.owns_resource(this_resource) and not self.user.is_superuser:
                 if command == CommandCodes.DO:
                     raise HSAccessException("Self must be owner or admin")
                 else:
@@ -1438,7 +1458,7 @@ class UserAccess(models.Model):
 
         # check for user authorization
 
-        if self.admin:
+        if self.user.is_superuser:
             pass  # admin can do anything
 
         elif whom_priv == PrivilegeCodes.OWNER:
@@ -1481,13 +1501,9 @@ class UserAccess(models.Model):
                                   privilege=this_privilege,
                                   grantor=self).save()
 
-        # TODO: Check with Alva on this 'if statement' that I (Pabitra) added is in fact needed
-        # Reason: If the user is down grading his own access to a resource then any higher privileges that he/she
-        # might have been granted previously (by anyone) must be deleted
-        # With this change all Alva's unit tests still pass
-        if access_user == self:
-            UserResourcePrivilege.objects.filter(resource=access_resource, user=access_user,
-                                                 privilege__lt=this_privilege).all().delete()
+        # if there exists higher privilege granted by someone else then those needs to be deleted
+        UserResourcePrivilege.objects.filter(resource=access_resource, user=access_user,
+                                             privilege__lt=this_privilege).all().delete()
 
     def __handle_unshare_resource_with_user(self, this_resource, this_user, command=CommandCodes.CHECK):
 
@@ -1530,7 +1546,7 @@ class UserAccess(models.Model):
         #   Admin
         #   Owner of resource
         #   Modifying self
-        if self.admin \
+        if self.user.is_superuser \
                 or access_resource.get_combined_privilege(self.user) == PrivilegeCodes.OWNER \
                 or access_user == self:
             if UserResourcePrivilege.objects \
@@ -1622,7 +1638,7 @@ class UserAccess(models.Model):
                 else:
                     return False
 
-            if not self.owns_resource(this_resource) and not self.admin:
+            if not self.owns_resource(this_resource) and not self.user.is_superuser:
                 if command == CommandCodes.DO:
                     raise HSAccessException("Self must be owner or admin")
                 else:
@@ -1717,8 +1733,8 @@ class UserAccess(models.Model):
         if not self.can_share_resource(this_resource, this_privilege):
             raise HSAccessException("User has insufficient sharing privilege over resource")
 
-        if self not in access_group.members.all():
-            raise HSAccessException("User is not a member of the group")
+        if self not in access_group.members.all() and not self.user.is_superuser:
+            raise HSAccessException("User is not a member of the group and not an admin")
 
         # user is authorized and privilege is appropriate
         # proceed to change the record if present
@@ -1764,7 +1780,7 @@ class UserAccess(models.Model):
         #   Admin
         #   Owner of resource
         #   Owner of group
-        if self.admin \
+        if self.user.is_superuser \
                 or self.owns_resource(this_resource) \
                 or self.owns_group(this_group):
 
@@ -1825,7 +1841,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
-        if self.admin or self.owns_resource(this_resource):
+        if self.user.is_superuser or self.owns_resource(this_resource):
 
             if access_resource.get_number_of_owners() > 1:
                 # print("Returning results for all undoes -- owners>1")
@@ -1872,7 +1888,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
-        if self.admin or self.owns_resource(this_resource):
+        if self.user.is_superuser or self.owns_resource(this_resource):
             # everyone who holds this resource, minus potential sole owners
             if access_resource.get_number_of_owners() == 1:
                 # get list of owners to exclude from main list
@@ -1905,7 +1921,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
-        if self.admin or self.owns_resource(this_resource):
+        if self.user.is_superuser or self.owns_resource(this_resource):
             return Group.objects.filter(gaccess__held_resources=access_resource).distinct()
         else:  #  privilege only for grantor
             return Group.objects.filter(gaccess__g2grp__resource=access_resource,
@@ -1924,14 +1940,14 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
-        # Users who can be removed fall into three catagories
+        # Users who can be removed fall into three categories
         # a) self is admin: everyone with access.
         # b) self is resource owner: everyone with access.
         # c) self is group owner: only for owned groups
 
         # if user is administrator or owner, then return all groups with access.
 
-        if self.admin or self.owns_resource(this_resource):
+        if self.user.is_superuser or self.owns_resource(this_resource):
             # all shared groups
             return Group.objects.filter(gaccess__held_resources=access_resource)
         else:
@@ -2260,8 +2276,12 @@ class ResourceAccess(models.Model):
 
         if not isinstance(this_user, User):
             raise HSAUsageException("Grantee is not a user")
-        access_user = this_user.uaccess
 
+        if this_user.is_superuser:
+            return PrivilegeCodes.OWNER
+
+        access_user = this_user.uaccess
+        
         # compute simple user privilege over resource
         user_priv = UserResourcePrivilege.objects\
             .filter(user=access_user,
