@@ -62,3 +62,5 @@
 {{ editor_name }}
 {% endfor %}
 {{ object.editors_count }}
+{{ object.comments_count }}
+{{ object.body }}

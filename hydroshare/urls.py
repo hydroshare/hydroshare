@@ -13,14 +13,15 @@ import autocomplete_light
 from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
+from haystack.views import SearchView
+from hs_core.customer_form import DateRangeSearchForm
 autocomplete_light.autodiscover()
 admin.autodiscover()
 
 # Add the urlpatterns for any custom Django applications here.
 # You can also change the ``home`` view to add your own functionality
 # to the project's homepage.
-#faceted_sqs = SearchQuerySet().facet('contributors')
-faceted_sqs = SearchQuerySet()
+faceted_sqs = SearchQuerySet().filter(discoverable=True)
 facet_list = ('author', 'creators', 'subjects', 'public', 'discoverable', 'language', 'title', 'resource_type')
 for item in facet_list:
     faceted_sqs = faceted_sqs.facet(item)
@@ -43,7 +44,8 @@ urlpatterns = i18n_patterns("",
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url(r'^search/$', FacetedSearchView(form_class=FacetedSearchForm, searchqueryset=faceted_sqs),name='haystack_search'),
+    #url(r'^search/$', SearchView(form_class=DateRangeSearchForm), name='haystack_search')
+    url(r'^search/$', FacetedSearchView(form_class=DateRangeSearchForm, searchqueryset=faceted_sqs),name='haystack_search'),
     #url('^search/', include('haystack.urls')),
 )
 #urlpatterns = patterns('haystack.views',

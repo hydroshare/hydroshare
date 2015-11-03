@@ -191,6 +191,8 @@
 
     <field name="viewers_names" type="text_en" indexed="true" stored="true" multiValued="true" />
 
+    <field name="comments_count_exact" type="long" indexed="true" stored="true" multiValued="false" />
+
     <field name="editors_count" type="long" indexed="true" stored="true" multiValued="false" />
 
     <field name="viewers_count" type="long" indexed="true" stored="true" multiValued="false" />
@@ -244,6 +246,8 @@
     <field name="viewers_logins_exact" type="string" indexed="true" stored="true" multiValued="true" />
 
     <field name="editors_logins_exact" type="string" indexed="true" stored="true" multiValued="true" />
+
+    <field name="comments_count" type="long" indexed="true" stored="true" multiValued="false" />
 
     <field name="formats" type="text_en" indexed="true" stored="true" multiValued="true" />
 
