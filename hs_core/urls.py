@@ -31,6 +31,9 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[A-z0-9]+)/files/(?P<filename>[^/]+)/$',
         views.resource_rest_api.ResourceFileCRUD.as_view(), name='get_update_delete_resource_file'),
 
+    url(r'^userInfo/$',
+        views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
+
     # internal API
 
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/add-file-to-resource/$', views.add_file_to_resource),

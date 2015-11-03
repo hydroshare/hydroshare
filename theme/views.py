@@ -1,11 +1,13 @@
 from json import dumps
 
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.messages import info, error
 from django.utils.translation import ugettext_lazy as _
+from django.db.models import Q
 
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
@@ -39,11 +41,27 @@ class UserProfileView(TemplateView):
             except:
                 u = User.objects.get(username=self.request.GET['user'])
 
-        res = BaseResource.objects.filter(user=u)
+        # get all resources the profile user owns
+        resources = u.uaccess.get_owned_resources()
+
+        # if requesting user is not the profile user, then show only resources that the requesting user has access
+        if self.request.user != u:
+            if self.request.user.is_authenticated():
+                if self.request.user.is_superuser:
+                    # admin can see all resources owned by profile user
+                    pass
+                else:
+                    # filter out any resources the requesting user doesn't have access
+                    resources = resources.filter(Q(pk__in=self.request.user.uaccess.get_held_resources()) |
+                                                 Q(raccess__public=True) | Q(raccess__discoverable=True))
+
+            else:
+                # for anonymous requesting user show only resources that are either public or discoverable
+                resources = resources.filter(Q(raccess__public=True) | Q(raccess__discoverable=True))
 
         return {
             'u': u,
-            'resources': res,
+            'resources': resources,
         }
 
 # added by Hong Yi to address issue #186 to customize Mezzanine-based commenting form and view
@@ -110,21 +128,25 @@ def signup(request, template="accounts/account_signup.html"):
     """
     form = SignupForm(request, request.POST, request.FILES)
     if request.method == "POST" and form.is_valid():
-        new_user = form.save()
-        if not new_user.is_active:
-            if settings.ACCOUNTS_APPROVAL_REQUIRED:
-                send_approve_mail(request, new_user)
-                info(request, _("Thanks for signing up! You'll receive "
-                                "an email when your account is activated."))
-            else:
-                send_verification_mail(request, new_user, "signup_verify")
-                info(request, _("A verification email has been sent with "
-                                "a link for activating your account."))
-            return redirect(next_url(request) or "/")
+        try:
+            new_user = form.save()
+        except ValidationError as e:
+            form.add_error(None, e.message)
         else:
-            info(request, _("Successfully signed up"))
-            auth_login(request, new_user)
-            return login_redirect(request)
+            if not new_user.is_active:
+                if settings.ACCOUNTS_APPROVAL_REQUIRED:
+                    send_approve_mail(request, new_user)
+                    info(request, _("Thanks for signing up! You'll receive "
+                                    "an email when your account is activated."))
+                else:
+                    send_verification_mail(request, new_user, "signup_verify")
+                    info(request, _("A verification email has been sent with "
+                                    "a link for activating your account."))
+                return redirect(next_url(request) or "/")
+            else:
+                info(request, _("Successfully signed up"))
+                auth_login(request, new_user)
+                return login_redirect(request)
     context = {
         "form": form,
         "title": _("Sign up"),
