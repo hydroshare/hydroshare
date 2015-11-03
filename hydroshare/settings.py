@@ -250,6 +250,8 @@ INPLACE_SAVE_URL = '/hsapi/save_inline/'
 INSTALLED_APPS = (
     "django.contrib.admin",
     "django.contrib.auth",
+    "oauth2_provider",
+    "corsheaders",
     "django.contrib.contenttypes",
     "django.contrib.redirects",
     "django.contrib.sessions",
@@ -295,6 +297,28 @@ INSTALLED_APPS = (
     "hs_modelinstance",
     "hs_tools_resource",
     "hs_swat_modelinstance",
+    "hs_geographic_feature_resource",
+)
+
+# These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
+# All apps beginning with "django." or "mezzanine." are also excluded by default
+APPS_TO_NOT_RUN = (
+    'ga_ows',
+    'ga_resources',
+    'jquery_ui',
+    'djcelery',
+    'rest_framework',
+    'django_docker_processes',
+    'dublincore',
+    'django_nose',
+    'inplaceeditform',
+    'grappelli_safe',
+    'django_irods',
+    'crispy_forms',
+    'autocomplete_light',
+    'widget_tweaks',
+    'oauth2_provider',
+    # etc...
 )
 
 # List of processors used by RequestContext to populate the context.
@@ -321,6 +345,7 @@ MIDDLEWARE_CLASSES = (
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -341,6 +366,13 @@ MIDDLEWARE_CLASSES = (
 # at the moment we are using custom forks of them.
 PACKAGE_NAME_FILEBROWSER = "filebrowser_safe"
 PACKAGE_NAME_GRAPPELLI = "grappelli_safe"
+
+#########################
+#  CORS/OAUTH SETTINGS  #
+#########################
+
+# TODO: change this to the actual origins we wish to support
+CORS_ORIGIN_ALLOW_ALL = True
 
 #########################
 # OPTIONAL APPLICATIONS #
@@ -423,5 +455,61 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+        'oauth2_provider.ext.rest_framework.OAuth2Authentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
     )
+}
+
+# customized value for password reset token and email verification link token to expire in 1 day
+PASSWORD_RESET_TIMEOUT_DAYS = 1
+
+####################
+# LOGGING SETTINGS #
+####################
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
+        'simple': {
+            'format': '[%(asctime)s] %(levelname)s %(message)s',
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
+    },
+    'handlers': {
+        'syslog': {
+            'level': 'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/hydroshare/system.log',
+            'formatter': 'simple',
+            'maxBytes': 1024*1024*15, # 15MB
+            'backupCount': 10,
+        },
+        'djangolog': {
+            'level': 'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/hydroshare/django.log',
+            'formatter': 'verbose',
+            'maxBytes': 1024*1024*15, # 15MB
+            'backupCount': 10,
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers':['syslog', 'djangolog'],
+            'propagate': True,
+            'level':'DEBUG',
+        },
+        'django.db.backends': {
+            'handlers': ['syslog'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    }
 }
