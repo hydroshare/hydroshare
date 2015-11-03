@@ -1,12 +1,15 @@
 __author__ = 'Mohamed Morsy'
 from django.forms import ModelForm
 from django import forms
-from crispy_forms import *
-from crispy_forms.layout import *
-from crispy_forms.bootstrap import *
-from models import *
+
+from crispy_forms import layout
+from crispy_forms.layout import Layout, Field, HTML
+
 from hs_core.forms import BaseFormHelper
 from hs_core.hydroshare import users
+
+from hs_swat_modelinstance.models import SWATModelInstanceResource, ModelOutput, ExecutedBy, ModelObjective,\
+    SimulationType, ModelMethod, ModelParameter, ModelInput
 
 model_objective_choices = (
                             ('Hydrology', 'Hydrology'),

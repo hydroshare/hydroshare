@@ -1,42 +1,22 @@
 __author__ = 'Mohamed Morsy'
 from django.contrib.contenttypes import generic
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.contrib.auth.models import User, Group
 from django.db import models
-from mezzanine.pages.models import Page, RichText
-from mezzanine.core.models import Ownable
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+
 from mezzanine.pages.page_processors import processor_for
-from lxml import etree
+
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
-from hs_model_program.models import ModelProgramResource
 from hs_core.hydroshare import utils
+
+from hs_model_program.models import ModelProgramResource
+
+from lxml import etree
 
 
 # extended metadata elements for SWAT Model Instance resource type
 class ModelOutput(AbstractMetaDataElement):
     term = 'ModelOutput'
     includes_output = models.BooleanField(default=False)
-
-    @classmethod
-    def create(cls, **kwargs):
-        return ModelOutput.objects.create(**kwargs)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        model_output = ModelOutput.objects.get(id=element_id)
-        if model_output:
-            for key, value in kwargs.iteritems():
-                setattr(model_output, key, value)
-
-            model_output.save()
-        else:
-            raise ObjectDoesNotExist("No ModelOutput element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("ModelOutput element of a resource can't be deleted.")
-
 
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
@@ -78,12 +58,6 @@ class ExecutedBy(AbstractMetaDataElement):
 
         else:
             raise ObjectDoesNotExist("No ExecutedBy element was found for the provided id:%s" % kwargs['id'])
-
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("ExecutedBy element of a resource can't be deleted.")
-
 
 class ModelObjectiveChoices(models.Model):
     description = models.CharField(max_length=300)
@@ -149,10 +123,6 @@ class ModelObjective(AbstractMetaDataElement):
             raise ObjectDoesNotExist("No ModelObjective element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("ModelObjective element of a resource can't be deleted.")
-
-    @classmethod
     def _validate_swat_model_objectives(cls, objectives):
         for swat_objective in objectives:
             if swat_objective not in ['Hydrology', 'Water quality', 'BMPs', 'Climate / Landuse Change']:
@@ -167,32 +137,6 @@ class SimulationType(AbstractMetaDataElement):
     def __unicode__(self):
         self.simulation_type_name
 
-    @classmethod
-    def create(cls, **kwargs):
-        if 'simulation_type_name' in kwargs:
-            if not kwargs['simulation_type_name'] in ['Normal Simulation', 'Sensitivity Analysis', 'Auto-Calibration']:
-                raise ValidationError('Invalid simulation type:%s' % kwargs['type'])
-        else:
-            raise ValidationError("simulation type is missing.")
-
-        metadata_obj = kwargs['content_object']
-        return SimulationType.objects.create(simulation_type_name=kwargs['simulation_type_name'], content_object=metadata_obj)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        simulation_type = SimulationType.objects.get(id=element_id)
-        if simulation_type:
-            for key, value in kwargs.iteritems():
-                if key in ('simulation_type_name'):
-                    setattr(simulation_type, key, value)
-            simulation_type.save()
-        else:
-            raise ObjectDoesNotExist("No SimulationType element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("SimulationType element of a resource can't be deleted.")
-
 class ModelMethod(AbstractMetaDataElement):
     term = 'ModelMethod'
     runoff_calculation_method = models.CharField(max_length=200, null=True, blank=True)
@@ -201,36 +145,6 @@ class ModelMethod(AbstractMetaDataElement):
 
     def __unicode__(self):
         self.runoff_calculation_method
-
-    @classmethod
-    def create(cls, **kwargs):
-        if not 'runoff_calculation_method' in kwargs:
-            raise ValidationError("ModelMethod runoffCalculationMethod is missing.")
-        if not 'flow_routing_method' in kwargs:
-            raise ValidationError("ModelMethod flowRoutingMethod is missing.")
-        if not 'PET_estimation_method' in kwargs:
-            raise ValidationError("ModelMethod PETestimationMethod is missing.")
-        metadata_obj = kwargs['content_object']
-        return ModelMethod.objects.create(runoff_calculation_method=kwargs['runoff_calculation_method'],
-                                             flow_routing_method=kwargs['flow_routing_method'],
-                                             PET_estimation_method=kwargs['PET_estimation_method'],
-                                             content_object=metadata_obj)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        model_methods = ModelMethod.objects.get(id=element_id)
-        if model_methods:
-            for key, value in kwargs.iteritems():
-                if key in ('runoff_calculation_method', 'flow_routing_method', 'PET_estimation_method'):
-                    setattr(model_methods, key, value)
-            model_methods.save()
-        else:
-            raise ObjectDoesNotExist("No ModelMethod element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("ModelMethod element of a resource can't be deleted.")
-
 
 class ModelParametersChoices(models.Model):
     description = models.CharField(max_length=300)
@@ -296,11 +210,6 @@ class ModelParameter(AbstractMetaDataElement):
         else:
             raise ObjectDoesNotExist("No ModelParameter element was found for the provided id:%s" % kwargs['id'])
 
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("ModelParameter element of a resource can't be deleted.")
-
     @classmethod
     def _validate_swat_model_parameters(cls, parameters):
         for swat_parameters in parameters:
@@ -334,81 +243,6 @@ class ModelInput(AbstractMetaDataElement):
     def __unicode__(self):
         self.rainfall_time_step
 
-    @classmethod
-    def create(cls, **kwargs):
-        if not 'warm_up_period' in kwargs:
-            raise ValidationError("ModelInput warm-upPeriod is missing.")
-        if not 'rainfall_time_step_type' in kwargs:
-            raise ValidationError("ModelInput rainfallTimeStepType is missing.")
-        if not 'rainfall_time_step_value' in kwargs:
-            raise ValidationError("ModelInput rainfallTimeStepValue is missing.")
-        if not 'routing_time_step_type' in kwargs:
-            raise ValidationError("ModelInput routingTimeStepType is missing.")
-        if not 'routing_time_step_value' in kwargs:
-            raise ValidationError("ModelInput routingTimeStepValue is missing.")
-        if not 'simulation_time_step_type' in kwargs:
-            raise ValidationError("ModelInput simulationTimeStepType is missing.")
-        if not 'simulation_time_step_value' in kwargs:
-            raise ValidationError("ModelInput simulationTimeStepValue is missing.")
-        if not 'watershed_area' in kwargs:
-            raise ValidationError("ModelInput watershedArea is missing.")
-        if not 'number_of_subbasins' in kwargs:
-            raise ValidationError("ModelInput numberOfSubbasins is missing.")
-        if not 'number_of_HRUs' in kwargs:
-            raise ValidationError("ModelInput numberOfHRUs is missing.")
-        if not 'DEM_resolution' in kwargs:
-            raise ValidationError("ModelInput DEMresolution is missing.")
-        if not 'DEM_source_name' in kwargs:
-            raise ValidationError("ModelInput DEMsourceName is missing.")
-        if not 'DEM_source_URL' in kwargs:
-            raise ValidationError("ModelInput DEMsourceURL is missing.")
-        if not 'landUse_data_source_name' in kwargs:
-            raise ValidationError("ModelInput landUseDataSourceName is missing.")
-        if not 'landUse_data_source_URL' in kwargs:
-            raise ValidationError("ModelInput landUseDataSourceURL is missing.")
-        if not 'soil_data_source_name' in kwargs:
-            raise ValidationError("ModelInput soilDataSourceName is missing.")
-        if not 'soil_data_source_URL' in kwargs:
-            raise ValidationError("ModelInput soilDataSourceURL is missing.")
-        metadata_obj = kwargs['content_object']
-        return ModelInput.objects.create(warm_up_period=kwargs['warm_up_period'],
-                                             rainfall_time_step_type=kwargs['rainfall_time_step_type'],
-                                             rainfall_time_step_value=kwargs['rainfall_time_step_value'],
-                                             routing_time_step_type=kwargs['routing_time_step_type'],
-                                             routing_time_step_value=kwargs['routing_time_step_value'],
-                                             simulation_time_step_type=kwargs['simulation_time_step_type'],
-                                             simulation_time_step_value=kwargs['simulation_time_step_value'],
-                                             watershed_area=kwargs['watershed_area'],
-                                             number_of_subbasins=kwargs['number_of_subbasins'],
-                                             number_of_HRUs=kwargs['number_of_HRUs'],
-                                             DEM_resolution=kwargs['DEM_resolution'],
-                                             DEM_source_name=kwargs['DEM_source_name'],
-                                             DEM_source_URL=kwargs['DEM_source_URL'],
-                                             landUse_data_source_name=kwargs['landUse_data_source_name'],
-                                             landUse_data_source_URL=kwargs['landUse_data_source_URL'],
-                                             soil_data_source_name=kwargs['soil_data_source_name'],
-                                             soil_data_source_URL=kwargs['soil_data_source_URL'],
-                                             content_object=metadata_obj)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        model_input = ModelInput.objects.get(id=element_id)
-        if model_input:
-            for key, value in kwargs.iteritems():
-                if key in ('warm_up_period', 'rainfall_time_step_type', 'rainfall_time_step_value',
-                           'routing_time_step_type', 'routing_time_step_value', 'simulation_time_step_type', 'simulation_time_step_value',
-                           'watershed_area','number_of_subbasins',
-                           'number_of_HRUs', 'DEM_resolution', 'DEM_source_name', 'DEM_source_URL',
-                           'landUse_data_source_name', 'landUse_data_source_URL', 'soil_data_source_name', 'soil_data_source_URL'):
-                    setattr(model_input, key, value)
-            model_input.save()
-        else:
-            raise ObjectDoesNotExist("No ModelInput element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("ModelInput element of a resource can't be deleted.")
-
 #SWAT Model Instance Resource type
 class SWATModelInstanceResource(BaseResource):
     objects = ResourceManager("SWATModelInstanceResource")
@@ -430,7 +264,6 @@ class SWATModelInstanceResource(BaseResource):
     @classmethod
     def can_have_multiple_files(cls):
         return True
-
 
 processor_for(SWATModelInstanceResource)(resource_processor)
 
@@ -472,7 +305,6 @@ class SWATModelInstanceMetaData(CoreMetaData):
     def model_input(self):
         return self._model_input.all().first()
 
-
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -499,7 +331,6 @@ class SWATModelInstanceMetaData(CoreMetaData):
         if not self.model_objective:
             missing_required_elements.append('ModelObjective')
         return missing_required_elements
-
 
     def get_xml(self, pretty_print=True):
 
@@ -609,5 +440,15 @@ class SWATModelInstanceMetaData(CoreMetaData):
             hsterms_model_input_soil_data_source_URL.text = self.model_input.soil_data_source_URL
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
+
+    def delete_all_elements(self):
+        super(SWATModelInstanceMetaData, self).delete_all_elements()
+        self._model_output.all().delete()
+        self._executed_by.all().delete()
+        self._model_objective.all().delete()
+        self._simulation_type.all().delete()
+        self._model_method.all().delete()
+        self._model_parameter.all().delete()
+        self._model_input.all().delete()
 
 import receivers
