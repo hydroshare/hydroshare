@@ -64,14 +64,6 @@ class mp_form(ModelForm):
         super(mp_form, self).__init__(*args, **kwargs)
         self.helper = mp_form_helper(allow_edit, res_short_id, element_id, element_name='MpMetadata', files=files)
 
-
-        # Set the choice lists as the file names in the content model
-        # filenames = ['       '] + [f.resource_file.name.split('/')[-1] for f in files.all()]
-        # CHOICES = tuple((f, f) for f in filenames)
-        # self.fields['modelReleaseNotes'].choices = CHOICES
-        # self.fields['modelDocumentation'].choices = CHOICES
-        # self.fields['modelSoftware'].choices = CHOICES
-
         for field in self.fields:
             help_text = self.fields[field].help_text
             self.fields[field].help_text = None

@@ -1,5 +1,3 @@
-import datetime as dt
-
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group
 from django.db import models
@@ -8,9 +6,6 @@ from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.signals import *
-from django.core import validators, checks
-from django.utils import six
-from django.utils.encoding import smart_text
 
 
 class MpMetadata(AbstractMetaDataElement):
