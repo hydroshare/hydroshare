@@ -705,9 +705,10 @@ def delete_resource_file(pk, filename_or_id, user):
     else:
         raise ObjectDoesNotExist(filename_or_id)
 
-    if resource.raccess.public:
+    if resource.raccess.public or resource.raccess.discoverable:
         if not resource.can_be_public:
             resource.raccess.public = False
+            resource.raccess.discoverable = False
             resource.raccess.save()
 
     # generate bag

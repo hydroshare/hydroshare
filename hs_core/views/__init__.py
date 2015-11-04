@@ -681,14 +681,14 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
         return
 
     if is_public and not resource.can_be_public:
-        messages.error(request, "Resource may not have sufficient required metadata to be public")
+        messages.error(request, _get_message_for_setting_resource_flag(resource, resource_flag='public'))
     else:
         if is_discoverable:
             if resource.can_be_public:
                 resource.raccess.public = False
                 resource.raccess.discoverable = True
             else:
-                messages.error(request, "Resource may not have sufficient required metadata to be discoverable")
+                messages.error(request, _get_message_for_setting_resource_flag(resource, resource_flag='discoverable'))
         else:
             resource.raccess.public = is_public
             resource.raccess.discoverable = is_public
@@ -697,3 +697,18 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
         # set isPublic metadata AVU accordingly
         istorage = IrodsStorage()
         istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
+
+
+def _get_message_for_setting_resource_flag(resource, resource_flag):
+    has_files = resource.has_required_content_files()
+    has_metadata = resource.metadata.has_all_required_elements()
+    msg = ''
+    if not has_metadata and not has_files:
+        msg = "Resource may not have sufficient required metadata and/or content files to be {flag}".format(
+              flag=resource_flag)
+    elif not has_metadata:
+        msg = "Resource may not have sufficient required metadata to be {flag}".format(flag=resource_flag)
+    elif not has_files:
+        msg = "Resource may not have required content files to be {flag}".format(flag=resource_flag)
+
+    return msg

@@ -48,7 +48,7 @@
                         {%  endif %}
                         {%  if not cm.has_required_content_files %}
                                 <br>
-                                <span>Content file(s) is missing. Content file(s) is required to make the resource public.</span>
+                                <span>Content file(s) is missing. Content file(s) is required to make the resource public or discoverable.</span>
                         {% endif %}
                         <hr>
                         <span class="glyphicon glyphicon-question-sign"></span>
@@ -408,7 +408,7 @@
                                   method="POST">
                                 <input name="t" type="hidden" value="make_discoverable"/>
                                 {% csrf_token %}
-                                <button {% if metadata_status == 'Insufficient to make public' %} disabled {% endif %}
+                                <button {% if not cm.can_be_public %} disabled {% endif %}
                                         id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
                                         title='Metadata is public but data is protected.' type="submit"
                                         class="btn btn-default">Discoverable
