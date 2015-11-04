@@ -95,7 +95,7 @@ class ExecutedBy(AbstractMetaDataElement):
 
 # Model Instance Resource type
 class ModelInstanceResource(BaseResource):
-    objects = ResourceManager()
+    objects = ResourceManager("ModelInstanceResource")
 
     class Meta:
         verbose_name = 'Model Instance Resource'

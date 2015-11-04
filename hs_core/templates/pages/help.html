@@ -66,7 +66,7 @@
                             </div>
                             <div id="faq-cat-1-sub-3" class="panel-collapse collapse">
                                 <div class="panel-body">
-                                    Hydroshare is currently in Release 1.5.2 of development.
+                                    Hydroshare is in active development. The current release is <span id="release_no"></span>.
                                 </div>
                             </div>
                         </div>
@@ -148,8 +148,7 @@
                                         <li><a href="{% url 'login' %}">Sign in</a> to HydroShare.</li>
                                         <li>Click on "Resources" in the navigation bar at the top of the page.</li>
                                         <li>Select the Title of the resource you would like to rate or comment on.</li>
-                                        <li>A new page will appear where you can Comment on a resource as well as perform various options on it. </li>
-                                        <li><strong>Currently HydroShare does not support rating resources.</strong> You may, however, rate a comment by clicking the "+1" next to the comment.</li>
+                                        <li>A new page will appear where you can comment on or rate a resource as well as perform various options on it. You may also rate a comment by clicking the "+1" next to the comment.</li>
                                     </ol>
                                 </div>
                             </div>
@@ -161,4 +160,15 @@
         </div>
     </div>
 
+    {% block extra_js %}
+        <script type="text/javascript">
+            $(document).ready(function () {
+                var url = 'https://api.github.com/repos/hydroshare/hydroshare/releases/latest';
+                $.get(url).done(function (data) {
+                  var version = data.tag_name;
+                  $('#release_no').html(version);
+                });
+            });
+        </script>
+    {% endblock %}
 {% endblock %}

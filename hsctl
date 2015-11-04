@@ -28,12 +28,14 @@ PROD_SERVER='uwsgi --socket :8001 --ini uwsgi.ini'
 
 display_usage() {
 	echo "*** HydroShare Control script ***"
-	echo "usage: $0 deploy      # deletes all database and container contents and deploys from scratch"
-	echo "usage: $0 loaddb      # loads database specified in hydroshare-config.yaml into running container"
-	echo "usage: $0 rebuild     # deletes hydroshare container contents only and deploys using exsiting database"
-	echo "usage: $0 restart     # restarts the hydroshare container without rebuilding"
-	echo "usage: $0 start       # attempts to start all containers"
-	echo "usage: $0 stop        # stops all running containers"
+	echo "usage: $0 loaddb         # loads database specified in hydroshare-config.yaml into running container"
+	echo "usage: $0 rebuild        # deletes hydroshare container contents only and deploys using exsiting database"
+	echo "usage: $0 rebuild --db   # deletes all database and container contents and deploys from scratch"
+	echo "usage: $0 maint_off   # removes maintenance page (only if USE_NGINX = true)"
+	echo "usage: $0 maint_on    # displays maintenance page (only if USE_NGINX = true)"
+	echo "usage: $0 restart        # restarts the hydroshare container without rebuilding"
+	echo "usage: $0 start          # attempts to start all containers"
+	echo "usage: $0 stop           # stops all running containers"
 }
 
 start_nginx() {
@@ -58,6 +60,26 @@ restart_hs() {
     docker start hydroshare_hydroshare_1
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
+    fi
+}
+
+maint_on_hs() {
+    if [ "${USE_NGINX,,}" = true ]; then
+        cd $NGINX_DIR
+        ./run-nginx maint_on
+        cd -
+    else
+        echo "*** Unable to apply: USE_NGINX = ${USE_NGINX} ***"
+    fi
+}
+
+maint_off_hs() {
+    if [ "${USE_NGINX,,}" = true ]; then
+        cd $NGINX_DIR
+        ./run-nginx maint_off
+        cd -
+    else
+        echo "*** Unable to apply: USE_NGINX = ${USE_NGINX} ***"
     fi
 }
 
@@ -94,13 +116,18 @@ stop_hs() {
 
 preflight_hs() {
     yes | cp -rf ${HS_PATH}/docker-compose.template ${HS_PATH}/docker-compose.yml
-    sed -i 's!HS_SHARED_VOLUME!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
+    sed -i 's!HS_PATH!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
+    sed -i 's!HS_LOG_FILES!'${HS_LOG_FILES}'!g' ${HS_PATH}/docker-compose.yml
     if [ "${USE_NGINX,,}" = true ]; then
         echo "*** Using nginx: USE_NGINX = ${USE_NGINX} ***"
         # create hs-certs directory if it doesn't exist
         if [[ ! -d ${HOST_SSL_DIR} ]]; then
             echo "*** creating directory: ${HOST_SSL_DIR} ***"
             mkdir ${HOST_SSL_DIR};
+        fi
+        if [[ ! -d ${HS_LOG_FILES} ]]; then
+            echo "*** creating directory: ${HS_LOG_FILES} ***"
+            mkdir ${HS_LOG_FILES};
         fi
         # generate nginx configuration file
         if [ "${USE_SSL,,}" = true ]; then
@@ -126,7 +153,7 @@ preflight_hs() {
     fi
 }
 
-rebuild_hs() {
+rebuild_nodb_hs() {
     echo "*** ${1^^} *** "
     stop_hs STOP
     preflight_hs
@@ -178,9 +205,10 @@ loaddb_hs() {
     #docker exec $CID python manage.py makemigrations
     echo "*** manage.py migrate ***"
     docker exec $CID python manage.py migrate
+    docker exec $CID python manage.py fix_permissions
 }
 
-deploy_hs() {
+rebuild_db_hs() {
     echo "*** ${1^^} ***"
     stop_hs STOP
     preflight_hs
@@ -232,16 +260,30 @@ deploy_hs() {
 ### Display usage if exactly one argument is not provided ###
 if [  $# -ne 1 ]
 then
-    display_usage
-    exit 1
+	if [ $1 != "rebuild" ] || [ $2 != "--db" ]
+	then
+	    display_usage
+	    exit 1
+	fi
 fi
 
+rebuild_hs() {
+	if [ "$2" == "--db" ]
+	then
+		rebuild_db_hs $1
+	else
+		rebuild_nodb_hs $1
+	fi
+}
+
 case "$1" in
-    deploy) deploy_hs $1
-        ;;
     loaddb) loaddb_hs $1
         ;;
-    rebuild) rebuild_hs $1
+    maint_off) maint_off_hs $1
+        ;;
+    maint_on) maint_on_hs $1
+        ;;
+    rebuild) rebuild_hs $1 $2
         ;;
     restart) restart_hs $1
         ;;

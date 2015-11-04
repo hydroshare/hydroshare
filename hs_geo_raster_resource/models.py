@@ -232,7 +232,7 @@ class CellInformation(AbstractMetaDataElement):
 # To create a new resource, use these two super-classes.
 #
 class RasterResource(BaseResource):
-    objects = ResourceManager()
+    objects = ResourceManager("RasterResource")
 
     class Meta:
         verbose_name = 'Geographic Raster'

@@ -25,9 +25,11 @@ hydroshare:
     SOLR_HOST: hydroshare_solr_1
   volumes:
     # hydroshare repository
-    - "HS_SHARED_VOLUME:/home/docker/hydroshare"
+    - "HS_PATH:/home/docker/hydroshare"
     # pycharm debugging
     # - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
+    # log files
+    - "HS_LOG_FILES:/var/log/hydroshare"
   ports:
     - "1338:22"
     - "8000:8000"
