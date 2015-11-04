@@ -5,11 +5,16 @@
 
 $(document).ready(function () {
 
-    // load jquery generated elements
-    loadWidgets();
+    // check to see if the view is in edit mode
+    if(document.getElementById("id-mpmetadata") != null)
+        // load jquery generated elements
+        loadWidgets();
 
 });
 
+/**
+ * Builds jQuery multiselect listboxes
+ */
 function loadWidgets(){
 
         // initialize help text popover
@@ -17,40 +22,93 @@ function loadWidgets(){
         container: 'body'
     });
 
+    // get the resource id from its url
+    var url = document.URL;
+    var url_array = url.split('/');
+    var shortid = url_array[url_array.length - 2];
 
-    // destroy any existing multiselect widgets
-    $('.multi-select').multiselect('destroy');
+    // call django view to get model program metadata files
+    $.ajax({
+        type: "GET",
+        url: '/hsapi/_internal/get-model-metadata-files/',
+        data: {resource_id: shortid},
+        success: function (data) {
+            // get the fieldset items
+            var fs = document.getElementById("id-mpmetadata").getElementsByTagName('fieldset')[0];
 
-    // rebuild the multiselect elements
-    $('.multi-select').multiselect({
-        // bind to the on close event
-        onDropdownHide: function (event, checked) {
-            populate_dropdown_table(event, checked);
+            // get the multiselect items
+            var multiselect = fs.getElementsByClassName('div-multi-select');
+
+            for (var i = 0; i < multiselect.length; i++) {
+
+                // get the metadata term associated with this multiselect field
+                var term = multiselect[i].getAttribute('parent_metadata');
+
+                // get the selected items that are saved to the resource
+                var selected_terms = data[term];
+
+                // loop through the options in the select list
+                var options = $(multiselect[i]).find('option');
+                for (var j = 0; j < options.length; j++) {
+
+                    // set the selected attribute
+                    if ($.inArray(options[j].value, selected_terms) >= 0) {
+                        $(options[j]).attr("selected", 1);
+                    }
+                }
+            }
+        },
+        error: function (data) {
+            console.log('There was an error with model instance GET.')
+        },
+        complete: function (data) {
+            // once the selected fields (html) have been updated, build the jQuery multiselect boxes
+
+            // destroy any existing multiselect widgets
+            $('.multi-select').multiselect('destroy');
+
+            // rebuild the multiselect elements
+            $('.multi-select').multiselect({
+                // bind a table view to the on close event
+                onDropdownHide: function (event, checked) {
+                    set_metadata_terms(event);
+                }
+            });
+
+            // add pull-right to the dropdown-menu
+            var dd = document.getElementsByClassName('multiselect-container dropdown-menu');
+            for (var i = 0; i < dd.length; i++) {
+                var classname = dd[i].className;
+                if (classname.indexOf(' pull-right ') == -1) {
+                    dd[i].className += ' pull-right';
+                }
+            }
         }
     });
-
-    // add pull-right to the dropdown-menu
-    var dd = document.getElementsByClassName('multiselect-container dropdown-menu');
-    for (var i = 0; i < dd.length; i ++){
-        var classname = dd[i].className;
-        if (classname.indexOf(' pull-right ') == -1 ){
-           dd[i].className += ' pull-right';
-        }
-    }
 }
 
+/**
+ * reloads the jQuery multi-select widgets on form submission
+ */
 $(document).bind("submit-success", function(event){
     // reload dynamically generated widgets
     loadWidgets();
 });
 
+/**
+ * reloads the jQuery multi-select widgets on form submission failure
+ */
 $(document).bind("submit-error", function(event){
-    // reload dynamicall generated widgets
+    // reload dynamically generated widgets
     loadWidgets();
 });
 
+/**
+ * Sets multi-select selections to hidden field values that are submitted with the form
+ * @param e
+ */
+function set_metadata_terms(e){
 
-function populate_dropdown_table(e, checked){
 
     // get parent div
     var parent = $(e.currentTarget.parentElement);

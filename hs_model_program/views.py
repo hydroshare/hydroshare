@@ -42,3 +42,30 @@ def get_model_metadata(request):
 
     json_data = json.dumps(metadata)
     return HttpResponse(json_data, content_type="application/json")
+
+def get_model_metadata_files(request):
+
+     # get the request data
+    r = request.GET
+
+    # get the resource id for looking up the resource object
+    resource_id = r['resource_id']
+
+    # get the model program resource
+    obj = ModelProgramResource.objects.filter(short_id=resource_id).first()
+    metadata = {}
+
+    if obj is not None:
+        mpmeta = obj.metadata.program
+
+        # build an output dictionary which will be returned as JSON
+        if obj is not None:
+            metadata = dict(
+                modelEngine = mpmeta.modelEngine.split(';'),
+                modelSoftware=mpmeta.modelSoftware.split(';'),
+                modelDocumentation=mpmeta.modelDocumentation.split(';'),
+                modelReleaseNotes=mpmeta.modelReleaseNotes.split(';'),
+            )
+
+    json_data = json.dumps(metadata)
+    return HttpResponse(json_data, content_type="application/json")
