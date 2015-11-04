@@ -8,7 +8,7 @@ solr:
   image: makuk66/docker-solr:4.10.4
   volumes:
     # hydroshare repository
-    - "HS_SHARED_VOLUME:/hydroshare"
+    - "HS_PATH:/hydroshare"
   ports:
     - "8983:8983"
 hydroshare:
@@ -22,12 +22,14 @@ hydroshare:
     POSTGIS_DB: postgres
     POSTGIS_USER: postgres
     PGPASSWORD: postgres
-    SOLR_HOST: hydroshare_solr_1
+    SOLR_HOST: solr
   volumes:
     # hydroshare repository
-    - "HS_SHARED_VOLUME:/home/docker/hydroshare"
+    - "HS_PATH:/home/docker/hydroshare"
     # pycharm debugging
     # - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
+    # log files
+    - "HS_LOG_FILES:/var/log/hydroshare"
   ports:
     - "1338:22"
     - "8000:8000"
@@ -35,6 +37,7 @@ hydroshare:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
+    - solr:solr
   command: /bin/bash init
 defaultworker:
   build: .

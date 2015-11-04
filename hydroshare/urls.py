@@ -31,6 +31,7 @@ urlpatterns = i18n_patterns("",
     # Change the admin prefix here to use an alternate URL for the
     # admin interface, which would be marginally more secure.
     url("^admin/", include(admin.site.urls)),
+    url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url("^inplaceeditform/", include("inplaceeditform.urls")),
     url('^ga_resources/', include('ga_resources.urls')),
     #url('^ga_interactive/', include('ga_interactive.urls')),
