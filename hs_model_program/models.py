@@ -162,7 +162,8 @@ class ModelProgramMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         # inject resource specific metadata elements into container element
-        fields = [  'modelSoftware',
+        fields = [  'modelEngine',
+                    'modelSoftware',
                     'modelDocumentation',
                     'modelReleaseNotes',
                     'modelReleaseDate',
