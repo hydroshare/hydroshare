@@ -8,7 +8,7 @@ solr:
   image: makuk66/docker-solr:4.10.4
   volumes:
     # hydroshare repository
-    - "HS_SHARED_VOLUME:/hydroshare"
+    - "HS_PATH:/hydroshare"
   ports:
     - "8983:8983"
 hydroshare:
