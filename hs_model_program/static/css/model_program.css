@@ -1,19 +1,19 @@
 
-.popover {
-    max-width: 60%;
-    font-size: 13px;
-    font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
-    word-break: break-all;
-    word-wrap: break-word;
-    white-space: pre;
-    min-width: 30%;
+/*.popover {*/
+    /*max-width: 60%;*/
+    /*font-size: 13px;*/
+    /*font-family: Menlo,Monaco,Consolas,"Courier New",monospace;*/
+    /*word-break: break-all;*/
+    /*word-wrap: break-word;*/
+    /*white-space: pre;*/
+    /*min-width: 30%;*/
 
-    }
+    /*}*/
 
-/*.row{*/
-    /*height: 1px;*/
-    /*padding: 2px 2px 2px 2px;*/
-/*}*/
+/*!*.row{*!*/
+    /*!*height: 1px;*!*/
+    /*!*padding: 2px 2px 2px 2px;*!*/
+/*!*}*!*/
 
 /*MP Element Style*/
 .mpElement{
@@ -21,26 +21,26 @@
     padding: 2px 2px 2px 2px;
 }
 
-/* unvisited link */
-a.mpElement:link {
-    color: black;
-    text-decoration: none;
-}
-/* selected link */
-a.mpElement:active {
-    color: black;
-}
+/*!* unvisited link *!*/
+/*a.mpElement:link {*/
+    /*color: black;*/
+    /*text-decoration: none;*/
+/*}*/
+/*!* selected link *!*/
+/*a.mpElement:active {*/
+    /*color: black;*/
+/*}*/
 
-/*visited link*/
-a.mpElement:visited {
-    color: black;
-}
+/*!*visited link*!*/
+/*a.mpElement:visited {*/
+    /*color: black;*/
+/*}*/
 
-/* mouse over link */
-a.mpElement:hover {
-    color: black;
-    font-size: 16px;
-}
+/*!* mouse over link *!*/
+/*a.mpElement:hover {*/
+    /*color: black;*/
+    /*font-size: 16px;*/
+/*}*/
 
 a.mpElement::after {
     display:block;
@@ -53,7 +53,7 @@ a.mpElement::after {
 }
 
 div#mp.row {
-    height: 28px;
+    padding: 5px 0px 5px 0px
 }
 
 option:checked{
@@ -86,3 +86,4 @@ table{
 .input-sm{
     max-width:550px;
 }
+

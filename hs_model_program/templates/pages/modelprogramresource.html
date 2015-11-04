@@ -13,27 +13,13 @@
                     {% if mpmetadata %}
                         <hr>
 
-{#                        <b>HERE</b>#}
-{##}
-{#                        {% for f in mpmetadata %}#}
-{#                            {{f.label}}{{f}}{{f.help_text|safe}}#}
-{#                        {%endfor%}#}
-
-
-
-{#                        get_form_attributes();#}
-
-{#                        <div id="program_id" hidden="true">{{ mpmetadata.id }}</div>#}
-
-{#                        <b>{{ mphelptext.modelCodeRepository}} </b>#}
-{#                        {{ mphelptext.modelSoftware }}#}
 
                         {########################}
-                        {#     UPLOADED DATA    #}
+                        {#       DATA FILES     #}
                         {########################}
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelEngine}}" data-toggle="popover" data-trigger="hover"> Computational Engine </a>
+                                <p class="mpElement"> Computational Engine </p>
                             </div>
 
                             <div class="col-sm-8">
@@ -51,10 +37,9 @@
                             </div>
                         </div>
 
-
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelSoftware}}" data-toggle="popover" data-trigger="hover"> Software </a>
+                                <p class="mpElement"> Software </p>
                             </div>
 
                             <div class="col-sm-8">
@@ -75,8 +60,7 @@
 
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelDocumentation }}"
-                                   data-toggle="popover" data-trigger="hover">Documentation:</a>
+                                <p class="mpElement">Documentation:</p>
                             </div>
                             <div class="col-sm-8">
                             <table>
@@ -91,14 +75,12 @@
                                     {% endfor %}
                             </table>
                             </div>
-                            {#                            <div class="col-sm-8">{{ mpmetadata.modelDocumentation }}</div>#}
                         </div>
-
 
 
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelReleaseNotes}}" data-toggle="popover" data-trigger="hover">Release Notes:</a>
+                                <p class="mpElement">Release Notes:</p>
                             </div>
                             <div class="col-sm-8">
                                 <table>
@@ -117,24 +99,26 @@
 
                         <hr>
 
+
+
                         {########################}
                         {#   MODEL  METADATA  #}
                         {########################}
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelReleaseDate}}" data-toggle="popover" data-trigger="hover">Release Date:</a>
+                                <p class="mpElement">Release Date:</p>
                             </div>
-
-                            <div class="col-sm-8">{{ mpmetadata.modelReleaseDate |date:"SHORT_DATE_FORMAT" }}</div>
+                                <div class="col-sm-8">{{ mpmetadata.modelReleaseDate |date:"SHORT_DATE_FORMAT" }}</div>
                         </div>
+
+
 
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelWebsite}}" data-toggle="popover" data-trigger="hover">Website:</a>
+                                <p class="mpElement">Website:</p>
                             </div>
                             <div class="col-sm-8"><a href="{{ mpmetadata.modelWebsite }}" target="_blank">{{ mpmetadata.modelWebsite }}</a></div>
                         </div>
-
                         <hr>
 
                         {########################}
@@ -143,31 +127,40 @@
 
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelVersion}}" data-toggle="popover" data-trigger="hover">Version:</a>
+                                <p class="mpElement">Version:</p>
                             </div>
                             <div class="col-sm-8">{{ mpmetadata.modelVersion }}</div>
                         </div>
 
+
+
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelProgramLanguage}}" data-toggle="popover" data-trigger="hover">Language:</a>
+                                <p class="mpElement">Language:</p>
                             </div>
                             <div class="col-sm-8">{{ mpmetadata.modelProgramLanguage }}</div>
                         </div>
+
+
+
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelCodeRepository}}" data-toggle="popover" data-trigger="hover">Software Repository:</a>
+                                <p class="mpElement" >Software Repository:</p>
                             </div>
                             <div class="col-sm-8"><a target="_blank" href="{{ mpmetadata.modelCodeRepository }}">{{ mpmetadata.modelCodeRepository }}</a></div>
                         </div>
+
+
+
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelOperatingSystem}}" data-toggle="popover" data-trigger="hover">Operating System:</a>
+                                <p class="mpElement">Operating System:</p>
                             </div>
                             <div class="col-sm-8">{{ mpmetadata.modelOperatingSystem }}</div>
                         </div>
 
                         <hr>
+
                     {% endif %}
                 </div>
 
