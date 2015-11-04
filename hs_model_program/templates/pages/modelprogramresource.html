@@ -33,6 +33,27 @@
                         {########################}
                         <div class="row" id="mp">
                             <div class="col-sm-4">
+                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelEngine}}" data-toggle="popover" data-trigger="hover"> Computational Engine </a>
+                            </div>
+
+                            <div class="col-sm-8">
+                                <table>
+                                    {% for path in mpmetadata.get_engine_list %}
+                                        <tr>
+                                            <td>
+                                                <a id="permalink"
+                                                   href="http://{{ request.get_host }}/resource/{{ path }}"
+                                                   target="_blank">{{ path }}</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            </div>
+                        </div>
+
+
+                        <div class="row" id="mp">
+                            <div class="col-sm-4">
                                 <a class="mpElement" href="#" data-content="{{ mphelptext.modelSoftware}}" data-toggle="popover" data-trigger="hover"> Software </a>
                             </div>
 
@@ -101,7 +122,7 @@
                         {########################}
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelReleaseDate}}" data-toggle="popover" data-trigger="hover">Date Released:</a>
+                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelReleaseDate}}" data-toggle="popover" data-trigger="hover">Release Date:</a>
                             </div>
 
                             <div class="col-sm-8">{{ mpmetadata.modelReleaseDate |date:"SHORT_DATE_FORMAT" }}</div>
@@ -122,14 +143,14 @@
 
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelVersion}}" data-toggle="popover" data-trigger="hover">Software Version:</a>
+                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelVersion}}" data-toggle="popover" data-trigger="hover">Version:</a>
                             </div>
                             <div class="col-sm-8">{{ mpmetadata.modelVersion }}</div>
                         </div>
 
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelProgramLanguage}}" data-toggle="popover" data-trigger="hover">Software Language:</a>
+                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelProgramLanguage}}" data-toggle="popover" data-trigger="hover">Language:</a>
                             </div>
                             <div class="col-sm-8">{{ mpmetadata.modelProgramLanguage }}</div>
                         </div>
@@ -141,7 +162,7 @@
                         </div>
                         <div class="row" id="mp">
                             <div class="col-sm-4">
-                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelOperatingSystem}}" data-toggle="popover" data-trigger="hover">Supported Operating Systems:</a>
+                                <a class="mpElement" href="#" data-content="{{ mphelptext.modelOperatingSystem}}" data-toggle="popover" data-trigger="hover">Operating System:</a>
                             </div>
                             <div class="col-sm-8">{{ mpmetadata.modelOperatingSystem }}</div>
                         </div>

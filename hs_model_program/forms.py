@@ -21,7 +21,7 @@ class mp_form_helper(BaseFormHelper):
 
         options = '\n'.join(['<option value=%s>%s</option>'%(value, key) for key, value in file_data.iteritems() ])
 
-        multiselect_elements = ['modelSoftware', 'modelDocumentation', 'modelReleaseNotes']
+        multiselect_elements = ['modelSoftware', 'modelDocumentation', 'modelReleaseNotes', 'modelEngine']
         multiselect = {}
         for elem in multiselect_elements:
             # build select list and selection table
@@ -30,7 +30,7 @@ class mp_form_helper(BaseFormHelper):
                                 ' <select class="multi-select" id="multi-select" multiple="multiple">'
                                         + options +
                                 '</select>'
-                            '</div>')
+                            '</div><br>')
 
 
         # Order of the Fields below determines their layout on the edit page
@@ -38,6 +38,8 @@ class mp_form_helper(BaseFormHelper):
         field_width = 'form-control input-sm'
         css_multichar = field_width + ' multichar'
         layout = Layout(
+            Field('modelEngine', css_class=css_multichar, style="display:none"),
+            multiselect['modelEngine'],
             Field('modelSoftware', css_class=css_multichar, style="display:none"),
             multiselect['modelSoftware'],
             Field('modelDocumentation', css_class=css_multichar, style="display:none"),
@@ -87,7 +89,8 @@ class mp_form(ModelForm):
                     'modelCodeRepository',
                     'modelReleaseNotes',
                     'modelDocumentation',
-                    'modelSoftware']
+                    'modelSoftware',
+                    'modelEngine']
         exclude = ['content_object']
 
 
@@ -101,5 +104,6 @@ class mp_form_validation(forms.Form):
     modelReleaseNotes = forms.CharField(required=False)
     modelDocumentation = forms.CharField(required=False)
     modelSoftware = forms.CharField(required=False)
+    modelEngine = forms.CharField(required=False)
 
 

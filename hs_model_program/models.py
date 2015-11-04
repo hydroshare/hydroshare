@@ -12,50 +12,6 @@ from django.core import validators, checks
 from django.utils import six
 from django.utils.encoding import smart_text
 
-# class SeparatedValuesField(models.Field):
-#     # description = _("String (up to %(max_length)s)")
-#
-#     def __init__(self, *args, **kwargs):
-#         self.token = kwargs.pop('token', ',')
-#         super(SeparatedValuesField, self).__init__(*args, **kwargs)
-#         self.validators.append(validators.MaxLengthValidator(self.max_length))
-#
-#     def check(self, **kwargs):
-#         errors = super(SeparatedValuesField, self).check(**kwargs)
-#         return errors
-#
-#     def get_internal_type(self):
-#         return "SeparatedValuesField"
-#
-#     def to_python(self, value):
-#         if not value: return
-#         if isinstance(value, list):
-#             return value
-#         return value.split(self.token)
-#
-#         # if isinstance(value, six.string_types) or value is None:
-#         #     return value
-#         # return smart_text(value)
-#
-#     def get_prep_value(self, value):
-#         if not value: return
-#         assert(isinstance(value, list) or isinstance(value, tuple))
-#         return self.token.join([unicode(s) for s in value])
-# #         value = super(SeparatedValuesField, self).get_prep_value(value)
-# #         return self.to_python(value)
-#
-#     # def value_to_string(self, obj):
-#     #     value = self._get_val_from_obj(obj)
-#     #     return self.get_db_prep_value(value)
-#
-#     # def get_db_prep_value(self, value):
-#     #     if not value: return
-#     #     assert(isinstance(value, list) or isinstance(value, tuple))
-#     #     return self.token.join([unicode(s) for s in value])
-#
-#     def value_to_string(self, obj):
-#         value = self._get_val_from_obj(obj)
-#         return self.get_prep_value(value)
 
 class MpMetadata(AbstractMetaDataElement):
     term = "MpMetadata"
@@ -86,29 +42,29 @@ class MpMetadata(AbstractMetaDataElement):
                                      help_text='A URL to the source code repository (e.g. git, mercurial, svn)')
 
     # release notes
-    modelReleaseNotes = models.CharField(verbose_name="Notes", null=True, blank=True, max_length=400,default='',
+    modelReleaseNotes = models.CharField(verbose_name="Release Notes", null=True, blank=True, max_length=400,default='',
                                      help_text="Notes regarding the software release (e.g. bug fixes, new functionality, readme)")
-                                     # choices=(('-', '    '),))
 
     # documentation
     modelDocumentation = models.CharField(verbose_name='Documentation', name="modelDocumentation", null=True,
                                           blank=True, default='',
                                           max_length=400,
                                           help_text='Documentation for the model (e.g. User manuals, theoretical manuals, reports, notes, etc.)')
-                                          # choices=(('-', '    '),))
 
     # software
     modelSoftware = models.CharField(verbose_name='Software', name='modelSoftware', null=True,default='',
                                           blank=True, max_length=400,
+                                          help_text='Uploaded archive containing model software (e.g., utilities software, etc.)' )
+
+    # software engine
+    modelEngine = models.CharField(verbose_name='Computational Engine', name='modelEngine', null=True,default='',
+                                          blank=True, max_length=400,
                                           help_text='Uploaded archive containing model software (source code, executable, etc.)' )
-                                          # choices=(('-', '    '),))
-
-
 
 
 
     def __unicode__(self):
-        self.software_version
+        self.modelVersion
 
     class Meta:
         # site element is not repeatable
@@ -139,6 +95,8 @@ class MpMetadata(AbstractMetaDataElement):
     def get_documentation_list(self):
         return self.modelDocumentation.split(';')
     def get_releasenotes_list(self):
+        return self.modelReleaseNotes.split(';')
+    def get_engine_list(self):
         return self.modelReleaseNotes.split(';')
 
 
@@ -203,7 +161,7 @@ class ModelProgramMetaData(CoreMetaData):
         # get the root 'Description' element, which contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
-        # inject raster resource specific metadata elements into container element
+        # inject resource specific metadata elements into container element
         fields = [  'modelSoftware',
                     'modelDocumentation',
                     'modelReleaseNotes',
