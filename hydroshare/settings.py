@@ -463,8 +463,8 @@ REST_FRAMEWORK = {
     )
 }
 
-SOLR_HOST = os.environ.get('SOLR_HOST', 'hydroshare_solr_1')
-SOLR_PORT = os.environ.get('SOLR_PORT', '8983')
+SOLR_HOST = os.environ.get('SOLR_PORT_8983_TCP_ADDR', 'localhost')
+SOLR_PORT = '8983'
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
@@ -472,6 +472,7 @@ HAYSTACK_CONNECTIONS = {
         # ...or for multicore...
         # 'URL': 'http://127.0.0.1:8983/solr/mysite',
     },
+}
 
 # customized value for password reset token and email verification link token to expire in 1 day
 PASSWORD_RESET_TIMEOUT_DAYS = 1

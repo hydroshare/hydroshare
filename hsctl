@@ -83,6 +83,19 @@ maint_off_hs() {
     fi
 }
 
+solr_schema_hs() {
+    echo
+    echo "*** Setting up solr schema ***"
+    echo "*** From hydroshare: build_solr_schema ***"
+    docker exec hydroshare_hydroshare_1 python manage.py build_solr_schema -f schema.xml
+    sleep 1s
+    echo "*** From solr: mv schema.xml to /opt/solr/example/solr/collection1/conf/ ***"
+    docker exec hydroshare_solr_1 cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml
+    #tar -cf /tmp/solr_conf.tar schema.xml
+    #docker cp /tmp/solr_conf.tar $(docker-compose ps -q solr):/tmp/solr_conf.tar
+    #docker exec $(docker-compose ps -q solr) tar -xf /tmp/solr_conf.tar -C /opt/solr/example/solr/collection1/conf/
+}
+
 start_hs() {
     echo "*** ${1^^}: all docker containers ***"
     preflight_hs
@@ -176,12 +189,7 @@ rebuild_nodb_hs() {
         echo -ne "$pc ...\033[0K\r"
         sleep 1
     done
-    echo
-    echo "*** setting up solr schema ***"
-    docker-compose run --rm hydroshare python manage.py build_solr_schema -f schema.xml
-    tar -cf /tmp/solr_conf.tar schema.xml
-    docker cp /tmp/solr_conf.tar $(docker-compose ps -q solr):/tmp/solr_conf.tar
-    docker exec $(docker-compose ps -q solr) tar -xf /tmp/solr_conf.tar -C /opt/solr/example/solr/collection1/conf/
+    solr_schema_hs
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
@@ -252,6 +260,7 @@ rebuild_db_hs() {
     done
     echo
     loaddb_hs LOADDB
+    solr_schema_hs
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi

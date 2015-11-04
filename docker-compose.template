@@ -22,7 +22,7 @@ hydroshare:
     POSTGIS_DB: postgres
     POSTGIS_USER: postgres
     PGPASSWORD: postgres
-    SOLR_HOST: hydroshare_solr_1
+    SOLR_HOST: solr
   volumes:
     # hydroshare repository
     - "HS_PATH:/home/docker/hydroshare"
@@ -37,6 +37,7 @@ hydroshare:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
+    - solr:solr
   command: /bin/bash init
 defaultworker:
   build: .
