@@ -1,4 +1,6 @@
 __author__ = 'Mohamed Morsy'
+from lxml import etree
+
 from django.contrib.contenttypes import generic
 from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -9,9 +11,6 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
 from hs_core.hydroshare import utils
 
 from hs_model_program.models import ModelProgramResource
-
-from lxml import etree
-
 
 # extended metadata elements for SWAT Model Instance resource type
 class ModelOutput(AbstractMetaDataElement):
@@ -31,33 +30,16 @@ class ExecutedBy(AbstractMetaDataElement):
         shortid = kwargs['model_name']
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
-
-        kwargs['model_program_fk'] = obj
         metadata_obj = kwargs['content_object']
         title = obj.title
-        mp_fk = ExecutedBy.objects.create(model_program_fk=obj,
-                                          model_name=title,
-                                          content_object=metadata_obj)
-        return mp_fk
+        return super(ExecutedBy,cls).create(model_program_fk=obj, model_name=title,content_object=metadata_obj)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         shortid = kwargs['model_name']
-
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
-
-        kwargs['model_program_fk'] = obj
-
-        executed_by = ExecutedBy.objects.get(id=element_id)
-        if executed_by:
-            for key, value in kwargs.iteritems():
-                setattr(executed_by, key, value)
-
-            executed_by.save()
-
-        else:
-            raise ObjectDoesNotExist("No ExecutedBy element was found for the provided id:%s" % kwargs['id'])
+        return super(ExecutedBy,cls).update(model_program_fk=obj, element_id=element_id)
 
 class ModelObjectiveChoices(models.Model):
     description = models.CharField(max_length=300)
@@ -82,12 +64,8 @@ class ModelObjective(AbstractMetaDataElement):
             cls._validate_swat_model_objectives(kwargs['swat_model_objectives'])
         else:
             raise ValidationError("swat_model_objectives is missing.")
-        if not 'other_objectives' in kwargs:
-            raise ValidationError("modelObjective other_objectives is missing.")
-
         metadata_obj = kwargs['content_object']
-        model_objective = ModelObjective.objects.create(other_objectives=kwargs['other_objectives'],
-                                                        content_object=metadata_obj)
+        model_objective = super(ModelObjective,cls).create(other_objectives=kwargs['other_objectives'],content_object=metadata_obj)
         for swat_objective in kwargs['swat_model_objectives']:
             qs = ModelObjectiveChoices.objects.filter(description__iexact=swat_objective)
             if qs.exists():
@@ -169,13 +147,8 @@ class ModelParameter(AbstractMetaDataElement):
             cls._validate_swat_model_parameters(kwargs['model_parameters'])
         else:
             raise ValidationError("model_parameters is missing.")
-        if not 'other_parameters' in kwargs:
-            raise ValidationError("ModelParameter other_parameters is missing.")
-
         metadata_obj = kwargs['content_object']
-        swat_model_parameters = ModelParameter.objects.create(other_parameters=kwargs['other_parameters'],
-                                                  content_object=metadata_obj)
-
+        swat_model_parameters = super(ModelParameter,cls).create(other_parameters=kwargs['other_parameters'],content_object=metadata_obj)
         for swat_parameter in kwargs['model_parameters']:
             qs = ModelParametersChoices.objects.filter(description__iexact=swat_parameter)
             if qs.exists():

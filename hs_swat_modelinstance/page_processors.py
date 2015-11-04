@@ -12,7 +12,6 @@ from hs_swat_modelinstance.forms import ModelOutputForm, ExecutedByForm, ModelOb
 from mezzanine.pages.page_processors import processor_for
 
 @processor_for(SWATModelInstanceResource)
-# when the resource is created this page will be shown
 def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)

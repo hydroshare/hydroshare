@@ -1,3 +1,5 @@
+from lxml import etree
+
 from django.contrib.contenttypes import generic
 from django.db import models
 
@@ -7,8 +9,6 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
 from hs_core.hydroshare import utils
 
 from hs_model_program.models import ModelProgramResource
-
-from lxml import etree
 
 # extended metadata elements for Model Instance resource type
 class ModelOutput(AbstractMetaDataElement):
@@ -28,32 +28,18 @@ class ExecutedBy(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         shortid = kwargs['model_name']
-
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
-
-        kwargs['model_program_fk'] = obj
         metadata_obj = kwargs['content_object']
         title = obj.title
-        mp_fk = ExecutedBy.objects.create(model_program_fk=obj,
-                                          model_name=title,
-                                          content_object=metadata_obj)
-        return mp_fk
+        return super(ExecutedBy,cls).create(model_program_fk=obj, model_name=title,content_object=metadata_obj)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         shortid = kwargs['model_name']
-
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
-
-        kwargs['model_program_fk'] = obj
-
-        executed_by = ExecutedBy.objects.get(id=element_id)
-        if executed_by:
-            for key, value in kwargs.iteritems():
-                setattr(executed_by, key, value)
-            executed_by.save()
+        return super(ExecutedBy,cls).update(model_program_fk=obj, element_id=element_id)
 
 # Model Instance Resource type
 class ModelInstanceResource(BaseResource):
