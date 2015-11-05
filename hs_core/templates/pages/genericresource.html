@@ -2541,21 +2541,34 @@
             }
 
             // Enables and disables granting access buttons accordingly to the current access level
-            function updateDropdownMenuItems(privilege){
+            function updateActionsState(privilege){
+                // Set the state of dropdown menu items
                 $("form[data-access-type]").parent().addClass("disabled");
                 $("#list-roles a[data-role]").parent().addClass("disabled");
+                $(".access-table li.active[data-access-type]").closest("tr").addClass("hide-actions");
+
                 if (privilege == "view") {
+                    // Dropdown menu items
                     $("form[data-access-type='Can view']").parent().removeClass("disabled");
                     $("#list-roles a[data-role='view']").parent().removeClass("disabled");
+
+                    // Remove buttons
+                    $(".access-table li.active[data-access-type='Can view']").closest("tr").removeClass("hide-actions");
                 }
                 else if(privilege == "change") {
+                    // Dropdown menu items
                     $("form[data-access-type='Can view']").parent().removeClass("disabled");
                     $("#list-roles a[data-role='view']").parent().removeClass("disabled");
 
                     $("form[data-access-type='Can edit']").parent().removeClass("disabled");
                     $("#list-roles a[data-role='edit']").parent().removeClass("disabled");
+
+                    // Remove buttons
+                    $(".access-table li.active[data-access-type='Can view']").closest("tr").removeClass("hide-actions");
+                    $(".access-table li.active[data-access-type='Can edit']").closest("tr").removeClass("hide-actions");
                 }
                 else if(privilege == "owner") {
+                    // Dropdown menu items
                     $("form[data-access-type='Can view']").parent().removeClass("disabled");
                     $("#list-roles a[data-role='view']").parent().removeClass("disabled");
 
@@ -2564,6 +2577,13 @@
 
                     $("form[data-access-type='Is owner']").parent().removeClass("disabled");
                     $("#list-roles a[data-role='owner']").parent().removeClass("disabled");
+
+                    // Remove buttons
+                    $(".access-table li.active[data-access-type='Can view']").closest("tr").removeClass("hide-actions");
+                    $(".access-table li.active[data-access-type='Can edit']").closest("tr").removeClass("hide-actions");
+                    if ($(".access-table li.active[data-access-type='Is owner']").length > 1) {     // At least one owner constrain
+                        $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
+                    }
                 }
             }
 
@@ -2600,7 +2620,7 @@
                                 $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
                             }
 
-                            updateDropdownMenuItems(json_response.current_user_privilege);
+                            updateActionsState(json_response.current_user_privilege);
 
                             setPointerEvents(true);
                         }
@@ -2699,21 +2719,7 @@
                             }
                             $(".access-table tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
 
-                            // Set state of remove buttons
-                            if (json_response.current_user_privilege != "owner"){
-                                $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
-                            }
-                            else {
-                                // Enable dropdown menu for other owner entries
-                                if (json_response.current_user_privilege == "owner" && $(".access-table li.active[data-access-type='Is owner']").length > 1){
-                                    $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
-                                }
-                                else {
-                                    $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
-                                }
-                            }
-
-                            updateDropdownMenuItems(json_response.current_user_privilege);
+                            updateActionsState(json_response.current_user_privilege);
                         }
                         else if (json_response.status == "error") {
                             $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
