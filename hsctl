@@ -261,6 +261,7 @@ rebuild_db_hs() {
     done
     echo
     loaddb_hs LOADDB
+    sleep 3s
     solr_schema_hs
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
@@ -277,7 +278,7 @@ rebuild_hs() {
 }
 
 manage_py_hs() {
-    docker exec hydroshare_hydroshare_1 python manage.py "${@:2}"
+    docker exec -ti hydroshare_hydroshare_1 python manage.py "${@:2}"
 }
 
 ### Display usage if exactly one argument is not provided ###
