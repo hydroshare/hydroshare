@@ -334,12 +334,26 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     else:
         status = 'error'
 
+    current_user_privilege = res.raccess.get_combined_privilege(user)
+    if current_user_privilege == PrivilegeCodes.VIEW:
+        current_user_privilege = "view"
+    elif current_user_privilege == PrivilegeCodes.CHANGE:
+        current_user_privilege = "change"
+    elif current_user_privilege == PrivilegeCodes.OWNER:
+        current_user_privilege = "owner"
+
+    is_current_user = False
+    if user == user_to_share_with:
+        is_current_user = True
+
     picture_url = 'No picture provided'
     if user_to_share_with.userprofile.picture:
         picture_url = user_to_share_with.userprofile.picture.url
 
     ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
-                          'username': user_to_share_with.username, 'privilege': privilege, 'profile_pic': picture_url,
+                          'username': user_to_share_with.username, 'privilege_granted': privilege,
+                          'current_user_privilege': current_user_privilege,
+                          'profile_pic': picture_url, 'is_current_user': is_current_user,
                           'error_msg': err_message}
     return HttpResponse(json.dumps(ajax_response_data))
 

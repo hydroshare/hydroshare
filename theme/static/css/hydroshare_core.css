@@ -1948,7 +1948,7 @@ td.user-actions > span:hover {
 	cursor: default;
 }
 
-.user-roles li.disabled a {
+.user-roles li.disabled a, #list-roles li.disabled a {
 	color: #aaa;
 	text-shadow: 0 1px 0 #FFF;
 	pointer-events: none;
@@ -1958,7 +1958,7 @@ td.user-actions > span:hover {
 	font-weight: bold;
 }
 
-.user-roles .dropdown-menu{
+.user-roles .dropdown-menu {
 	background-color:#FFF;
 }
 

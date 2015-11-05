@@ -472,6 +472,7 @@
                                                 <div class="profile-pic-thumbnail round-image user-icon"></div>
                                                 <div class="user-scope">
                                                     <span data-col="name" class="user-name"></span>
+                                                    <span class="text-muted you-flag">(You)</span>
                                                     <br>
                                                     <span data-col="user-name"
                                                           class="user-username-content"></span>
@@ -521,7 +522,7 @@
 
                                         {# Owners with full permissions to do anything on this resource #}
                                         {% for u in owners %}
-                                            <tr id="row-id-{{ u.pk }}" {% if owners|length == 1 %}class="hide-actions"{% endif %}>
+                                            <tr id="row-id-{{ u.pk }}" {% if owners|length == 1 or not is_owner_user %}class="hide-actions"{% endif %}>
                                                 <td>
                                                     <div class="user-scope">
                                                         <div
@@ -536,7 +537,7 @@
                                                         <span data-col="name"
                                                               class="user-name">{{ u|best_name }}</span>
                                                         {% if u.pk == current_user.pk %}
-                                                            <span class="text-muted">(You)</span>
+                                                            <span class="text-muted you-flag">(You)</span>
                                                         {% endif %}
                                                         <br>
                                                         <span data-col="user-name"
@@ -772,9 +773,9 @@
 
                                                 <ul id="list-roles" class="dropdown-menu"
                                                     aria-labelledby="roles_list">
-                                                    <li><a data-role="view">Can view</a></li>
-                                                    <li><a data-role="edit">Can edit</a></li>
-                                                    <li><a data-role="owner">Is owner</a></li>
+                                                    <li {% if not is_view_user and not is_edit_user and not is_owner_user %}class="disabled"{% endif %}><a data-role="view">Can view</a></li>
+                                                    <li {% if not is_edit_user and not is_owner_user %}class="disabled"{% endif %}><a data-role="edit">Can edit</a></li>
+                                                    <li {% if not is_owner_user %}class="disabled"{% endif %}><a data-role="owner">Is owner</a></li>
                                                 </ul>
                                             </div>
 
@@ -2529,12 +2530,41 @@
                         }
                         setPointerEvents(true);
                     },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    error: function(XMLHttpRequest, textStatus, errorThrown){
+                        $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+                        $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
                         setPointerEvents(true);
                     }
                 });
                 //don't submit the form
                 return false;
+            }
+
+            // Enables and disables granting access buttons accordingly to the current access level
+            function updateDropdownMenuItems(privilege){
+                $("form[data-access-type]").parent().addClass("disabled");
+                $("#list-roles a[data-role]").parent().addClass("disabled");
+                if (privilege == "view") {
+                    $("form[data-access-type='Can view']").parent().removeClass("disabled");
+                    $("#list-roles a[data-role='view']").parent().removeClass("disabled");
+                }
+                else if(privilege == "change") {
+                    $("form[data-access-type='Can view']").parent().removeClass("disabled");
+                    $("#list-roles a[data-role='view']").parent().removeClass("disabled");
+
+                    $("form[data-access-type='Can edit']").parent().removeClass("disabled");
+                    $("#list-roles a[data-role='edit']").parent().removeClass("disabled");
+                }
+                else if(privilege == "owner") {
+                    $("form[data-access-type='Can view']").parent().removeClass("disabled");
+                    $("#list-roles a[data-role='view']").parent().removeClass("disabled");
+
+                    $("form[data-access-type='Can edit']").parent().removeClass("disabled");
+                    $("#list-roles a[data-role='edit']").parent().removeClass("disabled");
+
+                    $("form[data-access-type='Is owner']").parent().removeClass("disabled");
+                    $("#list-roles a[data-role='owner']").parent().removeClass("disabled");
+                }
             }
 
             function change_share_permission_ajax_submit(form_id) {
@@ -2561,14 +2591,16 @@
                             $(".role-dropdown").removeClass("open");
                             $form.parent().closest(".user-roles").find("li").removeClass("loading");
 
-                            // If only one owner listed, disable actions for that entry
-                            if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
+                            // If only one owner listed or current access below owner, disable granting owner access
+                            if ($(".access-table li.active[data-access-type='Is owner']").length == 1 || json_response.current_user_privilege != "owner") {
                                 $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
                             }
                             else{
                                 // Enable actions for owner rows
                                 $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
                             }
+
+                            updateDropdownMenuItems(json_response.current_user_privilege);
 
                             setPointerEvents(true);
                         }
@@ -2577,6 +2609,11 @@
                             $form.parent().closest(".user-roles").find("li").removeClass("loading");
                             setPointerEvents(true);
                         }
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown){
+                        $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+                        $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
+                        setPointerEvents(true);
                     }
                 });
             }
@@ -2629,8 +2666,10 @@
                             rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
                             rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
                             rowTemplate.find("span[data-col='name']").text(json_response.name);
+                            if (!json_response.is_current_user){
+                                rowTemplate.find(".you-flag").hide();
+                            }
                             rowTemplate.find("span[data-col='user-name']").text(json_response.username);
-
 
                             if (json_response.profile_pic != "No picture provided") {
                                 rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
@@ -2659,6 +2698,11 @@
                         else if (json_response.status == "error") {
                             $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
                         }
+                        setPointerEvents(true);
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown){
+                        $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+                        $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
                         setPointerEvents(true);
                     }
 
