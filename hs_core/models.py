@@ -1536,7 +1536,7 @@ class AbstractResource(ResourcePermissionsMixin):
         return citation
 
     @property
-    def can_be_public(self):
+    def can_be_public_or_discoverable(self):
         if self.metadata.has_all_required_elements() and self.has_required_content_files():
             return True
 

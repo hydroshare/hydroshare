@@ -706,7 +706,7 @@ def delete_resource_file(pk, filename_or_id, user):
         raise ObjectDoesNotExist(filename_or_id)
 
     if resource.raccess.public or resource.raccess.discoverable:
-        if not resource.can_be_public:
+        if not resource.can_be_public_or_discoverable:
             resource.raccess.public = False
             resource.raccess.discoverable = False
             resource.raccess.save()

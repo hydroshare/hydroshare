@@ -190,7 +190,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                     res.title = res.metadata.title.value
                     res.save()
                     if res.raccess.public:
-                        if not res.can_be_public:
+                        if not res.can_be_public_or_discoverable:
                             res.raccess.public = False
                             res.raccess.save()
 
@@ -680,15 +680,24 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
         messages.error(request, "You don't have permission to change resource sharing status")
         return
 
-    if is_public and not resource.can_be_public:
-        messages.error(request, _get_message_for_setting_resource_flag(resource, resource_flag='public'))
+    has_files = False
+    has_metadata = False
+    can_resource_be_public_or_discoverable = False
+    if is_public or is_discoverable:
+        has_files = resource.has_required_content_files()
+        has_metadata = resource.metadata.has_all_required_elements()
+        can_resource_be_public_or_discoverable = has_files and has_metadata
+
+    if is_public and not can_resource_be_public_or_discoverable:
+        messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag='public'))
     else:
         if is_discoverable:
-            if resource.can_be_public:
+            if can_resource_be_public_or_discoverable:
                 resource.raccess.public = False
                 resource.raccess.discoverable = True
             else:
-                messages.error(request, _get_message_for_setting_resource_flag(resource, resource_flag='discoverable'))
+                messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata,
+                                                                               resource_flag='discoverable'))
         else:
             resource.raccess.public = is_public
             resource.raccess.discoverable = is_public
@@ -699,16 +708,14 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
         istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
 
 
-def _get_message_for_setting_resource_flag(resource, resource_flag):
-    has_files = resource.has_required_content_files()
-    has_metadata = resource.metadata.has_all_required_elements()
+def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
     msg = ''
     if not has_metadata and not has_files:
-        msg = "Resource may not have sufficient required metadata and/or content files to be {flag}".format(
+        msg = "Resource does not have sufficient required metadata and content files to be {flag}".format(
               flag=resource_flag)
     elif not has_metadata:
-        msg = "Resource may not have sufficient required metadata to be {flag}".format(flag=resource_flag)
+        msg = "Resource does not have sufficient required metadata to be {flag}".format(flag=resource_flag)
     elif not has_files:
-        msg = "Resource may not have required content files to be {flag}".format(flag=resource_flag)
+        msg = "Resource does not have required content files to be {flag}".format(flag=resource_flag)
 
     return msg

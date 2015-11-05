@@ -48,7 +48,7 @@
                         {%  endif %}
                         {%  if not cm.has_required_content_files %}
                                 <br>
-                                <span>Content file(s) is missing. Content file(s) is required to make the resource public or discoverable.</span>
+                                <span>Content files are required to make the resource public or discoverable.</span>
                         {% endif %}
                         <hr>
                         <span class="glyphicon glyphicon-question-sign"></span>
@@ -388,7 +388,7 @@
                                   method="POST">
                                 {% csrf_token %}
                                 <input name="t" type="hidden" value="make_public"/>
-                                <button {% if not cm.can_be_public %} disabled {% endif %}
+                                <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
                                         id="btn-public" data-toggle="tooltip" data-placement="auto"
                                         title='Can be viewed and downloaded by anyone.' type="submit"
                                         class="btn btn-default">Public
@@ -408,7 +408,7 @@
                                   method="POST">
                                 <input name="t" type="hidden" value="make_discoverable"/>
                                 {% csrf_token %}
-                                <button {% if not cm.can_be_public %} disabled {% endif %}
+                                <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
                                         id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
                                         title='Metadata is public but data is protected.' type="submit"
                                         class="btn btn-default">Discoverable
