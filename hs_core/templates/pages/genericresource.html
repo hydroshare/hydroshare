@@ -2665,7 +2665,13 @@
                             rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
                             rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
                             rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
-                            rowTemplate.find("span[data-col='name']").text(json_response.name);
+                            if (json_response.name){
+                                rowTemplate.find("span[data-col='name']").text(json_response.name);
+                            }
+                            else{
+                                rowTemplate.find("span[data-col='name']").text(json_response.username);
+                            }
+
                             if (!json_response.is_current_user){
                                 rowTemplate.find(".you-flag").hide();
                             }
@@ -2690,10 +2696,24 @@
                                 rowTemplate.find("span[data-col='current-access']").text("Is owner");
                                 rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
                                 rowTemplate.find(".share-form-owner").parent().addClass("active");
-                                // Enable dropdown menu for other owner entries
-                                $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
                             }
                             $(".access-table tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
+
+                            // Set state of remove buttons
+                            if (json_response.current_user_privilege != "owner"){
+                                $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
+                            }
+                            else {
+                                // Enable dropdown menu for other owner entries
+                                if (json_response.current_user_privilege == "owner" && $(".access-table li.active[data-access-type='Is owner']").length > 1){
+                                    $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
+                                }
+                                else {
+                                    $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
+                                }
+                            }
+
+                            updateDropdownMenuItems(json_response.current_user_privilege);
                         }
                         else if (json_response.status == "error") {
                             $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
