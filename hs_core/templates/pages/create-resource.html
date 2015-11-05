@@ -192,7 +192,7 @@
             var ext = ".*";
             for (var i = 0; i < fileList.length; i++) {
                 ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
-                ext = "." + ext;
+                ext = "." + ext.toLowerCase();
                 var ext_found = false;
                 if (ext === file_types) {
                     ext_found = true;
