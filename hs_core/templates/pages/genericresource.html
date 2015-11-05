@@ -2542,7 +2542,7 @@
 
             // Enables and disables granting access buttons accordingly to the current access level
             function updateActionsState(privilege){
-                // Set the state of dropdown menu items
+                // Set the state of dropdown menu items and remove buttons to false by default
                 $("form[data-access-type]").parent().addClass("disabled");
                 $("#list-roles a[data-role]").parent().addClass("disabled");
                 $(".access-table li.active[data-access-type]").closest("tr").addClass("hide-actions");
@@ -2610,15 +2610,6 @@
                             $form.parent().closest(".user-roles").find("li[data-access-type='" + $form.attr("data-access-type") + "']").addClass("active");
                             $(".role-dropdown").removeClass("open");
                             $form.parent().closest(".user-roles").find("li").removeClass("loading");
-
-                            // If only one owner listed or current access below owner, disable granting owner access
-                            if ($(".access-table li.active[data-access-type='Is owner']").length == 1 || json_response.current_user_privilege != "owner") {
-                                $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
-                            }
-                            else{
-                                // Enable actions for owner rows
-                                $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
-                            }
 
                             updateActionsState(json_response.current_user_privilege);
 
