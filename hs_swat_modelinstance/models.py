@@ -17,6 +17,13 @@ class ModelOutput(AbstractMetaDataElement):
     term = 'ModelOutput'
     includes_output = models.BooleanField(default=False)
 
+    @property
+    def includesModelOutput(self):
+        if self.includes_output:
+            return "Yes"
+        else:
+            return "No"
+
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
     model_name = models.CharField(max_length=500, choices=(('-', '    '),), default=None)
@@ -24,6 +31,20 @@ class ExecutedBy(AbstractMetaDataElement):
 
     def __unicode__(self):
         self.model_name
+
+    @property
+    def modelProgramName(self):
+        if self.model_program_fk:
+            return self.model_program_fk.title
+        else:
+            return "Unspecified"
+
+    @property
+    def modelProgramIdentifier(self):
+        if self.model_program_fk:
+            return '%s%s' % (utils.current_site_url(), self.model_program_fk.get_absolute_url())
+        else:
+            return "None"
 
     @classmethod
     def create(cls, **kwargs):
@@ -59,19 +80,22 @@ class ModelObjective(AbstractMetaDataElement):
         return ', '.join([objective.description for objective in self.swat_model_objectives.all()])
 
     @classmethod
-    def create(cls, **kwargs):
-        if 'swat_model_objectives' in kwargs:
-            cls._validate_swat_model_objectives(kwargs['swat_model_objectives'])
-        else:
-            raise ValidationError("swat_model_objectives is missing.")
-        metadata_obj = kwargs['content_object']
-        model_objective = super(ModelObjective,cls).create(other_objectives=kwargs['other_objectives'],content_object=metadata_obj)
-        for swat_objective in kwargs['swat_model_objectives']:
+    def _add_swat_objective(cls,model_objective,objectives):
+        for swat_objective in objectives:
             qs = ModelObjectiveChoices.objects.filter(description__iexact=swat_objective)
             if qs.exists():
                 model_objective.swat_model_objectives.add(qs[0])
             else:
                 model_objective.swat_model_objectives.create(description=swat_objective)
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'swat_model_objectives' in kwargs:
+            cls._validate_swat_model_objectives(kwargs['swat_model_objectives'])
+        else:
+            raise ValidationError("swat_model_objectives is missing.")
+        model_objective = super(ModelObjective,cls).create(content_object=kwargs['content_object'])
+        cls._add_swat_objective(model_objective, kwargs['swat_model_objectives'])
 
         return model_objective
 
@@ -82,12 +106,7 @@ class ModelObjective(AbstractMetaDataElement):
             if 'swat_model_objectives' in kwargs:
                 cls._validate_swat_model_objectives(kwargs['swat_model_objectives'])
                 model_objective.swat_model_objectives.all().delete()
-                for swat_objective in kwargs['swat_model_objectives']:
-                    qs = ModelObjectiveChoices.objects.filter(description__iexact=swat_objective)
-                    if qs.exists():
-                        model_objective.swat_model_objectives.add(qs[0])
-                    else:
-                        model_objective.swat_model_objectives.create(description=swat_objective)
+                cls._add_swat_objective(model_objective, kwargs['swat_model_objectives'])
 
             if 'other_objectives' in kwargs:
                 model_objective.other_objectives = kwargs['other_objectives']
@@ -122,6 +141,21 @@ class ModelMethod(AbstractMetaDataElement):
     PET_estimation_method = models.CharField(max_length=200, null=True, blank=True)
 
     def __unicode__(self):
+        self.description
+
+    @property
+    def runoffCalculationMethod(self):
+        return self.runoff_calculation_method
+
+    @property
+    def flowRoutingMethod(self):
+        return self.flow_routing_method
+
+    @property
+    def petEstimationMethod(self):
+        return self.PET_estimation_method
+
+    def __unicode__(self):
         self.runoff_calculation_method
 
 class ModelParametersChoices(models.Model):
@@ -142,19 +176,22 @@ class ModelParameter(AbstractMetaDataElement):
         return ', '.join([parameter.description for parameter in self.model_parameters.all()])
 
     @classmethod
-    def create(cls, **kwargs):
-        if 'model_parameters' in kwargs:
-            cls._validate_swat_model_parameters(kwargs['model_parameters'])
-        else:
-            raise ValidationError("model_parameters is missing.")
-        metadata_obj = kwargs['content_object']
-        swat_model_parameters = super(ModelParameter,cls).create(other_parameters=kwargs['other_parameters'],content_object=metadata_obj)
-        for swat_parameter in kwargs['model_parameters']:
+    def _add_swat_parameters(cls,swat_model_parameters,parameters):
+        for swat_parameter in parameters:
             qs = ModelParametersChoices.objects.filter(description__iexact=swat_parameter)
             if qs.exists():
                 swat_model_parameters.model_parameters.add(qs[0])
             else:
                 swat_model_parameters.model_parameters.create(description=swat_parameter)
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'model_parameters' in kwargs:
+            cls._validate_swat_model_parameters(kwargs['model_parameters'])
+        else:
+            raise ValidationError("model_parameters is missing.")
+        swat_model_parameters = super(ModelParameter,cls).create(content_object=kwargs['content_object'])
+        cls._add_swat_parameters(swat_model_parameters,kwargs['model_parameters'])
 
         return swat_model_parameters
 
@@ -165,12 +202,7 @@ class ModelParameter(AbstractMetaDataElement):
             if 'model_parameters' in kwargs:
                 cls._validate_swat_model_parameters(kwargs['model_parameters'])
                 swat_model_parameters.model_parameters.all().delete()
-                for swat_parameter in kwargs['model_parameters']:
-                    qs = ModelParametersChoices.objects.filter(description__iexact=swat_parameter)
-                    if qs.exists():
-                        swat_model_parameters.model_parameters.add(qs[0])
-                    else:
-                        swat_model_parameters.model_parameters.create(description=swat_parameter)
+                cls._add_swat_parameters(swat_model_parameters,kwargs['model_parameters'])
 
             if 'other_parameters' in kwargs:
                 swat_model_parameters.other_parameters = kwargs['other_parameters']
@@ -215,6 +247,81 @@ class ModelInput(AbstractMetaDataElement):
 
     def __unicode__(self):
         self.rainfall_time_step
+
+    @property
+    def warmupPeriodType(self):
+        return "Year"
+
+    @property
+    def warmupPeriodValue(self):
+        return self.warm_up_period
+
+    @property
+    def rainfallTimeStepType(self):
+        return self.rainfall_time_step_type
+
+    @property
+    def rainfallTimeStepValue(self):
+        return self.rainfall_time_step_value
+
+    @property
+    def routingTimeStepType(self):
+        return self.routing_time_step_type
+
+    @property
+    def routingTimeStepValue(self):
+        return self.routing_time_step_value
+
+    @property
+    def simulationTimeStepType(self):
+        return self.simulation_time_step_type
+
+    @property
+    def simulationTimeStepValue(self):
+        return self.simulation_time_step_value
+
+    @property
+    def watershedArea(self):
+        return self.watershed_area
+
+    @property
+    def numberOfSubbasins(self):
+        return self.number_of_subbasins
+
+    @property
+    def numberOfHRUs(self):
+        return self.number_of_HRUs
+
+    @property
+    def demResolution(self):
+        return self.DEM_resolution
+
+    @property
+    def demSourceName(self):
+        return self.DEM_source_name
+
+    @property
+    def demSourceURL(self):
+        return self.DEM_source_URL
+
+    @property
+    def landUseDataSourceName(self):
+        return self.landUse_data_source_name
+
+    @property
+    def landUseDataSourceURL(self):
+        return self.landUse_data_source_URL
+
+    @property
+    def soilDataSourceName(self):
+        return self.soil_data_source_name
+
+    @property
+    def soilDataSourceURL(self):
+        return self.soil_data_source_URL
+
+
+
 
 #SWAT Model Instance Resource type
 class SWATModelInstanceResource(BaseResource):
@@ -317,26 +424,19 @@ class SWATModelInstanceMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         if self.model_output:
-            hsterms_model_output = etree.SubElement(container, '{%s}ModelOutput' % self.NAMESPACES['hsterms'])
-            hsterms_model_output_rdf_Description = etree.SubElement(hsterms_model_output, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_model_output_value = etree.SubElement(hsterms_model_output_rdf_Description, '{%s}includesModelOutput' % self.NAMESPACES['hsterms'])
-        if self.model_output.includes_output == True:
-            hsterms_model_output_value.text = "Yes"
-        else:
-            hsterms_model_output_value.text = "No"
+            modelOutputFields = ['includesModelOutput']
+            self.add_metadata_element_to_xml(container,self.model_output,modelOutputFields)
 
-        hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
-        hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by, '{%s}Description' % self.NAMESPACES['rdf'])
-        hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}modelProgramName' % self.NAMESPACES['hsterms'])
-        hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}modelProgramIdentifier' % self.NAMESPACES['hsterms'])
         if self.executed_by:
-            title = self.executed_by.model_program_fk.title
-            url = '%s%s' % (utils.current_site_url(), self.executed_by.model_program_fk.get_absolute_url())
+            executedByFields = ['modelProgramName','modelProgramIdentifier']
+            self.add_metadata_element_to_xml(container,self.executed_by,executedByFields)
         else:
-            title = "Unspecified"
-            url = "None"
-        hsterms_executed_by_url.text = url
-        hsterms_executed_by_name.text = title
+            hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
+            hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}modelProgramName' % self.NAMESPACES['hsterms'])
+            hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}modelProgramIdentifier' % self.NAMESPACES['hsterms'])
+            hsterms_executed_by_name.text = "Unspecified"
+            hsterms_executed_by_url.text = "None"
 
         if self.model_objective:
             hsterms_model_objective = etree.SubElement(container, '{%s}modelObjective' % self.NAMESPACES['hsterms'])
@@ -346,22 +446,13 @@ class SWATModelInstanceMetaData(CoreMetaData):
             else:
                 hsterms_model_objective.text = ', '.join([objective.description for objective in self.model_objective.swat_model_objectives.all()])
 
-
         if self.simulation_type:
             hsterms_simulation_type = etree.SubElement(container, '{%s}simulationType' % self.NAMESPACES['hsterms'])
             hsterms_simulation_type.text = self.simulation_type.simulation_type_name
 
-
         if self.model_method:
-            hsterms_model_methods = etree.SubElement(container, '{%s}ModelMethod' % self.NAMESPACES['hsterms'])
-            hsterms_model_methods_rdf_Description = etree.SubElement(hsterms_model_methods, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_model_methods_runoff_calculation_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}runoffCalculationMethod' % self.NAMESPACES['hsterms'])
-            hsterms_model_methods_runoff_calculation_method.text = self.model_method.runoff_calculation_method
-            hsterms_model_methods_flow_routing_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}flowRoutingMethod' % self.NAMESPACES['hsterms'])
-            hsterms_model_methods_flow_routing_method.text = self.model_method.flow_routing_method
-            hsterms_model_methods_PET_estimation_method = etree.SubElement(hsterms_model_methods_rdf_Description, '{%s}petEstimationMethod' % self.NAMESPACES['hsterms'])
-            hsterms_model_methods_PET_estimation_method.text = self.model_method.PET_estimation_method
-
+            modelMethodFields = ['runoffCalculationMethod','flowRoutingMethod','petEstimationMethod']
+            self.add_metadata_element_to_xml(container,self.model_method,modelMethodFields)
 
         if self.model_parameter:
             hsterms_swat_model_parameters = etree.SubElement(container, '{%s}modelParameter' % self.NAMESPACES['hsterms'])
@@ -373,44 +464,11 @@ class SWATModelInstanceMetaData(CoreMetaData):
 
 
         if self.model_input:
-            hsterms_model_input = etree.SubElement(container, '{%s}ModelInput' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_rdf_Description = etree.SubElement(hsterms_model_input, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_model_input_warm_up_period_type = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}warm-upPeriodType' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_warm_up_period_type.text = 'Year'
-            hsterms_model_input_warm_up_period_value = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}warm-upPeriodValue' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_warm_up_period_value.text = self.model_input.warm_up_period
-            hsterms_model_input_rainfall_time_step_type = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}rainfallTimeStepType' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_rainfall_time_step_type.text = self.model_input.rainfall_time_step_type
-            hsterms_model_input_rainfall_time_step_value = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}rainfallTimeStepValue' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_rainfall_time_step_value.text = self.model_input.rainfall_time_step_value
-            hsterms_model_input_routing_time_step_type = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}routingTimeStepType' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_routing_time_step_type.text = self.model_input.routing_time_step_type
-            hsterms_model_input_routing_time_step_value = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}routingTimeStepValue' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_routing_time_step_value.text = self.model_input.routing_time_step_value
-            hsterms_model_input_simulation_time_step_type = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}simulationTimeStepType' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_simulation_time_step_type.text = self.model_input.simulation_time_step_type
-            hsterms_model_input_simulation_time_step_value = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}simulationTimeStepValue' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_simulation_time_step_value.text = self.model_input.simulation_time_step_value
-            hsterms_model_input_watershed_area = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}watershedArea' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_watershed_area.text = self.model_input.watershed_area
-            hsterms_model_input_number_of_subbasins = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}numberOfSubbasins' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_number_of_subbasins.text = self.model_input.number_of_subbasins
-            hsterms_model_input_number_of_HRUs = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}numberOfHRUs' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_number_of_HRUs.text = self.model_input.number_of_HRUs
-            hsterms_model_input_DEM_resolution = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}demResolution' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_DEM_resolution.text = self.model_input.DEM_resolution
-            hsterms_model_input_DEM_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}demSourceName' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_DEM_source_name.text = self.model_input.DEM_source_name
-            hsterms_model_input_DEM_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}demSourceURL' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_DEM_source_URL.text = self.model_input.DEM_source_URL
-            hsterms_model_input_landUse_data_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}landUseDataSourceName' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_landUse_data_source_name.text = self.model_input.landUse_data_source_name
-            hsterms_model_input_landUse_data_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}landUseDataSourceURL' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_landUse_data_source_URL.text = self.model_input.landUse_data_source_URL
-            hsterms_model_input_soil_data_source_name = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}soilDataSourceName' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_soil_data_source_name.text = self.model_input.soil_data_source_name
-            hsterms_model_input_soil_data_source_URL = etree.SubElement(hsterms_model_input_rdf_Description, '{%s}soilDataSourceURL' % self.NAMESPACES['hsterms'])
-            hsterms_model_input_soil_data_source_URL.text = self.model_input.soil_data_source_URL
+            modelInputFields = ['warmupPeriodType','warmupPeriodValue','rainfallTimeStepType','rainfallTimeStepValue','routingTimeStepType',\
+                                'routingTimeStepValue','simulationTimeStepType','simulationTimeStepValue','watershedArea','numberOfSubbasins',\
+                                'numberOfHRUs','demResolution','demSourceName','demSourceURL','landUseDataSourceName','landUseDataSourceURL',\
+                                'soilDataSourceName','soilDataSourceURL']
+            self.add_metadata_element_to_xml(container,self.model_input,modelInputFields)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 

@@ -15,15 +15,35 @@ class ModelOutput(AbstractMetaDataElement):
     term = 'ModelOutput'
     includes_output = models.BooleanField(default=False)
 
+    @property
+    def includesModelOutput(self):
+        if self.includes_output:
+            return "Yes"
+        else:
+            return "No"
+
 class ExecutedBy(AbstractMetaDataElement):
 
     term = 'ExecutedBY'
     model_name = models.CharField(max_length=500, choices=(('-', '    '),), default=None)
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True, related_name='modelinstance')
 
-
     def __unicode__(self):
         self.model_name
+
+    @property
+    def modelProgramName(self):
+        if self.model_program_fk:
+            return self.model_program_fk.title
+        else:
+            return "Unspecified"
+
+    @property
+    def modelProgramIdentifier(self):
+        if self.model_program_fk:
+            return '%s%s' % (utils.current_site_url(), self.model_program_fk.get_absolute_url())
+        else:
+            return "None"
 
     @classmethod
     def create(cls, **kwargs):
@@ -94,31 +114,19 @@ class ModelInstanceMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         if self.model_output:
-            hsterms_model_output = etree.SubElement(container, '{%s}ModelOutput' % self.NAMESPACES['hsterms'])
-            hsterms_model_output_rdf_Description = etree.SubElement(hsterms_model_output,
-                                                                    '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_model_output_value = etree.SubElement(hsterms_model_output_rdf_Description,
-                                                          '{%s}includesModelOutput' % self.NAMESPACES['hsterms'])
-            if self.model_output.includes_output == True:
-                hsterms_model_output_value.text = "Yes"
-            else:
-                hsterms_model_output_value.text = "No"
+            modelOutputFields = ['includesModelOutput']
+            self.add_metadata_element_to_xml(container,self.model_output,modelOutputFields)
 
-        hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
-        hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by,
-                                                               '{%s}Description' % self.NAMESPACES['rdf'])
-        hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description,
-                                                    '{%s}modelProgramName' % self.NAMESPACES['hsterms'])
-        hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description,
-                                                   '{%s}modelProgramIdentifier' % self.NAMESPACES['hsterms'])
         if self.executed_by:
-            title = self.executed_by.model_program_fk.title
-            url = '%s%s' % (utils.current_site_url(), self.executed_by.model_program_fk.get_absolute_url())
+            executedByFields = ['modelProgramName','modelProgramIdentifier']
+            self.add_metadata_element_to_xml(container,self.executed_by,executedByFields)
         else:
-            title = "Unspecified"
-            url = "None"
-        hsterms_executed_by_url.text = url
-        hsterms_executed_by_name.text = title
+            hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
+            hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}modelProgramName' % self.NAMESPACES['hsterms'])
+            hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}modelProgramIdentifier' % self.NAMESPACES['hsterms'])
+            hsterms_executed_by_name.text = "Unspecified"
+            hsterms_executed_by_url.text = "None"
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
