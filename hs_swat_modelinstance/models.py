@@ -94,7 +94,7 @@ class ModelObjective(AbstractMetaDataElement):
             cls._validate_swat_model_objectives(kwargs['swat_model_objectives'])
         else:
             raise ValidationError("swat_model_objectives is missing.")
-        model_objective = super(ModelObjective,cls).create(content_object=kwargs['content_object'])
+        model_objective = super(ModelObjective,cls).create(content_object=kwargs['content_object'], other_objectives=kwargs['other_objectives'])
         cls._add_swat_objective(model_objective, kwargs['swat_model_objectives'])
 
         return model_objective
@@ -136,27 +136,12 @@ class SimulationType(AbstractMetaDataElement):
 
 class ModelMethod(AbstractMetaDataElement):
     term = 'ModelMethod'
-    runoff_calculation_method = models.CharField(max_length=200, null=True, blank=True)
-    flow_routing_method = models.CharField(max_length=200, null=True, blank=True)
-    PET_estimation_method = models.CharField(max_length=200, null=True, blank=True)
+    runoffCalculationMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='Runoff calculation method')
+    flowRoutingMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='Flow routing method')
+    petEstimationMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='PET estimation method')
 
     def __unicode__(self):
-        self.description
-
-    @property
-    def runoffCalculationMethod(self):
-        return self.runoff_calculation_method
-
-    @property
-    def flowRoutingMethod(self):
-        return self.flow_routing_method
-
-    @property
-    def petEstimationMethod(self):
-        return self.PET_estimation_method
-
-    def __unicode__(self):
-        self.runoff_calculation_method
+        self.runoffCalculationMethod
 
 class ModelParametersChoices(models.Model):
     description = models.CharField(max_length=300)
@@ -190,7 +175,7 @@ class ModelParameter(AbstractMetaDataElement):
             cls._validate_swat_model_parameters(kwargs['model_parameters'])
         else:
             raise ValidationError("model_parameters is missing.")
-        swat_model_parameters = super(ModelParameter,cls).create(content_object=kwargs['content_object'])
+        swat_model_parameters = super(ModelParameter,cls).create(content_object=kwargs['content_object'], other_parameters=kwargs['other_parameters'])
         cls._add_swat_parameters(swat_model_parameters,kwargs['model_parameters'])
 
         return swat_model_parameters
@@ -227,101 +212,30 @@ class ModelInput(AbstractMetaDataElement):
     routing_type_choices = (('Daily', 'Daily'), ('Hourly', 'Hourly'),)
     simulation_type_choices = (('Annual', 'Annual'), ('Monthly', 'Monthly'), ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
 
-    warm_up_period = models.CharField(max_length=100, null=True, blank=True, verbose_name='Warm-up period in years')
-    rainfall_time_step_type = models.CharField(max_length=100, choices=rainfall_type_choices, null=True, blank=True)
-    rainfall_time_step_value = models.CharField(max_length=100, null=True, blank=True)
-    routing_time_step_type = models.CharField(max_length=100, choices=routing_type_choices, null=True, blank=True)
-    routing_time_step_value = models.CharField(max_length=100, null=True, blank=True)
-    simulation_time_step_type = models.CharField(max_length=100,choices=simulation_type_choices, null=True, blank=True)
-    simulation_time_step_value = models.CharField(max_length=100, null=True, blank=True)
-    watershed_area = models.CharField(max_length=100, null=True, blank=True, verbose_name='Waterhsed area in square kilometers')
-    number_of_subbasins = models.CharField(max_length=100, null=True, blank=True)
-    number_of_HRUs = models.CharField(max_length=100, null=True, blank=True)
-    DEM_resolution = models.CharField(max_length=100, null=True, blank=True, verbose_name='DEM resolution in meters')
-    DEM_source_name = models.CharField(max_length=200, null=True, blank=True)
-    DEM_source_URL = models.URLField(null=True, blank=True)
-    landUse_data_source_name = models.CharField(max_length=200, null=True, blank=True)
-    landUse_data_source_URL = models.URLField(null=True, blank=True)
-    soil_data_source_name = models.CharField(max_length=200, null=True, blank=True)
-    soil_data_source_URL = models.URLField(null=True, blank=True)
+    warmupPeriodValue = models.CharField(max_length=100, null=True, blank=True, verbose_name='Warm-up period in years')
+    rainfallTimeStepType = models.CharField(max_length=100, choices=rainfall_type_choices, null=True, blank=True, verbose_name='Rainfall time step type')
+    rainfallTimeStepValue = models.CharField(max_length=100, null=True, blank=True, verbose_name='Rainfall time step value')
+    routingTimeStepType = models.CharField(max_length=100, choices=routing_type_choices, null=True, blank=True, verbose_name='Routing time step type')
+    routingTimeStepValue = models.CharField(max_length=100, null=True, blank=True, verbose_name='Routing time step value')
+    simulationTimeStepType = models.CharField(max_length=100,choices=simulation_type_choices, null=True, blank=True, verbose_name='Simulation time step type')
+    simulationTimeStepValue = models.CharField(max_length=100, null=True, blank=True, verbose_name='Simulation time step value')
+    watershedArea = models.CharField(max_length=100, null=True, blank=True, verbose_name='Waterhsed area in square kilometers')
+    numberOfSubbasins = models.CharField(max_length=100, null=True, blank=True, verbose_name='Number of subbasins')
+    numberOfHRUs = models.CharField(max_length=100, null=True, blank=True, verbose_name='Number of HRUs')
+    demResolution = models.CharField(max_length=100, null=True, blank=True, verbose_name='DEM resolution in meters')
+    demSourceName = models.CharField(max_length=200, null=True, blank=True, verbose_name='DEM source name')
+    demSourceURL = models.URLField(null=True, blank=True, verbose_name='DEM source URL')
+    landUseDataSourceName = models.CharField(max_length=200, null=True, blank=True, verbose_name='LandUse data source name')
+    landUseDataSourceURL = models.URLField(null=True, blank=True, verbose_name='LandUse data source URL')
+    soilDataSourceName = models.CharField(max_length=200, null=True, blank=True, verbose_name='Soil data source name')
+    soilDataSourceURL = models.URLField(null=True, blank=True, verbose_name='Soil data source URL')
 
     def __unicode__(self):
-        self.rainfall_time_step
+        self.rainfallTimeStepType
 
     @property
     def warmupPeriodType(self):
         return "Year"
-
-    @property
-    def warmupPeriodValue(self):
-        return self.warm_up_period
-
-    @property
-    def rainfallTimeStepType(self):
-        return self.rainfall_time_step_type
-
-    @property
-    def rainfallTimeStepValue(self):
-        return self.rainfall_time_step_value
-
-    @property
-    def routingTimeStepType(self):
-        return self.routing_time_step_type
-
-    @property
-    def routingTimeStepValue(self):
-        return self.routing_time_step_value
-
-    @property
-    def simulationTimeStepType(self):
-        return self.simulation_time_step_type
-
-    @property
-    def simulationTimeStepValue(self):
-        return self.simulation_time_step_value
-
-    @property
-    def watershedArea(self):
-        return self.watershed_area
-
-    @property
-    def numberOfSubbasins(self):
-        return self.number_of_subbasins
-
-    @property
-    def numberOfHRUs(self):
-        return self.number_of_HRUs
-
-    @property
-    def demResolution(self):
-        return self.DEM_resolution
-
-    @property
-    def demSourceName(self):
-        return self.DEM_source_name
-
-    @property
-    def demSourceURL(self):
-        return self.DEM_source_URL
-
-    @property
-    def landUseDataSourceName(self):
-        return self.landUse_data_source_name
-
-    @property
-    def landUseDataSourceURL(self):
-        return self.landUse_data_source_URL
-
-    @property
-    def soilDataSourceName(self):
-        return self.soil_data_source_name
-
-    @property
-    def soilDataSourceURL(self):
-        return self.soil_data_source_URL
-
-
-
 
 #SWAT Model Instance Resource type
 class SWATModelInstanceResource(BaseResource):
@@ -428,15 +342,12 @@ class SWATModelInstanceMetaData(CoreMetaData):
             self.add_metadata_element_to_xml(container,self.model_output,modelOutputFields)
 
         if self.executed_by:
-            executedByFields = ['modelProgramName','modelProgramIdentifier']
-            self.add_metadata_element_to_xml(container,self.executed_by,executedByFields)
+            executed_by = self.executed_by
         else:
-            hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}modelProgramName' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}modelProgramIdentifier' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_name.text = "Unspecified"
-            hsterms_executed_by_url.text = "None"
+            executed_by = ExecutedBy()
+
+        executedByFields = ['modelProgramName','modelProgramIdentifier']
+        self.add_metadata_element_to_xml(container,executed_by,executedByFields)
 
         if self.model_objective:
             hsterms_model_objective = etree.SubElement(container, '{%s}modelObjective' % self.NAMESPACES['hsterms'])

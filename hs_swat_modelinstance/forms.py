@@ -197,9 +197,9 @@ class ModelMethodFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        MetadataField('runoff_calculation_method'),
-                        MetadataField('flow_routing_method'),
-                        MetadataField('PET_estimation_method'),
+                        MetadataField('runoffCalculationMethod'),
+                        MetadataField('flowRoutingMethod'),
+                        MetadataField('petEstimationMethod'),
                  )
         kwargs['element_name_label'] = 'Model Method'
         super(ModelMethodFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -211,15 +211,15 @@ class ModelMethodForm(ModelForm):
 
     class Meta:
         model = ModelMethod
-        fields = ('runoff_calculation_method',
-                  'flow_routing_method',
-                  'PET_estimation_method',)
+        fields = ('runoffCalculationMethod',
+                  'flowRoutingMethod',
+                  'petEstimationMethod',)
 
 
 class ModelMethodValidationForm(forms.Form):
-    runoff_calculation_method = forms.CharField(max_length=200, required=False)
-    flow_routing_method = forms.CharField(max_length=200, required=False)
-    PET_estimation_method = forms.CharField(max_length=200, required=False)
+    runoffCalculationMethod = forms.CharField(max_length=200, required=False)
+    flowRoutingMethod = forms.CharField(max_length=200, required=False)
+    petEstimationMethod = forms.CharField(max_length=200, required=False)
 
 class ModelParameterFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
@@ -263,23 +263,23 @@ class ModelInputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        MetadataField('warm_up_period'),
-                        MetadataField('rainfall_time_step_type'),
-                        MetadataField('rainfall_time_step_value'),
-                        MetadataField('routing_time_step_type'),
-                        MetadataField('routing_time_step_value'),
-                        MetadataField('simulation_time_step_type'),
-                        MetadataField('simulation_time_step_value'),
-                        MetadataField('watershed_area'),
-                        MetadataField('number_of_subbasins'),
-                        MetadataField('number_of_HRUs'),
-                        MetadataField('DEM_resolution'),
-                        MetadataField('DEM_source_name'),
-                        MetadataField('DEM_source_URL'),
-                        MetadataField('landUse_data_source_name'),
-                        MetadataField('landUse_data_source_URL'),
-                        MetadataField('soil_data_source_name'),
-                        MetadataField('soil_data_source_URL'),
+                        MetadataField('warmupPeriodValue'),
+                        MetadataField('rainfallTimeStepType'),
+                        MetadataField('rainfallTimeStepValue'),
+                        MetadataField('routingTimeStepType'),
+                        MetadataField('routingTimeStepValue'),
+                        MetadataField('simulationTimeStepType'),
+                        MetadataField('simulationTimeStepValue'),
+                        MetadataField('watershedArea'),
+                        MetadataField('numberOfSubbasins'),
+                        MetadataField('numberOfHRUs'),
+                        MetadataField('demResolution'),
+                        MetadataField('demSourceName'),
+                        MetadataField('demSourceURL'),
+                        MetadataField('landUseDataSourceName'),
+                        MetadataField('landUseDataSourceURL'),
+                        MetadataField('soilDataSourceName'),
+                        MetadataField('soilDataSourceURL'),
                  )
         kwargs['element_name_label'] = 'Model Input'
         super(ModelInputFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -288,46 +288,46 @@ class ModelInputForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelInputForm, self).__init__(*args, **kwargs)
         self.helper = ModelInputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelInput')
-        self.fields['rainfall_time_step_type'].choices = rainfall_type_choices
-        self.fields['routing_time_step_type'].choices = routing_type_choices
-        self.fields['simulation_time_step_type'].choices = simulation_type_choices
+        self.fields['rainfallTimeStepType'].choices = rainfall_type_choices
+        self.fields['routingTimeStepType'].choices = routing_type_choices
+        self.fields['simulationTimeStepType'].choices = simulation_type_choices
 
     class Meta:
         model = ModelInput
-        fields = ('warm_up_period',
-                  'rainfall_time_step_type',
-                  'rainfall_time_step_value',
-                  'routing_time_step_type',
-                  'routing_time_step_value',
-                  'simulation_time_step_type',
-                  'simulation_time_step_value',
-                  'watershed_area',
-                  'number_of_subbasins',
-                  'number_of_HRUs',
-                  'DEM_resolution',
-                  'DEM_source_name',
-                  'DEM_source_URL',
-                  'landUse_data_source_name',
-                  'landUse_data_source_URL',
-                  'soil_data_source_name',
-                  'soil_data_source_URL',)
+        fields = ('warmupPeriodValue',
+                  'rainfallTimeStepType',
+                  'rainfallTimeStepValue',
+                  'routingTimeStepType',
+                  'routingTimeStepValue',
+                  'simulationTimeStepType',
+                  'simulationTimeStepValue',
+                  'watershedArea',
+                  'numberOfSubbasins',
+                  'numberOfHRUs',
+                  'demResolution',
+                  'demSourceName',
+                  'demSourceURL',
+                  'landUseDataSourceName',
+                  'landUseDataSourceURL',
+                  'soilDataSourceName',
+                  'soilDataSourceURL',)
 
 
 class ModelInputValidationForm(forms.Form):
-    warm_up_period = forms.CharField(max_length=100, required=False)
-    rainfall_time_step_type = forms.CharField(max_length=100, required=False)
-    rainfall_time_step_value = forms.CharField(max_length=100, required=False)
-    routing_time_step_type = forms.CharField(max_length=100, required=False)
-    routing_time_step_value = forms.CharField(max_length=100, required=False)
-    simulation_time_step_type = forms.CharField(max_length=100, required=False)
-    simulation_time_step_value = forms.CharField(max_length=100, required=False)
-    watershed_area = forms.CharField(max_length=100, required=False)
-    number_of_subbasins = forms.CharField(max_length=100, required=False)
-    number_of_HRUs = forms.CharField(max_length=100, required=False)
-    DEM_resolution = forms.CharField(max_length=100, required=False)
-    DEM_source_name = forms.CharField(max_length=200, required=False)
-    DEM_source_URL = forms.URLField(required=False)
-    landUse_data_source_name = forms.CharField(max_length=200, required=False)
-    landUse_data_source_URL = forms.URLField(required=False)
-    soil_data_source_name = forms.CharField(max_length=200, required=False)
-    soil_data_source_URL = forms.URLField(required=False)
+    warmupPeriodValue = forms.CharField(max_length=100, required=False)
+    rainfallTimeStepType = forms.CharField(max_length=100, required=False)
+    rainfallTimeStepValue = forms.CharField(max_length=100, required=False)
+    routingTimeStepType = forms.CharField(max_length=100, required=False)
+    routingTimeStepValue = forms.CharField(max_length=100, required=False)
+    simulationTimeStepType = forms.CharField(max_length=100, required=False)
+    simulationTimeStepValue = forms.CharField(max_length=100, required=False)
+    watershedArea = forms.CharField(max_length=100, required=False)
+    numberOfSubbasins = forms.CharField(max_length=100, required=False)
+    numberOfHRUs = forms.CharField(max_length=100, required=False)
+    demResolution = forms.CharField(max_length=100, required=False)
+    demSourceName = forms.CharField(max_length=200, required=False)
+    demSourceURL = forms.URLField(required=False)
+    landUseDataSourceName = forms.CharField(max_length=200, required=False)
+    landUseDataSourceURL = forms.URLField(required=False)
+    soilDataSourceName = forms.CharField(max_length=200, required=False)
+    soilDataSourceURL = forms.URLField(required=False)

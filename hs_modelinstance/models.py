@@ -118,15 +118,12 @@ class ModelInstanceMetaData(CoreMetaData):
             self.add_metadata_element_to_xml(container,self.model_output,modelOutputFields)
 
         if self.executed_by:
-            executedByFields = ['modelProgramName','modelProgramIdentifier']
-            self.add_metadata_element_to_xml(container,self.executed_by,executedByFields)
+            executed_by = self.executed_by
         else:
-            hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}modelProgramName' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description, '{%s}modelProgramIdentifier' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_name.text = "Unspecified"
-            hsterms_executed_by_url.text = "None"
+            executed_by = ExecutedBy()
+
+        executedByFields = ['modelProgramName','modelProgramIdentifier']
+        self.add_metadata_element_to_xml(container,executed_by,executedByFields)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
