@@ -343,7 +343,7 @@ class SystemMetadataRetrieve(APIView, ResourceToListItemMixin):
     def get(self, request, pk):
         """ Get resource system metadata, as well as URLs to the bag and science metadata
         """
-        view_utils.authorize(request, pk, view=True, full=True)
+        view_utils.authorize(request, pk, discoverable=True, view=True, full=True)
         res = get_resource_by_shortkey(pk)
         ser = self.get_serializer_class()(self.resourceToResourceListItem(res))
 
@@ -415,7 +415,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
     allowed_methods = ('GET', 'PUT')
 
     def get(self, request, pk):
-        view_utils.authorize(request, pk, view=True, edit=True, full=True)
+        view_utils.authorize(request, pk, discoverable=True, view=True, edit=True, full=True)
 
         # TODO: once the science metadata xml file is available as a separate file on iRODS, that file needs to be returned
         return Response(data=hydroshare.get_science_metadata(pk), status=status.HTTP_200_OK)
