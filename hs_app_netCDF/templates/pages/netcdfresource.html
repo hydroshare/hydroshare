@@ -178,6 +178,19 @@
             {% endfor %}
     {% endif %}
 
+
+        {# Add netcdf opendap button  #}
+    {% if opendap_link %}
+        {% for f in cm.files.all %}
+            {% if f.resource_file.name|slice:"-3:" == '.nc'%}
+                <td><a style="margin-left:15px" id="btn-netcdf-opendap" type="button" class="btn btn-success" href='{{opendap_link }}'
+                       title='When changing this resource to or from public or private,please allow 2 hours for the OpenDAP service to refresh on this page' >
+                    <span class="button-label"> OPeNDAP Service</span>
+                </a></td>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
 {% endblock %} {# extra block ends here #}
 
 
@@ -204,6 +217,7 @@
             $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").hide()
         }
     };
+
 {#    // netcdf tool button#}
 {#    $(document).ready(function(){#}
 {#        $("#btn-netcdf-tools").insertAfter("#btn-download-all");#}
@@ -215,6 +229,11 @@
 {#            $('#createNcdump').hide()#}
 {#        }#}
 {#    })#}
+
+    // netcdf opendap button
+    $(document).ready(function(){
+        $("#btn-netcdf-opendap").insertAfter("#btn-download-all");
+    })
 
 </script>
 

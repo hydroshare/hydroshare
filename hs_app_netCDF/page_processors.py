@@ -115,6 +115,13 @@ def landing_page(request, page):
         context['add_variable_modal_form'] = add_variable_modal_form
         context['original_coverage_form'] = ori_cov_form
 
+    # add opendap link context if the .nc file exists
+    if content_model.raccess.public:
+        for f in content_model.files.all():
+            if '.nc' in f.resource_file.name[-3:]:
+                context['opendap_link'] = 'http://hydrotest41.renci.org:8080/thredds/dodsC/HFCat/{0}/data/contents/{1}.html'.\
+                    format(content_model.short_id, f.resource_file.name.split('/')[-1])
+
     hs_core_context = add_generic_context(request, page)
     context.update(hs_core_context)
 
