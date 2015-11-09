@@ -87,6 +87,10 @@ class ResourceListItemSerializer(serializers.Serializer):
     date_created = serializers.DateTimeField(format='%m-%d-%Y')
     date_last_updated = serializers.DateTimeField(format='%m-%d-%Y')
     public = serializers.BooleanField()
+    discoverable = serializers.BooleanField()
+    shareable = serializers.BooleanField()
+    immutable = serializers.BooleanField()
+    published = serializers.BooleanField()
     bag_url = serializers.URLField()
     science_metadata_url = serializers.URLField()
 
@@ -97,15 +101,19 @@ class ResourceType(object):
 
 
 ResourceListItem = namedtuple('ResourceListItem',
-                              'resource_type, '
-                              'resource_id, '
-                              'resource_title, '
-                              'creator, '
-                              'public, '
-                              'date_created, '
-                              'date_last_updated, '
-                              'bag_url, '
-                              'science_metadata_url' )
+                              ['resource_type',
+                               'resource_id',
+                               'resource_title',
+                               'creator',
+                               'public',
+                               'discoverable',
+                               'shareable',
+                               'immutable',
+                               'published',
+                               'date_created',
+                               'date_last_updated',
+                               'bag_url',
+                               'science_metadata_url'])
 
 
 class UserAuthenticateRequestValidator(serializers.Serializer):
