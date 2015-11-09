@@ -63,4 +63,7 @@
 {% endfor %}
 {{ object.editors_count }}
 {{ object.comments_count }}
+{% for comment in object.comments.all %}
+{{ comment }}
+{% endfor %}
 {{ object.body }}

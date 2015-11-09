@@ -14,24 +14,23 @@ from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
 from haystack.views import SearchView
-from hs_core.customer_form import DateRangeSearchForm
+from hs_core.customer_form import MyForm
 autocomplete_light.autodiscover()
 admin.autodiscover()
 
 # Add the urlpatterns for any custom Django applications here.
 # You can also change the ``home`` view to add your own functionality
 # to the project's homepage.
-faceted_sqs = SearchQuerySet().filter(discoverable=True)
-facet_list = ('author', 'creators', 'subjects', 'public', 'discoverable', 'language', 'title', 'resource_type')
-for item in facet_list:
-    faceted_sqs = faceted_sqs.facet(item)
+#faceted_sqs = SearchQuerySet().filter(discoverable=True)
+#facet_list = ('author', 'creators', 'subjects', 'public', 'discoverable', 'language', 'title', 'resource_type')
+#for item in facet_list:
+#    faceted_sqs = faceted_sqs.facet(item)
 
 urlpatterns = i18n_patterns("",
 
     # Change the admin prefix here to use an alternate URL for the
     # admin interface, which would be marginally more secure.
     url("^admin/", include(admin.site.urls)),
-    url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url("^inplaceeditform/", include("inplaceeditform.urls")),
     url('^ga_resources/', include('ga_resources.urls')),
     #url('^ga_interactive/', include('ga_interactive.urls')),
@@ -45,9 +44,8 @@ urlpatterns = i18n_patterns("",
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    #url(r'^search/$', SearchView(form_class=DateRangeSearchForm), name='haystack_search')
-    url(r'^search/$', FacetedSearchView(form_class=DateRangeSearchForm, searchqueryset=faceted_sqs),name='haystack_search'),
-    #url('^search/', include('haystack.urls')),
+    #url(r'^search/$', MySearchView, name='haystack_search'),
+    url(r'^search/', FacetedSearchView(form_class=MyForm),name='haystack_search'),
 )
 #urlpatterns = patterns('haystack.views',
 #    url(r'^search/$', FacetedSearchView(form_class=FacetedSearchForm, facet_fields=['author']), name='haystack_search'),

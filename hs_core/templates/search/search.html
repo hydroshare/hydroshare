@@ -1,141 +1,44 @@
-<form method="get" action=".">
-    <table>
-        <tbody>
-            {{ form.as_table }}
-            <tr>
-                <td>&nbsp;</td>
-                <td><input type="submit" value="Search"></td>
-            </tr>
-        </tbody>
-    </table>
-</form>
+{% extends "base.html" %}
+{% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 
-{% if query %}
-    <!-- Begin faceting. -->
+{# {% block title %}{{ user|best_name }}'s Resources{% endblock %}#}
+{% block title %}Resources{% endblock %}
 
-        <!-- Display results... -->
-    <h2>Resource Results</h2>
-    {% for result in page.object_list %}
-        <div class="search_result">
-            <h3><a href="{{ result.object.get_absolute_url }}">{{ result.object.title }}</a></h3>
-
-            <p>{{ result.object.body|truncatewords:80 }}</p>
+{% block main %}
+<div class="container-fluid" id="main">
+    <div class="row">
+        <div class="col-lg-2" id="folders">
+        	<form method="get" action=".">
+    			<table>
+        			<tbody>
+            			{{ form.as_table }}
+            			<tr>
+                			<td>&nbsp;</td>
+                			<td><input type="submit" value="Search"></td>
+            			</tr>
+        			</tbody>
+    			</table>
+			</form>
         </div>
-    {% empty %}
-        <p>Sorry, no results found.</p>
-    {% endfor %}
-
-    <h2>Faceted Search</h2>
-
-    <h4>By Titles</h4>
-    <div>
-        <dl>
-            {% if facets.fields.title %}
-                <dt>Titles</dt>
-                {# Provide only the top 5 authors #}
-                {% for title in facets.fields.title%}
-                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=title_exact:{{ title.0|urlencode }}">{{ title.0 }}</a> ({{ title.1 }})</dd>
-                {% endfor %}
-            {% else %}
-                <p>No titles facets.</p>
-            {% endif %}
-        </dl>
+       	<div class="col-lg-10" id="items">
+       		<table class="table table-striped table-hover" id="item-selectors">
+                <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>First author</th>
+                    <th>Last modified</th>
+                </tr>
+                {% if query %}
+                	{% for result in page.object_list %}
+                    	<tr>
+                        	<td><a href="{{ result.object.get_absolute_url }}">{{ result.object.title }}</a></td>
+                    	</tr>
+                    {% empty %}
+        			<p>Sorry, no results found.</p>
+                	{% endfor %}
+    			{% endif %}
+        	</table>
+       	</div>
     </div>
-
-    <h4>By Author</h4>
-    <div>
-        <dl>
-            {% if facets.fields.author %}
-                <dt>Author</dt>
-                {# Provide only the top 5 authors #}
-                {% for author in facets.fields.author|slice:":5" %}
-                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=author_exact:{{ author.0|urlencode }}">{{ author.0 }}</a> ({{ author.1 }})</dd>
-                {% endfor %}
-            {% else %}
-                <p>No author facets.</p>
-            {% endif %}
-        </dl>
-    </div>
-
-    <h4>By Creators</h4>
-
-    <div>
-        <dl>
-            {% if facets.fields.creators %}
-                <dt>Creators</dt>
-                {# Provide only the top 5 authors #}
-                {% for creator in facets.fields.creators %}
-                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=creators_exact:{{ creator.0|urlencode }}">{{ creator.0 }}</a> ({{ creator.1 }})</dd>
-                {% endfor %}
-            {% else %}
-                <p>No creators facets.</p>
-            {% endif %}
-        </dl>
-    </div>
-
-
-    <h4>By Subjects</h4>
-
-    <div>
-        <dl>
-            {% if facets.fields.subjects %}
-                <dt>Subjects</dt>
-                {# Provide only the top 5 authors #}
-                {% for subject in facets.fields.subjects%}
-                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=subjects_exact:{{ subjects.0|urlencode }}">{{ subject.0 }}</a> ({{ subject.1 }})</dd>
-                {% endfor %}
-            {% else %}
-                <p>No subjects facets.</p>
-            {% endif %}
-        </dl>
-    </div>
-
-    <h4>By Public</h4>
-
-    <div>
-        <dl>
-            {% if facets.fields.public %}
-                <dt>Public</dt>
-                {# Provide only the top 5 authors #}
-                {% for public in facets.fields.public%}
-                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=public_exact:{{ public.0|urlencode }}">{{ public.0 }}</a> ({{ public.1 }})</dd>
-                {% endfor %}
-            {% else %}
-                <p>No public facets.</p>
-            {% endif %}
-        </dl>
-    </div>
-
-    <h4>By Discoverable</h4>
-    <div>
-        <dl>
-            {% if facets.fields.discoverable %}
-                <dt>Discoverable</dt>
-                {# Provide only the top 5 authors #}
-                {% for discoverable in facets.fields.discoverable%}
-                    <dd><a class="facet" href="{{ request.get_full_path }}&amp;selected_facets=discoverable_exact:{{ discoverable.0|urlencode }}">{{ discoverable.0 }}</a> ({{ discoverable.1 }})</dd>
-                {% endfor %}
-            {% else %}
-                <p>No discoverable facets.</p>
-            {% endif %}
-        </dl>
-    </div>
-
-    <h4>By Languages</h4>
-    <div>
-        <dl>
-            {% if facets.fields.language %}
-                <dt>Language</dt>
-                {# Provide only the top 5 authors #}
-                {% for language in facets.fields.language%}
-                    <dd><a href="{{ request.get_full_path }}&amp;selected_facets=language_exact:{{ language.0|urlencode }}">{{ language.0 }}</a> ({{ language.1 }})</dd>
-                {% endfor %}
-            {% else %}
-                <p>No languages facets.</p>
-            {% endif %}
-        </dl>
-    </div>
-    <!-- End faceting -->
-
-
-{% endif %}
+</div>
+{% endblock %}
