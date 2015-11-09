@@ -46,7 +46,7 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
 
-def authorize(request, res_id, edit=False, view=False, discoverable=False,
+def authorize(request, res_id, discoverable=False, edit=False, view=False,
               full=False, superuser=False, raises_exception=True):
     """
     Authorizes the user making this request for the OR of the parameters.  If the user has ANY permission set to True in
@@ -58,20 +58,22 @@ def authorize(request, res_id, edit=False, view=False, discoverable=False,
     except ObjectDoesNotExist:
         raise NotFound(detail="No resource was found for resource id:%s" % res_id)
 
-    if discoverable:
+    if discoverable and (edit is False and view is False and full is False and superuser is False):
         authorized = res.raccess.discoverable
     elif user.is_authenticated():
         has_edit = user.uaccess.can_change_resource(res)
         has_view = user.uaccess.can_view_resource(res)
         has_full = user.uaccess.owns_resource(res)
 
-        authorized = (edit and has_edit) or \
+        authorized = (discoverable and res.raccess.discoverable) or \
+                     (edit and has_edit) or \
                      (view and has_view) or \
                      (full and has_full) or \
                      (superuser and (user.uaccess.admin or user.is_superuser))
     else:
         has_view = res.raccess.public
-        authorized = view and has_view
+        authorized = (discoverable and res.raccess.discoverable) or \
+                     (view and has_view)
 
     if raises_exception and not authorized:
         raise PermissionDenied()
