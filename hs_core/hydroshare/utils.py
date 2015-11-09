@@ -355,6 +355,13 @@ def resource_file_add_process(resource, files, user, extract_metadata=False, **k
                                     validate_files=file_validation_dict, extract_metadata=extract_metadata, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
+    sync_resource_title(resource)
 
     resource_modified(resource, user)
     return resource_file_objects
+
+
+def sync_resource_title(resource):
+    if resource.title != resource.metadata.title.value:
+        resource.title = resource.metadata.title.value
+        resource.save()

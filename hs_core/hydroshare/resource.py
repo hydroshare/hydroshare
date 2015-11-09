@@ -414,7 +414,9 @@ def create_resource(
 
         for keyword in keywords:
             resource.metadata.create_element('subject', value=keyword)
-        
+
+        utils.sync_resource_title(resource)
+
         hs_bagit.create_bag(resource)
 
     return resource
