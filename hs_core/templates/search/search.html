@@ -7,7 +7,7 @@
 {% block main %}
 <div class="container-fluid" id="main">
     <div class="row">
-        <div class="col-lg-2" id="folders">
+        <div class="col-lg-3" id="folders">
         	<form method="get" action=".">
     			<table>
         			<tbody>
@@ -19,14 +19,24 @@
         			</tbody>
     			</table>
 			</form>
+			<h4>By Author</h4>
+			<div>
+    			<dl>
+        			{% if facets.fields.author %}
+            			<dt>Author</dt>
+            			{% for author in facets.fields.author|slice:":5" %}
+                			<dd><a href="{{ request.get_full_path }}&amp;selected_facets=author_exact:{{ author.0|urlencode }}">{{ author.0 }}</a> ({{ author.1 }})</dd>
+            			{% endfor %}
+        			{% else %}
+            			<p>No author facets.</p>
+       				{% endif %}
+    			</dl>
+			</div>
         </div>
-       	<div class="col-lg-10" id="items">
+       	<div class="col-lg-9" id="items">
        		<table class="table table-striped table-hover" id="item-selectors">
                 <tr>
                     <th>Title</th>
-                    <th>Type</th>
-                    <th>First author</th>
-                    <th>Last modified</th>
                 </tr>
                 {% if query %}
                 	{% for result in page.object_list %}
