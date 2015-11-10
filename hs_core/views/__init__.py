@@ -24,6 +24,7 @@ from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes, HSAccessException
 
+from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
@@ -189,7 +190,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                     res.title = res.metadata.title.value
                     res.save()
                     if res.raccess.public:
-                        if not res.can_be_public:
+                        if not res.can_be_public_or_discoverable:
                             res.raccess.public = False
                             res.raccess.save()
 
@@ -333,12 +334,14 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     else:
         status = 'error'
 
-    if status == 'success':
-        messages.success(request, "Resource sharing was successful")
-    else:
-        messages.error(request, err_message)
+    picture_url = 'No picture provided'
+    if user_to_share_with.userprofile.picture:
+        picture_url = user_to_share_with.userprofile.picture.url
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
+                          'username': user_to_share_with.username, 'privilege': privilege, 'profile_pic': picture_url,
+                          'error_msg': err_message}
+    return HttpResponse(json.dumps(ajax_response_data))
 
 
 # Needed for new access control UI functionality being developed by Mauriel
@@ -563,8 +566,8 @@ def create_resource(request, *args, **kwargs):
         except utils.ResourceFileSizeException as ex:
             context = {'file_size_error': ex.message}
             return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
-        except Exception as ex:
-            context = {'resource_creation_error': ex.message}
+        except SessionException as ex:
+            context = {'resource_creation_error': ex.stderr}
             return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     url_key = "page_redirect_url"
@@ -677,15 +680,24 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
         messages.error(request, "You don't have permission to change resource sharing status")
         return
 
-    if is_public and not resource.can_be_public:
-        messages.error(request, "Resource may not have sufficient required metadata to be public")
+    has_files = False
+    has_metadata = False
+    can_resource_be_public_or_discoverable = False
+    if is_public or is_discoverable:
+        has_files = resource.has_required_content_files()
+        has_metadata = resource.metadata.has_all_required_elements()
+        can_resource_be_public_or_discoverable = has_files and has_metadata
+
+    if is_public and not can_resource_be_public_or_discoverable:
+        messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag='public'))
     else:
         if is_discoverable:
-            if resource.can_be_public:
+            if can_resource_be_public_or_discoverable:
                 resource.raccess.public = False
                 resource.raccess.discoverable = True
             else:
-                messages.error(request, "Resource may not have sufficient required metadata to be discoverable")
+                messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata,
+                                                                               resource_flag='discoverable'))
         else:
             resource.raccess.public = is_public
             resource.raccess.discoverable = is_public
@@ -694,3 +706,16 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
         # set isPublic metadata AVU accordingly
         istorage = IrodsStorage()
         istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
+
+
+def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
+    msg = ''
+    if not has_metadata and not has_files:
+        msg = "Resource does not have sufficient required metadata and content files to be {flag}".format(
+              flag=resource_flag)
+    elif not has_metadata:
+        msg = "Resource does not have sufficient required metadata to be {flag}".format(flag=resource_flag)
+    elif not has_files:
+        msg = "Resource does not have required content files to be {flag}".format(flag=resource_flag)
+
+    return msg
