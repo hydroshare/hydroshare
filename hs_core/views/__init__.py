@@ -475,9 +475,18 @@ def my_resources(request, page):
         edit_permission = frm.cleaned_data['edit_permission'] or False
         published = frm.cleaned_data['published'] or False
         startno = frm.cleaned_data['start']
+
+        search_items = dict(
+            (item_type, [t.strip() for t in request.REQUEST.getlist(item_type)])
+            for item_type in ("type", "author", "contributor", "subject")
+        )
+
+        from_date = frm.cleaned_data['from_date'] or None
+        words = request.REQUEST.get('text', None)
+
         if startno is None:
             # this is the case where either the 'RESOURCES' menu option or one of the 3 filtering menu options
-            # (Owned by me, Editable by me, Viewable by me) has been selected
+            # (Owned by me, Editable by me, Viewable by me) has been selected, OR a search item has been entered
             startno = 0
             if owner:   # 'Owned by me' selected
                 request.session['owner'] = owner
@@ -490,24 +499,32 @@ def my_resources(request, page):
 
             if not owner and edit_permission:   # 'Editable by me' selected
                 request.session['edit_permission'] = edit_permission
+
+            for item_type in ("type", "author", "contributor", "subject"):
+                request.session[item_type] = search_items[item_type]
+
+            request.session['published'] = published
+            request.session['from_date'] = from_date
+            request.session['words'] = words
+
         elif startno < 0 or startno >= 0:
             # this is the case where one of the pagination links has been selected
             if 'owner' in request.session:
                 owner = request.session['owner']
             if 'edit_permission' in request.session:
                 edit_permission = request.session['edit_permission']
+
+            for item_type in ("type", "author", "contributor", "subject"):
+                search_items[item_type] = request.session[item_type]
+
+            published = request.session['published']
+            from_date = request.session['from_date']
+            words = request.session['words']
             if startno < 0:
                 startno = 0
 
         start = startno or 0
-        from_date = frm.cleaned_data['from_date'] or None
-        words = request.REQUEST.get('text', None)
         public = not request.user.is_authenticated()
-
-        search_items = dict(
-            (item_type, [t.strip() for t in request.REQUEST.getlist(item_type)])
-            for item_type in ("type", "author", "contributor", "subject")
-        )
 
         # TODO ten separate SQL queries for basically the same data
         reslst = get_resource_list(
