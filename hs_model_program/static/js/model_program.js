@@ -101,6 +101,8 @@ function loadWidgets(){
             $('.multi-select').multiselect({
 
                 buttonWidth: width,
+                maxHeight: 200,
+                numberDisplayed: 1,
 
                 // bind a table view to the on close event
                 onDropdownHide: function (event, checked) {
