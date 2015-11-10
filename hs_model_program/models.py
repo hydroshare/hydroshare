@@ -67,13 +67,13 @@ class MpMetadata(AbstractMetaDataElement):
         metadata.delete()
 
     def get_software_list(self):
-        return self.modelSoftware.split(';')
+        return {name:path for (name, path) in [(i.split('/')[-1], i) for i in self.modelSoftware.split(';')]}
     def get_documentation_list(self):
-        return self.modelDocumentation.split(';')
+        return {name:path for (name, path) in [(i.split('/')[-1], i) for i in self.modelDocumentation.split(';')]}
     def get_releasenotes_list(self):
-        return self.modelReleaseNotes.split(';')
+        return {name:path for (name, path) in [(i.split('/')[-1], i) for i in self.modelReleaseNotes.split(';')]}
     def get_engine_list(self):
-        return self.modelReleaseNotes.split(';')
+        return {name:path for (name, path) in [(i.split('/')[-1], i) for i in self.modelEngine.split(';')]}
 
 
 class ModelProgramResource(BaseResource):

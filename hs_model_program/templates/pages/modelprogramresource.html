@@ -24,12 +24,12 @@
 
                             <div class="col-sm-8">
                                 <table>
-                                    {% for path in mpmetadata.get_engine_list %}
+                                    {% for name, path in mpmetadata.get_engine_list.items %}
                                         <tr>
                                             <td>
                                                 <a id="permalink"
                                                    href="http://{{ request.get_host }}/resource/{{ path }}"
-                                                   target="_blank">{{ path }}</a>
+                                                   target="_blank">{{ name }}</a>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -44,12 +44,12 @@
 
                             <div class="col-sm-8">
                                 <table>
-                                    {% for path in mpmetadata.get_software_list %}
+                                    {% for name, path in mpmetadata.get_software_list.items %}
                                         <tr>
                                             <td>
                                                 <a id="permalink"
                                                    href="http://{{ request.get_host }}/resource/{{ path }}"
-                                                   target="_blank">{{ path }}</a>
+                                                   target="_blank">{{ name }}</a>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -64,12 +64,12 @@
                             </div>
                             <div class="col-sm-8">
                             <table>
-                                    {% for path in mpmetadata.get_documentation_list %}
+                                    {% for name, path in mpmetadata.get_documentation_list.items %}
                                         <tr>
                                             <td>
                                                 <a id="permalink"
                                                    href="http://{{ request.get_host }}/resource/{{ path }}"
-                                                   target="_blank">{{ path }}</a>
+                                                   target="_blank">{{ name }}</a>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -84,12 +84,12 @@
                             </div>
                             <div class="col-sm-8">
                                 <table>
-                                    {% for path in mpmetadata.get_releasenotes_list %}
+                                    {% for name, path in mpmetadata.get_releasenotes_list.items %}
                                         <tr>
                                             <td>
                                                 <a id="permalink"
                                                    href="http://{{ request.get_host }}/resource/{{ path }}"
-                                                   target="_blank">{{ path }}</a>
+                                                   target="_blank">{{ name }}</a>
                                             </td>
                                         </tr>
                                     {% endfor %}
