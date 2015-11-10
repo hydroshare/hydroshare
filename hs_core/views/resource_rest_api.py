@@ -22,25 +22,17 @@ from hs_core.views import pagination
 # Mixins
 class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
-        creator_name = r.creator.username
-
-        public = True if r.raccess.public else False
-        discoverable = True if r.raccess.discoverable else False
-        shareable = True if r.raccess.shareable else False
-        immutable = True if r.raccess.immutable else False
-        published = True if r.raccess.published else False
-
         bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(r.short_id)
         science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
         resource_list_item = serializers.ResourceListItem(resource_type=r.__class__.__name__,
                                                           resource_id=r.short_id,
                                                           resource_title=r.title,
-                                                          creator=creator_name,
-                                                          public=public,
-                                                          discoverable=discoverable,
-                                                          shareable=shareable,
-                                                          immutable=immutable,
-                                                          published=published,
+                                                          creator=r.creator.username,
+                                                          public=r.raccess.public,
+                                                          discoverable=r.raccess.discoverable,
+                                                          shareable=r.raccess.shareable,
+                                                          immutable=r.raccess.immutable,
+                                                          published=r.raccess.published,
                                                           date_created=r.created,
                                                           date_last_updated=r.updated,
                                                           bag_url=bag_url,
