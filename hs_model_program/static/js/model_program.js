@@ -53,7 +53,7 @@ function loadWidgets(){
     // call django view to get model program metadata files
     $.ajax({
         type: "GET",
-        url: '/hsapi/_internal/get-model-metadata-files/',
+        url: '/hsapi/_internal/get-model-metadata/',
         data: {resource_id: shortid},
         success: function (data) {
             // get the fieldset items
@@ -80,6 +80,10 @@ function loadWidgets(){
                     }
                 }
             }
+
+            // set the initial value for the date picker
+            $('#modelReleaseDate_picker').datepicker('setDate', new Date(data['date_released']));
+
         },
         error: function (data) {
             console.log('There was an error with model instance GET.')
