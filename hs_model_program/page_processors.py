@@ -38,10 +38,8 @@ def landing_page(request, page):
                               element_id=content_model.metadata.program.id if content_model.metadata.program else None)
 
         ext_md_layout = Layout(
-                        HTML("<div class='form-group col-lg-4 col-xs-12' id='site'> "
-                                '{% load crispy_forms_tags %} '
-                                '{% crispy output_form %} '
-                             '</div>'),
+                        HTML('{% load crispy_forms_tags %} '
+                             '{% crispy output_form %} '),
                 )
 
         # get the context from hs_core
