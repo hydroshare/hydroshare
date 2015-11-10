@@ -468,8 +468,9 @@ def my_resources(request, page):
     # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
+    page_size = settings.RESOURCE_LIST_PAGE_SIZE
     if frm.is_valid():
-        res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
+        res_cnt = page_size
         owner = frm.cleaned_data['owner'] or None
         user = frm.cleaned_data['user'] or (request.user if request.user.is_authenticated() else None)
         edit_permission = frm.cleaned_data['edit_permission'] or False
@@ -488,17 +489,19 @@ def my_resources(request, page):
             # this is the case where either the 'RESOURCES' menu option or one of the 3 filtering menu options
             # (Owned by me, Editable by me, Viewable by me) has been selected, OR a search item has been entered
             startno = 0
+            # cleanup session
+            _cleanup_session_storage(request)
+
             if owner:   # 'Owned by me' selected
                 request.session['owner'] = owner
+                request.session['edit_permission'] = edit_permission
+            elif edit_permission:   # 'Editable by me' selected
                 request.session['edit_permission'] = edit_permission
             else:   # either 'Editable by me' or 'Viewable by me' selected
                 if 'owner' in request.session:
                     del request.session['owner']
                 if 'edit_permission' in request.session:
                     del request.session['edit_permission']
-
-            if not owner and edit_permission:   # 'Editable by me' selected
-                request.session['edit_permission'] = edit_permission
 
             for item_type in ("type", "author", "contributor", "subject"):
                 request.session[item_type] = search_items[item_type]
@@ -507,7 +510,7 @@ def my_resources(request, page):
             request.session['from_date'] = from_date
             request.session['words'] = words
 
-        elif startno < 0 or startno >= 0:
+        else:
             # this is the case where one of the pagination links has been selected
             if 'owner' in request.session:
                 owner = request.session['owner']
@@ -559,7 +562,25 @@ def my_resources(request, page):
             'first': start,
             'last': start + len(res),
             'ct': total_res_cnt,
+            'page_size': page_size
         }
+
+
+def _cleanup_session_storage(request):
+    for item_type in ("type", "author", "contributor", "subject"):
+        if item_type in request.session:
+            del request.session[item_type]
+
+    if 'owner' in request.session:
+        del request.session['owner']
+    if 'edit_permission' in request.session:
+        del request.session['edit_permission']
+    if 'published' in request.session:
+        del request.session['published']
+    if 'from_date' in request.session:
+        del request.session['from_date']
+    if 'words' in request.session:
+        del request.session['words']
 
 
 @processor_for(GenericResource)

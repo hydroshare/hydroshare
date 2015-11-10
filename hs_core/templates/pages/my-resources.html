@@ -56,20 +56,21 @@
             </table>
 
             <div class="btn-toolbar">
-                <a {% if first == 0 %} disabled {% endif %}
-                        class="btn btn-link" href="?start=0"><i class="fa fa-fast-backward"></i></a>
-                <a {% if first == 0 %} disabled {% endif %}
-                        class="btn btn-link" href="?start={{ first|add:"-20" }}"><i class="fa fa-backward"></i></a>
-                {% if last %}
-                    Results {{ first|add:"1" }}-{{ last }} of {{ ct }}
-                {% else %}
-                    Results 0-0 of 0
-                {% endif %}
-                <a {% if last == ct %} disabled {% endif %}
-                        class="btn btn-link" href="?start={{ first|add:"20" }}"><i class="fa fa-forward"></i></a>
-                <a {% if last == ct %} disabled {% endif %}
-                        class="btn btn-link" href="?start={{ ct|add:"-20" }}"><i class="fa fa-fast-forward"></i></a>
-
+                {% with negative_page_size="-{{ page_size}}" %}
+                    <a {% if first == 0 %} disabled {% endif %}
+                            class="btn btn-link" href="?start=0"><i class="fa fa-fast-backward"></i></a>
+                    <a {% if first == 0 %} disabled {% endif %}
+                            class="btn btn-link" href="?start={{ first|add:negative_page_size }}"><i class="fa fa-backward"></i></a>
+                    {% if last %}
+                        Results {{ first|add:"1" }}-{{ last }} of {{ ct }}
+                    {% else %}
+                        Results 0-0 of 0
+                    {% endif %}
+                    <a {% if last == ct %} disabled {% endif %}
+                            class="btn btn-link" href="?start={{ first|add:page_size }}"><i class="fa fa-forward"></i></a>
+                    <a {% if last == ct %} disabled {% endif %}
+                            class="btn btn-link" href="?start={{ ct|add:negative_page_size }}"><i class="fa fa-fast-forward"></i></a>
+                {%  endwith %}
             </div>
         </div>
     </div>
