@@ -61,25 +61,6 @@ class MpMetadata(AbstractMetaDataElement):
     def __unicode__(self):
         self.modelVersion
 
-    class Meta:
-        # site element is not repeatable
-        unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return MpMetadata.objects.create(**kwargs)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        metadata = MpMetadata.objects.get(id=element_id)
-        if metadata:
-            for key, value in kwargs.iteritems():
-                setattr(metadata, key, value)
-            metadata.save()
-        else:
-            raise ObjectDoesNotExist("No Site element was found for the provided id:%s" % kwargs['id'])
-
-
     @classmethod
     def remove(cls, element_id):
         metadata = MpMetadata.objects.get(id=element_id)
@@ -131,18 +112,18 @@ class ModelProgramMetaData(CoreMetaData):
         elements.append('MpMetadata')
         return elements
 
-    def has_all_required_elements(self):
-        if not super(ModelProgramMetaData, self).has_all_required_elements():
-            return False
-        if not self.program:
-            return False
-        return True
-
-    def get_required_missing_elements(self):
-        missing_required_elements = super(ModelProgramMetaData, self).get_required_missing_elements()
-        if not self.program:
-            missing_required_elements.append('MpMetadata')
-        return missing_required_elements
+    # def has_all_required_elements(self):
+    #     if not super(ModelProgramMetaData, self).has_all_required_elements():
+    #         return False
+    #     if not self.program:
+    #         return False
+    #     return True
+    #
+    # def get_required_missing_elements(self):
+    #     missing_required_elements = super(ModelProgramMetaData, self).get_required_missing_elements()
+    #     if not self.program:
+    #         missing_required_elements.append('MpMetadata')
+    #     return missing_required_elements
 
     def get_xml(self):
         from lxml import etree
