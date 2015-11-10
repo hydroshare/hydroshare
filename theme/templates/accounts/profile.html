@@ -50,8 +50,6 @@
                     </table>
                 </div>
             </div>
-
-
         </div>
 
         <div class="full-width-tabs-container">
@@ -64,357 +62,418 @@
                     <a href="#contributions" aria-controls="profile" role="tab" data-toggle="tab">
                         <i class="glyphicon glyphicon-file"></i> CONTRIBUTIONS</a>
                 </li>
-                <li role="presentation">
-                    <a href="#social" aria-controls="messages" role="tab"
-                       data-toggle="tab"><i class="glyphicon glyphicon-user"></i> SOCIAL</a></li>
+{#                <li role="presentation">#}
+{#                    <a href="#social" aria-controls="messages" role="tab"#}
+{#                       data-toggle="tab"><i class="glyphicon glyphicon-user"></i> SOCIAL</a></li>#}
             </ul>
 
             <!-- Tab panes -->
             <div class="tab-content">
                 <div role="tabpanel" class="tab-pane fade in active" id="overview">
-
-                    <div class="col-md-7">
-                        {#        DESCRIPTION       #}
-                        {% if profile.details %}
+                    <div class="row">
+                        <div class="col-md-7">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
-                                    <h3 class="panel-title">About {{ u.first_name }}</h3>
+                                    <h3 class="panel-title">Recent activity</h3>
                                 </div>
-                                <div class="panel-body" style="color:#757575;">
-                                    {{ profile.details }}
+                                <div class="panel-body">
+                                    {% if resources %}
+
+                                    {% for res in resources reversed %}
+                                        {# Show only the last five #}
+                                        {% if forloop.counter0 < 5 %}
+                                        <div class="activity-block">
+                                            {% if profile.picture and profile.picture.url %}
+                                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;"
+                                                     class="profile-pic-thumbnail round-image">
+                                                </div>
+                                            {% endif %}
+                                            {% if u.first_name or u.last_name %}
+                                                <strong>{{ u.first_name }} {{ u.last_name }}</strong>
+                                            {% else %}
+                                                <strong>{{ u.username }}</strong>
+                                            {% endif %}
+                                            <span class="text-muted"> shared <strong>{{ res|resource_type }}: </strong></span>
+                                            <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
+                                            <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
+
+                                            {% if  res.metadata.description %}
+                                                <a data-toggle="collapse"
+                                                   href="#abs-{{res.short_id}}" aria-expanded="false"
+                                                   aria-controls="collapseExample" class="show-hide">
+                                                    [Show/hide abstract]
+                                                </a>
+
+                                                <div class="collapse" id="abs-{{res.short_id}}">
+                                                    <p style="color:#757575;">
+                                                        <strong>ABSTRACT: </strong>{{ res.metadata.description }}
+                                                    </p>
+                                                </div>
+
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% else %}
+                                        <span class="text-muted">This user has no recent activity.</span>
+                                    {% endif %}
                                 </div>
                             </div>
-                        {% endif %}
+                        </div>
 
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h3 class="panel-title">Recent activity</h3>
-                            </div>
-                            <div class="panel-body">
-                                {% if resources %}
-
-                                {% for res in resources %}
-                                    <div class="activity-block">
-                                        {% if profile.picture and profile.picture.url %}
-                                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;"
-                                                 class="profile-pic-thumbnail round-image">
-                                            </div>
-                                        {% endif %}
-                                        {% if u.first_name or u.last_name %}
-                                            <strong>{{ u.first_name }} {{ u.last_name }}</strong>
-                                        {% else %}
-                                            <strong>{{ u.username }}</strong>
-                                        {% endif %}
-                                        <span class="text-muted"> shared <strong>{{ res|resource_type }}: </strong></span>
-                                        <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
-                                        <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
-
-                                        {% if  res.metadata.description %}
-                                            <a data-toggle="collapse"
-                                               href="#abs-{{res.short_id}}" aria-expanded="false"
-                                               aria-controls="collapseExample" class="show-hide">
-                                                [Show/hide abstract]
-                                            </a>
-
-                                            <div class="collapse" id="abs-{{res.short_id}}">
-                                                <p style="color:#757575;">
-                                                    <strong>ABSTRACT: </strong>{{ res.metadata.description }}
-                                                </p>
-                                            </div>
-
-                                        {% endif %}
+                        <div class="col-md-5">
+                            {#        DESCRIPTION       #}
+                            {% if profile.details %}
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">About {{ u.first_name }}</h3>
                                     </div>
-                                {% endfor %}
+                                    <div class="panel-body" style="color:#757575;">
+                                        {{ profile.details }}
+                                    </div>
+                                </div>
+                            {% endif %}
 
-                                {% else %}
-                                    <span class="text-muted">This user has no recent activity.</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-5">
-                        {#  CONTACT #}
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h3 class="panel-title">Contact</h3>
-                            </div>
-                            <div class="panel-body">
-                                <table class="overview">
-                                    <tbody>
-                                    {% if profile.phone_1 %}
-                                        <tr>
-                                            <td><span class="text-muted">{% if profile.phone_1_type %}
-                                                {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
-                                            <td>{{ profile.phone_1 }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if profile.phone_2 %}
-                                        <tr>
-                                            <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
-                                            <td>{{ profile.phone_2 }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if u.email %}
-                                        {% if user.pk %}
+                            {#  CONTACT #}
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">Contact</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <table class="overview">
+                                        <tbody>
+                                        {% if profile.phone_1 %}
                                             <tr>
-                                                <td><span class="text-muted">Email</span></td>
-                                                <td>
-                                                    <a href="mailto:{{ u.email }}">send email to
-                                                        {% if u.first_name or u.last_name %}
-                                                            {{ u.first_name }} {{ u.last_name }}
-                                                        {% else %}
-                                                            {{ u.username }}
-                                                        {% endif %}
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        {% else %}
-                                            <tr>
-                                                <td><span class="text-muted">Email</span></td>
-                                                <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
+                                                <td><span class="text-muted">{% if profile.phone_1_type %}
+                                                    {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
+                                                <td>{{ profile.phone_1 }}</td>
                                             </tr>
                                         {% endif %}
-                                    {% endif %}
-                                    </tbody>
-                                </table>
+                                        {% if profile.phone_2 %}
+                                            <tr>
+                                                <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
+                                                <td>{{ profile.phone_2 }}</td>
+                                            </tr>
+                                        {% endif %}
+                                        {% if u.email %}
+                                            {% if user.pk %}
+                                                <tr>
+                                                    <td><span class="text-muted">Email</span></td>
+                                                    <td>
+                                                        <a href="mailto:{{ u.email }}">send email to
+                                                            {% if u.first_name or u.last_name %}
+                                                                {{ u.first_name }} {{ u.last_name }}
+                                                            {% else %}
+                                                                {{ u.username }}
+                                                            {% endif %}
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% else %}
+                                                <tr>
+                                                    <td><span class="text-muted">Email</span></td>
+                                                    <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                        </tbody>
+                                    </table>
 
+                                </div>
                             </div>
-                        </div>
-                        {#      AFFILIATIONS     #}
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h3 class="panel-title">Affiliations</h3>
-                            </div>
-                            <div class="panel-body">
-                                <ul class="list-affiliations list-unstyled">
-                                    <li>
-                                        <div class="col-sm-3" style="padding:0">
-                                            <a href="http://www.usu.edu/" target="_blank"><img
-                                                    class="img-responsive affiliation-logo"
-                                                    src="http://www.usu.edu/prm/identity/logos/vertical-blue.jpg"
-                                                    alt="USU logo"></a>
-                                        </div>
-                                        <div class="col-sm-9" style="padding:0 10px">
-                                            <a href="http://www.usu.edu/" target="_blank">
-                                                <span class="organization_name">Utah State University</span></a>
-                                            <span class="text-muted">(2001-2015)</span>
-                                            <h5 class="text-muted">8200 Old Main Hill, Logan, UT, 84322</h5>
-                                            <h5 class="text-muted">Civil and Environmental Engineering | Professor</h5>
-                                            <h5 class="text-muted">(904) 343 3074</h5>
-                                        </div>
-                                    </li>
-
-                                    <li>
-                                        <div class="col-sm-3" style="padding:0">
-                                            <a href="http://uwrl.usu.edu/" target="_blank"><img
-                                                    class="img-responsive affiliation-logo"
-                                                    src="http://uwrl.usu.edu/sites/default/files/uwrllogo.gif"
-                                                    alt="UWRL logo"></a>
-                                        </div>
-                                        <div class="col-sm-9" style="padding:0 10px">
-                                            <a href="http://www.usu.edu/" target="_blank">
-                                        <span class="organization_name">Utah Water Research
-                                        Laboratory</span></a>
-                                            <span class="text-muted">(2001-2015)</span>
-                                            <h5 class="text-muted">1600 Canyon Road, Logan, UT, 84321</h5>
-                                            <h5 class="text-muted">Software Programming and Research Support | Web
-                                                Developer</h5>
-                                            <h5 class="text-muted">(904) 343 3074</h5>
-                                        </div>
-                                    </li>
-                                </ul>
-
-                            </div>
+                            {#      AFFILIATIONS     #}
+    {#                        <div class="panel panel-default">#}
+    {#                            <div class="panel-heading">#}
+    {#                                <h3 class="panel-title">Affiliations</h3>#}
+    {#                            </div>#}
+    {#                            <div class="panel-body">#}
+    {#                                <ul class="list-affiliations list-unstyled">#}
+    {#                                    <li>#}
+    {#                                        <div class="col-sm-3" style="padding:0">#}
+    {#                                            <a href="http://www.usu.edu/" target="_blank"><img#}
+    {#                                                    class="img-responsive affiliation-logo"#}
+    {#                                                    src="http://www.usu.edu/prm/identity/logos/vertical-blue.jpg"#}
+    {#                                                    alt="USU logo"></a>#}
+    {#                                        </div>#}
+    {#                                        <div class="col-sm-9" style="padding:0 10px">#}
+    {#                                            <a href="http://www.usu.edu/" target="_blank">#}
+    {#                                                <span class="organization_name">Utah State University</span></a>#}
+    {#                                            <span class="text-muted">(2001-2015)</span>#}
+    {#                                            <h5 class="text-muted">8200 Old Main Hill, Logan, UT, 84322</h5>#}
+    {#                                            <h5 class="text-muted">Civil and Environmental Engineering | Professor</h5>#}
+    {#                                            <h5 class="text-muted">(904) 343 3074</h5>#}
+    {#                                        </div>#}
+    {#                                    </li>#}
+    {##}
+    {#                                    <li>#}
+    {#                                        <div class="col-sm-3" style="padding:0">#}
+    {#                                            <a href="http://uwrl.usu.edu/" target="_blank"><img#}
+    {#                                                    class="img-responsive affiliation-logo"#}
+    {#                                                    src="http://uwrl.usu.edu/sites/default/files/uwrllogo.gif"#}
+    {#                                                    alt="UWRL logo"></a>#}
+    {#                                        </div>#}
+    {#                                        <div class="col-sm-9" style="padding:0 10px">#}
+    {#                                            <a href="http://www.usu.edu/" target="_blank">#}
+    {#                                        <span class="organization_name">Utah Water Research#}
+    {#                                        Laboratory</span></a>#}
+    {#                                            <span class="text-muted">(2001-2015)</span>#}
+    {#                                            <h5 class="text-muted">1600 Canyon Road, Logan, UT, 84321</h5>#}
+    {#                                            <h5 class="text-muted">Software Programming and Research Support | Web#}
+    {#                                                Developer</h5>#}
+    {#                                            <h5 class="text-muted">(904) 343 3074</h5>#}
+    {#                                        </div>#}
+    {#                                    </li>#}
+    {#                                </ul>#}
+    {##}
+    {#                            </div>#}
+    {#                        </div>#}
                         </div>
                     </div>
                 </div>
 
                 <div role="tabpanel" class="tab-pane fade" id="contributions">
-                    <div class="col-sm-12 col-md-8">
-                        <h4 style=" margin-bottom: -20px;">Resources</h4>
-                        {% for res in resources %}
-                            <div class="activity-block">
-                                <div class="icon-resource-type">
-                                    <i class="glyphicon glyphicon-file"></i>
-                                    <span class="text-muted"><strong>{{ res|resource_type }}</strong></span>
-                                </div>
+                    <div class="row">
+                        <div class="col-sm-12"><legend>Resources</legend></div>
+                        <div class="col-sm-12 col-md-4">
+                            <h4>Filters</h4>
+                            <table class="table-user-contributions table table-hover">
+                                <tbody>
+                                    <tr id="badge-all" class="active" data-type="all">
+                                        <td><span>All</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
+                                    <tr id="badge-generic" data-type="type-Generic">
+                                        <td><span>Generic</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
+                                    <tr id="badge-geographic" data-type="type-Geographic Raster">
+                                        <td><span>Geographic Raster</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
+                                    <tr id="badge-his" data-type="type-HIS Referenced Time Series">
+                                        <td><span>HIS Referenced Time Series</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
+                                    <tr id="badge-model-program" data-type="type-Model Program Resource">
+                                        <td><span>Model Program</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
+                                    <tr id="badge-model-instance" data-type="type-Model Instance Resource">
+                                        <td><span>Model Instance</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
+                                    <tr id="badge-swat" data-type="type-SWAT Model Instance Resource">
+                                        <td><span>SWAT Model Instance</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
+                                    <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
+                                        <td><span>Multidomensional (NetCDF)</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
+                                    <tr id="badge-time-series" data-type="type-Time Series">
+                                        <td><span>Time Series</span></td>
+                                        <td><span class="badge">1</span></td>
+                                    </tr>
+                                    <tr id="badge-geographic-feature" data-type="type-Geographic Feature (ESRI Shapefiles)">
+                                        <td><span>Geographic Feature</span></td>
+                                        <td><span class="badge">1</span></td>
+                                    </tr>
 
-                                <div class="activity-info">
-                                    <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
-                                    <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-sm-12 col-md-8">
+                            {% for res in resources %}
+                                <div data-type="type-{{ res|resource_type }}" class="activity-block row">
 
-                                    <div style="color: #757575;">
-                                        {% for creator in res.metadata.creators.all %}
-                                            {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}{{ creator.name }}
-                                        {% endfor %}
+                                    <div class="icon-resource-type col-sm-3">
+                                        <i class="glyphicon glyphicon-file"></i>
+                                        <span class="text-muted"><strong>{{ res|resource_type }}</strong></span>
                                     </div>
 
-                                    {% if res.metadata.description %}
-                                        <a data-toggle="collapse"
-                                           href="#abstract-{{ res.short_id }}" aria-expanded="false"
-                                           aria-controls="collapseExample" class="show-hide">
-                                            [Show/hide abstract]
-                                        </a>
+                                    <div class="activity-info col-sm-5">
+                                        <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
+                                        <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
 
-                                        <div class="collapse" id="abstract-{{ res.short_id }}">
-                                            <p style="color:#757575;">
+                                        <div style="color: #757575;">
+                                            {% for creator in res.metadata.creators.all %}
+                                                {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}{{ creator.name }}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="activity-description col-sm-4">
+                                        {% if res.metadata.description %}
+                                            <p class="description" style="color:#757575;">
                                                 <strong>ABSTRACT: </strong>{{ res.metadata.description }}
                                             </p>
-                                        </div>
+                                            <div class="show-more-btn">···</div>
+                                        {% endif %}
+                                    </div>
 
-                                    {% endif %}
                                 </div>
-                            </div>
-                        {% endfor %}
+                            {% endfor %}
+                        </div>
                     </div>
-                    <div class="col-sm-12 col-md-4">
-                        <h4>Filters</h4>
-                        <table class="table-user-contributions table table-hover">
-                            <tbody>
-                                <tr>
-                                    <td><span>All</span></td>
-                                    <td><span class="badge">30</span></td>
-                                </tr>
-                                <tr>
-                                    <td><span>Generic</span></td>
-                                    <td><span class="badge">5</span></td>
-                                </tr>
-                                <tr>
-                                    <td><span>Geographic Raster</span></td>
-                                    <td><span class="badge">6</span></td>
-                                </tr>
-                                <tr>
-                                    <td><span>HIS Referenced Time Series</span></td>
-                                    <td><span class="badge">3</span></td>
-                                </tr>
-                                <tr>
-                                    <td><span>Model Program</span></td>
-                                    <td><span class="badge">4</span></td>
-                                </tr>
-                                <tr>
-                                    <td><span>SWAT Model Instance</span></td>
-                                    <td><span class="badge">12</span></td>
-                                </tr>
-                                <tr>
-                                    <td><span>Multidomensional (NetCDF)</span></td>
-                                    <td><span class="badge">0</span></td>
-                                </tr>
-                                <tr>
-                                    <td><span>Time Series</span></td>
-                                    <td><span class="badge">1</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
                 </div>
 
-                <div role="tabpanel" class="tab-pane fade" id="social">
-
-                    <div class="col-sm-12 col-md-6">
-                        <h4 class="title">Groups</h4>
-                        <strong><span>{% if u.first_name or u.last_name %}
-                            {{ u.first_name }} {{ u.last_name }}
-                        {% else %}
-                            {{ u.username }}
-                        {% endif %}</span></strong>
-                        is a member of:
-
-                        <ul class="list-group" style="list-style-type: none;">
-                            <li><span class="badge">4 members</span> <a href="#">Utah State University</a></li>
-                            <li><span class="badge">7 members</span> <a href="#">Utah Water Research Laboratory</a></li>
-                        </ul>
-
-
-                        <h4 class="title" style="margin-top:30px;">Following</h4>
-
-                        <div>
-                            {% if profile.picture and profile.picture.url %}
-                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
-                                     class="profile-pic-thumbnail round-image"
-                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
-                                </div>
-                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
-                                     class="profile-pic-thumbnail round-image"
-                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
-                                </div>
-                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
-                                     class="profile-pic-thumbnail round-image"
-                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
-                                </div>
-                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
-                                     class="profile-pic-thumbnail round-image"
-                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
-                                </div>
-                            {% endif %}
-                        <a href="#" style="float: left;clear: both;margin-top: 10px;">View all</a>
-                        </div>
-
-
-                        <h4 class="title" style="margin-top: 120px;">Followers</h4>
-
-                        <div>
-                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
-                                 class="profile-pic-thumbnail round-image"
-                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
-                            </div>
-                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
-                                 class="profile-pic-thumbnail round-image"
-                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
-                            </div>
-                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
-                                 class="profile-pic-thumbnail round-image"
-                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
-                            </div>
-                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
-                                 class="profile-pic-thumbnail round-image"
-                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
-                            </div>
-                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
-                                 class="profile-pic-thumbnail round-image"
-                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
-                            </div>
-                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"
-                                 class="profile-pic-thumbnail round-image"
-                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">
-                            </div>
-                            <a href="#" style="float: left;clear: both;margin-top: 10px;">View all</a>
-                        </div>
-
-
-
-                    </div>
-
-                    <div class="col-sm-12 col-md-6">
-
-                        <h4>External profile urls</h4>
-
-                        <div class="content social">
-                            <ul>
-                                <li><a href="#" target="_blank"><i class="fa fa-twitter"></i></a></li>
-
-                                <li><a href="#" target="_blank"><i class="fa fa-facebook"></i></a></li>
-
-                                <li><a href="#" target="_blank"><i class="fa fa-pinterest"></i></a></li>
-
-                                <li><a href="#" target="_blank"><i class="fa fa-youtube"></i></a></li>
-
-                                <li><a hhref="#" target="_blank"><i class="fa fa-github"></i></a></li>
-
-                                <li><a href="#" target="_blank"><i class="fa fa-linkedin"></i></a></li>
-
-                                <li><a href="#" target="_blank"><i class="fa fa-vk"></i></a></li>
-
-                                <li><a href="#" target="_blank"><i class="fa fa-google-plus"></i></a></li>
-                            </ul>
-                        </div>
-
-                    </div>
+{#                <div role="tabpanel" class="tab-pane fade" id="social">#}
+{#                    <div class="col-sm-12 col-md-6">#}
+{#                        <h4 class="title">Groups</h4>#}
+{#                        <strong><span>{% if u.first_name or u.last_name %}#}
+{#                            {{ u.first_name }} {{ u.last_name }}#}
+{#                        {% else %}#}
+{#                            {{ u.username }}#}
+{#                        {% endif %}</span></strong>#}
+{#                        is a member of:#}
+{##}
+{#                        <ul class="list-group" style="list-style-type: none;">#}
+{#                            <li><span class="badge">4 members</span> <a href="#">Utah State University</a></li>#}
+{#                            <li><span class="badge">7 members</span> <a href="#">Utah Water Research Laboratory</a></li>#}
+{#                        </ul>#}
+{##}
+{##}
+{#                        <h4 class="title" style="margin-top:30px;">Following</h4>#}
+{##}
+{#                        <div>#}
+{#                            {% if profile.picture and profile.picture.url %}#}
+{#                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
+{#                                     class="profile-pic-thumbnail round-image"#}
+{#                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
+{#                                </div>#}
+{#                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
+{#                                     class="profile-pic-thumbnail round-image"#}
+{#                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
+{#                                </div>#}
+{#                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
+{#                                     class="profile-pic-thumbnail round-image"#}
+{#                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
+{#                                </div>#}
+{#                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
+{#                                     class="profile-pic-thumbnail round-image"#}
+{#                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
+{#                                </div>#}
+{#                            {% endif %}#}
+{#                        <a href="#" style="float: left;clear: both;margin-top: 10px;">View all</a>#}
+{#                        </div>#}
+{##}
+{##}
+{#                        <h4 class="title" style="margin-top: 120px;">Followers</h4>#}
+{##}
+{#                        <div>#}
+{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
+{#                                 class="profile-pic-thumbnail round-image"#}
+{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
+{#                            </div>#}
+{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
+{#                                 class="profile-pic-thumbnail round-image"#}
+{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
+{#                            </div>#}
+{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
+{#                                 class="profile-pic-thumbnail round-image"#}
+{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
+{#                            </div>#}
+{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
+{#                                 class="profile-pic-thumbnail round-image"#}
+{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
+{#                            </div>#}
+{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
+{#                                 class="profile-pic-thumbnail round-image"#}
+{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
+{#                            </div>#}
+{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
+{#                                 class="profile-pic-thumbnail round-image"#}
+{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
+{#                            </div>#}
+{#                            <a href="#" style="float: left;clear: both;margin-top: 10px;">View all</a>#}
+{#                        </div>                    #}
+{#                    </div>#}
+{##}
+{#                    <div class="col-sm-12 col-md-6">#}
+{##}
+{#                        <h4>External profile urls</h4>#}
+{##}
+{#                        <div class="content social">#}
+{#                            <ul>#}
+{#                                <li><a href="#" target="_blank"><i class="fa fa-twitter"></i></a></li>#}
+{##}
+{#                                <li><a href="#" target="_blank"><i class="fa fa-facebook"></i></a></li>#}
+{##}
+{#                                <li><a href="#" target="_blank"><i class="fa fa-pinterest"></i></a></li>#}
+{##}
+{#                                <li><a href="#" target="_blank"><i class="fa fa-youtube"></i></a></li>#}
+{##}
+{#                                <li><a hhref="#" target="_blank"><i class="fa fa-github"></i></a></li>#}
+{##}
+{#                                <li><a href="#" target="_blank"><i class="fa fa-linkedin"></i></a></li>#}
+{##}
+{#                                <li><a href="#" target="_blank"><i class="fa fa-vk"></i></a></li>#}
+{##}
+{#                                <li><a href="#" target="_blank"><i class="fa fa-google-plus"></i></a></li>#}
+{#                            </ul>#}
+{#                        </div>#}
+{##}
+{#                    </div>#}
+{#                </div>#}
                 </div>
-            </div>
         </div>
 
 
     {% endwith %}
 {% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript">
+    $(document).ready(function () {
+        $(".show-more-btn").click(function () {
+            if ($(this).parent().find("p").css("max-height") == "80px") {
+                $(this).parent().find("p").css("max-height", "initial");
+                $(this).text("▲");
+            }
+            else {
+                $(this).parent().find("p").css("max-height", "80px");
+                $(this).text("···");
+            }
+        });
+
+        // ------------ Initialize filters ---------------------------------------
+
+        var collection = [];
+        collection["total"] = 0;
+
+        var rows = $("#contributions .activity-block");
+        for (var i = 0; i < rows.length; i++) {
+            if (collection[$(rows[i]).attr("data-type")]) {
+                collection[$(rows[i]).attr("data-type")]++;
+            }
+            else {
+                collection[$(rows[i]).attr("data-type")] = 1;
+            }
+            collection["total"]++;
+        }
+
+        for (var item in collection) {
+            $("tr[data-type='" + item + "']").find(".badge").text(collection[item]);
+        }
+        $("tr[data-type='all']").find(".badge").text(collection["total"]);
+
+        $(".table-user-contributions tbody > tr").click(function(){
+            $(".table-user-contributions tbody > tr").removeClass("active");
+            $(this).addClass("active");
+            var res_type = $(this).attr("data-type");
+            if (res_type == "all") {
+                $("#contributions .activity-block").fadeIn();
+            }
+            else {
+                $("#contributions .activity-block").hide();
+                $("#contributions .activity-block[data-type='" + res_type + "']").fadeIn();
+            }
+
+        });
+
+
+    });
+    </script>
+{% endblock %}
+

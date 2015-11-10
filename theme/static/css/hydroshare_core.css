@@ -6,13 +6,16 @@ html, body {
 	font-family: 'Lato', sans-serif;
 	position: relative;
 }
+
 body {
 	padding-top: 50px;
+	overflow-x: hidden;
 }
 
-#page-container {
-    height:100%;
-    overflow:hidden;
+body > .container{
+    /*Subtract the height of the footer*/
+    min-height: calc(100% - 307px);
+    padding-top: 20px;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -574,12 +577,12 @@ img.media-object{
 
 footer {
     width: 100%;
+	margin-top: 60px;
 	background: #0A91AB;
 	font-weight: 300;
     color: white;
     position: absolute;
     overflow: hidden;
-    bottom: 0;
 }
 footer a {
 	color: #81D685;
@@ -1046,12 +1049,9 @@ span.remove {
 
 
 /* ===== Resource UI changes ===== */
-html {
-    height: 100%;
-}
-
-body {
-    min-height: 100%;
+html, body{
+    height:100%;
+    /*background:#F4F4F4;*/
 }
 
 a[data-toggle='tab']{
@@ -2232,11 +2232,6 @@ button.loading {
 	font-size: 12px;
 }
 
-.full-width-tabs-container .tab-pane {
-	margin-left: -15px;
-	margin-right: -15px;
-}
-
 .full-width-tabs-container .panel-heading {
     color: #757575;
     text-shadow: 0 1px 0 #fff;
@@ -2272,6 +2267,7 @@ button.loading {
 	min-height: calc(100% - 277px);
     padding-top: 20px;
     padding-bottom: 300px;
+	margin-top: 50px;
 }
 
 div.affiliation {
@@ -2297,14 +2293,36 @@ div.affiliation {
     padding-top: 15px;
 }
 
-.activity-block:first-child {
+.activity-description {
+	border-left: 1px solid #ddd;
+}
+
+.activity-description p.description {
+	max-height: 80px;
+  	overflow: hidden;
+}
+
+#overview .activity-block:first-child {
 	border-top: 0;
 	margin-top: 0;
 	padding-top:0;
 }
 
-.activity-info {
-    margin-left: 80px;
+.activity-description .show-more-btn {
+	position: absolute;
+	width: calc(100% - 30px);
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 8px;
+	border-radius: 8px;
+	text-align: center;
+	color: #AAA;
+	border: 1px solid #ddd;
+	font-size: 12px;
+}
+
+.activity-description .show-more-btn:hover {
+	cursor: pointer;
+	background: #EEE;
 }
 
 .show-hide {
@@ -2323,24 +2341,27 @@ table.overview tr > td:first-child {
 }
 
 .icon-resource-type {
-    height: 80px;
-    width: 80px;
     text-align: center;
     float: left;
 }
 
 .icon-resource-type > .glyphicon{
     font-size: 45px;
-    color: #35AAC0
-}
-
-.table-user-contributions {
-    border-top:1px solid #ddd;
+    color: #35AAC0;
+	float: left;
 }
 
 .table-user-contributions tbody > tr > td {
     border: 0;
     cursor:pointer;
+}
+
+.table-user-contributions tbody > tr.active td:first-child {
+	font-weight:bold;
+}
+
+.table-user-contributions tbody > tr.active {
+	pointer-events: none;
 }
 
 h4.title {
