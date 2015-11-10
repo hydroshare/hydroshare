@@ -7,6 +7,14 @@
     {% with u.userprofile as profile %}
 
         <div class="row" style="padding: 40px 0;">
+            {% if u.id == user.id %}
+                <div class="col-xs-12 col-sm-2 pull-right">
+                    <a id="btn-edit-profile" data-toggle="tooltip" data-placement="auto"
+                       title="Edit profile" href="{% url 'profile_update' %}"
+                       class="glyphicon glyphicon-pencil icon-button btn-edit"></a>
+                </div>
+            {% endif %}
+
             <div {% if u.id == user.id %}class="col-xs-12 col-sm-10"{% else %}class="col-sm-12"{% endif %}>
                 {#        Profile picture       #}
                 {% if profile.picture and profile.picture.url %}
@@ -50,13 +58,6 @@
                     </table>
                 </div>
             </div>
-            {% if u.id == user.id %}
-            <div class="col-xs-12 col-sm-2">
-                <a id="btn-edit-profile" data-toggle="tooltip" data-placement="auto"
-                        title="Edit profile" href="{% url 'profile_update' %}"
-                        class="glyphicon glyphicon-pencil icon-button btn-edit"></a>
-            </div>
-            {% endif %}
         </div>
 
         <div class="full-width-tabs-container">

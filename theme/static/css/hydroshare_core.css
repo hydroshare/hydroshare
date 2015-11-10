@@ -1778,6 +1778,9 @@ span.name-label {
   }
 }}
 
+#items {
+	overflow: auto;
+}
 .resource-search {
 	width: 100%;
 	position: relative;
