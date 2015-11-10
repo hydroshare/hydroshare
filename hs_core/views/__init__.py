@@ -475,8 +475,30 @@ def my_resources(request, page):
         edit_permission = frm.cleaned_data['edit_permission'] or False
         published = frm.cleaned_data['published'] or False
         startno = frm.cleaned_data['start']
-        if(startno < 0):
+        if startno is None:
+            # this is the case where either the 'RESOURCES' menu option or one of the 3 filtering menu options
+            # (Owned by me, Editable by me, Viewable by me) has been selected
             startno = 0
+            if owner:   # 'Owned by me' selected
+                request.session['owner'] = owner
+                request.session['edit_permission'] = edit_permission
+            else:   # either 'Editable by me' or 'Viewable by me' selected
+                if 'owner' in request.session:
+                    del request.session['owner']
+                if 'edit_permission' in request.session:
+                    del request.session['edit_permission']
+
+            if not owner and edit_permission:   # 'Editable by me' selected
+                request.session['edit_permission'] = edit_permission
+        elif startno < 0 or startno >= 0:
+            # this is the case where one of the pagination links has been selected
+            if 'owner' in request.session:
+                owner = request.session['owner']
+            if 'edit_permission' in request.session:
+                edit_permission = request.session['edit_permission']
+            if startno < 0:
+                startno = 0
+
         start = startno or 0
         from_date = frm.cleaned_data['from_date'] or None
         words = request.REQUEST.get('text', None)
@@ -503,14 +525,14 @@ def my_resources(request, page):
         # need to return total number of resources as 'ct' so have to get all resources
         # and then filter by start and count
         # TODO this is doing some pagination/limits before sorting, so it won't be consistent
-        if(start>=total_res_cnt):
-            start = total_res_cnt-res_cnt
-        if(start < 0):
+        if start >= total_res_cnt:
+            start = total_res_cnt - res_cnt
+        if start < 0:
             start = 0
-        if(start+res_cnt > total_res_cnt):
-            res_cnt = total_res_cnt-start
+        if start + res_cnt > total_res_cnt:
+            res_cnt = total_res_cnt - start
 
-        reslst = reslst[start : start + res_cnt]
+        reslst = reslst[start: start + res_cnt]
 
         # TODO sorts should be in SQL not python
         res = sorted(reslst, key=lambda x: x.title)
@@ -518,7 +540,7 @@ def my_resources(request, page):
         return {
             'resources': res,
             'first': start,
-            'last': start+len(res),
+            'last': start + len(res),
             'ct': total_res_cnt,
         }
 
