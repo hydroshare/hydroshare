@@ -49,3 +49,8 @@ table{
     max-width:550px;
 }
 
+/* Activate multi-line list elements in the droplist.
+   This makes long filenames look nice.  */
+.multiselect-container > li > a {
+    white-space: normal;
+}

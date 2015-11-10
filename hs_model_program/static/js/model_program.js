@@ -94,8 +94,14 @@ function loadWidgets(){
             // destroy any existing multiselect widgets
             $('.multi-select').multiselect('destroy');
 
+            // get the size of the parent div
+            var width = $('.div-multi-select').css('max-width');
+
             // rebuild the multiselect elements
             $('.multi-select').multiselect({
+
+                buttonWidth: width,
+
                 // bind a table view to the on close event
                 onDropdownHide: function (event, checked) {
                     set_metadata_terms(event);
