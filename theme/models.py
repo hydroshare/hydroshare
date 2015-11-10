@@ -155,9 +155,17 @@ class UserProfile(models.Model):
     cv = models.FileField(upload_to='profile', help_text='Upload your Curriculum Vitae if you wish people to be able to download it.', null=True, blank=True)
     details = models.TextField("Description", help_text='Tell the HydroShare community a little about yourself.', null=True, blank=True)
 
-from django.db.models.signals import post_save
-def create_user_profile(sender, instance, created, **kwargs):
-   if created:
-      UserProfile.objects.get_or_create(user=user)
+from django.db.models.signals import pre_save
+from django.core.exceptions import ValidationError
 
-create_profile_on_save = post_save.connect(User, create_user_profile, weak=False)
+def force_unique_emails(sender, instance, **kwargs):
+    if instance:
+        email = instance.email
+        username = instance.username
+
+        if not email:
+            raise ValidationError("email required")
+        if sender.objects.filter(email=email).exclude(username=username).count():
+            raise ValidationError("email needs to be unique")
+
+pre_save.connect(force_unique_emails, sender=User)
