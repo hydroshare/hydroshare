@@ -11,62 +11,22 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
 from hs_core.hydroshare import utils
 
 from hs_model_program.models import ModelProgramResource
+from hs_modelinstance.models import ModelInstanceMetaData, ModelOutput, ExecutedBy
+
+class ModelOutput(ModelOutput):
+    class Meta:
+        proxy = True
+
+class ExecutedBy(ExecutedBy):
+    class Meta:
+        proxy = True
 
 # extended metadata elements for SWAT Model Instance resource type
-class ModelOutput(AbstractMetaDataElement):
-    term = 'ModelOutput'
-    includes_output = models.BooleanField(default=False)
-
-    @property
-    def includesModelOutput(self):
-        if self.includes_output:
-            return "Yes"
-        else:
-            return "No"
-
-class ExecutedBy(AbstractMetaDataElement):
-    term = 'ExecutedBY'
-    model_name = models.CharField(max_length=500, choices=(('-', '    '),), default=None)
-    model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True,related_name='swatmodelinstance')
-
-    def __unicode__(self):
-        self.model_name
-
-    @property
-    def modelProgramName(self):
-        if self.model_program_fk:
-            return self.model_program_fk.title
-        else:
-            return "Unspecified"
-
-    @property
-    def modelProgramIdentifier(self):
-        if self.model_program_fk:
-            return '%s%s' % (utils.current_site_url(), self.model_program_fk.get_absolute_url())
-        else:
-            return "None"
-
-    @classmethod
-    def create(cls, **kwargs):
-        shortid = kwargs['model_name']
-        # get the MP object that matches.  Returns None if nothing is found
-        obj = ModelProgramResource.objects.filter(short_id=shortid).first()
-        metadata_obj = kwargs['content_object']
-        title = obj.title
-        return super(ExecutedBy,cls).create(model_program_fk=obj, model_name=title,content_object=metadata_obj)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        shortid = kwargs['model_name']
-        # get the MP object that matches.  Returns None if nothing is found
-        obj = ModelProgramResource.objects.filter(short_id=shortid).first()
-        return super(ExecutedBy,cls).update(model_program_fk=obj, element_id=element_id)
-
 class ModelObjectiveChoices(models.Model):
     description = models.CharField(max_length=300)
 
     def __unicode__(self):
-        self.description
+        return unicode(str(self))
 
 class ModelObjective(AbstractMetaDataElement):
     term = 'ModelObjective'
@@ -75,6 +35,10 @@ class ModelObjective(AbstractMetaDataElement):
 
     def __unicode__(self):
         self.other_objectives
+
+    class Meta:
+        # ModelObjective element is not repeatable
+        unique_together = ("content_type", "object_id")
 
     def get_swat_model_objectives(self):
         return ', '.join([objective.description for objective in self.swat_model_objectives.all()])
@@ -132,7 +96,11 @@ class SimulationType(AbstractMetaDataElement):
     simulation_type_name = models.CharField(max_length=100, choices=type_choices, verbose_name='Simulation type')
 
     def __unicode__(self):
-        self.simulation_type_name
+        return unicode(str(self))
+
+    class Meta:
+        # SimulationType element is not repeatable
+        unique_together = ("content_type", "object_id")
 
 class ModelMethod(AbstractMetaDataElement):
     term = 'ModelMethod'
@@ -141,13 +109,17 @@ class ModelMethod(AbstractMetaDataElement):
     petEstimationMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='PET estimation method')
 
     def __unicode__(self):
-        self.runoffCalculationMethod
+        return unicode(str(self))
+
+    class Meta:
+        # ModelMethod element is not repeatable
+        unique_together = ("content_type", "object_id")
 
 class ModelParametersChoices(models.Model):
     description = models.CharField(max_length=300)
 
     def __unicode__(self):
-        self.description
+        return unicode(str(self))
 
 class ModelParameter(AbstractMetaDataElement):
     term = 'ModelParameter'
@@ -156,6 +128,10 @@ class ModelParameter(AbstractMetaDataElement):
 
     def __unicode__(self):
         self.other_parameters
+
+    class Meta:
+        # ModelParameter element is not repeatable
+        unique_together = ("content_type", "object_id")
 
     def get_swat_model_parameters(self):
         return ', '.join([parameter.description for parameter in self.model_parameters.all()])
@@ -231,7 +207,11 @@ class ModelInput(AbstractMetaDataElement):
     soilDataSourceURL = models.URLField(null=True, blank=True, verbose_name='Soil data source URL')
 
     def __unicode__(self):
-        self.rainfallTimeStepType
+        return unicode(str(self))
+
+    class Meta:
+        # ModelInput element is not repeatable
+        unique_together = ("content_type", "object_id")
 
     @property
     def warmupPeriodType(self):
@@ -262,22 +242,12 @@ class SWATModelInstanceResource(BaseResource):
 processor_for(SWATModelInstanceResource)(resource_processor)
 
 # metadata container class
-class SWATModelInstanceMetaData(CoreMetaData):
-    _model_output = generic.GenericRelation(ModelOutput)
-    _executed_by = generic.GenericRelation(ExecutedBy)
+class SWATModelInstanceMetaData(ModelInstanceMetaData):
     _model_objective = generic.GenericRelation(ModelObjective)
     _simulation_type = generic.GenericRelation(SimulationType)
     _model_method = generic.GenericRelation(ModelMethod)
     _model_parameter = generic.GenericRelation(ModelParameter)
     _model_input = generic.GenericRelation(ModelInput)
-
-    @property
-    def model_output(self):
-        return self._model_output.all().first()
-
-    @property
-    def executed_by(self):
-        return self._executed_by.all().first()
 
     @property
     def model_objective(self):
@@ -304,8 +274,6 @@ class SWATModelInstanceMetaData(CoreMetaData):
         # get the names of all core metadata elements
         elements = super(SWATModelInstanceMetaData, cls).get_supported_element_names()
         # add the name of any additional element to the list
-        elements.append('ModelOutput')
-        elements.append('ExecutedBy')
         elements.append('ModelObjective')
         elements.append('SimulationType')
         elements.append('ModelMethod')
@@ -336,18 +304,6 @@ class SWATModelInstanceMetaData(CoreMetaData):
 
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-        if self.model_output:
-            modelOutputFields = ['includesModelOutput']
-            self.add_metadata_element_to_xml(container,self.model_output,modelOutputFields)
-
-        if self.executed_by:
-            executed_by = self.executed_by
-        else:
-            executed_by = ExecutedBy()
-
-        executedByFields = ['modelProgramName','modelProgramIdentifier']
-        self.add_metadata_element_to_xml(container,executed_by,executedByFields)
 
         if self.model_objective:
             hsterms_model_objective = etree.SubElement(container, '{%s}modelObjective' % self.NAMESPACES['hsterms'])
@@ -385,8 +341,6 @@ class SWATModelInstanceMetaData(CoreMetaData):
 
     def delete_all_elements(self):
         super(SWATModelInstanceMetaData, self).delete_all_elements()
-        self._model_output.all().delete()
-        self._executed_by.all().delete()
         self._model_objective.all().delete()
         self._simulation_type.all().delete()
         self._model_method.all().delete()

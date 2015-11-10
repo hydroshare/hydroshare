@@ -15,6 +15,10 @@ class ModelOutput(AbstractMetaDataElement):
     term = 'ModelOutput'
     includes_output = models.BooleanField(default=False)
 
+    class Meta:
+        # ModelOutput element is not repeatable
+        unique_together = ("content_type", "object_id")
+
     @property
     def includesModelOutput(self):
         if self.includes_output:
@@ -26,10 +30,14 @@ class ExecutedBy(AbstractMetaDataElement):
 
     term = 'ExecutedBY'
     model_name = models.CharField(max_length=500, choices=(('-', '    '),), default=None)
-    model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True, related_name='modelinstance')
+    model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True, default=None, related_name='modelinstance')
 
     def __unicode__(self):
-        self.model_name
+        return unicode(str(self))
+
+    class Meta:
+        # ExecutedBy element is not repeatable
+        unique_together = ("content_type", "object_id")
 
     @property
     def modelProgramName(self):

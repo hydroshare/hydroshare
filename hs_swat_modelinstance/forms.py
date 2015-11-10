@@ -8,7 +8,8 @@ from crispy_forms.layout import Layout, Field, HTML
 from hs_core.forms import BaseFormHelper
 from hs_core.hydroshare import users
 
-from hs_swat_modelinstance.models import SWATModelInstanceResource, ModelOutput, ExecutedBy, ModelObjective,\
+from hs_modelinstance.models import ModelOutput, ExecutedBy
+from hs_swat_modelinstance.models import SWATModelInstanceResource, ModelObjective,\
     SimulationType, ModelMethod, ModelParameter, ModelInput
 
 model_objective_choices = (
