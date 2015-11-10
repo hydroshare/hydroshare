@@ -6,18 +6,10 @@ html, body {
 	font-family: 'Lato', sans-serif;
 	position: relative;
 }
-
 body {
 	padding-top: 50px;
 	overflow-x: hidden;
 }
-
-body > .container{
-    /*Subtract the height of the footer*/
-    min-height: calc(100% - 307px);
-    padding-top: 20px;
-}
-
 h1, h2, h3, h4, h5, h6 {
 	font-family: 'Lato', sans-serif;
 }
@@ -1261,6 +1253,13 @@ table.table-plain td{
     border:none;
 }
 
+
+body > .container{
+    /*Subtract the height of the footer*/
+    min-height: calc(100% - 307px);
+    padding-top: 20px;
+}
+
 .icon-button {
     font-size: 22px;
     cursor: pointer;
@@ -1281,10 +1280,11 @@ table.table-plain td{
     border-radius: 3px;
     background-color: #FFF;
     border: 1px solid#adadad;
+
 }
 
 .custom-btn-toolbar .icon-button:hover {
-    box-shadow: 0px 0px 5px #B2B2B2;
+    box-shadow: 0 0 5px #B2B2B2;
 }
 
 .custom-btn-toolbar {
@@ -1303,13 +1303,6 @@ table.table-plain td{
 	margin-bottom: 5px;
 }
 
-.lined-wrapper{
-    width: 100%;
-    border-top: 1px solid rgb(204, 204, 204);
-    margin-top: 5px;
-    margin-bottom: 5px;
-}
-
 #success-alert, #error-alert{
     position: fixed;
     z-index: 999;
@@ -1318,6 +1311,34 @@ table.table-plain td{
     left: 50%;
     margin-left: -25%;
     top: 60px;
+}
+
+
+.custom-alert {
+    position: fixed;
+    background-color: lightgreen;
+    padding: 0 10px;
+    text-align: center;
+    line-height: 50px;
+    border: 1px solid #16E716;
+    text-shadow: 1px -1px #BEFFBE;
+}
+
+.custom-alert-icon {
+    font-size: 24px;
+    color: #337133;
+    top: 5px;
+    margin-right: 10px;
+}
+
+.custom-well {
+    min-height: 20px;
+    padding: 19px;
+    margin-bottom: 20px;
+    border: 1px solid #e3e3e3;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
 .cc-image {
@@ -1474,8 +1495,6 @@ table.table-plain td{
     overflow: hidden;
 }
 
-
-
 div#sharing-status {
     height: 34px;
 	margin-top: 20px;
@@ -1590,7 +1609,6 @@ span.name-label {
 }
 
 .tab-elements {
-    max-height:441px;
     overflow-x:auto;
     overflow-y:hidden;
 	margin-top: 20px;
@@ -1799,7 +1817,7 @@ span.name-label {
 }
 
 .resource-search ul {
-	margin: 7px 0px 0px;
+	margin: 7px 0 0;
 	padding-left: 2px;
 }
 
@@ -1824,14 +1842,14 @@ span.name-label {
 
 .resource-search-items ul {
 	position: absolute;
-	top: 0px;
+	top: 0;
 }
 .resource-search-items li {
 	display: inline-block;
 }
 
 ul.resource-search-options {
-	margin: 40px 0px 0px;
+	margin: 40px 0 0;
 	padding-left: 2px;
 	border: 1px solid lightgrey;
 	border-top: none;
@@ -2109,6 +2127,54 @@ button.loading {
 	font-size: 14px;
 	cursor: pointer;
 }
+
+.glyphicon-info-sign {
+    top: 2px;
+}
+
+/*  =============== Coverage Tab - Google map css ================ */
+#coverageMap {
+	height:350px;
+	border:1px solid #DDD;
+}
+
+#id_name {
+    max-width: 467px;
+}
+
+.invalid-input {
+	border-color: #F00 !important;
+}
+
+.invalid-input:focus {
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(233, 102, 102, 0.6);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(233, 102, 102, 0.6);
+}
+
+#resetZoomBtn {
+    width: 28px;
+    text-align: center;
+    padding: 8px;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    border-radius: 2px;
+    box-shadow: 0 1px 0 rgba(111, 111, 111, 0.5);
+    background-color: #FFF;
+    float: right;
+    right: 11px;
+    top: -120px;
+    color: #666;
+}
+
+#resetZoomBtn:hover {
+    cursor:pointer;
+    color: #353535;
+}
+
+#resetZoomBtn::before {
+    margin-left: -1px;
+}
+
 /* custom inclusion of right, left and below tabs */
 
 .tabs-below > .nav-tabs,
