@@ -2214,6 +2214,16 @@ button.loading {
 	margin-right:10px;
 }
 
+#btn-edit-profile {
+	border: 1px solid #adadad;
+	border-radius: 3px;
+	color: #428bca;
+}
+
+#btn-edit-profile:hover {
+	box-shadow: 0 0 5px #B2B2B2;
+}
+
 .round-image {
 	-webkit-border-radius: 50%;
 	-moz-border-radius: 50%;

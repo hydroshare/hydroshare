@@ -7,7 +7,7 @@
     {% with u.userprofile as profile %}
 
         <div class="row" style="padding: 40px 0;">
-            <div class="col-xs-12">
+            <div {% if u.id == user.id %}class="col-xs-12 col-sm-10"{% else %}class="col-sm-12"{% endif %}>
                 {#        Profile picture       #}
                 {% if profile.picture and profile.picture.url %}
                     <div style="background-image: url('{{ profile.picture.url }}'); float:left;"
@@ -50,6 +50,13 @@
                     </table>
                 </div>
             </div>
+            {% if u.id == user.id %}
+            <div class="col-xs-12 col-sm-2">
+                <a id="btn-edit-profile" data-toggle="tooltip" data-placement="auto"
+                        title="Edit profile" href="{% url 'profile_update' %}"
+                        class="glyphicon glyphicon-pencil icon-button btn-edit"></a>
+            </div>
+            {% endif %}
         </div>
 
         <div class="full-width-tabs-container">
@@ -245,50 +252,61 @@
                                     </tr>
                                     <tr id="badge-generic" data-type="type-Generic">
                                         <td><span>Generic</span></td>
-                                        <td><span class="badge">0</span></td>
+                                        <td><span style="background-color:#1f77b4" class="badge">0</span></td>
                                     </tr>
                                     <tr id="badge-geographic" data-type="type-Geographic Raster">
                                         <td><span>Geographic Raster</span></td>
-                                        <td><span class="badge">0</span></td>
+                                        <td><span style="background-color:#ff7f0e" class="badge">0</span></td>
                                     </tr>
                                     <tr id="badge-his" data-type="type-HIS Referenced Time Series">
                                         <td><span>HIS Referenced Time Series</span></td>
-                                        <td><span class="badge">0</span></td>
+                                        <td><span style="background-color:#2ca02c" class="badge">0</span></td>
                                     </tr>
                                     <tr id="badge-model-program" data-type="type-Model Program Resource">
                                         <td><span>Model Program</span></td>
-                                        <td><span class="badge">0</span></td>
+                                        <td><span style="background-color:#d62728" class="badge">0</span></td>
                                     </tr>
                                     <tr id="badge-model-instance" data-type="type-Model Instance Resource">
                                         <td><span>Model Instance</span></td>
-                                        <td><span class="badge">0</span></td>
+                                        <td><span style="background-color:#9467bd" class="badge">0</span></td>
                                     </tr>
                                     <tr id="badge-swat" data-type="type-SWAT Model Instance Resource">
                                         <td><span>SWAT Model Instance</span></td>
-                                        <td><span class="badge">0</span></td>
+                                        <td><span style="background-color:#8c564b" class="badge">0</span></td>
                                     </tr>
                                     <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
                                         <td><span>Multidomensional (NetCDF)</span></td>
-                                        <td><span class="badge">0</span></td>
+                                        <td><span style="background-color:#e377c2" class="badge">0</span></td>
                                     </tr>
                                     <tr id="badge-time-series" data-type="type-Time Series">
                                         <td><span>Time Series</span></td>
-                                        <td><span class="badge">1</span></td>
+                                        <td><span style="background-color:#17becf" class="badge">0</span></td>
                                     </tr>
                                     <tr id="badge-geographic-feature" data-type="type-Geographic Feature (ESRI Shapefiles)">
                                         <td><span>Geographic Feature</span></td>
-                                        <td><span class="badge">1</span></td>
+                                        <td><span style="background-color:#bcbd22" class="badge">0</span></td>
                                     </tr>
 
                                 </tbody>
                             </table>
                         </div>
                         <div class="col-sm-12 col-md-8">
+                            {% if resources %}
                             {% for res in resources %}
                                 <div data-type="type-{{ res|resource_type }}" class="activity-block row">
 
                                     <div class="icon-resource-type col-sm-3">
-                                        <i class="glyphicon glyphicon-file"></i>
+                                        <i class="glyphicon glyphicon-file"
+                                                {% if res|resource_type == "Generic" %}style="color:#1f77b4"
+                                                {% elif  res|resource_type == "Geographic Raster" %}style="color:#ff7f0e"
+                                                {% elif  res|resource_type == "HIS Referenced Time Series" %}style="color:#2ca02c"
+                                                {% elif  res|resource_type == "Model Program Resource" %}style="color:#d62728"
+                                                {% elif  res|resource_type == "Model Instance Resource" %}style="color:#9467bd"
+                                                {% elif  res|resource_type == "SWAT Model Instance Resource" %}style="color:#8c564b"
+                                                {% elif  res|resource_type == "Multidimensional (NetCDF)" %}style="color:#e377c2"
+                                                {% elif  res|resource_type == "Time Series" %}style="color:#17becf"
+                                                {% elif  res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}style="color:#bcbd22"
+                                                {% endif %}></i>
                                         <span class="text-muted"><strong>{{ res|resource_type }}</strong></span>
                                     </div>
 
@@ -314,6 +332,9 @@
 
                                 </div>
                             {% endfor %}
+                            {% else %}
+                                <span class="text-muted">This user has not shared any resources.</span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
