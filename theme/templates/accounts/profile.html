@@ -105,17 +105,16 @@
                                             <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
                                             <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
 
-                                            {% if  res.metadata.description %}
-                                                <a data-toggle="collapse"
-                                                   href="#abs-{{res.short_id}}" aria-expanded="false"
-                                                   aria-controls="collapseExample" class="show-hide">
-                                                    [Show/hide abstract]
-                                                </a>
+                                            {% if res.metadata.description %}
+                                                <div data-toggle="collapse" class="show-more-btn btn-default"
+                                                     href="#abs-{{ res.short_id }}" aria-expanded="false"
+                                                     title="Show/hide abstract"
+                                                     aria-controls="collapseExample">
+                                                    ···
+                                                </div>
 
-                                                <div class="collapse" id="abs-{{res.short_id}}">
-                                                    <p style="color:#757575;">
-                                                        <strong>ABSTRACT: </strong>{{ res.metadata.description }}
-                                                    </p>
+                                                <div class="collapse abstract-block" id="abs-{{res.short_id}}">
+                                                    <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
                                                 </div>
 
                                             {% endif %}
@@ -243,7 +242,7 @@
                 <div role="tabpanel" class="tab-pane fade" id="contributions">
                     <div class="row">
                         <div class="col-sm-12"><legend>Resources</legend></div>
-                        <div class="col-sm-12 col-md-4">
+                        <div class="col-sm-12 col-md-3">
                             <h4>Filters</h4>
                             <table class="table-user-contributions table table-hover">
                                 <tbody>
@@ -291,12 +290,12 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="col-sm-12 col-md-8">
+                        <div class="col-sm-12 col-md-9">
                             {% if resources %}
                             {% for res in resources %}
-                                <div data-type="type-{{ res|resource_type }}" class="activity-block row">
-
-                                    <div class="icon-resource-type col-sm-3">
+                                <div data-type="type-{{ res|resource_type }}" class="contribution">
+                                    <div class="icon-resource-type-wrapper">
+                                    <span class="icon-resource-type">
                                         <i class="glyphicon glyphicon-file"
                                                 {% if res|resource_type == "Generic" %}style="color:#1f77b4"
                                                 {% elif  res|resource_type == "Geographic Raster" %}style="color:#ff7f0e"
@@ -309,28 +308,30 @@
                                                 {% elif  res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}style="color:#bcbd22"
                                                 {% endif %}></i>
                                         <span class="text-muted"><strong>{{ res|resource_type }}</strong></span>
+                                    </span>
                                     </div>
+                                    <div data-type="type-{{ res|resource_type }}" class="activity-block row">
+                                        <div class="activity-info col-sm-12">
+                                            <span style="font-size:18px"><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
+                                            <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
 
-                                    <div class="activity-info col-sm-5">
-                                        <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
-                                        <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
-
-                                        <div style="color: #757575;">
-                                            {% for creator in res.metadata.creators.all %}
-                                                {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}{{ creator.name }}
-                                            {% endfor %}
+                                            <div style="color: #757575;">
+                                                {% for creator in res.metadata.creators.all %}
+                                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}{{ creator.name }}
+                                                {% endfor %}
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div class="activity-description col-sm-4">
                                         {% if res.metadata.description %}
-                                            <p class="description" style="color:#757575;">
-                                                <strong>ABSTRACT: </strong>{{ res.metadata.description }}
-                                            </p>
-                                            <div class="show-more-btn">···</div>
+                                            <div class="activity-description col-sm-12">
+                                                <p class="description" style="color:#757575;">
+                                                    <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
+                                                </p>
+                                            </div>
+                                            <div class="show-more-btn btn-default" title="Show abstract">···</div>
                                         {% endif %}
-                                    </div>
 
+                                    </div>
                                 </div>
                             {% endfor %}
                             {% else %}
@@ -448,13 +449,15 @@
 {% block extra_js %}
     <script type="text/javascript">
     $(document).ready(function () {
-        $(".show-more-btn").click(function () {
-            if ($(this).parent().find("p").css("max-height") == "80px") {
-                $(this).parent().find("p").css("max-height", "initial");
+        $("#contributions .show-more-btn").click(function () {
+            if ($(this).parent().find(".activity-description").css("display") == "none") {
+                $(this).parent().find(".activity-description").slideDown();
                 $(this).text("▲");
+                $(this).attr("title", "Hide abstract");
             }
             else {
-                $(this).parent().find("p").css("max-height", "80px");
+                $(this).parent().find(".activity-description").slideUp();
+                $(this).attr("title", "Show abstract");
                 $(this).text("···");
             }
         });
@@ -485,13 +488,12 @@
             $(this).addClass("active");
             var res_type = $(this).attr("data-type");
             if (res_type == "all") {
-                $("#contributions .activity-block").fadeIn();
+                $(".contribution").fadeIn();
             }
             else {
-                $("#contributions .activity-block").hide();
-                $("#contributions .activity-block[data-type='" + res_type + "']").fadeIn();
+                $(".contribution").hide();
+                $(".contribution[data-type='" + res_type + "']").fadeIn();
             }
-
         });
 
 
