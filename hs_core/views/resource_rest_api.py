@@ -22,17 +22,17 @@ from hs_core.views import pagination
 # Mixins
 class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
-        creator_name = r.creator.username
-
-        public = True if r.raccess.public else False
-
         bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(r.short_id)
         science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
         resource_list_item = serializers.ResourceListItem(resource_type=r.__class__.__name__,
                                                           resource_id=r.short_id,
                                                           resource_title=r.metadata.title.value,
-                                                          creator=creator_name,
-                                                          public=public,
+                                                          creator=r.creator.username,
+                                                          public=r.raccess.public,
+                                                          discoverable=r.raccess.discoverable,
+                                                          shareable=r.raccess.shareable,
+                                                          immutable=r.raccess.immutable,
+                                                          published=r.raccess.published,
                                                           date_created=r.created,
                                                           date_last_updated=r.updated,
                                                           bag_url=bag_url,
@@ -126,13 +126,17 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
             "previous": link to previous page
             "results":[
                     {"resource_type": resource type, "resource_title": resource title, "resource_id": resource id,
-                    'creator': creator name, 'public': True or False, 'date_created': date resource created,
-                    'date_last_update': date resource last updated, 'bag_url': link to bag file, 'science_metadata_url':
-                    link to science metadata},
+                    "creator": creator name, "date_created": date resource created,
+                    "date_last_updated": date resource last updated, "public": true or false,
+                    "discoverable": true or false, "shareable": true or false, "immutable": true or false,
+                    "published": true or false, "bag_url": link to bag file,
+                    "science_metadata_url": link to science metadata},
                     {"resource_type": resource type, "resource_title": resource title, "resource_id": resource id,
-                    'creator': creator name, 'public': True or False, 'date_created': date resource created,
-                    'date_last_update': date resource last updated, 'bag_url': link to bag file, 'science_metadata_url':
-                    link to science metadata},
+                    "creator": creator name, "date_created": date resource created,
+                    "date_last_updated": date resource last updated, "public": true or false,
+                    "discoverable": true or false, "shareable": true or false, "immutable": true or false,
+                    "published": true or false, "bag_url": link to bag file,
+                    "science_metadata_url": link to science metadata},
             ]
         }
 
@@ -333,7 +337,11 @@ class SystemMetadataRetrieve(APIView, ResourceToListItemMixin):
         "creator": creator user name,
         "date_created": date resource created,
         "date_last_updated": date resource last updated,
-        "public": True or False,
+        "public": true or false,
+        "discoverable": true or false,
+        "shareable": true or false,
+        "immutable": true or false,
+        "published": true or false,
         "bag_url": link to bag file,
         "science_metadata_url": link to science metadata
     }
@@ -343,7 +351,7 @@ class SystemMetadataRetrieve(APIView, ResourceToListItemMixin):
     def get(self, request, pk):
         """ Get resource system metadata, as well as URLs to the bag and science metadata
         """
-        view_utils.authorize(request, pk, view=True, full=True)
+        view_utils.authorize(request, pk, discoverable=True, view=True)
         res = get_resource_by_shortkey(pk)
         ser = self.get_serializer_class()(self.resourceToResourceListItem(res))
 
@@ -415,7 +423,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
     allowed_methods = ('GET', 'PUT')
 
     def get(self, request, pk):
-        view_utils.authorize(request, pk, view=True, edit=True, full=True)
+        view_utils.authorize(request, pk, discoverable=True, view=True)
 
         # TODO: once the science metadata xml file is available as a separate file on iRODS, that file needs to be returned
         return Response(data=hydroshare.get_science_metadata(pk), status=status.HTTP_200_OK)
