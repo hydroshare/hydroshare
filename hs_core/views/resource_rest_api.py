@@ -126,13 +126,17 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
             "previous": link to previous page
             "results":[
                     {"resource_type": resource type, "resource_title": resource title, "resource_id": resource id,
-                    'creator': creator name, 'public': True or False, 'date_created': date resource created,
-                    'date_last_update': date resource last updated, 'bag_url': link to bag file, 'science_metadata_url':
-                    link to science metadata},
+                    "creator": creator name, "date_created": date resource created,
+                    "date_last_updated": date resource last updated, "public": true or false,
+                    "discoverable": true or false, "shareable": true or false, "immutable": true or false,
+                    "published": true or false, "bag_url": link to bag file,
+                    "science_metadata_url": link to science metadata},
                     {"resource_type": resource type, "resource_title": resource title, "resource_id": resource id,
-                    'creator': creator name, 'public': True or False, 'date_created': date resource created,
-                    'date_last_update': date resource last updated, 'bag_url': link to bag file, 'science_metadata_url':
-                    link to science metadata},
+                    "creator": creator name, "date_created": date resource created,
+                    "date_last_updated": date resource last updated, "public": true or false,
+                    "discoverable": true or false, "shareable": true or false, "immutable": true or false,
+                    "published": true or false, "bag_url": link to bag file,
+                    "science_metadata_url": link to science metadata},
             ]
         }
 
@@ -333,7 +337,11 @@ class SystemMetadataRetrieve(APIView, ResourceToListItemMixin):
         "creator": creator user name,
         "date_created": date resource created,
         "date_last_updated": date resource last updated,
-        "public": True or False,
+        "public": true or false,
+        "discoverable": true or false,
+        "shareable": true or false,
+        "immutable": true or false,
+        "published": true or false,
         "bag_url": link to bag file,
         "science_metadata_url": link to science metadata
     }
