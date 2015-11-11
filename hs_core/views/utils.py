@@ -61,20 +61,15 @@ def authorize(request, res_id, discoverable=False, edit=False, view=False,
     if discoverable and (edit is False and view is False and full is False and superuser is False):
         authorized = res.raccess.discoverable
     elif user.is_authenticated():
-        has_edit = user.uaccess.can_change_resource(res)
-        has_view = user.uaccess.can_view_resource(res)
-        has_full = user.uaccess.owns_resource(res)
-
-        authorized = (discoverable and res.raccess.discoverable) or \
-                     (edit and has_edit) or \
-                     (view and has_view) or \
-                     (full and has_full) or \
+        authorized = (view and user.uaccess.can_view_resource(res)) or \
+                     (edit and user.uaccess.can_change_resource(res)) or \
+                     (full and user.uaccess.owns_resource(res)) or \
+                     (discoverable and res.raccess.discoverable) or \
                      (superuser and (user.uaccess.admin or user.is_superuser))
     else:
-        has_view = res.raccess.public
-        authorized = (discoverable and res.raccess.discoverable) or \
-                     (view and has_view)
-
+        authorized = (view and res.raccess.public) or \
+                     (discoverable and res.raccess.discoverable)
+                     
     if raises_exception and not authorized:
         raise PermissionDenied()
     else:
