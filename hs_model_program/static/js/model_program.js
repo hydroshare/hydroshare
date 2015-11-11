@@ -82,7 +82,9 @@ function loadWidgets(){
             }
 
             // set the initial value for the date picker
-            $('#modelReleaseDate_picker').datepicker('setDate', new Date(data['date_released']));
+            var date = new Date(data['date_released']);
+            if (isNaN(date) == false)
+                $('#modelReleaseDate_picker').datepicker('setDate', date);
 
         },
         error: function (data) {
