@@ -684,6 +684,10 @@ li.account p{
 #cogs-menu,
 #profile-menu {
 	display: none;
+	text-transform: initial;
+}
+#profile-menu > .dropdown-toggle {
+	font-size: 14px;
 }
 .display-none {
 	display: none !important;
