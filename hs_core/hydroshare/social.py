@@ -4,7 +4,7 @@ from . import utils
 from mezzanine.generic.models import Rating, ThreadedComment
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 # social API
 
 def endorse_resource(resource_short_id, user, endorse=True):
@@ -20,7 +20,7 @@ def endorse_resource(resource_short_id, user, endorse=True):
     # first check this user has not already endorsed this resource
     # then create a Rating object using the res and user
     # when creating the Rating object set the value attribute to 1 (+1)
-    resource_type = ContentType.objects.get_for_model(GenericResource)
+    resource_type = ContentType.objects.get_for_model(BaseResource)
     rating = Rating.objects.filter(content_type=resource_type, object_pk=res.id, user=user).first()
     # user has not endorsed this resource before
     if not rating and endorse:
@@ -179,7 +179,7 @@ def get_endorsements(for_object):
     """
 
     if isinstance(for_object, GenericResource):
-        resource_type = ContentType.objects.get_for_model(GenericResource)
+        resource_type = ContentType.objects.get_for_model(BaseResource)
         endorsements = Rating.objects.filter(content_type=resource_type, object_pk=for_object.id)
 
     elif isinstance(for_object, ThreadedComment):

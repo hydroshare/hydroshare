@@ -1,40 +1,22 @@
 from django.db import models
 from django.contrib.contenttypes import generic
-from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
-from hs_core import hydroshare
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.contrib.contenttypes.models import ContentType
-from mezzanine.pages.models import Page
+
 from mezzanine.pages.page_processors import processor_for
 
+from hs_core.models import BaseResource, ResourceManager, resource_processor,\
+                           CoreMetaData, AbstractMetaDataElement
+
+from lxml import etree
 
 #
 # To create a new resource, use these two super-classes.
 #
-class ToolResource(Page, AbstractResource):
+class ToolResource(BaseResource):
+    objects = ResourceManager('ToolResource')
 
     class Meta:
+        proxy = True
         verbose_name = 'Web App Resource'
-
-    def extra_capabilities(self):
-        return None
-
-    @property
-    def metadata(self):
-        md = ToolMetaData()
-        return self._get_metadata(md)
-
-    def can_add(self, request):
-        return AbstractResource.can_add(self, request)
-
-    def can_change(self, request):
-        return AbstractResource.can_change(self, request)
-
-    def can_delete(self, request):
-        return AbstractResource.can_delete(self, request)
-
-    def can_view(self, request):
-        return AbstractResource.can_view(self, request)
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -46,6 +28,10 @@ class ToolResource(Page, AbstractResource):
         # resource can't have any files
         return False
 
+    @property
+    def metadata(self):
+        md = ToolMetaData()
+        return self._get_metadata(md)
 
 
 processor_for(ToolResource)(resource_processor)
@@ -56,55 +42,17 @@ class RequestUrlBase(AbstractMetaDataElement):
     value = models.CharField(null=True, max_length="500") # whatever the user gives us- format is "http://www.example.com/{resource-info}"
     resShortID = models.CharField(max_length=100, default="UNKNOWN")
 
-    @classmethod
-    def create(cls, **kwargs):
-        if 'value' in kwargs:
-            if 'content_object' in kwargs:
-                content_object = kwargs['content_object']
-                metadata_type = ContentType.objects.get_for_model(content_object)
-                url_base = RequestUrlBase.objects.filter(value__iexact=kwargs['value'], object_id=content_object.id, content_type=metadata_type).first()
-                if url_base:
-                    raise ValidationError('There can only be one Request Url Base')
-                url_base = RequestUrlBase.objects.create(value=kwargs['value'], content_object=content_object)
+    class Meta:
+        # RequestUrlBase element is not repeatable
+        unique_together = ("content_type", "object_id")
 
-                # check for the optional fields and save them to the BandInformation metadata
-                for key, value in kwargs.iteritems():
-                    if key in ('resShortID'):
-                        setattr(url_base, key, value)
-                url_base.save()
-                return url_base
-            else:
-                raise ValidationError('Metadata instance for which Request Url Base element to be created is missing.')
-        else:
-            raise ValidationError("Value of Request Url Base is missing.")
-
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        url_base = RequestUrlBase.objects.get(id=element_id)
-        if url_base:
-            if 'value' in kwargs:
-                url_base.value = kwargs['value']
-                url_base.resShortID = kwargs['resShortID']
-                url_base.save()
-            else:
-                raise ValidationError('Value of Request Url Base is missing')
-        else:
-            raise ObjectDoesNotExist("No Request Url Base element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        url_base = RequestUrlBase.objects.get(id=element_id)
-        if url_base:
-            url_base.delete()
-        else:
-            raise ObjectDoesNotExist("No Request Url Base element was found for id:%d." % element_id)
 
 class SupportedResTypeChoices(models.Model):
     description = models.CharField(max_length=300)
 
     def __unicode__(self):
         self.description
+
 
 class SupportedResTypes(AbstractMetaDataElement):
     term = 'SupportedResTypes'
@@ -113,89 +61,16 @@ class SupportedResTypes(AbstractMetaDataElement):
     def get_supported_res_types_str(self):
         return ', '.join([parameter.description for parameter in self.supported_res_types.all()])
 
-    @classmethod
-    def create(cls, **kwargs):
-        if 'supported_res_types' in kwargs:
-
-            metadata_obj = kwargs['content_object']
-            new_meta_instance = SupportedResTypes.objects.create(content_object=metadata_obj,)
-
-        for res_type_str in kwargs['supported_res_types']:
-            qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
-            if qs.exists():
-                new_meta_instance.supported_res_types.add(qs[0])
-            else:
-                new_meta_instance.supported_res_types.create(description=res_type_str)
-
-        return new_meta_instance
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        meta_instance = SupportedResTypes.objects.get(id=element_id)
-        if meta_instance:
-            if 'supported_res_types' in kwargs:
-                #cls._validate_swat_model_parameters(kwargs['model_parameters'])
-                meta_instance.supported_res_types.all().delete()
-                for res_type_str in kwargs['supported_res_types']:
-                    qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
-                    if qs.exists():
-                        meta_instance.supported_res_types.add(qs[0])
-                    else:
-                        meta_instance.supported_res_types.create(description=res_type_str)
-
-            meta_instance.save()
-
-            # delete model_parameters metadata element if it has no data
-            if len(meta_instance.supported_res_types.all()) == 0 :
-                meta_instance.delete()
-        else:
-            raise ObjectDoesNotExist("No supported_res_types element was found for the provided id:%s" % kwargs['id'])
-
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("SupportedResTypes element can't be deleted.")
 
 
 class ToolVersion(AbstractMetaDataElement):
     term = 'Tool Version'
     value = models.CharField(null=True, max_length="500")
 
-    @classmethod
-    def create(cls, **kwargs):
-        if 'value' in kwargs:
-            if 'content_object' in kwargs:
-                content_object = kwargs['content_object']
-                metadata_type = ContentType.objects.get_for_model(content_object)
-                version = ToolVersion.objects.filter(value__iexact=kwargs['value'], object_id=content_object.id, content_type=metadata_type).first()
-                if version:
-                    raise ValidationError('There can only be one App Version')
-                version = ToolVersion.objects.create(value=kwargs['value'], content_object=content_object)
-                return version
-            else:
-                raise ValidationError('Metadata instance for which App Version element to be created is missing.')
-        else:
-            raise ValidationError("App Version is missing.")
+    class Meta:
+        # ToolVersion element is not repeatable
+        unique_together = ("content_type", "object_id")
 
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        version = ToolVersion.objects.get(id=element_id)
-        if version:
-            if 'value' in kwargs:
-                version.value = kwargs['value']
-                version.save()
-            else:
-                raise ValidationError('App Version is missing')
-        else:
-            raise ObjectDoesNotExist("No App Version element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        version = ToolVersion.objects.get(id=element_id)
-        if version:
-            version.delete()
-        else:
-            raise ObjectDoesNotExist("No App Version element was found for id:%d." % element_id)
 
 class ToolMetaData(CoreMetaData):
     # tool license is implemented via existing metadata element "rights" with attr. "statement" and "url"
@@ -211,10 +86,26 @@ class ToolMetaData(CoreMetaData):
         # get the names of all core metadata elements
         elements = super(ToolMetaData, cls).get_supported_element_names()
         # add the name of any additional element to the list
-        elements.append('RequestUrlBase')   # needs to match the class name
+        elements.append('RequestUrlBase')
         elements.append('ToolVersion')
         elements.append('SupportedResTypes')
         return elements
+
+    def has_all_required_elements(self):
+        if self.get_required_missing_elements():
+            return False
+        return True
+
+    def get_required_missing_elements(self):  # show missing required meta
+        missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
+        if not self.url_bases.all().first():
+            missing_required_elements.append('RequestUrlBase')
+        if not self.versions.all().first():
+            missing_required_elements.append('ToolVersion')
+        if not self.supported_res_types.all().first():
+            missing_required_elements.append('SupportedResTypes')
+
+        return missing_required_elements
 
     def get_xml(self):
         from lxml import etree

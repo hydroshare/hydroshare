@@ -7,7 +7,7 @@ from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import AbstractResource, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.signals import *
 
 
@@ -89,26 +89,17 @@ class MpMetadata(AbstractMetaDataElement):
         metadata.delete()
 
 
-class ModelProgramResource(Page, AbstractResource):
+class ModelProgramResource(BaseResource):
+    objects = ResourceManager("ModelProgramResource")
+
     class Meta:
         verbose_name = 'Model Program Resource'
+        proxy = True
 
     @property
     def metadata(self):
         md = ModelProgramMetaData()
         return self._get_metadata(md)
-
-    def can_add(self, request):
-        return AbstractResource.can_add(self, request)
-
-    def can_change(self, request):
-        return AbstractResource.can_change(self, request)
-
-    def can_delete(self, request):
-        return AbstractResource.can_delete(self, request)
-
-    def can_view(self, request):
-        return AbstractResource.can_view(self, request)
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -179,37 +170,3 @@ class ModelProgramMetaData(CoreMetaData):
 
 
 import receivers
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

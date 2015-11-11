@@ -49,7 +49,7 @@
             <select class="form-control" name="resource-type" id="resource-type">
                 <option value="GenericResource">Generic</option>
                 <option value="RasterResource">Geographic Raster</option>
-                <option value="RefTimeSeries">HIS Referenced Time Series</option>
+{#              <option value="RefTimeSeries">HIS Referenced Time Series</option> #}
                 <option value="ModelProgramResource">Model Program</option>
                 <option value="ModelInstanceResource">Model Instance</option>
                 <option value="SWATModelInstanceResource">SWAT Model Instance</option>
@@ -57,6 +57,8 @@
                 <option value="TimeSeriesResource">Time Series</option>
                 <option value="ToolResource">Web App</option>
 {#                <option value="InstResource">RHESSys Instance Resource</option> #}
+                <option value="GeographicFeatureResource">Geographic Feature (ESRI Shapefiles)</option>
+
             </select>
         </div>
     </div>
@@ -82,7 +84,7 @@
                 <input type="hidden" id="irods-host" name="irods-host" value="">
                 <input type="hidden" id="irods-port" name="irods-port" value="">
                 <input type="hidden" id="irods-zone" name="irods-zone" value="">
-                <input type="hidden" id="irods_file_name" name="irods_file_name" value="">
+                <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
                 <a id="btn-select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsContent" style="display:none;">
                     <span class="glyphicon glyphicon-plus"><span class="button-label">Browse iRODS...</span></span></a>
                 <span id="irods-sel-file"></span>
@@ -190,7 +192,7 @@
             var ext = ".*";
             for (var i = 0; i < fileList.length; i++) {
                 ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
-                ext = "." + ext;
+                ext = "." + ext.toLowerCase();
                 var ext_found = false;
                 if (ext === file_types) {
                     ext_found = true;

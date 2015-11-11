@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from rest_framework.exceptions import *
 import json
 import os
+import string
 
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
@@ -16,23 +17,37 @@ from hs_core.signals import pre_metadata_element_create
 from hs_core.hydroshare import file_size_limit
 from hs_core.hydroshare.utils import raise_file_size_exception
 from django_irods.storage import IrodsStorage
-from irods.exception import iRODSException
 
-# use iget to transfer selected data object from irods zone to local as a NamedTemporaryFile
-def upload_from_irods(username, password, host, port, zone, irods_fname, res_files):
-    try:
-        irods_storage = IrodsStorage()
-        irods_storage.set_user_session(username=username, password=password, host=host, port=port, zone=zone)
-        size = irods_storage.size(irods_fname)
+# Since an SessionException will be raised for all irods-related operations from django_irods module,
+# there is no need to raise iRODS SessionException from within this function
+def upload_from_irods(username, password, host, port, zone, irods_fnames, res_files):
+    """
+    use iget to transfer selected data object from irods zone to local as a NamedTemporaryFile
+    :param username: iRODS login account username used to download irods data object for uploading
+    :param password: iRODS login account password used to download irods data object for uploading
+    :param host: iRODS login host used to download irods data object for uploading
+    :param port: iRODS login port used to download irods data object for uploading
+    :param zone: iRODS login zone used to download irods data object for uploading
+    :param irods_fnames: the data object file name to download to local for uploading
+    :param res_files: list of files for uploading to create resources
+    :raises SessionException(proc.returncode, stdout, stderr) defined in django_irods/icommands.py
+            to capture iRODS exceptions raised from iRODS icommand subprocess run triggered from
+            any method calls from IrodsStorage() if an error or exception ever occurs
+    :return: None, but the downloaded file from the iRODS will be appended to res_files list for uploading
+    """
+    irods_storage = IrodsStorage()
+    irods_storage.set_user_session(username=username, password=password, host=host, port=port, zone=zone)
+    ifnames = string.split(irods_fnames, ',')
+    for ifname in ifnames:
+        size = irods_storage.size(ifname)
         if size > file_size_limit:
             raise_file_size_exception()
-        tmpFile = irods_storage.download(irods_fname)
-        fname = os.path.basename(irods_fname.rstrip(os.sep))
+        tmpFile = irods_storage.download(ifname)
+        fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
-    except Exception as ex:
-        raise iRODSException(ex.message)
 
-def authorize(request, res_id, edit=False, view=False, full=False, superuser=False, raises_exception=True):
+def authorize(request, res_id, discoverable=False, edit=False, view=False,
+              full=False, superuser=False, raises_exception=True):
     """
     Authorizes the user making this request for the OR of the parameters.  If the user has ANY permission set to True in
     the parameter list, then this returns True else False.
@@ -43,15 +58,18 @@ def authorize(request, res_id, edit=False, view=False, full=False, superuser=Fal
     except ObjectDoesNotExist:
         raise NotFound(detail="No resource was found for resource id:%s" % res_id)
 
-    has_edit = res.edit_users.filter(pk=user.pk).exists()
-    has_view = res.view_users.filter(pk=user.pk).exists()
-    has_full = res.owners.filter(pk=user.pk).exists()
-
-    authorized = (edit and has_edit) or \
-                 (view and (has_view or res.public)) or \
-                 (full and has_full) or \
-                 (superuser and user.is_superuser)
-
+    if discoverable and (edit is False and view is False and full is False and superuser is False):
+        authorized = res.raccess.discoverable
+    elif user.is_authenticated():
+        authorized = (view and user.uaccess.can_view_resource(res)) or \
+                     (edit and user.uaccess.can_change_resource(res)) or \
+                     (full and user.uaccess.owns_resource(res)) or \
+                     (discoverable and res.raccess.discoverable) or \
+                     (superuser and (user.uaccess.admin or user.is_superuser))
+    else:
+        authorized = (view and res.raccess.public) or \
+                     (discoverable and res.raccess.discoverable)
+                     
     if raises_exception and not authorized:
         raise PermissionDenied()
     else:
