@@ -112,19 +112,6 @@ class ModelProgramMetaData(CoreMetaData):
         elements.append('MpMetadata')
         return elements
 
-    # def has_all_required_elements(self):
-    #     if not super(ModelProgramMetaData, self).has_all_required_elements():
-    #         return False
-    #     if not self.program:
-    #         return False
-    #     return True
-    #
-    # def get_required_missing_elements(self):
-    #     missing_required_elements = super(ModelProgramMetaData, self).get_required_missing_elements()
-    #     if not self.program:
-    #         missing_required_elements.append('MpMetadata')
-    #     return missing_required_elements
-
     def get_xml(self):
         from lxml import etree
 
