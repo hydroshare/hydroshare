@@ -103,7 +103,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return [comment.comment for comment in obj.comments.all()]
 
     def prepare_comments_count(self, obj):
-        #print(obj.comments.comment.value)
         return obj.comments_count
 
     def prepare_owners_logins(self, obj):

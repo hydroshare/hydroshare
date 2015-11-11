@@ -10,10 +10,7 @@ from mezzanine.conf import settings
 from theme import views as theme
 import autocomplete_light
 
-from haystack.forms import FacetedSearchForm
-from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
-from haystack.views import SearchView
 from hs_core.customer_form import MyForm
 autocomplete_light.autodiscover()
 admin.autodiscover()
@@ -44,7 +41,6 @@ urlpatterns = i18n_patterns("",
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    #url(r'^search/$', MySearchView, name='haystack_search'),
     url(r'^search/', FacetedSearchView(form_class=MyForm),name='haystack_search'),
 )
 #urlpatterns = patterns('haystack.views',
