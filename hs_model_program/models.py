@@ -124,21 +124,49 @@ class ModelProgramMetaData(CoreMetaData):
         # get the root 'Description' element, which contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
-        # inject resource specific metadata elements into container element
-        fields = [  'modelEngine',
-                    'modelSoftware',
-                    'modelDocumentation',
-                    'modelReleaseNotes',
-                    'modelReleaseDate',
-                    'modelVersion',
-                    'modelWebsite',
-                    'modelProgramLanguage',
-                    'modelOperatingSystem',
-                    'modelCodeRepository',
-                    ]
+        if self.program:
+            model_engine = etree.SubElement(container, '{%s}modelEngine' % self.NAMESPACES['hsterms'])
+            engines = self.program.modelEngine.split(';')
+            for engine in engines:
+                filepath = etree.SubElement(model_engine, '{%s}file' % self.NAMESPACES['hsterms'])
+                filepath.text = engine
 
-        model_program_object = self.program
-        self.add_metadata_element_to_xml(container, model_program_object, fields)
+            model_software = etree.SubElement(container, '{%s}modelSoftware' % self.NAMESPACES['hsterms'])
+            software = self.program.modelSoftware.split(';')
+            for s in software:
+                filepath = etree.SubElement(model_software, '{%s}file' % self.NAMESPACES['hsterms'])
+                filepath.text = s
+
+            model_documentation = etree.SubElement(container, '{%s}modelDocumentation' % self.NAMESPACES['hsterms'])
+            documentation = self.program.modelDocumentation.split(';')
+            for doc in documentation:
+                filepath = etree.SubElement(model_documentation, '{%s}file' % self.NAMESPACES['hsterms'])
+                filepath.text = doc
+
+            model_releaseNotes = etree.SubElement(container, '{%s}modelReleaseNotes' % self.NAMESPACES['hsterms'])
+            releaseNotes = self.program.modelReleaseNotes.split(';')
+            for note in releaseNotes:
+                filepath = etree.SubElement(model_releaseNotes, '{%s}file' % self.NAMESPACES['hsterms'])
+                filepath.text = note
+
+            model_release_date = etree.SubElement(container, '{%s}modelReleaseDate' % self.NAMESPACES['hsterms'])
+            model_release_date.text = self.program.modelReleaseDate.strftime('%Y-%m-%d %H:%M:%S.%f%z')
+
+            model_version = etree.SubElement(container, '{%s}modelVersion' % self.NAMESPACES['hsterms'])
+            model_version.text = self.program.modelVersion
+
+            model_website = etree.SubElement(container, '{%s}modelWebsite' % self.NAMESPACES['hsterms'])
+            model_website.text = self.program.modelWebsite
+
+            model_program_language = etree.SubElement(container, '{%s}modelProgramLanguage' % self.NAMESPACES['hsterms'])
+            model_program_language.text = self.program.modelProgramLanguage
+
+            model_operating_system = etree.SubElement(container, '{%s}modelOperatingSystem' % self.NAMESPACES['hsterms'])
+            model_operating_system.text = self.program.modelOperatingSystem
+
+            model_code_repository = etree.SubElement(container, '{%s}modelCodeRepository' % self.NAMESPACES['hsterms'])
+            model_code_repository.text = self.program.modelCodeRepository
+
 
         xml_string = etree.tostring(RDF_ROOT, pretty_print=True)
 
