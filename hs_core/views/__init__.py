@@ -513,7 +513,7 @@ def my_resources(request, page):
         reslst = reslst[start : start + res_cnt]
 
         # TODO sorts should be in SQL not python
-        res = sorted(reslst, key=lambda x: x.title)
+        res = sorted(reslst, key=lambda x: x.metadata.title.value)
 
         return {
             'resources': res,
