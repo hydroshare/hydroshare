@@ -187,8 +187,6 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 element_data_dict = response['element_data_dict']
                 res.metadata.update_element(element_name, element_id, **element_data_dict)
                 if element_name == 'title':
-                    res.title = res.metadata.title.value
-                    res.save()
                     if res.raccess.public:
                         if not res.can_be_public_or_discoverable:
                             res.raccess.public = False
