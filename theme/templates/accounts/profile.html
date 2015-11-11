@@ -101,22 +101,24 @@
                                             {% else %}
                                                 <strong>{{ u.username }}</strong>
                                             {% endif %}
-                                            <span class="text-muted"> shared <strong>{{ res|resource_type }}: </strong></span>
+                                            <span class="text-muted"> shared </span>
                                             <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
-                                            <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
+                                            <h5 {% if profile.picture and profile.picture.url %}style="margin:0 50px;" {% else %}style="margin:0;"{% endif %}
+                                                class="text-muted">Resource type: <strong>{{ res|resource_type }}</strong></h5>
+                                            <h5 {% if profile.picture and profile.picture.url %}
+                                                style="margin:0 50px;margin-bottom:15px;"
+                                                {% else %}
+                                                style="margin:0;margin-bottom:15px;"
+                                            {% endif %} class="text-muted">Date: <strong>{{ res.created }}</strong></h5>
 
                                             {% if res.metadata.description %}
-                                                <div data-toggle="collapse" class="show-more-btn btn-default"
-                                                     href="#abs-{{ res.short_id }}" aria-expanded="false"
-                                                     title="Show/hide abstract"
-                                                     aria-controls="collapseExample">
-                                                    ···
+                                                <div class="activity-description col-sm-12"
+                                                        {% if profile.picture and profile.picture.url %}style="margin-left:15px;" {% endif %}>
+                                                    <p class="description">
+                                                        <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
+                                                    </p>
                                                 </div>
-
-                                                <div class="collapse abstract-block" id="abs-{{res.short_id}}">
-                                                    <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
-                                                </div>
-
+                                                <div class="show-more-btn btn-default" title="Show abstract">···</div>
                                             {% endif %}
                                         </div>
                                         {% endif %}
@@ -132,63 +134,68 @@
                         <div class="col-md-5">
                             {#        DESCRIPTION       #}
                             {% if profile.details %}
-                                <div class="panel panel-default">
-                                    <div class="panel-heading">
-                                        <h3 class="panel-title">About {{ u.first_name }}</h3>
-                                    </div>
-                                    <div class="panel-body" style="color:#757575;">
-                                        {{ profile.details }}
-                                    </div>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">About {{ u.first_name }}</h3>
                                 </div>
+                                <div class="panel-body" style="color:#757575;">
+                                    {{ profile.details }}
+                                </div>
+                            </div>
                             {% endif %}
 
                             {#  CONTACT #}
-                            <div class="panel panel-default">
-                                <div class="panel-heading">
+                            {% if profile.public or u.id == user.id and user.pk %} {# Show only if profile is public and user is logged in #}
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
                                     <h3 class="panel-title">Contact</h3>
                                 </div>
+
                                 <div class="panel-body">
                                     <table class="overview">
-                                        <tbody>
-                                        {% if profile.phone_1 %}
+                                    <tbody>
+                                    {% if profile.phone_1 %}
+                                        <tr>
+                                            <td><span class="text-muted">{% if profile.phone_1_type %}
+                                                {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
+                                            <td>{{ profile.phone_1 }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if profile.phone_2 %}
+                                        <tr>
+                                            <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
+                                            <td>{{ profile.phone_2 }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if u.email %}
+                                        {% if user.pk %}
                                             <tr>
-                                                <td><span class="text-muted">{% if profile.phone_1_type %}
-                                                    {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
-                                                <td>{{ profile.phone_1 }}</td>
+                                                <td><span class="text-muted">Email</span></td>
+                                                <td>
+                                                    <a href="mailto:{{ u.email }}">send email to
+                                                        {% if u.first_name or u.last_name %}
+                                                            {{ u.first_name }} {{ u.last_name }}
+                                                        {% else %}
+                                                            {{ u.username }}
+                                                        {% endif %}
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% else %}
+                                            <tr>
+                                                <td><span class="text-muted">Email</span></td>
+                                                <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
                                             </tr>
                                         {% endif %}
-                                        {% if profile.phone_2 %}
-                                            <tr>
-                                                <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
-                                                <td>{{ profile.phone_2 }}</td>
-                                            </tr>
-                                        {% endif %}
-                                        {% if u.email %}
-                                            {% if user.pk %}
-                                                <tr>
-                                                    <td><span class="text-muted">Email</span></td>
-                                                    <td>
-                                                        <a href="mailto:{{ u.email }}">send email to
-                                                            {% if u.first_name or u.last_name %}
-                                                                {{ u.first_name }} {{ u.last_name }}
-                                                            {% else %}
-                                                                {{ u.username }}
-                                                            {% endif %}
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            {% else %}
-                                                <tr>
-                                                    <td><span class="text-muted">Email</span></td>
-                                                    <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
-                                                </tr>
-                                            {% endif %}
-                                        {% endif %}
-                                        </tbody>
-                                    </table>
-
+                                    {% endif %}
+                                    </tbody>
+                                </table>
                                 </div>
                             </div>
+                            {% endif %}
+
+
+
                             {#      AFFILIATIONS     #}
     {#                        <div class="panel panel-default">#}
     {#                            <div class="panel-heading">#}
@@ -312,23 +319,28 @@
                                     </div>
                                     <div data-type="type-{{ res|resource_type }}" class="activity-block row">
                                         <div class="activity-info col-sm-12">
-                                            <span style="font-size:18px"><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
-                                            <h5 style="margin-top:0" class="text-muted">{{ res.created }}</h5>
-
-                                            <div style="color: #757575;">
+                                            <span style="font-size:16px;"><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
+                                            <h5 style="margin:0" class="text-muted">Created: <strong>{{ res.created }}</strong></h5>
+                                            <h5 style="margin:0" class="text-muted">Authors:<strong>
                                                 {% for creator in res.metadata.creators.all %}
-                                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}{{ creator.name }}
+                                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                                    {% if creator.description %}
+                                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
+                                                    {% else %}
+                                                        <span>{{ cr.name }}</span>
+                                                    {% endif %}
                                                 {% endfor %}
-                                            </div>
+                                                </strong>
+                                            </h5>
                                         </div>
 
                                         {% if res.metadata.description %}
                                             <div class="activity-description col-sm-12">
-                                                <p class="description" style="color:#757575;">
+                                                <p class="description">
                                                     <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
                                                 </p>
                                             </div>
-                                            <div class="show-more-btn btn-default" title="Show abstract">···</div>
+                                            <div class="show-more-btn btn-default" title="Show more">···</div>
                                         {% endif %}
 
                                     </div>
@@ -449,15 +461,20 @@
 {% block extra_js %}
     <script type="text/javascript">
     $(document).ready(function () {
-        $("#contributions .show-more-btn").click(function () {
-            if ($(this).parent().find(".activity-description").css("display") == "none") {
-                $(this).parent().find(".activity-description").slideDown();
+        $(".show-more-btn").click(function () {
+            if ($(this).parent().find(".activity-description").css("max-height") == "50px") {
+                var block = $(this).parent().find(".activity-description");
+
+                block.css("max-height", "initial");
+                var autoHeight = block.height();
+                block.css("max-height", "50px");
+                block.animate({'max-height': autoHeight}, 300);
                 $(this).text("▲");
-                $(this).attr("title", "Hide abstract");
+                $(this).attr("title", "Show less");
             }
             else {
-                $(this).parent().find(".activity-description").slideUp();
-                $(this).attr("title", "Show abstract");
+                $(this).parent().find(".activity-description").animate({'max-height': "50px"}, 300);
+                $(this).attr("title", "Show more");
                 $(this).text("···");
             }
         });
@@ -495,7 +512,6 @@
                 $(".contribution[data-type='" + res_type + "']").fadeIn();
             }
         });
-
 
     });
     </script>

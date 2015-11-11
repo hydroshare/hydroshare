@@ -2105,6 +2105,7 @@ button.loading {
 	height: 40px;
 	float: left;
 	margin-right: 10px;
+	margin-bottom: 10px;
 }
 
 .user-icon:before {
@@ -2367,8 +2368,6 @@ div.affiliation {
 }
 
 .activity-block {
-	border-top: 1px solid #ddd;
-	margin-bottom: 20px;
 	margin-right: 0;
 	margin-left: 0;
 }
@@ -2377,6 +2376,8 @@ div.affiliation {
 	float: left;
 	padding-top: 10px;
 	width: 100%;
+	border-top: 1px solid #ddd;
+  	margin-top: 10px;
 }
 
 .activity-info {
@@ -2386,11 +2387,17 @@ div.affiliation {
 .activity-description {
 	float: left;
 	border-left: 3px solid #CCC;
-	display: none;
+	max-height: 50px;
+	overflow: hidden;
+  	margin-bottom: 5px;
+}
+
+.contribution .activity-description {
+	margin-left: 15px;
 }
 
 .activity-description p {
-	color: #757575;
+	color: #555;
 }
 
 #overview .activity-block:first-child {
@@ -2410,9 +2417,6 @@ div.affiliation {
 	border: 1px solid #ddd;
 	font-size: 12px;
 	cursor: pointer;
-}
-
-#contributions .show-more-btn {
 	float: left;
 }
 
@@ -2432,8 +2436,11 @@ table.overview tr > td:first-child {
 	border: 1px solid #ddd;
 	padding: 8px;
 	border-radius: 0 0 4px 4px;
-
 	background-color: #FFF;
+}
+
+.icon-resource-type, .contribution {
+	box-shadow: 1px 1px 5px #E8E8E8;
 }
 
 .icon-resource-type > .glyphicon{
@@ -2444,7 +2451,7 @@ table.overview tr > td:first-child {
 
 .icon-resource-type-wrapper {
 	float: right;
-	margin-top: -2px;
+	margin-top: -12px;
 	margin-right: 20px;
 	margin-bottom: 10px;
 }
@@ -2461,6 +2468,12 @@ table.overview tr > td:first-child {
 
 .table-user-contributions tbody > tr.active td:first-child {
 	font-weight:bold;
+}
+
+.contribution {
+	border: 1px solid #ddd;
+	margin-bottom: 20px;
+  	padding: 10px 0;
 }
 
 h4.title {
