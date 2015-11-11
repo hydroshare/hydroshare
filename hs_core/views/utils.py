@@ -46,7 +46,8 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
 
-def authorize(request, res_id, edit=False, view=False, full=False, superuser=False, raises_exception=True):
+def authorize(request, res_id, discoverable=False, edit=False, view=False,
+              full=False, superuser=False, raises_exception=True):
     """
     Authorizes the user making this request for the OR of the parameters.  If the user has ANY permission set to True in
     the parameter list, then this returns True else False.
@@ -57,19 +58,18 @@ def authorize(request, res_id, edit=False, view=False, full=False, superuser=Fal
     except ObjectDoesNotExist:
         raise NotFound(detail="No resource was found for resource id:%s" % res_id)
 
-    if user.is_authenticated():
-        has_edit = user.uaccess.can_change_resource(res)
-        has_view = user.uaccess.can_view_resource(res)
-        has_full = user.uaccess.owns_resource(res)
-
-        authorized = (edit and has_edit) or \
-                     (view and has_view) or \
-                     (full and has_full) or \
+    if discoverable and (edit is False and view is False and full is False and superuser is False):
+        authorized = res.raccess.discoverable
+    elif user.is_authenticated():
+        authorized = (view and user.uaccess.can_view_resource(res)) or \
+                     (edit and user.uaccess.can_change_resource(res)) or \
+                     (full and user.uaccess.owns_resource(res)) or \
+                     (discoverable and res.raccess.discoverable) or \
                      (superuser and (user.uaccess.admin or user.is_superuser))
     else:
-        has_view = res.raccess.public
-        authorized = view and has_view
-
+        authorized = (view and res.raccess.public) or \
+                     (discoverable and res.raccess.discoverable)
+                     
     if raises_exception and not authorized:
         raise PermissionDenied()
     else:
