@@ -25,6 +25,9 @@ class ExecutedBy(ExecutedBy):
 class ModelObjectiveChoices(models.Model):
     description = models.CharField(max_length=300)
 
+    def __str__(self):
+        return "ModelObjectiveChoices"
+
     def __unicode__(self):
         return unicode(str(self))
 
@@ -33,9 +36,11 @@ class ModelObjective(AbstractMetaDataElement):
     swat_model_objectives = models.ManyToManyField(ModelObjectiveChoices, null=True, blank=True)
     other_objectives = models.CharField(max_length=200, null=True, blank=True)
 
-    def __unicode__(self):
-        self.other_objectives
+    def __str__(self):
+        return "ModelObjectiveChoices"
 
+    def __unicode__(self):
+        return self
     class Meta:
         # ModelObjective element is not repeatable
         unique_together = ("content_type", "object_id")
@@ -95,6 +100,9 @@ class SimulationType(AbstractMetaDataElement):
                     ('Auto-Calibration', 'Auto-Calibration'))
     simulation_type_name = models.CharField(max_length=100, choices=type_choices, verbose_name='Simulation type')
 
+    def __str__(self):
+        return "SimulationType"
+
     def __unicode__(self):
         return unicode(str(self))
 
@@ -108,6 +116,9 @@ class ModelMethod(AbstractMetaDataElement):
     flowRoutingMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='Flow routing method')
     petEstimationMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='PET estimation method')
 
+    def __str__(self):
+        return "ModelMethod"
+
     def __unicode__(self):
         return unicode(str(self))
 
@@ -118,6 +129,9 @@ class ModelMethod(AbstractMetaDataElement):
 class ModelParametersChoices(models.Model):
     description = models.CharField(max_length=300)
 
+    def __str__(self):
+        return "ModelParametersChoices"
+
     def __unicode__(self):
         return unicode(str(self))
 
@@ -126,8 +140,11 @@ class ModelParameter(AbstractMetaDataElement):
     model_parameters = models.ManyToManyField(ModelParametersChoices, null=True, blank=True)
     other_parameters = models.CharField(max_length=200, null=True, blank=True)
 
+    def __str__(self):
+        return "ModelParameter"
+
     def __unicode__(self):
-        self.other_parameters
+        return self
 
     class Meta:
         # ModelParameter element is not repeatable
@@ -205,6 +222,9 @@ class ModelInput(AbstractMetaDataElement):
     landUseDataSourceURL = models.URLField(null=True, blank=True, verbose_name='LandUse data source URL')
     soilDataSourceName = models.CharField(max_length=200, null=True, blank=True, verbose_name='Soil data source name')
     soilDataSourceURL = models.URLField(null=True, blank=True, verbose_name='Soil data source URL')
+
+    def __str__(self):
+        return "ModelInput"
 
     def __unicode__(self):
         return unicode(str(self))

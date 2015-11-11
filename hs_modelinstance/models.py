@@ -15,6 +15,12 @@ class ModelOutput(AbstractMetaDataElement):
     term = 'ModelOutput'
     includes_output = models.BooleanField(default=False)
 
+    def __str__(self):
+        return "ModelOutput"
+
+    def __unicode__(self):
+        return unicode(str(self))
+
     class Meta:
         # ModelOutput element is not repeatable
         unique_together = ("content_type", "object_id")
@@ -32,6 +38,9 @@ class ExecutedBy(AbstractMetaDataElement):
     model_name = models.CharField(max_length=500, choices=(('-', '    '),), default=None)
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True, default=None, related_name='modelinstance')
 
+    def __str__(self):
+        return "ExecutedBy"
+    
     def __unicode__(self):
         return unicode(str(self))
 
