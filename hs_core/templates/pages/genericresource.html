@@ -2297,6 +2297,7 @@
                     console.log(json_response);
                     if (json_response.status === 'success')
                     {
+                        $(document).trigger(jQuery.Event("submit-success"));
                         $form.find("button").hide();
                         if (json_response.hasOwnProperty('element_id')){
                             form_update_action = $form.attr('action');
@@ -2338,7 +2339,6 @@
                             this.remove();
                         });
                         $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
-                            $(document).trigger(jQuery.Event("submit-success"));
                             $(".alert-success").alert('close');
                         });
                     }
