@@ -529,15 +529,14 @@
                                             <tr id="row-id-{{ u.pk }}" {% if owners|length == 1 %}class="hide-actions"{% endif %}>
                                                 <td>
                                                     <div class="user-scope">
-                                                        <div
+
                                                         {% if u.userprofile.picture %}
-                                                            style="background-image: url('{{ u.userprofile.picture.url }}');"
-                                                            class="profile-pic-thumbnail round-image"
+                                                            <div style="background-image: url('{{ u.userprofile.picture.url }}');"
+                                                            class="profile-pic-thumbnail round-image"></div>
                                                         {% else %}
-                                                             class="profile-pic-thumbnail round-image user-icon"
+                                                             <div class="profile-pic-thumbnail round-image user-icon"></div>
                                                         {% endif %}
-                                                        >
-                                                        </div>
+
                                                         <span data-col="name"
                                                               class="user-name">{{ u|best_name }}</span>
                                                         {% if u.pk == current_user.pk %}

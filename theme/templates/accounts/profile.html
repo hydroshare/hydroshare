@@ -18,13 +18,14 @@
             <div {% if u.id == user.id %}class="col-xs-12 col-sm-10"{% else %}class="col-sm-12"{% endif %}>
                 {#        Profile picture       #}
                 {% if profile.picture and profile.picture.url %}
-                    <div style="background-image: url('{{ profile.picture.url }}'); float:left;"
-                         class="profile-pic round-image">
+                    <div style="background-image: url('{{ profile.picture.url }}')"
+                         class="profile-pic round-image pull-left">
                     </div>
+                {% else %}
+                    <div class="profile-pic round-image user-icon pull-left"></div>
                 {% endif %}
 
                 <div style="padding-top:10px;">
-
                     {% if u.first_name or u.last_name %}
                         <h2>{{ u.first_name }} {{ u.last_name }}</h2>
                     {% else %}
@@ -33,29 +34,30 @@
 
                     {% if profile.organization or profile.title %}
                     <h4 class="text-muted">
-                        {% if profile.organization %}{{ profile.organization }}|{% endif %}
+                        {% if profile.organization %}{{ profile.organization }}{% endif %}
+                        {% if profile.organization and profile.title %} | {% endif %}
                         {% if profile.title %}{{ profile.title }}{% endif %}
                     </h4>
                     {% endif %}
+                    {% if profile.subject_areas or profile.profession %}
                     <table class="overview">
                         <tbody>
                         {% if profile.subject_areas %}
-                            {% if profile.subject_areas %}
-                                <tr>
-                                    <td><span class="text-muted">Subject Areas: </span></td>
-                                    <td>{{ profile.subject_areas }}</td>
-                                </tr>
-                            {% endif %}
+                            <tr>
+                                <td><span class="text-muted">Subject Areas: </span></td>
+                                <td>{{ profile.subject_areas }}</td>
+                            </tr>
+                        {% endif %}
 
-                            {% if profile.profession %}
-                                <tr>
-                                    <td><span class="text-muted">Profession</span></td>
-                                    <td>{{ profile.profession }}</td>
-                                </tr>
-                            {% endif %}
+                        {% if profile.profession %}
+                            <tr>
+                                <td><span class="text-muted">Profession</span></td>
+                                <td>{{ profile.profession }}</td>
+                            </tr>
                         {% endif %}
                         </tbody>
                     </table>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -95,21 +97,20 @@
                                                 <div style="background-image: url('{{ profile.picture.url }}'); float:left;"
                                                      class="profile-pic-thumbnail round-image">
                                                 </div>
+                                            {% else %}
+                                                <div class="profile-pic-thumbnail round-image user-icon"></div>
                                             {% endif %}
+
                                             {% if u.first_name or u.last_name %}
                                                 <strong>{{ u.first_name }} {{ u.last_name }}</strong>
                                             {% else %}
                                                 <strong>{{ u.username }}</strong>
                                             {% endif %}
+
                                             <span class="text-muted"> shared </span>
                                             <span><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
-                                            <h5 {% if profile.picture and profile.picture.url %}style="margin:0 50px;" {% else %}style="margin:0;"{% endif %}
-                                                class="text-muted">Resource type: <strong>{{ res|resource_type }}</strong></h5>
-                                            <h5 {% if profile.picture and profile.picture.url %}
-                                                style="margin:0 50px;margin-bottom:15px;"
-                                                {% else %}
-                                                style="margin:0;margin-bottom:15px;"
-                                            {% endif %} class="text-muted">Date: <strong>{{ res.created }}</strong></h5>
+                                            <h5 style="margin:0 50px;" class="text-muted">Resource type: <strong>{{ res|resource_type }}</strong></h5>
+                                            <h5 style="margin:0 50px;margin-bottom:15px;" class="text-muted">Date: <strong>{{ res.created }}</strong></h5>
 
                                             {% if res.metadata.description %}
                                                 <div class="activity-description col-sm-12"
@@ -133,7 +134,8 @@
 
                         <div class="col-md-5">
                             {#        DESCRIPTION       #}
-                            {% if profile.details %}
+
+                            {% if profile.details and user.pk %}
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                     <h3 class="panel-title">About {{ u.first_name }}</h3>
@@ -317,7 +319,7 @@
                                         <span class="text-muted"><strong>{{ res|resource_type }}</strong></span>
                                     </span>
                                     </div>
-                                    <div data-type="type-{{ res|resource_type }}" class="activity-block row">
+                                    <div class="activity-block row">
                                         <div class="activity-info col-sm-12">
                                             <span style="font-size:16px;"><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></span>
                                             <h5 style="margin:0" class="text-muted">Created: <strong>{{ res.created }}</strong></h5>
@@ -484,7 +486,7 @@
         var collection = [];
         collection["total"] = 0;
 
-        var rows = $("#contributions .activity-block");
+        var rows = $(".contribution");
         for (var i = 0; i < rows.length; i++) {
             if (collection[$(rows[i]).attr("data-type")]) {
                 collection[$(rows[i]).attr("data-type")]++;
