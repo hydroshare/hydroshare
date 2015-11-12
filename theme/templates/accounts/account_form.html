@@ -94,14 +94,17 @@
             {#{% include "includes/form_field.html" with field=form.organization_type field_classes="col-md-6" %}#}
             {% include "includes/form_field.html" with field=form.organization  field_classes="col-md-12" %}
         </div>
-        <div class="row">
-            {% include "includes/form_field.html" with field=form.phone_2_type field_classes="col-md-6" %}
-            {% include "includes/form_field.html" with field=form.phone_2 field_classes="col-md-6" %}
-        </div>
+
         <div class="row">
             {% include "includes/form_field.html" with field=form.phone_1_type field_classes="col-md-6" %}
             {% include "includes/form_field.html" with field=form.phone_1 field_classes="col-md-6" %}
         </div>
+
+        <div class="row">
+            {% include "includes/form_field.html" with field=form.phone_2_type field_classes="col-md-6" %}
+            {% include "includes/form_field.html" with field=form.phone_2 field_classes="col-md-6" %}
+        </div>
+
 
         {% block account_form_actions %}
         <input class="hl-btn hl-btn-green" type="submit" value="{{ title }}">
