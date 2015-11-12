@@ -22,14 +22,16 @@ def landing_page(request, page):
                 content_model.metadata.supported_res_types.first() or \
                 content_model.metadata.versions.first():
             extended_metadata_exists = True
-        supported_res_types_str = content_model.metadata.supported_res_types.first().get_supported_res_types_str()
-        supported_res_types_array = supported_res_types_str.split(',')
+
         new_supported_res_types_array = []
-        for type_name in supported_res_types_array:
-            for display_name_tuple in parameters_choices:
-                if type_name.lower() == display_name_tuple[0].lower():
-                  new_supported_res_types_array += [display_name_tuple[1]]
-                  break
+        if content_model.metadata.supported_res_types.first():
+            supported_res_types_str = content_model.metadata.supported_res_types.first().get_supported_res_types_str()
+            supported_res_types_array = supported_res_types_str.split(',')
+            for type_name in supported_res_types_array:
+                for display_name_tuple in parameters_choices:
+                    if type_name.lower() == display_name_tuple[0].lower():
+                      new_supported_res_types_array += [display_name_tuple[1]]
+                      break
 
         context['extended_metadata_exists'] = extended_metadata_exists
         context['url_base'] = content_model.metadata.url_bases.first()
