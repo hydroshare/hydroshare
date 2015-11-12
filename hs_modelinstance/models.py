@@ -35,7 +35,7 @@ class ModelOutput(AbstractMetaDataElement):
 class ExecutedBy(AbstractMetaDataElement):
 
     term = 'ExecutedBY'
-    model_name = models.CharField(max_length=500, choices=(('-', '    '),), default=None)
+    model_name = models.CharField(max_length=500, default=None)
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True, default=None, related_name='modelinstance')
 
     def __str__(self):
