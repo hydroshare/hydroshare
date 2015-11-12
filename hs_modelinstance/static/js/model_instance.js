@@ -10,6 +10,9 @@ $(document).ready(function(){
     // proceed only if selectbox_ exists (i.e. edit page)
     if($('[id^=selectbox_]').length > 0) {
 
+        // set the initial value of the mp_old_id
+        mp_old_id = $('[id^=selectbox_]').attr('id').split('_').pop();
+
         // initialize the model program listbox
         build_selectbox();
 
@@ -19,8 +22,7 @@ $(document).ready(function(){
         // build metadata table (ajax query)
         show_model_details();
 
-        // set the initial value of the mp_old_id
-        mp_old_id = $('[id^=selectbox_]').attr('id').split('_').pop();
+
     }
 
 });

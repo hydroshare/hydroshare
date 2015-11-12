@@ -124,7 +124,7 @@ class ExecutedByForm(ModelForm):
         super(ExecutedByForm, self).__init__(*args, **kwargs)
 
         # set mpshort id to '' if a foreign key has not been established yet, otherwise use mp short id
-        mpshortid = ''
+        mpshortid = 'Unspecified'
         if self.instance.model_program_fk is not None:
             mpshortid = self.instance.model_program_fk.short_id
         kwargs = dict(mpshortid=mpshortid)
