@@ -663,6 +663,8 @@ class Date(AbstractMetaDataElement):
 
 class Relation(AbstractMetaDataElement):
     SOURCE_TYPES= (
+        ('isHostedBy', 'Hosted By'),
+        ('isCopiedFrom', 'Copied From'),
         ('isPartOf', 'Part Of'),
         ('isExecutedBy', 'Executed By'),
         ('isCreatedBy', 'Created By'),
@@ -684,12 +686,20 @@ class Relation(AbstractMetaDataElement):
             if rel:
                 raise ValidationError('Relation type:%s already exists.' % kwargs['type'])
             if 'value' in kwargs:
+                # ensure isHostedBy and isCopiedFrom are mutually exclusive
+                if kwargs['type'] == 'isHostedBy' and \
+                   Relation.objects.filter(type='isCopiedFrom', object_id=metadata_obj.id, content_type=metadata_type).count()>0:
+                    raise ValidationError('Relation type:%s cannot be created since isCopiedFrom relation already exists.' % kwargs['type'])
+                elif kwargs['type'] == 'isCopiedFrom' and \
+                     Relation.objects.filter(type='isHostedBy', object_id=metadata_obj.id, content_type=metadata_type).count()>0:
+                    raise ValidationError('Relation type:%s cannot be created since isHostedBy relation already exists.' % kwargs['type'])
+
                 return Relation.objects.create(type=kwargs['type'], value=kwargs['value'], content_object=metadata_obj)
 
             else:
                 raise ValidationError('Value for relation element is missing.')
         else:
-            raise ObjectDoesNotExist("Type of relation element is missing.")
+            raise ObjectDoesNotExist("Type for relation element is missing.")
 
 
     @classmethod
@@ -702,6 +712,14 @@ class Relation(AbstractMetaDataElement):
                     if Relation.objects.filter(type=kwargs['type'], object_id=rel.object_id,
                                               content_type__pk=rel.content_type.id).count()> 0:
                         raise ValidationError( 'Relation type:%s already exists.' % kwargs['type'])
+                    elif kwargs['type'] == 'isHostedBy' and \
+                         Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
+                                                 content_type__pk=rel.content_type.id).count()> 0:
+                        raise ValidationError('Relation type:%s cannot be updated to isHostedBy releation since isCopiedFrom relation already exists.' % rel.type)
+                    elif kwargs['type'] == 'isCopiedFrom' and \
+                         Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
+                                                 content_type__pk=rel.content_type.id).count()> 0:
+                        raise ValidationError('Relation type:%s cannot be updated since isHostedBy relation already exists.' % rel.type)
                     else:
                         rel.type = kwargs['type']
 
