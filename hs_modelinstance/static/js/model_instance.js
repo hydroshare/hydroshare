@@ -1,4 +1,5 @@
 
+// variable to store the last submitted model program id
 var mp_old_id = '';
 
 /*
@@ -17,6 +18,9 @@ $(document).ready(function(){
 
         // build metadata table (ajax query)
         show_model_details();
+
+        // set the initial value of the mp_old_id
+        mp_old_id = $('[id^=selectbox_]').attr('id').split('_').pop();
     }
 
 });
@@ -139,36 +143,22 @@ function show_model_details() {
                         cell.innerHTML = "<a href= " + data['url'] + " target='_blank'>Resource Landing Page</a>"
                     }
                 }
-
-
-                // set the modelprogram id of the selected value
-                set_hidden_model_name(shortid);
-
-                // enable/disable the save button if the value has been changed to something new
-                if (shortid != mp_old_id)
-                    $('#id-executedby').find('.btn-primary').show();
-                else
-                    $('#id-executedby').find('.btn-primary').hide();
-
             }
         },
         error: function (data) {
             console.log('There was an error with model instance GET.')
+        },
+        complete: function(data){
+
+            // set the modelprogram id of the selected value
+            set_hidden_model_name(shortid);
+
+            // enable/disable the save button if the value has been changed to something new
+            if (shortid != mp_old_id)
+                $('#id-executedby').find('.btn-primary').show();
+            else
+                $('#id-executedby').find('.btn-primary').hide();
         }
-        //complete: function(data){
-        //
-        //    //var mp_old_id = $('#id_model_name').val();
-        //
-        //    // set the modelprogram id of the selected value
-        //    set_hidden_model_name(shortid);
-        //
-        //    // enable/disable the save button if the value has been changed to something new
-        //    //var mp_old_id = $('[id^=selectbox_]').attr('id').split('_').pop();
-        //    if (shortid != mp_old_id)
-        //        $('#id-executedby').find('.btn-primary').show();
-        //    else
-        //        $('#id-executedby').find('.btn-primary').hide();
-        //}
     });
 
 }
