@@ -1691,6 +1691,8 @@
                                         <div class="controls">
                                             <select class="form-control input-sm select" id="id_relation-{{ forloop.counter0 }}-type" name="relation-{{ forloop.counter0 }}-type">
                                                 <option value="">---------</option>
+                                                <option value="isHostedBy" {% if relation.type == "isHostedBy" %}selected="selected"{% endif %}>Hosted By</option>
+                                                <option value="isCopiedFrom" {% if relation.type == "isCopiedFrom" %}selected="selected"{% endif %}>Copied From</option>
                                                 <option value="isPartOf" {% if relation.type == "isPartOf" %} selected="selected" {% endif %}>Part Of</option>
                                                 <option value="isCreatedBy" {% if relation.type == "isCreatedBy" %}selected="selected"{% endif %}>Created By</option>
                                                 <option value="isVersionOf" {% if relation.type == "isVersionOf" %}selected="selected"{% endif %}>Version Of</option>
@@ -2055,6 +2057,8 @@
                                         <div class="controls"><select class="form-control input-sm select" id="id_type"
                                                                       name="type">
                                             <option value="" selected="selected">---------</option>
+                                            <option value="isHostedBy">Hosted By</option>
+                                            <option value="isCopiedFrom">Copied From</option>
                                             <option value="isPartOf">Part Of</option>
                                             <option value="isCreatedBy">Created By</option>
                                             <option value="isVersionOf">Version Of</option>
