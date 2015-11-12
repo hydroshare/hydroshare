@@ -182,8 +182,6 @@ def _extract_metadata(resource, sqlite_file):
             # update title element
             if dataset["DataSetTitle"]:
                 resource.metadata.update_element('title', element_id=resource.metadata.title.id, value=dataset["DataSetTitle"])
-                resource.title = dataset["DataSetTitle"]
-                resource.save()
 
             # create abstract/description element
             if dataset["DataSetAbstract"]:
@@ -436,14 +434,12 @@ def _delete_extracted_metadata(resource):
 
     # add the title element as "Untitled resource"
     res_title = 'Untitled resource'
-    resource.title = res_title
-    resource.save()
     resource.metadata.create_element('title', value=res_title)
 
     # add back the resource creator as the creator in metadata
     if resource.creator.first_name:
         first_creator_name = "{first_name} {last_name}".format(first_name=resource.creator.first_name,
-                                                                   last_name=resource.creator.last_name)
+                                                               last_name=resource.creator.last_name)
     else:
         first_creator_name = resource.creator.username
 
