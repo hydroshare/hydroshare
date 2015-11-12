@@ -49,7 +49,7 @@
             <select class="form-control" name="resource-type" id="resource-type">
                 <option value="GenericResource">Generic</option>
                 <option value="RasterResource">Geographic Raster</option>
-                <option value="RefTimeSeries">HIS Referenced Time Series</option>
+{#              <option value="RefTimeSeries">HIS Referenced Time Series</option> #}
                 <option value="ModelProgramResource">Model Program</option>
                 <option value="ModelInstanceResource">Model Instance</option>
                 <option value="SWATModelInstanceResource">SWAT Model Instance</option>
@@ -192,7 +192,7 @@
             var ext = ".*";
             for (var i = 0; i < fileList.length; i++) {
                 ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
-                ext = "." + ext;
+                ext = "." + ext.toLowerCase();
                 var ext_found = false;
                 if (ext === file_types) {
                     ext_found = true;
