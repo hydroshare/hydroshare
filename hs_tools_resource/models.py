@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.contenttypes import generic
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -61,6 +62,48 @@ class SupportedResTypes(AbstractMetaDataElement):
     def get_supported_res_types_str(self):
         return ', '.join([parameter.description for parameter in self.supported_res_types.all()])
 
+    @classmethod
+    def create(cls, **kwargs):
+        if 'supported_res_types' in kwargs:
+
+            metadata_obj = kwargs['content_object']
+            new_meta_instance = SupportedResTypes.objects.create(content_object=metadata_obj,)
+
+        for res_type_str in kwargs['supported_res_types']:
+            qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
+            if qs.exists():
+                new_meta_instance.supported_res_types.add(qs[0])
+            else:
+                new_meta_instance.supported_res_types.create(description=res_type_str)
+
+        return new_meta_instance
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        meta_instance = SupportedResTypes.objects.get(id=element_id)
+        if meta_instance:
+            if 'supported_res_types' in kwargs:
+                #cls._validate_swat_model_parameters(kwargs['model_parameters'])
+                meta_instance.supported_res_types.all().delete()
+                for res_type_str in kwargs['supported_res_types']:
+                    qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
+                    if qs.exists():
+                        meta_instance.supported_res_types.add(qs[0])
+                    else:
+                        meta_instance.supported_res_types.create(description=res_type_str)
+
+            meta_instance.save()
+
+            # delete model_parameters metadata element if it has no data
+            if len(meta_instance.supported_res_types.all()) == 0 :
+                meta_instance.delete()
+        else:
+            raise ObjectDoesNotExist("No supported_res_types element was found for the provided id:%s" % kwargs['id'])
+
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("SupportedResTypes element can't be deleted.")
 
 
 class ToolVersion(AbstractMetaDataElement):

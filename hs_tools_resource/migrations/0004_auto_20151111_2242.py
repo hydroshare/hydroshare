@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('contenttypes', '0001_initial'),
-        ('hs_tools_resource', '0001_initial'),
+        ('hs_tools_resource', '0003_auto_20150724_1501'),
     ]
 
     operations = [
@@ -58,5 +58,13 @@ class Migration(migrations.Migration):
             name='resShortID',
             field=models.CharField(default=b'UNKNOWN', max_length=100),
             preserve_default=True,
+        ),
+        migrations.AlterUniqueTogether(
+            name='requesturlbase',
+            unique_together=set([('content_type', 'object_id')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='toolversion',
+            unique_together=set([('content_type', 'object_id')]),
         ),
     ]

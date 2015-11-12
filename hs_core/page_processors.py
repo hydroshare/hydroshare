@@ -60,13 +60,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                     url_obj = res_type.content_object.url_bases.first()
                     tool_res_obj = hydroshare.get_resource_by_shortkey(url_obj.resShortID)
                     tool_edit_mode = False
-                    if tool_res_obj.public or user.username == 'admin' or \
+                    if tool_res_obj.raccess.public or user.username == 'admin' or \
                             tool_res_obj.creator == user or \
                             user in (tool_res_obj.owners.all() | tool_res_obj.edit_users.all() | tool_res_obj.view_users.all()):
                         tool_edit_mode = True
                     tool_url = url_obj.value
                     if tool_res_obj:
-                        if tool_res_obj.public or tool_edit_mode:
+                        if tool_res_obj.raccess.public or tool_edit_mode:
                             u=user.username if len(user.username)>0 else "anonymous"
                             tl = {'title': res_type.content_object.title,
                                   'url': "{0}{1}{2}{3}{4}{5}".format(tool_url, "/?res_id=", content_model.short_id,"&usr=",u, "&src=hs")}
