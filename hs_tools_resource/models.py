@@ -1,3 +1,4 @@
+__author__ = 'Drew & Shawn'
 from django.db import models
 from django.contrib.contenttypes import generic
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -9,9 +10,6 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor,\
 
 from lxml import etree
 
-#
-# To create a new resource, use these two super-classes.
-#
 class ToolResource(BaseResource):
     objects = ResourceManager('ToolResource')
 
@@ -34,22 +32,19 @@ class ToolResource(BaseResource):
         md = ToolMetaData()
         return self._get_metadata(md)
 
-
 processor_for(ToolResource)(resource_processor)
-
 
 class RequestUrlBase(AbstractMetaDataElement):
     term = 'Request Url Base'
-    value = models.CharField(null=True, max_length="500") # whatever the user gives us- format is "http://www.example.com/{resource-info}"
-    resShortID = models.CharField(max_length=100, default="UNKNOWN")
+    value = models.CharField(max_length=1024, null=True)
+    resShortID = models.CharField(max_length=128, default="UNKNOWN")
 
     class Meta:
         # RequestUrlBase element is not repeatable
         unique_together = ("content_type", "object_id")
 
-
 class SupportedResTypeChoices(models.Model):
-    description = models.CharField(max_length=300)
+    description = models.CharField(max_length=128)
 
     def __unicode__(self):
         self.description
@@ -57,15 +52,14 @@ class SupportedResTypeChoices(models.Model):
 
 class SupportedResTypes(AbstractMetaDataElement):
     term = 'SupportedResTypes'
-    supported_res_types= models.ManyToManyField(SupportedResTypeChoices, null=True, blank=True)
+    supported_res_types = models.ManyToManyField(SupportedResTypeChoices, null=True, blank=True)
 
     def get_supported_res_types_str(self):
-        return ', '.join([parameter.description for parameter in self.supported_res_types.all()])
+        return ','.join([parameter.description for parameter in self.supported_res_types.all()])
 
     @classmethod
     def create(cls, **kwargs):
         if 'supported_res_types' in kwargs:
-
             metadata_obj = kwargs['content_object']
             new_meta_instance = SupportedResTypes.objects.create(content_object=metadata_obj,)
 
@@ -83,7 +77,6 @@ class SupportedResTypes(AbstractMetaDataElement):
         meta_instance = SupportedResTypes.objects.get(id=element_id)
         if meta_instance:
             if 'supported_res_types' in kwargs:
-                #cls._validate_swat_model_parameters(kwargs['model_parameters'])
                 meta_instance.supported_res_types.all().delete()
                 for res_type_str in kwargs['supported_res_types']:
                     qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
@@ -93,13 +86,10 @@ class SupportedResTypes(AbstractMetaDataElement):
                         meta_instance.supported_res_types.create(description=res_type_str)
 
             meta_instance.save()
-
-            # delete model_parameters metadata element if it has no data
-            if len(meta_instance.supported_res_types.all()) == 0 :
+            if meta_instance.supported_res_types.all().count() == 0:
                 meta_instance.delete()
         else:
             raise ObjectDoesNotExist("No supported_res_types element was found for the provided id:%s" % kwargs['id'])
-
 
     @classmethod
     def remove(cls, element_id):
@@ -107,8 +97,8 @@ class SupportedResTypes(AbstractMetaDataElement):
 
 
 class ToolVersion(AbstractMetaDataElement):
-    term = 'Tool Version'
-    value = models.CharField(null=True, max_length="500")
+    term = 'App Version'
+    value = models.CharField(max_length=128, null=True)
 
     class Meta:
         # ToolVersion element is not repeatable
@@ -116,19 +106,13 @@ class ToolVersion(AbstractMetaDataElement):
 
 
 class ToolMetaData(CoreMetaData):
-    # tool license is implemented via existing metadata element "rights" with attr. "statement" and "url"
-    # should be only one Request Url Base metadata element
     url_bases = generic.GenericRelation(RequestUrlBase)
-
-    # should be only one Version metadata element
     versions = generic.GenericRelation(ToolVersion)
     supported_res_types= generic.GenericRelation(SupportedResTypes)
 
     @classmethod
     def get_supported_element_names(cls):
-        # get the names of all core metadata elements
         elements = super(ToolMetaData, cls).get_supported_element_names()
-        # add the name of any additional element to the list
         elements.append('RequestUrlBase')
         elements.append('ToolVersion')
         elements.append('SupportedResTypes')
@@ -142,11 +126,11 @@ class ToolMetaData(CoreMetaData):
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
         if not self.url_bases.all().first():
-            missing_required_elements.append('RequestUrlBase')
+            missing_required_elements.append('App Url')
         if not self.versions.all().first():
-            missing_required_elements.append('ToolVersion')
+            missing_required_elements.append('App Version')
         if not self.supported_res_types.all().first():
-            missing_required_elements.append('SupportedResTypes')
+            missing_required_elements.append('Supported Resource Types')
 
         return missing_required_elements
 
@@ -173,7 +157,6 @@ class ToolMetaData(CoreMetaData):
             hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}type' % self.NAMESPACES['hsterms'])
             hsterms_name.text = type.get_supported_res_types_str()
-
 
         for v in self.versions.all():
             hsterms_method = etree.SubElement(container, '{%s}ToolVersion' % self.NAMESPACES['hsterms'])

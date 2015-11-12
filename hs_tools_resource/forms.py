@@ -1,14 +1,11 @@
-__author__ = 'Drew, Jeff & Shaun'
+__author__ = 'Drew & Shawn'
 from django.forms import ModelForm, BaseFormSet
 from django import forms
-from django.forms.models import formset_factory
-from models import *
+
+from crispy_forms.layout import Layout, Field
+
+from models import RequestUrlBase, ToolVersion, SupportedResTypes
 from hs_core.forms import BaseFormHelper
-from crispy_forms.helper import FormHelper
-from hs_core.hydroshare.utils import get_resource_types
-from crispy_forms import *
-from crispy_forms.layout import *
-from crispy_forms.bootstrap import *
 
 # #TODO: reference hs_core.forms
 class UrlBaseFormHelper(BaseFormHelper):
@@ -30,15 +27,14 @@ class UrlBaseForm(ModelForm):
         super(UrlBaseForm, self).__init__(*args, **kwargs)
         self.helper = UrlBaseFormHelper(allow_edit, res_short_id, element_id, element_name='RequestUrlBase')
 
-
     class Meta:
         model = RequestUrlBase
-        fields = ['value','resShortID']
+        fields = ['value', 'resShortID']
         exclude = ['content_object']
 
 
 class UrlBaseValidationForm(forms.Form):
-    value = forms.CharField(max_length="500")
+    value = forms.CharField(max_length=1024)
 
 # The following 3 classes need to have the "field" same as the fields defined in "ToolResourceType" table in models.py
 
@@ -63,26 +59,25 @@ class VersionForm(ModelForm):
         fields = ['value']
         exclude = ['content_object']
 
-
 class VersionValidationForm(forms.Form):
-    value = forms.CharField(max_length="500")
+    value = forms.CharField(max_length=128)
 
 parameters_choices = (
-                        ('GenericResource', 'GenericResource'),
-                        ('RasterResource', 'RasterResource'),
-                        ('RefTimeSeries', 'RefTimeSeries'),
-                        ('TimeSeriesResource', 'TimeSeriesResource'),
-                        ('NetcdfResource', 'NetcdfResource'),
-                        ('ModelProgramResource', 'ModelProgramResource'),
-                        ('ModelInstanceResource', 'ModelInstanceResource'),
-                        ('SWATModelInstanceResource', 'SWATModelInstanceResource'),
+                        ('GenericResource', 'Generic Resource'),
+                        ('RasterResource', 'Raster Resource'),
+                        # ('RefTimeSeries', 'HIS Referenced Time Series Resource'),
+                        ('TimeSeriesResource', 'Time Series Resource'),
+                        ('NetcdfResource', 'NetCDF Resource'),
+                        ('ModelProgramResource', 'Model Program Resource'),
+                        ('ModelInstanceResource', 'Model Instance Resource'),
+                        ('SWATModelInstanceResource', 'SWAT Model Instance Resource'),
+                        ('GeographicFeatureResource', 'Geographic Feature Resource'),
                       )
 
-class MetadataField(layout.Field):
-          def __init__(self, *args, **kwargs):
-              kwargs['css_class'] = 'form-control input-sm'
-              super(MetadataField, self).__init__(*args, **kwargs)
-
+class MetadataField(Field):
+      def __init__(self, *args, **kwargs):
+          kwargs['css_class'] = 'form-control input-sm'
+          super(MetadataField, self).__init__(*args, **kwargs)
 
 
 class SupportedResTypeFormHelper(BaseFormHelper):
@@ -115,14 +110,7 @@ class SupportedResTypesForm(ModelForm):
                     self.fields['supported_res_types'].initial = checked_item_list
                 else:
                     self.fields['supported_res_types'].initial = []
-
-            except TypeError:
-                self.fields['supported_res_types'].initial = []
-            except AttributeError:
-                self.fields['supported_res_types'].initial = []
-            except ValueError:
-                self.fields['supported_res_types'].initial = []
-            except Exception as e:
+            except:
                 self.fields['supported_res_types'].initial = []
 
     class Meta:
@@ -130,7 +118,5 @@ class SupportedResTypesForm(ModelForm):
 
 
 class SupportedResTypesValidationForm(forms.Form):
-    supported_res_types = forms.MultipleChoiceField(choices=parameters_choices,required=False)
-
-
+    supported_res_types = forms.MultipleChoiceField(choices=parameters_choices, required=False)
 

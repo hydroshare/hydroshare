@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='SupportedResTypeChoices',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('description', models.CharField(max_length=300)),
+                ('description', models.CharField(max_length=128)),
             ],
             options={
             },
@@ -56,7 +56,19 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='requesturlbase',
             name='resShortID',
-            field=models.CharField(default=b'UNKNOWN', max_length=100),
+            field=models.CharField(default=b'UNKNOWN', max_length=128),
+            preserve_default=True,
+        ),
+        migrations.AlterField(
+            model_name='requesturlbase',
+            name='value',
+            field=models.CharField(max_length=1024, null=True),
+            preserve_default=True,
+        ),
+        migrations.AlterField(
+            model_name='toolversion',
+            name='value',
+            field=models.CharField(max_length=128, null=True),
             preserve_default=True,
         ),
         migrations.AlterUniqueTogether(
