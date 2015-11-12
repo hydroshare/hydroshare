@@ -81,9 +81,25 @@ class ModelOutputValidationForm(forms.Form):
 # ExecutedBy element forms
 class ExecutedByFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
+
+        # pop the model program shortid out of the kwargs dictionary
+        mp_id = kwargs.pop('mpshortid')
+
+        # get all model program resources and build option HTML elements for each one.
+        # ModelProgram shortid is concatenated to the selectbox id so that it is accessible in the template.
+        mp_resource = users.get_resource_list(type=['ModelProgramResource'])
+        options = '\n'.join(['<option value=%s>%s</option>'%(r.short_id, r.title) for r in mp_resource ])
+        options  = '<option value=Unspecified>Unspecified</option>' + options
+        selectbox = HTML('<div class="div-selectbox">'
+                                ' <select class="selectbox" id="selectbox_'+mp_id+'">'
+                                        + options +
+                                '</select>'
+                            '</div><br>')
+
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-            MetadataField('model_name'),
+            MetadataField('model_name', style="display:none"),
+            selectbox,
             HTML("""
             <div id=program_details_div style="display:none">
                 <table id="program_details_table" class="modelprogram">
@@ -106,16 +122,13 @@ class ExecutedByFormHelper(BaseFormHelper):
 class ExecutedByForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ExecutedByForm, self).__init__(*args, **kwargs)
-        self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy')
 
-        # get all model program resources
-        mp_resource = users.get_resource_list(type=['ModelProgramResource'])
-
-        # set model programs resources in choice list
-        CHOICES = (('Unspecified', 'Unspecified'),) + tuple((r.short_id, r.title) for r in mp_resource)
-
-        # Set the choice lists as the file names in the content model
-        self.fields['model_name'].choices = CHOICES
+        # set mpshort id to '' if a foreign key has not been established yet, otherwise use mp short id
+        mpshortid = ''
+        if self.instance.model_program_fk is not None:
+            mpshortid = self.instance.model_program_fk.short_id
+        kwargs = dict(mpshortid=mpshortid)
+        self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy', **kwargs)
 
     class Meta:
         model = ExecutedBy
