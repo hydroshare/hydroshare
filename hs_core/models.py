@@ -219,6 +219,7 @@ class ExternalProfileLink(models.Model):
     class Meta:
         unique_together = ("type", "url", "object_id")
 
+
 class Party(AbstractMetaDataElement):
     description = models.URLField(null=True, blank=True, validators=[validate_user_url])
     name = models.CharField(max_length=100)
@@ -236,140 +237,105 @@ class Party(AbstractMetaDataElement):
         abstract = True
 
     @classmethod
-    def create(cls,**kwargs):
+    def create(cls, **kwargs):
         element_name = cls.__name__
-        if 'name' in kwargs:
-            if not isinstance(kwargs['content_object'], CoreMetaData) and not issubclass(kwargs['content_object'], CoreMetaData):
-                raise ValidationError("%s metadata element can't be created for metadata type:%s" %(element_name, type(kwargs['content_object'])))
 
-            metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            if element_name == 'Creator':
-                party = Creator.objects.filter(object_id=metadata_obj.id, content_type=metadata_type).last()
-                creator_order = 1
-                if party:
-                    creator_order = party.order + 1
+        profile_links = None
+        if 'profile_links' in kwargs:
+            profile_links = kwargs['profile_links']
+            del kwargs['profile_links']
+
+        metadata_obj = kwargs['content_object']
+        metadata_type = ContentType.objects.get_for_model(metadata_obj)
+        if element_name == 'Creator':
+            party = Creator.objects.filter(object_id=metadata_obj.id, content_type=metadata_type).last()
+            creator_order = 1
+            if party:
+                creator_order = party.order + 1
+            if 'name' in kwargs:
                 if len(kwargs['name'].strip()) == 0:
                     raise ValidationError("Invalid name for the %s." % element_name.lower())
 
-                party = Creator.objects.create(name=kwargs['name'], order=creator_order, content_object=metadata_obj)
-            else:
-                party = Contributor.objects.create(name=kwargs['name'], content_object=metadata_obj)
-
-            if 'profile_links' in kwargs:
-                links = kwargs['profile_links']
-                for link in links:
-                    cls._create_profile_link(party, link)
-
-            for key, value in kwargs.iteritems():
-                if key in ('description', 'organization', 'email', 'address', 'phone', 'homepage'):
-                    setattr(party, key, value)
-
-            party.save()
-            return party
+            kwargs['order'] = creator_order
+            party = super(Party, cls).create(**kwargs)
         else:
-            raise ValidationError("Name for the %s is missing." % element_name.lower())
+            party = super(Party, cls).create(**kwargs)
+
+        if profile_links:
+            for link in profile_links:
+                cls._create_profile_link(party, link)
+
+        return party
 
     @classmethod
     def update(cls, element_id, **kwargs):
         element_name = cls.__name__
-        if element_name == 'Creator':
-            party = Creator.objects.get(id=element_id)
-        else:
-            party = Contributor.objects.get(id=element_id)
+        creator_order = None
+        if 'order' in kwargs and element_name == 'Creator':
+            creator_order = kwargs['order']
+            if creator_order <= 0:
+                creator_order = 1
+            del kwargs['order']
 
-        if party:
-            if 'name' in kwargs:
-                party.name = kwargs['name']
+        party = super(Party, cls).update(element_id, **kwargs)
 
-            if 'description' in kwargs:
-                party.description = kwargs['description']
+        if isinstance(party, Creator) and creator_order is not None:
+            if party.order != creator_order:
+                resource_creators = Creator.objects.filter(object_id=party.object_id,
+                                                           content_type__pk=party.content_type.id).all()
 
-            if 'organization' in kwargs:
-                party.organization = kwargs['organization']
+                if creator_order > len(resource_creators):
+                    creator_order = len(resource_creators)
 
-            if 'email' in kwargs:
-                party.email = kwargs['email']
+                for res_cr in resource_creators:
+                    if party.order > creator_order:
+                        if res_cr.order < party.order and not res_cr.order < creator_order:
+                            res_cr.order += 1
+                            res_cr.save()
+                    else:
+                        if res_cr.order > party.order:
+                            res_cr.order -= 1
+                            res_cr.save()
 
-            if 'address' in kwargs:
-                party.address = kwargs['address']
+                party.order = creator_order
+                party.save()
 
-            if 'phone' in kwargs:
-                party.phone = kwargs['phone']
-
-            if 'homepage' in kwargs:
-                party.homepage = kwargs['homepage']
-
-            if 'researcherID' in kwargs:
-                party.researcherID = kwargs['researcherID']
-
-            if 'researchGateID' in kwargs:
-                party.researchGateID = kwargs['researchGateID']
-
-            # updating the order of a creator needs updating the order attribute of all other creators
-            # of the same resource
-            if 'order' in kwargs:
-                if isinstance(party, Creator):
-                    if kwargs['order'] <= 0:
-                        kwargs['order'] = 1
-
-                    if party.order != kwargs['order']:
-                        resource_creators = Creator.objects.filter(object_id=party.object_id, content_type__pk=party.content_type.id).all()
-
-                        if kwargs['order'] > len(resource_creators):
-                            kwargs['order'] = len(resource_creators)
-
-                        for res_cr in resource_creators:
-                            if party.order > kwargs['order']:
-                                if res_cr.order < party.order and not res_cr.order < kwargs['order']:
-                                    res_cr.order += 1
-                                    res_cr.save()
-
-                            else:
-                                if res_cr.order > party.order:
-                                    res_cr.order -= 1
-                                    res_cr.save()
-
-                        party.order = kwargs['order']
-
-            #either create or update external profile links
-            if 'profile_links' in kwargs:
-                links = kwargs['profile_links']
-                for link in links:
-                    if 'link_id' in link: # need to update an existing profile link
-                        cls._update_profile_link(party, link)
-                    elif 'type' in link and 'url' in link:  # add a new profile link
-                        cls._create_profile_link(party, link)
-            party.save()
-        else:
-            raise ObjectDoesNotExist("No %s was found for the provided id:%s" % (element_name, kwargs['id']))
+        #either create or update external profile links
+        if 'profile_links' in kwargs:
+            links = kwargs['profile_links']
+            for link in links:
+                if 'link_id' in link: # need to update an existing profile link
+                    cls._update_profile_link(party, link)
+                elif 'type' in link and 'url' in link:  # add a new profile link
+                    cls._create_profile_link(party, link)
 
     @classmethod
     def remove(cls, element_id):
         element_name = cls.__name__
-        if element_name == 'Creator':
-            party = Creator.objects.get(id=element_id)
-        else:
-            party = Contributor.objects.get(id=element_id)
+
+        try:
+           party = cls.objects.get(id=element_id)
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist("No %s element was found for id:%d." % (element_name, element_id))
 
         # if we are deleting a creator, then we have to update the order attribute of remaining
         # creators associated with a resource
-        if party:
-            # make sure we are not deleting all creators of a resource
-            if isinstance(party, Creator):
-                if Creator.objects.filter(object_id=party.object_id, content_type__pk=party.content_type.id).count()== 1:
-                    raise ValidationError("The only creator of the resource can't be deleted.")
+        # make sure we are not deleting all creators of a resource
+        if isinstance(party, Creator):
+            if Creator.objects.filter(object_id=party.object_id,
+                                      content_type__pk=party.content_type.id).count() == 1:
+                raise ValidationError("The only creator of the resource can't be deleted.")
 
-                creators_to_update = Creator.objects.filter(
-                    object_id=party.object_id, content_type__pk=party.content_type.id).exclude(order=party.order).all()
+            creators_to_update = Creator.objects.filter(object_id=party.object_id,
+                                                        content_type__pk=
+                                                        party.content_type.id).exclude(order=party.order).all()
 
-                for cr in creators_to_update:
-                    if cr.order > party.order:
-                        cr.order -= 1
-                        cr.save()
-            party.delete()
-        else:
-            raise ObjectDoesNotExist("No %s element was found for id:%d." % (element_name, element_id))
+            for cr in creators_to_update:
+                if cr.order > party.order:
+                    cr.order -= 1
+                    cr.save()
+        party.delete()
+
 
     @classmethod
     def _create_profile_link(cls, party, link):
@@ -394,37 +360,37 @@ class Party(AbstractMetaDataElement):
         if the link dict contains only key 'link_id' then the link will be deleted
         otherwise the link will be updated
         """
-        p_link = ExternalProfileLink.objects.get(id=link['link_id'])
-        if p_link:
-            if not 'type' in link and not 'url' in link:
-                # delete the link
-                p_link.delete()
-            else:
-                if 'type' in link:
-                    # check that the type is unique for the party
-                    if p_link.type != link['type']:
-                        if party.external_links.filter(type=link['type']).count() > 0:
-                            raise ValidationError("External profile link type:%s "
-                                                  "already exists for this %s" % (link['type'], type(party).__name__))
-                        else:
-                            p_link.type = link['type']
-                if 'url' in link:
-                    # check that the url is unique for the party
-                    if p_link.url != link['url']:
-                        if party.external_links.filter(url=link['url']).count() > 0:
-                            raise ValidationError("External profile link url:%s already exists "
-                                                  "for this %s" % (link['url'], type(party).__name__))
-                        else:
-                            p_link.url = link['url']
-
-                p_link.save()
-        else:
+        try:
+            p_link = ExternalProfileLink.objects.get(id=link['link_id'])
+        except ObjectDoesNotExist:
             raise ObjectDoesNotExist("%s external link does not exist "
                                      "for ID:%s" % (type(party).__name__,link['link_id']))
 
+        if not 'type' in link and not 'url' in link:
+            # delete the link
+            p_link.delete()
+        else:
+            if 'type' in link:
+                # check that the type is unique for the party
+                if p_link.type != link['type']:
+                    if party.external_links.filter(type=link['type']).count() > 0:
+                        raise ValidationError("External profile link type:%s "
+                                              "already exists for this %s" % (link['type'], type(party).__name__))
+                    else:
+                        p_link.type = link['type']
+            if 'url' in link:
+                # check that the url is unique for the party
+                if p_link.url != link['url']:
+                    if party.external_links.filter(url=link['url']).count() > 0:
+                        raise ValidationError("External profile link url:%s already exists "
+                                              "for this %s" % (link['url'], type(party).__name__))
+                    else:
+                        p_link.url = link['url']
+
+            p_link.save()
+
 class Contributor(Party):
     term = 'Contributor'
-
 
 
 # Example of repeatable metadata element
