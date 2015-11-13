@@ -30,7 +30,7 @@
                             <ul class="list-group">
                             {% for item in value %}
                                 <li class="list-group-item">
-                                    <input id="{{ item.0 }}" type="checkbox" onchange='window.location.assign("{{ request.get_full_path }}&amp;selected_facets={{ key }}_exact:{{ item.0|urlencode }}")' class="pull-left"> {{ item.0 }} &nbsp;&nbsp;
+                                    <input id="{{ item.0 }}" type="checkbox" onchange='window.location.assign("{{ request.get_full_path }}&amp;selected_facets={{ key }}_exact:{{ item.0|urlencode }}")' class="pull-left"> &nbsp;&nbsp; {{ item.0 }} 
                                     <span class="label label-default label-pill pull-right"
                                             {% if item.1 < 5 %}
                                                 style="background-color:#3333FF" class="badge"
@@ -57,11 +57,21 @@
                 </tr>
                 <tr>
                     <th>Title</th>
+                    <th>Type</th>
+                    <th>First Author</th>
+                    <th>Last Modified</th>
                 </tr>
                 {% if query %}
                     {% for result in page.object_list %}
                         <tr>
                             <td><a href="{{ result.object.get_absolute_url }}">{{ result.object.title }}</a></td>
+                            <td>{{ result.object.resource_type }}</td>
+                            {% if result.object.first_creator.description %}
+                            <td><a href="{{ result.object.first_creator.description }}">{{ result.object.first_creator.name  }}</a></td>
+                            {% else %}
+                                <td>{{ result.object.first_creator.name }}</td>
+                            {% endif %}
+                            <td>{{ result.object.updated|date }} {{ result.object.updated|time }}</td>
                         </tr>
                     {% empty %}
                     <p>Sorry, no results found.</p>
