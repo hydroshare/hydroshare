@@ -149,8 +149,9 @@ class ModelProgramMetaData(CoreMetaData):
                 filepath = etree.SubElement(model_releaseNotes, '{%s}file' % self.NAMESPACES['hsterms'])
                 filepath.text = note
 
-            model_release_date = etree.SubElement(container, '{%s}modelReleaseDate' % self.NAMESPACES['hsterms'])
-            model_release_date.text = self.program.modelReleaseDate.strftime('%Y-%m-%d %H:%M:%S.%f%z')
+            if self.program.modelReleaseDate:
+                model_release_date = etree.SubElement(container, '{%s}modelReleaseDate' % self.NAMESPACES['hsterms'])
+                model_release_date.text = self.program.modelReleaseDate.isoformat()
 
             model_version = etree.SubElement(container, '{%s}modelVersion' % self.NAMESPACES['hsterms'])
             model_version.text = self.program.modelVersion
