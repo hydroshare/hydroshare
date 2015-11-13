@@ -96,60 +96,9 @@ class BandInformation(AbstractMetaDataElement):
     # optional fields
     method = models.TextField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
+
     def __unicode__(self):
         self.name
-    @classmethod
-    def create(cls, **kwargs):
-        # Check the required fields and create new BandInformation meta instance
-        if 'name' in kwargs:
-            # check if the variable metadata already exists
-            metadata_obj = kwargs['content_object']
-            # metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            # band_info = BandInformation.objects.filter(name__iexact=kwargs['name'], object_id=metadata_obj.id,
-            #                                            content_type=metadata_type).first()
-            # if band_info:
-            #     raise ValidationError('BandInformation name:%s already exists' % kwargs['name'])
-        else:
-            raise ValidationError("name of BandInformation is missing.")
-
-        if not 'variableName' in kwargs:
-            raise ValidationError("BandInformation variableName is missing.")
-
-        if not 'variableUnit' in kwargs:
-            raise ValidationError("BandInformation variableUnit is missing.")
-
-        band_info = BandInformation.objects.create(name=kwargs['name'], variableName=kwargs['variableName'],
-                                                   variableUnit=kwargs['variableUnit'], content_object=metadata_obj)
-
-        # check for the optional fields and save them to the BandInformation metadata
-        for key, value in kwargs.iteritems():
-            if key in ('method', 'comment'):
-                setattr(band_info, key, value)
-
-        band_info.save()
-
-        return band_info
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        band_info = BandInformation.objects.get(id=element_id)
-        if band_info:
-            # if 'name' in kwargs:
-            #     if band_info.name != kwargs['name']:
-            #         # check to make sure this new name not already exists
-            #         if BandInformation.objects.filter(name_iexact=kwargs['name'], object_id=band_info.object_id,
-            #                                           content_type__pk=band_info.content_type.id).count()> 0:
-            #             raise ValidationError('BandInformation name:%s already exists.' % kwargs['name'])
-            #
-            #     band_info.name = kwargs['name']
-
-            for key, value in kwargs.iteritems():
-                if key in ('name', 'variableName', 'variableUnit', 'method', 'comment'):
-                    setattr(band_info, key, value)
-
-            band_info.save()
-        else:
-            raise ObjectDoesNotExist("No BandInformation element can be found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
