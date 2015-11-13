@@ -1,6 +1,7 @@
 __author__ = 'drew'
 
 import os
+from dateutil import parser
 
 from django.test import TestCase, TransactionTestCase
 from django.contrib.contenttypes.models import ContentType
@@ -106,7 +107,7 @@ class TestGeoFeature(TransactionTestCase):
 
         # add date of type 'valid'
         resource.create_metadata_element(self.resGeoFeature.short_id,'date', type='valid',
-                                         start_date='1/1/2012', end_date='12/31/2012')
+                                         start_date=parser.parse('1/1/2012'), end_date=parser.parse('12/31/2012'))
 
         # add a format element
         format = 'shp'

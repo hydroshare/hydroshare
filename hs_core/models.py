@@ -447,8 +447,9 @@ class Type(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Type element of a resource can't be deleted.")
 
+
 class Date(AbstractMetaDataElement):
-    DATE_TYPE_CHOICES=(
+    DATE_TYPE_CHOICES = (
         ('created', 'Created'),
         ('modified', 'Modified'),
         ('valid', 'Valid'),
@@ -464,99 +465,84 @@ class Date(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'type' in kwargs:
+            if not kwargs['type'] in dict(cls.DATE_TYPE_CHOICES).keys():
+                raise ValidationError('Invalid date type:%s' % kwargs['type'])
+
             # check the type doesn't already exists - we allow only one date type per resource
             metadata_obj = kwargs['content_object']
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            dt = Date.objects.filter(type= kwargs['type'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            dt = Date.objects.filter(type=kwargs['type'], object_id=metadata_obj.id,
+                                     content_type=metadata_type).first()
             # get matching resource
             resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
             if dt:
                 raise ValidationError('Date type:%s already exists' % kwargs['type'])
-            if not kwargs['type'] in ['created', 'modified', 'valid', 'available', 'published']:
-                raise ValidationError('Invalid date type:%s' % kwargs['type'])
+
+            if kwargs['type'] != 'valid':
+                if 'end_date' in kwargs:
+                    del kwargs['end_date']
 
             if kwargs['type'] == 'published':
                 if not resource.raccess.published:
                     raise ValidationError("Resource is not published yet.")
-
-            if kwargs['type'] == 'available':
+            elif kwargs['type'] == 'available':
                 if not resource.raccess.public:
                     raise ValidationError("Resource has not been shared yet.")
-
-            if 'start_date' in kwargs:
-                try:
-                    start_dt = parser.parse(str(kwargs['start_date']))
-                except TypeError:
-                    raise TypeError("Not a valid date value.")
-            else:
-                raise ValidationError('Date value is missing.')
-
-            # end_date is used only for date type 'valid'
-            if kwargs['type'] == 'valid':
+            elif kwargs['type'] == 'valid':
                 if 'end_date' in kwargs:
-                    try:
-                        end_dt = parser.parse(str(kwargs['end_date']))
-                    except TypeError:
-                        raise TypeError("Not a valid end date value.")
-                    dt = Date.objects.create(type=kwargs['type'], start_date=start_dt, end_date=end_dt, content_object=metadata_obj)
-                else:
-                    dt = Date.objects.create(type=kwargs['type'], start_date=start_dt, content_object=metadata_obj)
-            else:
-                dt = Date.objects.create(type=kwargs['type'], start_date=start_dt, content_object=metadata_obj)
+                    if kwargs['start_date'] > kwargs['end_date']:
+                        raise ValidationError("For date type valid, end date must be a date after the start date.")
 
-            return dt
+            return super(Date, cls).create(**kwargs)
 
         else:
             raise ValidationError("Type of date element is missing.")
 
-
     @classmethod
     def update(cls, element_id, **kwargs):
-        dt = Date.objects.get(id=element_id)
-        if dt:
-            if 'start_date' in kwargs:
-                try:
-                    start_dt = parser.parse(str(kwargs['start_date']))
-                except TypeError:
-                    raise TypeError("Not a valid date value.")
-                if dt.type == 'created':
-                    raise ValidationError("Resource creation date can't be changed")
-                elif dt.type == 'modified':
-                    dt.start_date = now().isoformat()
-                    dt.save()
-                elif dt.type == 'valid':
-                    if 'end_date' in kwargs:
-                        try:
-                            end_dt = parser.parse(str(kwargs['end_date']))
-                        except TypeError:
-                            raise TypeError("Not a valid date value.")
-                        dt.start_date = start_dt
-                        dt.end_date = end_dt
-                        dt.save()
-                    else:
-                        dt.start_date = start_dt
-                        dt.save()
-                else:
-                    dt.start_date = start_dt
-                    dt.save()
+        try:
+            dt = Date.objects.get(id=element_id)
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist("No date element was found for the provided id:%s" % element_id)
+
+        if 'start_date' in kwargs:
+            if dt.type == 'created':
+                raise ValidationError("Resource creation date can't be changed")
             elif dt.type == 'modified':
                 dt.start_date = now().isoformat()
                 dt.save()
+            elif dt.type == 'valid':
+                if 'end_date' in kwargs:
+                    if kwargs['start_date'] > kwargs['end_date']:
+                        raise ValidationError("For date type valid, end date must be a date after the start date.")
+                    dt.start_date = kwargs['start_date']
+                    dt.end_date = kwargs['end_date']
+                    dt.save()
+                else:
+                    if dt.end_date:
+                        if kwargs['start_date'] > dt.end_date:
+                            raise ValidationError("For date type valid, end date must be a date after the start date.")
+                    dt.start_date = kwargs['start_date']
+                    dt.save()
             else:
-                raise ValidationError("Date value is missing.")
-        else:
-            raise ObjectDoesNotExist("No date element was found for the provided id:%s" % element_id)
+                dt.start_date = kwargs['start_date']
+                dt.save()
+        elif dt.type == 'modified':
+            dt.start_date = now().isoformat()
+            dt.save()
 
     @classmethod
     def remove(cls, element_id):
-        dt = Date.objects.get(id=element_id)
-        if dt:
-            if dt.type in ['created', 'modified']:
-                raise ValidationError("Date element of type:%s can't be deleted." % dt.type)
-
-            dt.delete()
-        else:
+        try:
+            dt = Date.objects.get(id=element_id)
+        except ObjectDoesNotExist:
             raise ObjectDoesNotExist("No date element was found for id:%d." % element_id)
+
+        if dt.type in ['created', 'modified']:
+            raise ValidationError("Date element of type:%s can't be deleted." % dt.type)
+
+        dt.delete()
+
 
 class Relation(AbstractMetaDataElement):
     SOURCE_TYPES= (
