@@ -8,7 +8,6 @@ from hs_core.hydroshare.resource import ResourceFile
 from hs_app_netCDF.forms import *
 
 
-
 # receiver used to extract metadata after user click on "create resource"
 @receiver(pre_create_resource, sender=NetcdfResource)
 def netcdf_pre_create_resource(sender, **kwargs):
@@ -116,7 +115,6 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
                     metadata.append(ori_cov)
 
-
                 #create the ncdump text file
                 import nc_functions.nc_dump as nc_dump
                 if nc_dump.get_nc_dump_string_by_ncdump(infile.file.name):
@@ -144,7 +142,6 @@ def netcdf_pre_create_resource(sender, **kwargs):
             else:
                 validate_files_dict['are_files_valid'] = False
                 validate_files_dict['message'] = 'Please check if the uploaded file is in valid NetCDF format.'
-
 
 
 # # receiver used to create netcdf header text after user click on "create resource"
@@ -191,36 +188,22 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
         # user = kwargs['user']
         # resource_modified(resource, user)
 
-        if del_file_ext == '.nc':
-            # delete the netcdf header text file
+        # delete the netcdf header file or .nc file
+        file_ext = ['.nc', '.txt']
+        if del_file_ext in file_ext:
+            file_ext.remove(del_file_ext)
             for f in ResourceFile.objects.filter(object_id=nc_res.id):
                 ext = os.path.splitext(f.resource_file.name)[-1]
-                if ext == '.txt':
+                if ext in file_ext:
                     f.resource_file.delete()
                     f.delete()
                     break
-            # delete all the coverage info
-            nc_res.metadata.coverages.all().delete()
-            # cov_box = nc_res.metadata.coverages.all().filter(type='box').first()
-            # cov_period = nc_res.metadata.coverages.all().filter(type='period').first()
-            # if cov_box:
-            #
-            #         from collections import OrderedDict
-            #         box_info = OrderedDict([
-            #                 ('units', "Decimal degrees"),
-            #                 ('projection', 'WGS 84 EPSG:4326'),
-            #                 ('northlimit', 0.0),
-            #                 ('southlimit', 0.0),
-            #                 ('eastlimit', 0.0),
-            #                 ('westlimit', 0.0)
-            #             ])
-            #         nc_res.metadata.update_element('coverage', cov_box.id, type='box', value=box_info)
-            # if cov_period:
-            #     pass
 
-            # delete all the extended meta info
-            nc_res.metadata.variables.all().delete()
-            nc_res.metadata.ori_coverage.all().delete()
+        # delete all the coverage info
+        nc_res.metadata.coverages.all().delete()
+        # delete all the extended meta info
+        nc_res.metadata.variables.all().delete()
+        nc_res.metadata.ori_coverage.all().delete()
 
 
 # receiver used after user clicks on "add file" for existing resource netcdf file
@@ -268,38 +251,10 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                 nc_res.metadata.coverages.all().delete()
                 if res_dublin_core_meta.get('box'):
                     nc_res.metadata.create_element('coverage', type='box', value=res_dublin_core_meta['box'])
-                #cov_box = nc_res.metadata.coverages.all().filter(type='box').first()
-                # if cov_box:
-                #
-                #
-                #     from collections import OrderedDict
-                #     box_info = OrderedDict([
-                #             ('units', "Decimal degrees"),
-                #             ('projection', 'WGS 84 EPSG:4326'),
-                #             ('northlimit', 0.0),
-                #             ('southlimit', 0.0),
-                #             ('eastlimit', 0.0),
-                #             ('westlimit', 0.0)
-                #         ])
-                #     nc_res.metadata.update_element('coverage', cov_box.id, type='box', value=box_info)
-                # if res_dublin_core_meta.get('box'):
-                #     if cov_box:
-                #         nc_res.metadata.update_element('coverage', cov_box.id, type='box', value=res_dublin_core_meta['box'])
-                #     else:
-                #         nc_res.metadata.create_element('coverage', type='box', value=res_dublin_core_meta['box'])
 
                 # update period info
                 if res_dublin_core_meta.get('period'):
                     nc_res.metadata.create_element('coverage', type='period', value=res_dublin_core_meta['period'])
-                # cov_period = nc_res.metadata.coverages.all().filter(type='period').first()
-                # if cov_period:
-                #     pass
-                # if res_dublin_core_meta.get('period'):
-                #     if cov_period:
-                #         nc_res.metadata.update_element('coverage', cov_period.id, type='period', value=res_dublin_core_meta['period'])
-                #     else:
-                #         nc_res.metadata.create_element('coverage', type='period', value=res_dublin_core_meta['period'])
-
 
                 # update variable info
                 nc_res.metadata.variables.all().delete()
@@ -397,6 +352,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
         return {'is_valid': False, 'element_data_dict': None}
+
 
 # This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_update, sender=NetcdfResource)
