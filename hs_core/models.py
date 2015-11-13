@@ -444,25 +444,6 @@ class Type(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     @classmethod
-    def create(cls, **kwargs):
-        if 'url' in kwargs:
-            return Type.objects.create(**kwargs)
-        else:
-            raise ValidationError("URL of the type element is missing.")
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        type = Type.objects.get(id=element_id)
-        if type:
-            if 'url' in kwargs:
-                type.url = kwargs['url']
-                type.save()
-            else:
-                raise ValidationError('URL for type element is missing.')
-        else:
-            raise ObjectDoesNotExist("No type element was found for the provided id:%s" % element_id)
-
-    @classmethod
     def remove(cls, element_id):
         raise ValidationError("Type element of a resource can't be deleted.")
 
