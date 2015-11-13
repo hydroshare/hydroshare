@@ -1491,7 +1491,7 @@ class AbstractResource(ResourcePermissionsMixin):
         return None
 
     def get_citation(self):
-        citation = ''
+        citation_str_lst = []
 
         CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
         CITATION_ERROR = "Failed to generate citation."
@@ -1499,35 +1499,31 @@ class AbstractResource(ResourcePermissionsMixin):
         first_author = self.metadata.creators.all().filter(order=1)[0]
         name_parts = first_author.name.split()
         if len(name_parts) == 0:
-            citation = CREATOR_NAME_ERROR
-            return citation
+            return CREATOR_NAME_ERROR
 
         if len(name_parts) > 2:
-            citation = "{last_name}, {first_initial}.{middle_initial}.".format(last_name=name_parts[-1],
+            citation_str_lst.append("{last_name}, {first_initial}.{middle_initial}., ".format(last_name=name_parts[-1],
                                                                               first_initial=name_parts[0][0],
-                                                                              middle_initial=name_parts[1][0]) + ", "
+                                                                              middle_initial=name_parts[1][0]))
         else:
-            citation = "{last_name}, {first_initial}.".format(last_name=name_parts[-1],
-                                                              first_initial=name_parts[0][0]) + ", "
+            citation_str_lst.append("{last_name}, {first_initial}., ".format(last_name=name_parts[-1], first_initial=name_parts[0][0]))
 
         other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
             name_parts = author.name.split()
             if len(name_parts) == 0:
-                citation = CREATOR_NAME_ERROR
-                return citation
+                return CREATOR_NAME_ERROR
 
             if len(name_parts) > 2:
-                citation += "{first_initial}.{middle_initial}.{last_name}".format(first_initial=name_parts[0][0],
+                citation_str_lst.append("{first_initial}.{middle_initial}.{last_name}, ".format(first_initial=name_parts[0][0],
                                                                                   middle_initial=name_parts[1][0],
-                                                                                  last_name=name_parts[-1]) + ", "
+                                                                                  last_name=name_parts[-1]))
             else:
-                citation += "{first_initial}.{last_name}".format(first_initial=name_parts[0][0],
-                                                                 last_name=name_parts[-1]) + ", "
+                citation_str_lst.append("{first_initial}.{last_name}, ".format(first_initial=name_parts[0][0], last_name=name_parts[-1]))
 
         #  remove the last added comma and the space
-        if len(citation) > 2:
-            citation = citation[:-2]
+        if len(citation_str_lst[-1]) > 2:
+            citation_str_lst[-1] = citation_str_lst[-1][:-2]
         else:
             return CITATION_ERROR
 
@@ -1538,9 +1534,8 @@ class AbstractResource(ResourcePermissionsMixin):
         else:
             return CITATION_ERROR
 
-        citation += " ({year}). ".format(year=citation_date.start_date.year)
-        citation += self.metadata.title.value
-        citation += ", HydroShare, "
+        citation_str_lst.append(" ({year}). ".format(year=citation_date.start_date.year))
+        citation_str_lst.append(self.metadata.title.value)
 
         if self.metadata.identifiers.all().filter(name="doi"):
             hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
@@ -1549,9 +1544,19 @@ class AbstractResource(ResourcePermissionsMixin):
         else:
             return CITATION_ERROR
 
-        citation += "{url}".format(url=hs_identifier.url)
+        ref_rel = self.metadata.relations.all().filter(type='isHostedBy').first()
+        repl_rel = self.metadata.relations.all().filter(type='isCopiedFrom').first()
+        date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day, citation_date.start_date.year)
+        if ref_rel:
+            citation_str_lst.append(", {ref_rel_value}, last accessed {creation_date}.".format(ref_rel_value=ref_rel.value,
+                                                                                               creation_date=date_str))
+        elif repl_rel:
+            citation_str_lst.append(", {repl_rel_value}, accessed {creation_date}, replicated in HydroShare at: {url}".format(
+                                    repl_rel_value=repl_rel.value, creation_date=date_str, url=hs_identifier.url))
+        else:
+            citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
-        return citation
+        return ''.join(citation_str_lst)
 
     @property
     def can_be_public_or_discoverable(self):
