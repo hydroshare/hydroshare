@@ -429,35 +429,9 @@ class Title(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     @classmethod
-    def create(cls, **kwargs):
-        if 'value' in kwargs:
-            return Title.objects.create(**kwargs)
-
-        else:
-            raise ValidationError("Value of the title element is missing.")
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        title = Title.objects.get(id=element_id)
-        if title:
-            if 'value' in kwargs:
-                title.value = kwargs['value']
-                title.save()
-                # This way of updating the resource title field does not work
-                # so updating code is in the view
-                # sync resource title with title in metadata
-                # get matching resource
-                # resource = BaseResource.objects.filter(object_id=title.content_object.id).first()
-                # resource.title = title.value
-                # resource.save()
-            else:
-                raise ValidationError('Value for title is missing.')
-        else:
-            raise ValidationError("No title element was found for the provided id:%s" % element_id)
-
-    @classmethod
     def remove(cls, element_id):
         raise ValidationError("Title element of a resource can't be deleted.")
+
 
 class Type(AbstractMetaDataElement):
     term = 'Type'
