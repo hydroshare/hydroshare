@@ -561,46 +561,38 @@ class Relation(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'type' in kwargs:
+            if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
+                raise ValidationError('Invalid relation type:%s' % kwargs['type'])
+
             metadata_obj = kwargs['content_object']
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            rel = Relation.objects.filter(type= kwargs['type'], object_id=metadata_obj.id, content_type=metadata_type).first()
+            rel = Relation.objects.filter(type=kwargs['type'], object_id=metadata_obj.id,
+                                          content_type=metadata_type).first()
             if rel:
                 raise ValidationError('Relation type:%s already exists.' % kwargs['type'])
-            if 'value' in kwargs:
-                return Relation.objects.create(type=kwargs['type'], value=kwargs['value'], content_object=metadata_obj)
 
-            else:
-                raise ValidationError('Value for relation element is missing.')
+            return super(Relation, cls).create(**kwargs)
         else:
             raise ObjectDoesNotExist("Type of relation element is missing.")
 
-
     @classmethod
     def update(cls, element_id, **kwargs):
-        rel = Relation.objects.get(id=element_id)
-        if rel:
-            if 'type' in kwargs:
-                if rel.type != kwargs['type']:
-                    # check this new relation type not already exists
-                    if Relation.objects.filter(type=kwargs['type'], object_id=rel.object_id,
-                                              content_type__pk=rel.content_type.id).count()> 0:
-                        raise ValidationError( 'Relation type:%s already exists.' % kwargs['type'])
-                    else:
-                        rel.type = kwargs['type']
-
-            if 'value' in kwargs:
-                rel.value = kwargs['value']
-            rel.save()
-        else:
+        try:
+            rel = Relation.objects.get(id=element_id)
+        except ObjectDoesNotExist:
             raise ObjectDoesNotExist("No relation element exists for the provided id:%s" % element_id)
 
-    @classmethod
-    def remove(cls, element_id):
-        rel = Relation.objects.get(id=element_id)
-        if rel:
-            rel.delete()
-        else:
-            raise ObjectDoesNotExist("No relation element exists for id:%d." % element_id)
+        if 'type' in kwargs:
+            if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
+                raise ValidationError('Invalid relation type:%s' % kwargs['type'])
+            if rel.type != kwargs['type']:
+                # check this new relation type not already exists
+                if Relation.objects.filter(type=kwargs['type'], object_id=rel.object_id,
+                                           content_type__pk=rel.content_type.id).count() > 0:
+                    raise ValidationError('Relation type:%s already exists.' % kwargs['type'])
+
+        super(Relation, cls).update(element_id, **kwargs)
+
 
 class Identifier(AbstractMetaDataElement):
     term = 'Identifier'
@@ -615,7 +607,7 @@ class Identifier(AbstractMetaDataElement):
             resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
             # check the identifier name doesn't already exist - identifier name needs to be unique per resource
-            idf = Identifier.objects.filter(name__iexact= kwargs['name'], object_id=metadata_obj.id,
+            idf = Identifier.objects.filter(name__iexact=kwargs['name'], object_id=metadata_obj.id,
                                             content_type=metadata_type).first()
             if idf:
                 raise ValidationError('Identifier name:%s already exists' % kwargs['name'])
