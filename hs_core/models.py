@@ -780,43 +780,35 @@ class Language(AbstractMetaDataElement):
                 raise ValidationError('Language element already exists.')
 
             # check the code is a valid code
-            if not [t for t in iso_languages if t[0]==kwargs['code']]:
+            if not [t for t in iso_languages if t[0] == kwargs['code']]:
                 raise ValidationError('Invalid language code:%s' % kwargs['code'])
 
-            lang = Language.objects.create(code=kwargs['code'], content_object=metadata_obj)
-            return lang
+            return super(Language, cls).create(**kwargs)
         else:
             raise ValidationError("Language code is missing.")
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        lang = Language.objects.get(id=element_id)
-        if lang:
-            if 'code' in kwargs:
-                # validate code
-                if not [t for t in iso_languages if t[0]==kwargs['code']]:
-                    raise ValidationError('Invalid language code:%s' % kwargs['code'])
-
-                if lang.code != kwargs['code']:
-                    # check this new language not already exists
-                    if Language.objects.filter(code=kwargs['code'], object_id=lang.object_id,
-                                             content_type__pk=lang.content_type.id).count()> 0:
-                        raise ValidationError('Language:%s already exists.' % kwargs['code'])
-
-                lang.code = kwargs['code']
-                lang.save()
-            else:
-                raise ValidationError('Language code is missing.')
-        else:
+        try:
+            lang = Language.objects.get(id=element_id)
+        except ObjectDoesNotExist:
             raise ObjectDoesNotExist("No language element was found for the provided id:%s" % element_id)
 
-    @classmethod
-    def remove(cls, element_id):
-        lang = Language.objects.get(id=element_id)
-        if lang:
-            lang.delete()
+        if 'code' in kwargs:
+            # validate code
+            if not [t for t in iso_languages if t[0] == kwargs['code']]:
+                raise ValidationError('Invalid language code:%s' % kwargs['code'])
+
+            if lang.code != kwargs['code']:
+                # check this new language not already exists
+                if Language.objects.filter(code=kwargs['code'], object_id=lang.object_id,
+                                           content_type__pk=lang.content_type.id).count() > 0:
+                    raise ValidationError('Language:%s already exists.' % kwargs['code'])
+
+            super(Language, cls).update(element_id, **kwargs)
         else:
-            raise ObjectDoesNotExist("No language element was found for id:%d." % element_id)
+            raise ValidationError('Language code is missing.')
+
 
 class Coverage(AbstractMetaDataElement):
     COVERAGE_TYPES = (
