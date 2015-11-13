@@ -109,7 +109,6 @@ class CellInformation(AbstractMetaDataElement):
     term = 'CellInformation'
     # required fields
     name = models.CharField(max_length=500, null=True)
-
     rows = models.IntegerField(null=True)
     columns = models.IntegerField(null=True)
     cellSizeXValue = models.FloatField(null=True)
@@ -125,54 +124,6 @@ class CellInformation(AbstractMetaDataElement):
     class Meta:
         # CellInformation element is not repeatable
         unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        # Check the required fields and create new CellInformation meta instance
-        # if not 'name' in kwargs:
-        #     raise ValidationError("name of CellInformation is missing.")
-        #
-        # if not 'rows' in kwargs:
-        #     raise ValidationError("CellInformation rows is missing.")
-        #
-        # if not 'columns' in kwargs:
-        #     raise ValidationError("CellInformation columns is missing.")
-        #
-        # if not 'cellSizeXValue' in kwargs:
-        #     raise ValidationError("CellInformation cellSizeXValue is missing.")
-        #
-        # if not 'cellSizeYValue' in kwargs:
-        #     raise ValidationError("CellInformation cellSizeYValue is missing.")
-        #
-        # if not 'cellSizeUnit' in kwargs:
-        #     raise ValidationError("CellInformation cellSizeUnit is missing.")
-        #
-        # if not 'cellDataType' in kwargs:
-        #     raise ValidationError("CellInformation cellDataType is missing.")
-
-        cell_info = CellInformation.objects.create(name=kwargs['name'], rows=kwargs['rows'], columns=kwargs['columns'],
-                                                   cellSizeXValue=kwargs['cellSizeXValue'], cellSizeYValue=kwargs['cellSizeYValue'],
-                                                   cellDataType=kwargs['cellDataType'], content_object=kwargs['content_object'])
-
-        # check for the optional fields and save them to the CellInformation metadata
-        if 'noDataValue' in kwargs:
-            setattr(cell_info, 'noDataValue', kwargs['noDataValue'])
-
-        cell_info.save()
-
-        return cell_info
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        cell_info = CellInformation.objects.get(id=element_id)
-        if cell_info:
-            for key, value in kwargs.iteritems():
-                #if key in ('rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType', 'noDataValue'):
-                setattr(cell_info, key, value)
-
-            cell_info.save()
-        else:
-            raise ObjectDoesNotExist("No CellInformation element can be found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):

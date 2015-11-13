@@ -37,7 +37,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
                 ('columns', res_md_dict['cell_and_band_info']['columns']),
                 ('cellSizeXValue', res_md_dict['cell_and_band_info']['cellSizeXValue']),
                 ('cellSizeYValue', res_md_dict['cell_and_band_info']['cellSizeYValue']),
-                ('cellSizeUnit', res_md_dict['cell_and_band_info']['cellSizeUnit']),
+                # ('cellSizeUnit', res_md_dict['cell_and_band_info']['cellSizeUnit']),
                 ('cellDataType', res_md_dict['cell_and_band_info']['cellDataType']),
                 ('noDataValue', res_md_dict['cell_and_band_info']['noDataValue'])
                 ])
