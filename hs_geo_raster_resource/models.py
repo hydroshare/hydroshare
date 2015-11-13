@@ -50,9 +50,9 @@ class OriginalCoverage(AbstractMetaDataElement):
                               if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
 
                 value_json = json.dumps(value_dict)
-                metadata_obj = kwargs['content_object']
-                cov = OriginalCoverage.objects.create(_value=value_json, content_object=metadata_obj)
-                return cov
+                del kwargs['value']
+                kwargs['_value'] = value_json
+                return super(OriginalCoverage, cls).create(**kwargs)
             else:
                 raise ValidationError('Invalid coverage value format.')
         else:
@@ -60,23 +60,25 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        cov = OriginalCoverage.objects.get(id=element_id)
-        if cov:
-            if 'value' in kwargs:
-                if not isinstance(kwargs['value'], dict):
-                    raise ValidationError('Invalid coverage value format.')
-
-                value_dict = cov.value
-
-                for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
-                    if item_name in kwargs['value']:
-                        value_dict[item_name] = kwargs['value'][item_name]
-
-                value_json = json.dumps(value_dict)
-                cov._value = value_json
-                cov.save()
-        else:
+        try:
+            cov = OriginalCoverage.objects.get(id=element_id)
+        except:
             raise ObjectDoesNotExist("No coverage element was found for the provided id:%s" % element_id)
+
+        if 'value' in kwargs:
+            if not isinstance(kwargs['value'], dict):
+                raise ValidationError('Invalid coverage value format.')
+
+            value_dict = cov.value
+
+            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
+                if item_name in kwargs['value']:
+                    value_dict[item_name] = kwargs['value'][item_name]
+
+            value_json = json.dumps(value_dict)
+            del kwargs['value']
+            kwargs['_value'] = value_json
+            super(OriginalCoverage, cls).update(element_id, **kwargs)
 
     @classmethod
     def remove(cls, element_id):
