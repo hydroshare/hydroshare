@@ -616,72 +616,63 @@ class Identifier(AbstractMetaDataElement):
                     raise ValidationError("Identifier of 'DOI' type can't be created for a resource that has not been "
                                           "assigned a DOI yet.")
 
-            if 'url' in kwargs:
-                idf = Identifier.objects.create(name=kwargs['name'], url=kwargs['url'], content_object=metadata_obj)
-                return idf
-            else:
-                raise ValidationError('URL for the identifier is missing.')
+            return super(Identifier, cls).create(**kwargs)
 
         else:
             raise ValidationError("Name of identifier element is missing.")
 
-
     @classmethod
     def update(cls, element_id, **kwargs):
-        idf = Identifier.objects.get(id=element_id)
-        if idf:
-            if 'name' in kwargs:
-                if idf.name.lower() != kwargs['name'].lower():
-                    if idf.name.lower() == 'hydroshareidentifier':
-                        if not 'migration' in kwargs:
-                            raise ValidationError("Identifier name 'hydroshareIdentifier' can't be changed.")
-
-                    if idf.name.lower() == 'doi':
-                        raise ValidationError("Identifier name 'DOI' can't be changed.")
-
-                    # check this new identifier name not already exists
-                    if Identifier.objects.filter(name__iexact=kwargs['name'], object_id=idf.object_id,
-                                              content_type__pk=idf.content_type.id).count()> 0:
-                        if not 'migration' in kwargs:
-                            raise ValidationError('Identifier name:%s already exists.' % kwargs['name'])
-
-                    idf.name = kwargs['name']
-
-            if 'url' in kwargs:
-                if idf.url.lower() != kwargs['url'].lower():
-                    if idf.name.lower() == 'hydroshareidentifier':
-                        if not 'migration' in kwargs:
-                            raise  ValidationError("Hydroshare identifier url value can't be changed.")
-
-                    # if idf.url.lower().find('http://hydroshare.org/resource') == 0:
-                    #     raise  ValidationError("Hydroshare identifier url value can't be changed.")
-                    # check this new identifier name not already exists
-                    if Identifier.objects.filter(url__iexact=kwargs['url'], object_id=idf.object_id,
-                                                 content_type__pk=idf.content_type.id).count()> 0:
-                        raise ValidationError('Identifier URL:%s already exists.' % kwargs['url'])
-
-                    idf.url = kwargs['url']
-
-            idf.save()
-        else:
+        try:
+            idf = Identifier.objects.get(id=element_id)
+        except ObjectDoesNotExist:
             raise ObjectDoesNotExist( "No identifier element was found for the provided id:%s" % element_id)
+
+        if 'name' in kwargs:
+            if idf.name.lower() != kwargs['name'].lower():
+                if idf.name.lower() == 'hydroshareidentifier':
+                    if 'migration' not in kwargs:
+                        raise ValidationError("Identifier name 'hydroshareIdentifier' can't be changed.")
+
+                if idf.name.lower() == 'doi':
+                    raise ValidationError("Identifier name 'DOI' can't be changed.")
+
+                # check this new identifier name not already exists
+                if Identifier.objects.filter(name__iexact=kwargs['name'], object_id=idf.object_id,
+                                             content_type__pk=idf.content_type.id).count() > 0:
+                    if 'migration' not in kwargs:
+                        raise ValidationError('Identifier name:%s already exists.' % kwargs['name'])
+
+        if 'url' in kwargs:
+            if idf.url.lower() != kwargs['url'].lower():
+                if idf.name.lower() == 'hydroshareidentifier':
+                    if 'migration' not in kwargs:
+                        raise ValidationError("Hydroshare identifier url value can't be changed.")
+
+                # check this new identifier url not already exists
+                if Identifier.objects.filter(url__iexact=kwargs['url'], object_id=idf.object_id,
+                                             content_type__pk=idf.content_type.id).count() > 0:
+                    raise ValidationError('Identifier URL:%s already exists.' % kwargs['url'])
+
+        super(Identifier, cls).update(element_id, **kwargs)
 
     @classmethod
     def remove(cls, element_id):
-        idf = Identifier.objects.get(id=element_id)
+        try:
+            idf = Identifier.objects.get(id=element_id)
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist("No identifier element was found for id:%d." % element_id)
+
         # get matching resource
         resource = BaseResource.objects.filter(object_id=idf.content_object.id).first()
-        if idf:
-            if idf.name.lower() == 'hydroshareidentifier':
-                raise ValidationError("Hydroshare identifier:%s can't be deleted." % idf.name)
+        if idf.name.lower() == 'hydroshareidentifier':
+            raise ValidationError("Hydroshare identifier:%s can't be deleted." % idf.name)
 
-            if idf.name.lower() == 'doi':
-                if resource.doi:
-                    raise ValidationError("Hydroshare identifier:%s can't be deleted for a resource that has been "
-                                          "assigned a DOI." % idf.name)
-            idf.delete()
-        else:
-            raise ObjectDoesNotExist("No identifier element was found for id:%d." % element_id)
+        if idf.name.lower() == 'doi':
+            if resource.doi:
+                raise ValidationError("Hydroshare identifier:%s can't be deleted for a resource that has been "
+                                      "assigned a DOI." % idf.name)
+        idf.delete()
 
 
 class Publisher(AbstractMetaDataElement):
