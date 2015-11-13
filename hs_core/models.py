@@ -389,6 +389,7 @@ class Party(AbstractMetaDataElement):
 
             p_link.save()
 
+
 class Contributor(Party):
     term = 'Contributor'
 
@@ -413,34 +414,9 @@ class Description(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     @classmethod
-    def create(cls, **kwargs):
-        if 'abstract' in kwargs:
-
-            # no need to check if a description element already exists
-            # the Meta settings 'unique_together' will enforce that we have only one description element per resource
-            return Description.objects.create(**kwargs)
-
-        else:
-            raise ValidationError("Abstract of the description element is missing.")
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        description = Description.objects.get(id=element_id)
-        if description:
-            if 'abstract' in kwargs:
-                if len(kwargs['abstract'].strip()) > 0:
-                    description.abstract = kwargs['abstract']
-                    description.save()
-                else:
-                    raise ValidationError('A value for the description/abstract element is missing.')
-            else:
-                raise ValidationError('A value for description/abstract element is missing.')
-        else:
-            raise ObjectDoesNotExist("No description/abstract element was found for the provided id:%s" % element_id)
-
-    @classmethod
     def remove(cls, element_id):
         raise ValidationError("Description element of a resource can't be deleted.")
+
 
 class Title(AbstractMetaDataElement):
     term = 'Title'
