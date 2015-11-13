@@ -157,10 +157,9 @@ class VariableForm(ModelForm):
             self.action = "/hsapi/_internal/%s/variable/add-metadata/" % res_short_id
         else:
             self.action = ""
-        # if not allow_edit:
-        #     for field in self.fields.values():
-        #         field.widget.attrs['readonly'] = True
-        #         field.widget.attrs['style'] = "background-color:white;"
+        self.fields['name'].widget.attrs['readonly'] = True
+        self.fields['shape'].widget.attrs['readonly'] = True
+
     @property
     def form_id(self):
         form_id = 'id_variable_%s' % self.number
@@ -176,13 +175,6 @@ class VariableForm(ModelForm):
         # change the fields same here
         fields = ['name', 'unit', 'type', 'shape', 'descriptive_name', 'method', 'missing_value']
         exclude = ['content_object']
-        # widgets = { 'name': forms.TextInput(attrs={'readonly': 'readonly'}),
-        #             'unit': forms.TextInput(),
-        #             'type': forms.TextInput(),
-        #             'shape': forms.TextInput(attrs={'readonly': 'readonly'}),
-        #             'descriptive_name': forms.TextInput(),
-        #             'method': forms.Textarea(),#TODO row number abstract example
-        #             'missing_value': forms.TextInput()}
 
 
 class VariableValidationForm(forms.Form):
@@ -234,21 +226,21 @@ VariableLayoutEdit = Layout(
                                      '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
                                      '{% crispy form %} '
                                     '<div class="row" style="margin-top:10px">'
+                                        # '<div class="col-md-10 col-xs-6">'
+                                        #     '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-variable-element-dialog_{{ form.number }}" value="Delete Variable">'
+                                        # '</div>' #change
                                         '<div class="col-md-10 col-xs-6">'
-                                            '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-variable-element-dialog_{{ form.number }}" value="Delete Variable">'
-                                        '</div>' #change
-                                        '<div class="col-md-2 col-xs-6">'
-                                            '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'  # change
+                                            '<button type="button" class="btn btn-primary" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'  # change
                                         '</div>'
                                     '</div>'
-                                    '{% crispy form.delete_modal_form %} '
+                                    # '{% crispy form.delete_modal_form %} '
                                     '</form> '
                                     '</div> '
                                 '{% endfor %}'
                             ),
-                            HTML('<div style="margin-top:10px">'
-                                 '<p><a id="add-creator" class="btn btn-success" data-toggle="modal" data-target="#add-variable-dialog">'
-                                 '<i class="fa fa-plus"></i>Add another variable</a>'
-                                 '</div>'
-                            ),
+                            # HTML('<div style="margin-top:10px">'
+                            #      '<p><a id="add-creator" class="btn btn-success" data-toggle="modal" data-target="#add-variable-dialog">'
+                            #      '<i class="fa fa-plus"></i>Add another variable</a>'
+                            #      '</div>'
+                            # ),
                     )
