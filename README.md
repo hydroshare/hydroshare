@@ -1,3 +1,5 @@
+Jenkins CI Workflow: [![Build Status](http://ci.hydroshare.org:8080/job/develop-workflow/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-workflow/)
+
 Hydroshare
 ============
 
