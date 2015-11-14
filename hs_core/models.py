@@ -558,18 +558,14 @@ class Relation(AbstractMetaDataElement):
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.CharField(max_length=500)
 
+    class Meta:
+        unique_together = ("type", "content_type", "object_id")
+
     @classmethod
     def create(cls, **kwargs):
         if 'type' in kwargs:
             if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
                 raise ValidationError('Invalid relation type:%s' % kwargs['type'])
-
-            metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            rel = Relation.objects.filter(type=kwargs['type'], object_id=metadata_obj.id,
-                                          content_type=metadata_type).first()
-            if rel:
-                raise ValidationError('Relation type:%s already exists.' % kwargs['type'])
 
             return super(Relation, cls).create(**kwargs)
         else:
@@ -577,19 +573,9 @@ class Relation(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        try:
-            rel = Relation.objects.get(id=element_id)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("No relation element exists for the provided id:%s" % element_id)
-
         if 'type' in kwargs:
             if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
                 raise ValidationError('Invalid relation type:%s' % kwargs['type'])
-            if rel.type != kwargs['type']:
-                # check this new relation type not already exists
-                if Relation.objects.filter(type=kwargs['type'], object_id=rel.object_id,
-                                           content_type__pk=rel.content_type.id).count() > 0:
-                    raise ValidationError('Relation type:%s already exists.' % kwargs['type'])
 
         super(Relation, cls).update(element_id, **kwargs)
 
