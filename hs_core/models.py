@@ -1008,52 +1008,24 @@ class Subject(AbstractMetaDataElement):
     term = 'Subject'
     value = models.CharField(max_length=100)
 
+    class Meta:
+        unique_together = ("value", "content_type", "object_id")
+
     def __unicode__(self):
         return self.value
 
     @classmethod
-    def create(cls, **kwargs):
-        if 'value' in kwargs:
-            # check the subject doesn't already exists - subjects need to be unique per resource
-            metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            sub = Subject.objects.filter(value__iexact=kwargs['value'], object_id=metadata_obj.id, content_type=metadata_type).first()
-            if sub:
-                raise ValidationError('Subject:%s already exists for this resource.' % kwargs['value'])
-
-            return Subject.objects.create(**kwargs)
-
-        else:
-            raise ValidationError("Subject value is missing.")
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        sub = Subject.objects.get(id=element_id)
-        if sub:
-            if 'value' in kwargs:
-                if sub.value != kwargs['value']:
-                    # check this new subject not already exists
-                    if Subject.objects.filter(value__iexact=kwargs['value'], object_id=sub.object_id,
-                                             content_type__pk=sub.content_type.id).count() > 0:
-                        raise ValidationError('Subject:%s already exists for this resource.' % kwargs['value'])
-
-                sub.value = kwargs['value']
-                sub.save()
-            else:
-                raise ValidationError('Value for subject is missing.')
-        else:
-            raise ObjectDoesNotExist("No format element was found for the provided id:%s" % element_id)
-
-    @classmethod
     def remove(cls, element_id):
-        sub = Subject.objects.get(id=element_id)
-        if sub:
-            if Subject.objects.filter(object_id=sub.object_id,
-                                      content_type__pk=sub.content_type.id).count() == 1:
-                raise ValidationError("The only subject element of the resource con't be deleted.")
-            sub.delete()
-        else:
+        try:
+            sub = Subject.objects.get(id=element_id)
+        except ObjectDoesNotExist:
             raise ObjectDoesNotExist("No subject element was found for id:%d." % element_id)
+
+        if Subject.objects.filter(object_id=sub.object_id,
+                                  content_type__pk=sub.content_type.id).count() == 1:
+            raise ValidationError("The only subject element of the resource can't be deleted.")
+        sub.delete()
+
 
 class Source(AbstractMetaDataElement):
     term = 'Source'
