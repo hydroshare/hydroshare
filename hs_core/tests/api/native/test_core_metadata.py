@@ -573,7 +573,7 @@ class TestCoreMetadata(TestCase):
                       msg="Format element with value of %s does not exist." % format_csv)
 
         # duplicate formats are not allowed - exception is thrown
-        format_CSV = 'text/CSV'
+        format_CSV = 'text/csv'
         self.assertRaises(Exception, lambda :resource.create_metadata_element(self.res.short_id,'format', value=format_CSV))
 
         # test that a resource can have multiple formats

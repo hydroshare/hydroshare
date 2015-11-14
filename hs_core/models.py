@@ -997,49 +997,12 @@ class Format(AbstractMetaDataElement):
     term = 'Format'
     value = models.CharField(max_length=150)
 
+    class Meta:
+        unique_together = ("value", "content_type", "object_id")
+
     def __unicode__(self):
         return self.value
 
-    @classmethod
-    def create(cls, **kwargs):
-        if 'value' in kwargs:
-            # check the format doesn't already exists - format values need to be unique per resource
-            metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            format = Format.objects.filter(value__iexact= kwargs['value'], object_id=metadata_obj.id, content_type=metadata_type).first()
-            if format:
-                raise ValidationError('Format:%s already exists' % kwargs['value'])
-
-            return Format.objects.create(**kwargs)
-
-        else:
-            raise ValidationError("Format value is missing.")
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        format = Format.objects.get(id=element_id)
-        if format:
-            if 'value' in kwargs:
-                if format.value != kwargs['value']:
-                    # check this new format not already exists
-                    if Format.objects.filter(value=kwargs['value'], object_id=format.object_id,
-                                             content_type__pk=format.content_type.id).count()> 0:
-                        raise ValidationError('Format:%s already exists.' % kwargs['value'])
-
-                format.value = kwargs['value']
-                format.save()
-            else:
-                raise ValidationError('Value for format is missing.')
-        else:
-            raise ObjectDoesNotExist("No format element was found for the provided id:%s" % element_id)
-
-    @classmethod
-    def remove(cls, element_id):
-        format = Format.objects.get(id=element_id)
-        if format:
-            format.delete()
-        else:
-            raise ObjectDoesNotExist("No format element was found for id:%d." % element_id)
 
 class Subject(AbstractMetaDataElement):
     term = 'Subject'
