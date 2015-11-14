@@ -1031,50 +1031,13 @@ class Source(AbstractMetaDataElement):
     term = 'Source'
     derived_from = models.CharField(max_length=300)
 
+    class Meta:
+        unique_together = ("derived_from", "content_type", "object_id")
+
     def __unicode__(self):
         return self.derived_from
 
-    @classmethod
-    def create(cls, **kwargs):
-        if 'derived_from' in kwargs:
-            # check the source doesn't already exists - source needs to be unique per resource
-            metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            src = Source.objects.filter(derived_from=kwargs['derived_from'], object_id=metadata_obj.id, content_type=metadata_type).first()
-            if src:
-                raise ValidationError('Source:%s already exists for this resource.' % kwargs['derived_from'])
-
-            return Source.objects.create(**kwargs)
-
-        else:
-            raise ValidationError("Source data is missing.")
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        src = Source.objects.get(id=element_id)
-        if src:
-            if 'derived_from' in kwargs:
-                if src.derived_from != kwargs['derived_from']:
-                    # check this new derived_from not already exists
-                    if Source.objects.filter(derived_from__iexact=kwargs['derived_from'], object_id=src.object_id,
-                                              content_type__pk=src.content_type.id).count()> 0:
-                        raise ValidationError('Source:%s already exists for this resource.' % kwargs['value'])
-
-                src.derived_from = kwargs['derived_from']
-                src.save()
-            else:
-                raise ValidationError('Value for source is missing.')
-        else:
-            raise ObjectDoesNotExist("No source element was found for the provided id:%s" % element_id)
-
-    @classmethod
-    def remove(cls, element_id):
-        src = Source.objects.get(id=element_id)
-        if src:
-            src.delete()
-        else:
-            raise ObjectDoesNotExist("No source element was found for id:%d." % element_id)
-
+    
 class Rights(AbstractMetaDataElement):
     term = 'Rights'
     statement = models.TextField(null=True, blank=True)
