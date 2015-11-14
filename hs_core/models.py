@@ -787,6 +787,9 @@ class Coverage(AbstractMetaDataElement):
 
     term = 'Coverage'
     type = models.CharField(max_length=20, choices=COVERAGE_TYPES)
+
+    class Meta:
+        unique_together = ("type", "content_type", "object_id")
     """
     _value field stores a json string. The content of the json
      string depends on the type of coverage as shown below. All keys shown in json string are required.
@@ -830,10 +833,6 @@ class Coverage(AbstractMetaDataElement):
             # check the type doesn't already exists - we allow only one coverage type per resource
             metadata_obj = kwargs['content_object']
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            coverage = Coverage.objects.filter(type=kwargs['type'], object_id=metadata_obj.id,
-                                               content_type=metadata_type).first()
-            if coverage:
-                raise ValidationError('Coverage type:%s already exists' % kwargs['type'])
 
             if not kwargs['type'] in dict(cls.COVERAGE_TYPES).keys():
                 raise ValidationError('Invalid coverage type:%s' % kwargs['type'])
@@ -850,7 +849,8 @@ class Coverage(AbstractMetaDataElement):
                 coverage = Coverage.objects.filter(type='box', object_id=metadata_obj.id,
                                                    content_type=metadata_type).first()
                 if coverage:
-                    raise ValidationError("Coverage type 'Point' can't be created when there is a coverage of type 'Box'")
+                    raise ValidationError("Coverage type 'Point' can't be created when there is a coverage of "
+                                          "type 'Box'")
 
             if 'value' in kwargs:
                 if isinstance(kwargs['value'], dict):
@@ -890,20 +890,15 @@ class Coverage(AbstractMetaDataElement):
 
         if 'type' in kwargs:
             if cov.type != kwargs['type']:
-                # check this new coverage type not already exists
-                if Coverage.objects.filter(type=kwargs['type'], object_id=cov.object_id,
-                                           content_type__pk=cov.content_type.id).count()> 0:
-                    raise ValidationError('Coverage type:%s already exists.' % kwargs['type'])
-                else:
-                    if 'value' in kwargs:
-                        if isinstance(kwargs['value'], dict):
-                            cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
-                        else:
-                            raise ValidationError('Invalid coverage value format.')
+                if 'value' in kwargs:
+                    if isinstance(kwargs['value'], dict):
+                        cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
                     else:
-                        raise ValidationError('Coverage value is missing.')
+                        raise ValidationError('Invalid coverage value format.')
+                else:
+                    raise ValidationError('Coverage value is missing.')
 
-                    changing_coverage_type = True
+                changing_coverage_type = True
 
         if 'value' in kwargs:
             if not isinstance(kwargs['value'], dict):
