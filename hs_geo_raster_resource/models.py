@@ -116,7 +116,7 @@ class CellInformation(AbstractMetaDataElement):
     cellDataType = models.CharField(max_length=50, null=True)
 
     # optional fields
-    noDataValue = models.FloatField(null=True)
+    noDataValue = models.FloatField(null=True, blank=True)
 
     def __unicode__(self):
         self.name
