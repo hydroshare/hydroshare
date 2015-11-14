@@ -1037,7 +1037,7 @@ class Source(AbstractMetaDataElement):
     def __unicode__(self):
         return self.derived_from
 
-    
+
 class Rights(AbstractMetaDataElement):
     term = 'Rights'
     statement = models.TextField(null=True, blank=True)
@@ -1047,40 +1047,8 @@ class Rights(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     @classmethod
-    def create(cls, **kwargs):
-        # the Meta class setting "unique-tigether' enforces that we have only one rights element per resource
-        metadata_obj = kwargs['content_object']
-
-        # in order to create a Rights element we need to have either a value for the statement field or a value for the url field
-        if 'statement' in kwargs and 'url' in kwargs:
-            return Rights.objects.create(statement=kwargs['statement'], url=kwargs['url'],  content_object=metadata_obj)
-
-        elif 'url' in kwargs:
-            return Rights.objects.create(url=kwargs['url'],  content_object=metadata_obj)
-
-        elif 'statement' in kwargs:
-            return Rights.objects.create(statement=kwargs['statement'],  content_object=metadata_obj)
-
-        else:
-            raise ValidationError("Statement and/or URL of rights is missing.")
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        rights = Rights.objects.get(id=element_id)
-        if rights:
-            if 'statement' in kwargs:
-                rights.statement = kwargs['statement']
-            if 'url' in kwargs:
-                rights.url = kwargs['url']
-            rights.save()
-        else:
-            raise ObjectDoesNotExist("No rights element was found for the provided id:%s" % element_id)
-
-
-    @classmethod
     def remove(cls, element_id):
         raise ValidationError("Rights element of a resource can't be deleted.")
-
 
 
 def short_id():
@@ -1088,6 +1056,8 @@ def short_id():
 
 
 from mezzanine.pages.managers import PageManager
+
+
 class ResourceManager(PageManager):
 
     def __init__(self, resource_type=None, *args, **kwargs):
