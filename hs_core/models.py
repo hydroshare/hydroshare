@@ -462,22 +462,19 @@ class Date(AbstractMetaDataElement):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        unique_together = ("type", "content_type", "object_id")
+
     @classmethod
     def create(cls, **kwargs):
         if 'type' in kwargs:
             if not kwargs['type'] in dict(cls.DATE_TYPE_CHOICES).keys():
                 raise ValidationError('Invalid date type:%s' % kwargs['type'])
 
-            # check the type doesn't already exists - we allow only one date type per resource
+             # get matching resource
             metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            dt = Date.objects.filter(type=kwargs['type'], object_id=metadata_obj.id,
-                                     content_type=metadata_type).first()
-            # get matching resource
             resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
-            if dt:
-                raise ValidationError('Date type:%s already exists' % kwargs['type'])
-
+           
             if kwargs['type'] != 'valid':
                 if 'end_date' in kwargs:
                     del kwargs['end_date']
