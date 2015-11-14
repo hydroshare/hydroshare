@@ -766,19 +766,15 @@ class Language(AbstractMetaDataElement):
     term = 'Language'
     code = models.CharField(max_length=3, choices=iso_languages )
 
+    class Meta:
+        unique_together = ("content_type", "object_id")
+
     def __unicode__(self):
         return self.code
 
     @classmethod
     def create(cls, **kwargs):
         if 'code' in kwargs:
-            # check the code doesn't already exists - format values need to be unique per resource
-            metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            lang = Language.objects.filter(object_id=metadata_obj.id, content_type=metadata_type).first()
-            if lang:
-                raise ValidationError('Language element already exists.')
-
             # check the code is a valid code
             if not [t for t in iso_languages if t[0] == kwargs['code']]:
                 raise ValidationError('Invalid language code:%s' % kwargs['code'])
@@ -789,21 +785,10 @@ class Language(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        try:
-            lang = Language.objects.get(id=element_id)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("No language element was found for the provided id:%s" % element_id)
-
         if 'code' in kwargs:
-            # validate code
+            # validate language code
             if not [t for t in iso_languages if t[0] == kwargs['code']]:
                 raise ValidationError('Invalid language code:%s' % kwargs['code'])
-
-            if lang.code != kwargs['code']:
-                # check this new language not already exists
-                if Language.objects.filter(code=kwargs['code'], object_id=lang.object_id,
-                                           content_type__pk=lang.content_type.id).count() > 0:
-                    raise ValidationError('Language:%s already exists.' % kwargs['code'])
 
             super(Language, cls).update(element_id, **kwargs)
         else:
