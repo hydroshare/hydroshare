@@ -1650,7 +1650,8 @@ class CoreMetaData(models.Model):
         from lxml import etree
 
         hsterms_newElem = etree.SubElement(root,
-                                           "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'], new_element=md_element.term))
+                                           "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'],
+                                                                          new_element=md_element.term))
         hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
                                                     "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
         for md_field in md_fields:
@@ -1659,7 +1660,7 @@ class CoreMetaData(models.Model):
                 if attr:
                     field = etree.SubElement(hsterms_newElem_rdf_Desc,
                                              "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
-                                                                  field=md_field))
+                                                                      field=md_field))
                     field.text = str(attr)
 
     def _create_person_element(self, etree, parent_element, person):
@@ -1708,56 +1709,39 @@ class CoreMetaData(models.Model):
             hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link.url)
 
     def create_element(self, element_model_name, **kwargs):
+        model_type = self._get_metadata_element_model_type(element_model_name)
+        kwargs['content_object'] = self
+        element = model_type.model_class().create(**kwargs)
+        return element
+
+    def update_element(self, element_model_name, element_id, **kwargs):
+        model_type = self._get_metadata_element_model_type(element_model_name)
+        kwargs['content_object'] = self
+        model_type.model_class().update(element_id, **kwargs)
+
+    def delete_element(self, element_model_name, element_id):
+        model_type = self._get_metadata_element_model_type(element_model_name)
+        model_type.model_class().remove(element_id)
+       
+    def _get_metadata_element_model_type(self, element_model_name):
         element_model_name = element_model_name.lower()
         if not self._is_valid_element(element_model_name):
             raise ValidationError("Metadata element type:%s is not one of the supported in core metadata elements."
                                   % element_model_name)
 
+        unsupported_element_error = "Metadata element type:%s is not supported." % element_model_name
         try:
             model_type = ContentType.objects.get(app_label=self._meta.app_label, model=element_model_name)
         except ObjectDoesNotExist:
-            model_type = ContentType.objects.get(app_label='hs_core', model=element_model_name)
+            try:
+                model_type = ContentType.objects.get(app_label='hs_core', model=element_model_name)
+            except ObjectDoesNotExist:
+                raise ValidationError(unsupported_element_error)
 
-        if model_type:
-            if issubclass(model_type.model_class(), AbstractMetaDataElement):
-                kwargs['content_object'] = self
-                element = model_type.model_class().create(**kwargs)
-                return element
-            else:
-                raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
-        else:
-            raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
+        if not issubclass(model_type.model_class(), AbstractMetaDataElement):
+            raise ValidationError(unsupported_element_error)
 
-    def update_element(self, element_model_name, element_id, **kwargs):
-        element_model_name = element_model_name.lower()
-        try:
-            model_type = ContentType.objects.get(app_label=self._meta.app_label, model=element_model_name)
-        except ObjectDoesNotExist:
-            model_type = ContentType.objects.get(app_label='hs_core', model=element_model_name)
-
-        if model_type:
-            if issubclass(model_type.model_class(), AbstractMetaDataElement):
-                kwargs['content_object'] = self
-                model_type.model_class().update(element_id, **kwargs)
-            else:
-                raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
-        else:
-            raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
-
-    def delete_element(self, element_model_name, element_id):
-        element_model_name = element_model_name.lower()
-        try:
-            model_type = ContentType.objects.get(app_label=self._meta.app_label, model=element_model_name)
-        except ObjectDoesNotExist:
-            model_type = ContentType.objects.get(app_label='hs_core', model=element_model_name)
-
-        if model_type:
-            if issubclass(model_type.model_class(), AbstractMetaDataElement):
-                model_type.model_class().remove(element_id)
-            else:
-                raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
-        else:
-            raise ValidationError("Metadata element type:%s is not supported." % element_model_name)
+        return model_type
 
     def _is_valid_element(self, element_name):
         allowed_elements = [el.lower() for el in self.get_supported_element_names()]
