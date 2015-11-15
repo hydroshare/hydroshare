@@ -67,27 +67,15 @@ class Method(AbstractMetaDataElement):
     method_description = models.TextField(null=True, blank=True)
     method_link = models.URLField(null=True, blank=True)
 
+    def __str__(self):
+        return self.method_name
+
     def __unicode__(self):
-        self.method_name
+        return unicode(str(self))
 
     class Meta:
         # method element is not repeatable
         unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return Method.objects.create(**kwargs)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        method = Method.objects.get(id=element_id)
-        if method:
-            for key, value in kwargs.iteritems():
-                setattr(method, key, value)
-
-            method.save()
-        else:
-            raise ObjectDoesNotExist("No Method element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
