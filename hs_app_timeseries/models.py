@@ -88,28 +88,15 @@ class ProcessingLevel(AbstractMetaDataElement):
     definition = models.CharField(max_length=200, null=True, blank=True)
     explanation = models.TextField(null=True, blank=True)
 
+    def __str__(self):
+        return self.processing_level_code
+
     def __unicode__(self):
-        self.processing_level_code
+        return unicode(str(self))
 
     class Meta:
         # processinglevel element is not repeatable
         unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return ProcessingLevel.objects.create(**kwargs)
-
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        processing_level = ProcessingLevel.objects.get(id=element_id)
-        if processing_level:
-            for key, value in kwargs.iteritems():
-                setattr(processing_level, key, value)
-
-            processing_level.save()
-        else:
-            raise ObjectDoesNotExist("No ProcessingLevel element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
