@@ -20,27 +20,15 @@ class Site(AbstractMetaDataElement):
     elevation_datum = models.CharField(max_length=50, null=True, blank=True)
     site_type = models.CharField(max_length=100, null=True, blank=True)
 
+    def __str__(self):
+        return self.site_name
+
     def __unicode__(self):
-        self.site_name
+        return unicode(str(self))
 
     class Meta:
         # site element is not repeatable
         unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return Site.objects.create(**kwargs)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        site = Site.objects.get(id=element_id)
-        if site:
-            for key, value in kwargs.iteritems():
-                setattr(site, key, value)
-
-            site.save()
-        else:
-            raise ObjectDoesNotExist("No Site element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
