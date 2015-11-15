@@ -113,28 +113,15 @@ class TimeSeriesResult(AbstractMetaDataElement):
     value_count = models.IntegerField()
     aggregation_statistics = models.CharField(max_length=255)
 
+    def __str__(self):
+        return self.units_type
+
     def __unicode__(self):
-        self.processing_level_code
+        return unicode(str(self))
 
     class Meta:
         # processinglevel element is not repeatable
         unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return TimeSeriesResult.objects.create(**kwargs)
-
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        time_series_result = TimeSeriesResult.objects.get(id=element_id)
-        if time_series_result:
-            for key, value in kwargs.iteritems():
-                setattr(time_series_result, key, value)
-
-            time_series_result.save()
-        else:
-            raise ObjectDoesNotExist("No TimeSeriesResult element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
