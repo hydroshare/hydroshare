@@ -44,28 +44,15 @@ class Variable(AbstractMetaDataElement):
     variable_definition = models.CharField(max_length=255, null=True, blank=True)
     speciation = models.CharField(max_length=255, null=True, blank=True)
 
+    def __str__(self):
+        return self.variable_name
+
     def __unicode__(self):
-        self.variable_name
+        return unicode(str(self))
 
     class Meta:
         # variable element is not repeatable
         unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return Variable.objects.create(**kwargs)
-
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        variable = Variable.objects.get(id=element_id)
-        if variable:
-            for key, value in kwargs.iteritems():
-                setattr(variable, key, value)
-
-            variable.save()
-        else:
-            raise ObjectDoesNotExist("No Variable element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
