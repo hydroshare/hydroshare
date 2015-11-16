@@ -26,7 +26,7 @@ class ResourceToListItemMixin(object):
         science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
         resource_list_item = serializers.ResourceListItem(resource_type=r.__class__.__name__,
                                                           resource_id=r.short_id,
-                                                          resource_title=r.title,
+                                                          resource_title=r.metadata.title.value,
                                                           creator=r.creator.username,
                                                           public=r.raccess.public,
                                                           discoverable=r.raccess.discoverable,

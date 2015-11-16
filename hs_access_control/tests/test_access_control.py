@@ -346,7 +346,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(cat.uaccess.get_number_of_held_groups(), 0)
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -393,7 +393,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(dog.uaccess.get_number_of_held_groups(), 0)
 
         # metadata should be the same as before
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -430,7 +430,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
                                            metadata=[],)
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -454,7 +454,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         holes.raccess.save()
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertTrue(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -488,7 +488,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         holes.raccess.save()
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -518,7 +518,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
                                            metadata=[],)
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -550,7 +550,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists([], GenericResource.public_resources.all()))
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertTrue(holes.raccess.discoverable)
@@ -574,7 +574,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         holes.raccess.save()
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -614,7 +614,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
                                            metadata=[],)
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -638,7 +638,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         holes.raccess.save()
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertTrue(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -673,7 +673,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         holes.raccess.save()
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -706,7 +706,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
                                            metadata=[],)
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -738,7 +738,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists([holes], GenericResource.public_resources.all()))
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -762,7 +762,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         holes.raccess.save()
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -996,7 +996,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists([], cat.uaccess.get_resource_unshare_groups(holes)))
         self.assertTrue(match_lists([], cat.uaccess.get_resource_undo_groups(holes)))
 
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.public)
         self.assertFalse(holes.raccess.discoverable)
         self.assertFalse(holes.raccess.published)
@@ -1175,7 +1175,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # recheck metadata state: should not have changed
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.public)
         self.assertFalse(holes.raccess.discoverable)
         self.assertFalse(holes.raccess.published)
@@ -1319,7 +1319,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # recheck metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.public)
         self.assertFalse(holes.raccess.discoverable)
         self.assertFalse(holes.raccess.published)
@@ -1455,7 +1455,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # recheck metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.public)
         self.assertFalse(holes.raccess.discoverable)
         self.assertFalse(holes.raccess.published)
@@ -1463,7 +1463,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(holes.raccess.shareable)
 
         # ensure that nothing changed
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.public)
         self.assertFalse(holes.raccess.discoverable)
         self.assertFalse(holes.raccess.published)
@@ -1553,7 +1553,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # metadata state
-        self.assertEqual(holes.title, 'all about dog holes')
+        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.public)
         self.assertFalse(holes.raccess.discoverable)
         self.assertFalse(holes.raccess.published)

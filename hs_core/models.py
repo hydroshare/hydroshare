@@ -1521,7 +1521,7 @@ class AbstractResource(ResourcePermissionsMixin):
             return CITATION_ERROR
 
         citation += " ({year}). ".format(year=citation_date.start_date.year)
-        citation += self.title
+        citation += self.metadata.title.value
         citation += ", HydroShare, "
 
         if self.metadata.identifiers.all().filter(name="doi"):
