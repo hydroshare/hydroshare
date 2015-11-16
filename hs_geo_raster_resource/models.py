@@ -39,6 +39,10 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
+        """
+        Check if the 'value' is a dictionary and check if all required keys are in the dictionary.
+        Then convert the dict as Json string to be the "_value" subelement value
+        """
         if 'value' in kwargs:
             if isinstance(kwargs['value'], dict):
                 # check that all the required sub-elements exist
@@ -60,6 +64,9 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """
+        Check if the 'value' is a dictionary and convert the dictionary as Json string to be the "_value" subelement value.
+        """
         try:
             cov = OriginalCoverage.objects.get(id=element_id)
         except:
