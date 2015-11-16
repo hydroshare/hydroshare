@@ -56,7 +56,7 @@ def landing_page(request, page):
         model_input_form = ModelInputForm(instance=content_model.metadata.model_input, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.model_input.id if content_model.metadata.model_input else None)
 
-        ext_md_layout = Layout(HTML("<div class='form-group col-sm-12' id='modeloutput'> "
+        ext_md_layout = Layout(HTML("<div class='row'><div class='form-group col-sm-12' id='modeloutput'> "
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy model_output_form %} '
                                     '</div>'),
@@ -89,7 +89,7 @@ def landing_page(request, page):
                                HTML('<div class="form-group col-sm-6 col-xs-12" id="modelparameter"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy model_parameter_form %} '
-                                    '</div> ')
+                                    '</div></div>')
 
 
                         )
