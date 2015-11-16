@@ -46,6 +46,10 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
+        """
+        Check if the 'value' includes the required information and convert 'value' dict as Json string to be
+        the '_value' subelement value.
+        """
         if 'value' in kwargs:
             if isinstance(kwargs['value'], dict):
                 # check that all the required sub-elements exist and create new original coverage meta
@@ -67,9 +71,12 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """
+        Convert 'value' dict as Json string to be the '_value' subelement value.
+        """
         try:
             ori_cov = OriginalCoverage.objects.get(id=element_id)
-        except ObjectDoesNotExist:
+        except:
             raise ObjectDoesNotExist("No coverage element was found for the provided id:%s" % element_id)
 
         # update bounding box info
