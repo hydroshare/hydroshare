@@ -229,52 +229,52 @@ class TimeSeriesMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         if self.site:
-            element_fields = {'md_element': 'site', 'site_code': 'SiteCode', 'site_name': 'SiteName'}
+            element_fields = [('md_element', 'site'), ('site_code', 'SiteCode'), ('site_name', 'SiteName')]
 
             if self.site.elevation_m:
-                element_fields['elevation_m'] = 'Elevation_m'
+                element_fields.append(('elevation_m','Elevation_m'))
 
             if self.site.elevation_datum:
-                element_fields['elevation_datum'] = 'ElevationDatum'
+                element_fields.append(('elevation_datum', 'ElevationDatum'))
 
             if self.site.site_type:
-                element_fields['site_type'] = 'SiteType'
+                element_fields.append(('site_type', 'SiteType'))
 
             self.add_metadata_element_to_xml(container, self.site, element_fields)
 
         if self.variable:
-            element_fields = {'md_element': 'variable', 'variable_code': 'VariableCode',
-                              'variable_name': 'VariableName', 'variable_type': 'VariableType',
-                              'no_data_value': 'NoDataValue'}
+            element_fields = [('md_element', 'variable'), ('variable_code', 'VariableCode'),
+                              ('variable_name', 'VariableName'), ('variable_type', 'VariableType'),
+                              ('no_data_value', 'NoDataValue')]
 
             if self.variable.variable_definition:
-                element_fields['variable_definition'] = 'VariableDefinition'
+                element_fields.append(('variable_definition', 'VariableDefinition'))
 
             if self.variable.speciation:
-                element_fields['speciation'] = 'Speciation'
+                element_fields.append(('speciation', 'Speciation'))
 
             self.add_metadata_element_to_xml(container, self.variable, element_fields)
 
         if self.method:
-            element_fields = {'md_element': 'method', 'method_code': 'MethodCode', 'method_name': 'MethodName',
-                              'method_type': 'MethodType'}
+            element_fields = [('md_element', 'method'), ('method_code', 'MethodCode'), ('method_name', 'MethodName'),
+                              ('method_type', 'MethodType')]
 
             if self.method.method_description:
-                element_fields['method_description'] = 'MethodDescription'
+                element_fields.append(('method_description', 'MethodDescription'))
 
             if self.method.method_link:
-                element_fields['method_link'] = 'MethodLink'
+                element_fields.append(('method_link', 'MethodLink'))
 
             self.add_metadata_element_to_xml(container, self.method, element_fields)
 
         if self.processing_level:
-            element_fields = {'md_element': 'processingLevel', 'processing_level_code': 'ProcessingLevelCode'}
+            element_fields = [('md_element', 'processingLevel'), ('processing_level_code', 'ProcessingLevelCode')]
 
             if self.processing_level.definition:
-                element_fields['definition'] = 'Definition'
+                element_fields.append(('definition', 'Definition'))
 
             if self.processing_level.explanation:
-                element_fields['explanation'] = 'Explanation'
+                element_fields.append(('explanation', 'Explanation'))
 
             self.add_metadata_element_to_xml(container, self.processing_level, element_fields)
 
