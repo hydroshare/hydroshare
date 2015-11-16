@@ -1975,19 +1975,40 @@ class CoreMetaData(models.Model):
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
-        from lxml import etree
+        """
+        helper function to generate xml elements for a given metadata element that belongs to
+        'hsterms' namespace
 
+        :param root: the xml document root element to which xml elements for the specified metadata element needs
+                     to be added
+        :param md_element: the metadata element object
+        :param md_fields: attribute names of the metadata element (if the name to be used in generating the xml element
+                          name is same as the attribute name then it must be a list. if xml element name needs to be
+                          different from the attribute name then it must be a dictionary with keys being the attribute
+                          names and values being what will be used in naming the xml element)
+        :return:None
+        """
+        from lxml import etree
+        if not isinstance(md_fields, dict) and not isinstance(md_fields, list):
+            raise TypeError("Metadata element attributes must be specified as a list or dictionary")
+
+        if isinstance(md_fields, list):
+            dict_md_fields = {k: k for k in md_fields}
+            md_fields = dict_md_fields
+
+        element_name = md_fields.get('md_element', md_element.term)
         hsterms_newElem = etree.SubElement(root,
-                                           "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'], new_element=md_element.term))
+                                           "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'],
+                                                                          new_element=element_name))
         hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
                                                     "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
-        for md_field in md_fields:
+        for md_field in md_fields.keys():
             if hasattr(md_element, md_field):
                 attr = getattr(md_element, md_field)
                 if attr:
                     field = etree.SubElement(hsterms_newElem_rdf_Desc,
                                              "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
-                                                                  field=md_field))
+                                                                  field=md_fields[md_field]))
                     field.text = str(attr)
 
     def _create_person_element(self, etree, parent_element, person):

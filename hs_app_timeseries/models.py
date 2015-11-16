@@ -130,6 +130,7 @@ class TimeSeriesResult(AbstractMetaDataElement):
 # To create a new resource, use these three super-classes.
 #
 
+
 class TimeSeriesResource(BaseResource):
     objects = ResourceManager("TimeSeriesResource")
 
@@ -160,6 +161,7 @@ class TimeSeriesResource(BaseResource):
 
 # this would allow us to pick up additional form elements for the template before the template is displayed
 processor_for(TimeSeriesResource)(resource_processor)
+
 
 class TimeSeriesMetaData(CoreMetaData):
     _site = generic.GenericRelation(Site)
@@ -242,84 +244,57 @@ class TimeSeriesMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         if self.site:
-            hsterms_site = etree.SubElement(container, '{%s}site' % self.NAMESPACES['hsterms'])
-            hsterms_site_rdf_Description = etree.SubElement(hsterms_site, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_site_code = etree.SubElement(hsterms_site_rdf_Description, '{%s}SiteCode' % self.NAMESPACES['hsterms'])
-            hsterms_site_code.text = self.site.site_code
-
-            hsterms_site_name = etree.SubElement(hsterms_site_rdf_Description, '{%s}SiteName' % self.NAMESPACES['hsterms'])
-            hsterms_site_name.text = self.site.site_name
+            element_fields = {'md_element': 'site', 'site_code': 'SiteCode', 'site_name': 'SiteName'}
 
             if self.site.elevation_m:
-                hsterms_site_elevation_m = etree.SubElement(hsterms_site_rdf_Description, '{%s}Elevation_m' % self.NAMESPACES['hsterms'])
-                hsterms_site_elevation_m.text = str(self.site.elevation_m)
+                element_fields['elevation_m'] = 'Elevation_m'
 
             if self.site.elevation_datum:
-                hsterms_site_elevation_datum = etree.SubElement(hsterms_site_rdf_Description, '{%s}ElevationDatum' % self.NAMESPACES['hsterms'])
-                hsterms_site_elevation_datum.text = self.site.elevation_datum
+                element_fields['elevation_datum'] = 'ElevationDatum'
 
             if self.site.site_type:
-                hsterms_site_type = etree.SubElement(hsterms_site_rdf_Description, '{%s}SiteType' % self.NAMESPACES['hsterms'])
-                hsterms_site_type.text = self.site.site_type
+                element_fields['site_type'] = 'SiteType'
+
+            self.add_metadata_element_to_xml(container, self.site, element_fields)
 
         if self.variable:
-            hsterms_variable = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
-            hsterms_variable_rdf_Description = etree.SubElement(hsterms_variable, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_variable_code = etree.SubElement(hsterms_variable_rdf_Description, '{%s}VariableCode' % self.NAMESPACES['hsterms'])
-            hsterms_variable_code.text = self.variable.variable_code
-
-            hsterms_variable_name = etree.SubElement(hsterms_variable_rdf_Description, '{%s}VariableName' % self.NAMESPACES['hsterms'])
-            hsterms_variable_name.text = self.variable.variable_name
-
-            hsterms_variable_type = etree.SubElement(hsterms_variable_rdf_Description, '{%s}VariableType' % self.NAMESPACES['hsterms'])
-            hsterms_variable_type.text = self.variable.variable_type
-
-            hsterms_no_data_value = etree.SubElement(hsterms_variable_rdf_Description, '{%s}NoDataValue' % self.NAMESPACES['hsterms'])
-            hsterms_no_data_value.text = str(self.variable.no_data_value)
+            element_fields = {'md_element': 'variable', 'variable_code': 'VariableCode',
+                              'variable_name': 'VariableName', 'variable_type': 'VariableType',
+                              'no_data_value': 'NoDataValue'}
 
             if self.variable.variable_definition:
-                hsterms_variable_def = etree.SubElement(hsterms_variable_rdf_Description, '{%s}VariableDefinition' % self.NAMESPACES['hsterms'])
-                hsterms_variable_def.text = self.variable.variable_definition
+                element_fields['variable_definition'] = 'VariableDefinition'
 
             if self.variable.speciation:
-                hsterms_speciation = etree.SubElement(hsterms_variable_rdf_Description, '{%s}Speciation' % self.NAMESPACES['hsterms'])
-                hsterms_speciation.text = self.variable.speciation
+                element_fields['speciation'] = 'Speciation'
+
+            self.add_metadata_element_to_xml(container, self.variable, element_fields)
 
         if self.method:
-            hsterms_method = etree.SubElement(container, '{%s}method' % self.NAMESPACES['hsterms'])
-            hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_method_code = etree.SubElement(hsterms_method_rdf_Description, '{%s}MethodCode' % self.NAMESPACES['hsterms'])
-            hsterms_method_code.text = str(self.method.method_code)
-
-            hsterms_method_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}MethodName' % self.NAMESPACES['hsterms'])
-            hsterms_method_name.text = self.method.method_name
-
-            hsterms_method_type = etree.SubElement(hsterms_method_rdf_Description, '{%s}MethodType' % self.NAMESPACES['hsterms'])
-            hsterms_method_type.text = self.method.method_type
+            element_fields = {'md_element': 'method', 'method_code': 'MethodCode', 'method_name': 'MethodName',
+                              'method_type': 'MethodType'}
 
             if self.method.method_description:
-                hsterms_method_description = etree.SubElement(hsterms_method_rdf_Description, '{%s}MethodDescription' % self.NAMESPACES['hsterms'])
-                hsterms_method_description.text = self.method.method_description
+                element_fields['method_description'] = 'MethodDescription'
 
             if self.method.method_link:
-                hsterms_method_link = etree.SubElement(hsterms_method_rdf_Description, '{%s}MethodLink' % self.NAMESPACES['hsterms'])
-                hsterms_method_link.text = self.method.method_link
+                element_fields['method_link'] = 'MethodLink'
+
+            self.add_metadata_element_to_xml(container, self.method, element_fields)
 
         if self.processing_level:
-            hsterms_processing_level = etree.SubElement(container, '{%s}processingLevel' % self.NAMESPACES['hsterms'])
-            hsterms_processing_level_rdf_Description = etree.SubElement(hsterms_processing_level, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_processing_level_code = etree.SubElement(hsterms_processing_level_rdf_Description, '{%s}ProcessingLevelCode' % self.NAMESPACES['hsterms'])
-            hsterms_processing_level_code.text = str(self.processing_level.processing_level_code)
+            element_fields = {'md_element': 'processingLevel', 'processing_level_code': 'ProcessingLevelCode'}
 
             if self.processing_level.definition:
-                hsterms_definition = etree.SubElement(hsterms_processing_level_rdf_Description, '{%s}Definition' % self.NAMESPACES['hsterms'])
-                hsterms_definition.text = str(self.processing_level.definition)
+                element_fields['definition'] = 'Definition'
 
             if self.processing_level.explanation:
-                hsterms_explanation = etree.SubElement(hsterms_processing_level_rdf_Description, '{%s}Explanation' % self.NAMESPACES['hsterms'])
-                hsterms_explanation.text = str(self.processing_level.explanation)
+                element_fields['explanation'] = 'Explanation'
+
+            self.add_metadata_element_to_xml(container, self.processing_level, element_fields)
 
         if self.time_series_result:
+            # since 2nd level nesting of elements exists here, can't use the helper function add_metadata_element_to_xml()
             hsterms_time_series_result = etree.SubElement(container, '{%s}timeSeriesResult' % self.NAMESPACES['hsterms'])
             hsterms_time_series_result_rdf_Description = etree.SubElement(hsterms_time_series_result, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_units = etree.SubElement(hsterms_time_series_result_rdf_Description, '{%s}units' % self.NAMESPACES['hsterms'])
