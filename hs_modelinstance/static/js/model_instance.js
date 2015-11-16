@@ -152,8 +152,9 @@ function show_model_details() {
         },
         complete: function(data){
 
-            // set the modelprogram id of the selected value
-            set_hidden_model_name(shortid);
+            // Sets the ModelProgram shortid to the hidden model_name field.  This field is submitted to django and used to set
+            // database fields ModelName and ModelForeignKey.
+            document.getElementById('id_model_name').value = shortid;
 
             // enable/disable the save button if the value has been changed to something new
             if (shortid != mp_old_id)
@@ -163,16 +164,6 @@ function show_model_details() {
         }
     });
 
-}
-
-/*
-    Sets the ModelProgram shortid to the hidden model_name field.  This field is submitted to django and used to set
-    database fields ModelName and ModelForeignKey.
- */
-function set_hidden_model_name(id){
-
-    var model_name = document.getElementById('id_model_name');
-    model_name.value = id;
 }
 
 /*
