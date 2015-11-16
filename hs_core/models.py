@@ -817,6 +817,10 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
+        """
+        data for the coverage value attribute must be provided as a dictionary
+        """
+
         # TODO: validate coordinate values
         if 'type' in kwargs:
             # check the type doesn't already exists - we allow only one coverage type per resource
@@ -842,25 +846,23 @@ class Coverage(AbstractMetaDataElement):
                                           "type 'Box'")
 
             if 'value' in kwargs:
-                if isinstance(kwargs['value'], dict):
-                    cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
+                cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
 
-                    if kwargs['type'] == 'period':
-                        value_dict = {k: v for k, v in kwargs['value'].iteritems() if k in ('name', 'start', 'end')}
-                    elif kwargs['type'] == 'point':
-                        value_dict = {k: v for k, v in kwargs['value'].iteritems()
-                                      if k in ('name', 'east', 'north', 'units', 'elevation', 'zunits', 'projection')}
-                    elif kwargs['type'] == 'box':
-                        value_dict = {k: v for k, v in kwargs['value'].iteritems()
-                                      if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'name',
-                                               'uplimit', 'downlimit', 'zunits', 'projection')}
+                if kwargs['type'] == 'period':
+                    value_dict = {k: v for k, v in kwargs['value'].iteritems() if k in ('name', 'start', 'end')}
+                elif kwargs['type'] == 'point':
+                    value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                                  if k in ('name', 'east', 'north', 'units', 'elevation', 'zunits', 'projection')}
+                elif kwargs['type'] == 'box':
+                    value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                                  if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'name',
+                                           'uplimit', 'downlimit', 'zunits', 'projection')}
 
-                    value_json = json.dumps(value_dict)
-                    del kwargs['value']
-                    kwargs['_value'] = value_json
-                    return super(Coverage, cls).create(**kwargs)
-                else:
-                    raise ValidationError('Invalid coverage value format.')
+                value_json = json.dumps(value_dict)
+                del kwargs['value']
+                kwargs['_value'] = value_json
+                return super(Coverage, cls).create(**kwargs)
+
             else:
                 raise ValidationError('Coverage value is missing.')
 
@@ -869,6 +871,10 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """
+        data for the coverage value attribute must be provided as a dictionary
+        """
+
         # TODO: validate coordinate values
         cov = Coverage.objects.get(id=element_id)
 
@@ -877,19 +883,13 @@ class Coverage(AbstractMetaDataElement):
         if 'type' in kwargs:
             if cov.type != kwargs['type']:
                 if 'value' in kwargs:
-                    if isinstance(kwargs['value'], dict):
-                        cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
-                    else:
-                        raise ValidationError('Invalid coverage value format.')
+                    cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
                 else:
                     raise ValidationError('Coverage value is missing.')
 
                 changing_coverage_type = True
 
         if 'value' in kwargs:
-            if not isinstance(kwargs['value'], dict):
-                raise ValidationError('Invalid coverage value format.')
-
             if changing_coverage_type:
                 value_dict = {}
                 cov.type = kwargs['type']
