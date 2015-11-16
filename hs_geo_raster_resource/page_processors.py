@@ -39,7 +39,7 @@ def landing_page(request, page):
         cellinfo_form = CellInfoForm(instance=content_model.metadata.cellInformation, res_short_id=content_model.short_id,
                                      allow_edit = True,
                                     element_id=content_model.metadata.cellInformation.id if content_model.metadata.cellInformation else None)
-        cellinfo_layout = HTML("<div class='form-group col-lg-6 col-xs-12' id='CellInformation'> "
+        cellinfo_layout = HTML("<div class='form-group col-lg-4 col-xs-12' id='CellInformation'> "
                                  '{% load crispy_forms_tags %} '
                                  '{% crispy cellinfo_form %} '
                                  '</div>')
@@ -69,16 +69,17 @@ def landing_page(request, page):
                                                         res_short_id=content_model.short_id,
                                                         allow_edit=edit_resource,
                                                         element_id=ori_cov_obj.id if ori_cov_obj else None)
-        ori_coverage_layout = HTML('<div class="form-group col-lg-6 col-xs-12" id="originalcoverage"> '
+        ori_coverage_layout = HTML('<div class="form-group col-lg-4 col-xs-12" id="originalcoverage"> '
                                    '{% load crispy_forms_tags %} '
                                    '{% crispy ori_coverage_form %} '
                                    '</div>')
 
         # update context
-        ext_md_layout = Layout(
+        ext_md_layout = Layout(HTML("<div class='row'>"),
                                 ori_coverage_layout,
                                 cellinfo_layout,
-                                BandInfoLayoutEdit
+                                BandInfoLayoutEdit,
+                               HTML("</div>")
         )
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
         context['ori_coverage_form'] = ori_coverage_form
