@@ -20,11 +20,8 @@ class Site(AbstractMetaDataElement):
     elevation_datum = models.CharField(max_length=50, null=True, blank=True)
     site_type = models.CharField(max_length=100, null=True, blank=True)
 
-    def __str__(self):
-        return self.site_name
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.site_name
 
     class Meta:
         # site element is not repeatable
@@ -44,11 +41,8 @@ class Variable(AbstractMetaDataElement):
     variable_definition = models.CharField(max_length=255, null=True, blank=True)
     speciation = models.CharField(max_length=255, null=True, blank=True)
 
-    def __str__(self):
-        return self.variable_name
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.variable_name
 
     class Meta:
         # variable element is not repeatable
@@ -67,11 +61,8 @@ class Method(AbstractMetaDataElement):
     method_description = models.TextField(null=True, blank=True)
     method_link = models.URLField(null=True, blank=True)
 
-    def __str__(self):
-        return self.method_name
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.method_name
 
     class Meta:
         # method element is not repeatable
@@ -88,11 +79,8 @@ class ProcessingLevel(AbstractMetaDataElement):
     definition = models.CharField(max_length=200, null=True, blank=True)
     explanation = models.TextField(null=True, blank=True)
 
-    def __str__(self):
-        return self.processing_level_code
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.processing_level_code
 
     class Meta:
         # processinglevel element is not repeatable
@@ -113,11 +101,8 @@ class TimeSeriesResult(AbstractMetaDataElement):
     value_count = models.IntegerField()
     aggregation_statistics = models.CharField(max_length=255)
 
-    def __str__(self):
-        return self.units_type
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.units_type
 
     class Meta:
         # processinglevel element is not repeatable
