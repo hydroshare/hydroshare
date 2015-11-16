@@ -311,12 +311,7 @@ class Party(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        element_name = cls.__name__
-
-        try:
-           party = cls.objects.get(id=element_id)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("No %s element was found for id:%d." % (element_name, element_id))
+        party = cls.objects.get(id=element_id)
 
         # if we are deleting a creator, then we have to update the order attribute of remaining
         # creators associated with a resource
@@ -359,11 +354,7 @@ class Party(AbstractMetaDataElement):
         if the link dict contains only key 'link_id' then the link will be deleted
         otherwise the link will be updated
         """
-        try:
-            p_link = ExternalProfileLink.objects.get(id=link['link_id'])
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("%s external link does not exist "
-                                     "for ID:%s" % (type(party).__name__,link['link_id']))
+        p_link = ExternalProfileLink.objects.get(id=link['link_id'])
 
         if not 'type' in link and not 'url' in link:
             # delete the link
@@ -501,10 +492,7 @@ class Date(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        try:
-            dt = Date.objects.get(id=element_id)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("No date element was found for the provided id:%s" % element_id)
+        dt = Date.objects.get(id=element_id)
 
         if 'start_date' in kwargs:
             if dt.type == 'created':
@@ -534,10 +522,7 @@ class Date(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        try:
-            dt = Date.objects.get(id=element_id)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("No date element was found for id:%d." % element_id)
+        dt = Date.objects.get(id=element_id)
 
         if dt.type in ['created', 'modified']:
             raise ValidationError("Date element of type:%s can't be deleted." % dt.type)
@@ -573,7 +558,7 @@ class Relation(AbstractMetaDataElement):
 
             return super(Relation, cls).create(**kwargs)
         else:
-            raise ObjectDoesNotExist("Type of relation element is missing.")
+            raise ValidationError("Type of relation element is missing.")
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -616,10 +601,7 @@ class Identifier(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        try:
-            idf = Identifier.objects.get(id=element_id)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist( "No identifier element was found for the provided id:%s" % element_id)
+        idf = Identifier.objects.get(id=element_id)
 
         if 'name' in kwargs:
             if idf.name.lower() != kwargs['name'].lower():
@@ -651,10 +633,7 @@ class Identifier(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        try:
-            idf = Identifier.objects.get(id=element_id)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("No identifier element was found for id:%d." % element_id)
+        idf = Identifier.objects.get(id=element_id)
 
         # get matching resource
         resource = BaseResource.objects.filter(object_id=idf.content_object.id).first()
@@ -705,10 +684,7 @@ class Publisher(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        try:
-            pub = Publisher.objects.get(id=element_id)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("No publisher element was found for the provided id:%s" % element_id)
+        pub = Publisher.objects.get(id=element_id)
 
         metadata_obj = kwargs['content_object']
         # get matching resource
@@ -738,10 +714,8 @@ class Publisher(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        try:
-            pub = Publisher.objects.get(id=element_id)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("No publisher element was found for id:%d." % element_id)
+        pub = Publisher.objects.get(id=element_id)
+
         # get matching resource
         resource = BaseResource.objects.filter(object_id=pub.content_object.id).first()
 
@@ -896,10 +870,7 @@ class Coverage(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         # TODO: validate coordinate values
-        try:
-            cov = Coverage.objects.get(id=element_id)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("No coverage element was found for the provided id:%s" % element_id)
+        cov = Coverage.objects.get(id=element_id)
 
         changing_coverage_type = False
 
@@ -994,10 +965,8 @@ class Subject(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        try:
-            sub = Subject.objects.get(id=element_id)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist("No subject element was found for id:%d." % element_id)
+
+        sub = Subject.objects.get(id=element_id)
 
         if Subject.objects.filter(object_id=sub.object_id,
                                   content_type__pk=sub.content_type.id).count() == 1:
