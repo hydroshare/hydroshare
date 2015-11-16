@@ -67,10 +67,10 @@ function set_model_program_selection(){
 function build_selectbox(){
 
     // destroy any existing multiselect widgets
-    $('.selectbox').multiselect('destroy');
+    $('.div-selectbox .selectbox').multiselect('destroy');
 
     // rebuild the multiselect elements
-    $('.selectbox').multiselect({
+    $('.div-selectbox .selectbox').multiselect({
 
         // specify a max height in case there are lots of models
         maxHeight: 200,
