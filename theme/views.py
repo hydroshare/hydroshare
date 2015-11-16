@@ -1,19 +1,29 @@
 from json import dumps
 
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.views.generic import TemplateView
 from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.messages import info, error
+from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 
+from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
 from mezzanine.utils.views import render, set_cookie, is_spam
 from mezzanine.utils.cache import add_cache_bypass
+from mezzanine.utils.email import send_verification_mail, send_approve_mail
+from mezzanine.utils.urls import login_redirect, next_url
+from mezzanine.utils.views import render
 
 from hs_core.hydroshare import get_resource_types
 from hs_core.models import BaseResource
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm
+
+from .forms import SignupForm
+
 
 class UserProfileView(TemplateView):
     template_name='accounts/profile.html'
@@ -112,23 +122,11 @@ def rating(request):
     return response
 
 
-from mezzanine.conf import settings
-from django.contrib.messages import info, error
-from django.shortcuts import get_object_or_404, redirect
-from django.utils.translation import ugettext_lazy as _
-from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
-
-from mezzanine.utils.email import send_verification_mail, send_approve_mail
-from mezzanine.utils.urls import login_redirect, next_url
-from mezzanine.utils.views import render
-
-from .forms import SignupForm
-
 def signup(request, template="accounts/account_signup.html"):
     """
     Signup form.
     """
-    form = SignupForm(request.POST or None, request.FILES or None)
+    form = SignupForm(request, request.POST, request.FILES)
     if request.method == "POST" and form.is_valid():
         try:
             new_user = form.save()
@@ -149,5 +147,8 @@ def signup(request, template="accounts/account_signup.html"):
                 info(request, _("Successfully signed up"))
                 auth_login(request, new_user)
                 return login_redirect(request)
-    context = {"form": form, "title": _("Sign up")}
+    context = {
+        "form": form,
+        "title": _("Sign up"),
+    }
     return render(request, template, context)
