@@ -128,25 +128,25 @@ class ModelProgramMetaData(CoreMetaData):
             model_engine = etree.SubElement(container, '{%s}modelEngine' % self.NAMESPACES['hsterms'])
             engines = self.program.modelEngine.split(';')
             for engine in engines:
-                filepath = etree.SubElement(model_engine, '{%s}file' % self.NAMESPACES['hsterms'])
+                filepath = etree.SubElement(model_engine, '{%s}value' % self.NAMESPACES['rdf'])
                 filepath.text = engine
 
             model_software = etree.SubElement(container, '{%s}modelSoftware' % self.NAMESPACES['hsterms'])
             software = self.program.modelSoftware.split(';')
             for s in software:
-                filepath = etree.SubElement(model_software, '{%s}file' % self.NAMESPACES['hsterms'])
+                filepath = etree.SubElement(model_software, '{%s}value' % self.NAMESPACES['rdf'])
                 filepath.text = s
 
             model_documentation = etree.SubElement(container, '{%s}modelDocumentation' % self.NAMESPACES['hsterms'])
             documentation = self.program.modelDocumentation.split(';')
             for doc in documentation:
-                filepath = etree.SubElement(model_documentation, '{%s}file' % self.NAMESPACES['hsterms'])
+                filepath = etree.SubElement(model_documentation, '{%s}value' % self.NAMESPACES['rdf'])
                 filepath.text = doc
 
             model_releaseNotes = etree.SubElement(container, '{%s}modelReleaseNotes' % self.NAMESPACES['hsterms'])
             releaseNotes = self.program.modelReleaseNotes.split(';')
             for note in releaseNotes:
-                filepath = etree.SubElement(model_releaseNotes, '{%s}file' % self.NAMESPACES['hsterms'])
+                filepath = etree.SubElement(model_releaseNotes, '{%s}value' % self.NAMESPACES['rdf'])
                 filepath.text = note
 
             if self.program.modelReleaseDate:
