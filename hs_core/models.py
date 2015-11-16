@@ -230,11 +230,8 @@ class Party(AbstractMetaDataElement):
     homepage = models.URLField(null=True, blank=True)
     external_links = generic.GenericRelation(ExternalProfileLink)
 
-    def __str__(self):
-        return self.name
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.name
 
     class Meta:
         abstract = True
@@ -409,11 +406,8 @@ class Description(AbstractMetaDataElement):
     term = 'Description'
     abstract = models.TextField()
 
-    def __str__(self):
-        return self.abstract
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.abstract
 
     class Meta:
         unique_together = ("content_type", "object_id")
@@ -427,11 +421,8 @@ class Title(AbstractMetaDataElement):
     term = 'Title'
     value = models.CharField(max_length=300)
 
-    def __str__(self):
-        return self.value
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.value
 
     class Meta:
         unique_together = ("content_type", "object_id")
@@ -445,11 +436,8 @@ class Type(AbstractMetaDataElement):
     term = 'Type'
     url = models.URLField()
 
-    def __str__(self):
-        return self.url
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.url
 
     class Meta:
         unique_together = ("content_type", "object_id")
@@ -473,13 +461,10 @@ class Date(AbstractMetaDataElement):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField(null=True, blank=True)
 
-    def __str__(self):
+    def __unicode__(self):
         if self.end_date:
             return "{type} {start} {end}".format(type=self.type, start=self.start_date, end=self.end_date)
         return "{type} {start}".format(type=self.type, start=self.start_date)
-
-    def __unicode__(self):
-        return unicode(str(self))
 
     class Meta:
         unique_together = ("type", "content_type", "object_id")
@@ -574,11 +559,8 @@ class Relation(AbstractMetaDataElement):
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.CharField(max_length=500)
 
-    def __str__(self):
-        return "{type} {value}".format(type=self.type, value=self.value)
-
     def __unicode__(self):
-        return unicode(str(self))
+        return "{type} {value}".format(type=self.type, value=self.value)
 
     class Meta:
         unique_together = ("type", "content_type", "object_id")
@@ -607,11 +589,8 @@ class Identifier(AbstractMetaDataElement):
     name = models.CharField(max_length=100)
     url = models.URLField(unique=True)
 
-    def __str__(self):
-        return "{name} {url}".format(name=self.name, url=self.url)
-
     def __unicode__(self):
-        return unicode(str(self))
+        return "{name} {url}".format(name=self.name, url=self.url)
 
     @classmethod
     def create(cls, **kwargs):
@@ -694,11 +673,8 @@ class Publisher(AbstractMetaDataElement):
     name = models.CharField(max_length=200)
     url = models.URLField()
 
-    def __str__(self):
-        return "{name} {url}".format(name=self.name, url=self.url)
-
     def __unicode__(self):
-        return unicode(str(self))
+        return "{name} {url}".format(name=self.name, url=self.url)
 
     class Meta:
         unique_together = ("content_type", "object_id")
@@ -789,11 +765,8 @@ class Language(AbstractMetaDataElement):
     class Meta:
         unique_together = ("content_type", "object_id")
 
-    def __str__(self):
-        return self.code
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.code
 
     @classmethod
     def create(cls, **kwargs):
@@ -828,11 +801,8 @@ class Coverage(AbstractMetaDataElement):
     term = 'Coverage'
     type = models.CharField(max_length=20, choices=COVERAGE_TYPES)
 
-    def __str__(self):
-        return "{type} {value}".format(type=self.type, value=self._value)
-
     def __unicode__(self):
-        return unicode(str(self))
+        return "{type} {value}".format(type=self.type, value=self._value)
 
     class Meta:
         unique_together = ("type", "content_type", "object_id")
@@ -1008,11 +978,8 @@ class Format(AbstractMetaDataElement):
     class Meta:
         unique_together = ("value", "content_type", "object_id")
 
-    def __str__(self):
-        return self.value
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.value
 
 
 class Subject(AbstractMetaDataElement):
@@ -1022,11 +989,8 @@ class Subject(AbstractMetaDataElement):
     class Meta:
         unique_together = ("value", "content_type", "object_id")
 
-    def __str__(self):
-        return self.value
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.value
 
     @classmethod
     def remove(cls, element_id):
@@ -1048,11 +1012,8 @@ class Source(AbstractMetaDataElement):
     class Meta:
         unique_together = ("derived_from", "content_type", "object_id")
 
-    def __str__(self):
-        return self.derived_from
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.derived_from
 
 
 class Rights(AbstractMetaDataElement):
@@ -1060,7 +1021,7 @@ class Rights(AbstractMetaDataElement):
     statement = models.TextField(null=True, blank=True)
     url = models.URLField(null=True, blank=True)
 
-    def __str__(self):
+    def __unicode__(self):
         value = ''
         if self.statement:
             value += self.statement + ' '
@@ -1068,9 +1029,6 @@ class Rights(AbstractMetaDataElement):
             value += self.url
 
         return value
-
-    def __unicode__(self):
-        return unicode(str(self))
 
     class Meta:
         unique_together = ("content_type", "object_id")
