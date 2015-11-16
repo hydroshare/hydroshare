@@ -87,7 +87,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
   border: 1px solid #D6D6D6;
   border-top-color: #EEEEEE;
 
-  border-radius: 0px;
+  border-radius: 0;
   -webkit-box-shadow: none;
   box-shadow: none;
 }
@@ -1209,7 +1209,6 @@ table.table-plain td{
     overflow-x:hidden;
 }
 .tab-elements > .tabs-body{
-    max-height: 400px;
     min-height: 150px;
     border: 1px solid #ddd;
     padding: 10px;
@@ -1231,8 +1230,8 @@ table.table-plain td{
 
 .page-title{
     font-weight: 500;
-    margin: 30px 0px;
-    margin-top: 10px;
+    margin: 30px 0;
+    margin-top: 10;
     width: calc(100% - 100px);
 }
 
@@ -1258,10 +1257,6 @@ body > .container{
     /*Substract the height of the footer*/
     min-height: calc(100% - 307px);
     padding-top: 20px;
-    /*background: #FFF;*/
-    /*margin-top: 20px;*/
-    /*border-radius: 5px;*/
-    /*box-shadow: 0px 0px 5px #B5B5B5;*/
 }
 
 .icon-button {
@@ -1288,7 +1283,7 @@ body > .container{
 }
 
 .custom-btn-toolbar .icon-button:hover {
-    box-shadow: 0px 0px 5px #B2B2B2;
+    box-shadow: 0 0 5px #B2B2B2;
 }
 
 .custom-btn-toolbar {
@@ -1315,6 +1310,34 @@ body > .container{
     left: 50%;
     margin-left: -25%;
     top: 60px;
+}
+
+
+.custom-alert {
+    position: fixed;
+    background-color: lightgreen;
+    padding: 0 10px;
+    text-align: center;
+    line-height: 50px;
+    border: 1px solid #16E716;
+    text-shadow: 1px -1px #BEFFBE;
+}
+
+.custom-alert-icon {
+    font-size: 24px;
+    color: #337133;
+    top: 5px;
+    margin-right: 10px;
+}
+
+.custom-well {
+    min-height: 20px;
+    padding: 19px;
+    margin-bottom: 20px;
+    border: 1px solid #e3e3e3;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
 .cc-image {
@@ -1547,15 +1570,6 @@ a.tag:hover {
     border-bottom:1px solid #ddd;
 }
 
-.custom-well{
-    min-height: 20px;
-    padding: 19px;
-    margin-bottom: 20px;
-    border: 1px solid #e3e3e3;
-    border-radius: 4px;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.05);
-    box-shadow: inset 0 1px 1px rgba(0,0,0,0.05);
-}
 
 .user-thumbnail strong{
     margin-right:10px;
@@ -1585,7 +1599,6 @@ span.name-label {
 }
 
 .tab-elements {
-    max-height:441px;
     overflow-x:auto;
     overflow-y:hidden;
 	margin-top: 20px;
@@ -1791,7 +1804,7 @@ span.name-label {
 }
 
 .resource-search ul {
-	margin: 7px 0px 0px;
+	margin: 7px 0 0;
 	padding-left: 2px;
 }
 
@@ -1816,14 +1829,14 @@ span.name-label {
 
 .resource-search-items ul {
 	position: absolute;
-	top: 0px;
+	top: 0;
 }
 .resource-search-items li {
 	display: inline-block;
 }
 
 ul.resource-search-options {
-	margin: 40px 0px 0px;
+	margin: 40px 0 0;
 	padding-left: 2px;
 	border: 1px solid lightgrey;
 	border-top: none;
@@ -2100,4 +2113,51 @@ button.loading {
 #list-roles > li > a {
 	font-size: 14px;
 	cursor: pointer;
+}
+
+.glyphicon-info-sign {
+    top: 2px;
+}
+
+/*  =============== Coverage Tab - Google map css ================ */
+#coverageMap {
+	height:350px;
+	border:1px solid #DDD;
+}
+
+#id_name {
+    max-width: 467px;
+}
+
+.invalid-input {
+	border-color: #F00 !important;
+}
+
+.invalid-input:focus {
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(233, 102, 102, 0.6);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(233, 102, 102, 0.6);
+}
+
+#resetZoomBtn {
+    width: 28px;
+    text-align: center;
+    padding: 8px;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    border-radius: 2px;
+    box-shadow: 0 1px 0 rgba(111, 111, 111, 0.5);
+    background-color: #FFF;
+    float: right;
+    right: 11px;
+    top: -120px;
+    color: #666;
+}
+
+#resetZoomBtn:hover {
+    cursor:pointer;
+    color: #353535;
+}
+
+#resetZoomBtn::before {
+    margin-left: -1px;
 }

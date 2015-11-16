@@ -103,7 +103,7 @@ def create_bag_files(resource):
     a = Aggregation(ag_url)
 
     #Set properties of the aggregation
-    a._dc.title = resource.title
+    a._dc.title = resource.metadata.title.value
     a._dcterms.type = URIRef(resource.metadata.type.url)
     a._citoterms.isDocumentedBy = metadata_url
     a._ore.isDescribedBy = res_map_url
