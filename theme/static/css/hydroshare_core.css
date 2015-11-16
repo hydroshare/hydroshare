@@ -969,6 +969,15 @@ span.remove{
 #resourceSpecificTab{
     overflow-x:hidden;
 }
+
+#variables .custom-well {
+	height: 180px;
+	overflow: auto;
+}
+
+.custom-table th {
+	padding-right: 8px;
+}
 #txt-title{
     /*width: calc(100% - 10px);*/
     font-size: 27px;
