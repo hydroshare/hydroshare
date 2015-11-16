@@ -975,9 +975,8 @@ span.remove{
 	overflow: auto;
 }
 
-#modeloutput input.form-control[type='radio'] {
+#resourceSpecificTab input.form-control[type='radio'], #resourceSpecificTab input.form-control[type='checkbox'] {
 	box-shadow: none;
-
 }
 .custom-table th {
 	padding-right: 8px;

@@ -9,179 +9,245 @@
     {% if extended_metadata_exists %}
         <div class="row">
             <div class="col-md-12">
-                <div>
-                    {% if model_output %}
-                        <h4><strong>Model Output:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Includes output files?</strong></div>
-                            {% if model_output.includes_output %}
-                                <div class="col-sm-8">Yes</div>
-                            {% else %}
-                                <div class="col-sm-8">No</div>
-                            {% endif %}
 
-                        </div>
-                    <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if executed_by.name %}
-                        <h4><strong>Executed By:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Model Program used for execution:</strong></div>
-                            <div class="col-sm-8">{{ executed_by.name }}</div>
-                        </div>
-                    <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if model_objective %}
-                        <h4><strong>Model Objective:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>SWAT model objectives:</strong></div>
-                            {% if model_objective.other_objectives %}
-                                <div class="col-sm-8">{{ model_objective.get_swat_model_objectives }}, {{ model_objective.other_objectives }}</div>
-                            {% else %}
-                                <div class="col-sm-8">{{ model_objective.get_swat_model_objectives }}</div>
-                            {% endif %}
-                        </div>
-                    <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if simulation_type %}
-                        <h4><strong>Simulation Type:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>SWAT simulation type:</strong></div>
-                            <div class="col-sm-8">{{ simulation_type.simulation_type_name }}</div>
-                        </div>
-                    <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if model_method %}
-                        <h4><strong>Model Method:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
+                {% if model_output %}
+                    <div style="margin-bottom: 20px;">
+                        <legend>Model Output</legend>
+                        <table class="custom-table">
+                            <tbody>
+                            <tr>
+                                <th class="text-muted">Includes output files?</th>
+                                <td>{% if model_output.includes_output %}Yes{% else %}No{% endif %}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+
+
+                {% if executed_by.name %}
+                    <div style="margin-bottom: 20px;">
+                        <legend>Executed By</legend>
+                        <table class="custom-table">
+                            <tbody>
+                            <tr>
+                                <th class="text-muted">Model Program used for execution</th>
+                                <td>{{ executed_by.name }}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+
+                {% if model_objective %}
+                    <div style="margin-bottom: 20px;">
+                        <legend>Model Objective</legend>
+                        <table class="custom-table">
+                            <tbody>
+                            <tr>
+                                <th class="text-muted">SWAT model objectives</th>
+                                <td>{% if model_objective.other_objectives %}
+                                    {{ model_objective.get_swat_model_objectives }},
+                                    {{ model_objective.other_objectives }}
+                                {% else %}
+                                    {{ model_objective.get_swat_model_objectives }}
+                                {% endif %}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+
+                {% if simulation_type %}
+                    <div style="margin-bottom: 20px;">
+                        <legend>Simulation Type</legend>
+                        <table class="custom-table">
+                            <tbody>
+                            <tr>
+                                <th class="text-muted">SWAT simulation type</th>
+                                <td>{{ simulation_type.simulation_type_name }}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+
+                {% if model_method %}
+                    <div style="margin-bottom: 20px;">
+                        <legend>Model Method</legend>
+                        <table class="custom-table">
+                            <tbody>
                             {% if model_method.runoff_calculation_method %}
-                                <div class="col-sm-4"><strong>Runoff calculation method:</strong></div>
-                                <div class="col-sm-8">{{ model_method.runoff_calculation_method }}</div>
+                                <tr>
+                                    <th class="text-muted">Runoff calculation method</th>
+                                    <td>{{ model_method.runoff_calculation_method }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_method.flow_routing_method %}
-                                <div class="col-sm-4"><strong>Flow routing method:</strong></div>
-                                <div class="col-sm-8">{{ model_method.flow_routing_method }}</div>
+                                <tr>
+                                    <th class="text-muted">Flow routing method</th>
+                                    <td>{{ model_method.flow_routing_method }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_method.PET_estimation_method %}
-                                <div class="col-sm-4"><strong>PET estimation method:</strong></div>
-                                <div class="col-sm-8">{{ model_method.PET_estimation_method }}</div>
+                                <tr>
+                                    <th class="text-muted">PET estimation method</th>
+                                    <td>{{ model_method.PET_estimation_method }}</td>
+                                </tr>
                             {% endif %}
-                        </div>
-                    <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if model_parameter %}
-                        <h4><strong>Model Parameter:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>SWAT model used parameters:</strong></div>
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
 
-                            {% if model_parameter.other_parameters %}
-                                <div class="col-sm-8">{{ model_parameter.get_swat_model_parameters }}, {{ model_parameter.other_parameters }} </div>
-                            {% else %}
-                                <div class="col-sm-8">{{ model_parameter.get_swat_model_parameters }}</div>{#
-                            {% endif %}
-                        </div>
-                    <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if model_input %}
-                        <h4><strong>Model Input:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
+                {% if model_parameter %}
+                    <div style="margin-bottom: 20px;">
+                        <legend>Model Parameter</legend>
+                        <table class="custom-table">
+                            <tbody>
+                            <tr>
+                                <th class="text-muted">SWAT model used parameters</th>
+                                <td>{% if model_parameter.other_parameters %}
+                                    {{ model_parameter.get_swat_model_parameters }},
+                                    {{ model_parameter.other_parameters }}
+                                {% else %}
+                                    {{ model_parameter.get_swat_model_parameters }}
+                                {% endif %}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+
+
+                {% if model_input %}
+                    <div style="margin-bottom: 20px;">
+                        <legend>Model Input</legend>
+                        <table class="custom-table">
+                            <tbody>
                             {% if model_input.warm_up_period %}
-                                <div class="col-sm-4"><strong>Warm-up period in years:</strong></div>
-                                <div class="col-sm-8">{{ model_input.warm_up_period }}</div>
+                                <tr>
+                                    <th class="text-muted">Warm-up period in years</th>
+                                    <td>{{ model_input.warm_up_period }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_input.rainfall_time_step_type %}
-                                <div class="col-sm-4"><strong>Rainfall time step type:</strong></div>
-                                <div class="col-sm-8">{{ model_input.rainfall_time_step_type }}</div>
+                                <tr>
+                                    <th class="text-muted">Rainfall time step type</th>
+                                    <td>{{ model_input.rainfall_time_step_type }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_input.rainfall_time_step_value %}
-                                <div class="col-sm-4"><strong>Rainfall time step value:</strong></div>
-                                <div class="col-sm-8">{{ model_input.rainfall_time_step_value }}</div>
+                                <tr>
+                                    <th class="text-muted">Rainfall time step value</th>
+                                    <td>{{ model_input.rainfall_time_step_value }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_input.routing_time_step_type %}
-                                <div class="col-sm-4"><strong>Routing time step type:</strong></div>
-                                <div class="col-sm-8">{{ model_input.routing_time_step_type }}</div>
+                                <tr>
+                                    <th class="text-muted">Routing time step type</th>
+                                    <td>{{ model_input.routing_time_step_type }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_input.routing_time_step_value %}
-                                <div class="col-sm-4"><strong>Routing time step value:</strong></div>
-                                <div class="col-sm-8">{{ model_input.routing_time_step_value }}</div>
+                                <tr>
+                                    <th class="text-muted">Routing time step value</th>
+                                    <td>{{ model_input.routing_time_step_value }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_input.simulation_time_step_type %}
-                                <div class="col-sm-4"><strong>Simulation time step type:</strong></div>
-                                <div class="col-sm-8">{{ model_input.simulation_time_step_type }}</div>
+                                <tr>
+                                    <th class="text-muted">Simulation time step type</th>
+                                    <td>{{ model_input.simulation_time_step_type }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_input.simulation_time_step_value %}
-                                <div class="col-sm-4"><strong>Simulation time step value:</strong></div>
-                                <div class="col-sm-8">{{ model_input.simulation_time_step_value }}</div>
+                                <tr>
+                                    <th class="text-muted">Simulation time step value</th>
+                                    <td>{{ model_input.simulation_time_step_value }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_input.watershed_area %}
-                                <div class="col-sm-4"><strong>Watershed area in square kilometers:</strong></div>
-                                <div class="col-sm-8">{{ model_input.watershed_area }}</div>
+                                <tr>
+                                    <th class="text-muted">Watershed area in square kilometers</th>
+                                    <td>{{ model_input.watershed_area }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_input.number_of_subbasins %}
-                                <div class="col-sm-4"><strong>Number of subbasins:</strong></div>
-                                <div class="col-sm-8">{{ model_input.number_of_subbasins }}</div>
+                                <tr>
+                                    <th class="text-muted">Number of subbasins</th>
+                                    <td>{{ model_input.number_of_subbasins }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_input.number_of_HRUs %}
-                                <div class="col-sm-4"><strong>Number of HRUs:</strong></div>
-                                <div class="col-sm-8">{{ model_input.number_of_HRUs }}</div>
+                                <tr>
+                                    <th class="text-muted">Number of HRUs</th>
+                                    <td>{{ model_input.number_of_HRUs }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_input.DEM_resolution %}
-                                <div class="col-sm-4"><strong>DEM resolution in meters:</strong></div>
-                                <div class="col-sm-8">{{ model_input.DEM_resolution }}</div>
+                                <tr>
+                                    <th class="text-muted">DEM resolution in meters</th>
+                                    <td>{{ model_input.DEM_resolution }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_input.DEM_source_name %}
-                                <div class="col-sm-4"><strong>DEM source name:</strong></div>
-                                <div class="col-sm-8">{{ model_input.DEM_source_name }}</div>
+                                <tr>
+                                    <th class="text-muted">DEM source name</th>
+                                    <td>{{ model_input.DEM_source_name }}</td>
+                                </tr>
                             {% endif %}
                             {% if model_input.DEM_source_URL %}
-                                <div class="col-sm-4"><strong>DEM source URL:</strong></div>
-                                <div class="col-sm-8"><a id="permalink" href={{ model_input.DEM_source_URL }}>{{ model_input.DEM_source_URL }}</a></div>
+                                <tr>
+                                    <th class="text-muted">DEM source URL</th>
+                                    <td><a id="permalink"
+                                           href={{ model_input.DEM_source_URL }}>{{ model_input.DEM_source_URL }}</a>
+                                    </td>
+                                </tr>
                             {% endif %}
+
                             {% if model_input.landUse_data_source_name %}
-                                <div class="col-sm-4"><strong>LandUse data source name:</strong></div>
-                                <div class="col-sm-8">{{ model_input.landUse_data_source_name }}</div>
+                                <tr>
+                                    <th class="text-muted">LandUse data source name</th>
+                                    <td>{{ model_input.landUse_data_source_name }}</td>
+                                </tr>
                             {% endif %}
+
                             {% if model_input.landUse_data_source_URL %}
-                                <div class="col-sm-4"><strong>LandUse data source URL:</strong></div>
-                                <div class="col-sm-8"><a id="permalink" href={{ model_input.landUse_data_source_URL }}>{{ model_input.landUse_data_source_URL }}</a></div>
+                                <tr>
+                                    <th class="text-muted">LandUse data source URL</th>
+                                    <td><a id="permalink"
+                                           href={{ model_input.landUse_data_source_URL }}>{{ model_input.landUse_data_source_URL }}</a>
+                                    </td>
+                                </tr>}
                             {% endif %}
+
                             {% if model_input.soil_data_source_name %}
-                                <div class="col-sm-4"><strong>Soil data source name:</strong></div>
-                                <div class="col-sm-8">{{ model_input.soil_data_source_name }}</div>
+                                <tr>
+                                    <th class="text-muted">Soil data source name</th>
+                                    <td>{{ model_input.landUse_data_source_name }}</td>
+                                </tr>
                             {% endif %}
+
                             {% if model_input.soil_data_source_URL %}
-                                <div class="col-sm-4"><strong>Soil data source URL:</strong></div>
-                                <div class="col-sm-8"> <a id="permalink" href={{ model_input.soil_data_source_URL }}>{{ model_input.soil_data_source_URL }}</a></div>
+                                <tr>
+                                    <th class="text-muted">Soil data source URL</th>
+                                    <td><a id="permalink"
+                                           href={{ model_input.soil_data_source_URL }}>{{ model_input.soil_data_source_URL }}</a>
+                                    </td>
+                                </tr>
                             {% endif %}
-                        </div>
-                    {% endif %}
-                </div>
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
             </div>
         </div>
-    {%  endif %}
-{%  endblock %}
+    {% endif %}
+{% endblock %}
 {% block extra_js %}
     {{ block.super }}
 
     {# resource specific js can go here #}
 
-{%  endblock %}
+{% endblock %}
