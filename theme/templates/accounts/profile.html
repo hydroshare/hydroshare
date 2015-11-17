@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% load mezzanine_tags geoanalytics_tags hydroshare_tags %}
 
-{% block meta_title %}User profile for {{ u|best_name }}{% endblock %}
+{% block meta_title %}User profile for {{ profile_user|best_name }}{% endblock %}
 
 {% block main %}
-    {% with u.userprofile as profile %}
+    {% with profile_user.userprofile as profile %}
 
         <div class="row" style="padding: 40px 0;">
-            {% if u.id == user.id %}
+            {% if profile_user.id == user.id %}
                 <div class="col-xs-12 col-sm-2 pull-right">
                     <a id="btn-edit-profile" data-toggle="tooltip" data-placement="auto"
                        title="Edit profile" href="{% url 'profile_update' %}"
@@ -15,7 +15,7 @@
                 </div>
             {% endif %}
 
-            <div {% if u.id == user.id %}class="col-xs-12 col-sm-10"{% else %}class="col-sm-12"{% endif %}>
+            <div {% if profile_user.id == user.id %}class="col-xs-12 col-sm-10"{% else %}class="col-sm-12"{% endif %}>
                 {#        Profile picture       #}
                 {% if profile.picture and profile.picture.url %}
                     <div style="background-image: url('{{ profile.picture.url }}')"
@@ -26,10 +26,10 @@
                 {% endif %}
 
                 <div style="padding-top:10px;">
-                    {% if u.first_name or u.last_name %}
-                        <h2>{{ u.first_name }} {{ u.last_name }}</h2>
+                    {% if profile_user.first_name or profile_user.last_name %}
+                        <h2>{{ profile_user.first_name }} {{ profile_user.last_name }}</h2>
                     {% else %}
-                        <h2>{{ u.username }}</h2>
+                        <h2>{{ profile_user.username }}</h2>
                     {% endif %}
 
                     {% if profile.organization or profile.title %}
@@ -101,10 +101,10 @@
                                                 <div class="profile-pic-thumbnail round-image user-icon"></div>
                                             {% endif %}
 
-                                            {% if u.first_name or u.last_name %}
-                                                <strong>{{ u.first_name }} {{ u.last_name }}</strong>
+                                            {% if profile_user.first_name or profile_user.last_name %}
+                                                <strong>{{ profile_user.first_name }} {{ profile_user.last_name }}</strong>
                                             {% else %}
-                                                <strong>{{ u.username }}</strong>
+                                                <strong>{{ profile_user.username }}</strong>
                                             {% endif %}
 
                                             <span class="text-muted"> shared </span>
@@ -135,10 +135,10 @@
                         <div class="col-md-5">
                             {#        DESCRIPTION       #}
 
-                            {% if profile.details and user.pk %}
+                            {% if profile.details and not user.is_anonymous %}
                             <div class="panel panel-default">
                                 <div class="panel-heading">
-                                    <h3 class="panel-title">About {{ u.first_name }}</h3>
+                                    <h3 class="panel-title">About {{ profile_user.first_name }}</h3>
                                 </div>
                                 <div class="panel-body" style="color:#757575;">
                                     {{ profile.details }}
@@ -147,7 +147,7 @@
                             {% endif %}
 
                             {#  CONTACT #}
-                            {% if profile.public or u.id == user.id and user.pk %} {# Show only if profile is public and user is logged in #}
+                            {% if profile.public or profile_user.id == user.id and not user.is_anonymous %} {# Show only if profile is public and user is logged in #}
                                 <div class="panel panel-default">
                                     <div class="panel-heading">
                                     <h3 class="panel-title">Contact</h3>
@@ -169,16 +169,16 @@
                                             <td>{{ profile.phone_2 }}</td>
                                         </tr>
                                     {% endif %}
-                                    {% if u.email %}
-                                        {% if user.pk %}
+                                    {% if profile_user.email %}
+                                        {% if not user.is_anonymous %}
                                             <tr>
                                                 <td><span class="text-muted">Email</span></td>
                                                 <td>
-                                                    <a href="mailto:{{ u.email }}">send email to
-                                                        {% if u.first_name or u.last_name %}
-                                                            {{ u.first_name }} {{ u.last_name }}
+                                                    <a href="mailto:{{ profile_user.email }}">send email to
+                                                        {% if profile_user.first_name or profile_user.last_name %}
+                                                            {{ profile_user.first_name }} {{ profile_user.last_name }}
                                                         {% else %}
-                                                            {{ u.username }}
+                                                            {{ profile_user.username }}
                                                         {% endif %}
                                                     </a>
                                                 </td>
@@ -358,10 +358,10 @@
 {#                <div role="tabpanel" class="tab-pane fade" id="social">#}
 {#                    <div class="col-sm-12 col-md-6">#}
 {#                        <h4 class="title">Groups</h4>#}
-{#                        <strong><span>{% if u.first_name or u.last_name %}#}
-{#                            {{ u.first_name }} {{ u.last_name }}#}
+{#                        <strong><span>{% if profile_user.first_name or profile_user.last_name %}#}
+{#                            {{ profile_user.first_name }} {{ profile_user.last_name }}#}
 {#                        {% else %}#}
-{#                            {{ u.username }}#}
+{#                            {{ profile_user.username }}#}
 {#                        {% endif %}</span></strong>#}
 {#                        is a member of:#}
 {##}

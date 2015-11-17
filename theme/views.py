@@ -60,7 +60,7 @@ class UserProfileView(TemplateView):
                 resources = resources.filter(Q(raccess__public=True) | Q(raccess__discoverable=True))
 
         return {
-            'u': u,
+            'profile_user': u,
             'resources': resources,
         }
 
