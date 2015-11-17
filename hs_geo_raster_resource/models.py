@@ -40,32 +40,36 @@ class OriginalCoverage(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         """
-        Check if the 'value' is a dictionary and check if all required keys are in the dictionary.
-        Then convert the dict as Json string to be the "_value" subelement value
+        The '_value' subelement needs special processing. (Check if the 'value' includes the required info and convert
+        'value' dict as Json string to be the '_value' subelement value.) The base class create() can't do it.
+
+        :param kwargs: the 'value' in kwargs should be a dictionary
+
         """
+
         if 'value' in kwargs:
-            if isinstance(kwargs['value'], dict):
-                # check that all the required sub-elements exist
-                for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
-                    if not value_item in kwargs['value']:
-                        raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or 'units' is missing.")
+            # check that all the required sub-elements exist
+            for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
+                if not value_item in kwargs['value']:
+                    raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or 'units' is missing.")
 
-                value_dict = {k: v for k, v in kwargs['value'].iteritems()
-                              if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
+            value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
 
-                value_json = json.dumps(value_dict)
-                del kwargs['value']
-                kwargs['_value'] = value_json
-                return super(OriginalCoverage, cls).create(**kwargs)
-            else:
-                raise ValidationError('Invalid coverage value format.')
+            value_json = json.dumps(value_dict)
+            del kwargs['value']
+            kwargs['_value'] = value_json
+            return super(OriginalCoverage, cls).create(**kwargs)
         else:
             raise ValidationError('Coverage value is missing.')
 
     @classmethod
     def update(cls, element_id, **kwargs):
         """
-        Check if the 'value' is a dictionary and convert the dictionary as Json string to be the "_value" subelement value.
+        The '_value' subelement needs special processing. (Convert the 'value' dict as Json string to be the "_value"
+        subelement value.) The base class update() can't do it.
+
+        :param kwargs: the 'value' in kwargs should be a dictionary
         """
         try:
             cov = OriginalCoverage.objects.get(id=element_id)
@@ -73,9 +77,6 @@ class OriginalCoverage(AbstractMetaDataElement):
             raise ObjectDoesNotExist("No coverage element was found for the provided id:%s" % element_id)
 
         if 'value' in kwargs:
-            if not isinstance(kwargs['value'], dict):
-                raise ValidationError('Invalid coverage value format.')
-
             value_dict = cov.value
 
             for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
