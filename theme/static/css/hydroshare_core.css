@@ -1472,6 +1472,8 @@ body > .container{
     display: inline-block;
     float: left;
 	background:#EEE;
+	border: 1px solid #cccccc;
+  	border-radius: 0px;
 }
 
 #citation-text a, .rights-url a{

@@ -273,9 +273,8 @@
             <h3>How to cite</h3>
 
             <div class="input-group" style="margin-bottom: 30px">
-                <input readonly id="citation-text" style="cursor:default;" type="text"
-                       class="form-control" aria-describedby="basic-addon1" value="{{ citation }}">
-                <span class="input-group-addon "><span class="glyphicon glyphicon-book"
+                <span id="citation-text">{{ citation }}</span>
+                <span class="input-group-addon"><span class="glyphicon glyphicon-book"
                         data-toggle="tooltip" data-placement="bottom" title="Click on the text to select all"></span></span>
             </div>
 
@@ -2378,7 +2377,21 @@
         <script type="text/javascript">
 
             $("#citation-text").on("click", function(e){
-                $(this).select();
+                // document.selection logic is added in for IE 8 and lower
+                if (document.selection) {
+                    document.selection.empty();
+                    var range = document.body.createTextRange();
+                    range.moveToElementText(this);
+                    range.select();
+                }
+                else if (window.getSelection) {
+                    // Get the selection object
+                    var selection = window.getSelection();
+                    selection.removeAllRanges();
+                    var range = document.createRange();
+                    range.selectNode(this);
+                    selection.addRange(range);
+                }
             });
 
             // Prevents form submission when pressing the enter key on the search box.
