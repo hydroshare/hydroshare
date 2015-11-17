@@ -84,7 +84,7 @@
                         <div class="col-md-7">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
-                                    <h3 class="panel-title">Recent activity</h3>
+                                    <h3 class="panel-title"><span class="glyphicon glyphicon-bell">&nbsp;</span>Recent activity</h3>
                                 </div>
                                 <div class="panel-body">
                                     {% if resources %}
@@ -138,7 +138,7 @@
                             {% if profile.details and not user.is_anonymous %}
                             <div class="panel panel-default">
                                 <div class="panel-heading">
-                                    <h3 class="panel-title">About {{ profile_user.first_name }}</h3>
+                                    <h3 class="panel-title"><span class="glyphicon glyphicon-user">&nbsp;</span>About {{ profile_user.first_name }}</h3>
                                 </div>
                                 <div class="panel-body" style="color:#757575;">
                                     {{ profile.details }}
@@ -150,7 +150,7 @@
                             {% if profile.public or profile_user.id == user.id and not user.is_anonymous %} {# Show only if profile is public and user is logged in #}
                                 <div class="panel panel-default">
                                     <div class="panel-heading">
-                                    <h3 class="panel-title">Contact</h3>
+                                    <h3 class="panel-title"><span class="glyphicon glyphicon-phone-alt">&nbsp;</span>Contact</h3>
                                 </div>
 
                                 <div class="panel-body">
