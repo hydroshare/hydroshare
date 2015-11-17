@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import json
-import requests
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -396,26 +395,6 @@ def save_ajax(request):
     except ValidationError as error: # The error is for a field that you are editing
         message_i18n = ', '.join([u"%s" % m for m in error.messages])
         return _get_http_response({'errors': message_i18n})
-
-
-class CaptchaVerifyForm(forms.Form):
-    challenge = forms.CharField()
-    response = forms.CharField()
-
-
-def verify_captcha(request):
-    f = CaptchaVerifyForm(request.POST)
-    if f.is_valid():
-        params = dict(f.cleaned_data)
-        params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY', '6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x')
-        params['remoteip'] = request.META['REMOTE_ADDR']
-        # return HttpResponse('true', content_type='text/plain')
-        resp = requests.post('http://www.google.com/recaptcha/api/verify', params=params)
-        lines = resp.text.split('\n')
-        if lines[0].startswith('false'):
-            raise ex.PermissionDenied('captcha failed')
-        else:
-            return HttpResponse('true', content_type='text/plain')
 
 
 def verify_account(request, *args, **kwargs):
