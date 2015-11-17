@@ -1,18 +1,21 @@
 from __future__ import absolute_import
-from django.contrib.auth.decorators import login_required
-from django import forms
-from django.http import HttpResponseRedirect, HttpResponseNotFound
-from mezzanine.pages.page_processors import processor_for
-from ga_resources.utils import json_or_jsonp
-from hs_core import hydroshare, page_processors
-from . import ts_utils
-from .models import RefTimeSeriesResource
+
+import tempfile, zipfile
+import shutil
 import requests
 from lxml import etree
 import ast
+
+from django.contrib.auth.decorators import login_required
+from django import forms
+from django.http import HttpResponseRedirect, HttpResponseNotFound
 from django.http import HttpResponse
-import tempfile, zipfile
-import shutil
+from mezzanine.pages.page_processors import processor_for
+
+from hs_core import hydroshare, page_processors
+from ga_resources.utils import json_or_jsonp
+from .models import RefTimeSeriesResource
+from . import ts_utils
 
 def get_his_urls(request):
     service_url = 'http://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'

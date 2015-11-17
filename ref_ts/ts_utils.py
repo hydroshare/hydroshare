@@ -61,16 +61,24 @@ def sites_from_soap(wsdl_url, locations='[:]'):
          due to incorrect formatting in the web service response.")
     try:
         sites = []
-        root = etree.XML(response)
-        wml_version = get_version(root)
-        if wml_version == '1':
-            for element in root:
-                if 'site' in element.tag:
-                    sites.append(element[0][0].text + " : " + element[0][1].text)
-        elif wml_version == '2.0':
-            pass   # FIXME I need to change this, obviously
-        else:
-            raise Http404()
+        if isinstance(response, basestring):
+            root = etree.XML(response)
+            wml_version = get_version(root)
+            if wml_version == '1':
+                for element in root:
+                    if 'site' in element.tag:
+                        sites.append(element[0][0].text + " [" + element[0][1].attrib["network"]
+                                     + ":" + element[0][1].text + "]")
+            elif wml_version == '2.0':
+                pass   # FIXME I need to change this, obviously
+            else:
+                raise Http404()
+        elif isinstance(response, object):
+            for site in response.site:
+                site_code = site.siteInfo.siteCode[0].value
+                network_name = site.siteInfo.siteCode[0]._network
+                site_name = site.siteInfo.siteName
+                sites.append("%s [%s:%s]" % (site_name, network_name, site_code))
     except:
         return "Parsing error: The Data in the WSDL Url '{0}' was not correctly formatted \
 according to the WaterOneFlow standard given at 'http://his.cuahsi.org/wofws.html#waterml'.".format(wsdl_url)
@@ -78,7 +86,9 @@ according to the WaterOneFlow standard given at 'http://his.cuahsi.org/wofws.htm
     return sites
 
 def site_info_from_soap(wsdl_url, **kwargs):
-    site = ':' + kwargs['site']
+    site = kwargs['site']
+    index = site.rfind(" [")
+    site = site[index+2:len(site)-1]
 
     if not wsdl_url.endswith('.asmx?WSDL') and not wsdl_url.endswith('.asmx?wsdl'):
         raise Http404("The correct url format ends in '.asmx?WSDL'.")
