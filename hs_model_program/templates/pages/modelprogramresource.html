@@ -11,54 +11,35 @@
                 {# Add the view mode html code below #}
                 <div>
                     {% if mpmetadata %}
-                        <hr>
 
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Software Version:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.software_version }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Software Languages:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.software_language }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Software Repository:</strong></div>
-                            <div class="col-sm-8"><a target="_blank" href="{{ mpmetadata.software_repo }}">{{ mpmetadata.software_repo }}</a></div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Operating System:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.operating_sys }}</div>
-                        </div>
+                        <table class="custom-table">
+                            <tbody>
+                                <tr><th class="text-muted">Software Version</th><td>{{ mpmetadata.software_version }}</td></tr>
+                                <tr><th class="text-muted">Software Languages</th><td>{{ mpmetadata.software_language }}</td></tr>
+                                <tr><th class="text-muted">Software Repository</th><td><a target="_blank" href="{{ mpmetadata.software_repo }}">{{ mpmetadata.software_repo }}</a></td></tr>
+                                <tr><th class="text-muted">Operating System</th><td>{{ mpmetadata.operating_sys }}</td></tr>
+                            </tbody>
+                        </table>
 
                         <hr>
 
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Date Released:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.date_released |date:"SHORT_DATE_FORMAT" }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Website:</strong></div>
-                            <div class="col-sm-8"><a href="{{ mpmetadata.program_website }}" target="_blank">{{ mpmetadata.program_website }}</a></div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Release Notes:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.release_notes }}</div>
-                        </div>
+                        <table class="custom-table">
+                            <tbody>
+                                <tr><th class="text-muted">Date Released</th><td>{{ mpmetadata.date_released |date:"SHORT_DATE_FORMAT" }}</td></tr>
+                                <tr><th class="text-muted">Website</th><td><a href="{{ mpmetadata.program_website }}" target="_blank">{{ mpmetadata.program_website }}</a></td></tr>
+                                <tr><th class="text-muted">Release Notes</th><td>{{ mpmetadata.release_notes }}</td></tr>
+                            </tbody>
+                        </table>
 
                         <hr>
 
-                        <div class="row">
-                            <div class="col-sm-4"><strong>User Manual:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.user_manual }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Theoretical Manual:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.theoretical_manual }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Source Code:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.source_code }}</div>
-                        </div>
+                        <table class="custom-table">
+                            <tbody>
+                                <tr><th class="text-muted">User Manual</th><td>{{ mpmetadata.user_manual }}</td></tr>
+                                <tr><th class="text-muted">Theoretical Manual</th><td>{{ mpmetadata.theoretical_manual }}</td></tr>
+                                <tr><th class="text-muted">Source Code</th><td>{{ mpmetadata.source_code }}</td></tr>
+                            </tbody>
+                        </table>
 
                         <hr>
                     {% endif %}
