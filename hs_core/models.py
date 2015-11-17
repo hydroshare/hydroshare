@@ -1981,33 +1981,48 @@ class CoreMetaData(models.Model):
 
         :param root: the xml document root element to which xml elements for the specified metadata element needs
                      to be added
-        :param md_element: the metadata element object
-        :param md_fields: attribute names of the metadata element (if the name to be used in generating the xml element
-                          name is same as the attribute name then it must be a list of attribute names. if xml element
-                          name needs to be different from the attribute name then it must be a list of tuples with
-                          first element in each tuple being the attribute name and the second element being
+        :param md_element: the metadata element object. The term attribute of the metadata element object is used for
+                           naming the root xml element for this metadata element. If the root xml element needs to be
+                           named differently, then this needs to be a tuple with first element being the metadata
+                           element object and the second being the name for the root element.
+                           Example: md_element=self.Creator    # the term attribute of the Creator object will be used
+                                    md_element=(self.Creator, 'Author') # 'Author' will be used
+
+        :param md_fields: a list of attribute names of the metadata element (if the name to be used in generating the
+                          xml element name is same as the attribute name then include the attribute name as a list item.
+                          if xml element name needs to be different from the attribute name then the list item must be
+                          a tuple with first element of the tuple being the attribute name and the second element being
                           what will be used in naming the xml element)
+                          Example: [('first_name', 'firstName'), 'phone', 'email'] # xml sub-elements names: firstName, phone, email
 
         """
         from lxml import etree
 
-        # if the list of attributes is not a list of tuples make it a list of tuples
-        if not isinstance(md_fields[0], tuple):
-            md_fields = ([(k, k) for k in md_fields])
+        if isinstance(md_element, tuple):
+            md_element = md_element[0]
+            element_name = md_element[1]
+        else:
+            element_name = md_element.term
 
-        element_name = dict(md_fields).get('md_element', md_element.term)
         hsterms_newElem = etree.SubElement(root,
                                            "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'],
                                                                           new_element=element_name))
         hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
                                                     "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
         for md_field in md_fields:
-            if hasattr(md_element, md_field[0]):
-                attr = getattr(md_element, md_field[0])
+            if isinstance(md_field, tuple):
+                field_name = md_field[0]
+                xml_element_name = md_field[1]
+            else:
+                field_name = md_field
+                xml_element_name = md_field
+
+            if hasattr(md_element, field_name):
+                attr = getattr(md_element, field_name)
                 if attr:
                     field = etree.SubElement(hsterms_newElem_rdf_Desc,
                                              "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
-                                                                      field=md_field[1]))
+                                                                      field=xml_element_name))
                     field.text = str(attr)
 
     def _create_person_element(self, etree, parent_element, person):

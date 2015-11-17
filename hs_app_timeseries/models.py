@@ -229,10 +229,10 @@ class TimeSeriesMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         if self.site:
-            element_fields = [('md_element', 'site'), ('site_code', 'SiteCode'), ('site_name', 'SiteName')]
+            element_fields = [('site_code', 'SiteCode'), ('site_name', 'SiteName')]
 
             if self.site.elevation_m:
-                element_fields.append(('elevation_m','Elevation_m'))
+                element_fields.append(('elevation_m', 'Elevation_m'))
 
             if self.site.elevation_datum:
                 element_fields.append(('elevation_datum', 'ElevationDatum'))
@@ -240,12 +240,11 @@ class TimeSeriesMetaData(CoreMetaData):
             if self.site.site_type:
                 element_fields.append(('site_type', 'SiteType'))
 
-            self.add_metadata_element_to_xml(container, self.site, element_fields)
+            self.add_metadata_element_to_xml(container, (self.site, 'site'), element_fields)
 
         if self.variable:
-            element_fields = [('md_element', 'variable'), ('variable_code', 'VariableCode'),
-                              ('variable_name', 'VariableName'), ('variable_type', 'VariableType'),
-                              ('no_data_value', 'NoDataValue')]
+            element_fields = [('variable_code', 'VariableCode'), ('variable_name', 'VariableName'),
+                              ('variable_type', 'VariableType'), ('no_data_value', 'NoDataValue')]
 
             if self.variable.variable_definition:
                 element_fields.append(('variable_definition', 'VariableDefinition'))
@@ -253,10 +252,10 @@ class TimeSeriesMetaData(CoreMetaData):
             if self.variable.speciation:
                 element_fields.append(('speciation', 'Speciation'))
 
-            self.add_metadata_element_to_xml(container, self.variable, element_fields)
+            self.add_metadata_element_to_xml(container, (self.variable, 'variable'), element_fields)
 
         if self.method:
-            element_fields = [('md_element', 'method'), ('method_code', 'MethodCode'), ('method_name', 'MethodName'),
+            element_fields = [('method_code', 'MethodCode'), ('method_name', 'MethodName'),
                               ('method_type', 'MethodType')]
 
             if self.method.method_description:
@@ -265,10 +264,10 @@ class TimeSeriesMetaData(CoreMetaData):
             if self.method.method_link:
                 element_fields.append(('method_link', 'MethodLink'))
 
-            self.add_metadata_element_to_xml(container, self.method, element_fields)
+            self.add_metadata_element_to_xml(container, (self.method, 'method'), element_fields)
 
         if self.processing_level:
-            element_fields = [('md_element', 'processingLevel'), ('processing_level_code', 'ProcessingLevelCode')]
+            element_fields = [('processing_level_code', 'ProcessingLevelCode')]
 
             if self.processing_level.definition:
                 element_fields.append(('definition', 'Definition'))
@@ -276,7 +275,7 @@ class TimeSeriesMetaData(CoreMetaData):
             if self.processing_level.explanation:
                 element_fields.append(('explanation', 'Explanation'))
 
-            self.add_metadata_element_to_xml(container, self.processing_level, element_fields)
+            self.add_metadata_element_to_xml(container, (self.processing_level, 'processingLevel'), element_fields)
 
         if self.time_series_result:
             # since 2nd level nesting of elements exists here, can't use the helper function add_metadata_element_to_xml()
