@@ -973,6 +973,16 @@ span.remove{
 #variables .custom-well {
 	height: 180px;
 	overflow: auto;
+	background-color:#FFF;
+}
+
+#variables .custom-well > strong{
+	font-size:18px;
+}
+
+#variables {
+	max-height: 600px;
+	overflow:auto;
 }
 
 #resourceSpecificTab input.form-control[type='radio'], #resourceSpecificTab input.form-control[type='checkbox'] {

@@ -61,31 +61,33 @@
                     {# Add the Variable meta #}
                     <legend style="margin-top:20px;">Variables</legend>
                     {% if variables %}
-                        <div id="variables" class="row">
-                        {% for variable in variables %}
-                            <div class="col-xs-12 col-sm-3">
-                                <div class="custom-well">
-                                    <strong style="font-size:18px;">{{ variable.name }}</strong>
-                                    <table class="custom-table">
-                                        <tbody>
-                                            <tr><th class="text-muted">Unit </th><td>{{ variable.unit }}</td></tr>
-                                            <tr><th class="text-muted">Type </th><td>{{ variable.type }}</td></tr>
-                                            <tr><th class="text-muted">Shape </th><td>{{ variable.shape }}</td></tr>
-                                            {# Optional extended meta subelement for Variable #}
-                                            {% if variable.descriptive_name %}
-                                                <tr><th class="text-muted">Long Name </th><td>{{ variable.descriptive_name }}</td></tr>
-                                            {% endif %}
-                                            {% if variable.missing_value %}
-                                                <tr><th class="text-muted">Missing Value </th><td>{{ variable.missing_value }}</td></tr>
-                                            {% endif %}
-                                            {% if variable.method %}
-                                                <tr><th class="text-muted">Comment </th><td>{{ variable.method }}</td></tr>
-                                            {% endif %}
-                                        </tbody>
-                                    </table>
+                        <div id="variables" class="well clearfix">
+                            <div class="row">
+                            {% for variable in variables %}
+                                <div class="col-xs-12 col-sm-3">
+                                    <div class="custom-well">
+                                        <strong>{{ variable.name }}</strong>
+                                        <table class="custom-table">
+                                            <tbody>
+                                                <tr><th class="text-muted">Unit </th><td>{{ variable.unit }}</td></tr>
+                                                <tr><th class="text-muted">Type </th><td>{{ variable.type }}</td></tr>
+                                                <tr><th class="text-muted">Shape </th><td>{{ variable.shape }}</td></tr>
+                                                {# Optional extended meta subelement for Variable #}
+                                                {% if variable.descriptive_name %}
+                                                    <tr><th class="text-muted">Long Name </th><td>{{ variable.descriptive_name }}</td></tr>
+                                                {% endif %}
+                                                {% if variable.missing_value %}
+                                                    <tr><th class="text-muted">Missing Value </th><td>{{ variable.missing_value }}</td></tr>
+                                                {% endif %}
+                                                {% if variable.method %}
+                                                    <tr><th class="text-muted">Comment </th><td>{{ variable.method }}</td></tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                            </div>
-                        {% endfor %}
+                            {% endfor %}
+                         </div>
                         </div>
                     {% else %}
                         <p> Metadata information is not provided. </p>
