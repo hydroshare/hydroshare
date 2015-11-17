@@ -15,11 +15,8 @@ class ModelOutput(AbstractMetaDataElement):
     term = 'ModelOutput'
     includes_output = models.BooleanField(default=False)
 
-    def __str__(self):
-        return "ModelOutput"
-
     def __unicode__(self):
-        return unicode(str(self))
+        return self.includes_output
 
     class Meta:
         # ModelOutput element is not repeatable
@@ -38,11 +35,8 @@ class ExecutedBy(AbstractMetaDataElement):
     model_name = models.CharField(max_length=500, default=None)
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True, default=None, related_name='modelinstance')
 
-    def __str__(self):
-        return "ExecutedBy"
-    
     def __unicode__(self):
-        return unicode(str(self))
+        return self.model_name
 
     class Meta:
         # ExecutedBy element is not repeatable
