@@ -18,10 +18,6 @@ admin.autodiscover()
 # Add the urlpatterns for any custom Django applications here.
 # You can also change the ``home`` view to add your own functionality
 # to the project's homepage.
-#faceted_sqs = SearchQuerySet().filter(discoverable=True)
-#facet_list = ('author', 'creators', 'subjects', 'public', 'discoverable', 'language', 'title', 'resource_type')
-#for item in facet_list:
-#    faceted_sqs = faceted_sqs.facet(item)
 
 urlpatterns = i18n_patterns("",
 

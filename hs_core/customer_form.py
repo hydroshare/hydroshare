@@ -4,10 +4,10 @@ from crispy_forms.layout import *
 from crispy_forms.bootstrap import *
 
 class MyForm(FacetedSearchForm):
-    faceted_choices = (('author', 'Author'), ('creators', 'Creators'),('subjects', 'Subjects'),
-                       ('public', 'Public'),('discoverable', 'Discoverable'), ('language', 'Language'), ('resource_type', 'Resource Type'))
+    #faceted_choices = (('author', 'Author'), ('creators', 'Creators'),('subjects', 'Subjects'),
+                      # ('public', 'Public'),('discoverable', 'Discoverable'), ('language', 'Language'), ('resource_type', 'Resource Type'))
     #faceted_field = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=faceted_choices)
-    facted_fields = ['author', 'creators', 'subjects', 'resource_type', 'public', 'discoverable', 'language']
+    facted_fields = ['author', 'subjects', 'resource_type', 'public', 'creators', 'discoverable', 'language']
     def search(self):
         sqs = super(MyForm, self).search().filter(discoverable=True)
 
