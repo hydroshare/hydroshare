@@ -20,7 +20,7 @@
             </form>
             {% for key, values in facets.fields.items %}
                 {% if values %}
-                    <div class="panel-group">
+                    <div class="panel-group" id="faceting-{{ key }}">
                         <div class="panel panel-default">
                             <div class="panel-heading">
                             <h4 class="panel-title">
@@ -92,9 +92,25 @@
 
 {% block extra_js %}
     <script type="text/javascript">
+    var reorderDivs = function(){
+        var faceted_fields = ['author', 'subjects', 'resource_type', 'public', 'creators', 'discoverable', 'language'];
+         var div_ordering = [];
+         faceted_fields.forEach(function(field){
+             var faceting_div = "faceting-"+field;
+             div_ordering.push(faceting_div);
+         });
+         var i;
+         for (i = 1; i < div_ordering.length; i++) {
+             var div0 = "#" + div_ordering[i-1];
+             var div1 = "#" + div_ordering[i];
+             $(div1).insertAfter(div0);
+         }
+    }
+
      $(document).ready(function () {
-        $(function () {
-            $(".faceted-selections").click(function () {
+         reorderDivs();
+         $(function () {
+             $(".faceted-selections").click(function () {
                 console.log($(this).val());
                 var tokens = $(this).val().split(",");
                 var key = tokens[0];
