@@ -155,16 +155,17 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
 
         # reset extended metadata CellInformation now that the only file is deleted
         res.metadata.cellInformation.delete()
-        res.metadata.create_element('CellInformation', name=res.title, rows=0, columns = 0,
-                                        cellSizeXValue = 0, cellSizeYValue = 0,
-                                        cellSizeUnit = "NA",
-                                        cellDataType = "NA",
-                                        noDataValue = 0)
+        res.metadata.create_element('CellInformation', name=res.metadata.title.value, rows=0, columns=0,
+                                    cellSizeXValue=0, cellSizeYValue=0,
+                                    cellSizeUnit="NA",
+                                    cellDataType="NA",
+                                    noDataValue=0)
 
         # reset extended metadata BandInformation now that the only file is deleted
         for band in res.metadata.bandInformation:
             band.delete()
-        res.metadata.create_element('BandInformation', name='Band_1', variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
+        res.metadata.create_element('BandInformation', name='Band_1', variableName='Unnamed', variableUnit='Unnamed',
+                                    method='', comment='')
 
 @receiver(pre_metadata_element_create, sender=RasterResource)
 def metadata_element_pre_create_handler(sender, **kwargs):

@@ -81,7 +81,7 @@ class ExecutedByForm(ModelForm):
         mp_resource = users.get_resource_list(type=['ModelProgramResource'])
 
         # set model programs resources in choice list
-        CHOICES = (('Unspecified', 'Unspecified'),) + tuple((r.short_id, r.title) for r in mp_resource)
+        CHOICES = (('Unspecified', 'Unspecified'),) + tuple((r.short_id, r.metadata.title.value) for r in mp_resource)
 
         # Set the choice lists as the file names in the content model
         self.fields['model_name'].choices = CHOICES

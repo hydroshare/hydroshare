@@ -414,7 +414,7 @@ def create_resource(
 
         for keyword in keywords:
             resource.metadata.create_element('subject', value=keyword)
-        
+
         hs_bagit.create_bag(resource)
 
     return resource
@@ -705,9 +705,10 @@ def delete_resource_file(pk, filename_or_id, user):
     else:
         raise ObjectDoesNotExist(filename_or_id)
 
-    if resource.raccess.public:
-        if not resource.can_be_public:
+    if resource.raccess.public or resource.raccess.discoverable:
+        if not resource.can_be_public_or_discoverable:
             resource.raccess.public = False
+            resource.raccess.discoverable = False
             resource.raccess.save()
 
     # generate bag
@@ -824,7 +825,8 @@ def _update_science_metadata(resource, metadata):
 
     # add the few of the metadata elements that need to be
     # created from the resource properties (like title, abstract, created date etc)
-    resource.metadata.create_element('title', value=resource.title)
+    # TODO: create the title metadata element
+
     if resource.content:
         resource.metadata.create_element('description', abstract=resource.content)
     else:

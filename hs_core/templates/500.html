@@ -94,9 +94,18 @@
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ request.user }} <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                             <li class="account">
-                                <p><b>{{ request.user }}</b>{% if request.user.email %}<br />{{ request.user.email }}{% endif %}</p>
-                                <p><a href="{% url 'profile_update' %}">Profile</a> | <a href="{% url 'logout' %}" id="signout-menu">Sign out</a>
-                                <div class="clearfix"></div>
+                                {% if request.user.userprofile.picture and request.user.userprofile.picture.url%}
+                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                     class="round-image profile-pic-thumbnail pull-left">
+                                </div>
+                                {% else %}
+                                    <div class="profile-pic-thumbnail round-image user-icon pull-left"></div>
+                                {% endif %}
+                                <span>
+                                    <strong>{{ request.user }}</strong>
+                                    {% if request.user.email %}<br/>{{ request.user.email }}{% endif %}
+                                </span>
+                                <span><a href="/user/{{ user.id }}/">Profile</a> | <a href="{% url 'logout' %}" id="signout-menu">Sign out</a></span>
                             </li>
                         </ul>
                     </li>

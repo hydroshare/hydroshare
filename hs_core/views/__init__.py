@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import json
-import requests
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -187,10 +186,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 element_data_dict = response['element_data_dict']
                 res.metadata.update_element(element_name, element_id, **element_data_dict)
                 if element_name == 'title':
-                    res.title = res.metadata.title.value
-                    res.save()
                     if res.raccess.public:
-                        if not res.can_be_public:
+                        if not res.can_be_public_or_discoverable:
                             res.raccess.public = False
                             res.raccess.save()
 
@@ -400,26 +397,6 @@ def save_ajax(request):
         return _get_http_response({'errors': message_i18n})
 
 
-class CaptchaVerifyForm(forms.Form):
-    challenge = forms.CharField()
-    response = forms.CharField()
-
-
-def verify_captcha(request):
-    f = CaptchaVerifyForm(request.POST)
-    if f.is_valid():
-        params = dict(f.cleaned_data)
-        params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY', '6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x')
-        params['remoteip'] = request.META['REMOTE_ADDR']
-        # return HttpResponse('true', content_type='text/plain')
-        resp = requests.post('http://www.google.com/recaptcha/api/verify', params=params)
-        lines = resp.text.split('\n')
-        if lines[0].startswith('false'):
-            raise ex.PermissionDenied('captcha failed')
-        else:
-            return HttpResponse('true', content_type='text/plain')
-
-
 def verify_account(request, *args, **kwargs):
     context = {
             'username' : request.GET['username'],
@@ -513,7 +490,7 @@ def my_resources(request, page):
         reslst = reslst[start : start + res_cnt]
 
         # TODO sorts should be in SQL not python
-        res = sorted(reslst, key=lambda x: x.title)
+        res = sorted(reslst, key=lambda x: x.metadata.title.value)
 
         return {
             'resources': res,
@@ -680,15 +657,24 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
         messages.error(request, "You don't have permission to change resource sharing status")
         return
 
-    if is_public and not resource.can_be_public:
-        messages.error(request, "Resource may not have sufficient required metadata to be public")
+    has_files = False
+    has_metadata = False
+    can_resource_be_public_or_discoverable = False
+    if is_public or is_discoverable:
+        has_files = resource.has_required_content_files()
+        has_metadata = resource.metadata.has_all_required_elements()
+        can_resource_be_public_or_discoverable = has_files and has_metadata
+
+    if is_public and not can_resource_be_public_or_discoverable:
+        messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag='public'))
     else:
         if is_discoverable:
-            if resource.can_be_public:
+            if can_resource_be_public_or_discoverable:
                 resource.raccess.public = False
                 resource.raccess.discoverable = True
             else:
-                messages.error(request, "Resource may not have sufficient required metadata to be discoverable")
+                messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata,
+                                                                               resource_flag='discoverable'))
         else:
             resource.raccess.public = is_public
             resource.raccess.discoverable = is_public
@@ -697,3 +683,16 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
         # set isPublic metadata AVU accordingly
         istorage = IrodsStorage()
         istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
+
+
+def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
+    msg = ''
+    if not has_metadata and not has_files:
+        msg = "Resource does not have sufficient required metadata and content files to be {flag}".format(
+              flag=resource_flag)
+    elif not has_metadata:
+        msg = "Resource does not have sufficient required metadata to be {flag}".format(flag=resource_flag)
+    elif not has_files:
+        msg = "Resource does not have required content files to be {flag}".format(flag=resource_flag)
+
+    return msg

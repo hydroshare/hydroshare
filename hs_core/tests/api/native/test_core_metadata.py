@@ -63,7 +63,7 @@ class TestCoreMetadata(TestCase):
         # this test will pass only if are adding the relevant metadata elements
         # in the resource post-save signal handler
         # all these will fail as these elements are not being created in the resource creation signal handler yet
-        self.assertEqual(self.res.metadata.title.value, self.res.title, msg='resource title did not match')
+        self.assertEqual(self.res.metadata.title.value, 'Generic resource', msg='resource title did not match')
 
         #self.assertNotEqual(self.res.metadata.description, None, msg="resource abstract doesn't exist")
         # number of creators at this point should be 1

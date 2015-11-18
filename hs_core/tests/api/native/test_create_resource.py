@@ -45,7 +45,7 @@ class TestCreateResource(TestCase):
         res = get_resource_by_shortkey(pid)
         self.assertEqual(res.resource_type, 'GenericResource')
         self.assertTrue(isinstance(res, GenericResource), type(res))
-        self.assertTrue(res.title == 'My Test Resource')
+        self.assertTrue(res.metadata.title.value == 'My Test Resource')
         self.assertTrue(res.created.strftime('%m/%d/%Y %H:%M') == res.updated.strftime('%m/%d/%Y %H:%M') )
         self.assertTrue(res.created.strftime('%m/%d/%Y') == dt.datetime.today().strftime('%m/%d/%Y'))
         self.assertTrue(res.creator == self.user)
@@ -82,7 +82,7 @@ class TestCreateResource(TestCase):
         )
 
         # title element is created as part of resource creation
-        self.assertEqual(res.metadata.title.value, res.title, msg='resource title did not match')
+        self.assertEqual(res.metadata.title.value, 'My Test Resource', msg='resource title did not match')
 
         # resource description element is created as part of resource creation
         self.assertEqual(res.metadata.description.abstract, 'My test abstract')

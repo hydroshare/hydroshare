@@ -444,7 +444,6 @@ except ImportError:
 else:
     set_dynamic_settings(globals())
 
-#
 AUTH_PROFILE_MODULE = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 REST_FRAMEWORK = {
