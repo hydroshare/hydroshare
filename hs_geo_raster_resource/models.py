@@ -34,7 +34,6 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @property
     def value(self):
-        print self._value
         return json.loads(self._value)
 
     @classmethod
@@ -71,10 +70,8 @@ class OriginalCoverage(AbstractMetaDataElement):
 
         :param kwargs: the 'value' in kwargs should be a dictionary
         """
-        try:
-            cov = OriginalCoverage.objects.get(id=element_id)
-        except:
-            raise ObjectDoesNotExist("No coverage element was found for the provided id:%s" % element_id)
+
+        cov = OriginalCoverage.objects.get(id=element_id)
 
         if 'value' in kwargs:
             value_dict = cov.value
@@ -106,7 +103,7 @@ class BandInformation(AbstractMetaDataElement):
     comment = models.TextField(null=True, blank=True)
 
     def __unicode__(self):
-        self.name
+        return self.name
 
     @classmethod
     def remove(cls, element_id):
@@ -127,7 +124,7 @@ class CellInformation(AbstractMetaDataElement):
     noDataValue = models.FloatField(null=True, blank=True)
 
     def __unicode__(self):
-        self.name
+        return self.name
 
     class Meta:
         # CellInformation element is not repeatable
@@ -203,8 +200,6 @@ class RasterMetaData(CoreMetaData):
             return False
         if not self.bandInformation:
             return False
-        # if not self.originalCoverage:
-        #     return False
         if not self.coverages.all().filter(type='box').first():
             return False
         return True
@@ -217,8 +212,6 @@ class RasterMetaData(CoreMetaData):
             missing_required_elements.append('Cell Information')
         if not self.bandInformation:
             missing_required_elements.append('Band Information')
-        # if not self.originalCoverage:
-        #     missing_required_elements.append('Spatial Reference')
 
         return missing_required_elements
 
@@ -260,5 +253,13 @@ class RasterMetaData(CoreMetaData):
             rdf_coverage_value.text = cov_value
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
+
+    def delete_all_elements(self):
+        super(RasterMetaData, self).delete_all_elements()
+        if self.cellInformation:
+            self.cellInformation.delete()
+        if self.originalCoverage:
+            self.originalCoverage.delete()
+        self.bandInformation.delete()
 
 import receivers
