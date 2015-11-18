@@ -662,7 +662,7 @@ class Date(AbstractMetaDataElement):
             raise ObjectDoesNotExist("No date element was found for id:%d." % element_id)
 
 class Relation(AbstractMetaDataElement):
-    SOURCE_TYPES= (
+    SOURCE_TYPES = (
         ('isHostedBy', 'Hosted By'),
         ('isCopiedFrom', 'Copied From'),
         ('isPartOf', 'Part Of'),
@@ -672,6 +672,9 @@ class Relation(AbstractMetaDataElement):
         ('isDataFor', 'Data For'),
         ('cites', 'Cites'),
     )
+
+    # HS_RELATION_TERMS contains hydroshare custom terms that are not Dublin Core terms
+    HS_RELATION_TERMS = ('isHostedBy', 'isCopiedFrom')
 
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
@@ -1953,13 +1956,16 @@ class CoreMetaData(models.Model):
         for rel in self.relations.all():
             dc_relation = etree.SubElement(rdf_Description, '{%s}relation' % self.NAMESPACES['dc'])
             dc_rel_rdf_Description = etree.SubElement(dc_relation, '{%s}Description' % self.NAMESPACES['rdf'])
-            rel_dcterm = '{%s}' + rel.type
-            dcterms_type = etree.SubElement(dc_rel_rdf_Description, rel_dcterm % self.NAMESPACES['dcterms'])
-            # check if the relation value starts with 'http://' or 'https://'
-            if rel.value.lower().find('http://') == 0 or rel.value.lower().find('https://') == 0:
-                dcterms_type.set('{%s}resource' % self.NAMESPACES['rdf'], rel.value)
+            if rel.type in Relation.HS_RELATION_TERMS:
+                term_ns = self.NAMESPACES['hsterms']
             else:
-                dcterms_type.text = rel.value
+                term_ns = self.NAMESPACES['dcterms']
+            terms_type = etree.SubElement(dc_rel_rdf_Description, '{%s}{%s}' % (term_ns, rel.type))
+            # check if the relation value starts with 'http://' or 'https://'
+            if rel.value.lower().find('/resource/') == 0:
+                terms_type.set('{%s}resource' % self.NAMESPACES['rdf'], rel.value)
+            else:
+                terms_type.text = rel.value
 
         for src in self.sources.all():
             dc_source = etree.SubElement(rdf_Description, '{%s}source' % self.NAMESPACES['dc'])
