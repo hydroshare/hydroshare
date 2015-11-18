@@ -2120,11 +2120,11 @@ button.loading {
 }
 
 .profile-info-wrapper {
-	padding-top: 10px;
+    padding-top: 10px;
 }
 
 .profile-header {
-	margin: 40px 0;
+    margin: 40px 0;
 }
 
 #btn-edit-profile {
@@ -2208,7 +2208,7 @@ div.affiliation {
 .activity-block {
     margin-right: 0;
     margin-left: 0;
-	color: #555;
+    color: #555;
 }
 
 #overview .activity-block {
@@ -2224,16 +2224,16 @@ div.affiliation {
 }
 
 .activity-info > span.title {
-	font-size: 16px;
+    font-size: 16px;
 }
 
 .metadata-wrapper {
-	margin-left: 50px;
-	margin-bottom: 5px;
+    margin-left: 50px;
+    margin-bottom: 5px;
 }
 
 .metadata-wrapper > h5 {
-	margin: 2px 0;
+    margin: 2px 0;
 }
 
 .activity-description {
@@ -2242,7 +2242,7 @@ div.affiliation {
     max-height: 50px;
     overflow: hidden;
     margin-bottom: 5px;
-	margin-top: 10px;
+    margin-top: 10px;
 }
 
 .contribution .activity-description {
@@ -2289,7 +2289,7 @@ table.overview tr > td:first-child {
 }
 
 .icon-resource-type > span {
-	color: #757575;
+    color: #757575;
 }
 
 .icon-resource-type, .contribution {
@@ -2337,37 +2337,37 @@ h4.title {
 }
 
 #badge-generic .badge {
-	background-color:#1f77b4;
+    background-color:#1f77b4;
 }
 
 #badge-geographic .badge {
-	background-color:#ff7f0e;
+    background-color:#ff7f0e;
 }
 
 #badge-his .badge {
-	background-color:#2ca02c;
+    background-color:#2ca02c;
 }
 
 #badge-model-program .badge {
-	background-color:#d62728;
+    background-color:#d62728;
 }
 
 #badge-model-instance .badge {
-	background-color:#9467bd;
+    background-color:#9467bd;
 }
 
 #badge-swat .badge {
-	background-color:#8c564b;
+    background-color:#8c564b;
 }
 
 #badge-multidimensional .badge {
-	background-color:#e377c2;
+    background-color:#e377c2;
 }
 
 #badge-time-series .badge {
-	background-color:#17becf;
+    background-color:#17becf;
 }
 
 #badge-geographic-feature .badge {
-	background-color:#bcbd22;
+    background-color:#bcbd22;
 }
