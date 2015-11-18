@@ -164,10 +164,6 @@ class NetcdfMetaData(CoreMetaData):
     variables = generic.GenericRelation(Variable)
     ori_coverage = generic.GenericRelation(OriginalCoverage)
 
-    @property
-    def ori_coverage(self):
-        return self.ori_coverage.all().first()
-
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -269,8 +265,8 @@ class NetcdfMetaData(CoreMetaData):
 
     def delete_all_elements(self):
         super(NetcdfMetaData, self).delete_all_elements()
-        if self.ori_coverage:
-            self.ori_coverage.delete()
+        if self.ori_coverage.all().first():
+            self.ori_coverage.all().first().delete()
         self.variables.all().delete()
 
 import receivers  # never delete this otherwise non of the receiver function will work
