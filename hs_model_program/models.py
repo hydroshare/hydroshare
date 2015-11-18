@@ -125,17 +125,10 @@ class ModelProgramMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         if self.program:
-            model_engine = etree.SubElement(container, '{%s}modelEngine' % self.NAMESPACES['hsterms'])
-            self.build_xml_for_uploaded_content(model_engine, self.program.modelEngine.split(';'))
-
-            model_software = etree.SubElement(container, '{%s}modelSoftware' % self.NAMESPACES['hsterms'])
-            self.build_xml_for_uploaded_content(model_software, self.program.modelSoftware.split(';'))
-
-            model_documentation = etree.SubElement(container, '{%s}modelDocumentation' % self.NAMESPACES['hsterms'])
-            self.build_xml_for_uploaded_content(model_documentation, self.program.modelDocumentation.split(';'))
-
-            model_releaseNotes = etree.SubElement(container, '{%s}modelReleaseNotes' % self.NAMESPACES['hsterms'])
-            self.build_xml_for_uploaded_content(model_releaseNotes, self.program.modelReleaseNotes.split(';'))
+            self.build_xml_for_uploaded_content(container, 'modelEngine', self.program.modelEngine.split(';'))
+            self.build_xml_for_uploaded_content(container, 'modelSoftware', self.program.modelSoftware.split(';'))
+            self.build_xml_for_uploaded_content(container, 'modelDocumentation', self.program.modelDocumentation.split(';'))
+            self.build_xml_for_uploaded_content(container, 'modelReleaseNotes', self.program.modelReleaseNotes.split(';'))
 
             if self.program.modelReleaseDate:
                 model_release_date = etree.SubElement(container, '{%s}modelReleaseDate' % self.NAMESPACES['hsterms'])
@@ -161,10 +154,11 @@ class ModelProgramMetaData(CoreMetaData):
 
         return xml_string
 
-    def build_xml_for_uploaded_content(self, parent_element, content_list):
+    def build_xml_for_uploaded_content(self, parent_container, element_name, content_list):
+        # create an XML element for each content file
         for content in content_list:
-            filepath = etree.SubElement(parent_element, '{%s}value' % self.NAMESPACES['rdf'])
-            filepath.text = content
+            element = etree.SubElement(parent_container, '{%s}%s' % (self.NAMESPACES['hsterms'], element_name) )
+            element.text = content
     
 
 
