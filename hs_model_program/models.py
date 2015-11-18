@@ -6,7 +6,7 @@ from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.signals import *
-
+from lxml import etree
 
 class MpMetadata(AbstractMetaDataElement):
     term = "MpMetadata"
@@ -113,7 +113,7 @@ class ModelProgramMetaData(CoreMetaData):
         return elements
 
     def get_xml(self):
-        from lxml import etree
+
 
         # get the xml string for Model Program
         xml_string = super(ModelProgramMetaData, self).get_xml(pretty_print=False)
@@ -126,28 +126,16 @@ class ModelProgramMetaData(CoreMetaData):
 
         if self.program:
             model_engine = etree.SubElement(container, '{%s}modelEngine' % self.NAMESPACES['hsterms'])
-            engines = self.program.modelEngine.split(';')
-            for engine in engines:
-                filepath = etree.SubElement(model_engine, '{%s}value' % self.NAMESPACES['rdf'])
-                filepath.text = engine
+            self.build_xml_for_uploaded_content(model_engine, self.program.modelEngine.split(';'))
 
             model_software = etree.SubElement(container, '{%s}modelSoftware' % self.NAMESPACES['hsterms'])
-            software = self.program.modelSoftware.split(';')
-            for s in software:
-                filepath = etree.SubElement(model_software, '{%s}value' % self.NAMESPACES['rdf'])
-                filepath.text = s
+            self.build_xml_for_uploaded_content(model_software, self.program.modelSoftware.split(';'))
 
             model_documentation = etree.SubElement(container, '{%s}modelDocumentation' % self.NAMESPACES['hsterms'])
-            documentation = self.program.modelDocumentation.split(';')
-            for doc in documentation:
-                filepath = etree.SubElement(model_documentation, '{%s}value' % self.NAMESPACES['rdf'])
-                filepath.text = doc
+            self.build_xml_for_uploaded_content(model_documentation, self.program.modelDocumentation.split(';'))
 
             model_releaseNotes = etree.SubElement(container, '{%s}modelReleaseNotes' % self.NAMESPACES['hsterms'])
-            releaseNotes = self.program.modelReleaseNotes.split(';')
-            for note in releaseNotes:
-                filepath = etree.SubElement(model_releaseNotes, '{%s}value' % self.NAMESPACES['rdf'])
-                filepath.text = note
+            self.build_xml_for_uploaded_content(model_releaseNotes, self.program.modelReleaseNotes.split(';'))
 
             if self.program.modelReleaseDate:
                 model_release_date = etree.SubElement(container, '{%s}modelReleaseDate' % self.NAMESPACES['hsterms'])
@@ -172,6 +160,12 @@ class ModelProgramMetaData(CoreMetaData):
         xml_string = etree.tostring(RDF_ROOT, pretty_print=True)
 
         return xml_string
+
+    def build_xml_for_uploaded_content(self, parent_element, content_list):
+        for content in content_list:
+            filepath = etree.SubElement(parent_element, '{%s}value' % self.NAMESPACES['rdf'])
+            filepath.text = content
+    
 
 
 import receivers
