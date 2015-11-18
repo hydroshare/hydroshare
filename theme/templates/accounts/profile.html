@@ -109,8 +109,8 @@
 
                                             <span class="text-muted"> shared </span>
                                             <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                            <h5 style="margin:0 50px;" class="text-muted">Resource type: <strong>{{ res|resource_type }}</strong></h5>
-                                            <h5 style="margin:0 50px;margin-bottom:15px;" class="text-muted">Date: <strong>{{ res.created }}</strong></h5>
+                                            <h5 style="margin:0 50px;">Resource type: {{ res|resource_type }}</h5>
+                                            <h5 style="margin:0 50px;margin-bottom:15px;">Date: {{ res.created }}</h5>
 
                                             {% if res.metadata.description %}
                                                 <div class="activity-description col-sm-12"
@@ -321,23 +321,22 @@
                                     <div class="activity-block row">
                                         <div class="activity-info col-sm-12">
                                             <span style="font-size:16px;"><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                            <h5 style="margin:0" class="text-muted">Created: <strong>{{ res.created }}</strong></h5>
-                                            <h5 style="margin:0" class="text-muted">Authors:<strong>
+                                            <h5 style="margin:0; color:#757575;">Created: {{ res.created }}</h5>
+                                            <h5 style="margin:0; color:#757575;">Authors:
                                                 {% for creator in res.metadata.creators.all %}
                                                     {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
                                                     {% if creator.description %}
                                                         <a href="{{ creator.description }}">{{ creator.name }}</a>
                                                     {% else %}
-                                                        <span>{{ cr.name }}</span>
+                                                        <span>{{ creator.name }}</span>
                                                     {% endif %}
                                                 {% endfor %}
-                                                </strong>
                                             </h5>
                                         </div>
 
                                         {% if res.metadata.description %}
                                             <div class="activity-description col-sm-12">
-                                                <p class="description">
+                                                <p>
                                                     <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
                                                 </p>
                                             </div>

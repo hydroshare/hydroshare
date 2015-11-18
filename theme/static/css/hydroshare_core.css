@@ -2200,6 +2200,7 @@ div.affiliation {
 .activity-block {
     margin-right: 0;
     margin-left: 0;
+	color: #757575;
 }
 
 #overview .activity-block {
@@ -2224,10 +2225,6 @@ div.affiliation {
 
 .contribution .activity-description {
     margin-left: 15px;
-}
-
-.activity-description p {
-    color: #555;
 }
 
 #overview .activity-block:first-child {
