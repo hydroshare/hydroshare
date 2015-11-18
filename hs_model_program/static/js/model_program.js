@@ -11,16 +11,12 @@ $(document).ready(function () {
         loadWidgets();
 
         // initialize datepicker
-        //$(function() {
         $( "#modelReleaseDate_picker" ).datepicker({
             // bind a table view to the on close event
             onSelect: function (event) {
                 onChange_releaseDate(event);
             }
         });
-
-          //});
-
 });
 
 /**
@@ -39,11 +35,6 @@ function onChange_releaseDate(event){
  * Builds jQuery multiselect listboxes
  */
 function loadWidgets(){
-
-        // initialize help text popover
-    $('[data-toggle="popover"]').popover({
-        container: 'body'
-    });
 
     // get the resource id from its url
     var url = document.URL;
@@ -94,13 +85,13 @@ function loadWidgets(){
             // once the selected fields (html) have been updated, build the jQuery multiselect boxes
 
             // destroy any existing multiselect widgets
-            $('.multi-select').multiselect('destroy');
+            $('#mp-multi-select.multi-select').multiselect('destroy');
 
             // get the size of the parent div
-            var width = $('.div-multi-select').css('max-width');
+            var width = $('#mp-div-multiselect').css('max-width');
 
             // rebuild the multiselect elements
-            $('.multi-select').multiselect({
+            $('#mp-multi-select.multi-select').multiselect({
 
                 buttonWidth: width,
                 maxHeight: 200,
@@ -113,7 +104,7 @@ function loadWidgets(){
             });
 
             // add pull-right to the dropdown-menu
-            var dd = document.getElementsByClassName('multiselect-container dropdown-menu');
+            var dd = $('.div-multi-select > .btn-group > .multiselect-container.dropdown-menu');
             for (var i = 0; i < dd.length; i++) {
                 var classname = dd[i].className;
                 if (classname.indexOf(' pull-right ') == -1) {
@@ -146,13 +137,11 @@ $(document).bind("submit-error", function(event){
  */
 function set_metadata_terms(e){
 
-
     // get parent div
     var parent = $(e.currentTarget.parentElement);
 
     // get selected items from select list
-    var selected = parent.find('#multi-select').find("option:selected");
-
+    var selected = parent.find('#mp-multi-select').find("option:selected");
 
     // objects to store names and values in hidden metadata fields
     var values = [];

@@ -26,8 +26,8 @@ class mp_form_helper(BaseFormHelper):
         for elem in multiselect_elements:
             # build select list and selection table
             multiselect[elem] = HTML(
-                            '<div class="div-multi-select" parent_metadata="'+elem+'">'
-                                ' <select class="multi-select" id="multi-select" multiple="multiple">'
+                            '<div class="div-multi-select" id="mp-div-multiselect" parent_metadata="'+elem+'">'
+                                ' <select class="multi-select" id="mp-multi-select" multiple="multiple">'
                                         + options +
                                 '</select>'
                             '</div><br>')
