@@ -1470,14 +1470,15 @@ body > .container{
 
 #citation-text {
     display: inline-block;
-    float: left;
-	background:#EEE;
+    width:100%;
+    min-height: 30px;
+    background:#EEE;
 	border: 1px solid #cccccc;
   	border-radius: 0px;
 }
 
 #citation-text a, .rights-url a{
-    word-break:break-word;
+    word-break:normal;
 }
 
 #btn-download-all, #btn-add-file, #btn-signin-irods, #btn-select-irods-file {
