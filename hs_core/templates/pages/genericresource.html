@@ -2675,7 +2675,7 @@
                                 this.remove();
                             });
                             $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
-                                $(document).trigger(jQuery.Event("submit-error"));
+                                $(document).trigger(jQuery.Event("submit-success"));
                                 $(".alert-success").alert('close');
                             });
                         }
