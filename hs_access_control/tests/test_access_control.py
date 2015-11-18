@@ -270,7 +270,7 @@ class T01CreateUser(MockIRODSTestCaseMixin, TestCase):
         # check that privileged user was created correctly
         self.assertEqual(self.admin.uaccess.user.username, 'admin')
         self.assertEqual(self.admin.uaccess.user.first_name, 'administrator')
-        self.assertTrue(self.admin.uaccess.active)
+        self.assertTrue(self.admin.is_active)
 
         # start as privileged user
         self.assertEqual(self.admin.uaccess.get_number_of_owned_resources(), 0)
@@ -281,7 +281,7 @@ class T01CreateUser(MockIRODSTestCaseMixin, TestCase):
         # check that unprivileged user was created correctly
         self.assertEqual(self.cat.uaccess.user.username, 'cat')
         self.assertEqual(self.cat.uaccess.user.first_name, 'not a dog')
-        self.assertTrue(self.cat.uaccess.active)
+        self.assertTrue(self.cat.is_active)
 
         # check that user cat owns and holds nothing
         self.assertEqual(self.cat.uaccess.get_number_of_owned_resources(), 0)
