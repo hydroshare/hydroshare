@@ -445,24 +445,66 @@ def my_resources(request, page):
     # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
 
     frm = FilterForm(data=request.REQUEST)
+    page_size = settings.RESOURCE_LIST_PAGE_SIZE
     if frm.is_valid():
-        res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
+        res_cnt = page_size
         owner = frm.cleaned_data['owner'] or None
         user = frm.cleaned_data['user'] or (request.user if request.user.is_authenticated() else None)
         edit_permission = frm.cleaned_data['edit_permission'] or False
         published = frm.cleaned_data['published'] or False
         startno = frm.cleaned_data['start']
-        if(startno < 0):
-            startno = 0
-        start = startno or 0
-        from_date = frm.cleaned_data['from_date'] or None
-        words = request.REQUEST.get('text', None)
-        public = not request.user.is_authenticated()
 
         search_items = dict(
             (item_type, [t.strip() for t in request.REQUEST.getlist(item_type)])
             for item_type in ("type", "author", "contributor", "subject")
         )
+
+        from_date = frm.cleaned_data['from_date'] or None
+        words = request.REQUEST.get('text', None)
+
+        if startno is None:
+            # this is the case where either the 'RESOURCES' menu option or one of the 3 filtering menu options
+            # (Owned by me, Editable by me, Viewable by me) has been selected, OR a search item has been entered
+            startno = 0
+            # cleanup session
+            _cleanup_session_storage(request)
+
+            if owner:   # 'Owned by me' selected
+                request.session['owner'] = owner
+                request.session['edit_permission'] = edit_permission
+            elif edit_permission:   # 'Editable by me' selected
+                request.session['edit_permission'] = edit_permission
+            else:   # either 'Editable by me' or 'Viewable by me' selected
+                if 'owner' in request.session:
+                    del request.session['owner']
+                if 'edit_permission' in request.session:
+                    del request.session['edit_permission']
+
+            for item_type in ("type", "author", "contributor", "subject"):
+                request.session[item_type] = search_items[item_type]
+
+            request.session['published'] = published
+            request.session['from_date'] = from_date
+            request.session['words'] = words
+
+        else:
+            # this is the case where one of the pagination links has been selected
+            if 'owner' in request.session:
+                owner = request.session['owner']
+            if 'edit_permission' in request.session:
+                edit_permission = request.session['edit_permission']
+
+            for item_type in ("type", "author", "contributor", "subject"):
+                search_items[item_type] = request.session[item_type]
+
+            published = request.session['published']
+            from_date = request.session['from_date']
+            words = request.session['words']
+            if startno < 0:
+                startno = 0
+
+        start = startno or 0
+        public = not request.user.is_authenticated()
 
         # TODO ten separate SQL queries for basically the same data
         reslst = get_resource_list(
@@ -480,14 +522,14 @@ def my_resources(request, page):
         # need to return total number of resources as 'ct' so have to get all resources
         # and then filter by start and count
         # TODO this is doing some pagination/limits before sorting, so it won't be consistent
-        if(start>=total_res_cnt):
-            start = total_res_cnt-res_cnt
-        if(start < 0):
+        if start >= total_res_cnt:
+            start = total_res_cnt - res_cnt
+        if start < 0:
             start = 0
-        if(start+res_cnt > total_res_cnt):
-            res_cnt = total_res_cnt-start
+        if start + res_cnt > total_res_cnt:
+            res_cnt = total_res_cnt - start
 
-        reslst = reslst[start : start + res_cnt]
+        reslst = reslst[start: start + res_cnt]
 
         # TODO sorts should be in SQL not python
         res = sorted(reslst, key=lambda x: x.metadata.title.value)
@@ -495,9 +537,27 @@ def my_resources(request, page):
         return {
             'resources': res,
             'first': start,
-            'last': start+len(res),
+            'last': start + len(res),
             'ct': total_res_cnt,
+            'page_size': page_size
         }
+
+
+def _cleanup_session_storage(request):
+    for item_type in ("type", "author", "contributor", "subject"):
+        if item_type in request.session:
+            del request.session[item_type]
+
+    if 'owner' in request.session:
+        del request.session['owner']
+    if 'edit_permission' in request.session:
+        del request.session['edit_permission']
+    if 'published' in request.session:
+        del request.session['published']
+    if 'from_date' in request.session:
+        del request.session['from_date']
+    if 'words' in request.session:
+        del request.session['words']
 
 
 @processor_for(GenericResource)
