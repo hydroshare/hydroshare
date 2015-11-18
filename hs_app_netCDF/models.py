@@ -41,7 +41,6 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @property
     def value(self):
-        print self._value
         return json.loads(self._value)
 
     @classmethod
@@ -78,12 +77,7 @@ class OriginalCoverage(AbstractMetaDataElement):
         :param kwargs: the 'value' in kwargs should be a dictionary
         """
 
-        try:
-            ori_cov = OriginalCoverage.objects.get(id=element_id)
-        except:
-            raise ObjectDoesNotExist("No coverage element was found for the provided id:%s" % element_id)
-
-        # update bounding box info
+        ori_cov = OriginalCoverage.objects.get(id=element_id)
         if 'value' in kwargs:
             value_dict = ori_cov.value
 
@@ -129,18 +123,15 @@ class Variable(AbstractMetaDataElement):
     missing_value = models.CharField(max_length=100, null=True, blank=True)
 
     def __unicode__(self):
-        self.name
-
+        return self.name
 
     @classmethod
     def remove(cls, element_id):
         variable = Variable.objects.get(id=element_id)
-        if variable:
-            if Variable.objects.filter(object_id=variable.object_id, content_type__pk=variable.content_type.id).count()== 1:
-                raise ValidationError("The only variable of the resource can't be deleted.")
-            variable.delete()
-        else:
-            raise ObjectDoesNotExist("No variable element was found for id:%d." % element_id)
+        if Variable.objects.filter(object_id=variable.object_id, content_type__pk=variable.content_type.id).count()== 1:
+            raise ValidationError("The only variable of the resource can't be deleted.")
+        variable.delete()
+
 
 # Define the netCDF resource
 class NetcdfResource(BaseResource):
@@ -173,6 +164,10 @@ class NetcdfMetaData(CoreMetaData):
     variables = generic.GenericRelation(Variable)
     ori_coverage = generic.GenericRelation(OriginalCoverage)
 
+    @property
+    def ori_coverage(self):
+        return self.ori_coverage.all().first()
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -187,16 +182,12 @@ class NetcdfMetaData(CoreMetaData):
             return False
         if not self.variables.all():
             return False
-        # if not self.ori_coverage.all().first():
-        #     return False
         if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
             return False
         return True
 
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(NetcdfMetaData, self).get_required_missing_elements()
-        # if not self.ori_coverage.all().first():
-        #     missing_required_elements.append('Spatial Reference')
         if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
             missing_required_elements.append('Spatial Coverage')
         if not self.variables.all().first():
@@ -275,5 +266,11 @@ class NetcdfMetaData(CoreMetaData):
                                              "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
                                                                       field=md_fields[md_field]))
                     field.text = str(attr)
+
+    def delete_all_elements(self):
+        super(NetcdfMetaData, self).delete_all_elements()
+        if self.ori_coverage:
+            self.ori_coverage.delete()
+        self.variables.all().delete()
 
 import receivers  # never delete this otherwise non of the receiver function will work
