@@ -1,97 +1,76 @@
-from django.contrib.contenttypes import generic
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.contrib.auth.models import User, Group
-from django.db import models
-from django.contrib.sites.models import get_current_site
+from lxml import etree
 
-from mezzanine.pages.models import Page, RichText
-from mezzanine.core.models import Ownable
+from django.contrib.contenttypes import generic
+from django.db import models
+
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
-from hs_model_program.models import ModelProgramResource
-from hs_core.signals import *
 from hs_core.hydroshare import utils
 
+from hs_model_program.models import ModelProgramResource
 
 # extended metadata elements for Model Instance resource type
 class ModelOutput(AbstractMetaDataElement):
     term = 'ModelOutput'
     includes_output = models.BooleanField(default=False)
 
-    @classmethod
-    def create(cls, **kwargs):
-        if not 'includes_output' in kwargs:
-            raise ValidationError("ModelOutput includesOutput is missing.")
-        metadata_obj = kwargs['content_object']
-        return ModelOutput.objects.create(includes_output=kwargs['includes_output'], content_object=metadata_obj)
+    def __unicode__(self):
+        return self.includes_output
 
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        model_output = ModelOutput.objects.get(id=element_id)
-        if model_output:
-            for key, value in kwargs.iteritems():
-                setattr(model_output, key, value)
-            model_output.save()
+    class Meta:
+        # ModelOutput element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+    @property
+    def includesModelOutput(self):
+        if self.includes_output:
+            return "Yes"
         else:
-            raise ObjectDoesNotExist("No ModelOutput element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("ModelOutput element of a resource can't be deleted.")
-
+            return "No"
 
 class ExecutedBy(AbstractMetaDataElement):
-    term = 'ExecutedBY'
-    model_name = models.CharField(max_length=500, choices=(('-', '    '),))
-    model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True)
 
+    term = 'ExecutedBY'
+    model_name = models.CharField(max_length=500, default=None)
+    model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True, default=None, related_name='modelinstance')
 
     def __unicode__(self):
-        self.model_name
+        return self.model_name
+
+    class Meta:
+        # ExecutedBy element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+    @property
+    def modelProgramName(self):
+        if self.model_program_fk:
+            return self.model_program_fk.title
+        else:
+            return "Unspecified"
+
+    @property
+    def modelProgramIdentifier(self):
+        if self.model_program_fk:
+            return '%s%s' % (utils.current_site_url(), self.model_program_fk.get_absolute_url())
+        else:
+            return "None"
 
     @classmethod
     def create(cls, **kwargs):
         shortid = kwargs['model_name']
-
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
-
-        kwargs['model_program_fk'] = obj
         metadata_obj = kwargs['content_object']
         title = obj.title
-        mp_fk = ExecutedBy.objects.create(model_program_fk=obj,
-                                          model_name=title,
-                                          content_object=metadata_obj)
-
-        return mp_fk
-
+        return super(ExecutedBy,cls).create(model_program_fk=obj, model_name=title,content_object=metadata_obj)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         shortid = kwargs['model_name']
-
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
-
-        kwargs['model_program_fk'] = obj
-
-        executed_by = ExecutedBy.objects.get(id=element_id)
-        if executed_by:
-            for key, value in kwargs.iteritems():
-                setattr(executed_by, key, value)
-
-            executed_by.save()
-
-        else:
-            raise ObjectDoesNotExist("No ExecutedBy element was found for the provided id:%s" % kwargs['id'])
-
-
-    @classmethod
-    def remove(cls, element_id):
-        raise ValidationError("ExecutedBy element of a resource can't be deleted.")
-
+        return super(ExecutedBy,cls).update(model_program_fk=obj, element_id=element_id)
 
 # Model Instance Resource type
 class ModelInstanceResource(BaseResource):
@@ -135,27 +114,7 @@ class ModelInstanceMetaData(CoreMetaData):
         elements.append('ExecutedBy')
         return elements
 
-    def has_all_required_elements(self):
-        if not super(ModelInstanceMetaData, self).has_all_required_elements():
-            return False
-        if not self.model_output:
-            return False
-        if not self.executed_by:
-            return False
-
-        return True
-
-    def get_required_missing_elements(self):
-        missing_required_elements = super(ModelInstanceMetaData, self).get_required_missing_elements()
-        if not self.model_output:
-            missing_required_elements.append('ModelOutput')
-        # if not self.executed_by:
-        #     missing_required_elements.append('ExecutedBy')
-        return missing_required_elements
-
     def get_xml(self, pretty_print=True):
-        from lxml import etree
-
         # get the xml string representation of the core metadata elements
         xml_string = super(ModelInstanceMetaData, self).get_xml(pretty_print=False)
 
@@ -166,32 +125,22 @@ class ModelInstanceMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         if self.model_output:
-            hsterms_model_output = etree.SubElement(container, '{%s}ModelOutput' % self.NAMESPACES['hsterms'])
-            hsterms_model_output_rdf_Description = etree.SubElement(hsterms_model_output,
-                                                                    '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_model_output_value = etree.SubElement(hsterms_model_output_rdf_Description,
-                                                          '{%s}IncludesModelOutput' % self.NAMESPACES['hsterms'])
-            if self.model_output.includes_output == True:
-                hsterms_model_output_value.text = "Yes"
-            else:
-                hsterms_model_output_value.text = "No"
+            modelOutputFields = ['includesModelOutput']
+            self.add_metadata_element_to_xml(container,self.model_output,modelOutputFields)
+
         if self.executed_by:
-            hsterms_executed_by = etree.SubElement(container, '{%s}ExecutedBy' % self.NAMESPACES['hsterms'])
-            hsterms_executed_by_rdf_Description = etree.SubElement(hsterms_executed_by,
-                                                                   '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_executed_by_name = etree.SubElement(hsterms_executed_by_rdf_Description,
-                                                        '{%s}ModelProgramName' % self.NAMESPACES['hsterms'])
+            executed_by = self.executed_by
+        else:
+            executed_by = ExecutedBy()
 
-            title = self.executed_by.model_program_fk.title if self.executed_by.model_program_fk else "Unspecified"
-            hsterms_executed_by_name.text = title
-
-            hsterms_executed_by_url = etree.SubElement(hsterms_executed_by_rdf_Description,
-                                                       '{%s}ModelProgramURL' % self.NAMESPACES['hsterms'])
-
-            url = '%s%s' % (utils.current_site_url(), self.executed_by.model_program_fk.get_absolute_url()) if self.executed_by.model_program_fk else "None"
-
-            hsterms_executed_by_url.text = url
+        executedByFields = ['modelProgramName','modelProgramIdentifier']
+        self.add_metadata_element_to_xml(container,executed_by,executedByFields)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
+
+    def delete_all_elements(self):
+        super(ModelInstanceMetaData, self).delete_all_elements()
+        self._model_output.all().delete()
+        self._executed_by.all().delete()
 
 import receivers

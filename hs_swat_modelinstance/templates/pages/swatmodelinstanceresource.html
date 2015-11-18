@@ -26,14 +26,49 @@
                     {%  endif %}
                 </div>
                 <div>
-                    {% if executed_by.name %}
+                    {% if executed_by.model_program_fk %}
                         <h4><strong>Executed By:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            <div class="col-sm-4"><strong>Model Program used for execution:</strong></div>
-                            <div class="col-sm-8">{{ executed_by.name }}</div>
+
+                            <div class="col-sm-4"><strong>Name</strong></div>
+                            <div class="col-sm-8">{{ executed_by.model_program_fk.title }}</div>
+
+                            <div class="col-sm-4"><strong>Version</strong></div>
+                            <div class="col-sm-8">
+                                {% if executed_by.model_program_fk.metadata.program.software_version.strip %}
+                                    {{ executed_by.model_program_fk.metadata.program.software_version }}
+                                {% else %}
+                                    Not Provided
+                                {% endif %}
+
+                            </div>
+
+                            <div class="col-sm-4"><strong>Resource URL</strong></div>
+
+                            <div class="col-sm-8">
+                                {% if request.is_secure %}
+                                    <a id="permalink"
+                                       href="https://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/"
+                                       target="_blank">https://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
+                                {% else %}
+                                    <a id="permalink"
+                                       href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/"
+                                       target="_blank">http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
+                                {% endif %}
+                            </div>
                         </div>
-                    <hr style="border:0">
+
+                        <hr>
+
+                    {% else %}
+                        <h4><strong>Executed By:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Name</strong></div>
+                            <div class="col-sm-8">Unspecified</div>
+                        </div>
+
                     {% endif %}
                 </div>
                 <div>
@@ -67,17 +102,17 @@
                         <h4><strong>Model Method:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            {% if model_method.runoff_calculation_method %}
+                            {% if model_method.runoffCalculationMethod %}
                                 <div class="col-sm-4"><strong>Runoff calculation method:</strong></div>
-                                <div class="col-sm-8">{{ model_method.runoff_calculation_method }}</div>
+                                <div class="col-sm-8">{{ model_method.runoffCalculationMethod }}</div>
                             {% endif %}
-                            {% if model_method.flow_routing_method %}
+                            {% if model_method.flowRoutingMethod %}
                                 <div class="col-sm-4"><strong>Flow routing method:</strong></div>
-                                <div class="col-sm-8">{{ model_method.flow_routing_method }}</div>
+                                <div class="col-sm-8">{{ model_method.flowRoutingMethod }}</div>
                             {% endif %}
-                            {% if model_method.PET_estimation_method %}
+                            {% if model_method.petEstimationMethod %}
                                 <div class="col-sm-4"><strong>PET estimation method:</strong></div>
-                                <div class="col-sm-8">{{ model_method.PET_estimation_method }}</div>
+                                <div class="col-sm-8">{{ model_method.petEstimationMethod }}</div>
                             {% endif %}
                         </div>
                     <hr style="border:0">
@@ -104,73 +139,73 @@
                         <h4><strong>Model Input:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            {% if model_input.warm_up_period %}
+                            {% if model_input.warmupPeriodValue %}
                                 <div class="col-sm-4"><strong>Warm-up period in years:</strong></div>
-                                <div class="col-sm-8">{{ model_input.warm_up_period }}</div>
+                                <div class="col-sm-8">{{ model_input.warmupPeriodValue }}</div>
                             {% endif %}
-                            {% if model_input.rainfall_time_step_type %}
+                            {% if model_input.rainfallTimeStepType %}
                                 <div class="col-sm-4"><strong>Rainfall time step type:</strong></div>
-                                <div class="col-sm-8">{{ model_input.rainfall_time_step_type }}</div>
+                                <div class="col-sm-8">{{ model_input.rainfallTimeStepType }}</div>
                             {% endif %}
-                            {% if model_input.rainfall_time_step_value %}
+                            {% if model_input.rainfallTimeStepValue %}
                                 <div class="col-sm-4"><strong>Rainfall time step value:</strong></div>
-                                <div class="col-sm-8">{{ model_input.rainfall_time_step_value }}</div>
+                                <div class="col-sm-8">{{ model_input.rainfallTimeStepValue }}</div>
                             {% endif %}
-                            {% if model_input.routing_time_step_type %}
+                            {% if model_input.routingTimeStepType %}
                                 <div class="col-sm-4"><strong>Routing time step type:</strong></div>
-                                <div class="col-sm-8">{{ model_input.routing_time_step_type }}</div>
+                                <div class="col-sm-8">{{ model_input.routingTimeStepType }}</div>
                             {% endif %}
-                            {% if model_input.routing_time_step_value %}
+                            {% if model_input.routingTimeStepValue %}
                                 <div class="col-sm-4"><strong>Routing time step value:</strong></div>
-                                <div class="col-sm-8">{{ model_input.routing_time_step_value }}</div>
+                                <div class="col-sm-8">{{ model_input.routingTimeStepValue }}</div>
                             {% endif %}
-                            {% if model_input.simulation_time_step_type %}
+                            {% if model_input.simulationTimeStepType %}
                                 <div class="col-sm-4"><strong>Simulation time step type:</strong></div>
-                                <div class="col-sm-8">{{ model_input.simulation_time_step_type }}</div>
+                                <div class="col-sm-8">{{ model_input.simulationTimeStepType }}</div>
                             {% endif %}
-                            {% if model_input.simulation_time_step_value %}
+                            {% if model_input.simulationTimeStepValue %}
                                 <div class="col-sm-4"><strong>Simulation time step value:</strong></div>
-                                <div class="col-sm-8">{{ model_input.simulation_time_step_value }}</div>
+                                <div class="col-sm-8">{{ model_input.simulationTimeStepValue }}</div>
                             {% endif %}
-                            {% if model_input.watershed_area %}
+                            {% if model_input.watershedArea %}
                                 <div class="col-sm-4"><strong>Watershed area in square kilometers:</strong></div>
-                                <div class="col-sm-8">{{ model_input.watershed_area }}</div>
+                                <div class="col-sm-8">{{ model_input.watershedArea }}</div>
                             {% endif %}
-                            {% if model_input.number_of_subbasins %}
+                            {% if model_input.numberOfSubbasins %}
                                 <div class="col-sm-4"><strong>Number of subbasins:</strong></div>
-                                <div class="col-sm-8">{{ model_input.number_of_subbasins }}</div>
+                                <div class="col-sm-8">{{ model_input.numberOfSubbasins }}</div>
                             {% endif %}
-                            {% if model_input.number_of_HRUs %}
+                            {% if model_input.numberOfHRUs %}
                                 <div class="col-sm-4"><strong>Number of HRUs:</strong></div>
-                                <div class="col-sm-8">{{ model_input.number_of_HRUs }}</div>
+                                <div class="col-sm-8">{{ model_input.numberOfHRUs }}</div>
                             {% endif %}
-                            {% if model_input.DEM_resolution %}
+                            {% if model_input.demResolution %}
                                 <div class="col-sm-4"><strong>DEM resolution in meters:</strong></div>
-                                <div class="col-sm-8">{{ model_input.DEM_resolution }}</div>
+                                <div class="col-sm-8">{{ model_input.demResolution }}</div>
                             {% endif %}
-                            {% if model_input.DEM_source_name %}
+                            {% if model_input.demSourceName %}
                                 <div class="col-sm-4"><strong>DEM source name:</strong></div>
-                                <div class="col-sm-8">{{ model_input.DEM_source_name }}</div>
+                                <div class="col-sm-8">{{ model_input.demSourceName }}</div>
                             {% endif %}
-                            {% if model_input.DEM_source_URL %}
+                            {% if model_input.demSourceURL %}
                                 <div class="col-sm-4"><strong>DEM source URL:</strong></div>
-                                <div class="col-sm-8"><a id="permalink" href={{ model_input.DEM_source_URL }}>{{ model_input.DEM_source_URL }}</a></div>
+                                <div class="col-sm-8"><a id="permalink" href={{ model_input.demSourceURL }}>{{ model_input.demSourceURL }}</a></div>
                             {% endif %}
-                            {% if model_input.landUse_data_source_name %}
+                            {% if model_input.landUseDataSourceName %}
                                 <div class="col-sm-4"><strong>LandUse data source name:</strong></div>
-                                <div class="col-sm-8">{{ model_input.landUse_data_source_name }}</div>
+                                <div class="col-sm-8">{{ model_input.landUseDataSourceName }}</div>
                             {% endif %}
-                            {% if model_input.landUse_data_source_URL %}
+                            {% if model_input.landUseDataSourceURL %}
                                 <div class="col-sm-4"><strong>LandUse data source URL:</strong></div>
-                                <div class="col-sm-8"><a id="permalink" href={{ model_input.landUse_data_source_URL }}>{{ model_input.landUse_data_source_URL }}</a></div>
+                                <div class="col-sm-8"><a id="permalink" href={{ model_input.landUseDataSourceURL }}>{{ model_input.landUseDataSourceURL }}</a></div>
                             {% endif %}
-                            {% if model_input.soil_data_source_name %}
+                            {% if model_input.soilDataSourceName %}
                                 <div class="col-sm-4"><strong>Soil data source name:</strong></div>
-                                <div class="col-sm-8">{{ model_input.soil_data_source_name }}</div>
+                                <div class="col-sm-8">{{ model_input.soilDataSourceName }}</div>
                             {% endif %}
-                            {% if model_input.soil_data_source_URL %}
+                            {% if model_input.soilDataSourceURL %}
                                 <div class="col-sm-4"><strong>Soil data source URL:</strong></div>
-                                <div class="col-sm-8"> <a id="permalink" href={{ model_input.soil_data_source_URL }}>{{ model_input.soil_data_source_URL }}</a></div>
+                                <div class="col-sm-8"> <a id="permalink" href={{ model_input.soilDataSourceURL }}>{{ model_input.soilDataSourceURL }}</a></div>
                             {% endif %}
                         </div>
                     {% endif %}
@@ -179,9 +214,18 @@
         </div>
     {%  endif %}
 {%  endblock %}
+
+{% load staticfiles  %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static "css/bootstrap-multiselect.css" %}" />
+    <link rel="stylesheet" type="text/css" href="{% static "css/model_instance.css" %}" />
+{% endblock %}
+
 {% block extra_js %}
     {{ block.super }}
 
     {# resource specific js can go here #}
-
+    <script src="{% static "js/bootstrap-multiselect.js"%}"></script>
+    <script src="{% static "js/model_instance.js"%}"></script>
 {%  endblock %}
