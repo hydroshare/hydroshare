@@ -306,4 +306,18 @@ class TimeSeriesMetaData(CoreMetaData):
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
+    def delete_all_elements(self):
+        super(TimeSeriesMetaData, self).delete_all_elements()
+        if self.site:
+            self.site.delete()
+        if self.variable:
+            self.variable.delete()
+        if self.method:
+            self.method.delete()
+        if self.processing_level:
+            self.processing_level.delete()
+        if self.time_series_result:
+            self.time_series_result.delete()
+
+
 import receivers
