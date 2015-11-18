@@ -1999,8 +1999,8 @@ class CoreMetaData(models.Model):
         from lxml import etree
 
         if isinstance(md_element, tuple):
-            md_element = md_element[0]
             element_name = md_element[1]
+            md_element = md_element[0]
         else:
             element_name = md_element.term
 
