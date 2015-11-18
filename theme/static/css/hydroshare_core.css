@@ -2227,6 +2227,9 @@ div.affiliation {
     font-size: 16px;
 }
 
+.activity-info h5 {
+	margin: 2px 0;
+}
 .metadata-wrapper {
     margin-left: 50px;
     margin-bottom: 5px;
