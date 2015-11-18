@@ -84,26 +84,25 @@ function loadWidgets(){
         complete: function (data) {
             // once the selected fields (html) have been updated, build the jQuery multiselect boxes
 
-            // destroy any existing multiselect widgets
+            // destroy all multiselect listboxes for the model program resource (i.e.  that match the id mp-multi-select)
             $('#mp-multi-select.multi-select').multiselect('destroy');
 
             // get the size of the parent div
             var width = $('#mp-div-multiselect').css('max-width');
 
-            // rebuild the multiselect elements
+            // rebuild all the multiselect elements for the model program resource
             $('#mp-multi-select.multi-select').multiselect({
-
                 buttonWidth: width,
                 maxHeight: 200,
                 numberDisplayed: 1,
 
-                // bind a table view to the on close event
+                // bind to drop down list close event
                 onDropdownHide: function (event, checked) {
                     set_metadata_terms(event);
                 }
             });
 
-            // add pull-right to the dropdown-menu
+            // add pull-right attribute to the dropdown menus
             var dd = $('.div-multi-select > .btn-group > .multiselect-container.dropdown-menu');
             for (var i = 0; i < dd.length; i++) {
                 var classname = dd[i].className;
