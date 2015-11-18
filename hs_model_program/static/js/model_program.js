@@ -2,6 +2,12 @@
  * Created by tonycastronova on 10/12/15.
  */
 
+$alert_error = '<div class="alert alert-danger" id="error-alert"> \
+                    <button type="button" class="close" data-dismiss="alert">x</button> \
+                    <strong>Error </strong> \
+                    failed to retrieve metadata for this resource.\
+                </div>'
+
 
 $(document).ready(function () {
 
@@ -47,6 +53,7 @@ function loadWidgets(){
         url: '/hsapi/_internal/get-model-metadata/',
         data: {resource_id: shortid},
         success: function (data) {
+
             // get the fieldset items
             var fs = document.getElementById("id-mpmetadata").getElementsByTagName('fieldset')[0];
 
@@ -79,6 +86,7 @@ function loadWidgets(){
 
         },
         error: function (data) {
+            show_error();
             console.log('There was an error with model instance GET.')
         },
         complete: function (data) {
@@ -111,6 +119,13 @@ function loadWidgets(){
                 }
             }
         }
+    });
+}
+
+function show_error(){
+    $('body > .container').append($alert_error);
+    $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
+        $(".alert-danger").alert('close');
     });
 }
 
