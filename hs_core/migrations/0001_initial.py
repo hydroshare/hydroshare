@@ -235,7 +235,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
-                ('type', models.CharField(max_length=100, choices=[(b'isPartOf', b'Part Of'), (b'isExecutedBy', b'Executed By'), (b'isCreatedBy', b'Created By'), (b'isVersionOf', b'Version Of'), (b'isDataFor', b'Data For'), (b'cites', b'Cites')])),
+                ('type', models.CharField(max_length=100, choices=[(b'isHostedBy', b'Hosted By'), (b'isCopiedFrom', b'Copied From'), (b'isPartOf', b'Part Of'),
+                                                                   (b'isExecutedBy', b'Executed By'), (b'isCreatedBy', b'Created By'), (b'isVersionOf', b'Version Of'),
+                                                                   (b'isDataFor', b'Data For'), (b'cites', b'Cites')])),
                 ('value', models.CharField(max_length=500)),
                 ('content_type', models.ForeignKey(related_name='hs_core_relation_related', to='contenttypes.ContentType')),
             ],
