@@ -1482,7 +1482,7 @@ body > .container{
 }
 
 #citation-text a, .rights-url a{
-    word-break:normal;
+    word-break:break-word;
 }
 
 #btn-download-all, #btn-add-file, #btn-signin-irods, #btn-select-irods-file {
