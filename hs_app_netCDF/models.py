@@ -265,8 +265,7 @@ class NetcdfMetaData(CoreMetaData):
 
     def delete_all_elements(self):
         super(NetcdfMetaData, self).delete_all_elements()
-        if self.ori_coverage.all().first():
-            self.ori_coverage.all().first().delete()
+        self.ori_coverage.all().delete()
         self.variables.all().delete()
 
 import receivers  # never delete this otherwise non of the receiver function will work
