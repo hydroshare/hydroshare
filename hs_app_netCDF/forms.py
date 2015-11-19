@@ -189,36 +189,6 @@ class VariableValidationForm(forms.Form):
 from hs_core.forms import Helper
 ModalDialogLayoutAddVariable = Helper.get_element_add_modal_form('Variable', 'add_variable_modal_form')
 
-# ModalDialogLayoutAddVariable = Layout(
-#                             HTML('<div class="modal fade" id="add-variable-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
-#                                     '<div class="modal-dialog">'
-#                                         '<div class="modal-content">'
-#                                             '<form action="{{ add_variable_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
-#                                             '{% csrf_token %} '
-#                                             '<input name="resource-mode" type="hidden" value="edit"/>'
-#                                             '<div class="modal-header">'
-#                                                 '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
-#                                                 '<h4 class="modal-title" id="myModalLabel">Add Variable</h4>'
-#                                             '</div>'
-#                                             '<div class="modal-body">'
-#                                                 '{% csrf_token %}'
-#                                                 '<div class="form-group">'
-#                                                     '{% load crispy_forms_tags %} '
-#                                                     '{% crispy add_variable_modal_form %} '
-#                                                 '</div>'
-#                                             '</div>'
-#                                             '<div class="modal-footer">'
-#                                                 '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
-#                                                 '<button type="submit" class="btn btn-primary">Save changes</button>'
-#                                             '</div>'
-#                                             '</form>'
-#                                         '</div>'
-#                                     '</div>'
-#                                 '</div>'
-#                             )
-#                         )
-
-
 VariableLayoutEdit = Layout(
                             HTML('{% load crispy_forms_tags %} '
                                  '{% for form in variable_formset.forms %} '
@@ -226,21 +196,12 @@ VariableLayoutEdit = Layout(
                                      '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
                                      '{% crispy form %} '
                                     '<div class="row" style="margin-top:10px">'
-                                        # '<div class="col-md-10 col-xs-6">'
-                                        #     '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-variable-element-dialog_{{ form.number }}" value="Delete Variable">'
-                                        # '</div>' #change
                                         '<div class="col-md-10 col-xs-6">'
                                             '<button type="button" class="btn btn-primary" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'  # change
                                         '</div>'
                                     '</div>'
-                                    # '{% crispy form.delete_modal_form %} '
                                     '</form> '
                                     '</div> '
-                                '{% endfor %}'
+                                 '{% endfor %}'
                             ),
-                            # HTML('<div style="margin-top:10px">'
-                            #      '<p><a id="add-creator" class="btn btn-success" data-toggle="modal" data-target="#add-variable-dialog">'
-                            #      '<i class="fa fa-plus"></i>Add another variable</a>'
-                            #      '</div>'
-                            # ),
                     )
