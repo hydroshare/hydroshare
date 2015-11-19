@@ -178,6 +178,15 @@
             {% endfor %}
     {% endif %}
 
+
+    {# Add netcdf opendap button  #}
+    {% if opendap_link %}
+        <td><a style="margin-left:15px" id="btn-netcdf-opendap" type="button" class="btn btn-success" href='{{opendap_link }}'
+               title="When changing this resource's sharing status, please allow 2 minutes for the OPeNDAP service to refresh on this page" >
+            <span class="button-label"> OPeNDAP Service</span>
+        </a></td>
+    {% endif %}
+
 {% endblock %} {# extra block ends here #}
 
 
@@ -204,6 +213,7 @@
             $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").hide()
         }
     };
+
 {#    // netcdf tool button#}
 {#    $(document).ready(function(){#}
 {#        $("#btn-netcdf-tools").insertAfter("#btn-download-all");#}
@@ -215,6 +225,14 @@
 {#            $('#createNcdump').hide()#}
 {#        }#}
 {#    })#}
+
+    // netcdf opendap button
+    $(document).ready(function(){
+        if ($('#btn-netcdf-opendap').length > 0){
+           $("#btn-netcdf-opendap").insertAfter("#btn-download-all");
+        }
+    })
+
 
 </script>
 
