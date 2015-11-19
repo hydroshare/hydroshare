@@ -1,6 +1,7 @@
 __author__ = 'drew'
 
 import os
+from dateutil import parser
 
 from django.test import TestCase, TransactionTestCase
 from django.contrib.contenttypes.models import ContentType
@@ -60,8 +61,9 @@ class TestGeoFeature(TransactionTestCase):
                                          address=cr_address,
                                          phone=cr_phone,
                                          homepage=cr_homepage,
-                                         researcherID=cr_res_id,
-                                         researchGateID=cr_res_gate_id)
+                                         profile_links=[{'type': 'researchID', 'url': cr_res_id},
+                                                        {'type': 'researchGateID', 'url': cr_res_gate_id}])
+
 
         # add another creator with only the name
         resource.create_metadata_element(self.resGeoFeature.short_id, 'creator', name='Creator B')
@@ -84,8 +86,8 @@ class TestGeoFeature(TransactionTestCase):
                                          address=con_address,
                                          phone=con_phone,
                                          homepage=con_homepage,
-                                         researcherID=con_res_id,
-                                         researchGateID=con_res_gate_id)
+                                         profile_links=[{'type': 'researchID', 'url': con_res_id},
+                                                        {'type': 'researchGateID', 'url': con_res_gate_id}])
 
         # add another creator with only the name
         resource.create_metadata_element(self.resGeoFeature.short_id, 'contributor', name='Contributor B')
@@ -105,7 +107,7 @@ class TestGeoFeature(TransactionTestCase):
 
         # add date of type 'valid'
         resource.create_metadata_element(self.resGeoFeature.short_id,'date', type='valid',
-                                         start_date='1/1/2012', end_date='12/31/2012')
+                                         start_date=parser.parse('1/1/2012'), end_date=parser.parse('12/31/2012'))
 
         # add a format element
         format = 'shp'
