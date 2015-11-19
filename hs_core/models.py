@@ -1,3 +1,9 @@
+import os.path
+import json
+from uuid import uuid4
+from languages_iso import languages as iso_languages
+from dateutil import parser
+
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group
 from django.contrib.auth import settings
@@ -8,21 +14,17 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django import forms
 from django.utils.timezone import now
-from mezzanine.pages.models import Page, RichText
-from mezzanine.pages.page_processors import processor_for
-from uuid import uuid4
-from mezzanine.core.models import Ownable
-from mezzanine.generic.fields import CommentsField, RatingField
-from mezzanine.generic.fields import KeywordsField
-from mezzanine.conf import settings as s
-import os.path
 from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from languages_iso import languages as iso_languages
-from dateutil import parser
-import json
+
+from mezzanine.pages.models import Page, RichText
+from mezzanine.pages.page_processors import processor_for
+from mezzanine.core.models import Ownable
+from mezzanine.generic.fields import CommentsField, RatingField
+from mezzanine.generic.fields import KeywordsField
+from mezzanine.conf import settings as s
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -799,8 +801,6 @@ class Identifier(AbstractMetaDataElement):
                         if not 'migration' in kwargs:
                             raise  ValidationError("Hydroshare identifier url value can't be changed.")
 
-                    # if idf.url.lower().find('http://hydroshare.org/resource') == 0:
-                    #     raise  ValidationError("Hydroshare identifier url value can't be changed.")
                     # check this new identifier name not already exists
                     if Identifier.objects.filter(url__iexact=kwargs['url'], object_id=idf.object_id,
                                                  content_type__pk=idf.content_type.id).count()> 0:
@@ -1695,9 +1695,6 @@ Page.get_content_model = new_get_content_model
 
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
-    #from django.contrib.sites.models import Site
-    #_domain = 'hydroshare.org'  #Site.objects.get_current() # this one giving error since the database does not have a related table called 'django_site'
-
     XML_HEADER = '''<?xml version="1.0"?>
 <!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
 "http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">'''
@@ -1953,6 +1950,7 @@ class CoreMetaData(models.Model):
             hsterms_pub_url = etree.SubElement(dc_pub_rdf_Description, '{%s}publisherURL' % self.NAMESPACES['hsterms'])
             hsterms_pub_url.set('{%s}resource' % self.NAMESPACES['rdf'], self.publisher.url)
 
+        res_url_root = '{site_url}/resource/'.format(site_url = current_site_url())
         for rel in self.relations.all():
             dc_relation = etree.SubElement(rdf_Description, '{%s}relation' % self.NAMESPACES['dc'])
             dc_rel_rdf_Description = etree.SubElement(dc_relation, '{%s}Description' % self.NAMESPACES['rdf'])
@@ -1960,9 +1958,9 @@ class CoreMetaData(models.Model):
                 term_ns = self.NAMESPACES['hsterms']
             else:
                 term_ns = self.NAMESPACES['dcterms']
-            terms_type = etree.SubElement(dc_rel_rdf_Description, '{%s}{%s}' % (term_ns, rel.type))
-            # check if the relation value starts with 'http://' or 'https://'
-            if rel.value.lower().find('/resource/') == 0:
+            terms_type = etree.SubElement(dc_rel_rdf_Description, '{%s}%s' % (term_ns, rel.type))
+
+            if rel.value.lower().find(res_url_root) == 0:
                 terms_type.set('{%s}resource' % self.NAMESPACES['rdf'], rel.value)
             else:
                 terms_type.text = rel.value
@@ -1971,8 +1969,8 @@ class CoreMetaData(models.Model):
             dc_source = etree.SubElement(rdf_Description, '{%s}source' % self.NAMESPACES['dc'])
             dc_source_rdf_Description = etree.SubElement(dc_source, '{%s}Description' % self.NAMESPACES['rdf'])
             dcterms_derived_from = etree.SubElement(dc_source_rdf_Description, '{%s}isDerivedFrom' % self.NAMESPACES['dcterms'])
-            # if the source value starts with 'http://' or 'https://' add value as an attribute
-            if src.derived_from.lower().find('http://') == 0 or src.derived_from.lower().find('https://') == 0:
+
+            if src.derived_from.lower().find(res_url_root) == 0:
                 dcterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
             else:
                 dcterms_derived_from.text = src.derived_from
@@ -1988,7 +1986,7 @@ class CoreMetaData(models.Model):
 
         for sub in self.subjects.all():
             dc_subject = etree.SubElement(rdf_Description, '{%s}subject' % self.NAMESPACES['dc'])
-            if sub.value.lower().find('http://') == 0 or sub.value.lower().find('https://') == 0:
+            if sub.value.lower().find(res_url_root) == 0:
                 dc_subject.set('{%s}resource' % self.NAMESPACES['rdf'], sub.value)
             else:
                 dc_subject.text = sub.value
