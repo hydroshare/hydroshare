@@ -82,7 +82,7 @@ def add_file_to_resource(request, shortkey, *args, **kwargs):
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['file_validation_error'] = ex.message
+        request.session['validation_error'] = ex.message
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:
@@ -90,7 +90,7 @@ def add_file_to_resource(request, shortkey, *args, **kwargs):
                                                    extract_metadata=extract_metadata)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['file_validation_error'] = ex.message
+        request.session['validation_error'] = ex.message
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -144,8 +144,10 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                     for kw in keywords:
                         res.metadata.create_element(element_name, value=kw)
                 else:
-                    element = res.metadata.create_element(element_name, **element_data_dict)
-
+                    try:
+                        element = res.metadata.create_element(element_name, **element_data_dict)
+                    except ValidationError as exp:
+                        request.session['validation_error'] = exp.message
                 is_add_success = True
                 resource_modified(res, request.user)
 
@@ -184,7 +186,10 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
         if 'is_valid' in response:
             if response['is_valid']:
                 element_data_dict = response['element_data_dict']
-                res.metadata.update_element(element_name, element_id, **element_data_dict)
+                try:
+                    res.metadata.update_element(element_name, element_id, **element_data_dict)
+                except ValidationError as exp:
+                    request.session['validation_error'] = exp.message
                 if element_name == 'title':
                     if res.raccess.public:
                         if not res.can_be_public_or_discoverable:
@@ -558,7 +563,7 @@ def create_resource(request, *args, **kwargs):
         return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     except utils.ResourceFileValidationException as ex:
-        context = {'file_validation_error': ex.message}
+        context = {'validation_error': ex.message}
         return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     except Exception as ex:
@@ -584,7 +589,7 @@ def create_resource(request, *args, **kwargs):
     try:
         utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
-        request.session['file_validation_error'] = ex.message
+        request.session['validation_error'] = ex.message
 
     # go to resource landing page
     request.session['just_created'] = True

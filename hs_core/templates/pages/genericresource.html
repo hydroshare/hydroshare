@@ -15,10 +15,10 @@
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
 
         {% block error %}
-            {%  if file_validation_error %}
+            {%  if validation_error %}
                 <div class="alert alert-danger alert-dismissible" role="alert">
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                      <strong>Uploaded File Validation Error:{{ file_validation_error }}</strong>
+                      <strong>Validation Error: {{ validation_error }}</strong>
                  </div>
             {%  endif %}
         {% endblock %}
