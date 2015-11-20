@@ -1447,6 +1447,9 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise HSAccessException("Requester is not an active user")
 
+        if not this_user.is_active:
+            raise HSAccessException("Grantee is not an active user")
+
         # access control logic: Can change privilege if
         #   Admin
         #   Self-set permission

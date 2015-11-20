@@ -248,6 +248,33 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.bikers.gaccess.get_members().count(), 1)
         self.assertEqual(self.alva.uaccess.get_number_of_owned_groups(), 0)
 
+    def test_share_inactive_user(self):
+        """
+        Inactive grantor can't grant permission
+        Inactive grantee can't be granted permission
+        """
+        self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.NONE)
+        self.assertTrue(self.bikes.raccess.get_effective_privilege(self.alva) == PrivilegeCodes.NONE)
+        ## inactive users can't be granted access
+        # set john to an inactive user
+        self.john.is_active = False
+        self.john.save()
+        self.assertRaises(Exception, lambda: self.george.uaccess.share_resource_with_user(self.bikes, self.john,
+                                                                                          PrivilegeCodes.CHANGE))
+
+        self.john.is_active = True
+        self.john.save()
+        ## inactive grantor can't grant access
+        # let first grant John access privilege
+        self.george.uaccess.share_resource_with_user(self.bikes, self.john, PrivilegeCodes.CHANGE)
+        self.assertTrue(self.bikes.raccess.get_combined_privilege(self.john) == PrivilegeCodes.CHANGE)
+        self.assertTrue(self.bikes.raccess.get_effective_privilege(self.john) == PrivilegeCodes.CHANGE)
+        self.john.is_active = False
+        self.john.save()
+        self.assertRaises(Exception, lambda: self.john.uaccess.share_resource_with_user(self.bikes, self.alva,
+                                                                                        PrivilegeCodes.VIEW))
+        self.john.is_active = True
+        self.john.save()
 
 def match_lists(l1, l2):
     """ return true if two lists contain the same content
