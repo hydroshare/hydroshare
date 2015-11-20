@@ -1453,7 +1453,7 @@ class UserAccess(models.Model):
         #   Owner
         #   Non-owner and shareable
         whom_priv = access_resource.get_combined_privilege(self.user)
-
+        grantee_priv = access_resource.get_combined_privilege(this_user)
         # check for user authorization
 
         if self.user.is_superuser:
@@ -1475,6 +1475,18 @@ class UserAccess(models.Model):
 
         if whom_priv > this_privilege:
             raise HSAccessException("User has insufficient privilege over resource")
+
+        # non owner can't downgrade privilege granted by someone else
+        # grantee_priv: current privilege of the grantee
+        # this_privilege: proposed privilege for the grantee
+        if whom_priv != PrivilegeCodes.OWNER and grantee_priv < this_privilege:
+            record = UserResourcePrivilege.objects.get(resource=access_resource,
+                                                       user=access_user,
+                                                       privilege=grantee_priv)
+
+            # current granter is not the same as the original granter
+            if record.grantor != self:
+                raise HSAccessException("User has insufficient privilege over resource")
 
         # user is authorized and privilege is appropriate
         # proceed to change the record if present
