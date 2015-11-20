@@ -39,7 +39,7 @@ def landing_page(request, page):
         cellinfo_form = CellInfoForm(instance=content_model.metadata.cellInformation, res_short_id=content_model.short_id,
                                      allow_edit = True,
                                     element_id=content_model.metadata.cellInformation.id if content_model.metadata.cellInformation else None)
-        cellinfo_layout = HTML("<div class='form-group col-lg-4 col-xs-12' id='CellInformation'> "
+        cellinfo_layout = HTML("<div class='form-group col-lg-6 col-xs-12' id='CellInformation'> "
                                  '{% load crispy_forms_tags %} '
                                  '{% crispy cellinfo_form %} '
                                  '</div>')
@@ -69,7 +69,7 @@ def landing_page(request, page):
                                                         res_short_id=content_model.short_id,
                                                         allow_edit=edit_resource,
                                                         element_id=ori_cov_obj.id if ori_cov_obj else None)
-        ori_coverage_layout = HTML('<div class="form-group col-lg-4 col-xs-12" id="originalcoverage"> '
+        ori_coverage_layout = HTML('<div class="form-group col-lg-6 col-xs-12" id="originalcoverage"> '
                                    '{% load crispy_forms_tags %} '
                                    '{% crispy ori_coverage_form %} '
                                    '</div>')

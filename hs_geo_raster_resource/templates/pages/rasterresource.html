@@ -8,7 +8,7 @@
         <div class="row">
 
         {% if originalCoverage %}
-            <div class="col-sm-4" style="margin-bottom:40px;">
+            <div class="col-xs-12 col-sm-6" style="margin-bottom:40px;">
                 <legend>Spatial Reference</legend>
                 <table class="custom-table">
                     <tbody>
@@ -62,7 +62,7 @@
         {% endif %}
 
         {% if cellInformation %}
-             <div class="col-sm-4 col-xs-12" style="margin-bottom:40px;">
+             <div class="col-xs-12 col-sm-6" style="margin-bottom:40px;">
                 <legend>Cell Information</legend>
                 <table class="custom-table">
                     <tbody>
@@ -103,50 +103,37 @@
         {% endif %}
 
         {% if bandInformation %}
-             <div class="col-sm-4 col-xs-12" style="margin-bottom:40px;">
+            <div class="col-sm-12" style="margin-bottom:40px;">
                 <legend>Band Information</legend>
-                <table class="custom-table">
-                    <tbody>
-                    <tr>
-                        <th class="text-muted"></th>
-                        <td></td>
-                    </tr>
+                <div id="variables" class="well clearfix">
+                    <div class="row">
+                        {% for band in bandInformation %}
+                            <div class="col-xs-12 col-sm-3">
+                                <div class="custom-well">
+                                    <strong>{{ band.name }}</strong>
+                                    <table class="custom-table">
+                                        <tbody>
+                                            <tr><th class="text-muted">VariableName</th><td>{{ band.variableName }}</td></tr>
 
-                    {% for band in bandInformation %}
-                        <tr>
-                            <th class="text-muted">BandName</th>
-                            <td>{{ band.name }}</td>
-                        </tr>
+                                            <tr><th class="text-muted">VariableUnit</th><td>{{ band.variableUnit }}</td></tr>
 
-                        <tr>
-                            <th class="text-muted">VariableName</th>
-                            <td>{{ band.variableName }}</td>
-                        </tr>
+                                            {% if band.method %}
+                                                <tr><th class="text-muted">Method</th><td>{{ band.method }}</td></tr>
+                                            {% endif %}
 
-                        <tr>
-                            <th class="text-muted">VariableUnit</th>
-                            <td>{{ band.variableUnit }}</td>
-                        </tr>
-
-                        {% if band.method %}
-                            <tr>
-                                <th class="text-muted">Method</th>
-                                <td>{{ band.method }}</td>
-                            </tr>
-                        {% endif %}
-
-                        {% if band.comment %}
-                            <tr>
-                                <th class="text-muted">Comment</th>
-                                <td>{{ band.comment }}</td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                    </tbody>
-                </table>
+                                            {% if band.comment %}
+                                                <tr><th class="text-muted">Comment</th><td>{{ band.comment }}</td></tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         {% endif %}
-        </div>
+    </div>
     {% endif %}
 {% endblock %}
 {% block extra_js %}

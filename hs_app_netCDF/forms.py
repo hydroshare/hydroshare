@@ -229,14 +229,14 @@ ModalDialogLayoutAddVariable = Helper.get_element_add_modal_form('Variable', 'ad
 
 VariableLayoutEdit = Layout(
                             HTML('{% load crispy_forms_tags %} '
-                                 '<div class="row"> {% for form in variable_formset.forms %} '
-                                     '<div class="item form-group col-xs-12 col-md-4"> '
+                                 '<div id="variables" class="well"><div class="row"> {% for form in variable_formset.forms %} '
+                                     '<div class="form-group col-xs-12 col-md-4">'
                                      '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
                                      '{% crispy form %} '
                                     '<div class="row" style="margin-top:10px">'
                                         '<div class="col-md-10 col-xs-6">'
                                             '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-variable-element-dialog_{{ form.number }}" value="Delete Variable">'
-                                        '</div>' #change
+                                        '</div>'
                                         '<div class="col-md-2 col-xs-6">'
                                             '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'  # change
                                         '</div>'
@@ -244,7 +244,7 @@ VariableLayoutEdit = Layout(
                                     '{% crispy form.delete_modal_form %} '
                                     '</form> '
                                     '</div> '
-                                '{% endfor %}</div>'
+                                '{% endfor %}</div></div>'
                             ),
                             HTML('<div style="margin-top:10px">'
                                  '<p><a id="add-creator" class="btn btn-success" data-toggle="modal" data-target="#add-variable-dialog">'

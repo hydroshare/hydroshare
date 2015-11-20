@@ -983,6 +983,14 @@ span.remove{
 #variables {
 	max-height: 600px;
 	overflow:auto;
+	border-radius: 0;
+}
+
+#netcdf-header-info {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    width: 100%;
+	padding: 10px;
 }
 
 #resourceSpecificTab input.form-control[type='radio'], #resourceSpecificTab input.form-control[type='checkbox'] {

@@ -123,9 +123,9 @@
                         <legend>NetCDF Header Info</legend>
                         <p>{{ f.resource_file.name|slice:"33:" }}</p>
                         {% if f.resource_file.size <= 5000000 %}
-                            <textarea readonly rows="15" style="margin-bottom:20px;border: 1px solid #ddd;width:100%">{{ f.resource_file.read}}</textarea>
+                            <textarea id="netcdf-header-info" readonly rows="15">{{ f.resource_file.read}}</textarea>
                         {% else %}
-                            <textarea readonly rows="5" style="margin-bottom:20px;border: 1px solid #ddd;width:100%">The size of the netCDF header information text file is too large for loading on the page.</textarea>
+                            <textarea id="netcdf-header-info" readonly rows="5">The size of the netCDF header information text file is too large for loading on the page.</textarea>
                     {% endif %}
                     </div>
 {#                    {% else %}#}
