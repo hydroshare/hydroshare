@@ -1529,8 +1529,7 @@
                                             </tbody>
                                         </table>
                                         <a id="add-relation" class="btn btn-success" data-toggle="modal"
-                                           data-target="#add-relation-dialog"><i
-                                                class="fa fa-plus"></i> Add relation</a>
+                                           data-target="#add-relation-dialog"><i class="fa fa-plus"></i> Add relation</a>
                                     </div>
                                 {% endif %}
                             </div>
@@ -1690,13 +1689,9 @@
                                         <div class="controls">
                                             <select class="form-control input-sm select" id="id_relation-{{ forloop.counter0 }}-type" name="relation-{{ forloop.counter0 }}-type">
                                                 <option value="">---------</option>
-                                                <option value="isHostedBy" {% if relation.type == "isHostedBy" %}selected="selected"{% endif %}>Hosted By</option>
-                                                <option value="isCopiedFrom" {% if relation.type == "isCopiedFrom" %}selected="selected"{% endif %}>Copied From</option>
-                                                <option value="isPartOf" {% if relation.type == "isPartOf" %} selected="selected" {% endif %}>Part Of</option>
-                                                <option value="isCreatedBy" {% if relation.type == "isCreatedBy" %}selected="selected"{% endif %}>Created By</option>
-                                                <option value="isVersionOf" {% if relation.type == "isVersionOf" %}selected="selected"{% endif %}>Version Of</option>
-                                                <option value="isDataFor" {% if relation.type == "isDataFor" %}selected="selected"{% endif %}>Data For</option>
-                                                <option value="cites" {% if relation.type == "cites" %}selected="selected"{% endif %}>Cites</option>
+                                                {% for type_value, type_display in relation_source_types %}
+                                                    <option value={{ type_value }} {% if relation.type == type_value %}selected="selected"{% endif %}>{{ type_display }}</option>
+                                                {% endfor %}
                                             </select>
                                         </div>
                                     </div>
@@ -2053,17 +2048,11 @@
                                                                                        class="control-label requiredField">
                                         Relation type<span class="asteriskField">*</span></label>
 
-                                        <div class="controls"><select class="form-control input-sm select" id="id_type"
-                                                                      name="type">
+                                        <div class="controls"><select class="form-control input-sm select" id="id_type" name="type">
                                             <option value="" selected="selected">---------</option>
-                                            <option value="isHostedBy">Hosted By</option>
-                                            <option value="isCopiedFrom">Copied From</option>
-                                            <option value="isPartOf">Part Of</option>
-                                            <option value="isExecutedBy">Executed By</option>
-                                            <option value="isCreatedBy">Created By</option>
-                                            <option value="isVersionOf">Version Of</option>
-                                            <option value="isDataFor">Data For</option>
-                                            <option value="cites">Cites</option>
+                                            {% for type_value, type_display in relation_source_types %}
+                                                <option value={{ type_value }}>{{ type_display }}</option>
+                                            {% endfor %}
                                         </select></div>
                                     </div>
                                     <div id="div_id_value" class="control-group"><label for="id_value"

@@ -143,7 +143,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'bag_url': bag_url,
                    'show_content_files': show_content_files,
                    'discoverable': discoverable
-
         }
         return context
 
@@ -329,7 +328,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'current_user': user,               
                'show_content_files': show_content_files,
                'file_validation_error': file_validation_error if file_validation_error else None,
-               'discoverable': discoverable
+               'discoverable': discoverable,
+               'relation_source_types': Relation.SOURCE_TYPES
     }
 
     return context
