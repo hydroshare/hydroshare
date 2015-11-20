@@ -78,7 +78,7 @@ def time_series_from_service(request):
             ts = ts_utils.time_series_from_service(url, ref_type)
             site = ts.get('site_code')
         else:
-            ts = ts_utils.time_series_from_service(url, ref_type, site_name_or_code=site, variable_code=variable)
+            ts = ts_utils.time_series_from_service(url, ref_type, site_code=site, variable_code=variable)
         for_graph = ts['for_graph']
         units = ts['units']
         variable_name = ts['variable_name']

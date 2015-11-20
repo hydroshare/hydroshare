@@ -16,6 +16,42 @@ import os
 from StringIO import StringIO
 from hs_core import hydroshare
 
+from ref_ts.owslib_revised.waterml.wml11 import WaterML_1_1 as wml11
+from ref_ts.owslib_revised.waterml.wml10 import WaterML_1_0 as wml10
+
+def wmlParse(response, ver=11):
+    if ver == 11:
+        return wml11(response).response
+    elif ver == 10:
+        return wml10(response).response
+    else:
+        raise
+
+def wmlVersion(wsdl_url):
+    ver = -1
+    if "1_0.asmx?" in wsdl_url.lower():
+        ver = 10
+    elif "1_1.asmx?" in wsdl_url.lower():
+        ver = 11
+    return ver
+
+def check_url_and_version(wsdl_url):
+    if not wsdl_url.lower().endswith('.asmx?wsdl'):
+        raise Http404("The correct url format ends in '.asmx?WSDL'.")
+    return wmlVersion(wsdl_url)
+
+def connect_wsdl_url(wsdl_url):
+    try:
+        client = Client(wsdl_url)
+    except TransportError:
+        raise Http404('Url not found')
+    except ValueError:
+        raise Http404('Invalid url')  # ought to be a 400, but no page implemented for that
+    except SAXParseException:
+        raise Http404("The correct url format ends in '.asmx?WSDL'.")
+    except:
+        raise Http404("Sorry, but we've encountered an unexpected error.")
+    return client
 
 def get_version(root):
     wml_version = None
@@ -36,21 +72,14 @@ def sites_from_soap(wsdl_url, locations='[:]'):
     returns:
     a list of site names and codes at the given locations
     """
+    wml_ver = check_url_and_version(wsdl_url)
+    client = connect_wsdl_url(wsdl_url)
 
-    if not wsdl_url.endswith('.asmx?WSDL') and not wsdl_url.endswith('.asmx?wsdl'):
-        raise Http404("The correct url format ends in '.asmx?WSDL'.")
     try:
-        client = Client(wsdl_url)
-    except TransportError:
-        raise Http404('Url not found')
-    except ValueError:
-        raise Http404('Invalid url')  # ought to be a 400, but no page implemented for that
-    except SAXParseException:
-        raise Http404("The correct url format ends in '.asmx?WSDL'.")
-    except:
-        raise Http404("Sorry, but we've encountered an unexpected error.")
-    try:
-        response = client.service.GetSites(locations)
+        if wml_ver == 11:
+            response = client.service.GetSites(locations)
+        elif wml_ver == 10:
+            response = client.service.GetSitesXml(locations)
     except MethodNotFound:
         raise Http404("Method 'GetSites' not found")
     except WebFault:
@@ -59,78 +88,48 @@ def sites_from_soap(wsdl_url, locations='[:]'):
     except:
         raise Http404("Sorry, but we've encountered an unexpected error. This is most likely\
          due to incorrect formatting in the web service response.")
+
+    sites_list = []
     try:
-        sites = []
-        if isinstance(response, basestring):
-            root = etree.XML(response)
-            wml_version = get_version(root)
-            if wml_version == '1':
-                for element in root:
-                    if 'site' in element.tag:
-                        sites.append(element[0][0].text + " [" + element[0][1].attrib["network"]
-                                     + ":" + element[0][1].text + "]")
-            elif wml_version == '2.0':
-                pass   # FIXME I need to change this, obviously
-            else:
-                raise Http404()
-        elif isinstance(response, object):
-            for site in response.site:
-                site_code = site.siteInfo.siteCode[0].value
-                network_name = site.siteInfo.siteCode[0]._network
-                site_name = site.siteInfo.siteName
-                sites.append("%s [%s:%s]" % (site_name, network_name, site_code))
+        wml_sites = wmlParse(response, wml_ver)
+        counter = 0
+        for site in wml_sites.sites:
+            siteName = site.name
+            siteCode = site.codes[0]
+            netWork = site.site_info.net_work
+            counter += 1
+            sites_list.append("%s. %s [%s:%s]" % (str(counter), siteName, netWork, siteCode))
     except:
         return "Parsing error: The Data in the WSDL Url '{0}' was not correctly formatted \
 according to the WaterOneFlow standard given at 'http://his.cuahsi.org/wofws.html#waterml'.".format(wsdl_url)
-    sites = sorted(sites)
-    return sites
+    # sites = sorted(sites)
+    return sites_list
 
+# get variable names
 def site_info_from_soap(wsdl_url, **kwargs):
     site = kwargs['site']
     index = site.rfind(" [")
     site = site[index+2:len(site)-1]
-
-    if not wsdl_url.endswith('.asmx?WSDL') and not wsdl_url.endswith('.asmx?wsdl'):
-        raise Http404("The correct url format ends in '.asmx?WSDL'.")
-    try:
-        client = Client(wsdl_url)
-    except TransportError:
-        raise Http404('Url not found')
-    except ValueError:
-        raise Http404('Invalid url')  # ought to be a 400, but no page implemented for that
-    except SAXParseException:
-        raise Http404("The correct url format ends in '.asmx?WSDL'.")
-    except:
-        raise Http404("Sorry, but we've encountered an unexpected error.")
-    try:
-        response = client.service.GetSiteInfo(site)
-    except MethodNotFound:
-        raise Http404("Method 'GetValues' not found")
-
+    network = (site.split(':'))[0]
+    wml_ver = check_url_and_version(wsdl_url)
+    client = connect_wsdl_url(wsdl_url)
+    variables_list = []
     try:
         response = client.service.GetSiteInfo(site)
         response = response.encode('utf-8')
-        root = etree.XML(response)
-        wml_version = get_version(root)
-        variable_name = ''
-        variable_code = ''
-        variables = []
-        if wml_version =='1':
-            for element in root.iter():
-                brack_lock = element.tag.index('}')  #The namespace in the tag is enclosed in {}.
-                tag = element.tag[brack_lock+1:]     #Takes only actual tag, no namespace
-                if 'variableCode' in tag:
-                    variable_code = element.text
-                if 'variableName' in tag:
-                    variable_name = element.text
-                    if variable_name + ' : ' + variable_code not in variables:
-                        variables.append(variable_name + ' : ' + variable_code)
-        elif wml_version == '2.0':
-            pass  # FIXME add what to do here
-        else:
-            raise Http404()
-        variables = sorted(variables)
-        return variables
+        wml_siteinfo = wmlParse(response, wml_ver)
+        counter = 0
+        for series in wml_siteinfo.sites[0].series_catalogs[0].series:
+            wml_variable = series.variable
+            variable_name = wml_variable.variable_name
+            variable_code = wml_variable.variable_code
+            counter += 1
+            variables_list.append("%s. %s [%s:%s]" % (str(counter), variable_name, network, variable_code))
+
+        # variables = sorted(variables)
+        return variables_list
+    except MethodNotFound:
+        raise Http404("Method 'GetSiteInfo' not found")
     except:
         return "Parsing error: The Data in the WSDL Url '{0}' was not correctly formatted \
 according to the WaterOneFlow standard given at 'http://his.cuahsi.org/wofws.html#waterml'.".format(wsdl_url)
@@ -372,36 +371,28 @@ def time_series_from_service(service_url, soap_or_rest, **kwargs):
     returns:
     a string containing a WaterML file with location metadata and data
     """
+    # http://icewater.usu.edu/littlebearriver/cuahsi_1_1.asmx/GetValuesObject?location=LittleBearRiver:USU-LBR-SFLower&variable=LittleBearRiver:USU6:methodCode=2:sourceCode=2:qualityControlLevelCode=0&startDate=2007-07-26&endDate=2007-08-26&authToken=
     if soap_or_rest == 'soap':
-        var = ':' + kwargs['variable_code']
+        var = kwargs['variable_code']
+        index = var.rfind(" [")
+        var = var[index+2:len(var)-1]
+
+        site = kwargs['site_code']
+        index = site.rfind(" [")
+        site = site[index+2:len(site)-1]
+
         s_d = kwargs.get('startDate', '')
         e_d = kwargs.get('endDate', '')
         a_t = kwargs.get('authToken', '')
 
+        wml_ver = check_url_and_version(service_url)
+        client = connect_wsdl_url(service_url)
         try:
-            client = Client(service_url)
-        except TransportError:
-            raise Http404('Url not found')
-        except ValueError:
-            raise Http404('Invalid url')  # ought to be a 400, but no page implemented for that
-        try:
-            location = ':' + kwargs['site_name_or_code'] # maybe the user provided a site code
-            response = client.service.GetValues(location, var, s_d, e_d, a_t)
+            response = client.service.GetValues(site, var, s_d, e_d, a_t)
         except MethodNotFound:
             raise Http404("Method 'GetValues' not found")
         except WebFault:
-                    #maybe the user provided a site name
-            try:
-                all_sites = sites_from_soap(service_url)
-                location = ':' + all_sites[kwargs['site_name_or_code']]
-                response = client.service.GetValues(location, var, s_d, e_d, a_t)
-            except KeyError:
-                Http404('Invalid site name')
-            except WebFault:
-                raise Http404('One or more of your parameters may be incorrect. \
-Location and Variable are not optional, and case sensitive')
-            except:
-                raise Http404("Sorry, but we've encountered an unexpected error")
+            raise Http404('This service does not work properly.')
         except:
             raise Http404("Sorry, but we've encountered an unexpected error. This is most likely \
 due to incorrect formatting in the web service format.")

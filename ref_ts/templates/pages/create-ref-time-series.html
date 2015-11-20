@@ -30,7 +30,6 @@
             <h3 id="loading-1-text">Retrieving sites...</h3>
         </div>
 
-
         <div class="form-group cuahsi-his cuahsi-his-2">
             <label for="" class="col-sm-2 control-label">Site</label>
             <div class="col-sm-10">
@@ -42,7 +41,6 @@
             <h3 id="loading-2-text">Retrieving variables...</h3>
         </div>
 
-
         <div class="form-group cuahsi-his cuahsi-his-3">
             <label for="" class="col-sm-2 control-label">Variable</label>
             <div class="col-sm-10">
@@ -51,7 +49,6 @@
         </div>
 
         <div class ="form-group" id ="preview-div" class="col-sm-offset-2 col-sm-10">
-
         </div>
 
         <div class="form-group" id="fail-notice">
@@ -60,7 +57,6 @@
                 <h5>This data failed to validate, which probably means that the WaterML document is not correctly formatted. This time series cannot be used to create a resource </h5>
             </div>
         </div>
-
 
         <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
@@ -79,7 +75,6 @@
                 <input type="text" class="btn btn-primary btn-lg btn-block" name='title' value='{{ title }}'>
             </div>
         </div>
-
 
     </form>
     <style>
@@ -106,7 +101,6 @@
 {% block extra_js %}
     <script type="text/javascript">
         $(function() {
-
             var globurl = "";
 
             $(document).ready(function(){
@@ -147,7 +141,6 @@
                                 $('#url-input').removeClass("has-success");
                                 $('#url-input').addClass("has-error");
                             }
-
                         },
                         error: function(){
                             $('#url-input').removeClass("has-success");
@@ -167,6 +160,7 @@
                     type: "GET",
                     url: '/hsapi/_internal/get-his-urls/',
                     success: function (data, xhr, status) {
+                        console.log("urls:" + data.length)
                         var select = document.getElementsByName('url')[0];
                         removeOptions(select);
                         $('#his-loading')
@@ -178,9 +172,7 @@
                             opt.value = ln;
                             opt.innerHTML = ln;
                             select.appendChild(opt);
-
                         }
-
                     },
                     error: function(){
                         $('#his-loading')
@@ -191,8 +183,7 @@
             }
 
             function removeOptions(selectbox){
-                var i;
-                for(i=selectbox.options.length-1;i>=0;i--)
+                for(var i=selectbox.options.length-1; i>=0; i--)
                 {
                     selectbox.remove(i);
                 }
@@ -201,11 +192,13 @@
             function get_sites(url){
                 $('#loading-1').show();
                 $('#loading-1-text').html('<h3>Retrieving Sites...</h3>');
+                $('.ui-autocomplete-input').prop("disabled", true);
                 $.ajax({
                     type:"GET",
                     url:'/hsapi/_internal/search-sites/',
                     data: {url: url},
                     success: function(data, xhr, status){
+                        console.log("site:" + data.length)
                         var select = document.getElementsByName('site')[0];
                         removeOptions(select);
                         for(var site in data) {
@@ -216,23 +209,27 @@
                             select.appendChild(opt);
                             $('.cuahsi-his-2').show();
                             $('#loading-1').hide();
+                            $('.ui-autocomplete-input').prop("disabled", false);
                         }
                     },
                     error: function(data, stuff){
                         $('#loading-1-text').html('<h3">There was an error retrieving sites for this server</h3>');
                                 console.log(data);
                         console.log(stuff);
+                        $('.ui-autocomplete-input').prop("disabled", false);
                     }
-                }).always(function () {btn.button('reset')});
+                });
             }
 
             function get_variables(site){
                 $('#loading-2').show();
-                site_code = site
+                site_code = site;
                 var url = globurl;
 
                 var b = $('#submit');
                 b.addClass('disabled');
+                $('#site').prop("disabled", true);
+                $('.ui-autocomplete-input').prop("disabled", true);
 
                 $.ajax({
                     type:"GET",
@@ -240,6 +237,7 @@
                     data: {url: url,
                         site: site_code},
                     success: function(data, xhr, status){
+                        console.log("var:" + data.length);
                         $('.cuahsi-his-3').show();
                         var select = document.getElementsByName('variable')[0];
                         removeOptions(select);
@@ -249,8 +247,10 @@
                             opt.value = ln;
                             opt.innerHTML = ln;
                             select.appendChild(opt);
+                            $('#site').prop("disabled", false);
+                            $('.ui-autocomplete-input').prop("disabled", false);
                             if (data.length == 1){
-                                getVals('soap');
+                                $('#variable').trigger("change");
                             }
                         }
                         $('#loading-2').hide();
@@ -259,32 +259,30 @@
                         $('#loading-2-text').html('<h3">There was an error retrieving variables for this site</h3>');
                         console.log(data);
                         console.log(stuff);
-
+                        $('#site').prop("disabled", false);
+                        $('.ui-autocomplete-input').prop("disabled", false);
                     }
                 })
             }
 
-
-            function getVals(ref_type) {
+            function getVals(ref_type, _site, _var) {
                 $('#preview-div').html('<h2 class="col-sm-offset-2 col-sm-10">Retrieving Data . . .</h2>');
                 $('#preview-div').show();
+                var service_url = "";
+                var site = "";
+                var variable = "";
                 if (ref_type == 'rest') {
-                    var service_url = globurl,
-                            site,
-                            variable;
+                    service_url = globurl;
                 }
                 else {
                     service_url = globurl;
-                    var full_site = $('#site').val();
-                    var n = full_site.indexOf(':');
-                    site = full_site.substr(n+2);
-                    var full_variable = $('#variable').val();
-                    n = full_variable.indexOf(':');
-                    variable = full_variable.substr(n+2);
+                    site = _site;
+                    variable = _var;
                 }
 
-
-
+                $('#site').prop("disabled", true);
+                $('.ui-autocomplete-input').prop("disabled", true);
+                $('#variable').prop("disabled", true);
                 $.ajax({
                     type:"GET",
                     url:'/hsapi/_internal/time-series-from-service/',
@@ -299,10 +297,9 @@
                         var b = $('#submit');
                         b.removeClass('disabled');
                         $('#loading-1').hide();
-                        $('#url').append($("<option></option>")
-                                .attr("value",service_url)
-                                .text(service_url));
-                        $('#url').val(service_url);
+                        $('#site').prop("disabled", false);
+                        $('#variable').prop("disabled", false);
+                        $('.ui-autocomplete-input').prop("disabled", false);
                     },
                     error: function(data, stuff){
                         $('#url-input').removeClass("has-success");
@@ -311,16 +308,20 @@
                         console.log(stuff);
                         $('#preview-div').hide();
                         $('#loading-1').hide();
+                        $('#site').prop("disabled", false);
+                        $('#variable').prop("disabled", false);
+                        $('.ui-autocomplete-input').prop("disabled", false);
                     }
-                })
+                });
             }
 
             $('#variable').change(function(){
                 $('#fail-notice').hide();
                 var b = $('#submit');
                 b.addClass('disabled');
-                getVals('soap');
-
+                var variable = $('#variable').val();
+                var site = $('#site').val();
+                getVals('soap', site, variable);
             });
 
             $('#site').change(function(){
@@ -441,9 +442,9 @@
                     }
 
                     // Search for a match (case-insensitive)
-                    var value = this.input.val(),
-                            valueLowerCase = value.toLowerCase(),
-                            valid = false;
+                    var value = this.input.val();
+                    var valueLowerCase = value.toLowerCase();
+                    var valid = false;
                     this.element.children( "option" ).each(function() {
                         if ( $( this ).text().toLowerCase() === valueLowerCase ) {
                             this.selected = valid = true;
@@ -455,7 +456,6 @@
                     if ( valid ) {
                         return;
                     }
-
                 },
 
                 _destroy: function() {

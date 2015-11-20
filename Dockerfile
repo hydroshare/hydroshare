@@ -9,6 +9,7 @@ RUN curl ftp://ftp.renci.org/pub/irods/releases/4.1.5/ubuntu14/irods-icommands-4
 RUN sudo dpkg -i irods-runtime.deb irods-icommands.deb
 RUN sudo apt-get -f install
 RUN pip install -e git+https://github.com/iPlantCollaborativeOpenSource/python-irodsclient.git@master#egg=python-irodsclient
+RUN pip install OWSLib
 
 ADD . /home/docker/hydroshare
 WORKDIR /home/docker
