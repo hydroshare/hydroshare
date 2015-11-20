@@ -178,13 +178,13 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.george.uaccess.unshare_group_with_user(self.bikers, self.alva)
 
         ## test upgrade privilege by non owners
-        # grant change privilege to non owner alva
+        # let george (owner) grant change privilege to alva (non owner)
         self.george.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.CHANGE)
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.CHANGE)
-        # let non owner alva grant view privilege to john (on owner)
+        # let alva (non owner) grant view privilege to john (non owner)
         self.alva.uaccess.share_resource_with_user(self.bikes, self.john, PrivilegeCodes.VIEW)
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.john) == PrivilegeCodes.VIEW)
-        # let alva grant change privilege (upgrade) to john
+        # let alva (non owner) grant change privilege (upgrade) to john (non owner)
         self.alva.uaccess.share_resource_with_user(self.bikes, self.john, PrivilegeCodes.CHANGE)
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.john) == PrivilegeCodes.CHANGE)
 
@@ -976,13 +976,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.mouse = hydroshare.create_account(
             'mouse@gmail.com',
             username='mouse',
-            first_name='fisrt_name_mouse',
+            first_name='first_name_mouse',
             last_name='last_name_mouse',
             superuser=False,
             groups=[]
         )
-
-
         self.holes = hydroshare.create_resource(resource_type='GenericResource',
                                                 owner=self.cat,
                                                 title='all about dog holes',

@@ -1477,14 +1477,14 @@ class UserAccess(models.Model):
             raise HSAccessException("User has insufficient privilege over resource")
 
         # non owner can't downgrade privilege granted by someone else
-        # grantee_priv: current privilege of the grantee
-        # this_privilege: proposed privilege for the grantee
+        # grantee_priv: current privilege of the grantee (this_user)
+        # this_privilege: proposed privilege for the grantee (this_user)
         if whom_priv != PrivilegeCodes.OWNER and grantee_priv < this_privilege:
             record = UserResourcePrivilege.objects.get(resource=access_resource,
                                                        user=access_user,
                                                        privilege=grantee_priv)
 
-            # current granter is not the same as the original granter
+            # current grantor (self) is not the same as the original grantor
             if record.grantor != self:
                 raise HSAccessException("User has insufficient privilege over resource")
 
@@ -1511,7 +1511,7 @@ class UserAccess(models.Model):
                                   privilege=this_privilege,
                                   grantor=self).save()
 
-        # if there exists higher privilege granted by someone else then those needs to be deleted
+        # if there exists higher privileges than what was granted now (this_privilege) then those needs to be deleted
         UserResourcePrivilege.objects.filter(resource=access_resource, user=access_user,
                                              privilege__lt=this_privilege).all().delete()
 
