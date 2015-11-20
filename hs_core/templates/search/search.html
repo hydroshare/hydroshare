@@ -12,8 +12,7 @@
                     <tbody>
                         {{ form.as_table }}
                         <tr>
-                            <td>&nbsp;</td>
-                            <td><input id="faceted-search" type="submit" value="Search"></td>
+                            <td><input class="btn btn-default" type="button" value="clear all" onclick="clearAll()"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -24,7 +23,15 @@
                         <div class="panel panel-default">
                             <div class="panel-heading">
                             <h4 class="panel-title">
-                                <a data-toggle="collapse" href="#{{ key }}">Filter By {{ key }}</a>
+                                <a data-toggle="collapse" href="#{{ key }}">&nbsp; Filter By {{ key }}
+                                    <span
+                                        {% if key == 'author' or key == 'subjects' or key == 'resource_type'%}
+                                            class="glyphicon glyphicon-minus pull-left"
+                                        {% else %}
+                                            class="glyphicon glyphicon-plus pull-left"
+                                        {% endif %}>
+                                    </span>
+                                </a>
                             </h4>
                             </div>
                             <div id="{{ key }}"
@@ -107,8 +114,25 @@
          }
     }
 
+    var clearAll = function(){
+        window.localStorage.clear();
+        var textSearch = $("#id_q").val();
+        var clearURL = "/search/?q=" + textSearch;
+        window.location = clearURL;
+    }
      $(document).ready(function () {
          reorderDivs();
+         $('.collapse').on('shown.bs.collapse', function(){
+            $(this).parent().find(".glyphicon-plus").removeClass("glyphicon-plus").addClass("glyphicon-minus");
+         }).on('hidden.bs.collapse', function(){
+             $(this).parent().find(".glyphicon-minus").removeClass("glyphicon-minus").addClass("glyphicon-plus");
+         });
+         $("#id_q").keypress(function(event) {
+            if (event.which == 13) {
+                event.preventDefault();
+                $("form").submit();
+            }
+         });
          $(function () {
              $(".faceted-selections").click(function () {
                 console.log($(this).val());
@@ -123,7 +147,6 @@
                 }else{
                     localStorage.removeItem($(this).attr("id"));
                     var textSearch = $("#id_q").val();
-                    console.log(textSearch);
                     var updateURL = "/search/?q=" + textSearch;
                      $(".faceted-selections").each(function () {
                          var val = localStorage[$(this).attr("id")];
