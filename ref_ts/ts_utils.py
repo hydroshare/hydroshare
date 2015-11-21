@@ -91,6 +91,7 @@ def sites_from_soap(wsdl_url, locations='[:]'):
 
     sites_list = []
     try:
+        response = response.encode('utf-8')
         wml_sites = wmlParse(response, wml_ver)
         counter = 0
         for site in wml_sites.sites:
@@ -102,10 +103,9 @@ def sites_from_soap(wsdl_url, locations='[:]'):
     except:
         return "Parsing error: The Data in the WSDL Url '{0}' was not correctly formatted \
 according to the WaterOneFlow standard given at 'http://his.cuahsi.org/wofws.html#waterml'.".format(wsdl_url)
-    # sites = sorted(sites)
     return sites_list
 
-# get variable names
+# get variable names list
 def site_info_from_soap(wsdl_url, **kwargs):
     site = kwargs['site']
     index = site.rfind(" [")
@@ -123,10 +123,17 @@ def site_info_from_soap(wsdl_url, **kwargs):
             wml_variable = series.variable
             variable_name = wml_variable.variable_name
             variable_code = wml_variable.variable_code
+            method_id = series.method_id
+            source_id = series.source_id
+            value_count = series.value_count
+            quality_control_level_id = series.quality_control_level_id
+            start_date = series.begin_date_time
+            end_date = series.end_date_time
             counter += 1
-            variables_list.append("%s. %s [%s:%s]" % (str(counter), variable_name, network, variable_code))
+            variables_list.append("%s. %s (ID:%s, Count:%s) [%s:%s:methodCode=%s:sourceCode=%s:qualityControlLevelCode=%s]" %
+                                 (str(counter), variable_name, variable_code, str(value_count), network, variable_code,
+                                  method_id, source_id, quality_control_level_id))
 
-        # variables = sorted(variables)
         return variables_list
     except MethodNotFound:
         raise Http404("Method 'GetSiteInfo' not found")
@@ -157,8 +164,6 @@ def time_to_int(t):
                     t = t[:-6]
                     epoch_secs = int(datetime.strptime(unicode(t), '%Y-%m-%dT%H:%M:%S').strftime('%s'))
                     ret = epoch_secs + offset_hrs*3600 + offset_min*60
-
-
     return ret
 
 def parse_1_0_and_1_1(root):
@@ -358,6 +363,7 @@ def map_waterml(xml_doc):
     elif not version:
         return False
 
+# get values
 def time_series_from_service(service_url, soap_or_rest, **kwargs):
     """ performs getValues call and returns (through parsing fxns) time series and parsed data from response
     called by view: create_ref_time_series
@@ -401,17 +407,16 @@ due to incorrect formatting in the web service format.")
         r = requests.get(service_url)
         if r.status_code == 200:
             response = r.text.encode('utf-8')
-    else:
-        raise Http404()
     root = etree.XML(response)
     wml_version = get_version(root)
     if wml_version == '1':
+        values = wmlParse(response, wmlVersion(service_url))
         ts = parse_1_0_and_1_1(root)
     elif wml_version == '2.0':
         ts = parse_2_0(root)
     else:
         raise Http404()
-    ts['root'] = root #add root to ts
+    ts['root'] = root # add root to ts
     return ts
 
 

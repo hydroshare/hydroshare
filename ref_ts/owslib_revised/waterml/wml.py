@@ -393,7 +393,11 @@ class Series(XMLParser):
         self.method_description = xml_dict.get('method_description')
         self.method_code = xml_dict.get('method_code')
         self.method_link = xml_dict.get('method_link')
-        method = self._find('method') or self._find('Method')
+        # drew
+        method = self._find('method')
+        if method is None:
+            method = self._find('Method')
+
         if method is not None:
             self.method_id = method.attrib.get('methodID')
         else:
@@ -403,7 +407,9 @@ class Series(XMLParser):
         self.organization = xml_dict.get('organization')
         self.source_description = xml_dict.get('source_description')
         self.citation = xml_dict.get('citation')
-        source = self._find('source') or self._find('Source')
+        source = self._find('source')
+        if source is None:
+            source = self._find('Source')
         if source is not None:
             self.source_id = source.attrib.get('sourceID')
         else:
@@ -412,9 +418,13 @@ class Series(XMLParser):
         # quality control info
         self.quality_control_level_code = xml_dict.get('quality_control_level_code')
         self.definition = xml_dict.get('definition')
-        qa = self._find('qualityControlLevel') or self._find('QualityControlLevel')
+        # drew
+        qa = self._find('qualityControlLevel')
+        if qa is None:
+            qa = self._find('QualityControlLevel')
+
         if qa is not None:
-            self.quality_control_level_id = qa.attrib.get('qualityControlLevelID')
+            self.quality_control_level_id = qa.attrib.get('qualityControlLevelID') or qa.attrib.get('QualityControlLevelID')
         else:
             self.quality_control_level_id = None
 
