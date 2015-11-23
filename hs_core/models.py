@@ -570,7 +570,7 @@ class Relation(AbstractMetaDataElement):
                Relation.objects.filter(type='isCopiedFrom', object_id=metadata_obj.id, content_type=metadata_type).exists():
                 raise ValidationError('Relation type:%s cannot be created since isCopiedFrom relation already exists.' % kwargs['type'])
             elif kwargs['type'] == 'isCopiedFrom' and \
-                 Relation.objects.filter(type='isHostedBy', object_id=metadata_obj.id, content_type=metadata_type).exists() > 0:
+                 Relation.objects.filter(type='isHostedBy', object_id=metadata_obj.id, content_type=metadata_type).exists():
                 raise ValidationError('Relation type:%s cannot be created since isHostedBy relation already exists.' % kwargs['type'])
 
             return super(Relation, cls).create(**kwargs)
@@ -588,11 +588,11 @@ class Relation(AbstractMetaDataElement):
             if rel.type != kwargs['type']:
                 if kwargs['type'] == 'isHostedBy' and \
                      Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
-                                             content_type__pk=rel.content_type.id).exists() > 0:
+                                             content_type__pk=rel.content_type.id).exists():
                     raise ValidationError('Relation type:%s cannot be updated since isCopiedFrom relation already exists.' % rel.type)
                 elif kwargs['type'] == 'isCopiedFrom' and \
                      Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
-                                             content_type__pk=rel.content_type.id).exists() > 0:
+                                             content_type__pk=rel.content_type.id).exists():
                     raise ValidationError('Relation type:%s cannot be updated since isHostedBy relation already exists.' % rel.type)
 
         super(Relation, cls).update(element_id, **kwargs)
