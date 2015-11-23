@@ -1623,7 +1623,6 @@ class CoreMetaData(models.Model):
             hsterms_pub_url = etree.SubElement(dc_pub_rdf_Description, '{%s}publisherURL' % self.NAMESPACES['hsterms'])
             hsterms_pub_url.set('{%s}resource' % self.NAMESPACES['rdf'], self.publisher.url)
 
-        res_url_root = '{site_url}/resource/'.format(site_url = current_site_url())
         for rel in self.relations.all():
             dc_relation = etree.SubElement(rdf_Description, '{%s}relation' % self.NAMESPACES['dc'])
             dc_rel_rdf_Description = etree.SubElement(dc_relation, '{%s}Description' % self.NAMESPACES['rdf'])
@@ -1633,7 +1632,8 @@ class CoreMetaData(models.Model):
                 term_ns = self.NAMESPACES['dcterms']
             terms_type = etree.SubElement(dc_rel_rdf_Description, '{%s}%s' % (term_ns, rel.type))
 
-            if rel.value.lower().find(res_url_root) == 0:
+            # check if the relation value starts with 'http://' or 'https://'
+            if rel.value.lower().find('http://') == 0 or rel.value.lower().find('https://') == 0:
                 terms_type.set('{%s}resource' % self.NAMESPACES['rdf'], rel.value)
             else:
                 terms_type.text = rel.value
@@ -1643,7 +1643,8 @@ class CoreMetaData(models.Model):
             dc_source_rdf_Description = etree.SubElement(dc_source, '{%s}Description' % self.NAMESPACES['rdf'])
             dcterms_derived_from = etree.SubElement(dc_source_rdf_Description, '{%s}isDerivedFrom' % self.NAMESPACES['dcterms'])
 
-            if src.derived_from.lower().find(res_url_root) == 0:
+            # if the source value starts with 'http://' or 'https://' add value as an attribute
+            if src.derived_from.lower().find('http://') == 0 or src.derived_from.lower().find('https://') == 0:
                 dcterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
             else:
                 dcterms_derived_from.text = src.derived_from
@@ -1659,7 +1660,7 @@ class CoreMetaData(models.Model):
 
         for sub in self.subjects.all():
             dc_subject = etree.SubElement(rdf_Description, '{%s}subject' % self.NAMESPACES['dc'])
-            if sub.value.lower().find(res_url_root) == 0:
+            if sub.value.lower().find('http://') == 0 or sub.value.lower().find('https://') == 0:
                 dc_subject.set('{%s}resource' % self.NAMESPACES['rdf'], sub.value)
             else:
                 dc_subject.text = sub.value
