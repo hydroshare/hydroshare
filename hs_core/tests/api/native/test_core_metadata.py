@@ -795,12 +795,35 @@ class TestCoreMetadata(TestCase):
         self.assertIn('isPartOf', [rel.type for rel in self.res.metadata.relations.all()],
                       msg="No relation element of type 'isPartOf' was found")
         self.assertIn('isDataFor', [rel.type for rel in self.res.metadata.relations.all()],
+                      msg="No relation element of type 'isDataFor' was found")
+
+        # add another relation element with isHostedBy type
+        resource.create_metadata_element(self.res.short_id,'relation', type='isHostedBy',
+                                value='https://www.cuahsi.org/')
+        # at this point there should be 3 relation elements
+        self.assertEqual(self.res.metadata.relations.all().count(), 3,
+                         msg="Number of source elements is not equal to 3")
+        self.assertIn('isHostedBy', [rel.type for rel in self.res.metadata.relations.all()],
+                      msg="No relation element of type 'isHostedBy' was found")
+        self.assertIn('isPartOf', [rel.type for rel in self.res.metadata.relations.all()],
                       msg="No relation element of type 'isPartOf' was found")
+        self.assertIn('isDataFor', [rel.type for rel in self.res.metadata.relations.all()],
+                      msg="No relation element of type 'isDataFor' was found")
+
+        # test isHostedBy and isCopiedFrom are mutually exclusive
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'relation',
+                                                                      type='isCopiedFrom',
+                                                                      value='Another Source'))
+
+        rel_to_update = self.res.metadata.relations.all().filter(type='isHostedBy').first()
+        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id,'relation',
+                                                                      rel_to_update.id, type='isCopiedFrom'))
 
         # test that duplicate relation types are not allowed
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'relation',
                                                                       type='isDataFor',
                                                                       value='http://hydroshare.org/resource/003'))
+
 
         # test update relation type
         rel_to_update = self.res.metadata.relations.all().filter(type='isPartOf').first()
@@ -821,6 +844,40 @@ class TestCoreMetadata(TestCase):
         # test that it is possible to delete all relation elements
         for rel in self.res.metadata.relations.all():
             resource.delete_metadata_element(self.res.short_id,'relation', rel.id)
+
+        # at this point there should not be any relation elements
+        self.assertEqual(self.res.metadata.relations.all().count(), 0, msg="Resource has relation element(s) after deleting all.")
+
+        # test to add relation element with isCopiedFrom type
+        resource.create_metadata_element(self.res.short_id,'relation', type='isCopiedFrom',
+                                value='https://www.cuahsi.org/')
+        # at this point there should be 1 relation element
+        self.assertEqual(self.res.metadata.relations.all().count(), 1,
+                         msg="Number of source elements is not equal to 1")
+        self.assertIn('isCopiedFrom', [rel.type for rel in self.res.metadata.relations.all()],
+                      msg="No relation element of type 'isCopiedFrom' was found")
+
+        # test update relation value
+        rel_to_update = self.res.metadata.relations.all().filter(type='isCopiedFrom').first()
+        resource.update_metadata_element(self.res.short_id, 'relation', rel_to_update.id, type='isCopiedFrom', value='Another Source')
+        self.assertIn('isCopiedFrom', [rel.type for rel in self.res.metadata.relations.all()], msg="No relation element of type 'isCopiedFrom' was found")
+        self.assertIn('Another Source', [rel.value for rel in self.res.metadata.relations.all()], msg="No relation element of value 'Another Source' was found")
+
+        # test isHostedBy and isCopiedFrom are mutually exclusive
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'relation',
+                                                                      type='isHostedBy',
+                                                                      value='https://www.cuahsi.org/'))
+
+        rel_to_update = self.res.metadata.relations.all().filter(type='isCopiedFrom').first()
+        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id,'relation',
+                                                                      rel_to_update.id, type='isHostedBy'))
+
+        # test that it is possible to delete all relation elements
+        for rel in self.res.metadata.relations.all():
+            resource.delete_metadata_element(self.res.short_id,'relation', rel.id)
+
+        # at this point there should not be any relation elements
+        self.assertEqual(self.res.metadata.relations.all().count(), 0, msg="Resource has relation element(s) after deleting all.")
 
     def test_rights(self):
         # By default a resource should have the rights element

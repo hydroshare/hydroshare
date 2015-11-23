@@ -15,10 +15,10 @@
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
 
         {% block error %}
-            {%  if file_validation_error %}
+            {%  if validation_error %}
                 <div class="alert alert-danger alert-dismissible" role="alert">
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                      <strong>Uploaded File Validation Error:{{ file_validation_error }}</strong>
+                      <strong>Validation Error: {{ validation_error }}</strong>
                  </div>
             {%  endif %}
         {% endblock %}
@@ -273,15 +273,14 @@
             <h3>How to cite</h3>
 
             <div class="input-group" style="margin-bottom: 30px">
-                <input readonly id="citation-text" style="cursor:default;" type="text"
-                       class="form-control" aria-describedby="basic-addon1" value="{{ citation }}">
-                <span class="input-group-addon "><span class="glyphicon glyphicon-book"
+                <span id="citation-text">{{ citation }}</span>
+                <span class="input-group-addon"><span class="glyphicon glyphicon-book"
                         data-toggle="tooltip" data-placement="bottom" title="Click on the text to select all"></span></span>
             </div>
 
             {#        ======= Sharing =======#}
             {% if not metadata_form %}
-        {% if rights.statement or rights.url %}
+            {% if rights.statement or rights.url %}
             <div id="rights">
                 {% if rights.statement %}
                     <span class="rights-text">{{ rights.statement }} </span>
@@ -1530,8 +1529,7 @@
                                             </tbody>
                                         </table>
                                         <a id="add-relation" class="btn btn-success" data-toggle="modal"
-                                           data-target="#add-relation-dialog"><i
-                                                class="fa fa-plus"></i> Add relation</a>
+                                           data-target="#add-relation-dialog"><i class="fa fa-plus"></i> Add relation</a>
                                     </div>
                                 {% endif %}
                             </div>
@@ -1691,11 +1689,9 @@
                                         <div class="controls">
                                             <select class="form-control input-sm select" id="id_relation-{{ forloop.counter0 }}-type" name="relation-{{ forloop.counter0 }}-type">
                                                 <option value="">---------</option>
-                                                <option value="isPartOf" {% if relation.type == "isPartOf" %} selected="selected" {% endif %}>Part Of</option>
-                                                <option value="isCreatedBy" {% if relation.type == "isCreatedBy" %}selected="selected"{% endif %}>Created By</option>
-                                                <option value="isVersionOf" {% if relation.type == "isVersionOf" %}selected="selected"{% endif %}>Version Of</option>
-                                                <option value="isDataFor" {% if relation.type == "isDataFor" %}selected="selected"{% endif %}>Data For</option>
-                                                <option value="cites" {% if relation.type == "cites" %}selected="selected"{% endif %}>Cites</option>
+                                                {% for type_value, type_display in relation_source_types %}
+                                                    <option value={{ type_value }} {% if relation.type == type_value %}selected="selected"{% endif %}>{{ type_display }}</option>
+                                                {% endfor %}
                                             </select>
                                         </div>
                                     </div>
@@ -2052,14 +2048,11 @@
                                                                                        class="control-label requiredField">
                                         Relation type<span class="asteriskField">*</span></label>
 
-                                        <div class="controls"><select class="form-control input-sm select" id="id_type"
-                                                                      name="type">
+                                        <div class="controls"><select class="form-control input-sm select" id="id_type" name="type">
                                             <option value="" selected="selected">---------</option>
-                                            <option value="isPartOf">Part Of</option>
-                                            <option value="isCreatedBy">Created By</option>
-                                            <option value="isVersionOf">Version Of</option>
-                                            <option value="isDataFor">Data For</option>
-                                            <option value="cites">Cites</option>
+                                            {% for type_value, type_display in relation_source_types %}
+                                                <option value={{ type_value }}>{{ type_display }}</option>
+                                            {% endfor %}
                                         </select></div>
                                     </div>
                                     <div id="div_id_value" class="control-group"><label for="id_value"
@@ -2373,7 +2366,21 @@
         <script type="text/javascript">
 
             $("#citation-text").on("click", function(e){
-                $(this).select();
+                // document.selection logic is added in for IE 8 and lower
+                if (document.selection) {
+                    document.selection.empty();
+                    var range = document.body.createTextRange();
+                    range.moveToElementText(this);
+                    range.select();
+                }
+                else if (window.getSelection) {
+                    // Get the selection object
+                    var selection = window.getSelection();
+                    selection.removeAllRanges();
+                    var range = document.createRange();
+                    range.selectNode(this);
+                    selection.addRange(range);
+                }
             });
 
             // Prevents form submission when pressing the enter key on the search box.
