@@ -126,18 +126,18 @@ function show_error(){
 /**
  * reloads the jQuery multi-select widgets on form submission
  */
-$(document).bind("submit-success", function(event){
+$(document).on("submit-success submit-error", function(event){
     // reload dynamically generated widgets
     loadWidgets();
 });
 
-/**
- * reloads the jQuery multi-select widgets on form submission failure
- */
-$(document).bind("submit-error", function(event){
-    // reload dynamically generated widgets
-    loadWidgets();
-});
+///**
+// * reloads the jQuery multi-select widgets on form submission failure
+// */
+//$(document).bind("submit-error", function(event){
+//    // reload dynamically generated widgets
+//    loadWidgets();
+//});
 
 /**
  * Sets multi-select selections to hidden field values that are submitted with the form
