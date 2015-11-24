@@ -52,11 +52,8 @@ function loadWidgets(){
         data: {resource_id: shortid},
         success: function (data) {
 
-            // get the fieldset items
-            var fs = document.getElementById("id-mpmetadata").getElementsByTagName('fieldset')[0];
-
             // get the multiselect items
-            var multiselect = fs.getElementsByClassName('div-multi-select');
+            var multiselect = $("#id-mpmetadata fieldset .div-multi-select");
 
             for (var i = 0; i < multiselect.length; i++) {
 
