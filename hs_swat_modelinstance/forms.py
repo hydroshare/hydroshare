@@ -1,12 +1,16 @@
 __author__ = 'Mohamed Morsy'
 from django.forms import ModelForm
 from django import forms
-from crispy_forms import *
-from crispy_forms.layout import *
-from crispy_forms.bootstrap import *
-from models import *
-from hs_core.forms import BaseFormHelper
 
+from crispy_forms import layout
+from crispy_forms.layout import Layout, Field, HTML
+
+from hs_core.forms import BaseFormHelper
+from hs_core.hydroshare import users
+
+from hs_modelinstance.models import ModelOutput, ExecutedBy
+from hs_swat_modelinstance.models import SWATModelInstanceResource, ModelObjective,\
+    SimulationType, ModelMethod, ModelParameter, ModelInput
 
 model_objective_choices = (
                             ('Hydrology', 'Hydrology'),
@@ -74,29 +78,66 @@ class ModelOutputValidationForm(forms.Form):
         else:
             return True
 
+# ExecutedBy element forms
 class ExecutedByFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
+
+        # pop the model program shortid out of the kwargs dictionary
+        mp_id = kwargs.pop('mpshortid')
+
+        # get all model program resources and build option HTML elements for each one.
+        # ModelProgram shortid is concatenated to the selectbox id so that it is accessible in the template.
+        mp_resource = users.get_resource_list(type=['ModelProgramResource'])
+        options = '\n'.join(['<option value=%s>%s</option>'%(r.short_id, r.title) for r in mp_resource ])
+        options  = '<option value=Unspecified>Unspecified</option>' + options
+        selectbox = HTML('<div class="div-selectbox">'
+                                ' <select class="selectbox" id="selectbox_'+mp_id+'">'
+                                        + options +
+                                '</select>'
+                            '</div><br>')
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        MetadataField('name'),
-                 )
+            MetadataField('model_name', style="display:none"),
+            selectbox,
+            HTML("""
+            <div id=program_details_div style="display:none">
+                <table id="program_details_table" class="modelprogram">
+                <tr><td>Description: </td><td></td></tr>
+                <tr><td>Release Date: </td><td></td></tr>
+                <tr><td>Version: </td><td></td></tr>
+                <tr><td>Language: </td><td></td></tr>
+                <tr><td>Operating System: </td><td></td></tr>
+                <tr><td>Url: </td><td></td></tr>
+            </table>
+            </div>
+            """),
+        )
 
         kwargs['element_name_label'] = 'Model Program used for execution'
-        super(ExecutedByFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(ExecutedByFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, *args,
+                                                   **kwargs)
 
 
 class ExecutedByForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ExecutedByForm, self).__init__(*args, **kwargs)
-        self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy')
+
+        # set mpshort id to '' if a foreign key has not been established yet, otherwise use mp short id
+        mpshortid = 'Unspecified'
+        if self.instance.model_program_fk is not None:
+            mpshortid = self.instance.model_program_fk.short_id
+        kwargs = dict(mpshortid=mpshortid)
+        self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy', **kwargs)
 
     class Meta:
         model = ExecutedBy
-        fields = ('name',)
+        exclude = ('content_object', 'model_program_fk',)
+
 
 class ExecutedByValidationForm(forms.Form):
-    name = forms.CharField(max_length=200)
+    model_name = forms.CharField(max_length=200)
+    model_program_fk = forms
 
 
 class ModelObjectiveFormHelper(BaseFormHelper):
@@ -170,9 +211,9 @@ class ModelMethodFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        MetadataField('runoff_calculation_method'),
-                        MetadataField('flow_routing_method'),
-                        MetadataField('PET_estimation_method'),
+                        MetadataField('runoffCalculationMethod'),
+                        MetadataField('flowRoutingMethod'),
+                        MetadataField('petEstimationMethod'),
                  )
         kwargs['element_name_label'] = 'Model Method'
         super(ModelMethodFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -184,15 +225,15 @@ class ModelMethodForm(ModelForm):
 
     class Meta:
         model = ModelMethod
-        fields = ('runoff_calculation_method',
-                  'flow_routing_method',
-                  'PET_estimation_method',)
+        fields = ('runoffCalculationMethod',
+                  'flowRoutingMethod',
+                  'petEstimationMethod',)
 
 
 class ModelMethodValidationForm(forms.Form):
-    runoff_calculation_method = forms.CharField(max_length=200, required=False)
-    flow_routing_method = forms.CharField(max_length=200, required=False)
-    PET_estimation_method = forms.CharField(max_length=200, required=False)
+    runoffCalculationMethod = forms.CharField(max_length=200, required=False)
+    flowRoutingMethod = forms.CharField(max_length=200, required=False)
+    petEstimationMethod = forms.CharField(max_length=200, required=False)
 
 class ModelParameterFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
@@ -236,23 +277,23 @@ class ModelInputFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        MetadataField('warm_up_period'),
-                        MetadataField('rainfall_time_step_type'),
-                        MetadataField('rainfall_time_step_value'),
-                        MetadataField('routing_time_step_type'),
-                        MetadataField('routing_time_step_value'),
-                        MetadataField('simulation_time_step_type'),
-                        MetadataField('simulation_time_step_value'),
-                        MetadataField('watershed_area'),
-                        MetadataField('number_of_subbasins'),
-                        MetadataField('number_of_HRUs'),
-                        MetadataField('DEM_resolution'),
-                        MetadataField('DEM_source_name'),
-                        MetadataField('DEM_source_URL'),
-                        MetadataField('landUse_data_source_name'),
-                        MetadataField('landUse_data_source_URL'),
-                        MetadataField('soil_data_source_name'),
-                        MetadataField('soil_data_source_URL'),
+                        MetadataField('warmupPeriodValue'),
+                        MetadataField('rainfallTimeStepType'),
+                        MetadataField('rainfallTimeStepValue'),
+                        MetadataField('routingTimeStepType'),
+                        MetadataField('routingTimeStepValue'),
+                        MetadataField('simulationTimeStepType'),
+                        MetadataField('simulationTimeStepValue'),
+                        MetadataField('watershedArea'),
+                        MetadataField('numberOfSubbasins'),
+                        MetadataField('numberOfHRUs'),
+                        MetadataField('demResolution'),
+                        MetadataField('demSourceName'),
+                        MetadataField('demSourceURL'),
+                        MetadataField('landUseDataSourceName'),
+                        MetadataField('landUseDataSourceURL'),
+                        MetadataField('soilDataSourceName'),
+                        MetadataField('soilDataSourceURL'),
                  )
         kwargs['element_name_label'] = 'Model Input'
         super(ModelInputFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -261,46 +302,46 @@ class ModelInputForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelInputForm, self).__init__(*args, **kwargs)
         self.helper = ModelInputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelInput')
-        self.fields['rainfall_time_step_type'].choices = rainfall_type_choices
-        self.fields['routing_time_step_type'].choices = routing_type_choices
-        self.fields['simulation_time_step_type'].choices = simulation_type_choices
+        self.fields['rainfallTimeStepType'].choices = rainfall_type_choices
+        self.fields['routingTimeStepType'].choices = routing_type_choices
+        self.fields['simulationTimeStepType'].choices = simulation_type_choices
 
     class Meta:
         model = ModelInput
-        fields = ('warm_up_period',
-                  'rainfall_time_step_type',
-                  'rainfall_time_step_value',
-                  'routing_time_step_type',
-                  'routing_time_step_value',
-                  'simulation_time_step_type',
-                  'simulation_time_step_value',
-                  'watershed_area',
-                  'number_of_subbasins',
-                  'number_of_HRUs',
-                  'DEM_resolution',
-                  'DEM_source_name',
-                  'DEM_source_URL',
-                  'landUse_data_source_name',
-                  'landUse_data_source_URL',
-                  'soil_data_source_name',
-                  'soil_data_source_URL',)
+        fields = ('warmupPeriodValue',
+                  'rainfallTimeStepType',
+                  'rainfallTimeStepValue',
+                  'routingTimeStepType',
+                  'routingTimeStepValue',
+                  'simulationTimeStepType',
+                  'simulationTimeStepValue',
+                  'watershedArea',
+                  'numberOfSubbasins',
+                  'numberOfHRUs',
+                  'demResolution',
+                  'demSourceName',
+                  'demSourceURL',
+                  'landUseDataSourceName',
+                  'landUseDataSourceURL',
+                  'soilDataSourceName',
+                  'soilDataSourceURL',)
 
 
 class ModelInputValidationForm(forms.Form):
-    warm_up_period = forms.CharField(max_length=100, required=False)
-    rainfall_time_step_type = forms.CharField(max_length=100, required=False)
-    rainfall_time_step_value = forms.CharField(max_length=100, required=False)
-    routing_time_step_type = forms.CharField(max_length=100, required=False)
-    routing_time_step_value = forms.CharField(max_length=100, required=False)
-    simulation_time_step_type = forms.CharField(max_length=100, required=False)
-    simulation_time_step_value = forms.CharField(max_length=100, required=False)
-    watershed_area = forms.CharField(max_length=100, required=False)
-    number_of_subbasins = forms.CharField(max_length=100, required=False)
-    number_of_HRUs = forms.CharField(max_length=100, required=False)
-    DEM_resolution = forms.CharField(max_length=100, required=False)
-    DEM_source_name = forms.CharField(max_length=200, required=False)
-    DEM_source_URL = forms.URLField(required=False)
-    landUse_data_source_name = forms.CharField(max_length=200, required=False)
-    landUse_data_source_URL = forms.URLField(required=False)
-    soil_data_source_name = forms.CharField(max_length=200, required=False)
-    soil_data_source_URL = forms.URLField(required=False)
+    warmupPeriodValue = forms.CharField(max_length=100, required=False)
+    rainfallTimeStepType = forms.CharField(max_length=100, required=False)
+    rainfallTimeStepValue = forms.CharField(max_length=100, required=False)
+    routingTimeStepType = forms.CharField(max_length=100, required=False)
+    routingTimeStepValue = forms.CharField(max_length=100, required=False)
+    simulationTimeStepType = forms.CharField(max_length=100, required=False)
+    simulationTimeStepValue = forms.CharField(max_length=100, required=False)
+    watershedArea = forms.CharField(max_length=100, required=False)
+    numberOfSubbasins = forms.CharField(max_length=100, required=False)
+    numberOfHRUs = forms.CharField(max_length=100, required=False)
+    demResolution = forms.CharField(max_length=100, required=False)
+    demSourceName = forms.CharField(max_length=200, required=False)
+    demSourceURL = forms.URLField(required=False)
+    landUseDataSourceName = forms.CharField(max_length=200, required=False)
+    landUseDataSourceURL = forms.URLField(required=False)
+    soilDataSourceName = forms.CharField(max_length=200, required=False)
+    soilDataSourceURL = forms.URLField(required=False)
