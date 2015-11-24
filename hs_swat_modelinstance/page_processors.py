@@ -1,10 +1,15 @@
 __author__ = 'Mohamed Morsy'
-from mezzanine.pages.page_processors import processor_for
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
+from crispy_forms.bootstrap import AccordionGroup
+from crispy_forms.layout import Layout, HTML
+
 from hs_core import page_processors
-from hs_core.views import *
-from hs_swat_modelinstance.forms import *
+from hs_core.views import add_generic_context
+
 from hs_swat_modelinstance.models import SWATModelInstanceResource
+from hs_swat_modelinstance.forms import ModelOutputForm, ExecutedByForm, ModelObjectiveForm,\
+    SimulationTypeForm, ModelMethodForm, ModelParameterForm, ModelInputForm
+
+from mezzanine.pages.page_processors import processor_for
 
 @processor_for(SWATModelInstanceResource)
 def landing_page(request, page):

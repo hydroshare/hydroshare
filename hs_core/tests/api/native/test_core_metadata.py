@@ -408,10 +408,10 @@ class TestCoreMetadata(TestCase):
 
         # test that the name, uplimit, downlimit, zunits and projection are optional
         self.res.metadata.coverages.get(type='box').delete()
-        value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789',
-                      'units': 'decimal deg','name': 'Bear river', 'uplimit': '45.234', 'downlimit': '12.345',
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '12.6789','southlimit': '16.45678', 'westlimit': '16.6789',
+                      'units': 'decimal deg', 'name': 'Bear river', 'uplimit': '45.234', 'downlimit': '12.345',
                       'zunits': 'decimal deg', 'projection': 'NAD83'}
-        resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+        resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         # there should be now 2 coverage elements
         self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total overages not equal 2.")
@@ -428,96 +428,104 @@ class TestCoreMetadata(TestCase):
 
         # add another date of type 'created' - which should raise an exception
         self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'date',
-                                                                               type='created', start_date="8/10/2014"))
+                                                                               type='created',
+                                                                               start_date=parser.parse("8/10/2014")))
 
         # add another date of type 'modified' - which should raise an exception
         self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'date',
-                                                                               type='modified', start_date="8/10/2014"))
+                                                                               type='modified',
+                                                                               start_date=parser.parse("8/10/2014")))
 
         # add another date of type 'published' - which should raise an exception since the resource is not yet published.
         self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'date',
                                                                                type='published',
-                                                                               start_date="8/10/2014"))
+                                                                               start_date=parser.parse("8/10/2014")))
 
         # make the resource published and then add the date type published - which should work
         self.res.raccess.published = True
         self.res.raccess.save()
-        resource.create_metadata_element(self.res.short_id,'date', type='published', start_date="8/10/2014")
+        resource.create_metadata_element(self.res.short_id, 'date', type='published',
+                                         start_date=parser.parse("8/10/2014"))
 
         # add date type 'available' when the the resource is NOT public - this should raise an exception
         self.res.raccess.public = False
         self.res.raccess.save()
         self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id, 'date',
                                                                                type='available',
-                                                                               start_date="8/10/2014"))
+                                                                               start_date=parser.parse("8/10/2014")))
 
         # make the resource public and then add available date
         self.res.raccess.public = True
         self.res.raccess.save()
-        resource.create_metadata_element(self.res.short_id,'date', type='available', start_date="8/10/2014")
+        resource.create_metadata_element(self.res.short_id,'date', type='available',
+                                         start_date=parser.parse("8/10/2014"))
         self.assertIn('available', [dt.type for dt in self.res.metadata.dates.all()],
                       msg="Date element type 'Available' does not exist")
 
         # add date type 'valid' - it seems there is no restriction for this date type
-        resource.create_metadata_element(self.res.short_id,'date', type='valid', start_date="8/10/2014")
+        resource.create_metadata_element(self.res.short_id,'date', type='valid', start_date=parser.parse("8/10/2014"))
         self.assertIn('valid', [dt.type for dt in self.res.metadata.dates.all()],
                       msg="Date element type 'Valid' does not exist")
 
         # trying to add an existing date type element should raise an exception
-        self.assertRaises(Exception, lambda :resource.create_metadata_element(self.res.short_id, 'date', type='valid',
-                                                                              start_date="9/10/2014"))
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'date', type='valid',
+                                                                              start_date=parser.parse("9/10/2014")))
 
-        # add another date of type 'none-type' that is not one of the date types allowed - which should raise an exception.
-        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id, 'date',
-                                                                               type='none-type',
-                                                                               start_date="8/10/2014"))
+        # add another date of type 'none-type' that is not one of the date types allowed -
+        # which should raise an exception.
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'date',
+                                                                              type='none-type',
+                                                                              start_date=parser.parse("8/10/2014")))
 
         # test updating a date element
         # update of created date is not allowed
         dt_created = self.res.metadata.dates.all().filter(type='created').first()
-        self.assertRaises(Exception, lambda :resource.update_metadata_element(self.res.short_id,'date', dt_created.id,
-                                                                              start_date='8/10/2014'))
+        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'date', dt_created.id,
+                                                                             start_date=parser.parse('8/10/2014')))
 
         # update of modified date should not change to what the user specifies
         # it should always match with resource update date value
         dt_modified = self.res.metadata.dates.all().filter(type='modified').first()
-        resource.update_metadata_element(self.res.short_id,'date', dt_modified.id, start_date='8/10/2014')
+        resource.update_metadata_element(self.res.short_id,'date', dt_modified.id, start_date=parser.parse('8/10/2014'))
         dt_modified = self.res.metadata.dates.all().filter(type='modified').first()
         self.assertNotEqual(dt_modified.start_date.date(), parser.parse('8/10/2014').date())
         self.assertEqual(self.res.updated.date(), dt_modified.start_date.date())
 
         # test the date type can't be changed - it does not through any exception though - it just ignores
-        resource.update_metadata_element(self.res.short_id,'date', dt_modified.id, type='valid', start_date='8/10/2013')
+        resource.update_metadata_element(self.res.short_id,'date', dt_modified.id, type='valid',
+                                         start_date=parser.parse('8/10/2013'))
         self.assertIn('modified', [dt.type for dt in self.res.metadata.dates.all()],
                       msg="Date element type 'Modified' does not exist")
 
         # test that date value for date type 'valid' can be changed
         dt_valid = self.res.metadata.dates.all().filter(type='valid').first()
-        resource.update_metadata_element(self.res.short_id,'date', dt_valid.id, start_date='8/10/2011',
-                                         end_date='8/11/2012')
+        resource.update_metadata_element(self.res.short_id,'date', dt_valid.id, start_date=parser.parse('8/10/2011'),
+                                         end_date=parser.parse('8/11/2012'))
         dt_valid = self.res.metadata.dates.all().filter(type='valid').first()
         self.assertEqual(dt_valid.start_date.date(), parser.parse('8/10/2011').date())
         self.assertEqual(dt_valid.end_date.date(), parser.parse('8/11/2012').date())
 
         # test that date value for date type 'available' can be changed
         dt_available = self.res.metadata.dates.all().filter(type='available').first()
-        resource.update_metadata_element(self.res.short_id,'date', dt_available.id, start_date='8/11/2011')
+        resource.update_metadata_element(self.res.short_id,'date', dt_available.id,
+                                         start_date=parser.parse('8/11/2011'))
         dt_available = self.res.metadata.dates.all().filter(type='available').first()
         self.assertEqual(dt_available.start_date.date(), parser.parse('8/11/2011').date())
 
         # test that date value for date type 'published can be changed
         dt_published = self.res.metadata.dates.all().filter(type='published').first()
-        resource.update_metadata_element(self.res.short_id,'date', dt_published.id, start_date='8/9/2011')
+        resource.update_metadata_element(self.res.short_id, 'date', dt_published.id,
+                                         start_date=parser.parse('8/9/2011'))
         dt_published = self.res.metadata.dates.all().filter(type='published').first()
         self.assertEqual(dt_published.start_date.date(), parser.parse('8/9/2011').date())
 
         # trying to delete date type 'created' should raise exception
         dt_created = self.res.metadata.dates.all().filter(type='created').first()
-        self.assertRaises(Exception, lambda : resource.delete_metadata_element(self.res.short_id,'date', dt_created.id))
+        self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id,'date', dt_created.id))
 
         # trying to delete date type 'modified' should raise exception
         dt_modified = self.res.metadata.dates.all().filter(type='modified').first()
-        self.assertRaises(Exception, lambda : resource.delete_metadata_element(self.res.short_id,'date',
+        self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id,'date',
                                                                                dt_modified.id))
 
         # trying to delete date type 'published' should work
@@ -565,7 +573,7 @@ class TestCoreMetadata(TestCase):
                       msg="Format element with value of %s does not exist." % format_csv)
 
         # duplicate formats are not allowed - exception is thrown
-        format_CSV = 'text/CSV'
+        format_CSV = 'text/csv'
         self.assertRaises(Exception, lambda :resource.create_metadata_element(self.res.short_id,'format', value=format_CSV))
 
         # test that a resource can have multiple formats
@@ -1016,7 +1024,8 @@ class TestCoreMetadata(TestCase):
         self.res.metadata.create_element('coverage', type='box', value=value_dict)
 
         # add date of type 'valid'
-        self.res.metadata.create_element('date', type='valid', start_date='8/10/2011', end_date='8/11/2012')
+        self.res.metadata.create_element('date', type='valid', start_date=parser.parse('8/10/2011'),
+                                         end_date=parser.parse('8/11/2012'))
 
         # add a format element
         format_csv = 'text/csv'

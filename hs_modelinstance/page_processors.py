@@ -1,12 +1,16 @@
 __author__ = 'Mohamed'
+from crispy_forms.bootstrap import AccordionGroup
 from crispy_forms.layout import Layout, HTML
-from forms import *
-from hs_core import page_processors
-from hs_core.views import *
 
+from hs_core import page_processors
+from hs_core.views import add_generic_context
+
+from hs_modelinstance.models import ModelInstanceResource
+from hs_modelinstance.forms import ModelOutputForm, ExecutedByForm
+
+from mezzanine.pages.page_processors import processor_for
 
 @processor_for(ModelInstanceResource)
-# TODO: problematic permissions.
 def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)

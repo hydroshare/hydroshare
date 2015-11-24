@@ -56,10 +56,12 @@
 {% endblock %}
 
 {% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static "css/bootstrap-multiselect.css" %}" />
     <link rel="stylesheet" type="text/css" href="{% static "css/model_instance.css" %}" />
 {% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
+    <script src="{% static "js/bootstrap-multiselect.js"%}"></script>
     <script src="{% static "js/model_instance.js"%}"></script>
 {% endblock %}
