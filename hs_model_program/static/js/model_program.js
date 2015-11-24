@@ -2,7 +2,7 @@
  * Created by tonycastronova on 10/12/15.
  */
 
-$alert_error = '<div class="alert alert-danger" id="error-alert"> \
+$mp_alert_error = '<div class="alert alert-danger" id="error-alert"> \
                     <button type="button" class="close" data-dismiss="alert">x</button> \
                     <strong>Error </strong> \
                     failed to retrieve metadata for this resource.\
@@ -87,7 +87,6 @@ function loadWidgets(){
         },
         error: function (data) {
             show_error();
-            console.log('There was an error with model instance GET.')
         },
         complete: function (data) {
             // once the selected fields (html) have been updated, build the jQuery multiselect boxes
@@ -123,7 +122,7 @@ function loadWidgets(){
 }
 
 function show_error(){
-    $('body > .container').append($alert_error);
+    $('body > .container').append($mp_alert_error);
     $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
         $(".alert-danger").alert('close');
     });
