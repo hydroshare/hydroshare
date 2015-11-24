@@ -2676,14 +2676,14 @@
                             rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
                             rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
                             rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
-                            if (json_response.name){
+                            if (json_response.name) {
                                 rowTemplate.find("span[data-col='name']").text(json_response.name);
                             }
-                            else{
+                            else {
                                 rowTemplate.find("span[data-col='name']").text(json_response.username);
                             }
 
-                            if (!json_response.is_current_user){
+                            if (!json_response.is_current_user) {
                                 rowTemplate.find(".you-flag").hide();
                             }
                             rowTemplate.find("span[data-col='user-name']").text(json_response.username);
