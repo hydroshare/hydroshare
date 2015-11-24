@@ -2644,7 +2644,7 @@
                         json_response = JSON.parse(result);
                         if (json_response.status === 'success')
                         {
-                            $(document).trigger(jQuery.Event("submit-success"));
+                            $(document).trigger("submit-success");
                             $form.find("button.btn-primary").hide();
                             if (json_response.hasOwnProperty('element_id')){
                                 form_update_action = $form.attr('action');
@@ -2675,14 +2675,14 @@
                                 this.remove();
                             });
                             $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
-                                $(document).trigger(jQuery.Event("submit-success"));
+                                $(document).trigger("submit-success");
                                 $(".alert-success").alert('close');
                             });
                         }
                         else{
                             $('body > .container').append($alert_error);
                             $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
-                                $(document).trigger(jQuery.Event("submit-error"));
+                                $(document).trigger("submit-error");
                                 $(".alert-danger").alert('close');
                             });
                         }
