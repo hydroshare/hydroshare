@@ -18,24 +18,22 @@ $(document).ready(function () {
 
         // initialize datepicker
         $( "#modelReleaseDate_picker" ).datepicker({
-            // bind a table view to the on close event
+
+            // **
+            // * Sets the hidden date field base on the datepicker.  The hidden field is what is submitted.
+            // */
             onSelect: function (event) {
-                onChange_releaseDate(event);
+
+                // set the value of the hidden date field which will be submitted to the server on Save
+                var date = document.getElementById('id_modelReleaseDate');
+                var date_picker = document.getElementById("modelReleaseDate_picker");
+                date.value = date_picker.value;
+
+                // activate the save button
+                $("#resourceSpecificTab").find('.btn-primary').show();
             }
         });
 });
-
-/**
- * Sets the hidden date field base on the datepicker.  The hidden field is what is submitted.
- */
-function onChange_releaseDate(event){
-    var date = document.getElementById('id_modelReleaseDate');
-    var date_picker = document.getElementById("modelReleaseDate_picker");
-    date.value = date_picker.value;
-
-    // activate the save button
-    $("#resourceSpecificTab").find('.btn-primary').show();
-}
 
 /**
  * Builds jQuery multiselect listboxes
