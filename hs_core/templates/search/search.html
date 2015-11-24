@@ -1,7 +1,6 @@
 {% extends "base.html" %}
-
-{# {% block title %}{{ user|best_name }}'s Resources{% endblock %}#}
-{% block title %}Resources{% endblock %}
+{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags %}
+{% block title %}Discovery{% endblock %}
 
 {% block main %}
 <div class="container-fluid" id="main">
@@ -35,13 +34,14 @@
                                 {% for item in values %}
                                     <li class="list-group-item">
                                         <input class="faceted-selections" id="{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp; {{ item.0 }}
-                                        <span class="label label-default label-pill pull-right"
+                                        <span class="label label-default label-pill pull-right badge"
                                             {% if item.1 < 5 %}
-                                                style="background-color:#3333FF" class="badge"
+                                                style="background-color:#d62728"
+                                                {#  style = "background-color: rgb( {{ item.1|add:"200" }} , 0, {{ item.1|add:"50" }})" #}
                                             {% elif item.1 >= 5 and item.1 < 10 %}
-                                                style="background-color:#CCFF00" class="badge"
+                                                style="background-color:#e377c2"
                                             {% elif item.1 >= 10 %}
-                                                style="background-color:#FF0000" class="badge"
+                                                style="background-color:#1f77b4"
                                             {% endif %}>{{ item.1 }}
                                         </span>
                                         {#<a href="{{ request.get_full_path }}&amp;selected_facets={{ key }}_exact:{{ item.0|urlencode }}">{{ item.0 }}</a>#}
@@ -76,7 +76,7 @@
                     {% for result in page.object_list %}
                         <tr>
                             <td><a href="{{ result.object.get_absolute_url }}">{{ result.object.title }}</a></td>
-                            <td>{{ result.object.resource_type}}</td>
+                            <td>{{ result.object.resource_type }}</td>
                             {% if result.object.first_creator.description %}
                             <td><a href="{{ result.object.first_creator.description }}">{{ result.object.first_creator.name  }}</a></td>
                             {% else %}
