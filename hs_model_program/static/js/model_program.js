@@ -131,14 +131,6 @@ $(document).on("submit-success submit-error", function(event){
     loadWidgets();
 });
 
-///**
-// * reloads the jQuery multi-select widgets on form submission failure
-// */
-//$(document).bind("submit-error", function(event){
-//    // reload dynamically generated widgets
-//    loadWidgets();
-//});
-
 /**
  * Sets multi-select selections to hidden field values that are submitted with the form
  * @param e
@@ -155,7 +147,7 @@ function set_metadata_terms(e){
     var values = [];
 
     // grab all of the selected values
-    for(var i=0; i<selected.length; i++){
+    for (var i=0; i<selected.length; i++){
         values.push(selected[i].value);
     }
 
