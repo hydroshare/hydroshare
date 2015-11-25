@@ -712,10 +712,21 @@ def generate_files(shortkey, ts, tempdir):
     if res.metadata.referenceURLs.all()[0].type == 'rest':
         ts = time_series_from_service(res.metadata.referenceURLs.all()[0].value, res.metadata.referenceURLs.all()[0].type)
     else:
+        site_code = res.metadata.sites.all()[0].code
+        net_work = res.metadata.sites.all()[0].net_work
+        variable_code = res.metadata.variables.all()[0].code
+        method_code = res.metadata.methods.all()[0].code
+        source_code = res.metadata.datasources.all()[0].code
+        quality_control_level_code = res.metadata.quality_levels.all()[0].code
+
+        site_code_query = "[%s:%s]" % (net_work, site_code)
+        variable_code_query = "[%s:%s:methodCode=%s:sourceCode=%s:qualityControlLevelCode=%s]" % \
+        (net_work, variable_code, method_code, source_code, quality_control_level_code)
+
         ts = time_series_from_service(res.metadata.referenceURLs.all()[0].value,
                                   res.metadata.referenceURLs.all()[0].type,
-                                  site_name_or_code=res.metadata.sites.all()[0].code,
-                                  variable_code=res.metadata.variables.all()[0].code)
+                                  site_code=site_code_query,
+                                  variable_code=variable_code_query)
 
     files = make_files(res, tempdir, ts)
     return files

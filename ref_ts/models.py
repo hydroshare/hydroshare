@@ -59,8 +59,13 @@ class Site(AbstractMetaDataElement):
     term = 'Site'
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=50)
+    net_work = models.CharField(max_length=100, default="")
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+
+class DataSource(AbstractMetaDataElement):
+    term = 'DataSource'
+    code = models.CharField(max_length=100, default="")
 
 class RefTSMetadata(CoreMetaData):
     methods = generic.GenericRelation(Method)
@@ -68,6 +73,7 @@ class RefTSMetadata(CoreMetaData):
     variables = generic.GenericRelation(Variable)
     sites = generic.GenericRelation(Site)
     referenceURLs = generic.GenericRelation(ReferenceURL)
+    datasources = generic.GenericRelation(DataSource)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -79,6 +85,7 @@ class RefTSMetadata(CoreMetaData):
         elements.append('Variable')
         elements.append('Site')
         elements.append('ReferenceURL')
+        elements.append('DataSource')
         return elements
 
     def get_xml(self):
