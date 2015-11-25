@@ -8,9 +8,9 @@ import ast
 
 from django.contrib.auth.decorators import login_required
 from django import forms
-from django.http import HttpResponseRedirect, HttpResponseNotFound
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, Http404
 from mezzanine.pages.page_processors import processor_for
+
 
 from hs_core import hydroshare, page_processors
 from ga_resources.utils import json_or_jsonp
@@ -28,7 +28,6 @@ def get_his_urls(request):
         if "servURL" in element.tag:
             url_list.append(element.text)
     return json_or_jsonp(request, url_list)
-
 
 class ReferencedSitesForm(forms.Form):
     url = forms.URLField()
@@ -63,7 +62,6 @@ class GetTSValuesForm(forms.Form):
     site = forms.CharField(min_length=0, required=False)
     variable = forms.CharField(min_length=0, required=False)
 
-ts = None
 preview_name = "preview.png"
 def time_series_from_service(request):
     f = GetTSValuesForm(request.GET)
@@ -73,25 +71,35 @@ def time_series_from_service(request):
         url = params['service_url']
         site = params.get('site')
         variable = params.get('variable')
-        global ts
         if ref_type == 'rest':
             ts = ts_utils.time_series_from_service(url, ref_type)
             site = ts.get('site_code')
         else:
             ts = ts_utils.time_series_from_service(url, ref_type, site_code=site, variable_code=variable)
-        for_graph = ts['for_graph']
-        units = ts['units']
-        variable_name = ts['variable_name']
-        noDataValue = ts.get('noDataValue', None)
         ts['url'] = url
         ts['ref_type'] = ref_type
+
+        ts_session = request.session.get('ts', None)
+        if ts_session is not None:
+            del request.session['ts']
+        request.session['ts'] = ts
+
+        for_graph = ts['for_graph']
+        units = ts['unit_abbr']
+        if units is None:
+            units = ts['unit_name']
+            if units is None:
+                units = "Unknown"
+        variable_name = ts['variable_name']
+        noDataValue = ts['noDataValue']
+
         try:
             tempdir = tempfile.mkdtemp()
-            vis_fn_fh_dict = ts_utils.create_vis(tempdir, site, for_graph, 'Date', variable_name, units, noDataValue,predefined_name=preview_name)
+            vis_fn_fh_dict = ts_utils.create_vis_2(tempdir, site, for_graph, 'Date', variable_name, units, noDataValue, predefined_name=preview_name)
             vis_fn_fh_dict["fhandle"].close()
             tempdir_last_six_chars = tempdir[-6:]
             preview_url = "/hsapi/_internal/refts/preview-figure/%s/" % (tempdir_last_six_chars)
-            return json_or_jsonp(request,{'preview_url': preview_url})
+            return json_or_jsonp(request, {'preview_url': preview_url})
         except Exception as e:
             if tempdir is not None:
                shutil.rmtree(tempdir)
@@ -133,37 +141,51 @@ def verify_rest_url(request):
         except:
             return json_or_jsonp(request, 400)
 
-
 class CreateRefTimeSeriesForm(forms.Form):
     metadata = forms.CharField(required=False, min_length=0)
     title = forms.CharField(required=False, min_length=0)
 
 @login_required
 def create_ref_time_series(request, *args, **kwargs):
-    url = ts['url']
-    reference_type = ts['ref_type']
+    ts_dict = request.session.get('ts', False)
+    if not ts_dict:
+        raise Http404("No ts in session") # need to change
+
+    url = ts_dict['url']
+    reference_type = ts_dict['ref_type']
     frm = CreateRefTimeSeriesForm(request.POST)
     if frm.is_valid():
         metadata = frm.cleaned_data.get('metadata')
         metadata = ast.literal_eval(metadata)
+        metadata = [{"Coverage": {"type": "point",
+                          "value": {"east": ts_dict["longitude"],
+                                    "north": ts_dict["latitude"],
+                                    "units": "WGS 84 EPSG:4326"}}},
+                    {"Coverage": {"type": "period",
+                                 "value": {"start": ts_dict["start_date"], "end": ts_dict["end_date"]}}}
+
+                    ]
+
         res = hydroshare.create_resource(
             resource_type='RefTimeSeriesResource',
             owner=request.user,
             title=frm.cleaned_data.get('title'),
             metadata=metadata,
-            content= frm.cleaned_data.get('title')
+            content=frm.cleaned_data.get('title')
         )
 
         hydroshare.resource.create_metadata_element(
             res.short_id,
             'QualityControlLevel',
-            value=ts['QClevel'],
+             code=ts_dict['quality_control_level_code'],
+             definition=ts_dict['quality_control_level_definition'],
             )
 
         hydroshare.resource.create_metadata_element(
             res.short_id,
             'Method',
-            value=ts['method'],
+            code=ts_dict['method_code'],
+            description=ts_dict['method_description'],
             )
 
         hydroshare.resource.create_metadata_element(
@@ -176,23 +198,20 @@ def create_ref_time_series(request, *args, **kwargs):
         hydroshare.resource.create_metadata_element(
             res.short_id,
             'Site',
-            name=ts['site_name'],
-            code=ts['site_code'],
-            latitude=ts['latitude'],
-            longitude=ts['longitude']
+            name=ts_dict['site_name'],
+            code=ts_dict['site_code'],
+            latitude=ts_dict['latitude'],
+            longitude=ts_dict['longitude']
         )
 
         hydroshare.resource.create_metadata_element(
             res.short_id,
             'Variable',
-            name=ts['variable_name'],
-            code=ts['variable_code'],
-            sample_medium=ts.get('sample_medium', 'unknown')
+            name=ts_dict['variable_name'],
+            code=ts_dict['variable_code'],
+            sample_medium=ts_dict.get('sample_medium', 'unknown')
         )
         #release global var
-        global ts
-        if ts is not None:
-            ts = None
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeriesResource)
@@ -226,8 +245,6 @@ def add_dublin_core(request, page):
     context['referenceURL'] = content_model.metadata.referenceURLs.all().first
     context['short_id'] = content_model.short_id
     return context
-
-
 
 def update_files(request, shortkey, *args, **kwargs):
 

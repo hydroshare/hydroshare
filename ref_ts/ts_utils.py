@@ -166,6 +166,160 @@ def time_to_int(t):
                     ret = epoch_secs + offset_hrs*3600 + offset_min*60
     return ret
 
+def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
+
+        wml_str, variable_code, variable_name, net_work, site_name, site_code, elevation, vertical_datum,\
+        longitude, latitude, projection, srs, noDataValue, unit_abbr, unit_code, unit_name, unit_type,\
+        method_code, method_id, method_description, source_code, source_id, quality_control_level_code,\
+        quality_control_level_definition, for_graph, method_code_query, source_code_query,  \
+        quality_control_level_code_query, start_date, end_date = None, None, None, None, None, None, None, None,\
+                                                                 None, None, None, None, None, None,\
+        None, None, None, None, None, None, None, None, None, None,  None, None, None, None, None, None
+
+        wmlVaules = wmlParse(wml_string, wml_ver)
+
+        variable_query = wmlVaules.query_info.criteria.variable_param
+        if variable_query is None:
+            for p in wmlVaules.query_info.criteria.parameters:
+                if p[0].lower() == "variable":
+                    variable_query = p[1]
+        if variable_query is not None:
+            params = variable_query.split(':')
+            for param in params:
+                if "methodcode" in param.lower():
+                    method_code_query = (param.split('='))[1]
+                elif "sourcecode" in param.lower():
+                    source_code_query = (param.split('='))[1]
+                elif "qualitycontrollevelcode" in param.lower():
+                    quality_control_level_code_query = (param.split('='))[1]
+
+        wml_str = wml_string
+        variable_code = wmlVaules.variable_codes[0]
+        variable_name = wmlVaules.variable_names[0]
+
+        if hasattr(wmlVaules.time_series[0], "source_info"):
+            sourceInfo_obj = wmlVaules.time_series[0].source_info
+            if sourceInfo_obj:
+                net_work = sourceInfo_obj.net_work if hasattr(sourceInfo_obj, "net_work") else None
+                site_name = sourceInfo_obj.site_name if hasattr(sourceInfo_obj, "site_name") else None
+                site_codes = sourceInfo_obj.site_codes if hasattr(sourceInfo_obj, "site_codes") else None
+                if site_codes and len(site_codes) > 0:
+                    site_code = site_codes[0]
+                elevation = sourceInfo_obj.elevation if hasattr(sourceInfo_obj, "elevation") else None
+                vertical_datum = sourceInfo_obj.vertical_datum if hasattr(sourceInfo_obj, "vertical_datum") else None
+                loc_obj = sourceInfo_obj.location if hasattr(sourceInfo_obj, "location") else None
+                if loc_obj:
+                    geo_coords_tuple_list = loc_obj.geo_coords if hasattr(loc_obj, "geo_coords") else None
+                    if geo_coords_tuple_list and len(geo_coords_tuple_list) > 0:
+                        longitude = geo_coords_tuple_list[0][0]
+                        latitude = geo_coords_tuple_list[0][1]
+
+                    local_coords_tuple_list = loc_obj.local_sites if hasattr(loc_obj, "local_sites") else None
+                    if local_coords_tuple_list and len(local_coords_tuple_list) > 0:
+                        local_coords_x = local_coords_tuple_list[0][0]
+                        local_coords_y = local_coords_tuple_list[0][1]
+                    projection_list = loc_obj.projections if hasattr(loc_obj, "projections") else None
+                    if projection_list and len(projection_list) >  0:
+                       projection = projection_list[0]
+                    srs_list = loc_obj.srs if hasattr(loc_obj, "srs") else None
+                    if srs_list and len(srs_list) > 0:
+                        srs = srs_list[0]
+
+        variable_obj = wmlVaules.time_series[0].variable if hasattr(wmlVaules.time_series[0], "variable") else None
+        noDataValue = variable_obj.no_data_value if hasattr(variable_obj, "no_data_value") else None
+        unit_obj = variable_obj.unit if hasattr(variable_obj, "unit") else None
+        if unit_obj:
+            unit_abbr = unit_obj.abbreviation if hasattr(unit_obj, "abbreviation") else None
+            unit_code = unit_obj.code if hasattr(unit_obj, "code") else None
+            unit_name = unit_obj.name if hasattr(unit_obj, "name") else None
+            unit_type = unit_obj.unit_type if hasattr(unit_obj, "unit_type") else None
+
+        value_obj = wmlVaules.time_series[0].values[0]
+        value_list = value_obj.values if hasattr(value_obj, "values") else None
+        x = []
+        y = []
+        for_graph = {"x": x, "y": y}
+        if value_list:
+            for val in value_list:
+                t = val.date_time
+                t_str = t.isoformat()
+                x.append(t_str)
+                y.append(float(val.value))
+
+        start_date = value_list[0].date_time.isoformat()
+        end_date = value_list[len(value_list)-1].date_time.isoformat()
+        method_list = value_obj.methods if hasattr(value_obj, "methods") else None
+        if method_list and len(method_list) > 0:
+            method_obj = method_list[0]
+            method_code = method_obj.code if hasattr(method_obj, "code") else None
+            method_id = method_obj.id if hasattr(method_obj, "id") else None
+            method_description = method_obj.description if hasattr(method_obj, "description") else None
+        if method_code is None:
+            method_code = method_code_query
+
+        source_list = value_obj.sources if hasattr(value_obj, "sources") else None
+        if source_list and len(source_list) > 0:
+            source_code = source_list[0].code if hasattr(source_list[0], "code") else None
+            source_id = source_list[0].code if hasattr(source_list[0], "id") else None
+        if source_code is None:
+            source_code = source_code_query
+
+        quality_control_level_list = value_obj.quality_control_levels if \
+            hasattr(value_obj, "quality_control_levels") else None
+        if quality_control_level_list and len(quality_control_level_list) > 0:
+            quality_control_level_obj = quality_control_level_list[0]
+            quality_control_level_code = quality_control_level_obj.code if \
+                hasattr(quality_control_level_obj, "code") else None
+            quality_control_level_definition = quality_control_level_obj.definition if \
+                hasattr(quality_control_level_obj, "definition") else None
+
+        if quality_control_level_code is None:
+            quality_control_level_code = quality_control_level_code_query
+
+        if quality_control_level_definition is None:
+            if quality_control_level_code is None or quality_control_level_code == "0":
+                quality_control_level_definition = "Raw Data"
+            elif quality_control_level_code == "1":
+                quality_control_level_definition = "Quality Controlled Data"
+            elif quality_control_level_code == "2":
+                quality_control_level_definition = "Derived Products"
+            elif quality_control_level_code == "3":
+                quality_control_level_definition = "Interpreted Products"
+            elif quality_control_level_code == "4":
+                quality_control_level_definition = "Knowledge Products"
+            else:
+                quality_control_level_definition = 'Unknown'
+
+
+        return {'wml_str': wml_str,
+                'variable_code': variable_code,
+                'variable_name': variable_name,
+                "net_work": net_work,
+                'site_name': site_name,
+                'site_code': site_code,
+                'elevation': elevation,
+                'vertical_datum': vertical_datum,
+                'latitude': latitude,
+                'longitude': longitude,
+                'projection': projection,
+                'srs': srs,
+                'noDataValue': noDataValue,
+                'unit_abbr': unit_abbr,
+                'unit_code': unit_code,
+                'unit_name': unit_name,
+                'unit_type': unit_type,
+                'method_code': method_code,
+                'method_id': method_id,
+                'method_description': method_description,
+                'source_code': source_code,
+                'source_id': source_id,
+                'quality_control_level_code': quality_control_level_code,
+                'quality_control_level_definition': quality_control_level_definition,
+                'for_graph': for_graph,
+                "start_date": start_date,
+                "end_date": end_date
+                }
+
 def parse_1_0_and_1_1(root):
         time_series_response_present = False
         if 'timeSeriesResponse' in root.tag:
@@ -178,7 +332,9 @@ def parse_1_0_and_1_1(root):
             ts = etree.tostring(time_series)
             values = {}
             for_graph = []
-            noDataValue, units, site_name, site_code, variable_name, variable_code, latitude, longitude, methodCode, method, QCcode, QClevel = None, None, None, None, None, None, None, None, None, None, None, None
+            noDataValue, units, site_name, site_code, variable_name, \
+            variable_code, latitude, longitude, methodCode, method, QCcode, \
+            QClevel = None, None, None, None, None, None, None, None, None, None, None, None
             unit_is_set = False
             methodCode_set = False
             QCcode_set = False
@@ -410,15 +566,43 @@ due to incorrect formatting in the web service format.")
     root = etree.XML(response)
     wml_version = get_version(root)
     if wml_version == '1':
-        values = wmlParse(response, wmlVersion(service_url))
-        ts = parse_1_0_and_1_1(root)
+        ts = parse_1_0_and_1_1_owslib(response, wml_ver)
     elif wml_version == '2.0':
         ts = parse_2_0(root)
     else:
         raise Http404()
-    ts['root'] = root # add root to ts
     return ts
 
+
+def create_vis_2(path, site_name, data, xlab, variable_name, units, noDataValue, predefined_name=None):
+    '''creates vis and returns open file'''
+    x_list = data["x"]
+    y_list = data["y"]
+    x_list_draw = []
+    y_list_draw = []
+
+    for i in range(len(x_list)):
+        if noDataValue is not None and (y_list[i]) != int(noDataValue):
+            x_list_draw.append(datetime.strptime(x_list[i], "%Y-%m-%dT%H:%M:%S"))
+            y_list_draw.append(y_list[i])
+
+    fig, ax = plt.subplots()
+    ax.plot_date(x_list_draw, y_list_draw, 'b-', color='g')
+    ax.set_xlabel(xlab)
+    ax.xaxis_date()
+    ax.set_ylabel(variable_name + "(" + units + ")")
+    ax.grid(True)
+    fig.autofmt_xdate()
+
+    if predefined_name is None:
+        vis_name = 'visualization-'+site_name+'-'+variable_name+'.png'
+        vis_name = vis_name.replace(" ", "_")
+    else:
+        vis_name = predefined_name
+    vis_path = path + "/" + vis_name
+    savefig(vis_path, bbox_inches='tight')
+    vis_file = open(vis_path, 'rb')
+    return {"fname": vis_name, "fhandle": vis_file}
 
 def create_vis(path, site_name, data, xlab, variable_name, units, noDataValue, predefined_name=None):
     '''creates vis and returns open file'''
@@ -464,7 +648,7 @@ def create_vis(path, site_name, data, xlab, variable_name, units, noDataValue, p
     vis_path = path + "/" + vis_name
     savefig(vis_path, bbox_inches='tight')
     vis_file = open(vis_path, 'rb')
-    return {"fname":vis_name,"fhandle":vis_file}
+    return {"fname": vis_name, "fhandle": vis_file}
 
 def make_files(res, tempdir, ts):
     '''gets time series, creates the metadata terms, creates the files and returns them

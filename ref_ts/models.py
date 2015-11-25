@@ -40,11 +40,13 @@ class ReferenceURL(AbstractMetaDataElement):
 
 class Method(AbstractMetaDataElement):
     term = 'Method'
-    value = models.CharField(max_length=200)
+    code = models.CharField(max_length=200, default="")
+    description = models.CharField(max_length=200, default="")
 
 class QualityControlLevel(AbstractMetaDataElement):
     term = 'QualityControlLevel'
-    value = models.CharField(max_length=200)
+    code = models.CharField(max_length=200, default="")
+    definition = models.CharField(max_length=200, default="")
 
 class Variable(AbstractMetaDataElement):
     term = 'Variable'

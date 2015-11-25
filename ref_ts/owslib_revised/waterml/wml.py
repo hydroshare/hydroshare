@@ -667,7 +667,7 @@ class Values(XMLParser):
         self.sources = [Source(source,self._ns) for source in self._findall('source')]
 
         # quality control info
-        self.qualit_control_levels = [QualityControlLevel(qal, self._ns) for qal in self._findall('qualityControlLevel')]
+        self.quality_control_levels = [QualityControlLevel(qal, self._ns) for qal in self._findall('qualityControlLevel')]
 
         # offset info
         self.offsets = [Offset(os,self._ns) for os in self._findall('offset')]
@@ -778,6 +778,7 @@ class Source(XMLParser):
     def parse_source(self):
         try:
             xml_dict = _xml_to_dict(self._root)
+            self.id = self._root.attrib.get("sourceID", None)
             self.code = xml_dict.get('source_code')
             self.organization = xml_dict.get('organization')
             self.description = xml_dict.get('source_description')
