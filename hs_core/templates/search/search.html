@@ -35,13 +35,40 @@
                                     <li class="list-group-item">
                                         <input class="faceted-selections" id="{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp; {{ item.0 }}
                                         <span class="label label-default label-pill pull-right badge"
-                                            {% if item.1 < 5 %}
-                                                style="background-color:#d62728"
-                                                {#  style = "background-color: rgb( {{ item.1|add:"200" }} , 0, {{ item.1|add:"50" }})" #}
-                                            {% elif item.1 >= 5 and item.1 < 10 %}
-                                                style="background-color:#e377c2"
-                                            {% elif item.1 >= 10 %}
-                                                style="background-color:#1f77b4"
+                                            {% if item.1 <= 1 %}
+                                                style="background-color:rgb(254, 0, 0)"
+                                            {% elif item.1 > 1 and item.1 <= 2 %}
+                                                style="background-color:rgb(238, 0, 16)"
+                                            {% elif item.1 > 2 and item.1 <= 4 %}
+                                                style="background-color:rgb(222, 0, 32)"
+                                            {% elif item.1 > 4 and item.1 <= 6 %}
+                                                style="background-color:rgb(206, 0, 48)"
+                                            {% elif item.1 > 6 and item.1 <= 10 %}
+                                                style="background-color:rgb(190, 0, 64)"
+                                            {% elif item.1 > 10 and item.1 <= 18 %}
+                                                style="background-color:rgb(174, 0, 80)"
+                                            {% elif item.1 > 18 and item.1 <= 32 %}
+                                                style="background-color:rgb(158, 0, 96)"
+                                            {% elif item.1 > 32 and item.1 <= 57 %}
+                                                style="background-color:rgb(142, 0, 112)"
+                                            {% elif item.1 > 57 and item.1 <= 100 %}
+                                                style="background-color:rgb(127, 0, 127)"
+                                            {% elif item.1 > 100 and item.1 <= 178 %}
+                                                style="background-color:rgb(111, 0, 143)"
+                                            {% elif item.1 > 178 and item.1 <= 317 %}
+                                                style="background-color:rgb(95, 0, 159)"
+                                            {% elif item.1 > 317 and item.1 <= 563 %}
+                                                style="background-color:rgb(79, 0, 175)"
+                                            {% elif item.1 > 563 and item.1 <= 1000 %}
+                                                style="background-color:rgb(63, 0, 191)"
+                                            {% elif item.1 > 1000 and item.1 <= 1779 %}
+                                                style="background-color:rgb(47, 0, 207)"
+                                            {% elif item.1 > 1779 and item.1 <= 3163 %}
+                                                style="background-color:rgb(31, 0, 223)"
+                                            {% elif item.1 > 3163 and item.1 <= 5624 %}
+                                                style="background-color:rgb(15, 0, 239)"
+                                            {% elif item.1 > 5624 and item.1 <= 10000 %}
+                                                style="background-color:rgb(0, 0, 254)"
                                             {% endif %}>{{ item.1 }}
                                         </span>
                                         {#<a href="{{ request.get_full_path }}&amp;selected_facets={{ key }}_exact:{{ item.0|urlencode }}">{{ item.0 }}</a>#}
