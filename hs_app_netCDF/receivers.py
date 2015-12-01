@@ -1,11 +1,18 @@
 import re
 import os
+import StringIO
+
+import netCDF4
 
 from django.dispatch import receiver
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from hs_core.signals import *
 from hs_core.hydroshare.resource import ResourceFile
 from hs_app_netCDF.forms import *
+import nc_functions.nc_utils as nc_utils
+import nc_functions.nc_dump as nc_dump
+import nc_functions.nc_meta as nc_meta
 
 
 # receiver used to extract metadata after user click on "create resource"
@@ -21,13 +28,10 @@ def netcdf_pre_create_resource(sender, **kwargs):
         infile = files[0]
 
         # file validation and metadata extraction
-        import nc_functions.nc_utils as nc_utils
-        import netCDF4
         nc_dataset = nc_utils.get_nc_dataset(infile.file.name)
 
         if isinstance(nc_dataset, netCDF4.Dataset):
             # Extract the metadata from netcdf file
-            import nc_functions.nc_meta as nc_meta
             try:
                 res_md_dict = nc_meta.get_nc_meta_dict(infile.file.name)
                 res_dublin_core_meta = res_md_dict['dublin_core_meta']
@@ -115,16 +119,13 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
                 metadata.append(ori_cov)
 
-            #create the ncdump text file
-            import nc_functions.nc_dump as nc_dump
+            # create the ncdump text file
             if nc_dump.get_nc_dump_string_by_ncdump(infile.file.name):
                 dump_str = nc_dump.get_nc_dump_string_by_ncdump(infile.file.name)
             else:
                 dump_str = nc_dump.get_nc_dump_string(infile.file.name)
 
             if dump_str:
-                from django.core.files.uploadedfile import InMemoryUploadedFile
-                import StringIO, os
                 # refine dump_str first line
                 nc_file_name = '.'.join(os.path.basename(infile.name).split('.')[:-1])
                 first_line = list('netcdf {0} '.format(nc_file_name))
@@ -219,8 +220,6 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
     elif len(files) == 1:
         # file type validation and existing metadata update and create new ncdump text file
         infile = files[0]
-        import nc_functions.nc_utils as nc_utils
-        import netCDF4
         nc_dataset = nc_utils.get_nc_dataset(infile.file.name)
         if isinstance(nc_dataset, netCDF4.Dataset):
             # delete all existing resource files and metadata related
@@ -233,7 +232,6 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
             # resource_modified(resource, user)
 
             # extract metadata
-            import nc_functions.nc_meta as nc_meta
             try:
                 res_dublin_core_meta = nc_meta.get_dublin_core_meta(nc_dataset)
             except:
@@ -277,15 +275,12 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                     nc_res.metadata.create_element('originalcoverage', value=res_dublin_core_meta['original-box'])
 
             # create the ncdump text file
-            import nc_functions.nc_dump as nc_dump
             if nc_dump.get_nc_dump_string_by_ncdump(infile.file.name):
                 dump_str = nc_dump.get_nc_dump_string_by_ncdump(infile.file.name)
             else:
                 dump_str = nc_dump.get_nc_dump_string(infile.file.name)
 
             if dump_str:
-                from django.core.files.uploadedfile import InMemoryUploadedFile
-                import StringIO, os
                 # refine dump_str first line
                 nc_file_name = '.'.join(os.path.basename(infile.name).split('.')[:-1])
                 first_line = list('netcdf {0} '.format(nc_file_name))
