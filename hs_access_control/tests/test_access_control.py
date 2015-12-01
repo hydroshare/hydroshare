@@ -99,6 +99,15 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
+        self.john = hydroshare.create_account(
+            'john@gmail.com',
+            username='john',
+            first_name='john',
+            last_name='miller',
+            superuser=False,
+            groups=[]
+        )
+
         self.admin = hydroshare.create_account(
             'admin@gmail.com',
             username='admin',
@@ -168,8 +177,18 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
 
         self.george.uaccess.unshare_group_with_user(self.bikers, self.alva)
 
-        # test for django admin - admin has not been given any permission on any resource by any user
+        ## test upgrade privilege by non owners
+        # let george (owner) grant change privilege to alva (non owner)
+        self.george.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.CHANGE)
+        self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.CHANGE)
+        # let alva (non owner) grant view privilege to john (non owner)
+        self.alva.uaccess.share_resource_with_user(self.bikes, self.john, PrivilegeCodes.VIEW)
+        self.assertTrue(self.bikes.raccess.get_combined_privilege(self.john) == PrivilegeCodes.VIEW)
+        # let alva (non owner) grant change privilege (upgrade) to john (non owner)
+        self.alva.uaccess.share_resource_with_user(self.bikes, self.john, PrivilegeCodes.CHANGE)
+        self.assertTrue(self.bikes.raccess.get_combined_privilege(self.john) == PrivilegeCodes.CHANGE)
 
+        ## test for django admin - admin has not been given any permission on any resource by any user
         # test django admin has ownership permission over any resource even when not owning a resource
         self.assertFalse(self.admin.uaccess.owns_resource(self.bikes))
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.admin) == PrivilegeCodes.OWNER)
@@ -229,6 +248,33 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.bikers.gaccess.get_members().count(), 1)
         self.assertEqual(self.alva.uaccess.get_number_of_owned_groups(), 0)
 
+    def test_share_inactive_user(self):
+        """
+        Inactive grantor can't grant permission
+        Inactive grantee can't be granted permission
+        """
+        self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.NONE)
+        self.assertTrue(self.bikes.raccess.get_effective_privilege(self.alva) == PrivilegeCodes.NONE)
+        ## inactive users can't be granted access
+        # set john to an inactive user
+        self.john.is_active = False
+        self.john.save()
+        self.assertRaises(Exception, lambda: self.george.uaccess.share_resource_with_user(self.bikes, self.john,
+                                                                                          PrivilegeCodes.CHANGE))
+
+        self.john.is_active = True
+        self.john.save()
+        ## inactive grantor can't grant access
+        # let first grant John access privilege
+        self.george.uaccess.share_resource_with_user(self.bikes, self.john, PrivilegeCodes.CHANGE)
+        self.assertTrue(self.bikes.raccess.get_combined_privilege(self.john) == PrivilegeCodes.CHANGE)
+        self.assertTrue(self.bikes.raccess.get_effective_privilege(self.john) == PrivilegeCodes.CHANGE)
+        self.john.is_active = False
+        self.john.save()
+        self.assertRaises(Exception, lambda: self.john.uaccess.share_resource_with_user(self.bikes, self.alva,
+                                                                                        PrivilegeCodes.VIEW))
+        self.john.is_active = True
+        self.john.save()
 
 def match_lists(l1, l2):
     """ return true if two lists contain the same content
@@ -953,6 +999,15 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
+        # use this as non owner
+        self.mouse = hydroshare.create_account(
+            'mouse@gmail.com',
+            username='mouse',
+            first_name='first_name_mouse',
+            last_name='last_name_mouse',
+            superuser=False,
+            groups=[]
+        )
         self.holes = hydroshare.create_resource(resource_type='GenericResource',
                                                 owner=self.cat,
                                                 title='all about dog holes',
@@ -1475,7 +1530,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         holes = self.holes
         dog = self.dog
         cat = self.cat
-
+        mouse = self.mouse
         # initial state
         self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
@@ -1677,6 +1732,27 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+
+        # set edit privilege for mouse on holes
+        self.cat.uaccess.share_resource_with_user(holes, mouse, PrivilegeCodes.CHANGE)
+        self.assertTrue(self.holes.raccess.get_combined_privilege(self.mouse) == PrivilegeCodes.CHANGE)
+
+        # set edit privilege for dog on holes
+        self.cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
+        self.assertTrue(self.holes.raccess.get_combined_privilege(self.dog) == PrivilegeCodes.CHANGE)
+
+        # non owner (mouse) should not be able to downgrade privilege of dog from edit/change
+        # (originally granted by cat) to view
+        self.assertRaises(Exception, lambda: self.mouse.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW))
+
+        # non owner (mouse) should be able to downgrade privilege of a user (dog) originally granted by the same
+        # non owner (mouse)
+        self.cat.uaccess.unshare_resource_with_user(holes, dog)
+        self.assertTrue(self.holes.raccess.get_combined_privilege(self.dog) == PrivilegeCodes.NONE)
+        self.mouse.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
+        self.assertTrue(self.holes.raccess.get_combined_privilege(self.dog) == PrivilegeCodes.CHANGE)
+        self.mouse.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
+        self.assertTrue(self.holes.raccess.get_combined_privilege(self.dog) == PrivilegeCodes.VIEW)
 
         # django admin should be able to downgrade privilege
         self.cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.OWNER)
