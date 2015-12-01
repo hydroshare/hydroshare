@@ -62,7 +62,7 @@ class OriginalCoverageSpatialForm(forms.Form):
         super(OriginalCoverageSpatialForm, self).clean()
         temp_cleaned_data = copy.deepcopy(self.cleaned_data)
         is_form_errors = False
-        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit', 'units'):
             limit_data = temp_cleaned_data.get(limit, None)
             if not limit_data:
                 self._errors[limit] = ["Data for %s is missing" % limit]
@@ -240,7 +240,7 @@ class BandInfoValidationForm(forms.Form):
     variableName = forms.CharField(max_length=100, required=True)
     variableUnit = forms.CharField(max_length=50, required=True)
     method = forms.CharField(required=False)
-    comment = forms.CharField(required=False)
+    comment = forms.CharField(required=True)
 
 
 class BaseBandInfoFormSet(BaseFormSet):

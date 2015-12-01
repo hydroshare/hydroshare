@@ -24,10 +24,10 @@ class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
         bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(r.short_id)
         science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
-        resource_list_item = serializers.ResourceListItem(resource_type=r.__class__.__name__,
+        resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
                                                           resource_id=r.short_id,
                                                           resource_title=r.metadata.title.value,
-                                                          creator=r.creator.username,
+                                                          creator=r.first_creator.name,
                                                           public=r.raccess.public,
                                                           discoverable=r.raccess.discoverable,
                                                           shareable=r.raccess.shareable,

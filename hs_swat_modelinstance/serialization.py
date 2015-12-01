@@ -1,9 +1,12 @@
+import os
 
 import rdflib
 
 from django.db import transaction
 
-from hs_core.serialization import GenericResourceMeta
+from hs_core.models import BaseResource
+from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException
 from hs_swat_modelinstance.models import ExecutedBy, ModelObjective, SimulationType, ModelMethod, \
     ModelParameter, ModelInput
 from hs_swat_modelinstance.forms import model_objective_choices, parameters_choices
@@ -18,7 +21,8 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
         super(SWATModelInstanceResourceMeta, self).__init__()
 
         self.model_output = None
-        self.executed_by = None  # Optional
+        self.executed_by_name = None  # Optional
+        self.executed_by_uri = None  # Optional
         self.model_objective = None  # Optional
         self.simulation_type = None
         self.model_method = None  # Optional
@@ -42,29 +46,33 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
         # Get ModelOutput
         for s, p, o in self._rmeta_graph.triples((None, hsterms.ModelOutput, None)):
             # Get IncludesModelOutput
-            model_output_lit = self._rmeta_graph.value(o, hsterms.IncludesModelOutput)
+            model_output_lit = self._rmeta_graph.value(o, hsterms.includesModelOutput)
             if model_output_lit is None:
-                msg = "IncludesModelOutput for ModelOutput was not found for resource {0}".format(self.root_uri)
+                msg = "includesModelOutput for ModelOutput was not found for resource {0}".format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.model_output = SWATModelInstanceResourceMeta.ModelOutput()
             self.model_output.includes_output = str(model_output_lit) == 'Yes'
             print("\t\t{0}".format(self.model_output))
         # Get ExecutedBy
         for s, p, o in self._rmeta_graph.triples((None, hsterms.ExecutedBy, None)):
-            # Get ModelProgramName
-            executed_by_name_lit = self._rmeta_graph.value(o, hsterms.ModelProgramName)
-            if executed_by_name_lit is None:
-                msg = "ModelProgramName for ExecutedBy was not found for resource {0}".format(self.root_uri)
+            # Get modelProgramName
+            executed_by_name_lit = self._rmeta_graph.value(o, hsterms.modelProgramName)
+            if executed_by_name_lit is not None:
+                self.executed_by_name = str(executed_by_name_lit)
+            # Get modelProgramIdentifier
+            executed_by_uri_lit = self._rmeta_graph.value(o, hsterms.modelProgramIdentifier)
+            if executed_by_uri_lit is not None:
+                self.executed_by_uri = str(executed_by_uri_lit)
+            if (self.executed_by_name is not None) ^ (self.executed_by_uri is not None):
+                msg = "Both modelProgramName and modelProgramIdentifier must be supplied if one is supplied."
                 raise GenericResourceMeta.ResourceMetaException(msg)
-            self.executed_by = SWATModelInstanceResourceMeta.ExecutedBy()
-            self.executed_by.name = str(executed_by_name_lit)
-            print("\t\t{0}".format(self.executed_by))
-        # Get ModelObjective
-        for s, p, o in self._rmeta_graph.triples((None, hsterms.ModelObjective, None)):
+        print("\t\t{0}".format(str(self)))
+        # Get modelObjective
+        for s, p, o in self._rmeta_graph.triples((None, hsterms.modelObjective, None)):
             self.model_objective = SWATModelInstanceResourceMeta.ModelObjective(str(o))
             print("\t\t{0}".format(self.model_objective))
-        # Get SimulationType
-        for s, p, o in self._rmeta_graph.triples((None, hsterms.SimulationType, None)):
+        # Get simulationType
+        for s, p, o in self._rmeta_graph.triples((None, hsterms.simulationType, None)):
             self.simulation_type = SWATModelInstanceResourceMeta.SimulationType()
             self.simulation_type.simulation_type_name = str(o)
             print("\t\t{0}".format(self.simulation_type))
@@ -79,13 +87,13 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             flowrouting_method_lit = self._rmeta_graph.value(o, hsterms.flowRoutingMethod)
             if flowrouting_method_lit is not None:
                 self.model_method.flow_routing_method = str(flowrouting_method_lit)
-            # Get PETEstimationMethod
-            pet_method_lit = self._rmeta_graph.value(o, hsterms.PETEstimationMethod)
+            # Get petEstimationMethod
+            pet_method_lit = self._rmeta_graph.value(o, hsterms.petEstimationMethod)
             if pet_method_lit is not None:
                 self.model_method.PET_estimation_method = str(pet_method_lit)
             print("\t\t{0}".format(self.model_method))
-        # Get ModelParameter
-        for s, p, o in self._rmeta_graph.triples((None, hsterms.ModelParameter, None)):
+        # Get modelParameter
+        for s, p, o in self._rmeta_graph.triples((None, hsterms.modelParameter, None)):
             self.model_parameter = SWATModelInstanceResourceMeta.ModelParameter(str(o))
             print("\t\t{0}".format(self.model_parameter))
         # Get ModelInput
@@ -135,16 +143,16 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             number_of_HRUs_lit = self._rmeta_graph.value(o, hsterms.numberOfHRUs)
             if number_of_HRUs_lit is not None:
                 self.model_input.number_of_HRUs = str(number_of_HRUs_lit)
-            # Get DEMResolution
-            DEM_resolution_lit = self._rmeta_graph.value(o, hsterms.DEMResolution)
+            # Get demResolution
+            DEM_resolution_lit = self._rmeta_graph.value(o, hsterms.demResolution)
             if DEM_resolution_lit is not None:
                 self.model_input.DEM_resolution = str(DEM_resolution_lit)
-            # Get DEMSourceName
-            DEM_source_name_lit = self._rmeta_graph.value(o, hsterms.DEMSourceName)
+            # Get demSourceName
+            DEM_source_name_lit = self._rmeta_graph.value(o, hsterms.demSourceName)
             if DEM_source_name_lit is not None:
                 self.model_input.DEM_source_name = str(DEM_source_name_lit)
-            # Get DEMSourceURL
-            DEM_source_URL_lit = self._rmeta_graph.value(o, hsterms.DEMSourceURL)
+            # Get demSourceURL
+            DEM_source_URL_lit = self._rmeta_graph.value(o, hsterms.demSourceURL)
             if DEM_source_URL_lit is not None:
                 self.model_input.DEM_source_URL = str(DEM_source_URL_lit)
             # Get landUseDataSourceName
@@ -176,16 +184,30 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
 
         if self.model_output:
             resource.metadata._model_output.update(includes_output=self.model_output.includes_output)
-        if self.executed_by:
+        if self.executed_by_uri:
+            uri_stripped = self.executed_by_uri.strip('/')
+            short_id = os.path.basename(uri_stripped)
+            if short_id == '':
+                msg = "ExecutedBy URL {0} does not contain a model program resource ID, "
+                msg += "for resource {1}"
+                msg = msg.format(self.executed_by_uri, self.root_uri)
+                raise GenericResourceMeta.ResourceMetaException(msg)
+            # Make sure the resource specified by ExecutedBy exists
+            try:
+                executed_by_resource = get_resource_by_shortkey(short_id,
+                                                                or_404=False)
+            except BaseResource.DoesNotExist:
+                msg = "ExecutedBy resource {0} does not exist.".format(short_id)
+                raise HsDeserializationDependencyException(short_id, msg)
             executed_by = resource.metadata.executed_by
             if not executed_by:
                 # Create
                 ExecutedBy.create(content_object=resource.metadata,
-                                  name=self.executed_by.name)
+                                  model_name=short_id)
             else:
                 # Update
                 ExecutedBy.update(executed_by.element_id,
-                                  name=self.executed_by.name)
+                                  model_name=short_id)
         if self.model_objective:
             swat_model_objectives = []
             other_objectives = []

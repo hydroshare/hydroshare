@@ -1,8 +1,13 @@
 __author__ = 'Mohamed Morsy'
 from django.dispatch import receiver
+
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update,pre_create_resource
+
 from hs_swat_modelinstance.models import SWATModelInstanceResource
-from hs_swat_modelinstance.forms import *
+from hs_swat_modelinstance.forms import ModelOutputValidationForm, ExecutedByValidationForm,\
+    ModelObjectiveValidationForm, SimulationTypeValidationForm, ModelMethodValidationForm,\
+    ModelParameterValidationForm, ModelInputValidationForm
+
 
 @receiver(pre_create_resource, sender=SWATModelInstanceResource)
 def swatmodelinstance_pre_create_resource(sender, **kwargs):

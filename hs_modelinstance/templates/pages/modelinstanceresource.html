@@ -43,7 +43,7 @@
 
                             </div>
 
-                            <div class="col-sm-4"><strong>Resource URL</strong></div>
+                            <div class="col-sm-4"><strong>Resource URI</strong></div>
 
                             <div class="col-sm-8">
                                 {% if request.is_secure %}
@@ -75,10 +75,12 @@
 {% endblock %}
 
 {% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static "css/bootstrap-multiselect.css" %}" />
     <link rel="stylesheet" type="text/css" href="{% static "css/model_instance.css" %}" />
 {% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
+    <script src="{% static "js/bootstrap-multiselect.js"%}"></script>
     <script src="{% static "js/model_instance.js"%}"></script>
 {% endblock %}
