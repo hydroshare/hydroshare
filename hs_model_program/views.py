@@ -23,8 +23,8 @@ def get_model_metadata(request):
         # get the http protocol
         protocol = 'https' if request.is_secure() else 'http'
 
-        if mpmeta.date_released:
-            dt = datetime.datetime.strftime(mpmeta.date_released,'%m/%d/%Y')
+        if mpmeta.modelReleaseDate:
+            dt = datetime.datetime.strftime(mpmeta.modelReleaseDate,'%m/%d/%Y')
         else:
             dt = ''
 
@@ -32,12 +32,16 @@ def get_model_metadata(request):
         if obj is not None:
             metadata = dict(
                 description=obj.description,
-                program_website=mpmeta.program_website,
+                program_website=mpmeta.modelWebsite,
                 date_released=dt,
-                software_version=mpmeta.software_version,
-                software_language=mpmeta.software_language,
-                operating_sys=mpmeta.operating_sys,
+                software_version=mpmeta.modelVersion,
+                software_language=mpmeta.modelProgramLanguage,
+                operating_sys=mpmeta.modelOperatingSystem,
                 url = protocol+"://"+request.get_host()+"/resource/"+resource_id+"/",
+                modelEngine = mpmeta.modelEngine.split(';'),
+                modelSoftware=mpmeta.modelSoftware.split(';'),
+                modelDocumentation=mpmeta.modelDocumentation.split(';'),
+                modelReleaseNotes=mpmeta.modelReleaseNotes.split(';'),
             )
 
     json_data = json.dumps(metadata)
