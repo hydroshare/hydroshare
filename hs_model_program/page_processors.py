@@ -25,6 +25,12 @@ def landing_page(request, page):
         context['extended_metadata_exists'] = extended_metadata_exists
         context['mpmetadata'] = content_model.metadata.program
 
+        # get the helptext for each mp field
+        attributes = content_model.metadata.modelprogrammetadata._mpmetadata.model._meta.get_fields_with_model()
+        attribute_dict = {}
+        for att in attributes:
+             attribute_dict[att[0].attname] = att[0].help_text
+        context["mphelptext" ] = attribute_dict
 
     else:
         output_form = mp_form(files=content_model.files, instance=content_model.metadata.program,
@@ -32,10 +38,8 @@ def landing_page(request, page):
                               element_id=content_model.metadata.program.id if content_model.metadata.program else None)
 
         ext_md_layout = Layout(
-                        HTML("<div class='form-group col-lg-4 col-xs-12' id='site'> "
-                                '{% load crispy_forms_tags %} '
-                                '{% crispy output_form %} '
-                             '</div>'),
+                        HTML('{% load crispy_forms_tags %} '
+                             '{% crispy output_form %} '),
                 )
 
         # get the context from hs_core
@@ -44,6 +48,7 @@ def landing_page(request, page):
 
         context['resource_type'] = 'Model Program Resource'
         context['output_form'] = output_form
+
 
     hs_core_context = add_generic_context(request, page)
     context.update(hs_core_context)
