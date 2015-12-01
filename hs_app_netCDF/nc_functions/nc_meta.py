@@ -419,7 +419,7 @@ def get_type_specific_meta(nc_dataset):
     Return: the netCDF type specific metadata
     """
 
-    nc_data_variables = get_nc_data_variables(nc_dataset)
+    nc_data_variables = nc_dataset.variables #get_nc_data_variables(nc_dataset)
     type_specific_meta = extract_nc_data_variables_meta(nc_data_variables)
 
     return type_specific_meta
@@ -436,7 +436,7 @@ def extract_nc_data_variables_meta(nc_data_variables):
         nc_data_variables_meta[var_name] = {
             'name': var_name,
             'unit': var_obj.units if (hasattr(var_obj, 'units') and var_obj.units) else 'Unknown',
-            'shape': ','.join(var_obj.dimensions),
+            'shape': ','.join(var_obj.dimensions) if var_obj.dimensions else 'Not defined',
             'descriptive_name': var_obj.long_name if hasattr(var_obj, 'long_name') else '',
             'missing_value': str(var_obj.missing_value if hasattr(var_obj, 'missing_value') else ''),
             'method': str(var_obj.comment if hasattr(var_obj, 'comment') else ''),
@@ -456,17 +456,21 @@ def extract_nc_data_variables_meta(nc_data_variables):
             'uint64': 'Unsigned Int64',
         }
 
-        try:
-            if isinstance(var_obj.datatype, netCDF4.CompoundType) or isinstance(var_obj.datatype, netCDF4.VLType):
-                nc_data_variables_meta[var_name]['type'] = 'User Defined Type'
-            elif var_obj.datatype.name in nc_data_type_dict.keys():
-                nc_data_variables_meta[var_name]['type'] = nc_data_type_dict[var_obj.datatype.name]
-            elif ('string' in var_obj.datatype.name) or ('unicode' in var_obj.datatype.name):
-                nc_data_variables_meta[var_name]['type'] = 'Char' if '8' in var_obj.datatype.name else 'String'
-            else:
+        if var_obj.dimensions:
+            try:
+                if isinstance(var_obj.datatype, netCDF4.CompoundType) or isinstance(var_obj.datatype, netCDF4.VLType):
+                    nc_data_variables_meta[var_name]['type'] = 'User Defined Type'
+                elif var_obj.datatype.name in nc_data_type_dict.keys():
+                    nc_data_variables_meta[var_name]['type'] = nc_data_type_dict[var_obj.datatype.name]
+                elif ('string' in var_obj.datatype.name) or ('unicode' in var_obj.datatype.name):
+                    nc_data_variables_meta[var_name]['type'] = 'Char' if '8' in var_obj.datatype.name else 'String'
+                else:
+                    nc_data_variables_meta[var_name]['type'] = 'Unknown'
+            except:
                 nc_data_variables_meta[var_name]['type'] = 'Unknown'
-        except:
+        else:
             nc_data_variables_meta[var_name]['type'] = 'Unknown'
+
 
     return nc_data_variables_meta
 
