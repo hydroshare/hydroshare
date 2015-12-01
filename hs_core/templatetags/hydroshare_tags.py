@@ -47,6 +47,8 @@ from mezzanine.utils.urls import admin_url
 from mezzanine.utils.views import is_editable
 from mezzanine import template
 
+from django.template import Library
+import datetime
 
 register = template.Library()
 
@@ -88,3 +90,7 @@ def best_name(content):
         content = content.username
 
     return content
+
+@register.filter(expects_localtime=True)
+def parse_iso(value):
+    return datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
