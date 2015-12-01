@@ -8,14 +8,14 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import *
 from hs_model_program.models import MpMetadata
 from hs_core.forms import BaseFormHelper
-
+from django.utils.html import escape
 class mp_form_helper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
 
         files = kwargs.pop('files')
         file_data = {}
         for f in files.all():
-            short_url = f.resource_file.name
+            short_url = escape(f.resource_file.name)
             name = short_url.split('/')[-1]
             file_data[name] = short_url
 
