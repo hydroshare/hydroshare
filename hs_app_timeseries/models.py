@@ -21,26 +21,11 @@ class Site(AbstractMetaDataElement):
     site_type = models.CharField(max_length=100, null=True, blank=True)
 
     def __unicode__(self):
-        self.site_name
+        return self.site_name
 
     class Meta:
         # site element is not repeatable
         unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return Site.objects.create(**kwargs)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        site = Site.objects.get(id=element_id)
-        if site:
-            for key, value in kwargs.iteritems():
-                setattr(site, key, value)
-
-            site.save()
-        else:
-            raise ObjectDoesNotExist("No Site element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
@@ -57,27 +42,11 @@ class Variable(AbstractMetaDataElement):
     speciation = models.CharField(max_length=255, null=True, blank=True)
 
     def __unicode__(self):
-        self.variable_name
+        return self.variable_name
 
     class Meta:
         # variable element is not repeatable
         unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return Variable.objects.create(**kwargs)
-
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        variable = Variable.objects.get(id=element_id)
-        if variable:
-            for key, value in kwargs.iteritems():
-                setattr(variable, key, value)
-
-            variable.save()
-        else:
-            raise ObjectDoesNotExist("No Variable element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
@@ -93,26 +62,11 @@ class Method(AbstractMetaDataElement):
     method_link = models.URLField(null=True, blank=True)
 
     def __unicode__(self):
-        self.method_name
+        return self.method_name
 
     class Meta:
         # method element is not repeatable
         unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return Method.objects.create(**kwargs)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        method = Method.objects.get(id=element_id)
-        if method:
-            for key, value in kwargs.iteritems():
-                setattr(method, key, value)
-
-            method.save()
-        else:
-            raise ObjectDoesNotExist("No Method element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
@@ -126,27 +80,11 @@ class ProcessingLevel(AbstractMetaDataElement):
     explanation = models.TextField(null=True, blank=True)
 
     def __unicode__(self):
-        self.processing_level_code
+        return self.processing_level_code
 
     class Meta:
         # processinglevel element is not repeatable
         unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return ProcessingLevel.objects.create(**kwargs)
-
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        processing_level = ProcessingLevel.objects.get(id=element_id)
-        if processing_level:
-            for key, value in kwargs.iteritems():
-                setattr(processing_level, key, value)
-
-            processing_level.save()
-        else:
-            raise ObjectDoesNotExist("No ProcessingLevel element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
@@ -164,27 +102,11 @@ class TimeSeriesResult(AbstractMetaDataElement):
     aggregation_statistics = models.CharField(max_length=255)
 
     def __unicode__(self):
-        self.processing_level_code
+        return self.units_type
 
     class Meta:
         # processinglevel element is not repeatable
         unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return TimeSeriesResult.objects.create(**kwargs)
-
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        time_series_result = TimeSeriesResult.objects.get(id=element_id)
-        if time_series_result:
-            for key, value in kwargs.iteritems():
-                setattr(time_series_result, key, value)
-
-            time_series_result.save()
-        else:
-            raise ObjectDoesNotExist("No TimeSeriesResult element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
@@ -192,6 +114,7 @@ class TimeSeriesResult(AbstractMetaDataElement):
 
 # To create a new resource, use these three super-classes.
 #
+
 
 class TimeSeriesResource(BaseResource):
     objects = ResourceManager("TimeSeriesResource")
@@ -223,6 +146,7 @@ class TimeSeriesResource(BaseResource):
 
 # this would allow us to pick up additional form elements for the template before the template is displayed
 processor_for(TimeSeriesResource)(resource_processor)
+
 
 class TimeSeriesMetaData(CoreMetaData):
     _site = generic.GenericRelation(Site)
@@ -305,84 +229,56 @@ class TimeSeriesMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         if self.site:
-            hsterms_site = etree.SubElement(container, '{%s}site' % self.NAMESPACES['hsterms'])
-            hsterms_site_rdf_Description = etree.SubElement(hsterms_site, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_site_code = etree.SubElement(hsterms_site_rdf_Description, '{%s}SiteCode' % self.NAMESPACES['hsterms'])
-            hsterms_site_code.text = self.site.site_code
-
-            hsterms_site_name = etree.SubElement(hsterms_site_rdf_Description, '{%s}SiteName' % self.NAMESPACES['hsterms'])
-            hsterms_site_name.text = self.site.site_name
+            element_fields = [('site_code', 'SiteCode'), ('site_name', 'SiteName')]
 
             if self.site.elevation_m:
-                hsterms_site_elevation_m = etree.SubElement(hsterms_site_rdf_Description, '{%s}Elevation_m' % self.NAMESPACES['hsterms'])
-                hsterms_site_elevation_m.text = str(self.site.elevation_m)
+                element_fields.append(('elevation_m', 'Elevation_m'))
 
             if self.site.elevation_datum:
-                hsterms_site_elevation_datum = etree.SubElement(hsterms_site_rdf_Description, '{%s}ElevationDatum' % self.NAMESPACES['hsterms'])
-                hsterms_site_elevation_datum.text = self.site.elevation_datum
+                element_fields.append(('elevation_datum', 'ElevationDatum'))
 
             if self.site.site_type:
-                hsterms_site_type = etree.SubElement(hsterms_site_rdf_Description, '{%s}SiteType' % self.NAMESPACES['hsterms'])
-                hsterms_site_type.text = self.site.site_type
+                element_fields.append(('site_type', 'SiteType'))
+
+            self.add_metadata_element_to_xml(container, (self.site, 'site'), element_fields)
 
         if self.variable:
-            hsterms_variable = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
-            hsterms_variable_rdf_Description = etree.SubElement(hsterms_variable, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_variable_code = etree.SubElement(hsterms_variable_rdf_Description, '{%s}VariableCode' % self.NAMESPACES['hsterms'])
-            hsterms_variable_code.text = self.variable.variable_code
-
-            hsterms_variable_name = etree.SubElement(hsterms_variable_rdf_Description, '{%s}VariableName' % self.NAMESPACES['hsterms'])
-            hsterms_variable_name.text = self.variable.variable_name
-
-            hsterms_variable_type = etree.SubElement(hsterms_variable_rdf_Description, '{%s}VariableType' % self.NAMESPACES['hsterms'])
-            hsterms_variable_type.text = self.variable.variable_type
-
-            hsterms_no_data_value = etree.SubElement(hsterms_variable_rdf_Description, '{%s}NoDataValue' % self.NAMESPACES['hsterms'])
-            hsterms_no_data_value.text = str(self.variable.no_data_value)
+            element_fields = [('variable_code', 'VariableCode'), ('variable_name', 'VariableName'),
+                              ('variable_type', 'VariableType'), ('no_data_value', 'NoDataValue')]
 
             if self.variable.variable_definition:
-                hsterms_variable_def = etree.SubElement(hsterms_variable_rdf_Description, '{%s}VariableDefinition' % self.NAMESPACES['hsterms'])
-                hsterms_variable_def.text = self.variable.variable_definition
+                element_fields.append(('variable_definition', 'VariableDefinition'))
 
             if self.variable.speciation:
-                hsterms_speciation = etree.SubElement(hsterms_variable_rdf_Description, '{%s}Speciation' % self.NAMESPACES['hsterms'])
-                hsterms_speciation.text = self.variable.speciation
+                element_fields.append(('speciation', 'Speciation'))
+
+            self.add_metadata_element_to_xml(container, (self.variable, 'variable'), element_fields)
 
         if self.method:
-            hsterms_method = etree.SubElement(container, '{%s}method' % self.NAMESPACES['hsterms'])
-            hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_method_code = etree.SubElement(hsterms_method_rdf_Description, '{%s}MethodCode' % self.NAMESPACES['hsterms'])
-            hsterms_method_code.text = str(self.method.method_code)
-
-            hsterms_method_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}MethodName' % self.NAMESPACES['hsterms'])
-            hsterms_method_name.text = self.method.method_name
-
-            hsterms_method_type = etree.SubElement(hsterms_method_rdf_Description, '{%s}MethodType' % self.NAMESPACES['hsterms'])
-            hsterms_method_type.text = self.method.method_type
+            element_fields = [('method_code', 'MethodCode'), ('method_name', 'MethodName'),
+                              ('method_type', 'MethodType')]
 
             if self.method.method_description:
-                hsterms_method_description = etree.SubElement(hsterms_method_rdf_Description, '{%s}MethodDescription' % self.NAMESPACES['hsterms'])
-                hsterms_method_description.text = self.method.method_description
+                element_fields.append(('method_description', 'MethodDescription'))
 
             if self.method.method_link:
-                hsterms_method_link = etree.SubElement(hsterms_method_rdf_Description, '{%s}MethodLink' % self.NAMESPACES['hsterms'])
-                hsterms_method_link.text = self.method.method_link
+                element_fields.append(('method_link', 'MethodLink'))
+
+            self.add_metadata_element_to_xml(container, (self.method, 'method'), element_fields)
 
         if self.processing_level:
-            hsterms_processing_level = etree.SubElement(container, '{%s}processingLevel' % self.NAMESPACES['hsterms'])
-            hsterms_processing_level_rdf_Description = etree.SubElement(hsterms_processing_level, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_processing_level_code = etree.SubElement(hsterms_processing_level_rdf_Description, '{%s}ProcessingLevelCode' % self.NAMESPACES['hsterms'])
-            hsterms_processing_level_code.text = str(self.processing_level.processing_level_code)
+            element_fields = [('processing_level_code', 'ProcessingLevelCode')]
 
             if self.processing_level.definition:
-                hsterms_definition = etree.SubElement(hsterms_processing_level_rdf_Description, '{%s}Definition' % self.NAMESPACES['hsterms'])
-                hsterms_definition.text = str(self.processing_level.definition)
+                element_fields.append(('definition', 'Definition'))
 
             if self.processing_level.explanation:
-                hsterms_explanation = etree.SubElement(hsterms_processing_level_rdf_Description, '{%s}Explanation' % self.NAMESPACES['hsterms'])
-                hsterms_explanation.text = str(self.processing_level.explanation)
+                element_fields.append(('explanation', 'Explanation'))
+
+            self.add_metadata_element_to_xml(container, (self.processing_level, 'processingLevel'), element_fields)
 
         if self.time_series_result:
+            # since 2nd level nesting of elements exists here, can't use the helper function add_metadata_element_to_xml()
             hsterms_time_series_result = etree.SubElement(container, '{%s}timeSeriesResult' % self.NAMESPACES['hsterms'])
             hsterms_time_series_result_rdf_Description = etree.SubElement(hsterms_time_series_result, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_units = etree.SubElement(hsterms_time_series_result_rdf_Description, '{%s}units' % self.NAMESPACES['hsterms'])
@@ -409,5 +305,19 @@ class TimeSeriesMetaData(CoreMetaData):
             hsterms_statistics.text = self.time_series_result.aggregation_statistics
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
+
+    def delete_all_elements(self):
+        super(TimeSeriesMetaData, self).delete_all_elements()
+        if self.site:
+            self.site.delete()
+        if self.variable:
+            self.variable.delete()
+        if self.method:
+            self.method.delete()
+        if self.processing_level:
+            self.processing_level.delete()
+        if self.time_series_result:
+            self.time_series_result.delete()
+
 
 import receivers

@@ -471,7 +471,7 @@ class Date(AbstractMetaDataElement):
              # get matching resource
             metadata_obj = kwargs['content_object']
             resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
-           
+
             if kwargs['type'] != 'valid':
                 if 'end_date' in kwargs:
                     del kwargs['end_date']
@@ -1676,20 +1676,54 @@ class CoreMetaData(models.Model):
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
+        """
+        helper function to generate xml elements for a given metadata element that belongs to
+        'hsterms' namespace
+
+        :param root: the xml document root element to which xml elements for the specified metadata element needs
+                     to be added
+        :param md_element: the metadata element object. The term attribute of the metadata element object is used for
+                           naming the root xml element for this metadata element. If the root xml element needs to be
+                           named differently, then this needs to be a tuple with first element being the metadata
+                           element object and the second being the name for the root element.
+                           Example: md_element=self.Creator    # the term attribute of the Creator object will be used
+                                    md_element=(self.Creator, 'Author') # 'Author' will be used
+
+        :param md_fields: a list of attribute names of the metadata element (if the name to be used in generating the
+                          xml element name is same as the attribute name then include the attribute name as a list item.
+                          if xml element name needs to be different from the attribute name then the list item must be
+                          a tuple with first element of the tuple being the attribute name and the second element being
+                          what will be used in naming the xml element)
+                          Example: [('first_name', 'firstName'), 'phone', 'email'] # xml sub-elements names: firstName, phone, email
+
+        """
         from lxml import etree
+
+        if isinstance(md_element, tuple):
+            element_name = md_element[1]
+            md_element = md_element[0]
+        else:
+            element_name = md_element.term
 
         hsterms_newElem = etree.SubElement(root,
                                            "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'],
-                                                                          new_element=md_element.term))
+                                                                          new_element=element_name))
         hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
                                                     "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
         for md_field in md_fields:
-            if hasattr(md_element, md_field):
-                attr = getattr(md_element, md_field)
+            if isinstance(md_field, tuple):
+                field_name = md_field[0]
+                xml_element_name = md_field[1]
+            else:
+                field_name = md_field
+                xml_element_name = md_field
+
+            if hasattr(md_element, field_name):
+                attr = getattr(md_element, field_name)
                 if attr:
                     field = etree.SubElement(hsterms_newElem_rdf_Desc,
                                              "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
-                                                                      field=md_field))
+                                                                      field=xml_element_name))
                     field.text = str(attr)
 
     def _create_person_element(self, etree, parent_element, person):
