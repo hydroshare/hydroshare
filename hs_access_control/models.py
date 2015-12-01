@@ -1447,13 +1447,16 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise HSAccessException("Requester is not an active user")
 
+        if not this_user.is_active:
+            raise HSAccessException("Grantee is not an active user")
+
         # access control logic: Can change privilege if
         #   Admin
         #   Self-set permission
         #   Owner
         #   Non-owner and shareable
         whom_priv = access_resource.get_combined_privilege(self.user)
-
+        grantee_priv = access_resource.get_combined_privilege(this_user)
         # check for user authorization
 
         if self.user.is_superuser:
@@ -1475,6 +1478,18 @@ class UserAccess(models.Model):
 
         if whom_priv > this_privilege:
             raise HSAccessException("User has insufficient privilege over resource")
+
+        # non owner can't downgrade privilege granted by someone else
+        # grantee_priv: current privilege of the grantee (this_user)
+        # this_privilege: proposed privilege for the grantee (this_user)
+        if whom_priv != PrivilegeCodes.OWNER and grantee_priv < this_privilege:
+            record = UserResourcePrivilege.objects.get(resource=access_resource,
+                                                       user=access_user,
+                                                       privilege=grantee_priv)
+
+            # current grantor (self) is not the same as the original grantor
+            if record.grantor != self:
+                raise HSAccessException("User has insufficient privilege over resource")
 
         # user is authorized and privilege is appropriate
         # proceed to change the record if present
@@ -1499,7 +1514,7 @@ class UserAccess(models.Model):
                                   privilege=this_privilege,
                                   grantor=self).save()
 
-        # if there exists higher privilege granted by someone else then those needs to be deleted
+        # if there exists higher privileges than what was granted now (this_privilege) then those needs to be deleted
         UserResourcePrivilege.objects.filter(resource=access_resource, user=access_user,
                                              privilege__lt=this_privilege).all().delete()
 
