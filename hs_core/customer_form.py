@@ -23,4 +23,6 @@ class MyForm(FacetedSearchForm):
 
         sqs = sqs.date_facet('created', start_date=datetime.date(2015, 01, 01), end_date=datetime.date(2015, 12, 01), gap_by='month')
         sqs = sqs.date_facet('modified', start_date=datetime.date(2015, 01, 01), end_date=datetime.date(2015, 12, 01), gap_by='month')
+        #sqs = sqs.stats('created')
+        #sqs = sqs.stats_results()
         return sqs
