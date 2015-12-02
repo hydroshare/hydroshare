@@ -1,0 +1,167 @@
+__author__ = 'shawn'
+
+from django.test import TestCase, TransactionTestCase
+from django.contrib.auth.models import Group, User
+from django.http import HttpRequest, QueryDict
+
+from hs_core.hydroshare import resource
+from hs_core import hydroshare
+
+from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource
+from hs_tools_resource.receivers import metadata_element_pre_create_handler, metadata_element_pre_update_handler
+
+
+class TestWebAppFeature(TransactionTestCase):
+
+    def setUp(self):
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.user = hydroshare.create_account(
+            'scrawley@byu.edu',
+            username='scrawley',
+            first_name='Shawn',
+            last_name='Crawley',
+            superuser=False,
+            groups=[self.group]
+        )
+        self.allowance = 0.00001
+
+        self.resWebApp = hydroshare.create_resource(
+            resource_type='ToolResource',
+            owner=self.user,
+            title='Test Web App Resource',
+            keywords=['kw1', 'kw2']
+        )
+
+    def test_web_app_res_specific_metadata(self):
+
+        #######################
+        # Class: RequestUrlBase
+        #######################
+        # no RequestUrlBase obj
+        self.assertEqual(RequestUrlBase.objects.all().count(), 0)
+
+        # create 1 RequestUrlBase obj with required params
+        resource.create_metadata_element(self.resWebApp.short_id, 'RequestUrlBase', value='https://www.google.com',
+                                         resShortID='xyz')
+        self.assertEqual(RequestUrlBase.objects.all().count(), 1)
+
+        # may not create additional instance of RequestUrlBase
+        with self.assertRaises(Exception):
+            resource.create_metadata_element(self.resWebApp.short_id, 'RequestUrlBase',
+                                             value='https://www.facebook.com',
+                                             resShortID='abc')
+
+        self.assertEqual(RequestUrlBase.objects.all().count(), 1)
+
+        # update existing meta
+        resource.update_metadata_element(self.resWebApp.short_id, 'RequestUrlBase',
+                                         element_id=RequestUrlBase.objects.first().id,
+                                         value='https://www.yahoo.com',
+                                         resShortID='lmn')
+        self.assertEqual(RequestUrlBase.objects.first().value, 'https://www.yahoo.com')
+        self.assertEqual(RequestUrlBase.objects.first().resShortID, 'lmn')
+
+        # delete RequestUrlBase obj
+        resource.delete_metadata_element(self.resWebApp.short_id, 'RequestUrlBase',
+                                         element_id=RequestUrlBase.objects.first().id)
+        self.assertEqual(RequestUrlBase.objects.all().count(), 0)
+
+        ####################
+        # Class: ToolVersion
+        ####################
+        # verify no ToolVersion obj
+        self.assertEqual(ToolVersion.objects.all().count(), 0)
+
+        # no ToolVersion obj
+        self.assertEqual(ToolVersion.objects.all().count(), 0)
+
+        # create 1 ToolVersion obj with required params
+        resource.create_metadata_element(self.resWebApp.short_id, 'ToolVersion', value='1.0')
+        self.assertEqual(ToolVersion.objects.all().count(), 1)
+
+        # may not create additional instance of ToolVersion
+        with self.assertRaises(Exception):
+            resource.create_metadata_element(self.resWebApp.short_id, 'ToolVersion', value='2.0')
+        self.assertEqual(ToolVersion.objects.all().count(), 1)
+
+        # update existing meta
+        resource.update_metadata_element(self.resWebApp.short_id, 'ToolVersion',
+                                         element_id=ToolVersion.objects.first().id,
+                                         value='3.0')
+        self.assertEqual(ToolVersion.objects.first().value, '3.0')
+
+        # delete ToolVersion obj
+        resource.delete_metadata_element(self.resWebApp.short_id, 'ToolVersion',
+                                         element_id=ToolVersion.objects.first().id)
+        self.assertEqual(ToolVersion.objects.all().count(), 0)
+
+        ##########################
+        # Class: SupportedResTypes
+        ##########################
+        # no SupportedResTypes obj
+        self.assertEqual(SupportedResTypes.objects.all().count(), 0)
+
+        # create 2 SupportedResTypes obj with required params
+        resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
+                                         supported_res_types=['NetCDF Resource'])
+        resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
+                                         supported_res_types=['NetCDF Resource'])
+        self.assertEqual(SupportedResTypes.objects.all().count(), 2)
+
+        # update existing meta
+        resource.update_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
+                                         element_id=SupportedResTypes.objects.first().id,
+                                         supported_res_types=['Time Series Resource'])
+        self.assertEqual(SupportedResTypes.objects.first().supported_res_types.all()[0].description,
+                         'Time Series Resource')
+
+        # try to delete 1st SupportedResTypes obj
+        with self.assertRaises(Exception):
+            resource.delete_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
+                                             element_id=SupportedResTypes.objects.first().id)
+        self.assertEqual(SupportedResTypes.objects.all().count(), 2)
+
+    def test_metadata_element_pre_create_and_update(self):
+        request = HttpRequest()
+
+        # RequestUrlBase
+        request.POST = {'value': 'https://www.msn.com', 'resShortID': 'test'}
+
+        data = metadata_element_pre_create_handler(sender=ToolResource,
+                                                   element_name="RequestUrlBase",
+                                                   request=request)
+        self.assertTrue(data["is_valid"])
+        data = metadata_element_pre_update_handler(sender=ToolResource,
+                                                   element_name="RequestUrlBase",
+                                                   request=request)
+        self.assertTrue(data["is_valid"])
+
+        # ToolVersion
+        request.POST = {'value': '4.0'}
+
+        data = metadata_element_pre_create_handler(sender=ToolResource,
+                                                   element_name="ToolVersion",
+                                                   request=request)
+        self.assertTrue(data["is_valid"])
+        data = metadata_element_pre_update_handler(sender=ToolResource,
+                                                   element_name="ToolVersion",
+                                                   request=request)
+        self.assertTrue(data["is_valid"])
+
+        # SupportedResTypes
+        request.POST = {'supportedResTypes': ['NetCDF Resource']}
+        data = metadata_element_pre_create_handler(sender=ToolResource,
+                                                   element_name="SupportedResTypes",
+                                                   request=request)
+        self.assertTrue(data["is_valid"])
+        data = metadata_element_pre_update_handler(sender=ToolResource,
+                                                   element_name="SupportedResTypes",
+                                                   request=request)
+        self.assertTrue(data["is_valid"])
+
+        # Invalid Form
+        request.POST = {'thisShouldFail': ['NetCDF Resource']}
+        data = metadata_element_pre_create_handler(sender=ToolResource,
+                                                   element_name="SupportedResTypes",
+                                                   request=request)
+        self.assertTrue(data["is_valid"] == False)

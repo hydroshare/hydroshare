@@ -1,46 +1,48 @@
 {% extends "pages/genericresource.html" %}
 {% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
 
-{% block tools %}
+{#{% block tools %}#}
+{#{% endblock %}#}
 
+{% block content %}
 {% endblock %}
-{% block extra_content %}
 
-{% endblock %}
+{#{% block extra_content %}#}
+{#{% endblock %}#}
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
         <div class="row">
-        <div class="col-md-12">
-            <div>
-                {% if url_base %}
-                    <h4><strong>URL Base:</strong></h4>
-                    <hr style="margin-top: 0px;margin-bottom: 2px">
-                    <div class="row">
-                        <div class="col-sm-4"><strong>App URL:</strong></div>
-                        <div class="col-sm-8"><a href='{{ url_base.value }}'>{{ url_base.value }}</a></div>
-                    </div>
-                <hr style="border:0">
-                {%  endif %}
-            </div>
-            <div>
-                {% if version %}
-                    <h4><strong>Version:</strong></h4>
-                    <hr style="margin-top: 0px;margin-bottom: 2px">
+            <div class="col-md-12">
+                <div>
+                    {% if url_base %}
+                        <h4><strong>URL Base:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-4"><strong>App URL:</strong></div>
+                            <div class="col-sm-8"><a href='{{ url_base.value }}'>{{ url_base.value }}</a></div>
+                        </div>
+                        <hr style="border:0">
+                    {%  endif %}
+                </div>
+                <div>
+                    {% if version %}
+                        <h4><strong>Version:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-4"><strong>Version:</strong></div>
                             <div class="col-sm-8">{{ version.value }}</div>
                         </div>
-                {% endif %}
-            </div>
-             <div>
-                {% if supported_res_types %}
-                    <h4><strong>Supported Resource Types:</strong></h4>
-                    <hr style="margin-top: 0px;margin-bottom: 2px">
+                    {% endif %}
+                </div>
+                <div>
+                    {% if supported_res_types %}
+                        <h4><strong>Supported Resource Types:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-8">{{ supported_res_types }}</div>
                         </div>
-                {% endif %}
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -48,22 +50,18 @@
 {%  endblock %}
 
 {% block extra_js %}
-
-{{ block.super }}
+    {{ block.super }}
     <div id="checked_res_div" hidden="true">{{ checked_res }}</div>
-
-{# put resource specific js below #}
-<script type="text/javascript">
-
-    $(document).ready(function(){
-        checked_res_str=$("#checked_res_div").text()
-        checked_res_array=checked_res_str.split(",")
-        for (i = 0; i < checked_res_array.length; i++)
-        {
-            checked_res_item=checked_res_array[i]
-            $("input[value='"+checked_res_item+"']").attr("checked","true");
-
-        }
-    })
-</script>
+    {# put resource specific js below #}
+    <script type="text/javascript">
+        $(document).ready(function(){
+            var checked_res_str=$("#checked_res_div").text();
+            var checked_res_array=checked_res_str.split(",");
+            for (var i = 0; i < checked_res_array.length; i++)
+            {
+                var checked_res_item=checked_res_array[i];
+                $("input[value='"+checked_res_item+"']").attr("checked","true");
+            }
+        })
+    </script>
 {% endblock %}

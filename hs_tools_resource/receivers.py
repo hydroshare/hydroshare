@@ -6,31 +6,22 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
 from hs_tools_resource.models import ToolResource
 from hs_tools_resource.forms import SupportedResTypesValidationForm, UrlBaseForm, VersionForm
 
+
 @receiver(pre_metadata_element_create, sender=ToolResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
     request = kwargs['request']
-    element_name = kwargs['element_name']
-    element_name = element_name.lower()
+    element_name = kwargs['element_name'].lower()
+    return validate_form(request, element_name)
 
-    if element_name == 'requesturlbase':
-        element_form = UrlBaseForm(data=request.POST)
-    elif element_name == 'toolversion':
-        element_form = VersionForm(data=request.POST)
-    elif element_name == 'supportedrestypes':
-        element_form = SupportedResTypesValidationForm(data=request.POST)
 
-    if element_form.is_valid():
-        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
-    else:
-        return {'is_valid': False, 'element_data_dict': None}
-
-# This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_update, sender=ToolResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
-    element_name = kwargs['element_name'].lower()
-    element_name = element_name.lower()
     request = kwargs['request']
-
+    element_name = kwargs['element_name'].lower()
+    return validate_form(request, element_name)
+    
+    
+def validate_form(request, element_name):
     if element_name == 'requesturlbase':
         element_form = UrlBaseForm(data=request.POST)
     elif element_name == 'toolversion':
