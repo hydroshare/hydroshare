@@ -6,6 +6,7 @@
 echo "*** RUN SCRIPT run-nginx.sh ***"
 
 ### Load Configuration Variables ###
+DIR_PREFIX=$(pwd | rev | cut -d '/' -f 2 | rev | sed 's/[\._-]//g')
 NGINX_CONFIG_DIRECTORY='./config-files'
 NGINX_DOCKER_IMG='hs-nginx'
 NGINX_DOCKER_CNTR='web-nginx'
@@ -58,7 +59,7 @@ start_nginx() {
         echo "*** IMG: ${NGINX_DOCKER_IMG} already exists ***";
     fi
     # Launch nginx as docker container web-nginx
-    HYDROSHARE_CID=`docker ps | grep hydroshare_hydroshare_1 | tr -s ' ' | cut -d ' ' -f 1`
+    HYDROSHARE_CID=`docker ps | grep ${DIR_PREFIX}_hydroshare_1 | tr -s ' ' | cut -d ' ' -f 1`
     CHECK_NGINX_CID=`docker ps -a | tr -s ' ' | grep ${NGINX_DOCKER_CNTR} | cut -d ' ' -f 1`
     if [[ -z "${CHECK_NGINX_CID}" ]]; then
         echo "*** docker run ${NGINX_DOCKER_IMG} as ${NGINX_DOCKER_CNTR} ***"
