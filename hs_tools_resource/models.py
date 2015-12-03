@@ -89,7 +89,7 @@ class SupportedResTypes(AbstractMetaDataElement):
         meta_instance = SupportedResTypes.objects.get(id=element_id)
         if meta_instance:
             if 'supported_res_types' in kwargs:
-                meta_instance.supported_res_types.all().delete()
+                meta_instance.supported_res_types.clear()
                 for res_type_str in kwargs['supported_res_types']:
                     qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
                     if qs.exists():
