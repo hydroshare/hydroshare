@@ -69,7 +69,8 @@ class ModelObjective(AbstractMetaDataElement):
         if model_objective:
             if 'swat_model_objectives' in kwargs:
                 cls._validate_swat_model_objectives(kwargs['swat_model_objectives'])
-                model_objective.swat_model_objectives.all().delete()
+                # delete the the m2m association records
+                model_objective.swat_model_objectives.clear()
                 cls._add_swat_objective(model_objective, kwargs['swat_model_objectives'])
 
             if 'other_objectives' in kwargs:
@@ -162,7 +163,8 @@ class ModelParameter(AbstractMetaDataElement):
         if swat_model_parameters:
             if 'model_parameters' in kwargs:
                 cls._validate_swat_model_parameters(kwargs['model_parameters'])
-                swat_model_parameters.model_parameters.all().delete()
+                # delete the the m2m association records
+                swat_model_parameters.model_parameters.clear()
                 cls._add_swat_parameters(swat_model_parameters,kwargs['model_parameters'])
 
             if 'other_parameters' in kwargs:
