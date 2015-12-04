@@ -40,23 +40,23 @@ class ModelInstanceResourceMeta(GenericResourceMeta):
         # Get ModelOutput
         for s, p, o in self._rmeta_graph.triples((None, hsterms.ModelOutput, None)):
             # Get has_model_output
-            has_model_output_lit = self._rmeta_graph.value(o, hsterms.IncludesModelOutput)
+            has_model_output_lit = self._rmeta_graph.value(o, hsterms.includesModelOutput)
             if has_model_output_lit is None:
-                msg = "IncludesModelOutput for ModelOutput was not found for resource {0}".format(self.root_uri)
+                msg = "includesModelOutput for ModelOutput was not found for resource {0}".format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.has_model_output = str(has_model_output_lit) == 'Yes'
         # Get ExecutedBy
         for s, p, o in self._rmeta_graph.triples((None, hsterms.ExecutedBy, None)):
-            # Get ModelProgramName
-            executed_by_name_lit = self._rmeta_graph.value(o, hsterms.ModelProgramName)
+            # Get modelProgramName
+            executed_by_name_lit = self._rmeta_graph.value(o, hsterms.modelProgramName)
             if executed_by_name_lit is not None:
                 self.executed_by_name = str(executed_by_name_lit)
-            # Get ModelProgramURL
-            executed_by_uri_lit = self._rmeta_graph.value(o, hsterms.ModelProgramURL)
+            # Get modelProgramIdentifier
+            executed_by_uri_lit = self._rmeta_graph.value(o, hsterms.modelProgramIdentifier)
             if executed_by_uri_lit is not None:
                 self.executed_by_uri = str(executed_by_uri_lit)
             if (self.executed_by_name is not None) ^ (self.executed_by_uri is not None):
-                msg = "Both ModelProgramName and ModelProgramURL must be supplied if one is supplied."
+                msg = "Both modelProgramName and modelProgramIdentifier must be supplied if one is supplied."
                 raise GenericResourceMeta.ResourceMetaException(msg)
         print("\t\t{0}".format(str(self)))
 

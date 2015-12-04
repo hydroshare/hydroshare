@@ -47,7 +47,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     content_model = page.get_content_model()
     discoverable = content_model.raccess.discoverable
-    file_validation_error = None
+    validation_error = None
 
     metadata_status = _get_metadata_status(content_model)
 
@@ -78,7 +78,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     just_created = False
     if request:
-        file_validation_error = check_for_file_validation(request)
+        validation_error = check_for_validation(request)
 
         just_created = request.session.get('just_created', False)
         if 'just_created' in request.session:
@@ -152,14 +152,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                    'supported_file_types': content_model.get_supported_upload_file_types(),
                    'allow_multiple_file_upload': content_model.can_have_multiple_files(),
-                   'file_validation_error': file_validation_error if file_validation_error else None,
+                   'validation_error': validation_error if validation_error else None,
                    'relevant_tools': relevant_tools,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
                    'bag_url': bag_url,
                    'show_content_files': show_content_files,
                    'discoverable': discoverable
-
         }
         return context
 
@@ -344,8 +343,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'bag_url': bag_url,
                'current_user': user,               
                'show_content_files': show_content_files,
-               'file_validation_error': file_validation_error if file_validation_error else None,
-               'discoverable': discoverable
+               'validation_error': validation_error if validation_error else None,
+               'discoverable': discoverable,
+               'relation_source_types': Relation.SOURCE_TYPES
     }
 
     return context
@@ -383,12 +383,12 @@ def check_resource_mode(request):
 
     return edit_resource
 
-def check_for_file_validation(request):
+def check_for_validation(request):
     if request.method == "GET":
-        file_validation_error = request.session.get('file_validation_error', None)
-        if file_validation_error:
-            del request.session['file_validation_error']
-            return file_validation_error
+        validation_error = request.session.get('validation_error', None)
+        if validation_error:
+            del request.session['validation_error']
+            return validation_error
 
     return None
 

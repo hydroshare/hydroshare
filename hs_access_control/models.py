@@ -288,8 +288,6 @@ class UserAccess(models.Model):
                                 related_name='uaccess',
                                 related_query_name='uaccess')
 
-    active = models.BooleanField(default=True, editable=False, help_text='whether user is currently capable of action')
-
     # syntactic sugar: make some queries easier to write
     # related names are not used by our application, but trying to
     # turn them off breaks queries to these objects.
@@ -473,7 +471,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a group")
         access_group = this_group.gaccess
 
-        if not self.active:
+        if not self.user.is_active:
             return False
 
         if self.user.is_superuser:
@@ -505,7 +503,7 @@ class UserAccess(models.Model):
 
 
         # allow access to public resources even if user is not logged in.
-        if not self.active:
+        if not self.user.is_active:
             return False
 
         if self.user.is_superuser:
@@ -542,7 +540,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a group")
         access_group = this_group.gaccess
 
-        if not self.active:
+        if not self.user.is_active:
             return False
 
         if access_group.discoverable or access_group.public:
@@ -575,7 +573,7 @@ class UserAccess(models.Model):
         if not isinstance(this_group, Group):
             raise HSAUsageException("Target is not a group")
 
-        return self.active and (self.user.is_superuser or self.owns_group(this_group))
+        return self.user.is_active and (self.user.is_superuser or self.owns_group(this_group))
 
     def can_delete_group(self, this_group):
         """
@@ -598,7 +596,7 @@ class UserAccess(models.Model):
         if not isinstance(this_group, Group):
             raise HSAUsageException("Target is not a group")
 
-        return self.active and (self.user.is_superuser or self.owns_group(this_group))
+        return self.user.is_active and (self.user.is_superuser or self.owns_group(this_group))
 
     ####################################
     # sharing permission checking
@@ -628,7 +626,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a group")
         access_group = this_group.gaccess
 
-        if not self.active:
+        if not self.user.is_active:
             return False
 
         if self.user.is_superuser:
@@ -685,7 +683,7 @@ class UserAccess(models.Model):
         access_user = this_user.uaccess
 
         # check for user authorization
-        if not self.active:
+        if not self.user.is_active:
             raise HSAccessException("User is not active")
 
         if not self.owns_group(this_group) and not access_group.shareable and not self.user.is_superuser:
@@ -736,7 +734,7 @@ class UserAccess(models.Model):
         if command != CommandCodes.CHECK and command != CommandCodes.DO:
             raise HSAUsageException("Invalid command code")
 
-        if not self.active:
+        if not self.user.is_active:
             if command == CommandCodes.DO:
                 raise HSAccessException("Grantor is not active")
             else:
@@ -858,7 +856,7 @@ class UserAccess(models.Model):
         else:
             access_grantor = self
 
-        if not self.active:
+        if not self.user.is_active:
             if command == CommandCodes.DO:
                 raise HSAccessException("Grantor is not active")
             else:
@@ -1166,7 +1164,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
-        if not self.active:
+        if not self.user.is_active:
             return False
 
         if access_resource.immutable:
@@ -1199,7 +1197,7 @@ class UserAccess(models.Model):
         if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
 
-        return self.active and (self.user.is_superuser or self.owns_resource(this_resource))
+        return self.user.is_active and (self.user.is_superuser or self.owns_resource(this_resource))
 
     def can_view_resource(self, this_resource):
         """
@@ -1214,7 +1212,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
-        if not self.active:
+        if not self.user.is_active:
             return False
 
         if access_resource.public:
@@ -1246,7 +1244,7 @@ class UserAccess(models.Model):
         if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
 
-        return self.active and (self.user.is_superuser or self.owns_resource(this_resource))
+        return self.user.is_active and (self.user.is_superuser or self.owns_resource(this_resource))
 
     ##########################################
     # check sharing rights
@@ -1268,7 +1266,7 @@ class UserAccess(models.Model):
             raise HSAUsageException("Target is not a resource")
         access_resource = this_resource.raccess
 
-        if not self.active:
+        if not self.user.is_active:
             return False
 
         # access control logic: Can change privilege if
@@ -1446,8 +1444,11 @@ class UserAccess(models.Model):
 
         # this is parallel to can_share_resource_with_user(this_resource, this_privilege)
 
-        if not self.active:
+        if not self.user.is_active:
             raise HSAccessException("Requester is not an active user")
+
+        if not this_user.is_active:
+            raise HSAccessException("Grantee is not an active user")
 
         # access control logic: Can change privilege if
         #   Admin
@@ -1455,7 +1456,7 @@ class UserAccess(models.Model):
         #   Owner
         #   Non-owner and shareable
         whom_priv = access_resource.get_combined_privilege(self.user)
-
+        grantee_priv = access_resource.get_combined_privilege(this_user)
         # check for user authorization
 
         if self.user.is_superuser:
@@ -1477,6 +1478,18 @@ class UserAccess(models.Model):
 
         if whom_priv > this_privilege:
             raise HSAccessException("User has insufficient privilege over resource")
+
+        # non owner can't downgrade privilege granted by someone else
+        # grantee_priv: current privilege of the grantee (this_user)
+        # this_privilege: proposed privilege for the grantee (this_user)
+        if whom_priv != PrivilegeCodes.OWNER and grantee_priv < this_privilege:
+            record = UserResourcePrivilege.objects.get(resource=access_resource,
+                                                       user=access_user,
+                                                       privilege=grantee_priv)
+
+            # current grantor (self) is not the same as the original grantor
+            if record.grantor != self:
+                raise HSAccessException("User has insufficient privilege over resource")
 
         # user is authorized and privilege is appropriate
         # proceed to change the record if present
@@ -1501,7 +1514,7 @@ class UserAccess(models.Model):
                                   privilege=this_privilege,
                                   grantor=self).save()
 
-        # if there exists higher privilege granted by someone else then those needs to be deleted
+        # if there exists higher privileges than what was granted now (this_privilege) then those needs to be deleted
         UserResourcePrivilege.objects.filter(resource=access_resource, user=access_user,
                                              privilege__lt=this_privilege).all().delete()
 
@@ -2088,7 +2101,7 @@ class GroupAccess(models.Model):
         """
         p = UserGroupPrivilege.objects.filter(group=self,
                                               user=this_user,
-                                              user__active=True)\
+                                              user__user__is_active=True)\
             .aggregate(models.Min('privilege'))
         val = p['privilege__min']
         if val is None:
@@ -2285,7 +2298,7 @@ class ResourceAccess(models.Model):
         # compute simple user privilege over resource
         user_priv = UserResourcePrivilege.objects\
             .filter(user=access_user,
-                    user__active=True,
+                    user__user__is_active=True,
                     resource=self)\
             .aggregate(models.Min('privilege'))
 

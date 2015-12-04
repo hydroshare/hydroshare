@@ -358,3 +358,4 @@ def resource_file_add_process(resource, files, user, extract_metadata=False, **k
 
     resource_modified(resource, user)
     return resource_file_objects
+

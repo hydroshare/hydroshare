@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import json
-import requests
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -83,7 +82,7 @@ def add_file_to_resource(request, shortkey, *args, **kwargs):
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['file_validation_error'] = ex.message
+        request.session['validation_error'] = ex.message
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:
@@ -91,7 +90,7 @@ def add_file_to_resource(request, shortkey, *args, **kwargs):
                                                    extract_metadata=extract_metadata)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['file_validation_error'] = ex.message
+        request.session['validation_error'] = ex.message
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -145,8 +144,10 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                     for kw in keywords:
                         res.metadata.create_element(element_name, value=kw)
                 else:
-                    element = res.metadata.create_element(element_name, **element_data_dict)
-
+                    try:
+                        element = res.metadata.create_element(element_name, **element_data_dict)
+                    except ValidationError as exp:
+                        request.session['validation_error'] = exp.message
                 is_add_success = True
                 resource_modified(res, request.user)
 
@@ -185,10 +186,11 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
         if 'is_valid' in response:
             if response['is_valid']:
                 element_data_dict = response['element_data_dict']
-                res.metadata.update_element(element_name, element_id, **element_data_dict)
+                try:
+                    res.metadata.update_element(element_name, element_id, **element_data_dict)
+                except ValidationError as exp:
+                    request.session['validation_error'] = exp.message
                 if element_name == 'title':
-                    res.title = res.metadata.title.value
-                    res.save()
                     if res.raccess.public:
                         if not res.can_be_public_or_discoverable:
                             res.raccess.public = False
@@ -334,12 +336,26 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     else:
         status = 'error'
 
+    current_user_privilege = res.raccess.get_combined_privilege(user)
+    if current_user_privilege == PrivilegeCodes.VIEW:
+        current_user_privilege = "view"
+    elif current_user_privilege == PrivilegeCodes.CHANGE:
+        current_user_privilege = "change"
+    elif current_user_privilege == PrivilegeCodes.OWNER:
+        current_user_privilege = "owner"
+
+    is_current_user = False
+    if user == user_to_share_with:
+        is_current_user = True
+
     picture_url = 'No picture provided'
     if user_to_share_with.userprofile.picture:
         picture_url = user_to_share_with.userprofile.picture.url
 
     ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
-                          'username': user_to_share_with.username, 'privilege': privilege, 'profile_pic': picture_url,
+                          'username': user_to_share_with.username, 'privilege_granted': privilege,
+                          'current_user_privilege': current_user_privilege,
+                          'profile_pic': picture_url, 'is_current_user': is_current_user,
                           'error_msg': err_message}
     return HttpResponse(json.dumps(ajax_response_data))
 
@@ -398,26 +414,6 @@ def save_ajax(request):
     except ValidationError as error: # The error is for a field that you are editing
         message_i18n = ', '.join([u"%s" % m for m in error.messages])
         return _get_http_response({'errors': message_i18n})
-
-
-class CaptchaVerifyForm(forms.Form):
-    challenge = forms.CharField()
-    response = forms.CharField()
-
-
-def verify_captcha(request):
-    f = CaptchaVerifyForm(request.POST)
-    if f.is_valid():
-        params = dict(f.cleaned_data)
-        params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY', '6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x')
-        params['remoteip'] = request.META['REMOTE_ADDR']
-        # return HttpResponse('true', content_type='text/plain')
-        resp = requests.post('http://www.google.com/recaptcha/api/verify', params=params)
-        lines = resp.text.split('\n')
-        if lines[0].startswith('false'):
-            raise ex.PermissionDenied('captcha failed')
-        else:
-            return HttpResponse('true', content_type='text/plain')
 
 
 def verify_account(request, *args, **kwargs):
@@ -513,7 +509,7 @@ def my_resources(request, page):
         reslst = reslst[start : start + res_cnt]
 
         # TODO sorts should be in SQL not python
-        res = sorted(reslst, key=lambda x: x.title)
+        res = sorted(reslst, key=lambda x: x.metadata.title.value)
 
         return {
             'resources': res,
@@ -581,7 +577,7 @@ def create_resource(request, *args, **kwargs):
         return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     except utils.ResourceFileValidationException as ex:
-        context = {'file_validation_error': ex.message}
+        context = {'validation_error': ex.message}
         return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     except Exception as ex:
@@ -607,7 +603,7 @@ def create_resource(request, *args, **kwargs):
     try:
         utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
-        request.session['file_validation_error'] = ex.message
+        request.session['validation_error'] = ex.message
 
     # go to resource landing page
     request.session['just_created'] = True
