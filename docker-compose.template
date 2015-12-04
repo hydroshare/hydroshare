@@ -10,7 +10,7 @@ solr:
     # hydroshare repository
     - "HS_PATH:/hydroshare"
   ports:
-    - "8983:8983"
+    - "8983"
 hydroshare:
   build: .
   environment:
