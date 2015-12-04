@@ -15,10 +15,10 @@
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
 
         {% block error %}
-            {%  if file_validation_error %}
+            {%  if validation_error %}
                 <div class="alert alert-danger alert-dismissible" role="alert">
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                      <strong>Uploaded File Validation Error:{{ file_validation_error }}</strong>
+                      <strong>Validation Error: {{ validation_error }}</strong>
                  </div>
             {%  endif %}
         {% endblock %}
@@ -273,15 +273,14 @@
             <h3>How to cite</h3>
 
             <div class="input-group" style="margin-bottom: 30px">
-                <input readonly id="citation-text" style="cursor:default;" type="text"
-                       class="form-control" aria-describedby="basic-addon1" value="{{ citation }}">
-                <span class="input-group-addon "><span class="glyphicon glyphicon-book"
+                <span id="citation-text">{{ citation }}</span>
+                <span class="input-group-addon"><span class="glyphicon glyphicon-book"
                         data-toggle="tooltip" data-placement="bottom" title="Click on the text to select all"></span></span>
             </div>
 
             {#        ======= Sharing =======#}
             {% if not metadata_form %}
-        {% if rights.statement or rights.url %}
+            {% if rights.statement or rights.url %}
             <div id="rights">
                 {% if rights.statement %}
                     <span class="rights-text">{{ rights.statement }} </span>
@@ -477,6 +476,7 @@
                                                 <div class="profile-pic-thumbnail round-image user-icon"></div>
                                                 <div class="user-scope">
                                                     <span data-col="name" class="user-name"></span>
+                                                    <span class="text-muted you-flag">(You)</span>
                                                     <br>
                                                     <span data-col="user-name"
                                                           class="user-username-content"></span>
@@ -526,7 +526,7 @@
 
                                         {# Owners with full permissions to do anything on this resource #}
                                         {% for u in owners %}
-                                            <tr id="row-id-{{ u.pk }}" {% if owners|length == 1 %}class="hide-actions"{% endif %}>
+                                            <tr id="row-id-{{ u.pk }}" {% if owners|length == 1 or not is_owner_user %}class="hide-actions"{% endif %}>
                                                 <td>
                                                     <div class="user-scope">
 
@@ -540,7 +540,7 @@
                                                         <span data-col="name"
                                                               class="user-name">{{ u|best_name }}</span>
                                                         {% if u.pk == current_user.pk %}
-                                                            <span class="text-muted">(You)</span>
+                                                            <span class="text-muted you-flag">(You)</span>
                                                         {% endif %}
                                                         <br>
                                                         <span data-col="user-name"
@@ -776,9 +776,9 @@
 
                                                 <ul id="list-roles" class="dropdown-menu"
                                                     aria-labelledby="roles_list">
-                                                    <li><a data-role="view">Can view</a></li>
-                                                    <li><a data-role="edit">Can edit</a></li>
-                                                    <li><a data-role="owner">Is owner</a></li>
+                                                    <li {% if not is_view_user and not is_edit_user and not is_owner_user %}class="disabled"{% endif %}><a data-role="view">Can view</a></li>
+                                                    <li {% if not is_edit_user and not is_owner_user %}class="disabled"{% endif %}><a data-role="edit">Can edit</a></li>
+                                                    <li {% if not is_owner_user %}class="disabled"{% endif %}><a data-role="owner">Is owner</a></li>
                                                 </ul>
                                             </div>
 
@@ -1530,8 +1530,7 @@
                                             </tbody>
                                         </table>
                                         <a id="add-relation" class="btn btn-success" data-toggle="modal"
-                                           data-target="#add-relation-dialog"><i
-                                                class="fa fa-plus"></i> Add relation</a>
+                                           data-target="#add-relation-dialog"><i class="fa fa-plus"></i> Add relation</a>
                                     </div>
                                 {% endif %}
                             </div>
@@ -1691,11 +1690,9 @@
                                         <div class="controls">
                                             <select class="form-control input-sm select" id="id_relation-{{ forloop.counter0 }}-type" name="relation-{{ forloop.counter0 }}-type">
                                                 <option value="">---------</option>
-                                                <option value="isPartOf" {% if relation.type == "isPartOf" %} selected="selected" {% endif %}>Part Of</option>
-                                                <option value="isCreatedBy" {% if relation.type == "isCreatedBy" %}selected="selected"{% endif %}>Created By</option>
-                                                <option value="isVersionOf" {% if relation.type == "isVersionOf" %}selected="selected"{% endif %}>Version Of</option>
-                                                <option value="isDataFor" {% if relation.type == "isDataFor" %}selected="selected"{% endif %}>Data For</option>
-                                                <option value="cites" {% if relation.type == "cites" %}selected="selected"{% endif %}>Cites</option>
+                                                {% for type_value, type_display in relation_source_types %}
+                                                    <option value={{ type_value }} {% if relation.type == type_value %}selected="selected"{% endif %}>{{ type_display }}</option>
+                                                {% endfor %}
                                             </select>
                                         </div>
                                     </div>
@@ -2052,14 +2049,11 @@
                                                                                        class="control-label requiredField">
                                         Relation type<span class="asteriskField">*</span></label>
 
-                                        <div class="controls"><select class="form-control input-sm select" id="id_type"
-                                                                      name="type">
+                                        <div class="controls"><select class="form-control input-sm select" id="id_type" name="type">
                                             <option value="" selected="selected">---------</option>
-                                            <option value="isPartOf">Part Of</option>
-                                            <option value="isCreatedBy">Created By</option>
-                                            <option value="isVersionOf">Version Of</option>
-                                            <option value="isDataFor">Data For</option>
-                                            <option value="cites">Cites</option>
+                                            {% for type_value, type_display in relation_source_types %}
+                                                <option value={{ type_value }}>{{ type_display }}</option>
+                                            {% endfor %}
                                         </select></div>
                                     </div>
                                     <div id="div_id_value" class="control-group"><label for="id_value"
@@ -2373,7 +2367,21 @@
         <script type="text/javascript">
 
             $("#citation-text").on("click", function(e){
-                $(this).select();
+                // document.selection logic is added in for IE 8 and lower
+                if (document.selection) {
+                    document.selection.empty();
+                    var range = document.body.createTextRange();
+                    range.moveToElementText(this);
+                    range.select();
+                }
+                else if (window.getSelection) {
+                    // Get the selection object
+                    var selection = window.getSelection();
+                    selection.removeAllRanges();
+                    var range = document.createRange();
+                    range.selectNode(this);
+                    selection.addRange(range);
+                }
             });
 
             // Prevents form submission when pressing the enter key on the search box.
@@ -2429,12 +2437,61 @@
                         }
                         setPointerEvents(true);
                     },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    error: function(XMLHttpRequest, textStatus, errorThrown){
+                        $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+                        $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
                         setPointerEvents(true);
                     }
                 });
                 //don't submit the form
                 return false;
+            }
+
+            // Enables and disables granting access buttons accordingly to the current access level
+            function updateActionsState(privilege){
+                // Set the state of dropdown menu items and remove buttons to false by default
+                $("form[data-access-type]").parent().addClass("disabled");
+                $("#list-roles a[data-role]").parent().addClass("disabled");
+                $(".access-table li.active[data-access-type]").closest("tr").addClass("hide-actions");
+
+                if (privilege == "view") {
+                    // Dropdown menu items
+                    $("form[data-access-type='Can view']").parent().removeClass("disabled");
+                    $("#list-roles a[data-role='view']").parent().removeClass("disabled");
+
+                    // Remove buttons
+                    $(".access-table li.active[data-access-type='Can view']").closest("tr").removeClass("hide-actions");
+                }
+                else if(privilege == "change") {
+                    // Dropdown menu items
+                    $("form[data-access-type='Can view']").parent().removeClass("disabled");
+                    $("#list-roles a[data-role='view']").parent().removeClass("disabled");
+
+                    $("form[data-access-type='Can edit']").parent().removeClass("disabled");
+                    $("#list-roles a[data-role='edit']").parent().removeClass("disabled");
+
+                    // Remove buttons
+                    $(".access-table li.active[data-access-type='Can view']").closest("tr").removeClass("hide-actions");
+                    $(".access-table li.active[data-access-type='Can edit']").closest("tr").removeClass("hide-actions");
+                }
+                else if(privilege == "owner") {
+                    // Dropdown menu items
+                    $("form[data-access-type='Can view']").parent().removeClass("disabled");
+                    $("#list-roles a[data-role='view']").parent().removeClass("disabled");
+
+                    $("form[data-access-type='Can edit']").parent().removeClass("disabled");
+                    $("#list-roles a[data-role='edit']").parent().removeClass("disabled");
+
+                    $("form[data-access-type='Is owner']").parent().removeClass("disabled");
+                    $("#list-roles a[data-role='owner']").parent().removeClass("disabled");
+
+                    // Remove buttons
+                    $(".access-table li.active[data-access-type='Can view']").closest("tr").removeClass("hide-actions");
+                    $(".access-table li.active[data-access-type='Can edit']").closest("tr").removeClass("hide-actions");
+                    if ($(".access-table li.active[data-access-type='Is owner']").length > 1) {     // At least one owner constrain
+                        $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
+                    }
+                }
             }
 
             function change_share_permission_ajax_submit(form_id) {
@@ -2461,14 +2518,7 @@
                             $(".role-dropdown").removeClass("open");
                             $form.parent().closest(".user-roles").find("li").removeClass("loading");
 
-                            // If only one owner listed, disable actions for that entry
-                            if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
-                                $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
-                            }
-                            else{
-                                // Enable actions for owner rows
-                                $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
-                            }
+                            updateActionsState(json_response.current_user_privilege);
 
                             setPointerEvents(true);
                         }
@@ -2477,6 +2527,11 @@
                             $form.parent().closest(".user-roles").find("li").removeClass("loading");
                             setPointerEvents(true);
                         }
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown){
+                        $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+                        $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
+                        setPointerEvents(true);
                     }
                 });
             }
@@ -2528,9 +2583,17 @@
                             rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
                             rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
                             rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
-                            rowTemplate.find("span[data-col='name']").text(json_response.name);
-                            rowTemplate.find("span[data-col='user-name']").text(json_response.username);
+                            if (json_response.name) {
+                                rowTemplate.find("span[data-col='name']").text(json_response.name);
+                            }
+                            else {
+                                rowTemplate.find("span[data-col='name']").text(json_response.username);
+                            }
 
+                            if (!json_response.is_current_user) {
+                                rowTemplate.find(".you-flag").hide();
+                            }
+                            rowTemplate.find("span[data-col='user-name']").text(json_response.username);
 
                             if (json_response.profile_pic != "No picture provided") {
                                 rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
@@ -2551,14 +2614,19 @@
                                 rowTemplate.find("span[data-col='current-access']").text("Is owner");
                                 rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
                                 rowTemplate.find(".share-form-owner").parent().addClass("active");
-                                // Enable dropdown menu for other owner entries
-                                $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
                             }
                             $(".access-table tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
+
+                            updateActionsState(json_response.current_user_privilege);
                         }
                         else if (json_response.status == "error") {
                             $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
                         }
+                        setPointerEvents(true);
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown){
+                        $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+                        $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
                         setPointerEvents(true);
                     }
 
@@ -2643,7 +2711,8 @@
                         json_response = JSON.parse(result);
                         if (json_response.status === 'success')
                         {
-                            $form.find("button").hide();
+                            $(document).trigger("submit-success");
+                            $form.find("button.btn-primary").hide();
                             if (json_response.hasOwnProperty('element_id')){
                                 form_update_action = $form.attr('action');
                                 res_short_id = form_update_action.split('/')[3];
@@ -2673,19 +2742,21 @@
                                 this.remove();
                             });
                             $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
+                                $(document).trigger("submit-success");
                                 $(".alert-success").alert('close');
                             });
                         }
                         else{
                             $('body > .container').append($alert_error);
                             $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
+                                $(document).trigger("submit-error");
                                 $(".alert-danger").alert('close');
                             });
                         }
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown)
                     {
-                        $('#' + form_id).before($alert_error)
+                        $('#' + form_id).before($alert_error);
                         $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
                             $(".alert-error").alert('close');
                         });
