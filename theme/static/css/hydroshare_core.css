@@ -1003,7 +1003,7 @@ span.remove{
 	box-shadow: none;
 }
 .custom-table th {
-	padding-right: 8px;
+	padding-right: 40px;
 }
 #txt-title{
     /*width: calc(100% - 10px);*/
