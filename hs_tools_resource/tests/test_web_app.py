@@ -158,10 +158,3 @@ class TestWebAppFeature(TransactionTestCase):
                                                    element_name="SupportedResTypes",
                                                    request=request)
         self.assertTrue(data["is_valid"])
-
-        # Invalid Form
-        request.POST = {'thisShouldFail': ['NetCDF Resource']}
-        data = metadata_element_pre_create_handler(sender=ToolResource,
-                                                   element_name="SupportedResTypes",
-                                                   request=request)
-        self.assertTrue(data["is_valid"] == False)
