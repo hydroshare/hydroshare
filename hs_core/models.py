@@ -1,3 +1,9 @@
+import os.path
+import json
+from uuid import uuid4
+from languages_iso import languages as iso_languages
+from dateutil import parser
+
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group
 from django.contrib.auth import settings
@@ -8,21 +14,17 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django import forms
 from django.utils.timezone import now
-from mezzanine.pages.models import Page, RichText
-from mezzanine.pages.page_processors import processor_for
-from uuid import uuid4
-from mezzanine.core.models import Ownable
-from mezzanine.generic.fields import CommentsField, RatingField
-from mezzanine.generic.fields import KeywordsField
-from mezzanine.conf import settings as s
-import os.path
 from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from languages_iso import languages as iso_languages
-from dateutil import parser
-import json
+
+from mezzanine.pages.models import Page, RichText
+from mezzanine.pages.page_processors import processor_for
+from mezzanine.core.models import Ownable
+from mezzanine.generic.fields import CommentsField, RatingField
+from mezzanine.generic.fields import KeywordsField
+from mezzanine.conf import settings as s
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -469,7 +471,7 @@ class Date(AbstractMetaDataElement):
              # get matching resource
             metadata_obj = kwargs['content_object']
             resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
-           
+
             if kwargs['type'] != 'valid':
                 if 'end_date' in kwargs:
                     del kwargs['end_date']
@@ -531,7 +533,9 @@ class Date(AbstractMetaDataElement):
 
 
 class Relation(AbstractMetaDataElement):
-    SOURCE_TYPES= (
+    SOURCE_TYPES = (
+        ('isHostedBy', 'Hosted By'),
+        ('isCopiedFrom', 'Copied From'),
         ('isPartOf', 'Part Of'),
         ('isExecutedBy', 'Executed By'),
         ('isCreatedBy', 'Created By'),
@@ -539,6 +543,9 @@ class Relation(AbstractMetaDataElement):
         ('isDataFor', 'Data For'),
         ('cites', 'Cites'),
     )
+
+    # HS_RELATION_TERMS contains hydroshare custom terms that are not Dublin Core terms
+    HS_RELATION_TERMS = ('isHostedBy', 'isCopiedFrom')
 
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
@@ -556,6 +563,16 @@ class Relation(AbstractMetaDataElement):
             if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
                 raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
+            # ensure isHostedBy and isCopiedFrom are mutually exclusive
+            metadata_obj = kwargs['content_object']
+            metadata_type = ContentType.objects.get_for_model(metadata_obj)
+            if kwargs['type'] == 'isHostedBy' and \
+               Relation.objects.filter(type='isCopiedFrom', object_id=metadata_obj.id, content_type=metadata_type).exists():
+                raise ValidationError('Relation type:%s cannot be created since isCopiedFrom relation already exists.' % kwargs['type'])
+            elif kwargs['type'] == 'isCopiedFrom' and \
+                 Relation.objects.filter(type='isHostedBy', object_id=metadata_obj.id, content_type=metadata_type).exists():
+                raise ValidationError('Relation type:%s cannot be created since isHostedBy relation already exists.' % kwargs['type'])
+
             return super(Relation, cls).create(**kwargs)
         else:
             raise ValidationError("Type of relation element is missing.")
@@ -565,6 +582,18 @@ class Relation(AbstractMetaDataElement):
         if 'type' in kwargs:
             if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
                 raise ValidationError('Invalid relation type:%s' % kwargs['type'])
+
+            # ensure isHostedBy and isCopiedFrom are mutually exclusive
+            rel = Relation.objects.get(id=element_id)
+            if rel.type != kwargs['type']:
+                if kwargs['type'] == 'isHostedBy' and \
+                     Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
+                                             content_type__pk=rel.content_type.id).exists():
+                    raise ValidationError('Relation type:%s cannot be updated since isCopiedFrom relation already exists.' % rel.type)
+                elif kwargs['type'] == 'isCopiedFrom' and \
+                     Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
+                                             content_type__pk=rel.content_type.id).exists():
+                    raise ValidationError('Relation type:%s cannot be updated since isHostedBy relation already exists.' % rel.type)
 
         super(Relation, cls).update(element_id, **kwargs)
 
@@ -1138,7 +1167,7 @@ class AbstractResource(ResourcePermissionsMixin):
         return None
 
     def get_citation(self):
-        citation = ''
+        citation_str_lst = []
 
         CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
         CITATION_ERROR = "Failed to generate citation."
@@ -1146,35 +1175,31 @@ class AbstractResource(ResourcePermissionsMixin):
         first_author = self.metadata.creators.all().filter(order=1)[0]
         name_parts = first_author.name.split()
         if len(name_parts) == 0:
-            citation = CREATOR_NAME_ERROR
-            return citation
+            return CREATOR_NAME_ERROR
 
         if len(name_parts) > 2:
-            citation = "{last_name}, {first_initial}.{middle_initial}.".format(last_name=name_parts[-1],
+            citation_str_lst.append("{last_name}, {first_initial}.{middle_initial}., ".format(last_name=name_parts[-1],
                                                                               first_initial=name_parts[0][0],
-                                                                              middle_initial=name_parts[1][0]) + ", "
+                                                                              middle_initial=name_parts[1][0]))
         else:
-            citation = "{last_name}, {first_initial}.".format(last_name=name_parts[-1],
-                                                              first_initial=name_parts[0][0]) + ", "
+            citation_str_lst.append("{last_name}, {first_initial}., ".format(last_name=name_parts[-1], first_initial=name_parts[0][0]))
 
         other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
             name_parts = author.name.split()
             if len(name_parts) == 0:
-                citation = CREATOR_NAME_ERROR
-                return citation
+                return CREATOR_NAME_ERROR
 
             if len(name_parts) > 2:
-                citation += "{first_initial}.{middle_initial}.{last_name}".format(first_initial=name_parts[0][0],
+                citation_str_lst.append("{first_initial}.{middle_initial}.{last_name}, ".format(first_initial=name_parts[0][0],
                                                                                   middle_initial=name_parts[1][0],
-                                                                                  last_name=name_parts[-1]) + ", "
+                                                                                  last_name=name_parts[-1]))
             else:
-                citation += "{first_initial}.{last_name}".format(first_initial=name_parts[0][0],
-                                                                 last_name=name_parts[-1]) + ", "
+                citation_str_lst.append("{first_initial}.{last_name}, ".format(first_initial=name_parts[0][0], last_name=name_parts[-1]))
 
         #  remove the last added comma and the space
-        if len(citation) > 2:
-            citation = citation[:-2]
+        if len(citation_str_lst[-1]) > 2:
+            citation_str_lst[-1] = citation_str_lst[-1][:-2]
         else:
             return CITATION_ERROR
 
@@ -1185,9 +1210,8 @@ class AbstractResource(ResourcePermissionsMixin):
         else:
             return CITATION_ERROR
 
-        citation += " ({year}). ".format(year=citation_date.start_date.year)
-        citation += self.metadata.title.value
-        citation += ", HydroShare, "
+        citation_str_lst.append(" ({year}). ".format(year=citation_date.start_date.year))
+        citation_str_lst.append(self.metadata.title.value)
 
         if self.metadata.identifiers.all().filter(name="doi"):
             hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
@@ -1196,9 +1220,19 @@ class AbstractResource(ResourcePermissionsMixin):
         else:
             return CITATION_ERROR
 
-        citation += "{url}".format(url=hs_identifier.url)
+        ref_rel = self.metadata.relations.all().filter(type='isHostedBy').first()
+        repl_rel = self.metadata.relations.all().filter(type='isCopiedFrom').first()
+        date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day, citation_date.start_date.year)
+        if ref_rel:
+            citation_str_lst.append(", {ref_rel_value}, last accessed {creation_date}.".format(ref_rel_value=ref_rel.value,
+                                                                                               creation_date=date_str))
+        elif repl_rel:
+            citation_str_lst.append(", {repl_rel_value}, accessed {creation_date}, replicated in HydroShare at: {url}".format(
+                                    repl_rel_value=repl_rel.value, creation_date=date_str, url=hs_identifier.url))
+        else:
+            citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
-        return citation
+        return ''.join(citation_str_lst)
 
     @property
     def can_be_public_or_discoverable(self):
@@ -1334,9 +1368,6 @@ Page.get_content_model = new_get_content_model
 
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
-    #from django.contrib.sites.models import Site
-    #_domain = 'hydroshare.org'  #Site.objects.get_current() # this one giving error since the database does not have a related table called 'django_site'
-
     XML_HEADER = '''<?xml version="1.0"?>
 <!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
 "http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">'''
@@ -1595,18 +1626,23 @@ class CoreMetaData(models.Model):
         for rel in self.relations.all():
             dc_relation = etree.SubElement(rdf_Description, '{%s}relation' % self.NAMESPACES['dc'])
             dc_rel_rdf_Description = etree.SubElement(dc_relation, '{%s}Description' % self.NAMESPACES['rdf'])
-            rel_dcterm = '{%s}' + rel.type
-            dcterms_type = etree.SubElement(dc_rel_rdf_Description, rel_dcterm % self.NAMESPACES['dcterms'])
+            if rel.type in Relation.HS_RELATION_TERMS:
+                term_ns = self.NAMESPACES['hsterms']
+            else:
+                term_ns = self.NAMESPACES['dcterms']
+            terms_type = etree.SubElement(dc_rel_rdf_Description, '{%s}%s' % (term_ns, rel.type))
+
             # check if the relation value starts with 'http://' or 'https://'
             if rel.value.lower().find('http://') == 0 or rel.value.lower().find('https://') == 0:
-                dcterms_type.set('{%s}resource' % self.NAMESPACES['rdf'], rel.value)
+                terms_type.set('{%s}resource' % self.NAMESPACES['rdf'], rel.value)
             else:
-                dcterms_type.text = rel.value
+                terms_type.text = rel.value
 
         for src in self.sources.all():
             dc_source = etree.SubElement(rdf_Description, '{%s}source' % self.NAMESPACES['dc'])
             dc_source_rdf_Description = etree.SubElement(dc_source, '{%s}Description' % self.NAMESPACES['rdf'])
             dcterms_derived_from = etree.SubElement(dc_source_rdf_Description, '{%s}isDerivedFrom' % self.NAMESPACES['dcterms'])
+
             # if the source value starts with 'http://' or 'https://' add value as an attribute
             if src.derived_from.lower().find('http://') == 0 or src.derived_from.lower().find('https://') == 0:
                 dcterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
@@ -1640,20 +1676,54 @@ class CoreMetaData(models.Model):
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
+        """
+        helper function to generate xml elements for a given metadata element that belongs to
+        'hsterms' namespace
+
+        :param root: the xml document root element to which xml elements for the specified metadata element needs
+                     to be added
+        :param md_element: the metadata element object. The term attribute of the metadata element object is used for
+                           naming the root xml element for this metadata element. If the root xml element needs to be
+                           named differently, then this needs to be a tuple with first element being the metadata
+                           element object and the second being the name for the root element.
+                           Example: md_element=self.Creator    # the term attribute of the Creator object will be used
+                                    md_element=(self.Creator, 'Author') # 'Author' will be used
+
+        :param md_fields: a list of attribute names of the metadata element (if the name to be used in generating the
+                          xml element name is same as the attribute name then include the attribute name as a list item.
+                          if xml element name needs to be different from the attribute name then the list item must be
+                          a tuple with first element of the tuple being the attribute name and the second element being
+                          what will be used in naming the xml element)
+                          Example: [('first_name', 'firstName'), 'phone', 'email'] # xml sub-elements names: firstName, phone, email
+
+        """
         from lxml import etree
+
+        if isinstance(md_element, tuple):
+            element_name = md_element[1]
+            md_element = md_element[0]
+        else:
+            element_name = md_element.term
 
         hsterms_newElem = etree.SubElement(root,
                                            "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'],
-                                                                          new_element=md_element.term))
+                                                                          new_element=element_name))
         hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
                                                     "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
         for md_field in md_fields:
-            if hasattr(md_element, md_field):
-                attr = getattr(md_element, md_field)
+            if isinstance(md_field, tuple):
+                field_name = md_field[0]
+                xml_element_name = md_field[1]
+            else:
+                field_name = md_field
+                xml_element_name = md_field
+
+            if hasattr(md_element, field_name):
+                attr = getattr(md_element, field_name)
                 if attr:
                     field = etree.SubElement(hsterms_newElem_rdf_Desc,
                                              "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
-                                                                      field=md_field))
+                                                                      field=xml_element_name))
                     field.text = str(attr)
 
     def _create_person_element(self, etree, parent_element, person):

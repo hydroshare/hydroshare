@@ -1,92 +1,79 @@
-import datetime as dt
-
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group
 from django.db import models
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
-
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.signals import *
-
+from lxml import etree
 
 class MpMetadata(AbstractMetaDataElement):
     term = "MpMetadata"
 
     # version
-    software_version = models.CharField(verbose_name='Version ', null=True, blank=True, max_length=255, default='',
-                                        help_text='The software version of the model')
+    modelVersion = models.CharField(verbose_name='Version', null=True, blank=True, max_length=255, default='',
+                                        help_text='The software version or build number of the model')
 
     # program language
-    software_language = models.CharField(verbose_name="Language", null=True, blank=True, max_length=100,default='',
-                                         help_text="The programming language(s) that the model was written in")
+    modelProgramLanguage = models.CharField(verbose_name="Language", null=True, blank=True, max_length=100,default='',
+                                         help_text="The programming language(s) that the model is written in")
 
     # operating system
-    operating_sys = models.CharField(verbose_name='Operating System', null=True, blank=True,default='',
-                                     max_length=255, help_text='Compatible operating systems')
+    modelOperatingSystem = models.CharField(verbose_name='Operating System', null=True, blank=True,default='',
+                                     max_length=255, help_text='Compatible operating systems to setup and run the model')
 
     # release date
-    date_released = models.DateTimeField(verbose_name='Release Date', null=True, blank=True,
-                                         help_text='The date of the software release (m/d/Y H:M)')
+    modelReleaseDate = models.DateTimeField(verbose_name='Release Date', null=True, blank=True,
+                                         help_text='The date that this version of the model was released')
 
     # web page
-    program_website = models.CharField(verbose_name='Website', null=True, blank=True, max_length=255,default='',
-                                       help_text='A URL providing addition information about the software')
+    modelWebsite = models.CharField(verbose_name='Website', null=True, blank=True, max_length=255,default='',
+                                       help_text='A URL to the website maintained by the model developers')
 
     # repository
-    software_repo = models.CharField(verbose_name='Software Repository', null=True, blank=True,default='',
+    modelCodeRepository = models.CharField(verbose_name='Software Repository', null=True, blank=True,default='',
                                      max_length=255,
-                                     help_text='A URL for the source code repository (e.g. git, mecurial, svn)')
+                                     help_text='A URL to the source code repository (e.g. git, mercurial, svn)')
 
     # release notes
-    release_notes = models.CharField(verbose_name="Release Notes", null=True, blank=True, max_length=400,default='',
-                                     help_text="Notes about the software release (e.g. bug fixes, new functionality)",
-                                     choices=(('-', '    '),))
+    modelReleaseNotes = models.CharField(verbose_name="Release Notes", null=True, blank=True, max_length=400,default='',
+                                     help_text="Notes regarding the software release (e.g. bug fixes, new functionality, readme)")
 
-    # user manual
-    user_manual = models.CharField(verbose_name='User Manual', name='user_manual', null=True, blank=True,default='',
-                                   max_length=400,
-                                   help_text='User manual for the model program (e.g. .doc, .md, .rtf, .pdf',
-                                   choices=(('-', '    '),))
+    # documentation
+    modelDocumentation = models.CharField(verbose_name='Documentation', name="modelDocumentation", null=True,
+                                          blank=True, default='',
+                                          max_length=400,
+                                          help_text='Documentation for the model (e.g. User manuals, theoretical manuals, reports, notes, etc.)')
 
-    # theoretical manual
-    theoretical_manual = models.CharField(verbose_name='Theoretical Manual', name='theoretical_manual', null=True,default='',
+    # software
+    modelSoftware = models.CharField(verbose_name='Software', name='modelSoftware', null=True,default='',
                                           blank=True, max_length=400,
-                                          help_text='Theoretical manual for the model program (e.g. .doc, .md, .rtf, .pdf',
-                                          choices=(('-', '    '),))
+                                          help_text='Uploaded archive containing model software (e.g., utilities software, etc.)' )
 
-    # source code
-    source_code = models.CharField(verbose_name='Source Code', name='source_code', null=True, blank=True,default='',
-                                   max_length=400,
-                                   help_text='Archive of the  source code for the model (e.g. .zip, .tar)',
-                                   choices=(('-', '    '),))
+    # software engine
+    modelEngine = models.CharField(verbose_name='Computational Engine', name='modelEngine', null=True,default='',
+                                          blank=True, max_length=400,
+                                          help_text='Uploaded archive containing model software (source code, executable, etc.)' )
+
+
+
     def __unicode__(self):
-        self.software_version
-
-    class Meta:
-        # site element is not repeatable
-        unique_together = ("content_type", "object_id")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return MpMetadata.objects.create(**kwargs)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        metadata = MpMetadata.objects.get(id=element_id)
-        if metadata:
-            for key, value in kwargs.iteritems():
-                setattr(metadata, key, value)
-            metadata.save()
-        else:
-            raise ObjectDoesNotExist("No Site element was found for the provided id:%s" % kwargs['id'])
-
+        self.modelVersion
 
     @classmethod
     def remove(cls, element_id):
         metadata = MpMetadata.objects.get(id=element_id)
         metadata.delete()
+
+    def get_software_list(self):
+        return {name:path for (name, path) in [(i.split('/')[-1], i) for i in self.modelSoftware.split(';')]}
+    def get_documentation_list(self):
+        return {name:path for (name, path) in [(i.split('/')[-1], i) for i in self.modelDocumentation.split(';')]}
+    def get_releasenotes_list(self):
+        return {name:path for (name, path) in [(i.split('/')[-1], i) for i in self.modelReleaseNotes.split(';')]}
+    def get_engine_list(self):
+        return {name:path for (name, path) in [(i.split('/')[-1], i) for i in self.modelEngine.split(';')]}
 
 
 class ModelProgramResource(BaseResource):
@@ -99,7 +86,8 @@ class ModelProgramResource(BaseResource):
     @property
     def metadata(self):
         md = ModelProgramMetaData()
-        return self._get_metadata(md)
+        meta = self._get_metadata(md)
+        return meta
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -124,21 +112,8 @@ class ModelProgramMetaData(CoreMetaData):
         elements.append('MpMetadata')
         return elements
 
-    def has_all_required_elements(self):
-        if not super(ModelProgramMetaData, self).has_all_required_elements():
-            return False
-        if not self.program:
-            return False
-        return True
-
-    def get_required_missing_elements(self):
-        missing_required_elements = super(ModelProgramMetaData, self).get_required_missing_elements()
-        if not self.program:
-            missing_required_elements.append('MpMetadata')
-        return missing_required_elements
-
     def get_xml(self):
-        from lxml import etree
+
 
         # get the xml string for Model Program
         xml_string = super(ModelProgramMetaData, self).get_xml(pretty_print=False)
@@ -149,24 +124,42 @@ class ModelProgramMetaData(CoreMetaData):
         # get the root 'Description' element, which contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
-        # inject raster resource specific metadata elements into container element
-        fields = ['software_version',
-                  'software_language',
-                  'operating_sys',
-                  'date_released',
-                  'program_website',
-                  'software_repo',
-                  'release_notes',
-                  'user_manual',
-                  'theoretical_manual',
-                  'source_code']
+        if self.program:
+            self.build_xml_for_uploaded_content(container, 'modelEngine', self.program.modelEngine.split(';'))
+            self.build_xml_for_uploaded_content(container, 'modelSoftware', self.program.modelSoftware.split(';'))
+            self.build_xml_for_uploaded_content(container, 'modelDocumentation', self.program.modelDocumentation.split(';'))
+            self.build_xml_for_uploaded_content(container, 'modelReleaseNotes', self.program.modelReleaseNotes.split(';'))
 
-        model_program_object = self.program
-        self.add_metadata_element_to_xml(container, model_program_object, fields)
+            if self.program.modelReleaseDate:
+                model_release_date = etree.SubElement(container, '{%s}modelReleaseDate' % self.NAMESPACES['hsterms'])
+                model_release_date.text = self.program.modelReleaseDate.isoformat()
+
+            model_version = etree.SubElement(container, '{%s}modelVersion' % self.NAMESPACES['hsterms'])
+            model_version.text = self.program.modelVersion
+
+            model_website = etree.SubElement(container, '{%s}modelWebsite' % self.NAMESPACES['hsterms'])
+            model_website.text = self.program.modelWebsite
+
+            model_program_language = etree.SubElement(container, '{%s}modelProgramLanguage' % self.NAMESPACES['hsterms'])
+            model_program_language.text = self.program.modelProgramLanguage
+
+            model_operating_system = etree.SubElement(container, '{%s}modelOperatingSystem' % self.NAMESPACES['hsterms'])
+            model_operating_system.text = self.program.modelOperatingSystem
+
+            model_code_repository = etree.SubElement(container, '{%s}modelCodeRepository' % self.NAMESPACES['hsterms'])
+            model_code_repository.text = self.program.modelCodeRepository
+
 
         xml_string = etree.tostring(RDF_ROOT, pretty_print=True)
 
         return xml_string
+
+    def build_xml_for_uploaded_content(self, parent_container, element_name, content_list):
+        # create an XML element for each content file
+        for content in content_list:
+            element = etree.SubElement(parent_container, '{%s}%s' % (self.NAMESPACES['hsterms'], element_name) )
+            element.text = content
+    
 
 
 import receivers

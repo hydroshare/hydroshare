@@ -12,7 +12,6 @@ from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 
 
-
 # Define original spatial coverage metadata info
 class OriginalCoverage(AbstractMetaDataElement):
     PRO_STR_TYPES = (
@@ -42,71 +41,54 @@ class OriginalCoverage(AbstractMetaDataElement):
 
     @property
     def value(self):
-        print self._value
         return json.loads(self._value)
 
     @classmethod
     def create(cls, **kwargs):
+        """
+        The '_value' subelement needs special processing. (Check if the 'value' includes the required information and
+        convert 'value' dict as Json string to be the '_value' subelement value.) The base class create() can't do it.
+
+        :param kwargs: the 'value' in kwargs should be a dictionary
+        """
+
         if 'value' in kwargs:
-            if isinstance(kwargs['value'], dict):
-                # check that all the required sub-elements exist and create new original coverage meta
-                for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
-                    if not value_item in kwargs['value']:
-                        raise ValidationError("For original coverage meta, one or more bounding box limits or 'units' is missing.")
+            # check that all the required sub-elements exist and create new original coverage meta
+            for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
+                if not value_item in kwargs['value']:
+                    raise ValidationError("For original coverage meta, one or more bounding box limits or 'units' is missing.")
 
-                value_dict = {k: v for k, v in kwargs['value'].iteritems()
-                              if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
+            value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
 
-                value_json = json.dumps(value_dict)
-                metadata_obj = kwargs['content_object']
-                ori_cov = OriginalCoverage.objects.create(_value=value_json, content_object=metadata_obj,)
-
-                # check for optional fields and save them to original coverage meta
-                for key, value in kwargs.iteritems():
-                    if key in ('projection_string_type', 'projection_string_text'):
-                        setattr(ori_cov, key, value)
-                    ori_cov.save()
-
-                return ori_cov
-            else:
-                raise ValidationError('Invalid coverage value format.')
+            value_json = json.dumps(value_dict)
+            del kwargs['value']
+            kwargs['_value'] = value_json
+            return super(OriginalCoverage, cls).create(**kwargs)
         else:
             raise ValidationError('Coverage value is missing.')
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """
+        The '_value' subelement needs special processing. (Convert 'value' dict as Json string to be the '_value'
+        subelement value) and the base class update() can't do it.
+
+        :param kwargs: the 'value' in kwargs should be a dictionary
+        """
+
         ori_cov = OriginalCoverage.objects.get(id=element_id)
-        if ori_cov:
-            # update bounding box info
-            if 'value' in kwargs:
-                if not isinstance(kwargs['value'], dict):
-                    raise ValidationError('Invalid coverage value format.')
+        if 'value' in kwargs:
+            value_dict = ori_cov.value
 
-                value_dict = ori_cov.value
+            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
+                if item_name in kwargs['value']:
+                    value_dict[item_name] = kwargs['value'][item_name]
 
-                for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
-                    if item_name in kwargs['value']:
-                        value_dict[item_name] = kwargs['value'][item_name]
-
-                value_json = json.dumps(value_dict)
-                ori_cov._value = value_json
-                ori_cov.save()
-
-            # update projection string info
-            for key, value in kwargs.iteritems():
-                if key in ('projection_string_type', 'projection_string_text'):
-                    setattr(ori_cov, key, value)
-                    ori_cov.save()
-        else:
-            raise ObjectDoesNotExist("No coverage element was found for the provided id:%s" % element_id)
-
-    @classmethod
-    def remove(cls, element_id):
-        ori_cov = OriginalCoverage.objects.get(id=element_id)
-        if ori_cov:
-            ori_cov.delete()
-        else:
-            raise ObjectDoesNotExist("No original coverage element exists for id:%d."%element_id)
+            value_json = json.dumps(value_dict)
+            del kwargs['value']
+            kwargs['_value'] = value_json
+            super(OriginalCoverage, cls).update(element_id, **kwargs)
 
 
 # Define netCDF variable metadata
@@ -141,79 +123,15 @@ class Variable(AbstractMetaDataElement):
     missing_value = models.CharField(max_length=100, null=True, blank=True)
 
     def __unicode__(self):
-        self.name
-
-    @classmethod
-    def create(cls, **kwargs):
-        # Check the required attributes and create new variable meta instance
-        if 'name' in kwargs:
-            # check if the variable metadata already exists
-            metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            variable = Variable.objects.filter(name__iexact=kwargs['name'], object_id=metadata_obj.id,
-                                               content_type=metadata_type).first()
-            if variable:
-                raise ValidationError('Variable name:%s already exists' % kwargs['name'])
-        else:
-            raise ValidationError("Name of variable is missing.")
-
-        if not 'unit' in kwargs:
-            raise ValidationError("Variable unit is missing.")
-
-        if 'type' in kwargs:
-            if not kwargs['type'] in ['Char', 'Byte', 'Short', 'Int', 'Float', 'Double', 'Unknown', 'Int64',
-                                      'Unsigned Byte', 'Unsigned Short', 'Unsigned Int', 'Unsigned Int64',
-                                      'String', 'User Defined Type']:
-                raise ValidationError('Invalid variable type:%s' % kwargs['type'])
-        else:
-            raise ValidationError("Variable type is missing.")
-
-        if not 'shape' in kwargs:
-            raise ValidationError("Variable shape is missing.")
-
-        variable = Variable.objects.create(name=kwargs['name'], unit=kwargs['unit'], type=kwargs['type'],
-                                            shape=kwargs['shape'], content_object=metadata_obj)
-
-        # check if the optional attributes and save them to the variable metadata
-        for key, value in kwargs.iteritems():
-                if key in ('descriptive_name', 'method', 'missing_value'):
-                    setattr(variable, key, value)
-
-                variable.save()
-
-        return variable
-
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        variable = Variable.objects.get(id=element_id)
-        if variable:
-            if 'name' in kwargs:
-                if variable.name != kwargs['name']:
-                # check this new name not already exists
-                    if Variable.objects.filter(name__iexact=kwargs['name'], object_id=variable.object_id,
-                                         content_type__pk=variable.content_type.id).count()> 0:
-                        raise ValidationError('Variable name:%s already exists.' % kwargs['name'])
-
-                variable.name = kwargs['name']
-
-            for key, value in kwargs.iteritems():
-                if key in ('unit', 'type', 'shape', 'descriptive_name', 'method', 'missing_value'):
-                    setattr(variable, key, value)
-
-            variable.save()
-        else:
-            raise ObjectDoesNotExist("No variable element was found for the provided id:%s" % kwargs['id'])
+        return self.name
 
     @classmethod
     def remove(cls, element_id):
         variable = Variable.objects.get(id=element_id)
-        if variable:
-            if Variable.objects.filter(object_id=variable.object_id, content_type__pk=variable.content_type.id).count()== 1:
-                raise ValidationError("The only variable of the resource can't be deleted.")
-            variable.delete()
-        else:
-            raise ObjectDoesNotExist("No variable element was found for id:%d." % element_id)
+        if Variable.objects.filter(object_id=variable.object_id, content_type__pk=variable.content_type.id).count()== 1:
+            raise ValidationError("The only variable of the resource can't be deleted.")
+        variable.delete()
+
 
 # Define the netCDF resource
 class NetcdfResource(BaseResource):
@@ -260,16 +178,12 @@ class NetcdfMetaData(CoreMetaData):
             return False
         if not self.variables.all():
             return False
-        # if not self.ori_coverage.all().first():
-        #     return False
         if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
             return False
         return True
 
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(NetcdfMetaData, self).get_required_missing_elements()
-        # if not self.ori_coverage.all().first():
-        #     missing_required_elements.append('Spatial Reference')
         if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
             missing_required_elements.append('Spatial Coverage')
         if not self.variables.all().first():
@@ -348,5 +262,10 @@ class NetcdfMetaData(CoreMetaData):
                                              "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
                                                                       field=md_fields[md_field]))
                     field.text = str(attr)
+
+    def delete_all_elements(self):
+        super(NetcdfMetaData, self).delete_all_elements()
+        self.ori_coverage.all().delete()
+        self.variables.all().delete()
 
 import receivers  # never delete this otherwise non of the receiver function will work
