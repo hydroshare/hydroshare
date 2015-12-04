@@ -90,7 +90,3 @@ def best_name(content):
         content = content.username
 
     return content
-
-@register.filter(expects_localtime=True)
-def parse_iso(value):
-    return datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")

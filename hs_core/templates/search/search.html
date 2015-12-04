@@ -6,7 +6,7 @@
 <div class="container-fluid" id="main">
     <div class="row">
         <div class="col-lg-3" id="folders">
-            <p><input class="btn btn-default" type="button" value="clear all" onclick="clearAllFacted()"></p>
+            <p><input class="btn btn-default" type="button" value="clear all" onclick="clearAllFaceted()"></p>
             {% for key, values in facets.fields.items %}
                 {% if values %}
                     <div class="panel-group" id="faceting-{{ key }}">
@@ -86,10 +86,10 @@
             <div class=resource-search>
                 <form method="get" action=".">
                     {% for field in form %}
-                     <div class="fieldWrapper">
-                         {{ field }}
-                    </div>
-                {% endfor %}
+                        <div class="fieldWrapper">
+                            {{ field }}
+                        </div>
+                    {% endfor %}
                 </form>
             </div>
             <table class="table table-striped table-hover" id="item-selectors">
@@ -105,14 +105,14 @@
                             <td><a href="{{ result.object.get_absolute_url }}">{{ result.object.title }}</a></td>
                             <td>{{ result.object|resource_type }}</td>
                             {% if result.object.first_creator.description %}
-                            <td><a href="{{ result.object.first_creator.description }}">{{ result.object.first_creator.name  }}</a></td>
+                                <td><a href="{{ result.object.first_creator.description }}">{{ result.object.first_creator.name  }}</a></td>
                             {% else %}
                                 <td>{{ result.object.first_creator.name }}</td>
                             {% endif %}
                             <td>{{ result.object.updated|date }} {{ result.object.updated|time }}</td>
                         </tr>
                     {% empty %}
-                    <p>No results found.</p>
+                        <p>No results found.</p>
                     {% endfor %}
                 {% endif %}
             </table>
@@ -139,8 +139,8 @@
          }
     }
 
-    var clearAllFacted = function(){
-        window.localStorage.clear();
+    var clearAllFaceted = function(){
+        localStorage.clear();
         var textSearch = $("#id_q").val();
         var clearURL = "/search/?q=" + textSearch;
         window.location = clearURL;
@@ -161,44 +161,40 @@
                 $("form").submit();
             }
          });
-         $(function () {
-             $(".faceted-selections").click(function () {
-                console.log($(this).val());
-                var tokens = $(this).val().split(",");
-                var key = tokens[0];
-                var value = tokens[1];
-                var requestURL = "{{ request.get_full_path }}"
-                if($(this).is(":checked")) {
-                    window.location = requestURL + "&selected_facets="+key+"_exact:"+value;
-                    //console.log(solr);
-                    localStorage[$(this).attr("id")] = this.checked;
-                }else{
-                    localStorage.removeItem($(this).attr("id"));
-                    var textSearch = $("#id_q").val();
-                    var updateURL = "/search/?q=" + textSearch;
-                     $(".faceted-selections").each(function () {
-                         var val = localStorage[$(this).attr("id")];
-                         var isChecked = val !== undefined ? val == "true" : false;
-                         if(isChecked){
-                             var arr = $(this).val().split(",");
-                             var key = arr[0];
-                             var value = arr[1];
-                             updateURL += "&selected_facets="+key+"_exact:"+value;
-                         }
-                     });
-                    window.location = updateURL;
-                }
-            });
+         $(".faceted-selections").click(function () {
+             var tokens = $(this).val().split(",");
+             var key = tokens[0];
+             var value = tokens[1];
+             var requestURL = window.location.href;
+             if($(this).is(":checked")) {
+                 window.location = requestURL + "&selected_facets="+key+"_exact:"+value;
+                 localStorage[$(this).attr("id")] = this.checked;
+             }else{
+                 localStorage.removeItem($(this).attr("id"));
+                 var textSearch = $("#id_q").val();
+                 var updateURL = "/search/?q=" + textSearch;
+                 $(".faceted-selections").each(function () {
+                     var val = localStorage[$(this).attr("id")];
+                     //var isChecked = val !== undefined ? val == "true" : false;
+                     var isChecked = val === 'true';
+                     if(isChecked){
+                         var arr = $(this).val().split(",");
+                         var key = arr[0];
+                         var value = arr[1];
+                         updateURL += "&selected_facets="+key+"_exact:"+value;
+                     }
+                 });
+                 window.location = updateURL;
+             }
+         });
             $(".faceted-selections").each(function () {
                 var val = localStorage[$(this).attr("id")];
                 var isChecked = val !== undefined ? val == "true" : false;
                 $(this).prop("checked", isChecked);
             });
-        });
         $("#faceted-search").click(function(){
-            //localStorage = [];
-            window.localStorage.clear();
+            localStorage.clear();
         });
     });
     </script>
-{% endblock %}
+{% endblock %}×뷜¿

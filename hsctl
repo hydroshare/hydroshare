@@ -92,9 +92,6 @@ solr_schema_hs() {
     sleep 1s
     echo "*** From solr: mv schema.xml to /opt/solr/example/solr/collection1/conf/ ***"
     docker exec hydroshare_solr_1 cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml
-    #tar -cf /tmp/solr_conf.tar schema.xml
-    #docker cp /tmp/solr_conf.tar $(docker-compose ps -q solr):/tmp/solr_conf.tar
-    #docker exec $(docker-compose ps -q solr) tar -xf /tmp/solr_conf.tar -C /opt/solr/example/solr/collection1/conf/
 }
 
 start_hs() {

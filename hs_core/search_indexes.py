@@ -70,7 +70,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return publisher
         else:
             return 'none'
-        #return foo
 
     def prepare_author_emails(self, obj):
         return [creator.email for creator in obj.metadata.creators.all()]
