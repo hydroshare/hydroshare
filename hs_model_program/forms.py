@@ -38,6 +38,7 @@ class mp_form_helper(BaseFormHelper):
         field_width = 'form-control input-sm'
         css_multichar = field_width + ' multichar'
         layout = Layout(
+            HTML('<legend>Data files</legend>'),
             Field('modelEngine', css_class=css_multichar, style="display:none"),
             multiselect['modelEngine'],
             Field('modelSoftware', css_class=css_multichar, style="display:none"),
@@ -46,9 +47,14 @@ class mp_form_helper(BaseFormHelper):
             multiselect['modelDocumentation'],
             Field('modelReleaseNotes', css_class=css_multichar, style="display:none"),
             multiselect['modelReleaseNotes'],
+            HTML('<hr style="border:0">'),
+            HTML('<legend>General</legend>'),
             Field('modelReleaseDate', css_class=field_width, style="display:none"),
             HTML('<input type="text" class="'+field_width+'" id="modelReleaseDate_picker">'),
             Field('modelVersion', css_class=field_width),
+            HTML('<br>'),
+            HTML('<hr style="border:0">'),
+            HTML('<legend>Software</legend>'),
             Field('modelWebsite', css_class=field_width),
             Field('modelProgramLanguage', css_class=field_width),
             Field('modelOperatingSystem', css_class=field_width),

@@ -9,93 +9,98 @@
         <div class="row">
             <div class="col-md-12">
                 {# Add the view mode html code below #}
-                <div>
-                    {% if mpmetadata %}
-                        {########################}
-                        {#       DATA FILES     #}
-                        {########################}
-                        <legend>Data files</legend>
-                        <table class="custom-table">
-                            <tbody>
-                                <tr><th class="text-muted">Computational Engine </th>
-                                    <td>
-                                        {% for name, path in mpmetadata.get_engine_list.items %}
-                                            <a id="permalink"
-                                               href="http://{{ request.get_host }}/resource/{{ path }}"
-                                               target="_blank">{{ name }}</a>
-                                        {% endfor %}
-                                    </td>
-                                </tr>
-                                <tr><th class="text-muted">Software </th>
-                                    <td>
-                                        {% for name, path in mpmetadata.get_software_list.items %}
-                                            <a id="permalink"
-                                               href="http://{{ request.get_host }}/resource/{{ path }}"
-                                               target="_blank">{{ name }}</a>
-                                        {% endfor %}
-                                    </td>
-                                </tr>
-                                <tr><th class="text-muted">Documentation </th>
-                                    <td>
-                                        {% for name, path in mpmetadata.get_documentation_list.items %}
-                                            <a id="permalink"
-                                               href="http://{{ request.get_host }}/resource/{{ path }}"
-                                               target="_blank">{{ name }}</a>
+                {% if mpmetadata %}
+                    {########################}
+                    {#       DATA FILES     #}
+                    {########################}
+                    <legend>Data files</legend>
+                    <table class="custom-table">
+                        <tbody>
+                            <tr><th class="text-muted">Computational Engine </th>
+                                <td>
+                                    {% if mpmetadata.get_engine_list.items|length > 0 %}
+                                    {% for name, path in mpmetadata.get_engine_list.items %}
+                                        <a id="permalink"
+                                           href="http://{{ request.get_host }}/resource/{{ path }}"
+                                           target="_blank">{{ name }}</a>
                                     {% endfor %}
-                                    </td>
-                                </tr>
-                                <tr><th class="text-muted">Release Notes </th>
-                                    <td>
-                                        {% for name, path in mpmetadata.get_releasenotes_list.items %}
-                                        <tr>
-                                            <td>
-                                                <a id="permalink"
-                                                   href="http://{{ request.get_host }}/resource/{{ path }}"
-                                                   target="_blank">{{ name }}</a>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <hr style="border:0">
+                                    {% else %}
+                                    <i>Unspecified</i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr><th class="text-muted">Software </th>
+                                <td>
+                                    {% if mpmetadata.get_software_list.items|length > 0 %}
+                                    {% for name, path in mpmetadata.get_software_list.items %}
+                                        <a id="permalink"
+                                           href="http://{{ request.get_host }}/resource/{{ path }}"
+                                           target="_blank">{{ name }}</a>
+                                    {% endfor %}
+                                    {% else %}
+                                    <i>Unspecified</i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr><th class="text-muted">Documentation </th>
+                                <td>
+                                    {% for name, path in mpmetadata.get_documentation_list.items %}
+                                        <a id="permalink"
+                                           href="http://{{ request.get_host }}/resource/{{ path }}"
+                                           target="_blank">{{ name }}</a>
+                                {% endfor %}
+                                </td>
+                            </tr>
+                            <tr><th class="text-muted">Release Notes </th>
+                                <td>
+                                    {% for name, path in mpmetadata.get_releasenotes_list.items %}
+                                    <tr>
+                                        <td>
+                                            <a id="permalink"
+                                               href="http://{{ request.get_host }}/resource/{{ path }}"
+                                               target="_blank">{{ name }}</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <hr style="border:0">
 
-                        {########################}
-                        {#   MODEL  METADATA  #}
-                        {########################}
-                        <legend>Model</legend>
-                        <table class="custom-table">
-                            <tbody>
-                                <tr>
-                                    <th class="text-muted">Release Date </th>
-                                    <td>{{ mpmetadata.modelReleaseDate |date:"SHORT_DATE_FORMAT" }}</td>
-                                </tr>
-                                <tr>
-                                    <th class="text-muted">Website </th>
-                                    <td><a href="{{ mpmetadata.modelWebsite }}" target="_blank">{{ mpmetadata.modelWebsite }}</a></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <hr style="border:0">
+                    {########################}
+                    {#   MODEL  METADATA  #}
+                    {########################}
+                    <legend>General</legend>
+                    <table class="custom-table">
+                        <tbody>
+                            <tr>
+                                <th class="text-muted">Release Date </th>
+                                <td>{{ mpmetadata.modelReleaseDate |date:"SHORT_DATE_FORMAT" }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Website </th>
+                                <td><a href="{{ mpmetadata.modelWebsite }}" target="_blank">{{ mpmetadata.modelWebsite }}</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <hr style="border:0"/>
 
-                        {########################}
-                        {#  SOFTWARE  METADATA  #}
-                        {########################}
-                        <legend>Software</legend>
-                        <table class="custom-table">
-                            <tbody>
-                                <tr><th class="text-muted">Version </th><td>{{ mpmetadata.modelVersion }}</td></tr>
-                                <tr><th class="text-muted">Language </th><td>{{ mpmetadata.modelProgramLanguage }}</td></tr>
-                                <tr><th class="text-muted">Software Repository </th><td><a target="_blank" href="{{ mpmetadata.modelCodeRepository }}">{{ mpmetadata.modelCodeRepository }}</a></td></tr>
-                                <tr><th class="text-muted">Operating System </th><td>{{ mpmetadata.modelOperatingSystem }}</td></tr>
-                            </tbody>
-                        </table>
-                        <hr style="border:0">
+                    {########################}
+                    {#  SOFTWARE  METADATA  #}
+                    {########################}
+                    <legend>Software</legend>
+                    <table class="custom-table">
+                        <tbody>
+                            <tr><th class="text-muted">Version </th><td>{{ mpmetadata.modelVersion }}</td></tr>
+                            <tr><th class="text-muted">Language </th><td>{{ mpmetadata.modelProgramLanguage }}</td></tr>
+                            <tr><th class="text-muted">Software Repository </th><td><a target="_blank" href="{{ mpmetadata.modelCodeRepository }}">{{ mpmetadata.modelCodeRepository }}</a></td></tr>
+                            <tr><th class="text-muted">Operating System </th><td>{{ mpmetadata.modelOperatingSystem }}</td></tr>
+                        </tbody>
+                    </table>
+                    <hr style="border:0"/>
 
-                    {% endif %}
-                </div>
-
+                {% endif %}
             </div>
         </div>
     {% endif %}
