@@ -42,6 +42,11 @@ def landing_page(request, page):
         context['version'] = content_model.metadata.versions.first()
     else:
         url_base = content_model.metadata.url_bases.first()
+        if not url_base:
+            url_base = RequestUrlBase.create(content_object=content_model.metadata,
+                                             resShortID=content_model.short_id,
+                                             value="")
+
         url_base_form = UrlBaseForm(instance=url_base,
                                     res_short_id=content_model.short_id,
                                     element_id=url_base.id

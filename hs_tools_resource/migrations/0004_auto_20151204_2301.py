@@ -68,7 +68,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='toolversion',
             name='value',
-            field=models.CharField(max_length=128, null=True),
+            field=models.CharField(default=b'1.0', max_length=128),
             preserve_default=True,
         ),
         migrations.AlterUniqueTogether(

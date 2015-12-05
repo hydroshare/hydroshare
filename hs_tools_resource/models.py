@@ -48,7 +48,7 @@ class RequestUrlBase(AbstractMetaDataElement):
 
 class ToolVersion(AbstractMetaDataElement):
     term = 'AppVersion'
-    value = models.CharField(max_length=128)
+    value = models.CharField(max_length=128, default="1.0")
 
     class Meta:
         # ToolVersion element is not repeatable
