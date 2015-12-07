@@ -509,3 +509,13 @@ LOGGING = {
         },
     }
 }
+
+####################
+# OAUTH TOKEN SETTINGS #
+####################
+
+OAUTH2_PROVIDER = {
+    # 30 days
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,
+}
+
