@@ -260,7 +260,7 @@ class UserLabels(models.Model):
         """
         Get a list of resources with a specific label
         """
-        if not isinstance(this_label, str):
+        if not isinstance(this_label, basestring):
             raise HSLUsageException("Label is not text")
 
         label_string = UserLabels.clean_label(this_label)                 # remove leading and trailing spaces
@@ -306,7 +306,7 @@ class UserLabels(models.Model):
             raise HSLUsageException("Target is not a resource")
         label_resource = this_resource.rlabels
 
-        if not isinstance(this_label, str):
+        if not isinstance(this_label, basestring):
             raise HSLUsageException("Label is not text")
 
         # remove leading and trailing spaces
@@ -339,7 +339,7 @@ class UserLabels(models.Model):
             raise HSLUsageException("Target is not a resource")
         label_resource = this_resource.rlabels
 
-        if not isinstance(this_label, str):
+        if not isinstance(this_label, basestring):
             raise HSLUsageException("Label is not text")
 
         label_string = UserLabels.clean_label(this_label)                 # remove leading and trailing spaces
@@ -396,7 +396,7 @@ class UserLabels(models.Model):
             raise HSLUsageException("Target is not a resource")
         label_resource = this_resource.rlabels
 
-        if not isinstance(this_folder, str):
+        if not isinstance(this_folder, basestring):
             raise HSLUsageException("Folder is not text")
 
         # remove leading and trailing whitespace
@@ -515,10 +515,9 @@ class UserLabels(models.Model):
         # proceed to change the record if present
         # This logic implicitly limits one to one record per resource and user.
         try:
-            record = UserResourceLabels.objects.get(resource=label_resource,
-                                                    kind=LabelCodes.MINE,
-                                                    user=self)
-            # print("it does exist")
+            UserResourceLabels.objects.get(resource=label_resource,
+                                           kind=LabelCodes.MINE,
+                                           user=self)
 
         # only create label if it does not exist. No duplicates.
         except UserResourceLabels.DoesNotExist:

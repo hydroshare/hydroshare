@@ -382,6 +382,72 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
+def resource_labeling_action(request, shortkey, *args, **kwargs):
+    """
+    This must be a POST request. The following data needs to be passed as part of the POST request:
+    action: resource labeling action - has to be either 'CREATE' or 'DELETE'
+    label_type: type of label - one of these: 'LABEL', 'FAVORITE', 'MINE', 'FOLDER'
+    label: a string value required if the label_type is either 'LABEL', or 'FOLDER' and action is 'CREATE'
+
+    """
+
+    # TODO: clear all labels
+    res, _, user = authorize(request, shortkey, view=True, full=True, superuser=True)
+    action = request.POST['action']
+    label_type = request.POST['label_type']
+    label = request.POST.get('label', None)
+    err_msg = None
+
+    # validate post data
+    if label_type not in ('LABEL', 'FAVORITE', 'FOLDER', 'MINE'):
+        err_msg = "Invalid type of label found"
+    elif label_type == 'LABEL':
+        if label is None:
+            err_msg = "A value for label is missing"
+    elif label_type == 'FOLDER' and action == 'CREATE':
+        if label is None:
+            err_msg = "A folder name is missing"
+
+    if err_msg is None:
+        try:
+            if action == 'CREATE':
+                if label_type == 'LABEL':
+                    hydroshare.label_resource(user, res, label)
+                elif label_type == 'FAVORITE':
+                    hydroshare.favorite_resource(user, res)
+                elif label_type == 'FOLDER':
+                    hydroshare.create_resource_folder(user, res, label)
+                elif label_type == 'MINE':
+                    hydroshare.add_to_my_resources(user, res)
+            elif action == 'DELETE':
+                if label_type == 'LABEL':
+                    hydroshare.unlabel_resource(user, res, label)
+                elif label_type == 'FAVORITE':
+                    hydroshare.unfavorite_resource(user, res)
+                elif label_type == 'FOLDER':
+                    hydroshare.delete_resource_folder(user, res)
+                elif label_type == 'MINE':
+                    hydroshare.delete_from_my_resources(user, res)
+
+        except Exception as exp:
+            err_msg = exp.message
+
+    if request.is_ajax():
+        if err_msg:
+            ajax_response_data = {'status': 'error', 'message': err_msg}
+        else:
+            ajax_response_data = {'status': 'success', 'label_type': label_type, 'action': action,
+                                  'resource_id': shortkey}
+
+        return HttpResponse(json.dumps(ajax_response_data))
+
+    if err_msg:
+        messages.error(request, err_msg)
+    else:
+        messages.success(request, "Resource labeling action was successful")
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 # view functions mapped with INPLACE_SAVE_URL(/hsapi/save_inline/) for Django inplace editing
 def save_ajax(request):
     if not request.method == 'POST':

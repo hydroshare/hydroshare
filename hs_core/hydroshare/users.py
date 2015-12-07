@@ -545,6 +545,132 @@ def get_public_groups():
         """
         return Group.objects.filter(gaccess__public=True)
 
+
+def label_resource(user, resource, label):
+    """
+    assigns a label to a resource (wrapper api for hs_labels app)
+    Args:
+        user: an instance of User object - who wants to assign a label to a resource
+        resource: an instance of BaseResource which needs to be assigned a label
+        label: label text to be assigned
+
+    Returns:
+
+    """
+    user.ulabels.label_resource(resource, label)
+
+
+def unlabel_resource(user, resource, label):
+    """
+    deletes a label previously assigned to a resource by a given user (wrapper api for hs_labels app)
+    Args:
+        user: an instance of User object - who wants to delete a label from a resource
+        resource: an instance of BaseResource from which a label needs to be deleted
+        label: label text needs to be deleted
+
+    Returns:
+
+    """
+    user.ulabels.unlabel_resource(resource, label)
+
+
+def clear_resource_labels(user, resource):
+    """
+    removes all labels assigned by a user form the specified resource (wrapper api for hs_labels app)
+    Args:
+        user: an instance of User object - who wants to delete all labels assigned by him/her from a resource
+        resource: an instance of BaseResource from which all labels need to be deleted
+
+    Returns:
+
+    """
+    user.ulabels.clear_resource_labels(resource)
+
+
+def favorite_resource(user, resource):
+    """
+    marks the specified resource as a favorite resource (wrapper api for hs_labels app)
+    Args:
+        user: an instance of User object - who wants to label a resource as favorite resource
+        resource: an instance of BaseResource which needs to be labeled as favorite
+
+    Returns:
+
+    """
+
+    user.ulabels.favorite_resource(resource)
+
+
+def unfavorite_resource(user, resource):
+    """
+    deletes a resource as a favorite resource - not actual deletion of resource (wrapper api for hs_labels app)
+    Args:
+        user: an instance of User object - who wants to delete a resource as a favorite resource
+        resource: an instance of BaseResource which needs to be deleted as a favorite resource
+
+    Returns:
+
+    """
+
+    user.ulabels.unfavorite_resource(resource)
+
+
+def create_resource_folder(user, resource, folder_name):
+    """
+    creates a user specific folder for the specified resource (wrapper api for hs_labels app)
+    Args:
+        user: an instance of User object - who wants to create a folder for the resource
+        resource: an instance of BaseResource for which a folder needs to be created
+        folder_name: name of the folder
+
+    Returns:
+
+    """
+    user.ulabels.file_resource(resource, folder_name)
+
+
+def delete_resource_folder(user, resource):
+    """
+    deletes folder for the specified resource (wrapper api for hs_labels app)
+    Args:
+        user: an instance of User object - who wants to delete folder for the resource
+        resource: an instance of BaseResource for which a folder needs to be deleted
+
+    Returns:
+
+    """
+    user.ulabels.unfile_resource(resource)
+
+
+def add_to_my_resources(user, resource):
+    """
+    marks the specified resource to be included in the user's list of resources (my resources)
+    (wrapper api for hs_labels app)
+    Args:
+        user: an instance of User object - who wants to add the resource to my resources
+        resource: an instance of BaseResource which needs to be added to my resources
+
+    Returns:
+
+    """
+
+    user.ulabels.claim_resource(resource)
+
+
+def delete_from_my_resources(user, resource):
+    """
+    removes the specified resource from the user's list of resources (my resources) (wrapper api for hs_labels app)
+    Args:
+        user: an instance of User object - who wants to remove the resource from my resources
+        resource: an instance of BaseResource which needs to be removed from my resources
+
+    Returns:
+
+    """
+
+    user.ulabels.unclaim_resource(resource)
+
+
 def get_resource_list(creator=None,
         group=None, user=None, owner=None,
         from_date=None, to_date=None,
