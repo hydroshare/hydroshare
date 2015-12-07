@@ -7,9 +7,11 @@ from forms import *
 from hs_core import page_processors
 from hs_core.forms import MetaDataElementDeleteForm
 from django.forms.models import formset_factory
+from django.core.urlresolvers import reverse
 from hs_core.views import *
 from functools import partial, wraps
 from hs_app_netCDF.forms import ModalDialogLayoutAddVariable
+from hs_app_netCDF.views import thredds_service_view
 
 @processor_for(NetcdfResource)
 # when the resource is created this page will be shown
@@ -115,13 +117,21 @@ def landing_page(request, page):
         context['add_variable_modal_form'] = add_variable_modal_form
         context['original_coverage_form'] = ori_cov_form
 
-    # add opendap link context if the .nc file exists
+    # add thredds service links if the resource is public
     if content_model.raccess.public:
         for f in content_model.files.all():
             if '.nc' in f.resource_file.name[-3:]:
-                context['opendap_link'] = 'http://hydrotest41.renci.org:8080/thredds/dodsC/HFCat/{0}/data/contents/{1}.html'.\
-                    format(content_model.short_id, f.resource_file.name.split('/')[-1])
+                ip = 'http://hydrotest41.renci.org:8080'
+                shortkey = content_model.short_id
+                nc_file_name = f.resource_file.name.split('/')[-1]
 
+                context['opendap'] = '{}/thredds/dodsC/HFCat/{}/data/contents/{}.html'.format(ip, shortkey, nc_file_name)
+                context['ncss'] = '{}/thredds/ncss/HFCat/{}/data/contents/{}/dataset.html'.format(ip,shortkey, nc_file_name)
+                context['iso'] = '{}/thredds/iso/HFCat/{}/data/contents/{}'.format(ip, shortkey, nc_file_name)
+                context['ncml'] = '{}/thredds/ncml/HFCat/{}/data/contents/{}'.format(ip, shortkey, nc_file_name)
+                context['nc_file_name'] = nc_file_name
+
+    # get hs_core context
     hs_core_context = add_generic_context(request, page)
     context.update(hs_core_context)
 
