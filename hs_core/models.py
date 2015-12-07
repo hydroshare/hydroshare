@@ -1119,6 +1119,7 @@ class AbstractResource(ResourcePermissionsMixin):
     def delete(self, using=None):
         from hydroshare import hs_bagit
         from hs_access_control.models import UserResourcePrivilege, GroupResourcePrivilege
+        from hs_labels.models import UserResourceLabels
         for fl in self.files.all():
             fl.resource_file.delete()
 
@@ -1127,10 +1128,16 @@ class AbstractResource(ResourcePermissionsMixin):
         self.metadata.delete_all_elements()
         self.metadata.delete()
 
+        # delete related access controls records
         access_resource = self.raccess
         UserResourcePrivilege.objects.filter(resource=access_resource).delete()
         GroupResourcePrivilege.objects.filter(resource=access_resource).delete()
         access_resource.delete()
+
+        # delete related resource labelling records
+        res_labels = self.rlabels
+        UserResourceLabels.objects.filter(resource=res_labels).delete()
+        res_labels.delete()
 
         super(AbstractResource, self).delete()
 
