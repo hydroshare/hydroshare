@@ -76,18 +76,21 @@
                 <td><input type="file" name="files" id="select-file" multiple/></td>
             </tr>
             <tr>
-                <td><a id="btn-signin-irods"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsSignin">
-                    <span class="glyphicon glyphicon-plus"><span class="button-label">Sign in iRODS...</span></span></a>
-                <span id="sign-in-info"></span>
-                <input type="hidden" id="irods-username" name="irods-username" value="">
-                <input type="hidden" id="irods-password" name="irods-password" value="">
-                <input type="hidden" id="irods-host" name="irods-host" value="">
-                <input type="hidden" id="irods-port" name="irods-port" value="">
-                <input type="hidden" id="irods-zone" name="irods-zone" value="">
-                <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
-                <a id="btn-select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsContent" style="display:none;">
-                    <span class="glyphicon glyphicon-plus"><span class="button-label">Browse iRODS...</span></span></a>
-                <span id="irods-sel-file"></span>
+                <td>
+                    If you want to load a resource from an iRODS server into HydroShare, please do so by logging into your iRODS server
+                    <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal" data-target="#irodsSignin">here</a>
+                    <span id="sign-in-info"></span>
+                    <br>
+                    <input type="hidden" id="irods-username" name="irods-username" value="">
+                    <input type="hidden" id="irods-password" name="irods-password" value="">
+                    <input type="hidden" id="irods-host" name="irods-host" value="">
+                    <input type="hidden" id="irods-port" name="irods-port" value="">
+                    <input type="hidden" id="irods-zone" name="irods-zone" value="">
+                    <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
+                    <a id="btn-select-irods-file"  type="button" class="btn btn-default" data-toggle="modal" data-target="#irodsContent" style="display: none">
+                        Browse iRODS...
+                    </a>
+                    <span id="irods-sel-file"></span>
                 </td>
             </tr>
         </tbody>
