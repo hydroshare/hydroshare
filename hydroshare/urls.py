@@ -25,6 +25,7 @@ urlpatterns = i18n_patterns("",
     # admin interface, which would be marginally more secure.
     url("^admin/", include(admin.site.urls)),
     url("^inplaceeditform/", include("inplaceeditform.urls")),
+    url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url('^ga_resources/', include('ga_resources.urls')),
     #url('^ga_interactive/', include('ga_interactive.urls')),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', 'hs_core.views.short_url'),
