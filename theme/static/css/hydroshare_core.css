@@ -1734,9 +1734,6 @@ a.tag:hover {
   }
 }}
 
-#items {
-    overflow: auto;
-}
 .resource-search {
 	width: 100%;
 	position: relative;
@@ -2377,4 +2374,71 @@ h4.title {
 
 #badge-geographic-feature .badge {
     background-color:#bcbd22;
+}
+
+/*-------- My resources page revamp ---------*/
+
+.dropdown.dropdown-lg .dropdown-menu {
+    margin-top: -1px;
+    padding: 6px 20px;
+}
+.input-group-btn .btn-group {
+    display: flex !important;
+}
+.btn-group .btn {
+    border-radius: 0;
+    margin-left: -1px;
+}
+.btn-group .btn:last-child {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+.btn-group .form-horizontal .btn[type="submit"] {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+.form-horizontal .form-group {
+    margin-left: 0;
+    margin-right: 0;
+}
+.form-group .form-control:last-child {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+#adv-search {
+
+}
+
+#item-selectors_filter {
+	display: none;
+}
+.dropdown.dropdown-lg {
+	position: static !important;
+}
+
+.dropdown.dropdown-lg .dropdown-menu {
+	left: -211px;
+	width: 284px;
+}
+
+.btn-clear-search {
+	position: absolute;
+	left: -25px;
+	color: grey;
+	font-size: 16px;
+	background: #FFF;
+	top: 7px;
+}
+
+.search-icon {
+	position: absolute;
+	top: 10px;
+	left: 8px;
+	color: #A8A8A8;
+}
+
+#resource-search-input {
+	padding-left: 25px;
+	padding-right: 30px;
 }
