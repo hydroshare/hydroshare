@@ -466,8 +466,8 @@ PASSWORD_RESET_TIMEOUT_DAYS = 1
 ####################
 
 OAUTH2_PROVIDER = {
-    # 30 days
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,
+   # 30 days
+   'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,
 }
 
 ####################
