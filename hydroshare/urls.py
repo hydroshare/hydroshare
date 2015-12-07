@@ -40,9 +40,7 @@ urlpatterns = i18n_patterns("",
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^search/$', FacetedSearchView(form_class=MyForm),name='haystack_search'),
 )
-#urlpatterns = patterns('haystack.views',
-#    url(r'^search/$', FacetedSearchView(form_class=FacetedSearchForm, facet_fields=['author']), name='haystack_search'),
-#)
+
 # Filebrowser admin media library.
 if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
     urlpatterns += i18n_patterns("",
