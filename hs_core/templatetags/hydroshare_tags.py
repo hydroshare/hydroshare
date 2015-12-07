@@ -47,8 +47,6 @@ from mezzanine.utils.urls import admin_url
 from mezzanine.utils.views import is_editable
 from mezzanine import template
 
-from django.template import Library
-import datetime
 
 register = template.Library()
 
