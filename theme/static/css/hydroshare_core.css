@@ -2412,6 +2412,11 @@ h4.title {
 
 #item-selectors {
 	display: none;
+	font-size: 16px;
+}
+
+#item-selectors tr > td:first-child {
+	max-width: 38px;
 }
 .dropdown.dropdown-lg {
 	position: static !important;
@@ -2492,6 +2497,10 @@ h4.title {
 	cursor: pointer;
 }
 
+.btn-inline-label:hover {
+	color: #0A91AB;
+}
+
 .btn-inline-favorite.isfavorite {
 	color: rgb(255, 163, 0);
 }
@@ -2500,9 +2509,7 @@ h4.title {
 	color: rgb(255, 163, 0);
 }
 
-.btn-inline-label:hover {
-	color: #0A91AB;
-}
+
 
 .facet-list .list-group-item {
 	border: 0;
@@ -2559,10 +2566,6 @@ h4.title {
 	text-shadow: 0 1px 0 #fff;
 }
 
-#facets .panel-title > .glyphicon {
-	color: rgb(10, 145, 171);
-}
-
 #facets .list-group {
 	margin: 0;
 }
@@ -2575,6 +2578,7 @@ h4.title {
 
 .list-labels .list-group-item {
 	padding: 10px;
+    border-radius: 0;
 }
 
 .list-labels li:hover {
@@ -2590,8 +2594,14 @@ h4.title {
 	margin-bottom: 0;
 }
 
-#labels-dropdown {
-	font-size: 16px;
+.no-labels-found {
+    font-style: italic;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+#toolbar-labels-dropdown {
+	font-size: 14px;
 	padding: 0;
 	background: #FFF;
 }
@@ -2607,4 +2617,31 @@ h4.title {
 
 #modalManageLabels table tr:first-child > td {
 	border-top: 0;
+}
+
+.inline-dropdown {
+	position: relative;
+	width: 0;
+	height: 0;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	left: 80px;
+	top: -25px;
+}
+
+.inline-dropdown > .panel-body {
+	background: #FFF;
+	border: 1px solid #ddd;
+	padding: 0 15px;
+	min-width: 200px;
+}
+
+.inline-dropdown ul, .list-labels {
+	list-style-type: none;
+}
+
+.dataTables_wrapper {
+    max-width: 100%;
+    overflow: auto;
 }

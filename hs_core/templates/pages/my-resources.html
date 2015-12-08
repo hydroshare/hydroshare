@@ -17,17 +17,17 @@
                         <span class="glyphicon glyphicon glyphicon-search"></span>
                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#browse">&nbsp;Browse</a></h4>
                 </div>
-                <div id="browse" class="facet-list panel-collapse collapse in" style="height: auto;">
+                <div id="browse" class="facet-list panel-collapse collapse in">
                     <div class="panel-body">
                         <div class="list-group">
                             <ul class="list-group inputs-group">
                                 <li class="list-group-item" id="1">
-                                    <span class="badge">2</span>
+                                    <span class="badge">0</span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="1">Owned by me</label>
                                 </li>
                                 <li class="list-group-item" id="1">
-                                    <span class="badge">4</span>
+                                    <span class="badge">0</span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="1">Editable by me</label>
                                 </li>
@@ -37,17 +37,17 @@
                                         <input type="checkbox" data-facet="browse" value="1">Shared with me</label>
                                 </li>
                                 <li class="list-group-item" id="1">
-                                    <span class="badge">7</span>
+                                    <span class="badge">0</span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="1">Favorites</label>
                                 </li>
                                 <li class="list-group-item" id="1">
-                                    <span class="badge">13</span>
+                                    <span class="badge">0</span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="1">Following</label>
                                 </li>
                                 <li class="list-group-item" id="1">
-                                    <span class="badge">5</span>
+                                    <span class="badge">0</span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="1">Recent</label>
                                 </li>
@@ -60,28 +60,14 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h4 class="panel-title">
-                        <span class="glyphicon glyphicon glyphicon-tags"> </span>
+                        <span class="glyphicon glyphicon-tags"></span>
                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#labels">&nbsp;&nbsp;Labels</a></h4>
                 </div>
                 <div id="labels" class="facet-list panel-collapse collapse in">
                     <div class="panel-body">
                         <div class="list-group">
-                            <ul class="list-group inputs-group">
-                                <li class="list-group-item" id="1">
-                                    <span class="badge">2</span>
-                                    <label class="checkbox">
-                                        <input type="checkbox" data-facet="labels" value="1">Little Bear River</label>
-                                </li>
-                                <li class="list-group-item" id="1">
-                                    <span class="badge">4</span>
-                                    <label class="checkbox">
-                                        <input type="checkbox" data-facet="labels" value="1">Water quality</label>
-                                </li>
-                                <li class="list-group-item" id="1">
-                                    <span class="badge">0</span>
-                                    <label class="checkbox">
-                                        <input type="checkbox" data-facet="labels" value="1">Hydrology</label>
-                                </li>
+                            <ul id="user-labels-left" class="list-group inputs-group">
+
                             </ul>
                         </div>
                     </div>
@@ -137,36 +123,28 @@
                         </div>
                     </div>
                  </div>
+
                 <div class="col-sm-4 col-xs-12">
                     <div id="resource-actions-container" class="noselect">
+                        <span class="glyphicon  glyphicon-trash pull-right"  data-toggle="modal" data-target="#delete-resource-dialog" title="Delete"></span>
+                        <span id="btn-favorite" class="glyphicon  glyphicon-star pull-right" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>
+                        <span class="glyphicon  glyphicon-share pull-right" data-toggle="tooltip" data-placement="bottom" title="Share"></span>
 
-                        <span id="btn-label" class="glyphicon glyphicon glyphicon-tags dropdown-toggle"
+                        <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle pull-right"
                               data-toggle="dropdown" aria-expanded="false" title="Label"></span>
 
-                        <div id="labels-dropdown" class="dropdown-menu" role="menu">
+                        <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">
                             <div class="panel-body" role="form">
                                 <span>Label as:</span>
                                 <ul class="list-group list-labels">
-                                    <li>
-                                        <label class="checkbox"><input type="checkbox" value="1">Water quality</label>
-                                    </li>
-                                    <li>
-                                        <label class="checkbox"><input type="checkbox" value="1">Little Bear
-                                            River</label>
-                                    </li>
-                                    <li>
-                                        <label class="checkbox"><input type="checkbox" value="1">Hydrology</label>
-                                    </li>
-                                    <li class="divider"></li>
-                                    <li class="list-group-item" data-toggle="modal" data-target="#modalCreateLabel">Create New Label</li>
-                                    <li class="list-group-item" data-toggle="modal" data-target="#modalManageLabels">Manage Labels</li>
+                                    <li class="divider persist"></li>
+                                    <li class="list-group-item persist" data-toggle="modal" data-target="#modalCreateLabel">
+                                        <span style="color:#5cb85c" class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;&nbsp;&nbsp;Create New Label</li>
+                                    <li class="list-group-item persist" data-toggle="modal" data-target="#modalManageLabels">
+                                        <span style="color:#0A91AB" class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;&nbsp;&nbsp;Manage Labels</li>
                                 </ul>
                             </div>
                         </div>
-
-                        <span class="glyphicon glyphicon glyphicon-share" data-toggle="tooltip" data-placement="bottom" title="Share"></span>
-                        <span id="btn-favorite" class="glyphicon glyphicon glyphicon-star" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>
-                        <span class="glyphicon glyphicon glyphicon-trash"  data-toggle="modal" data-target="#delete-resource-dialog" title="Delete"></span>
                     </div>
                 </div>
             </div>
@@ -188,9 +166,17 @@
                     {% for res in resources %}
                         <tr>
                             <td>
-                                <input type="checkbox" aria-label="...">
+                                <input class="row-selector" type="checkbox" aria-label="...">
                                 <span class="glyphicon glyphicon-star btn-inline-favorite"></span>
-                                <span class="glyphicon glyphicon-tags btn-inline-label"></span>
+                                <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown" aria-expanded="false"></span>
+
+                                <div class="dropdown-menu inline-dropdown" role="menu">
+                                    <div class="panel-body" role="form">
+                                        <ul class="list-group list-labels">
+                                        </ul>
+                                    </div>
+                                </div>
+
                             </td>
                             <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
                             <td>{{ res|resource_type }}</td>
@@ -221,14 +207,14 @@
                 <div class="modal-body">
                     <form role="form">
                         <div class="form-group">
-                            <label for="email">New Label Name:</label>
-                            <input type="text" class="form-control">
+                            <label for="txtLabelName">New Label Name:</label>
+                            <input id="txtLabelName" type="text" class="form-control">
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary">Create</button>
+                    <button id="btn-create-label" type="button" class="btn btn-primary">Create</button>
                 </div>
             </div>
         </div>
@@ -245,11 +231,13 @@
                     <h4 class="modal-title" id="myModalLabel">Manage Labels</h4>
                 </div>
                 <div class="modal-body">
-                    <table class="table">
+                    <table id="table-user-labels" class="table">
                         <tbody>
-                            <tr><td>Little Bear River</td><td><span class="glyphicon glyphicon-remove"></span></td></tr>
-                            <tr><td>Water Quality</td><td><span class="glyphicon glyphicon-remove"></span></td></tr>
-                            <tr><td>Hydrology</td><td><span class="glyphicon glyphicon-remove"></span></td></tr>
+{#                            <tr><td><i>No labels found.</i></td></tr>#}
+                            <tr>
+                                <td class="user-label">Test Label</td>
+                                <td><span class="glyphicon glyphicon-remove"></span></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -348,9 +336,29 @@
                 resourceTable.draw();
             });
 
+            $(".row-selector").change(function() {
+                var toolbarLabels = $("#toolbar-labels-dropdown .list-labels input[type='checkbox']");
+                if ($(".row-selector:checked").length == 0) {
+                    toolbarLabels.attr("disabled", true);
+                    return;
+                }
+
+                toolbarLabels.attr("disabled", false);
+                toolbarLabels.prop("checked", true);
+
+                var inlineCheckboxes = $(".row-selector:checked").parent().find(".inline-dropdown input[type='checkbox']:not(:checked)");
+
+                for (var i = 0; i < inlineCheckboxes.length; i++) {
+                    var label = $(inlineCheckboxes[i]).val();
+                    $("#toolbar-labels-dropdown .list-labels input[type='checkbox'][value='" + label + "']").prop("checked", false);
+                }
+            });
+
             $(".btn-inline-favorite").click(function(){
                 $(this).toggleClass("isfavorite");
             });
+
+            $("#btn-create-label").click(createLabel);
 
             $("#btn-favorite").click(function(){
                 var stars = $("#item-selectors input[type='checkbox']:checked").parent().find(".btn-inline-favorite");
@@ -368,20 +376,128 @@
                 if (e.target.tagName != "TD") {
                     return;
                 }
-                if ($(this).parent().find("input[type='checkbox']:checked").length > 0) {
-                    $(this).parent().find("input[type='checkbox']").prop("checked", false);
+                if ($(this).parent().find("input[type='checkbox']:checked.row-selector").length > 0) {
+                    $(this).parent().find("input[type='checkbox'].row-selector").prop("checked", false);
                 }
                 else {
-                    $(this).parent().find("input[type='checkbox']").prop("checked", true);
+                    $(this).parent().find("input[type='checkbox'].row-selector").prop("checked", true);
                 }
             });
 
             // Prevents dropdown form getting dismissed when clicking on items
-            $('.dropdown-menu label').click(function (e) {
+            $('.dropdown-menu label, .list-labels label').click(function (e) {
                 e.stopPropagation();
             });
 
+            updateLabelLists();
+
         });
+
+        function updateLabelLists() {
+            $("#user-labels-left").empty();
+            $(".inline-dropdown ul").empty();
+            $("#toolbar-labels-dropdown ul :not(.persist)").empty();
+
+            var labels = $("#table-user-labels td.user-label");
+            for (var i = 0; i < labels.length; i++) {
+                var curr = $(labels[i]).text();
+
+                $("#user-labels-left").append(
+                        '<li class="list-group-item">' +
+                        '<span class="badge">0</span>' +
+                        '<label class="checkbox">' +
+                        '<input data-label="' + curr + '" type="checkbox">' + curr + '</label>' +
+                        '</li>'
+                );
+
+                $(".inline-dropdown ul").append(
+                        '<li>' +
+                        '<label class="checkbox"><input type="checkbox" value="' + curr + '">' + curr +'</label>' +
+                        '</li>'
+                );
+
+                $("#toolbar-labels-dropdown ul").prepend(
+                        '<li>' +
+                            '<label class="checkbox"><input disabled type="checkbox" value="' + curr + '">' + curr + '</label>' +
+                        '</li>'
+                );
+
+                $(".inline-dropdown input[type='checkbox']").change(updateLabelCount);
+            }
+
+            if (labels.length == 0) {
+                $("#user-labels-left").append(
+                        '<h5><i>No labels found.</i></h5>'
+                );
+
+                $("#toolbar-labels-dropdown ul").prepend(
+                        '<li class="no-labels-found">No labels found.</li>'
+                );
+
+                $(".btn-inline-label").attr("data-toggle", "");
+            }
+            else {
+                $(".btn-inline-label").attr("data-toggle", "dropdown");
+            }
+
+            // -----------------   Bind events   -----------------
+
+            $(".inline-dropdown .label").click(updateLabelCount);
+
+            $("#toolbar-labels-dropdown input[type='checkbox']").click(function(){
+                var inlineCheckboxes = $(".row-selector:checked").parent().find(".inline-dropdown input[type='checkbox'][value='" + $(this).val() + "']")
+                if ($(this).prop("checked") == true) {
+                    inlineCheckboxes.prop("checked", true);
+                }
+                else {
+                    inlineCheckboxes.prop("checked", false);
+                }
+
+                updateLabelCount();
+            });
+
+
+            // Prevents dropdown form getting dismissed when clicking on items
+            $('.dropdown-menu label, .list-labels label').click(function (e) {
+                e.stopPropagation();
+            });
+        }
+
+        function createLabel () {
+            if ($("#txtLabelName").val() != "") {
+                $("#table-user-labels tbody").append(
+                        '<tr>' +
+                            '<td class="user-label">' + $("#txtLabelName").val() + '</td>' +
+                            '<td><span class="glyphicon glyphicon-remove"></span></td>' +
+                        '</tr>')
+            }
+
+            $("#modalCreateLabel").modal('hide');
+            $("#txtLabelName").val("");
+            updateLabelLists();
+        }
+
+        function updateLabelCount() {
+            $("#labels input[data-label]").parent().parent().find(".badge").text("0");
+            $(".btn-inline-label").css("color", "");
+            var items = $(".inline-dropdown input[type='checkbox']");
+            var collection = [];
+            for (var i = 0; i < items.length; i++) {
+                var label = items[i].value;
+                if (items[i].checked == true) {
+                    if (!collection[label]) {
+                        collection[label] = 0;
+                    }
+                    collection[label]++;
+
+                    $(items[i]).closest("tr").find(".btn-inline-label").css("color", "#0A91AB");
+                }
+            }
+
+            for (var key in collection) {
+                $("#labels input[data-label='" + key + "']").parent().parent().find(".badge").text(collection[key]);
+            }
+        }
 
         //strips query inputs from a search string
         function removeQueryOccurrences(inputString) {
@@ -518,6 +634,10 @@
                     if (inputAuthor && data[3].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
                         return false;
                     }
+
+                    // Facets filter
+
+
 
                     // Default
                     return true;
