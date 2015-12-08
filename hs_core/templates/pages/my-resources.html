@@ -8,23 +8,91 @@
 
 <div class="container-fluid" id="main">
     <div class="row">
-        <div class="col-lg-2" id="folders">
-            <ul class="nav nav-stacked">
-                <li><a href="?owner={{ user.username }}&user={{ user.pk }}&edit_permission=true">Owned by me</a></li>
-                <li><a href="?user={{ user.pk }}&edit_permission=true">Editable by me</a></li>
-                {% if user.pk %}
-                    <li><a href="?user={{ user.pk }}">Viewable by me</a></li>
-                {% else %}
-                    <li><a href="/my-resources">Viewable by me</a></li>
-                {%  endif %}
-                <li><span><a class="btn btn-success" href="/hsapi/_internal/create-resource"><i class="fa fa-plus"></i> Create new</a></span></li>
-            </ul>
+        <div class="col-lg-2" id="facets">
+            <a class="btn btn-success" href="/hsapi/_internal/create-resource"><i class="fa fa-plus"></i> Create new</a>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <span class="glyphicon glyphicon glyphicon-search"></span>
+                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#browse">Browse</a></h4>
+                </div>
+                <div id="browse" class="facet-list panel-collapse collapse in" style="height: auto;">
+                    <div class="panel-body">
+                        <div class="list-group">
+                            <ul class="list-group inputs-group">
+                                <li class="list-group-item" id="1">
+                                    <span class="badge">2</span>
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-facet="browse" value="1">Owned by me</label>
+                                </li>
+                                <li class="list-group-item" id="1">
+                                    <span class="badge">4</span>
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-facet="browse" value="1">Editable by me</label>
+                                </li>
+                                <li class="list-group-item" id="1">
+                                    <span class="badge">0</span>
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-facet="browse" value="1">Shared with me</label>
+                                </li>
+                                <li class="list-group-item" id="1">
+                                    <span class="badge">7</span>
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-facet="browse" value="1">Favorites</label>
+                                </li>
+                                <li class="list-group-item" id="1">
+                                    <span class="badge">13</span>
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-facet="browse" value="1">Following</label>
+                                </li>
+                                <li class="list-group-item" id="1">
+                                    <span class="badge">5</span>
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-facet="browse" value="1">Recent</label>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <span class="glyphicon glyphicon glyphicon-tags"> </span>
+                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#labels">&nbsp;Labels</a></h4>
+                </div>
+                <div id="labels" class="facet-list panel-collapse collapse in" style="height: auto;">
+                    <div class="panel-body">
+                        <div class="list-group">
+                            <ul class="list-group inputs-group">
+                                <li class="list-group-item" id="1">
+                                    <span class="badge">2</span>
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-facet="labels" value="1">Little Bear River</label>
+                                </li>
+                                <li class="list-group-item" id="1">
+                                    <span class="badge">4</span>
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-facet="labels" value="1">Water quality</label>
+                                </li>
+                                <li class="list-group-item" id="1">
+                                    <span class="badge">0</span>
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-facet="labels" value="1">Hydrology</label>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="col-lg-10" id="items">
             <h2 class="page-title">My Resources</h2>
             <div class="row">
                 <div class="col-sm-8 col-xs-12">
-                    <div class="input-group">
+                    <div id="search-container" class="input-group">
                         <span class="glyphicon glyphicon-search search-icon"></span>
                         <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
 
@@ -69,15 +137,25 @@
                         </div>
                     </div>
                  </div>
+                <div class="col-sm-4 col-xs-12">
+                    <div id="resource-actions-container">
+                        <span class="glyphicon glyphicon glyphicon-tags" data-toggle="tooltip" data-placement="bottom" title="Label"></span>
+                        <span class="glyphicon glyphicon glyphicon-share" data-toggle="tooltip" data-placement="bottom" title="Share"></span>
+                        <span class="glyphicon glyphicon glyphicon-star" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>
+                        <span class="glyphicon glyphicon glyphicon-trash" data-toggle="tooltip" data-placement="bottom" title="Delete"></span>
+                    </div>
+
+                </div>
             </div>
 
             <!-- /input-group -->
-            <table id="item-selectors">
+            <table id="item-selectors" class="table-striped table-hover">
                 <thead>
                 <tr>
+                    <th></th>
                     <th>Title</th>
                     <th>Type</th>
-                    <th>First author</th>
+                    <th>Owner</th>
                     <th>Last modified</th>
                     <th>Subject</th>
                 </tr>
@@ -86,6 +164,7 @@
                     {# ################### #}
                     {% for res in resources %}
                         <tr>
+                            <td><input type="checkbox" aria-label="..."><span class="glyphicon glyphicon-star btn-inline-favorite"></span></td>
                             <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
                             <td>{{ res|resource_type }}</td>
                             {% if res.first_creator.description %}
@@ -111,10 +190,23 @@
     <script type="text/javascript">
         $(document).ready(function () {
             var resourceTable = $("#item-selectors").DataTable({
-                "order": [[0, "desc"]],
+                "order": [[1, "desc"]],
                 "paging": false,
-                "info": false
+                "info": false,
+                "columnDefs": [
+                    {
+                        "targets": [ 5 ],
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [0],
+                        "orderable": false,
+                        "searchable": false
+                    }
+                ]
             });
+            $("#item-selectors").show();
 
             $("#resource-search-input").keyup(function () {
                 var searchString = removeQueryOccurrences($(this).val());
@@ -232,11 +324,12 @@
         }
 
         {#        Table columns             #}
-        {#        0 - Title                 #}
-        {#        1 - Resource Type         #}
-        {#        2 - First Author          #}
-        {#        3 - Last Modified         #}
-        {#        4 - Subject               #}
+        {#        0 - actions                 #}
+        {#        1 - Title                 #}
+        {#        2 - Resource Type         #}
+        {#        3 - First Author          #}
+        {#        4 - Last Modified         #}
+        {#        5 - Subject               #}
 
         /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
         $.fn.dataTable.ext.search.push (
@@ -274,15 +367,15 @@
 
                     // Filter the table for each value
 
-                    if (inputType && data[1].toUpperCase().indexOf(inputType.toUpperCase()) == -1) {
+                    if (inputType && data[2].toUpperCase().indexOf(inputType.toUpperCase()) == -1) {
                         return false;
                     }
 
-                    if (inputSubject && data[4].toUpperCase().indexOf(inputSubject.toUpperCase()) == -1) {
+                    if (inputSubject && data[5].toUpperCase().indexOf(inputSubject.toUpperCase()) == -1) {
                         return false;
                     }
 
-                    if (inputAuthor && data[2].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
+                    if (inputAuthor && data[3].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
                         return false;
                     }
 
