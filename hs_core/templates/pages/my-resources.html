@@ -15,7 +15,7 @@
                 <div class="panel-heading">
                     <h4 class="panel-title">
                         <span class="glyphicon glyphicon glyphicon-search"></span>
-                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#browse">Browse</a></h4>
+                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#browse">&nbsp;Browse</a></h4>
                 </div>
                 <div id="browse" class="facet-list panel-collapse collapse in" style="height: auto;">
                     <div class="panel-body">
@@ -23,32 +23,32 @@
                             <ul class="list-group inputs-group">
                                 <li class="list-group-item" id="1">
                                     <span class="badge">2</span>
-                                    <label class="checkbox">
+                                    <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="1">Owned by me</label>
                                 </li>
                                 <li class="list-group-item" id="1">
                                     <span class="badge">4</span>
-                                    <label class="checkbox">
+                                    <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="1">Editable by me</label>
                                 </li>
                                 <li class="list-group-item" id="1">
                                     <span class="badge">0</span>
-                                    <label class="checkbox">
+                                    <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="1">Shared with me</label>
                                 </li>
                                 <li class="list-group-item" id="1">
                                     <span class="badge">7</span>
-                                    <label class="checkbox">
+                                    <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="1">Favorites</label>
                                 </li>
                                 <li class="list-group-item" id="1">
                                     <span class="badge">13</span>
-                                    <label class="checkbox">
+                                    <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="1">Following</label>
                                 </li>
                                 <li class="list-group-item" id="1">
                                     <span class="badge">5</span>
-                                    <label class="checkbox">
+                                    <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="1">Recent</label>
                                 </li>
                             </ul>
@@ -61,9 +61,9 @@
                 <div class="panel-heading">
                     <h4 class="panel-title">
                         <span class="glyphicon glyphicon glyphicon-tags"> </span>
-                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#labels">&nbsp;Labels</a></h4>
+                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#labels">&nbsp;&nbsp;Labels</a></h4>
                 </div>
-                <div id="labels" class="facet-list panel-collapse collapse in" style="height: auto;">
+                <div id="labels" class="facet-list panel-collapse collapse in">
                     <div class="panel-body">
                         <div class="list-group">
                             <ul class="list-group inputs-group">
@@ -138,13 +138,36 @@
                     </div>
                  </div>
                 <div class="col-sm-4 col-xs-12">
-                    <div id="resource-actions-container">
-                        <span class="glyphicon glyphicon glyphicon-tags" data-toggle="tooltip" data-placement="bottom" title="Label"></span>
-                        <span class="glyphicon glyphicon glyphicon-share" data-toggle="tooltip" data-placement="bottom" title="Share"></span>
-                        <span class="glyphicon glyphicon glyphicon-star" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>
-                        <span class="glyphicon glyphicon glyphicon-trash" data-toggle="tooltip" data-placement="bottom" title="Delete"></span>
-                    </div>
+                    <div id="resource-actions-container" class="noselect">
 
+                        <span id="btn-label" class="glyphicon glyphicon glyphicon-tags dropdown-toggle"
+                              data-toggle="dropdown" aria-expanded="false" title="Label"></span>
+
+                        <div id="labels-dropdown" class="dropdown-menu" role="menu">
+                            <div class="panel-body" role="form">
+                                <span>Label as:</span>
+                                <ul class="list-group list-labels">
+                                    <li>
+                                        <label class="checkbox"><input type="checkbox" value="1">Water quality</label>
+                                    </li>
+                                    <li>
+                                        <label class="checkbox"><input type="checkbox" value="1">Little Bear
+                                            River</label>
+                                    </li>
+                                    <li>
+                                        <label class="checkbox"><input type="checkbox" value="1">Hydrology</label>
+                                    </li>
+                                    <li class="divider"></li>
+                                    <li class="list-group-item" data-toggle="modal" data-target="#modalCreateLabel">Create New Label</li>
+                                    <li class="list-group-item" data-toggle="modal" data-target="#modalManageLabels">Manage Labels</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <span class="glyphicon glyphicon glyphicon-share" data-toggle="tooltip" data-placement="bottom" title="Share"></span>
+                        <span id="btn-favorite" class="glyphicon glyphicon glyphicon-star" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>
+                        <span class="glyphicon glyphicon glyphicon-trash"  data-toggle="modal" data-target="#delete-resource-dialog" title="Delete"></span>
+                    </div>
                 </div>
             </div>
 
@@ -181,6 +204,85 @@
         </div>
     </div>
 </div>
+
+    <!-- Create Label Modal -->
+    <div class="modal fade" id="modalCreateLabel" tabindex="-1" role="dialog" aria-labelledby="Create New Label">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Create New Label</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form">
+                        <div class="form-group">
+                            <label for="email">New Label Name:</label>
+                            <input type="text" class="form-control">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Manage Labels Modal -->
+    <div class="modal fade" id="modalManageLabels" tabindex="-1" role="dialog" aria-labelledby="Manage Labels">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Manage Labels</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table">
+                        <tbody>
+                            <tr><td>Little Bear River</td><td><span class="glyphicon glyphicon-remove"></span></td></tr>
+                            <tr><td>Water Quality</td><td><span class="glyphicon glyphicon-remove"></span></td></tr>
+                            <tr><td>Hydrology</td><td><span class="glyphicon glyphicon-remove"></span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Resource Modal -->
+    <div class="modal fade" id="delete-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="delete-resource-title">Delete Resource</h4>
+                </div>
+                <div class="modal-body">
+                    <strong>THIS IS A PERMANENT ACTION. </strong>
+                    <ul>
+                        <li>This will delete the resource file.</li>
+                        <li>A copy of your resource file will not be retained by Hydroshare.</li>
+                        <li>We highly recommend that you download the latest copy of your resource file before
+                            confirming this action.
+                        </li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a type="button" class="btn btn-danger"
+                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
 
@@ -240,7 +342,41 @@
             $("#input-resource-type").change(function(){
                 typeQueryStrings();
                 resourceTable.draw();
-            })
+            });
+
+            $(".btn-inline-favorite").click(function(){
+                $(this).toggleClass("isfavorite");
+            });
+
+            $("#btn-favorite").click(function(){
+                var stars = $("#item-selectors input[type='checkbox']:checked").parent().find(".btn-inline-favorite");
+                for (var i = 0; i < stars.length; i++) {
+                    if (!$(stars[i]).hasClass("isfavorite")) {
+                        $(stars).addClass("isfavorite");
+                        return;
+                    }
+                }
+
+                stars.removeClass("isfavorite");
+            });
+
+            $("#item-selectors td").click(function(e){
+                if (e.target.tagName != "TD") {
+                    return;
+                }
+                if ($(this).parent().find("input[type='checkbox']:checked").length > 0) {
+                    $(this).parent().find("input[type='checkbox']").prop("checked", false);
+                }
+                else {
+                    $(this).parent().find("input[type='checkbox']").prop("checked", true);
+                }
+            });
+
+            // Prevents dropdown form getting dismissed when clicking on items
+            $('.dropdown-menu label').click(function (e) {
+                e.stopPropagation();
+            });
+
         });
 
         //strips query inputs from a search string

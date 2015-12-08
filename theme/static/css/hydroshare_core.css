@@ -2491,6 +2491,10 @@ h4.title {
 	cursor: pointer;
 }
 
+.btn-inline-favorite.isfavorite {
+	color: rgb(255, 163, 0);
+}
+
 .btn-inline-favorite:hover {
 	color: rgb(255, 163, 0);
 }
@@ -2517,6 +2521,9 @@ h4.title {
 	padding-top: 5px;
 	padding-bottom: 5px;
 	margin: 0;
+}
+
+.noselect {
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
 	-khtml-user-select: none;
@@ -2547,6 +2554,52 @@ h4.title {
 	text-shadow: 0 1px 0 #fff;
 }
 
+#facets .panel-title > .glyphicon {
+	color: rgb(10, 145, 171);
+}
+
 #facets .list-group {
-	  margin: 0;
+	margin: 0;
+}
+
+.list-labels li {
+	padding: 0 10px;
+	background: none;
+	border: 0;
+}
+
+.list-labels .list-group-item {
+	padding: 10px;
+}
+
+.list-labels li:hover {
+	background:#DDD;
+}
+
+.list-labels li > label {
+	font-weight: normal;
+}
+
+.list-labels {
+	margin-left: -10px;
+	margin-bottom: 0;
+}
+
+#labels-dropdown {
+	font-size: 16px;
+	padding: 0;
+	background: #FFF;
+}
+
+#modalManageLabels .glyphicon-remove {
+	color: rgb(217, 83, 79);
+	cursor: pointer;
+}
+
+#modalManageLabels .glyphicon-remove:hover {
+	color: rgb(168, 69, 66);
+}
+
+#modalManageLabels table tr:first-child > td {
+	border-top: 0;
 }
