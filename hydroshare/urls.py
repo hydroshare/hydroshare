@@ -10,8 +10,7 @@ from mezzanine.conf import settings
 from theme import views as theme
 import autocomplete_light
 
-from haystack.views import FacetedSearchView
-from hs_core.customer_form import MyForm
+
 autocomplete_light.autodiscover()
 admin.autodiscover()
 
@@ -24,8 +23,8 @@ urlpatterns = i18n_patterns("",
     # Change the admin prefix here to use an alternate URL for the
     # admin interface, which would be marginally more secure.
     url("^admin/", include(admin.site.urls)),
-    url("^inplaceeditform/", include("inplaceeditform.urls")),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    url("^inplaceeditform/", include("inplaceeditform.urls")),
     url('^ga_resources/', include('ga_resources.urls')),
     #url('^ga_interactive/', include('ga_interactive.urls')),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', 'hs_core.views.short_url'),
@@ -38,7 +37,6 @@ urlpatterns = i18n_patterns("",
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url(r'^search/$', FacetedSearchView(form_class=MyForm),name='haystack_search'),
 )
 
 # Filebrowser admin media library.
@@ -47,6 +45,7 @@ if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
         ("^admin/media-library/", include("%s.urls" %
                                         settings.PACKAGE_NAME_FILEBROWSER)),
     )
+
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += patterns('',
     url('^hsapi/', include('hs_core.urls')),
@@ -58,7 +57,6 @@ urlpatterns += patterns('',
     url('^hs_metrics/', include('hs_metrics.urls')),
     url('^hsapi/', include('hs_model_program.urls')),
 )
-
 
 if settings.DEBUG is False:   #if DEBUG is True it will be served automatically
   urlpatterns += patterns('',
