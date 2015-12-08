@@ -40,7 +40,7 @@ def check_fn_for_shp(files):
             if str(f).endswith('/'):
                 dir_count += 1
             else:
-                fileName, fileExtension = os.path.splitext(f)
+                fileName, fileExtension = os.path.splitext(f.lower())
                 if ".shp" == fileExtension:
                     shp_filename = fileName
                     shp = True
@@ -61,7 +61,7 @@ def check_fn_for_shp(files):
 
 def is_zipped_shapefiles(files):
     # check if the uploaded zip files contains valid shapefiles (shp, shx, dbf)
-    if(len(files) == 1) and '.zip' in files[0].name:
+    if(len(files) == 1) and files[0].name.lower().endswith(".zip"):
         zipfile_path = files[0].file.name
         if zipfile.is_zipfile(zipfile_path):
             zf = zipfile.ZipFile(zipfile_path, 'r')
@@ -69,9 +69,14 @@ def is_zipped_shapefiles(files):
             return check_fn_for_shp(content_fn_list)
     return False
 
+def lower_filenames(files):
+    for f in files:
+        f.name = f.name.lower()
+
 def check_uploaded_files_type(files):
         files_type_dict = {}
         if is_shapefiles(files):
+            lower_filenames(files) # change all uploaded shapefile names to lower case
             uploaded_file_type = "shp"
             files_type_dict["uploaded_file_type"] = uploaded_file_type
             # create a temp folder and copy shapefiles
@@ -80,7 +85,7 @@ def check_uploaded_files_type(files):
             baseFilename = None
             for f in files:
                 source = f.file.name
-                fileName, fileExtension = os.path.splitext(f.name.lower())
+                fileName, fileExtension = os.path.splitext(f.name)
                 if fileExtension == ".shp":
                     baseFilename = fileName
                 target = tmp_dir + "/" + fileName + fileExtension
@@ -120,15 +125,12 @@ def check_uploaded_files_type(files):
                 source = tmp_dir + '/' + old_fn
                 target = tmp_dir
                 if os.path.isfile(source): # only add files, filter out folders (should be 0 or 1 folder)
-                    fileName, fileExtension = os.path.splitext(old_fn)
-
+                    fileName, fileExtension = os.path.splitext(old_fn.lower())
                     if '/' in fileName: # if the file is inside a folder, move it to the root of tmp_dir
                         path_and_filename = fileName.split('/')
                         fileName = path_and_filename[len(path_and_filename)-1]
-                        target = tmp_dir + '/' + fileName + fileExtension
-                        shutil.move(source, target)
-                    else:
-                        target = source
+                    target = tmp_dir + '/' + fileName + fileExtension
+                    shutil.move(source, target) # move file from folder (if any) to tmp root and rename it into lower case
 
                     if fileExtension == ".shp": # save the real path to .shp file
                         baseFilename = fileName # save the name of .shp as the baseFileName
@@ -286,7 +288,7 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
     all_file_removed = False
     ori_file_info = res_obj.metadata.originalfileinfo.all().first()
     if ori_file_info.fileType == "SHP" or ori_file_info.fileType == "ZSHP":
-        del_f_fullname = del_file.resource_file.name.lower()
+        del_f_fullname = del_file.resource_file.name
         del_f_fullname = del_f_fullname[del_f_fullname.rfind('/')+1:]
         del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
         if del_f_ext in [".shp", ".shx", ".dbf"]:
@@ -295,7 +297,7 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
             one_file_removed = False
 
             for f in ResourceFile.objects.filter(object_id=res_obj.id):
-                res_f_fullname = f.resource_file.name.lower()
+                res_f_fullname = f.resource_file.name
                 res_f_fullname = res_f_fullname[res_f_fullname.rfind('/')+1:]
                 if res_f_fullname != del_f_fullname:
                     f.resource_file.delete()
@@ -332,9 +334,10 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
 
     try:
         if ori_file_info and ResourceFile.objects.filter(object_id=res_obj.id).count() > 0: # just add non-required files
-            crt_f_str = ori_file_info.filenameString.lower()
+            crt_f_str = ori_file_info.filenameString
+            lower_filenames(files)
             for f in files:
-                new_f_fullname = f.name.lower()
+                new_f_fullname = f.name
                 new_f_name, new_f_ext = os.path.splitext(new_f_fullname)
 
                 if new_f_ext in  [".shp", ".shx", ".dbf"]:
@@ -357,7 +360,7 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
             if some_new_files_added:
                 ori_fn_dict = json.loads(ori_file_info.filenameString)
                 for f in files:
-                    new_f_fullname = f.name.lower()
+                    new_f_fullname = f.name
                     ori_fn_dict[new_f_fullname] = "new"
                 res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.id,
                                                 filenameString=json.dumps(ori_fn_dict))
@@ -459,11 +462,11 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
     found_prj = False
     found_zip = False
     for f in files:
-        if f.name.lower()[-4:] == ".shp":
+        if f.name.endswith(".shp"):
             found_shp = True
-        elif f.name.lower()[-4:] == ".prj":
+        elif f.name.endswith(".prj"):
             found_prj = True
-        elif f.name.lower()[-4:] == ".zip":
+        elif f.name.endswith(".zip"):
             found_zip = True
 
     if found_prj and (not found_shp):
@@ -472,7 +475,7 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
             tmp_dir = tempfile.mkdtemp()
             for res_f in res_file_list:
                 source = res_f.resource_file.file.name
-                f_fullname = res_f.resource_file.name.lower()
+                f_fullname = res_f.resource_file.name
                 f_fullname = f_fullname[f_fullname.rfind('/')+1:]
 
                 fileName, fileExtension = os.path.splitext(f_fullname)

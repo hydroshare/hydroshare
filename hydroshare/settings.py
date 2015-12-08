@@ -445,7 +445,6 @@ except ImportError:
 else:
     set_dynamic_settings(globals())
 
-#
 AUTH_PROFILE_MODULE = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 REST_FRAMEWORK = {
@@ -458,9 +457,6 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'oauth2_provider.ext.rest_framework.OAuth2Authentication',
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    )
 }
 
 SOLR_HOST = os.environ.get('SOLR_PORT_8983_TCP_ADDR', 'localhost')
@@ -476,6 +472,15 @@ HAYSTACK_CONNECTIONS = {
 
 # customized value for password reset token and email verification link token to expire in 1 day
 PASSWORD_RESET_TIMEOUT_DAYS = 1
+
+####################
+# OAUTH TOKEN SETTINGS #
+####################
+
+OAUTH2_PROVIDER = {
+   # 30 days
+   'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,
+}
 
 ####################
 # LOGGING SETTINGS #

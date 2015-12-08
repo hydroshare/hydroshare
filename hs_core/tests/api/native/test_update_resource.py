@@ -71,7 +71,7 @@ class TestUpdateResource(TestCase):
         )
 
         # title element is recreated in the resource update api method
-        self.assertEqual(self.res.metadata.title.value, self.res.title, msg='resource title did not match')
+        self.assertEqual(self.res.metadata.title.value, 'My Test Resource', msg='resource title did not match')
 
         # resource description element is created in the resource signal handler
         self.assertEqual(self.res.metadata.description.abstract, 'My Test Resource')

@@ -1,10 +1,15 @@
 __author__ = 'Mohamed Morsy'
-from mezzanine.pages.page_processors import processor_for
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
+from crispy_forms.bootstrap import AccordionGroup
+from crispy_forms.layout import Layout, HTML
+
 from hs_core import page_processors
-from hs_core.views import *
-from hs_swat_modelinstance.forms import *
+from hs_core.views import add_generic_context
+
 from hs_swat_modelinstance.models import SWATModelInstanceResource
+from hs_swat_modelinstance.forms import ModelOutputForm, ExecutedByForm, ModelObjectiveForm,\
+    SimulationTypeForm, ModelMethodForm, ModelParameterForm, ModelInputForm
+
+from mezzanine.pages.page_processors import processor_for
 
 @processor_for(SWATModelInstanceResource)
 def landing_page(request, page):
@@ -57,14 +62,14 @@ def landing_page(request, page):
                              element_id=content_model.metadata.model_input.id if content_model.metadata.model_input else None)
 
         ext_md_layout = Layout(
-                                AccordionGroup('Model Output (required)',
+                                AccordionGroup('Model Output',
                                     HTML("<div class='form-group' id='modeloutput'> "
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy model_output_form %} '
                                      '</div>'),
                                 ),
 
-                                AccordionGroup('Executed By (required)',
+                                AccordionGroup('Executed By',
                                      HTML('<div class="form-group" id="executedby"> '
                                         '{% load crispy_forms_tags %} '
                                         '{% crispy executed_by_form %} '

@@ -1,12 +1,16 @@
 __author__ = 'Mohamed'
+from crispy_forms.bootstrap import AccordionGroup
 from crispy_forms.layout import Layout, HTML
-from forms import *
-from hs_core import page_processors
-from hs_core.views import *
 
+from hs_core import page_processors
+from hs_core.views import add_generic_context
+
+from hs_modelinstance.models import ModelInstanceResource
+from hs_modelinstance.forms import ModelOutputForm, ExecutedByForm
+
+from mezzanine.pages.page_processors import processor_for
 
 @processor_for(ModelInstanceResource)
-# TODO: problematic permissions.
 def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
@@ -33,14 +37,14 @@ def landing_page(request, page):
                                           element_id=content_model.metadata.executed_by.id if content_model.metadata.executed_by else None)
 
         ext_md_layout = Layout(
-            AccordionGroup('Model Output (required)',
+            AccordionGroup('Model Output',
                            HTML("<div class='form-group' id='modeloutput'> "
                                 '{% load crispy_forms_tags %} '
                                 '{% crispy model_output_form %} '
                                 '</div>'),
                            ),
 
-            AccordionGroup('Executed By (required)',
+            AccordionGroup('Executed By',
                            HTML('<div class="form-group" id="executedby"> '
                                 '{% load crispy_forms_tags %} '
                                 '{% crispy executed_by_form %} '
