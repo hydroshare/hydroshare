@@ -1,17 +1,14 @@
-__author__ = 'hydro'
-
-from mezzanine.pages.page_processors import processor_for
-from models import *
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
-from forms import *
-from hs_core import page_processors
-from hs_core.forms import MetaDataElementDeleteForm
+
 from django.forms.models import formset_factory
-from django.core.urlresolvers import reverse
+from mezzanine.pages.page_processors import processor_for
+
+from hs_core import page_processors
 from hs_core.views import *
-from functools import partial, wraps
+
+from forms import *
 from hs_app_netCDF.forms import ModalDialogLayoutAddVariable
-from hs_app_netCDF.views import thredds_service_view
+
 
 @processor_for(NetcdfResource)
 # when the resource is created this page will be shown
@@ -121,7 +118,7 @@ def landing_page(request, page):
     if content_model.raccess.public:
         for f in content_model.files.all():
             if '.nc' in f.resource_file.name[-3:]:
-                ip = 'http://hydrotest41.renci.org:8080'
+                ip = 'http://thredds.hydroshare.org'
                 shortkey = content_model.short_id
                 nc_file_name = f.resource_file.name.split('/')[-1]
 
