@@ -187,7 +187,11 @@
                     {# ################### #}
                     {% for res in resources %}
                         <tr>
-                            <td><input type="checkbox" aria-label="..."><span class="glyphicon glyphicon-star btn-inline-favorite"></span></td>
+                            <td>
+                                <input type="checkbox" aria-label="...">
+                                <span class="glyphicon glyphicon-star btn-inline-favorite"></span>
+                                <span class="glyphicon glyphicon-tags btn-inline-label"></span>
+                            </td>
                             <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
                             <td>{{ res|resource_type }}</td>
                             {% if res.first_creator.description %}
