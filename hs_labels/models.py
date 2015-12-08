@@ -162,15 +162,15 @@ class UserResourceLabels(models.Model):
     # Utilize an underlying class of User to hold labels for resources.
     # This creates an implicit query User.ulabels that represents all labels
     # for a user.
-    user = models.ForeignKey('UserLabels', null=False, editable=False,
-                             related_name='u2urlabels',         # unused but must be defined and unique
-                             help_text='user assigning a label')
+    ulabels = models.ForeignKey('UserLabels', null=False, editable=False,
+                                related_name='ul2url',         # unused but must be defined and unique
+                                help_text='user assigning a label')
     # There is a basic design question as to whether the target of a label should be a
     # Resource proper, or an annotation class that contains mainly methods for the resource.
     # Should this be 'BaseResource' or 'ResourceLabels'?
-    resource = models.ForeignKey('ResourceLabels', null=False, editable=False,
-                                 related_name="r2urlabels",     # unused but must be defined and unique
-                                 help_text='resource to which a label applies')
+    rlabels = models.ForeignKey('ResourceLabels', null=False, editable=False,
+                                related_name="rl2url",     # unused but must be defined and unique
+                                help_text='resource to which a label applies')
     label = models.TextField()
 
 
@@ -207,8 +207,8 @@ class UserLabels(models.Model):
 
         :return: List of resource objects labeled by user.
         """
-        return BaseResource.objects.filter(rlabels__r2urlabels__user=self,
-                                           rlabels__r2urlabels__kind=LabelCodes.LABEL).distinct()
+        return BaseResource.objects.filter(rlabels__rl2url__ulabels=self,
+                                           rlabels__rl2url__kind=LabelCodes.LABEL).distinct()
 
     @property
     def filed_resources(self):
@@ -219,8 +219,8 @@ class UserLabels(models.Model):
 
         :return: List of resource objects assigned to folders by a user.
         """
-        return BaseResource.objects.filter(rlabels__r2urlabels__user=self,
-                                           rlabels__r2urlabels__kind=LabelCodes.FOLDER).distinct()
+        return BaseResource.objects.filter(rlabels__rl2url__ulabels=self,
+                                           rlabels__rl2url__kind=LabelCodes.FOLDER).distinct()
 
     @property
     def favorited_resources(self):
@@ -229,22 +229,22 @@ class UserLabels(models.Model):
 
         This list eliminates duplicates.
 
-        :return: List of resource objects assigned to folders by a user.
+        :return: List of resource objects marked as favorite by a user.
         """
-        return BaseResource.objects.filter(rlabels__r2urlabels__user=self,
-                                           rlabels__r2urlabels__kind=LabelCodes.FAVORITE).distinct()
+        return BaseResource.objects.filter(rlabels__rl2url__ulabels=self,
+                                           rlabels__rl2url__kind=LabelCodes.FAVORITE).distinct()
 
     @property
     def my_resources(self):
         """
-        Get a list of resources chosen by a user.
+        Get a list of resources marked as mine (add to my resources) by a user.
 
         This list eliminates duplicates.
 
-        :return: List of resource objects assigned to folders by a user.
+        :return: List of resource objects marked as mine by a user.
         """
-        return BaseResource.objects.filter(rlabels__r2urlabels__user=self,
-                                           rlabels__r2urlabels__kind=LabelCodes.MINE).distinct()
+        return BaseResource.objects.filter(rlabels__rl2url__ulabels=self,
+                                           rlabels__rl2url__kind=LabelCodes.MINE).distinct()
 
     # TODO: use access control to include accessible resources in this list.
     @property
@@ -254,7 +254,7 @@ class UserLabels(models.Model):
 
         :return: List of resource objects that a user has marked.
         """
-        return BaseResource.objects.filter(rlabels__r2urlabels__user=self).distinct()
+        return BaseResource.objects.filter(rlabels__rl2url__ulabels=self).distinct()
 
     def get_resources_with_label(self, this_label):
         """
@@ -265,19 +265,16 @@ class UserLabels(models.Model):
 
         label_string = UserLabels.clean_label(this_label)                 # remove leading and trailing spaces
 
-        return BaseResource.objects.filter(rlabels__r2urlabels__user=self,
-                                           rlabels__r2urlabels__kind=LabelCodes.LABEL,
-                                           rlabels__r2urlabels__label__exact=label_string)\
-                                    .distinct()\
-                                    .order_by('rlabels__r2urlabels__label')
+        return BaseResource.objects.filter(rlabels__rl2url__ulabels=self,
+                                           rlabels__rl2url__kind=LabelCodes.LABEL,
+                                           rlabels__rl2url__label__exact=label_string)\
+                                        .distinct()\
+                                        .order_by('rlabels__rl2url__label')
     @property
     def user_labels(self):
         return UserResourceLabels.objects.values_list('label', flat=True)\
-                                 .filter(user=self, kind=LabelCodes.LABEL)\
+                                 .filter(ulabels=self, kind=LabelCodes.LABEL)\
                                  .distinct().order_by('label')
-
-    # TODO: get_dir emulates LS for a specific folder
-    # TODO: get_hierarchy parses directories as hierarchy
 
     ######################################
     # Label a resource
@@ -314,18 +311,18 @@ class UserLabels(models.Model):
 
         # This logic implicitly limits one to one record per resource and requester.
         try:
-            UserResourceLabels.objects.get(resource=label_resource,
+            UserResourceLabels.objects.get(rlabels=label_resource,
                                            label__exact=label_string,
-                                           user=self)
+                                           ulabels=self)
             # if this succeeds, resource is already labeled with this label_string.
 
         # only create label if it does not exist. No duplicates.
         except UserResourceLabels.DoesNotExist:
             # create a new label record
-            UserResourceLabels(resource=label_resource,
+            UserResourceLabels(rlabels=label_resource,
                                kind=LabelCodes.LABEL,
                                label=label_string,
-                               user=self).save()
+                               ulabels=self).save()
 
     def unlabel_resource(self, this_resource, this_label):
         """ Remove one label from a resource
@@ -344,10 +341,10 @@ class UserLabels(models.Model):
 
         label_string = UserLabels.clean_label(this_label)                 # remove leading and trailing spaces
 
-        UserResourceLabels.objects.filter(resource=label_resource,
+        UserResourceLabels.objects.filter(rlabels=label_resource,
                                           label__exact=label_string,
                                           kind = LabelCodes.LABEL,
-                                          user=self).delete()
+                                          ulabels=self).delete()
 
     def clear_resource_labels(self, this_resource):
         """ Clear all labels for a resource
@@ -359,8 +356,8 @@ class UserLabels(models.Model):
         if not isinstance(this_resource, BaseResource):
             raise HSLUsageException("Target is not a resource")
         label_resource = this_resource.rlabels
-        UserResourceLabels.objects.filter(resource=label_resource,
-                                          user=self,
+        UserResourceLabels.objects.filter(rlabels=label_resource,
+                                          ulabels=self,
                                           kind=LabelCodes.LABEL).delete()
 
     ##########################################
@@ -408,32 +405,32 @@ class UserLabels(models.Model):
         # proceed to change the record if present
         # This logic implicitly limits one to one record per resource and user.
         try:
-            record = UserResourceLabels.objects.get(resource=label_resource,
+            record = UserResourceLabels.objects.get(rlabels=label_resource,
                                                     kind=LabelCodes.FOLDER,
-                                                    user=self)
+                                                    ulabels=self)
             record.label = folder_string
             record.save()
 
         # only create label if it does not exist. No duplicates.
         except UserResourceLabels.DoesNotExist:
             # create a new label record
-            UserResourceLabels(resource=label_resource,
+            UserResourceLabels(rlabels=label_resource,
                                kind=LabelCodes.FOLDER,
                                label=folder_string,
-                               user=self).save()
+                               ulabels=self).save()
 
     def unfile_resource(self, this_resource):
-        """ Clear all labels for a resource
+        """ Clear all folders for a resource
 
         :param this_resource: BaseResource for which to clear all folder names
-        :return: none.
+
         """
         # check for user error
         if not isinstance(this_resource, BaseResource):
             raise HSLUsageException("Target is not a resource")
         label_resource = this_resource.rlabels
-        UserResourceLabels.objects.filter(user=self,
-                                          resource=label_resource,
+        UserResourceLabels.objects.filter(ulabels=self,
+                                          rlabels=label_resource,
                                           kind=LabelCodes.FOLDER).delete()
 
 
@@ -443,10 +440,9 @@ class UserLabels(models.Model):
 
     def favorite_resource(self, this_resource):
         """
-        Specify a file folder for a resource.
+        Mark a resource as favorite.
 
-        :param this_resource: Resource to share.
-        :return: None
+        :param this_resource: Resource to mark as favorite
 
         Users are allowed to file any resource, including resources to which they do not have access.
         This is not an access control problem because labeling information is private.
@@ -463,29 +459,29 @@ class UserLabels(models.Model):
         # proceed to change the record if present
         # This logic implicitly limits one to one record per resource and user.
         try:
-            UserResourceLabels.objects.get(resource=label_resource,
+            UserResourceLabels.objects.get(rlabels=label_resource,
                                            kind=LabelCodes.FAVORITE,
-                                           user=self)
+                                           ulabels=self)
 
         # only create label if it does not exist. No duplicates.
         except UserResourceLabels.DoesNotExist:
             # create a new label record
-            UserResourceLabels(resource=label_resource,
+            UserResourceLabels(rlabels=label_resource,
                                kind=LabelCodes.FAVORITE,
-                               user=self).save()
+                               ulabels=self).save()
 
     def unfavorite_resource(self, this_resource):
-        """ Clear all labels for a resource
+        """ Clear favorite label for a resource
 
-        :param this_resource: BaseResource for which to clear all folder names
-        :return: none.
+        :param this_resource: BaseResource for which to clear favorite label
+
         """
         # check for user error
         if not isinstance(this_resource, BaseResource):
             raise HSLUsageException("Target is not a resource")
         label_resource = this_resource.rlabels
-        UserResourceLabels.objects.filter(user=self,
-                                          resource=label_resource,
+        UserResourceLabels.objects.filter(ulabels=self,
+                                          rlabels=label_resource,
                                           kind=LabelCodes.FAVORITE).delete()
 
 
@@ -495,16 +491,10 @@ class UserLabels(models.Model):
 
     def claim_resource(self, this_resource):
         """
-        Add to my resources.
+        Label a resource as mine (add to my resources).
 
-        :param this_resource: Resource to add to my resources.
+        :param this_resource: Resource to label as mine (add to my resources).
 
-        # TODO (PK): The following comments are not relevant to this function
-        Users are allowed to file any resource, including resources to which they do not have access.
-        This is not an access control problem because labeling information is private.
-
-        There can only be one folder for a resource. If an attempt is made to set two;
-        the first is overridden with the second.
         """
 
         # check for user error
@@ -515,29 +505,29 @@ class UserLabels(models.Model):
         # proceed to change the record if present
         # This logic implicitly limits one to one record per resource and user.
         try:
-            UserResourceLabels.objects.get(resource=label_resource,
+            UserResourceLabels.objects.get(rlabels=label_resource,
                                            kind=LabelCodes.MINE,
-                                           user=self)
+                                           ulabels=self)
 
         # only create label if it does not exist. No duplicates.
         except UserResourceLabels.DoesNotExist:
             # create a new label record
-            UserResourceLabels(resource=label_resource,
+            UserResourceLabels(rlabels=label_resource,
                                kind=LabelCodes.MINE,
-                               user=self).save()
+                               ulabels=self).save()
 
     def unclaim_resource(self, this_resource):
-        """ Clear all labels for a resource
+        """ Clear 'mine' label for a resource (removes from my resources)
 
-        :param this_resource: BaseResource for which to clear all folder names
-        :return: none.
+        :param this_resource: BaseResource for which to clear mine label
+
         """
         # check for user error
         if not isinstance(this_resource, BaseResource):
             raise HSLUsageException("Target is not a resource")
         label_resource = this_resource.rlabels
-        UserResourceLabels.objects.filter(user=self,
-                                          resource=label_resource,
+        UserResourceLabels.objects.filter(ulabels=self,
+                                          rlabels=label_resource,
                                           kind=LabelCodes.MINE).delete()
 
     ##########################################
@@ -548,14 +538,170 @@ class UserLabels(models.Model):
         """ Clear all annotations for a resource
 
         :param this_resource: BaseResource for which to clear all annotations
-        :return: none.
+
         """
         # check for user error
         if not isinstance(this_resource, BaseResource):
             raise HSLUsageException("Target is not a resource")
         label_resource = this_resource.rlabels
-        UserResourceLabels.objects.filter(resource=label_resource,
-                                          user=self).delete()
+        UserResourceLabels.objects.filter(rlabels=label_resource,
+                                          ulabels=self).delete()
+
+    ##########################################
+    # handling of folder hierarchies
+    ##########################################
+
+    @property
+    def resource_folders(self):
+        """
+        Get a list of resource folders in use
+        :return: List of folders with resources in them.
+        """
+        return UserResourceLabels.objects.values_list('label', flat=True)\
+                                 .filter(ulabels=self, kind=LabelCodes.FOLDER)\
+                                 .distinct().order_by('label')
+
+    def get_resources_in_folder(self, this_folder):
+        """
+        Get a list of resources in a specific folder
+        :param this_folder: folder for which to report
+        :type this_folder: basestring
+        :return: QuerySet of BaseResource references.
+        :rtype: QuerySet
+        """
+        if not isinstance(this_folder, basestring):
+            raise HSLUsageException("Label is not text")
+
+        # remove leading and trailing spaces
+        label_string = UserLabels.clean_folder(this_folder)
+
+        return BaseResource.objects.filter(rlabels__rl2url__ulabels=self,
+                                           rlabels__rl2url__kind=LabelCodes.FOLDER,
+                                           rlabels__rl2url__label__exact=label_string)\
+                                    .distinct()\
+                                    .order_by('rlabels__rl2url__label')
+
+    @property
+    def resource_top_folders(self):
+        """
+        Get a list of top-level folders for a resource.
+        :return: List of top-level folders as strings
+
+        """
+        top = {}
+        folders = self.resource_folders
+        for f in folders:
+            # use dict as a set to eliminate duplicates
+            top[f.split('/')[0]] = 1
+        f2 = top.keys()
+        f2.sort()
+        return f2
+
+    def get_resource_subfolders(self, this_folder):
+        """
+        Get a list of resources with a specific label
+        """
+        if this_folder is None:
+            this_folder = ""
+
+        if not isinstance(this_folder, basestring):
+            raise HSLUsageException("Folder is not text")
+
+        # remove leading and trailing spaces
+        folder_string = UserLabels.clean_folder(this_folder)
+
+        subs = UserResourceLabels.objects\
+                                 .filter(ulabels=self,
+                                         kind=LabelCodes.FOLDER,
+                                         label__startswith=folder_string)\
+                                 .values_list('label', flat=True)\
+                                 .distinct()\
+                                 .order_by('label')
+        # instantiate query
+        subs = list(subs)
+        if folder_string != r'':
+            subs = [r[len(folder_string)+1:] for r in subs]
+
+        output = list()
+        for s in subs:
+            if s.find("/")>=0:
+                t = s[:s.find("/")]
+                if t != "":
+                    output.append(t)
+            else:
+                if s != "":
+                    output.append(s)
+
+        output = filter(lambda x: x != '', output)
+        return output
+
+    @property
+    def resource_hierarchy(self):
+        """
+        Compute a polymorphic nested dictionary of folders and resources.
+
+        :return: a dict structure that mimics the structure of directories; see below.
+
+        This routine computes a complex dictionary object that describes the
+        whole folder hierarchy for a user. It is not particularly useful in views due
+        to the need for recursion to parse it. The structure consists of 'folders' and
+        'resources' keys, where folders is a nested structure of folders, while
+        'resources' is a list of resources.
+
+        For example, for one resource x, filed in folder 'foo/bar', it will return
+            { 'folders': { 'foo': {'folders': {'bar': {'resources': [x]}}}}
+        This structure is recursive in the sense that x['folders'][y] has the same structure as x.
+
+        Note that resources are returned in random order and must be sorted to taste.
+        """
+        folders = self.resource_folders
+        output = {}
+        for f in folders:
+            path = f.split(r'/')
+            ptr = output
+            for p in path:
+                if u'folders' not in ptr:
+                    ptr[u'folders']={p : {}}
+                if p not in ptr[u'folders']:
+                    ptr[u'folders'][p] = {}
+                ptr = ptr[u'folders'][p]
+            # now the cursor is set to contain files.
+            ptr[u'resources'] = list(self.get_resources_in_folder(str(f)))
+        return output
+
+    @staticmethod
+    def __hierarchy_sequence(folder, thing, level=0):
+        """
+        Return an iterable list describing the folder hierarchy.
+
+        :param thing: the output of resource_hierarchy
+        :param level: recursion level: for indentation
+        :return: a list of lists that describe the folder hierarchy as a linear iterable.
+
+        This routine is used in views to create a linear iterable that can be used to depict
+        the folder hierarchy as an HTML table.
+        """
+        output = []
+        record = [folder, level]
+        if 'resources' in thing:
+            record += [thing[u'resources']]
+        else:
+            record += [[]]
+        output += [record]
+        if 'folders' in thing:
+            for k in thing['folders']:
+                output += UserLabels.__hierarchy_sequence(k, thing['folders'][k], level+1)
+        return output
+
+    @property
+    def resource_sequence(self):
+        """
+        Return nested list of resource folders and objects
+        :return: complex nested list
+        """
+        hier = self.resource_hierarchy
+        # throw away (unfiled) record
+        return UserLabels.__hierarchy_sequence("(unfiled)", hier, 0)[1:]
 
 
 class ResourceLabels(models.Model):
@@ -584,7 +730,7 @@ class ResourceLabels(models.Model):
 
         :return: QuerySet that evaluates to all users holding resource.
         """
-        return User.objects.filter(ulabels__u2urlabels__resource=self)
+        return User.objects.filter(ulabels__ul2url__rlabels=self)
 
     def get_folder(self, this_user):
         """ return the folder for a resource, or null if no folder
@@ -597,9 +743,9 @@ class ResourceLabels(models.Model):
 
         try:
             folder = UserResourceLabels.objects.values_list("label", flat=True)\
-                                       .get(user=user_labels,
+                                       .get(ulabels=user_labels,
                                             kind=LabelCodes.FOLDER,
-                                            resource=self)
+                                            rlabels=self)
             return folder
 
         except UserResourceLabels.DoesNotExist:
@@ -616,9 +762,9 @@ class ResourceLabels(models.Model):
 
         labels = UserResourceLabels.objects\
                                    .values_list('label', flat=True)\
-                                   .filter(user=user_labels,
+                                   .filter(ulabels=user_labels,
                                            kind=LabelCodes.LABEL,
-                                           resource=self)\
+                                           rlabels=self)\
                                    .order_by("label").all()
         return labels
 
@@ -630,29 +776,29 @@ class ResourceLabels(models.Model):
         if not isinstance(this_user, User):
             raise HSLUsageException("Target is not a user")
         user_labels = this_user.ulabels
-        # TODO: use exists() here instead of try except
+
         try:
-            labels = UserResourceLabels.objects.get(user=user_labels,
-                                                    resource=self,
-                                                    kind=LabelCodes.FAVORITE)
+            UserResourceLabels.objects.get(ulabels=user_labels,
+                                           rlabels=self,
+                                           kind=LabelCodes.FAVORITE)
             return True
 
         except UserResourceLabels.DoesNotExist:
             return False
 
     def is_mine(self, this_user):
-        """ return True if this resource has been favorited by a given user
+        """ return True if this resource has been labeled as mine by a given user
 
         :return: True or False
         """
         if not isinstance(this_user, User):
             raise HSLUsageException("Target is not a user")
         user_labels = this_user.ulabels
-        # TODO: use exists() here instead of try except
+
         try:
-            labels = UserResourceLabels.objects.get(user=user_labels,
-                                                    resource=self,
-                                                    kind=LabelCodes.MINE)
+            UserResourceLabels.objects.get(ulabels=user_labels,
+                                           rlabels=self,
+                                           kind=LabelCodes.MINE)
             return True
 
         except UserResourceLabels.DoesNotExist:

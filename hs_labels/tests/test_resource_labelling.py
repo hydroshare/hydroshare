@@ -1,11 +1,11 @@
 from django.test import TestCase
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_labels.models import UserLabels, ResourceLabels, \
-    UserResourceLabels, LabelCodes, HSLUsageException
+    UserResourceLabels, HSLUsageException
 
 
 def global_reset():
@@ -22,6 +22,48 @@ def match_lists(l1, l2):
     """
     return len(set(l1) & set(l2)) == len(set(l1))\
        and len(set(l1) | set(l2)) == len(set(l1))
+
+
+def match_nested_dicts(d1, d2):
+    # pprint(d1)
+    # pprint(d2)
+    if not isinstance(d1, dict): return False
+    if not isinstance(d2, dict): return False
+    # print("got two dicts")
+    if not match_lists(d1.keys(), d2.keys()): return False
+    # print("same keys")
+    for k in d1:
+        # print("key is ", k)
+        # print("type of d1[k] is ", type(d1[k]))
+        # print("type of d2[k] is ", type(d2[k]))
+        if type(d1[k]) != type(d2[k]): return False
+        if isinstance(d1[k], dict) and isinstance(d2[k], dict):
+            # print("checking dicts against one another")
+            if not match_nested_dicts(d1[k], d2[k]): return False
+        else:
+            # print("checking base values")
+            return d1[k]==d2[k]
+    return True
+
+
+def match_nested_lists(l1, l2):
+    """
+    Match nested lists term for term
+
+    :param l1: first list
+    :param l2: second list
+    :return: True or False
+    """
+    if not isinstance(l1, list): return False
+    if not isinstance(l2, list): return False
+    if len(l1) != len(l2): return False
+    for i in range(len(l1)):
+        if isinstance(l1[i], list) and isinstance(l2[i], list):
+            if not match_nested_lists(l1[i], l2[i]): return False
+        elif not isinstance(l1[i], list) and not isinstance(l2[i], list):
+            if l1[i] != l2[i]: return False
+        else: return False
+    return True
 
 
 class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
@@ -308,3 +350,82 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
             self.fail("clear_resource_labels allowed invalid resource")
         except HSLUsageException:
             pass
+
+        try:
+            scratching.rlabels.get_labels('foo')
+            self.fail("get_labels is allowed invalid user")
+        except HSLUsageException:
+            pass
+
+        try:
+            scratching.rlabels.get_folder('foo')
+            self.fail("get_folder is allowed invalid user")
+        except HSLUsageException:
+            pass
+
+        try:
+            scratching.rlabels.is_favorite('foo')
+            self.fail("is_favorite is allowed invalid user")
+        except HSLUsageException:
+            pass
+
+        try:
+            scratching.rlabels.is_mine('foo')
+            self.fail("is_mine is allowed invalid user")
+        except HSLUsageException:
+            pass
+
+    def test15subfolders(self):
+        cat = self.cat
+        scratching = self.scratching
+        bones = self.bones
+        cat.ulabels.file_resource(scratching, "foo/bar/cat")
+        self.assertTrue(match_lists(cat.ulabels.get_resources_in_folder("foo/bar/cat"), [scratching]))
+        self.assertEqual(scratching.rlabels.get_folder(cat), 'foo/bar/cat')
+        # pprint(cat.ulabels.resource_top_folders)
+        self.assertTrue(match_lists(cat.ulabels.resource_top_folders, ['foo']))
+        self.assertTrue(match_lists(cat.ulabels.get_resource_subfolders('foo/bar'), ['cat']))
+        self.assertTrue(match_lists(cat.ulabels.get_resource_subfolders('foo'), ['bar']))
+        self.assertTrue(match_lists(cat.ulabels.get_resource_subfolders('foo/bar/cat'), []))
+        self.assertTrue(match_lists(cat.ulabels.get_resource_subfolders(None), ['foo']))
+
+        foo = cat.ulabels.resource_hierarchy
+        expected = {u'folders': {u'foo': {u'folders': {u'bar': {u'folders': {u'cat': {u'resources': [scratching]}}}}}}}
+        self.assertTrue(match_nested_dicts(foo, expected))
+
+        foo = cat.ulabels.resource_sequence
+        expected = [[u'foo', 1, []],
+                    [u'bar', 2, []],
+                    [u'cat', 3, [scratching]]]
+        self.assertTrue(match_nested_lists(foo, expected))
+
+        # put in a second file
+        cat.ulabels.file_resource(bones, "foo")
+
+        foo = cat.ulabels.resource_hierarchy
+        expected = {u'folders': {u'foo': {u'folders': {u'bar': {u'folders': {u'cat': {u'resources': [scratching]}}}},
+                                          u'resources': [bones]}}}
+        self.assertTrue(match_nested_dicts(foo, expected))
+
+        foo = cat.ulabels.resource_sequence
+        expected = [[u'foo', 1, [bones]],
+                    [u'bar', 2, []],
+                    [u'cat', 3, [scratching]]]
+        self.assertTrue(match_nested_lists(foo, expected))
+
+        # now move the second file around.
+        cat.ulabels.file_resource(bones, "foo/vaz")
+
+        self.assertTrue(match_lists(cat.ulabels.get_resource_subfolders('foo'), ['bar', 'vaz']))
+
+        foo = cat.ulabels.resource_hierarchy
+        expected = {u'folders': {u'foo': {u'folders': {u'bar': {u'folders': {u'cat': {u'resources': [scratching]}}},
+                                                       u'vaz': {u'resources': [bones]}}}}}
+        self.assertTrue(match_nested_dicts(foo, expected))
+
+        foo = cat.ulabels.resource_sequence
+        expected = [[u'foo', 1, []],
+                    [u'vaz', 2, [bones]],
+                    [u'bar', 2, []],
+                    [u'cat', 3, [scratching]]]
+        self.assertTrue(match_nested_lists(foo, expected))

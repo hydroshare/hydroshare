@@ -40,8 +40,8 @@ class Migration(migrations.Migration):
                 ('kind', models.IntegerField(default=1, editable=False, choices=[(1, b'Label'), (2, b'Folder'), (3, b'Favorite'), (4, b'Mine')])),
                 ('start', models.DateTimeField(auto_now=True)),
                 ('label', models.TextField()),
-                ('resource', models.ForeignKey(related_name='r2urlabels', editable=False, to='hs_labels.ResourceLabels', help_text=b'resource to which a label applies')),
-                ('user', models.ForeignKey(related_name='u2urlabels', editable=False, to='hs_labels.UserLabels', help_text=b'user assigning a label')),
+                ('rlabels', models.ForeignKey(related_name='rl2url', editable=False, to='hs_labels.ResourceLabels', help_text=b'resource to which a label applies')),
+                ('ulabels', models.ForeignKey(related_name='ul2url', editable=False, to='hs_labels.UserLabels', help_text=b'user assigning a label')),
             ],
             options={
             },
