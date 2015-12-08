@@ -2406,10 +2406,6 @@ h4.title {
     border-bottom-left-radius: 4px;
 }
 
-#adv-search {
-
-}
-
 #item-selectors_filter {
 	display: none;
 }
@@ -2425,10 +2421,10 @@ h4.title {
 .btn-clear-search {
 	position: absolute;
 	left: -25px;
-	color: grey;
+	color: #A8A8A8;
 	font-size: 16px;
 	background: #FFF;
-	top: 7px;
+	top: 10px;
 }
 
 .search-icon {
@@ -2438,7 +2434,18 @@ h4.title {
 	color: #A8A8A8;
 }
 
+#input-author, #input-subject {
+	padding-right: 25px;
+}
+
 #resource-search-input {
 	padding-left: 25px;
 	padding-right: 30px;
+}
+
+.btn-clear-search-inline {
+	color: #A8A8A8;
+	float: right;
+	top: -25px;
+	right: 8px;
 }
