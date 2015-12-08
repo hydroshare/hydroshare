@@ -4,6 +4,13 @@ redis:
   image: redis:2.8
 rabbitmq:
   image: rabbitmq:3.5
+solr:
+  image: makuk66/docker-solr:4.10.4
+  volumes:
+    # hydroshare repository
+    - "/home/hydro/hydroshare:/hydroshare"
+  ports:
+    - "8983"
 hydroshare:
   build: .
   environment:
@@ -15,11 +22,15 @@ hydroshare:
     POSTGIS_DB: postgres
     POSTGIS_USER: postgres
     PGPASSWORD: postgres
+    SOLR_HOST: solr
   volumes:
     # hydroshare repository
     - ".:/home/docker/hydroshare"
+    #- "/home/hydro/hydroshare:/home/docker/hydroshare"
     # pycharm debugging
-    #- "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
+    # - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
+    # log files
+    #- "/home/hydro/hydroshare/log:/var/log/hydroshare"
   ports:
     - "1338:22"
     - "8000:8000"
@@ -27,6 +38,7 @@ hydroshare:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
+    - solr:solr
   command: /bin/bash init
 defaultworker:
   build: .
