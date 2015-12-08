@@ -416,11 +416,22 @@
                         '</li>'
                 );
 
-                $("#toolbar-labels-dropdown ul").prepend(
-                        '<li>' +
+                if ($(".row-selector:checked").length == 0) {
+                    $("#toolbar-labels-dropdown ul").prepend(
+                            '<li>' +
                             '<label class="checkbox"><input disabled type="checkbox" value="' + curr + '">' + curr + '</label>' +
-                        '</li>'
-                );
+                            '</li>'
+                    );
+                }
+                else {
+
+                    $("#toolbar-labels-dropdown ul").prepend(
+                            '<li>' +
+                            '<label class="checkbox"><input type="checkbox" value="' + curr + '">' + curr + '</label>' +
+                            '</li>'
+                    );
+                }
+
 
                 $(".inline-dropdown input[type='checkbox']").change(updateLabelCount);
             }
@@ -479,6 +490,7 @@
 
         function updateLabelCount() {
             $("#labels input[data-label]").parent().parent().find(".badge").text("0");
+            $("#toolbar-labels-dropdown input[type='checkbox']").prop("checked", true);
             $(".btn-inline-label").css("color", "");
             var items = $(".inline-dropdown input[type='checkbox']");
             var collection = [];
@@ -491,6 +503,13 @@
                     collection[label]++;
 
                     $(items[i]).closest("tr").find(".btn-inline-label").css("color", "#0A91AB");
+                }
+                else {
+                    // Update state of toolbar label chekcboxes
+                    var row = $(items[i]).closest("tr").find(".row-selector")
+                    if (row.prop("checked") == true) {
+                        $("#toolbar-labels-dropdown input[type='checkbox'][value='" + label + "']").prop("checked", false);
+                    }
                 }
             }
 
