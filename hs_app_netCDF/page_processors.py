@@ -1,13 +1,16 @@
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
-
 from django.forms.models import formset_factory
+from django.forms import BaseFormSet
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core import page_processors
-from hs_core.views import *
+from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
+from functools import partial, wraps
 
-from forms import *
-from hs_app_netCDF.forms import ModalDialogLayoutAddVariable
+from hs_core import page_processors
+from hs_core.forms import MetaDataElementDeleteForm
+from hs_core.views import add_generic_context
+
+from hs_app_netCDF.forms import ModalDialogLayoutAddVariable, OriginalCoverageForm, OriginalCoverageMetaDelete, VariableForm, VariableLayoutEdit
+from hs_app_netCDF.models import NetcdfResource
 
 
 @processor_for(NetcdfResource)
@@ -27,8 +30,6 @@ def landing_page(request, page):
             for f in content_model.files.all():
                 if '_header_info.txt' in f.resource_file.name:
                     extended_metadata_exists = True
-
-
 
         context['extended_metadata_exists'] = extended_metadata_exists
 
@@ -123,7 +124,7 @@ def landing_page(request, page):
                 nc_file_name = f.resource_file.name.split('/')[-1]
 
                 context['opendap'] = '{}/thredds/dodsC/HFCat/{}/data/contents/{}.html'.format(ip, shortkey, nc_file_name)
-                context['ncss'] = '{}/thredds/ncss/HFCat/{}/data/contents/{}/dataset.html'.format(ip,shortkey, nc_file_name)
+                context['ncss'] = '{}/thredds/ncss/HFCat/{}/data/contents/{}/dataset.html'.format(ip, shortkey, nc_file_name)
                 context['iso'] = '{}/thredds/iso/HFCat/{}/data/contents/{}'.format(ip, shortkey, nc_file_name)
                 context['ncml'] = '{}/thredds/ncml/HFCat/{}/data/contents/{}'.format(ip, shortkey, nc_file_name)
                 context['nc_file_name'] = nc_file_name
