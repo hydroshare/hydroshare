@@ -1136,7 +1136,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
         # delete related resource labelling records
         res_labels = self.rlabels
-        UserResourceLabels.objects.filter(resource=res_labels).delete()
+        UserResourceLabels.objects.filter(rlabels=res_labels).delete()
         res_labels.delete()
 
         super(AbstractResource, self).delete()
