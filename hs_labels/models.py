@@ -125,21 +125,18 @@ class LabelCodes(object):
         * 4 or LabelCodes.MINE:
             marks the object to be included in my resources
 
-        * 5 or LabelCodes.SAVEDLABEL:
-            creates a label that can be used later for labeling a resource
 
     """
     LABEL = 1
     FOLDER = 2
     FAVORITE = 3
     MINE = 4
-    SAVEDLABEL = 5
+
     LABEL_CHOICES = (
         (LABEL, 'Label'),
         (FOLDER, 'Folder'),
         (FAVORITE, 'Favorite'),
         (MINE, 'Mine'),
-        (SAVEDLABEL, 'Saved Label')
     )
 
 ####################################
@@ -167,7 +164,7 @@ class UserResourceLabels(models.Model):
     # Utilize an underlying class of User to hold labels for resources.
     # This creates an implicit query User.ulabels that represents all labels
     # for a user.
-    ulabels = models.ForeignKey('UserLabels', null=False, editable=False,
+    ulabels = models.ForeignKey('UserLabels', null=True, editable=False,
                                 related_name='ul2url',         # unused but must be defined and unique
                                 help_text='user assigning a label')
     # There is a basic design question as to whether the target of a label should be a
@@ -177,6 +174,13 @@ class UserResourceLabels(models.Model):
                                 related_name="rl2url",     # unused but must be defined and unique
                                 help_text='resource to which a label applies')
     label = models.TextField()
+
+
+class UserStoredLabels(models.Model):
+    """ Storage class for persistent labels that are reusable across different kinds of objects
+    """
+    ulabels = models.ForeignKey('UserLabels', null=True, help_text='user who stored the label', related_name='ul2usl')
+    label = models.TextField(help_text='label to be stored by user')
 
 
 class UserLabels(models.Model):
@@ -189,7 +193,7 @@ class UserLabels(models.Model):
 
     user = models.OneToOneField(User,
                                 editable=False,
-                                null=True,
+                                null=False,
                                 related_name='ulabels',  # induced field in User class.
                                 related_query_name='ulabels')
 
@@ -731,17 +735,13 @@ class UserLabels(models.Model):
 
         # This logic implicitly limits one to one record per resource and requester.
         try:
-            UserResourceLabels.objects.get(kind=LabelCodes.SAVEDLABEL,
-                                           label__exact=label_string,
-                                           ulabels=self)
+            UserStoredLabels.objects.get(label__exact=label_string, ulabels=self)
             # if this succeeds, resource is already labeled with this label_string.
 
         # only create label if it does not exist. No duplicates.
-        except UserResourceLabels.DoesNotExist:
+        except UserStoredLabels.DoesNotExist:
             # create a new label record
-            UserResourceLabels(kind=LabelCodes.SAVEDLABEL,
-                               label=label_string,
-                               ulabels=self).save()
+            UserStoredLabels(label=label_string, ulabels=self).save()
 
     def unsave_label(self, this_label):
         """ Remove the specified saved label
@@ -756,23 +756,21 @@ class UserLabels(models.Model):
         # remove leading and trailing spaces
         label_string = UserLabels.clean_label(this_label)
 
-        UserResourceLabels.objects.filter(label__exact=label_string,
-                                          kind=LabelCodes.SAVEDLABEL,
-                                          ulabels=self).delete()
+        UserStoredLabels.objects.filter(label__exact=label_string, ulabels=self).delete()
 
     def clear_saved_labels(self):
         """
         Clear all saved labels for a user
 
         """
-        UserResourceLabels.objects.filter(kind=LabelCodes.SAVEDLABEL, ulabels=self).delete()
+        UserStoredLabels.objects.filter(ulabels=self).delete()
 
     @property
     def saved_labels(self):
         """
         :return: a list of strings that constitute the saved labels
         """
-        return UserResourceLabels.objects.filter(kind=LabelCodes.SAVEDLABEL).values_list('label', flat=True).distinct()
+        return UserStoredLabels.objects.filter(ulabels=self).values_list('label', flat=True).distinct()
 
 
 class ResourceLabels(models.Model):
@@ -787,7 +785,7 @@ class ResourceLabels(models.Model):
 
     resource = models.OneToOneField(BaseResource,
                                     editable=False,
-                                    null=True,
+                                    null=False,
                                     related_name='rlabels',  # induced field of BaseResource
                                     related_query_name='rlabels')
 
