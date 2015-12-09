@@ -1114,7 +1114,19 @@ class UserAccess(models.Model):
         :return: List of resource objects that can be edited  by this user.
         """
         return BaseResource.objects.filter(raccess__r2urp__user=self, raccess__immutable=False,
-                                              raccess__r2urp__privilege__lte=PrivilegeCodes.CHANGE).distinct()
+                                           raccess__r2urp__privilege__lte=PrivilegeCodes.CHANGE).distinct()
+
+    def get_resources_with_explicit_access(self, privilege):
+        """
+        Get a list of resources that the user has the specified privilege
+        Args:
+            privilege: one of the PrivilegeCodes
+
+        Returns: list of resource objects (QuerySet)
+
+        """
+        return BaseResource.objects.filter(raccess__r2urp__user=self, raccess__immutable=False,
+                                           raccess__r2urp__privilege=privilege).distinct()
 
     #############################################
     # Check access permissions for self (user)

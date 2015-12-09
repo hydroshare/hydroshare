@@ -2021,6 +2021,12 @@ button.loading {
 
 .list-separator {
 	color: #333;
+	pointer-events: none;
+}
+
+.list-separator:hover {
+	text-decoration: none;
+	pointer-events: none;
 }
 
 .user-icon:before {
@@ -2416,7 +2422,8 @@ h4.title {
 }
 
 #item-selectors tr > td:first-child {
-	max-width: 38px;
+	max-width: 77px;
+	min-width:77px;
 }
 .dropdown.dropdown-lg {
 	position: static !important;
@@ -2508,8 +2515,6 @@ h4.title {
 .btn-inline-favorite:hover {
 	color: rgb(255, 163, 0);
 }
-
-
 
 .facet-list .list-group-item {
 	border: 0;
@@ -2635,6 +2640,8 @@ h4.title {
 	border: 1px solid #ddd;
 	padding: 0 15px;
 	min-width: 200px;
+	max-height: 150px;
+	overflow: auto;
 }
 
 .inline-dropdown ul, .list-labels {
@@ -2644,4 +2651,12 @@ h4.title {
 .dataTables_wrapper {
     max-width: 100%;
     overflow: auto;
+}
+
+.all-rows-selector {
+
+}
+
+.resource-type-text {
+	display:none;
 }

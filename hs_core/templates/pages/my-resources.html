@@ -15,41 +15,41 @@
                 <div class="panel-heading">
                     <h4 class="panel-title">
                         <span class="glyphicon glyphicon glyphicon-search"></span>
-                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#browse">&nbsp;Browse</a></h4>
+                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#filter">&nbsp;Filter</a></h4>
                 </div>
-                <div id="browse" class="facet-list panel-collapse collapse in">
+                <div id="filter" class="facet-list panel-collapse collapse in">
                     <div class="panel-body">
                         <div class="list-group">
                             <ul class="list-group inputs-group">
-                                <li class="list-group-item" id="1">
-                                    <span class="badge">0</span>
+                                <li class="list-group-item">
+                                    <span class="badge">{{ owned|length }}</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="browse" value="1">Owned by me</label>
+                                        <input type="checkbox" data-facet="browse" value="Owned">Owned by me</label>
                                 </li>
-                                <li class="list-group-item" id="1">
-                                    <span class="badge">0</span>
+                                <li class="list-group-item">
+                                    <span class="badge">{{ editable|length }}</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="browse" value="1">Editable by me</label>
+                                        <input type="checkbox" data-facet="browse" value="Editable">Editable by me</label>
                                 </li>
-                                <li class="list-group-item" id="1">
-                                    <span class="badge">0</span>
+                                <li class="list-group-item">
+                                    <span class="badge">{{ view|length }}</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="browse" value="1">Shared with me</label>
+                                        <input type="checkbox" data-facet="browse" value="View">Shared with me</label>
                                 </li>
-                                <li class="list-group-item" id="1">
+                                <li class="list-group-item">
                                     <span class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="browse" value="1">Favorites</label>
+                                        <input type="checkbox" data-facet="browse" value="Favorites">Favorites</label>
                                 </li>
-                                <li class="list-group-item" id="1">
+                                <li class="list-group-item" >
                                     <span class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="browse" value="1">Following</label>
+                                        <input type="checkbox" data-facet="browse" value="Following">Following</label>
                                 </li>
-                                <li class="list-group-item" id="1">
+                                <li class="list-group-item">
                                     <span class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="browse" value="1">Recent</label>
+                                        <input type="checkbox" data-facet="browse" value="Recent">Recent</label>
                                 </li>
                             </ul>
                         </div>
@@ -153,17 +153,19 @@
             <table id="item-selectors" class="table-striped table-hover">
                 <thead>
                 <tr>
-                    <th></th>
-                    <th>Title</th>
+                    <th><input class="all-rows-selector" type="checkbox" aria-label="..."></th>
                     <th>Type</th>
+                    <th>Title</th>
                     <th>Owner</th>
                     <th>Last modified</th>
                     <th>Subject</th>
+                    <th>Authors</th>
+                    <th>Permission Level</th>
                 </tr>
                 </thead>
                 <tbody>
                     {# ################### #}
-                    {% for res in resources %}
+                    {% for res in owned %}
                         <tr>
                             <td>
                                 <input class="row-selector" type="checkbox" aria-label="...">
@@ -176,17 +178,195 @@
                                         </ul>
                                     </div>
                                 </div>
-
+                            </td>
+                            <td>
+                                <span class="resource-type-text">{{ res|resource_type }}</span>
+                                {% if res|resource_type == "Generic" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Geographic Raster" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Model Program Resource" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Model Instance Resource" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "SWAT Model Instance Resource" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Multidimensional" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Time Series" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Geographic Feature" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% endif %}
                             </td>
                             <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
-                            <td>{{ res|resource_type }}</td>
+                            <td>{% for owner in res.raccess.owners.all %}
+                                  {% if forloop.counter0 > 0 %} · {% endif %}
+                                <span>{{ owner|contact|safe }}</span>
+                            {% endfor %}</td>
+                            <td>{{ res.updated|date }}, {{ res.updated|time }}</td>
+                            <td>
+                                {% for kw in res.metadata.subjects.all %}
+                                   {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for creator in res.metadata.creators.all %}
+                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                    {% if creator.description %}
+                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
+                                    {% else %}
+                                        <span>{{ creator.name }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>Owned</td>
+                        </tr>
+                    {% endfor %}
+
+                    {% for res in editable %}
+                        <tr>
+                            <td>
+                                <input class="row-selector" type="checkbox" aria-label="...">
+                                <span class="glyphicon glyphicon-star btn-inline-favorite"></span>
+                                <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown" aria-expanded="false"></span>
+
+                                <div class="dropdown-menu inline-dropdown" role="menu">
+                                    <div class="panel-body" role="form">
+                                        <ul class="list-group list-labels">
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="resource-type-text">{{ res|resource_type }}</span>
+                                {% if res|resource_type == "Generic" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Geographic Raster" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Model Program Resource" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Model Instance Resource" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "SWAT Model Instance Resource" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Multidimensional" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Time Series" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Geographic Feature" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% endif %}
+                            </td>
+                            <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
                             {% if res.first_creator.description %}
                                 <td><a href="{{ res.first_creator.description }}">{{ res.first_creator.name  }}</a></td>
                             {% else %}
                                 <td>{{ res.first_creator.name }}</td>
                             {% endif %}
                             <td>{{ res.updated|date }}, {{ res.updated|time }}</td>
-                            <td>Subject {{ forloop.counter }}</td>
+                            <td>
+                                {% for kw in res.metadata.subjects.all %}
+                                   {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for creator in res.metadata.creators.all %}
+                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                    {% if creator.description %}
+                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
+                                    {% else %}
+                                        <span>{{ creator.name }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>Editable</td>
+                        </tr>
+                    {% endfor %}
+
+                    {% for res in view %}
+                        <tr>
+                            <td>
+                                <input class="row-selector" type="checkbox" aria-label="...">
+                                <span class="glyphicon glyphicon-star btn-inline-favorite"></span>
+                                <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown"
+                                      aria-expanded="false"></span>
+
+                                <div class="dropdown-menu inline-dropdown" role="menu">
+                                    <div class="panel-body" role="form">
+                                        <ul class="list-group list-labels">
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </td>
+                            <td>
+                                <span class="resource-type-text">{{ res|resource_type }}</span>
+                                {% if res|resource_type == "Generic" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Geographic Raster" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Model Program Resource" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Model Instance Resource" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "SWAT Model Instance Resource" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Multidimensional" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Time Series" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Geographic Feature" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% endif %}
+                            </td>
+                            <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
+                            {% if res.first_creator.description %}
+                                <td><a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a></td>
+                            {% else %}
+                                <td>{{ res.first_creator.name }}</td>
+                            {% endif %}
+                            <td>{{ res.updated|date }}, {{ res.updated|time }}</td>
+                            <td>
+                                {% for kw in res.metadata.subjects.all %}
+                                   {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for creator in res.metadata.creators.all %}
+                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                    {% if creator.description %}
+                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
+                                    {% else %}
+                                        <span>{{ creator.name }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>View</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -220,6 +400,8 @@
         </div>
     </div>
 
+    {#    To be used for querying the tabla in javascrip    t#}
+    <input id="currentUserName" value="{{ user|best_name }}" style="display:none">
 
     <!-- Manage Labels Modal -->
     <div class="modal fade" id="modalManageLabels" tabindex="-1" role="dialog" aria-labelledby="Manage Labels">
@@ -233,11 +415,11 @@
                 <div class="modal-body">
                     <table id="table-user-labels" class="table">
                         <tbody>
-                            <tr><td><i>No labels found.</i></td></tr>
-{#                            <tr>#}
-{#                                <td class="user-label">Test Label</td>#}
-{#                                <td><span class="glyphicon glyphicon-remove"></span></td>#}
-{#                            </tr>#}
+{#                            <tr><td><i>No labels found.</i></td></tr>#}
+                            <tr>
+                                <td class="user-label">Test Label</td>
+                                <td><span class="glyphicon glyphicon-remove"></span></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -283,13 +465,35 @@
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
     <script type="text/javascript">
         $(document).ready(function () {
+
+        /*==================================================
+            Table columns
+            0 - actions
+            1 - Resource Type
+            2 - Title
+            3 - Owner
+            4 - Last Modified
+            5 - Subject
+            6 - Authors
+            7 - Permission Level
+        ==================================================*/
             var resourceTable = $("#item-selectors").DataTable({
                 "order": [[1, "desc"]],
                 "paging": false,
                 "info": false,
                 "columnDefs": [
                     {
-                        "targets": [ 5 ],
+                        "targets": [5],
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [6],
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [7],
                         "visible": false,
                         "searchable": true
                     },
@@ -336,9 +540,26 @@
                 resourceTable.draw();
             });
 
+            $("#filter input[type='checkbox']").change(function(){
+                resourceTable.draw();
+            });
+
+            $(".all-rows-selector").change(function(){
+                $(".row-selector").prop("checked", $(this).prop("checked"));
+
+                var toolbarLabels = $("#toolbar-labels-dropdown input[type='checkbox']");
+                if ($(this).prop("checked") == false) {
+                    toolbarLabels.attr("disabled", true);
+                }
+                else {
+                    toolbarLabels.attr("disabled", false);
+                }
+            });
+
             $(".row-selector").change(function() {
-                var toolbarLabels = $("#toolbar-labels-dropdown .list-labels input[type='checkbox']");
-                if ($(".row-selector:checked").length == 0) {
+                var toolbarLabels = $("#toolbar-labels-dropdown input[type='checkbox']");
+                var selectedRows = $(".row-selector:checked");
+                if (selectedRows.length == 0) {
                     toolbarLabels.attr("disabled", true);
                     return;
                 }
@@ -346,8 +567,9 @@
                 toolbarLabels.attr("disabled", false);
                 toolbarLabels.prop("checked", true);
 
-                var inlineCheckboxes = $(".row-selector:checked").parent().find(".inline-dropdown input[type='checkbox']:not(:checked)");
+                var inlineCheckboxes = selectedRows.parent().find(".inline-dropdown input[type='checkbox']:not(:checked)");
 
+                // Uncheck label checkbox in toolbar
                 for (var i = 0; i < inlineCheckboxes.length; i++) {
                     var label = $(inlineCheckboxes[i]).val();
                     $("#toolbar-labels-dropdown .list-labels input[type='checkbox'][value='" + label + "']").prop("checked", false);
@@ -598,13 +820,18 @@
             searchInput.val(searchQuery);
         }
 
-        {#        Table columns             #}
-        {#        0 - actions                 #}
-        {#        1 - Title                 #}
-        {#        2 - Resource Type         #}
-        {#        3 - First Author          #}
-        {#        4 - Last Modified         #}
-        {#        5 - Subject               #}
+
+        /*==================================================
+            Table columns
+            0 - actions
+            1 - Resource Type
+            2 - Title
+            3 - Owner
+            4 - Last Modified
+            5 - Subject
+            6 - Authors
+            7 - Permission Level
+        ==================================================*/
 
         /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
         $.fn.dataTable.ext.search.push (
@@ -642,7 +869,7 @@
 
                     // Filter the table for each value
 
-                    if (inputType && data[2].toUpperCase().indexOf(inputType.toUpperCase()) == -1) {
+                    if (inputType && data[1].toUpperCase().indexOf(inputType.toUpperCase()) == -1) {
                         return false;
                     }
 
@@ -650,13 +877,31 @@
                         return false;
                     }
 
-                    if (inputAuthor && data[3].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
+                    if (inputAuthor && data[6].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
                         return false;
                     }
 
-                    // Facets filter
+                    //---------------- Facets filter--------------------
+                    // Owned by me
+                    if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
+                        if (data[7] != "Owned") {
+                            return false;
+                        }
+                    }
 
+                    // Editable by me
+                    if ($('#filter input[type="checkbox"][value="Editable"]').prop("checked") == true) {
+                        if (data[7] != "Owned" && data[7] != "Editable") {
+                            return false;
+                        }
+                    }
 
+                    // Shared with me
+                    if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
+                        if (data[7] == "Owned" || (data[7] != "View" && data[7] != "Editable")) {
+                            return false;
+                        }
+                    }
 
                     // Default
                     return true;
