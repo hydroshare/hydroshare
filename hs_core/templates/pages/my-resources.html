@@ -27,12 +27,12 @@
                                         <input type="checkbox" data-facet="browse" value="Owned">Owned by me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span class="badge">{{ editable|length }}</span>
+                                    <span class="badge">0</span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="Editable">Editable by me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span class="badge">{{ view|length }}</span>
+                                    <span class="badge">0</span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="browse" value="View">Shared with me</label>
                                 </li>
@@ -77,7 +77,8 @@
         <div class="col-lg-10" id="items">
             <h2 class="page-title">My Resources</h2>
             <div class="row">
-                <div class="col-sm-8 col-xs-12">
+
+                <div class="col-sm-8 col-xs-12 pull-right">
                     <div id="search-container" class="input-group">
                         <span class="glyphicon glyphicon-search search-icon"></span>
                         <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
@@ -123,15 +124,16 @@
                         </div>
                     </div>
                  </div>
-
-                <div class="col-sm-4 col-xs-12">
+                <div class="col-sm-4 col-xs-12 pull-left">
                     <div id="resource-actions-container" class="noselect">
-                        <span class="glyphicon  glyphicon-trash pull-right"  data-toggle="modal" data-target="#delete-resource-dialog" title="Delete"></span>
-                        <span id="btn-favorite" class="glyphicon  glyphicon-star pull-right" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>
-                        <span class="glyphicon  glyphicon-share pull-right" data-toggle="tooltip" data-placement="bottom" title="Share"></span>
-
-                        <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle pull-right"
+                        <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle"
                               data-toggle="dropdown" aria-expanded="false" title="Label"></span>
+
+                        <span class="glyphicon  glyphicon-share" data-toggle="tooltip" data-placement="bottom" title="Share"></span>
+
+                        <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>
+
+                        <span class="glyphicon  glyphicon-trash"  data-toggle="modal" data-target="#delete-resource-dialog" title="Delete"></span>
 
                         <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">
                             <div class="panel-body" role="form">
@@ -415,11 +417,11 @@
                 <div class="modal-body">
                     <table id="table-user-labels" class="table">
                         <tbody>
-{#                            <tr><td><i>No labels found.</i></td></tr>#}
-                            <tr>
-                                <td class="user-label">Test Label</td>
-                                <td><span class="glyphicon glyphicon-remove"></span></td>
-                            </tr>
+                            <tr><td><i>No labels found.</i></td></tr>
+{#                            <tr>#}
+{#                                <td class="user-label">Test Label</td>#}
+{#                                <td><span class="glyphicon glyphicon-remove"></span></td>#}
+{#                            </tr>#}
                         </tbody>
                     </table>
                 </div>
