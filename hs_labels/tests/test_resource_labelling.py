@@ -429,3 +429,13 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
                     [u'bar', 2, []],
                     [u'cat', 3, [scratching]]]
         self.assertTrue(match_nested_lists(foo, expected))
+
+    def test16savedlabels(self):
+        cat = self.cat
+        cat.ulabels.save_label('silly')
+        cat.ulabels.save_label('cranky')
+        self.assertTrue(match_lists(cat.ulabels.saved_labels, ['silly', 'cranky']))
+        cat.ulabels.unsave_label('silly')
+        self.assertTrue(match_lists(cat.ulabels.saved_labels, ['cranky']))
+        cat.ulabels.clear_saved_labels()
+        self.assertTrue(match_lists(cat.ulabels.saved_labels, []))

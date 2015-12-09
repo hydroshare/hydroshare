@@ -546,6 +546,32 @@ def get_public_groups():
         return Group.objects.filter(gaccess__public=True)
 
 
+def create_resource_label(user, label):
+    """
+    creates a label for a user to be later used for labeling a resource (wrapper api for hs_labels app)
+    Args:
+        user: an instance of User object - who wants to create a label
+        label: label text to be created
+
+    Returns:
+
+    """
+    user.ulabels.save_label(label)
+
+
+def delete_resource_label(user, label):
+    """
+    deletes a label from the list of user saved resource labels (wrapper api for hs_labels app)
+    Args:
+        user: an instance of User object - who wants to delete a label
+        label: label text to be deleted
+
+    Returns:
+
+    """
+    user.ulabels.unsave_label(label)
+
+
 def label_resource(user, resource, label):
     """
     assigns a label to a resource (wrapper api for hs_labels app)
@@ -654,6 +680,8 @@ def add_to_my_resources(user, resource):
 
     """
 
+    # TODO: Need to find out if we should check if the resource is suitable (meaning the resource is public/discoverable
+    # and user has no explicit access permission) for adding to my resources
     user.ulabels.claim_resource(resource)
 
 
@@ -670,6 +698,31 @@ def delete_from_my_resources(user, resource):
 
     user.ulabels.unclaim_resource(resource)
 
+
+def get_user_resource_labels(user):
+    """
+    gets a list of user saved labels (strings)
+    Args:
+        user: an instance of User object - whose saved resource labels are needed
+
+    Returns: a list of strings
+
+    """
+
+    return user.ulabels.saved_labels
+
+
+def get_user_resource_used_labels(user):
+    """
+    gets a list of labels (strings) currently used by the user in labeling resources
+    Args:
+        user: an instance of User object - whose saved resource labels are needed
+
+    Returns: a list of strings
+
+    """
+
+    return user.ulabels.user_labels
 
 def get_resource_list(creator=None,
         group=None, user=None, owner=None,

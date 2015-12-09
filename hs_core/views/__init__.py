@@ -387,12 +387,18 @@ def resource_labeling_action(request, shortkey, *args, **kwargs):
     """
     This must be a POST request. The following data needs to be passed as part of the POST request:
     action: resource labeling action - has to be either 'CREATE' or 'DELETE'
-    label_type: type of label - one of these: 'LABEL', 'FAVORITE', 'MINE', 'FOLDER'
-    label: a string value required if the label_type is either 'LABEL', or 'FOLDER' and action is 'CREATE'
+    label_type: type of label - one of these: 'LABEL', 'FAVORITE', 'MINE', 'FOLDER', 'SAVEDLABEL'
+    label: a string value required if the label_type is either 'LABEL', 'SAVEDLABEL',
+           or 'FOLDER' and action is 'CREATE'
 
     """
+    _LABEL = 'LABEL'
+    _FOLDER = 'FOLDER'
+    _FAVORITE = 'FAVORITE'
+    _MINE = 'MINE'
+    _SAVEDLABEL = 'SAVEDLABEL'
 
-    # TODO: clear all labels
+    # TODO: clear all labels, clear all saved labels
     res, _, user = authorize(request, shortkey, view=True, full=True, superuser=True)
     action = request.POST['action']
     label_type = request.POST['label_type']
@@ -400,34 +406,38 @@ def resource_labeling_action(request, shortkey, *args, **kwargs):
     err_msg = None
 
     # validate post data
-    if label_type not in ('LABEL', 'FAVORITE', 'FOLDER', 'MINE'):
+    if label_type not in (_LABEL, _FAVORITE, _FOLDER, _MINE, _SAVEDLABEL):
         err_msg = "Invalid type of label found"
-    elif label_type == 'LABEL':
+    elif label_type == _LABEL or label_type == _SAVEDLABEL:
         if label is None:
             err_msg = "A value for label is missing"
-    elif label_type == 'FOLDER' and action == 'CREATE':
+    elif label_type == _FOLDER and action == 'CREATE':
         if label is None:
             err_msg = "A folder name is missing"
 
     if err_msg is None:
         try:
             if action == 'CREATE':
-                if label_type == 'LABEL':
+                if label_type == _LABEL:
                     hydroshare.label_resource(user, res, label)
-                elif label_type == 'FAVORITE':
+                elif label_type == _SAVEDLABEL:
+                    hydroshare.create_resource_label(user, label)
+                elif label_type == _FAVORITE:
                     hydroshare.favorite_resource(user, res)
-                elif label_type == 'FOLDER':
+                elif label_type == _FOLDER:
                     hydroshare.create_resource_folder(user, res, label)
-                elif label_type == 'MINE':
+                elif label_type == _MINE:
                     hydroshare.add_to_my_resources(user, res)
             elif action == 'DELETE':
-                if label_type == 'LABEL':
+                if label_type == _LABEL:
                     hydroshare.unlabel_resource(user, res, label)
-                elif label_type == 'FAVORITE':
+                elif label_type == _SAVEDLABEL:
+                    hydroshare.delete_resource_label(user, label)
+                elif label_type == _FAVORITE:
                     hydroshare.unfavorite_resource(user, res)
-                elif label_type == 'FOLDER':
+                elif label_type == _FOLDER:
                     hydroshare.delete_resource_folder(user, res)
-                elif label_type == 'MINE':
+                elif label_type == _MINE:
                     hydroshare.delete_from_my_resources(user, res)
 
         except Exception as exp:

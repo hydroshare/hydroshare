@@ -125,16 +125,21 @@ class LabelCodes(object):
         * 4 or LabelCodes.MINE:
             marks the object to be included in my resources
 
+        * 5 or LabelCodes.SAVEDLABEL:
+            creates a label that can be used later for labeling a resource
+
     """
     LABEL = 1
     FOLDER = 2
     FAVORITE = 3
     MINE = 4
+    SAVEDLABEL = 5
     LABEL_CHOICES = (
         (LABEL, 'Label'),
         (FOLDER, 'Folder'),
         (FAVORITE, 'Favorite'),
-        (MINE, 'Mine')
+        (MINE, 'Mine'),
+        (SAVEDLABEL, 'Saved Label')
     )
 
 ####################################
@@ -168,7 +173,7 @@ class UserResourceLabels(models.Model):
     # There is a basic design question as to whether the target of a label should be a
     # Resource proper, or an annotation class that contains mainly methods for the resource.
     # Should this be 'BaseResource' or 'ResourceLabels'?
-    rlabels = models.ForeignKey('ResourceLabels', null=False, editable=False,
+    rlabels = models.ForeignKey('ResourceLabels', null=True, editable=False,
                                 related_name="rl2url",     # unused but must be defined and unique
                                 help_text='resource to which a label applies')
     label = models.TextField()
@@ -702,6 +707,72 @@ class UserLabels(models.Model):
         hier = self.resource_hierarchy
         # throw away (unfiled) record
         return UserLabels.__hierarchy_sequence("(unfiled)", hier, 0)[1:]
+
+    ##########################################
+    # save unused labels
+    ##########################################
+
+    def save_label(self, this_label):
+        """
+        Save a label for use later.
+
+        :param this_label: Label to save
+        :return: None
+
+        Users are allowed to label any resource, including resources to which they do not have access.
+        This is not an access control problem because labeling information is private.
+        """
+
+        # check for user error
+        if not isinstance(this_label, basestring):
+            raise HSLUsageException("Label is not text")
+
+        label_string = UserLabels.clean_label(this_label)    # remove leading and trailing spaces
+
+        # This logic implicitly limits one to one record per resource and requester.
+        try:
+            UserResourceLabels.objects.get(kind=LabelCodes.SAVEDLABEL,
+                                           label__exact=label_string,
+                                           ulabels=self)
+            # if this succeeds, resource is already labeled with this label_string.
+
+        # only create label if it does not exist. No duplicates.
+        except UserResourceLabels.DoesNotExist:
+            # create a new label record
+            UserResourceLabels(kind=LabelCodes.SAVEDLABEL,
+                               label=label_string,
+                               ulabels=self).save()
+
+    def unsave_label(self, this_label):
+        """ Remove the specified saved label
+
+        :param this_label: The label to remove. Only that labels will be removed.
+
+        """
+        # check for user input error
+        if not isinstance(this_label, basestring):
+            raise HSLUsageException("Label is not text")
+
+        # remove leading and trailing spaces
+        label_string = UserLabels.clean_label(this_label)
+
+        UserResourceLabels.objects.filter(label__exact=label_string,
+                                          kind=LabelCodes.SAVEDLABEL,
+                                          ulabels=self).delete()
+
+    def clear_saved_labels(self):
+        """
+        Clear all saved labels for a user
+
+        """
+        UserResourceLabels.objects.filter(kind=LabelCodes.SAVEDLABEL, ulabels=self).delete()
+
+    @property
+    def saved_labels(self):
+        """
+        :return: a list of strings that constitute the saved labels
+        """
+        return UserResourceLabels.objects.filter(kind=LabelCodes.SAVEDLABEL).values_list('label', flat=True).distinct()
 
 
 class ResourceLabels(models.Model):
