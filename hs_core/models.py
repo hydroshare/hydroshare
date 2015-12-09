@@ -1134,11 +1134,6 @@ class AbstractResource(ResourcePermissionsMixin):
         GroupResourcePrivilege.objects.filter(resource=access_resource).delete()
         access_resource.delete()
 
-        # delete related resource labelling records
-        res_labels = self.rlabels
-        UserResourceLabels.objects.filter(rlabels=res_labels).delete()
-        res_labels.delete()
-
         super(AbstractResource, self).delete()
 
     # this property needs to be overriden by any specific resource type
