@@ -87,7 +87,6 @@ class HSLUsageException(HSLException):
     def __str__(self):
         return repr("HS Usage Exception: " + self.message)
 
-    pass
 
 
 ####################################
@@ -291,11 +290,10 @@ class UserLabels(models.Model):
 
     def label_resource(self, this_resource, this_label):
         """
-        Share a resource with a group
+        assign a label to a resource
 
-        :param this_resource: Resource to share.
+        :param this_resource: Resource to be assigned a label.
         :param this_label: Label to assign to resource
-        :return: None
 
         Users are allowed to label any resource, including resources to which they do not have access.
         This is not an access control problem because labeling information is private.
