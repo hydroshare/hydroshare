@@ -2300,12 +2300,18 @@ table.overview tr > td:first-child {
 
 .icon-resource-type > span {
     color: #757575;
+	text-shadow: 0 1px 0 #fff;
 }
 
 .icon-resource-type, .contribution {
     box-shadow: 1px 1px 5px #E8E8E8;
     -moz-box-shadow: 1px 1px 5px #E8E8E8;
     -webkit-box-shadow: 1px 1px 5px #E8E8E8;
+}
+
+.icon-resource-type {
+	padding: 17px 10px;
+	background: #F8F8F8
 }
 
 .icon-resource-type > .glyphicon{
@@ -2351,35 +2357,35 @@ h4.title {
 }
 
 #badge-geographic .badge {
-    background-color:#ff7f0e;
+    background-color: #6A8593;
 }
 
 #badge-his .badge {
-    background-color:#2ca02c;
+    background-color: #2ca02c;
 }
 
 #badge-model-program .badge {
-    background-color:#d62728;
+    background-color: #4A5BB9;
 }
 
 #badge-model-instance .badge {
-    background-color:#9467bd;
+    background-color: #CFDD40;
 }
 
 #badge-swat .badge {
-    background-color:#8c564b;
+    background-color: #FF9F0D;
 }
 
 #badge-multidimensional .badge {
-    background-color:#e377c2;
+    background-color: #7247BC;
 }
 
 #badge-time-series .badge {
-    background-color:#17becf;
+    background-color: #129D90;
 }
 
 #badge-geographic-feature .badge {
-    background-color:#bcbd22;
+    background-color: #6A8593;
 }
 
 /*-------- My resources page revamp ---------*/
@@ -2419,6 +2425,17 @@ h4.title {
 #item-selectors {
 	display: none;
 	font-size: 16px;
+	border: 1px solid #ddd;
+	margin-top: 10px;
+}
+
+#item-selectors tbody td {
+	background: #F8F8F8;
+	border-bottom: 1px solid #ddd;
+}
+
+#item-selectors thead th {
+	border-bottom: 1px solid #ddd;
 }
 
 #item-selectors tr:first-child th:first-child {
@@ -2426,9 +2443,10 @@ h4.title {
 }
 
 #item-selectors tr > td:first-child {
-	max-width: 77px;
-	min-width:77px;
+	max-width: 100px;
+	min-width: 100px;
 }
+
 .dropdown.dropdown-lg {
 	position: static !important;
 }
@@ -2501,11 +2519,17 @@ h4.title {
 }
 
 .btn-inline-favorite, .btn-inline-label {
-	padding-left: 8px;
+	padding-top: 3px;
+	margin-left: 8px;
 	margin-right: 8px;
 	font-size: 16px;
-	color: #A9A9A9;
 	cursor: pointer;
+	background-color: #888888;
+	color: transparent;
+	text-shadow: 0 2px 3px rgba(255, 255, 255, 0.5);
+	-webkit-background-clip: text;
+	-moz-background-clip: text;
+	background-clip: text;
 }
 
 .btn-inline-label:hover {
@@ -2566,7 +2590,6 @@ h4.title {
 }
 
 #facets {
-	margin-top: 17px;
 	text-align: center;
 }
 
@@ -2663,4 +2686,8 @@ h4.title {
 
 .resource-type-text {
 	display:none;
+}
+
+.row-selector {
+	margin-right: 8px !important;
 }
