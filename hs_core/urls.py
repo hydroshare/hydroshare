@@ -49,10 +49,6 @@ urlpatterns = patterns('',
         views.share_resource_with_user),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/unshare-resource-with-user/(?P<user_id>[0-9]+)/$',
         views.unshare_resource_with_user),
-
-    # resource labeling actions
-    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/label-resource-action/$', views.resource_labeling_action),
-
     url(r'^_internal/publish/$', views.publish),
     url(r'^_internal/create-resource/$', views.create_resource_select_resource_type),
     url(r'^_internal/create-resource/do/$', views.create_resource),
