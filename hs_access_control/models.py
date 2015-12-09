@@ -1126,7 +1126,8 @@ class UserAccess(models.Model):
 
         """
         return BaseResource.objects.filter(raccess__r2urp__user=self, raccess__immutable=False,
-                                           raccess__r2urp__privilege=privilege).distinct()
+                                   raccess__r2urp__privilege=privilege).exclude(
+                                   raccess__r2urp__privilege__gt=privilege).distinct()
 
     #############################################
     # Check access permissions for self (user)

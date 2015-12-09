@@ -2,7 +2,7 @@
 {% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 
 {# {% block title %}{{ user|best_name }}'s Resources{% endblock %}#}
-{% block title %}Resources{% endblock %}
+{% block title %}My Resources{% endblock %}
 
 {% block main %}
 
@@ -20,36 +20,37 @@
                 <div id="filter" class="facet-list panel-collapse collapse in">
                     <div class="panel-body">
                         <div class="list-group">
-                            <ul class="list-group inputs-group">
+                            <ul class="list-group inputs-group" data-owned-count="{{ owned|length }}"
+                            data-editable-count="{{ editable|length }}" data-view-count="{{ view|length }}" >
                                 <li class="list-group-item">
-                                    <span class="badge">{{ owned|length }}</span>
+                                    <span data-facet="owned" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="browse" value="Owned">Owned by me</label>
+                                        <input type="checkbox" data-facet="owned" value="Owned">Owned by me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span class="badge">0</span>
+                                    <span data-facet="editable" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="browse" value="Editable">Editable by me</label>
+                                        <input type="checkbox" data-facet="editable" value="Editable">Editable by me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span class="badge">0</span>
+                                    <span data-facet="shared with me" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="browse" value="View">Shared with me</label>
+                                        <input type="checkbox" data-facet="shared with me" value="View">Shared with me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span class="badge">0</span>
+                                    <span data-facet="favorites" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="browse" value="Favorites">Favorites</label>
+                                        <input type="checkbox" data-facet="favorites" value="Favorites">Favorites</label>
                                 </li>
                                 <li class="list-group-item" >
-                                    <span class="badge">0</span>
+                                    <span data-facet="following" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="browse" value="Following">Following</label>
+                                        <input type="checkbox" data-facet="following" value="Following">Following</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span class="badge">0</span>
+                                    <span data-facet="recent" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="browse" value="Recent">Recent</label>
+                                        <input type="checkbox" data-facet="recent" value="Recent">Recent</label>
                                 </li>
                             </ul>
                         </div>
@@ -198,7 +199,7 @@
                                 {% elif res|resource_type == "SWAT Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Multidimensional" %}
+                                {% elif res|resource_type == "Multidimensional (NetCDF)" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
                                 {% elif res|resource_type == "Time Series" %}
@@ -265,7 +266,7 @@
                                 {% elif res|resource_type == "SWAT Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Multidimensional" %}
+                                {% elif res|resource_type == "Multidimensional (NetCDF)" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
                                 {% elif res|resource_type == "Time Series" %}
@@ -507,6 +508,15 @@
                 ]
             });
             $("#item-selectors").show();
+
+            // Initialize filter badge count
+            var ownedCount = parseInt($("#filter ul").attr("data-owned-count"));
+            var editableCount = parseInt($("#filter ul").attr("data-editable-count"));
+            var viewCount = parseInt($("#filter ul").attr("data-view-count"));
+
+            $("#filter .badge[data-facet='owned']").text(ownedCount);
+            $("#filter .badge[data-facet='editable']").text(ownedCount + editableCount);
+            $("#filter .badge[data-facet='shared with me']").text(viewCount + editableCount);
 
             $("#resource-search-input").keyup(function () {
                 var searchString = removeQueryOccurrences($(this).val());

@@ -2421,6 +2421,10 @@ h4.title {
 	font-size: 16px;
 }
 
+#item-selectors tr:first-child th:first-child {
+	padding-left: 10px;
+}
+
 #item-selectors tr > td:first-child {
 	max-width: 77px;
 	min-width:77px;
