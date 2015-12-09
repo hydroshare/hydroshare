@@ -1,8 +1,7 @@
 from __future__ import absolute_import
 import json
 
-from django.contrib import messages
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponse
 
 from hs_core.views import authorize
 
@@ -67,17 +66,11 @@ def resource_labeling_action(request, shortkey, *args, **kwargs):
         except Exception as exp:
             err_msg = exp.message
 
-    if request.is_ajax():
-        if err_msg:
-            ajax_response_data = {'status': 'error', 'message': err_msg}
-        else:
-            ajax_response_data = {'status': 'success', 'label_type': label_type, 'action': action,
-                                  'resource_id': shortkey}
-
-        return HttpResponse(json.dumps(ajax_response_data))
-
     if err_msg:
-        messages.error(request, err_msg)
+        ajax_response_data = {'status': 'error', 'message': err_msg}
     else:
-        messages.success(request, "Resource labeling action was successful")
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        ajax_response_data = {'status': 'success', 'label_type': label_type, 'action': action,
+                              'resource_id': shortkey}
+
+    return HttpResponse(json.dumps(ajax_response_data))
+
