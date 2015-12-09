@@ -37,21 +37,12 @@ __author__ = 'Alva'
 # - r.rlabels.get_labels(u)
 # - r.rlabels.is_favorite(u) (trivial, not yet implemented, tomorrow)
 
-from django.contrib.auth.models import User
-from django.db import models
-#from django.db.models import Q
-# from django.conf import settings
-#from pprint import pprint
 import re
 
-from hs_core.models import BaseResource
+from django.contrib.auth.models import User
+from django.db import models
 
-# from hs_core.models import BaseResource
-# for debugging, create a stub BaseResource class
-# fields will be induced into this class via Many-Many relations
-# class BaseResource(models.Model):
-#     title = models.TextField(default='nothing')
-#     pass
+from hs_core.models import BaseResource
 
 ######################################
 ######################################
@@ -69,6 +60,8 @@ from hs_core.models import BaseResource
 # Exceptions specific to access control:
 # b) Usage Exception: bad parameters
 ######################################
+
+
 class HSLException(Exception):
     """
     Generic Base Exception class for HSLLabel class.
@@ -77,6 +70,7 @@ class HSLException(Exception):
     See subclass HSLUsageException for details.
     """
     pass
+
 
 class HSLUsageException(HSLException):
     """
