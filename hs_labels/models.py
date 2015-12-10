@@ -159,13 +159,13 @@ class UserResourceLabels(models.Model):
     # Utilize an underlying class of User to hold labels for resources.
     # This creates an implicit query User.ulabels that represents all labels
     # for a user.
-    ulabels = models.ForeignKey('UserLabels', null=True, editable=False,
+    ulabels = models.ForeignKey('UserLabels', null=False, editable=False,
                                 related_name='ul2url',         # unused but must be defined and unique
                                 help_text='user assigning a label')
     # There is a basic design question as to whether the target of a label should be a
     # Resource proper, or an annotation class that contains mainly methods for the resource.
     # Should this be 'BaseResource' or 'ResourceLabels'?
-    rlabels = models.ForeignKey('ResourceLabels', null=True, editable=False,
+    rlabels = models.ForeignKey('ResourceLabels', null=False, editable=False,
                                 related_name="rl2url",     # unused but must be defined and unique
                                 help_text='resource to which a label applies')
     label = models.TextField()
@@ -188,9 +188,10 @@ class UserLabels(models.Model):
 
     user = models.OneToOneField(User,
                                 editable=False,
-                                null=False,
+                                null=True,
                                 related_name='ulabels',  # induced field in User class.
-                                related_query_name='ulabels')
+                                related_query_name='ulabels',
+                                on_delete=models.CASCADE)
 
     ##########################################
     ##########################################
@@ -757,9 +758,10 @@ class ResourceLabels(models.Model):
 
     resource = models.OneToOneField(BaseResource,
                                     editable=False,
-                                    null=False,
+                                    null=True,
                                     related_name='rlabels',  # induced field of BaseResource
-                                    related_query_name='rlabels')
+                                    related_query_name='rlabels',
+                                    on_delete=models.CASCADE)
 
     #############################################
     # workalike queries adapt to old access control system
