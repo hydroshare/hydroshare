@@ -311,19 +311,10 @@ class UserLabels(models.Model):
         label_string = UserLabels.clean_label(this_label)
 
         # This logic implicitly limits one to one record per resource and requester.
-        try:
-            UserResourceLabels.objects.get(rlabels=label_resource,
-                                           label__exact=label_string,
-                                           ulabels=self)
-            # if this succeeds, resource is already labeled with this label_string.
-
-        # only create label if it does not exist. No duplicates.
-        except UserResourceLabels.DoesNotExist:
-            # create a new label record
-            UserResourceLabels(rlabels=label_resource,
-                               kind=LabelCodes.LABEL,
-                               label=label_string,
-                               ulabels=self).save()
+        UserResourceLabels.objects.get_or_create(rlabels=label_resource,
+                                                 kind=LabelCodes.LABEL,
+                                                 label=label_string,
+                                                 ulabels=self)
 
     def unlabel_resource(self, this_resource, this_label):
         """ Remove one label from a resource
@@ -340,11 +331,12 @@ class UserLabels(models.Model):
         if not isinstance(this_label, basestring):
             raise HSLUsageException("Label is not text")
 
-        label_string = UserLabels.clean_label(this_label)                 # remove leading and trailing spaces
+        # remove leading and trailing spaces
+        label_string = UserLabels.clean_label(this_label)
 
         UserResourceLabels.objects.filter(rlabels=label_resource,
                                           label__exact=label_string,
-                                          kind = LabelCodes.LABEL,
+                                          kind=LabelCodes.LABEL,
                                           ulabels=self).delete()
 
     def clear_resource_labels(self, this_resource):
@@ -459,17 +451,10 @@ class UserLabels(models.Model):
 
         # proceed to change the record if present
         # This logic implicitly limits one to one record per resource and user.
-        try:
-            UserResourceLabels.objects.get(rlabels=label_resource,
-                                           kind=LabelCodes.FAVORITE,
-                                           ulabels=self)
 
-        # only create label if it does not exist. No duplicates.
-        except UserResourceLabels.DoesNotExist:
-            # create a new label record
-            UserResourceLabels(rlabels=label_resource,
-                               kind=LabelCodes.FAVORITE,
-                               ulabels=self).save()
+        UserResourceLabels.objects.get_or_create(rlabels=label_resource,
+                                                 kind=LabelCodes.FAVORITE,
+                                                 ulabels=self)
 
     def unfavorite_resource(self, this_resource):
         """ Clear favorite label for a resource
@@ -505,17 +490,10 @@ class UserLabels(models.Model):
 
         # proceed to change the record if present
         # This logic implicitly limits one to one record per resource and user.
-        try:
-            UserResourceLabels.objects.get(rlabels=label_resource,
-                                           kind=LabelCodes.MINE,
-                                           ulabels=self)
 
-        # only create label if it does not exist. No duplicates.
-        except UserResourceLabels.DoesNotExist:
-            # create a new label record
-            UserResourceLabels(rlabels=label_resource,
-                               kind=LabelCodes.MINE,
-                               ulabels=self).save()
+        UserResourceLabels.objects.get_or_create(rlabels=label_resource,
+                                                 kind=LabelCodes.MINE,
+                                                 ulabels=self)
 
     def unclaim_resource(self, this_resource):
         """ Clear 'mine' label for a resource (removes from my resources)
