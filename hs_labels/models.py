@@ -1,41 +1,43 @@
 __author__ = 'Alva'
 
-# This model supports user labeling of resources in various ways.
-# For a User u, this instantiates a subobject u.ulabels (like u.uaccess)
-# that contains all the labeling functions.
-#
-# Functions include:
-# - u.ulabels.label_resource(r, label)
-#   instantiates a label for a resource. Resources can have multiple labels.
-# - u.ulabels.unlabel_resource(r, label)
-#   removes a label; there can be many labels.
-# - u.ulabels.clear_resource_labels(r)
-#   removes all labels for a resource
-# - u.ulabels.favorite_resource(r)
-#   favorites a resource
-# - u.ulabels.unfavorite_resource(r)
-#   removes a favorite
-# - u.ulabels.file_resource(r, folder_name)
-#   adds a folder name for a resource
-# - u.ulabels.unfile_resource(r)
-#   remove folder name
-#
-# and the reporting functions
-# - u.ulabels.labeled_resources
-#   A queryset of resources that are labeled.
-# - u.ulabels.filed_resources (trivial, not yet implemented, available tomorrow)
-#   A queryset of resources that are filed in folders
-# - u.ulabels.favorite_resources (trivial, not yet implemented, available tomorrow)
-#   A queryset of resources that have been favorited
-# - u.ulabels.get_resources_with_label(label)
-#   Get a queryset of resources possessing a specific label.
-# - u.ulabels.get_resources_in_folder(folder)
-#   Get a queryset of resources in a specific folder.
+"""
+ This model supports user labeling of resources in various ways.
+ For a User u, this instantiates a subobject u.ulabels (like u.uaccess)
+ that contains all the labeling functions.
 
-# For a BaseResource r, this also adds a subobject rlabels that reports on labels for resources
-# -	r.rlabels.get_folder(u)
-# - r.rlabels.get_labels(u)
-# - r.rlabels.is_favorite(u) (trivial, not yet implemented, tomorrow)
+ Functions include:
+ - u.ulabels.label_resource(r, label)
+   instantiates a label for a resource. Resources can have multiple labels.
+ - u.ulabels.unlabel_resource(r, label)
+   removes a label; there can be many labels.
+ - u.ulabels.clear_resource_labels(r)
+   removes all labels for a resource
+ - u.ulabels.favorite_resource(r)
+   favorites a resource
+ - u.ulabels.unfavorite_resource(r)
+   removes a favorite
+ - u.ulabels.file_resource(r, folder_name)
+   adds a folder name for a resource
+ - u.ulabels.unfile_resource(r)
+   remove folder name
+
+ and the reporting functions
+ - u.ulabels.labeled_resources
+   A queryset of resources that are labeled.
+ - u.ulabels.filed_resources (trivial, not yet implemented, available tomorrow)
+   A queryset of resources that are filed in folders
+ - u.ulabels.favorite_resources (trivial, not yet implemented, available tomorrow)
+   A queryset of resources that have been favorited
+ - u.ulabels.get_resources_with_label(label)
+   Get a queryset of resources possessing a specific label.
+ - u.ulabels.get_resources_in_folder(folder)
+   Get a queryset of resources in a specific folder.
+
+ For a BaseResource r, this also adds a subobject rlabels that reports on labels for resources
+ -	r.rlabels.get_folder(u)
+ - r.rlabels.get_labels(u)
+ - r.rlabels.is_favorite(u) (trivial, not yet implemented, tomorrow)
+"""
 
 import re
 
