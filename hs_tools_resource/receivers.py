@@ -1,4 +1,3 @@
-__author__ = 'Drew & Shawn'
 from django.dispatch import receiver
 
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update

@@ -1,4 +1,3 @@
-__author__ = 'Drew & Shawn'
 from mezzanine.pages.page_processors import processor_for
 from crispy_forms.layout import Layout, HTML
 

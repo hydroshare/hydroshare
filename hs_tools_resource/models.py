@@ -1,4 +1,3 @@
-__author__ = 'Drew & Shawn'
 from django.db import models
 from django.contrib.contenttypes import generic
 from django.core.exceptions import ObjectDoesNotExist, ValidationError

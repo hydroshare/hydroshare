@@ -6,6 +6,7 @@ from forms import *
 from hs_tools_resource.models import SupportedResTypes
 from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
+from hs_core.views.utils import authorize
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -55,20 +56,15 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     relevant_tools = None
     if not resource_edit: # view mode
         relevant_tools = []
+        content_model_str = str(content_model.content_model).lower()
         for res_type in SupportedResTypes.objects.all():
-            if str(content_model.content_model).lower() in str(res_type.get_supported_res_types_str()).lower():
+            if content_model_str in str(res_type.get_supported_res_types_str()).lower():
                 url_obj = res_type.content_object.url_bases.first()
                 tool_res_obj = hydroshare.get_resource_by_shortkey(url_obj.resShortID)
-                tool_edit_mode = False
-                if tool_res_obj.raccess.public or user.username == 'admin' or \
-                        tool_res_obj.creator == user or \
-                        user in tool_res_obj.raccess.owners.all() or \
-                        user in tool_res_obj.raccess.edit_users.all() or \
-                        user in tool_res_obj.raccess.view_users.all():
-                    tool_edit_mode = True
-                tool_url = url_obj.value
                 if tool_res_obj:
-                    if tool_res_obj.raccess.public or tool_edit_mode:
+                    tool_edit_mode = authorize(request, tool_res_obj.resShortID)[1]
+                    if tool_edit_mode:
+                        tool_url = url_obj.value
                         u = user.username if len(user.username) > 0 else "anonymous"
                         tl = {'title': str(res_type.content_object.title),
                               'url': "{0}{1}{2}{3}{4}{5}".format(tool_url, "/?res_id=", content_model.short_id,
