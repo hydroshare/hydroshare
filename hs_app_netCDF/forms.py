@@ -191,7 +191,7 @@ ModalDialogLayoutAddVariable = Helper.get_element_add_modal_form('Variable', 'ad
 
 VariableLayoutEdit = Layout(
                             HTML('{% load crispy_forms_tags %} '
-                                '{% if form in variable_formset.forms %}'
+                                '{% if variable_formset.forms %}'
                                  '<div id="variables" class="well"><div class="row"> {% for form in variable_formset.forms %} '
                                      '<div class="form-group col-xs-12 col-md-4">'
                                      '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
