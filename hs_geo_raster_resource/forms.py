@@ -255,7 +255,7 @@ BandInfoFormSet = formset_factory(BandInfoForm, formset=BaseBandInfoFormSet, ext
 
 BandInfoLayoutEdit = Layout(
     HTML('{% load crispy_forms_tags %} '
-         '<div class="col-sm-12">'
+         '<div class="col-sm-12 pull-left">'
              '<div id="variables" class="well">'
                  '<div class="row">'
                      '{% for form in bandinfo_formset.forms %}'

@@ -1002,13 +1002,17 @@ span.remove{
 #resourceSpecificTab input.form-control[type='radio'], #resourceSpecificTab input.form-control[type='checkbox'] {
 	box-shadow: none;
 }
+
 .custom-table th {
 	padding-right: 40px;
 }
+
+.custom-table th, .custom-table td {
+	vertical-align: top
+}
+
 #txt-title{
-    /*width: calc(100% - 10px);*/
     font-size: 27px;
-    /*margin-bottom: 30px;*/
     height: auto;
 }
 
