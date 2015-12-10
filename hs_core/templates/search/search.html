@@ -13,7 +13,20 @@
                         <div class="panel panel-default">
                             <div class="panel-heading">
                             <h4 class="panel-title">
-                                <a data-toggle="collapse" href="#{{ key }}">&nbsp; Filter By {{ key }}
+                                <a data-toggle="collapse" href="#{{ key }}">
+                                    {% if key == 'author'%}
+                                        &nbsp; Filter by Author
+                                    {% elif key ==  'subjects'%}
+                                        &nbsp; Filter by Subject
+                                    {% elif key ==  'resource_type'%}
+                                        &nbsp; Filter by Resource Type
+                                    {% elif key ==  'public'%}
+                                        &nbsp; Filter by Public
+                                    {% elif key ==  'owners_names'%}
+                                        &nbsp; Filter by Owner
+                                    {% elif key ==  'discoverable'%}
+                                        &nbsp; Filter by Discoverable
+                                    {% endif %}
                                     <span
                                         {% if key == 'author' or key == 'subjects' or key == 'resource_type'%}
                                             class="glyphicon glyphicon-minus pull-left"
@@ -32,47 +45,44 @@
                                  {% endif %}>
                                 <ul class="list-group">
                                 {% for item in values %}
-                                    <li class="list-group-item">
-                                        <input class="faceted-selections" id="{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp; {{ item.0 }}
-                                        <span class="label label-default label-pill pull-right badge"
-                                            {% if item.1 <= 1 %}
-                                                style="background-color:rgb(254, 0, 0)"
-                                            {% elif item.1 > 1 and item.1 <= 2 %}
-                                                style="background-color:rgb(238, 0, 16)"
-                                            {% elif item.1 > 2 and item.1 <= 4 %}
-                                                style="background-color:rgb(222, 0, 32)"
-                                            {% elif item.1 > 4 and item.1 <= 6 %}
-                                                style="background-color:rgb(206, 0, 48)"
-                                            {% elif item.1 > 6 and item.1 <= 10 %}
-                                                style="background-color:rgb(190, 0, 64)"
-                                            {% elif item.1 > 10 and item.1 <= 18 %}
-                                                style="background-color:rgb(174, 0, 80)"
-                                            {% elif item.1 > 18 and item.1 <= 32 %}
-                                                style="background-color:rgb(158, 0, 96)"
-                                            {% elif item.1 > 32 and item.1 <= 57 %}
-                                                style="background-color:rgb(142, 0, 112)"
-                                            {% elif item.1 > 57 and item.1 <= 100 %}
-                                                style="background-color:rgb(127, 0, 127)"
-                                            {% elif item.1 > 100 and item.1 <= 178 %}
-                                                style="background-color:rgb(111, 0, 143)"
-                                            {% elif item.1 > 178 and item.1 <= 317 %}
-                                                style="background-color:rgb(95, 0, 159)"
-                                            {% elif item.1 > 317 and item.1 <= 563 %}
-                                                style="background-color:rgb(79, 0, 175)"
-                                            {% elif item.1 > 563 and item.1 <= 1000 %}
-                                                style="background-color:rgb(63, 0, 191)"
-                                            {% elif item.1 > 1000 and item.1 <= 1779 %}
-                                                style="background-color:rgb(47, 0, 207)"
-                                            {% elif item.1 > 1779 and item.1 <= 3163 %}
-                                                style="background-color:rgb(31, 0, 223)"
-                                            {% elif item.1 > 3163 and item.1 <= 5624 %}
-                                                style="background-color:rgb(15, 0, 239)"
-                                            {% elif item.1 > 5624 and item.1 <= 10000 %}
-                                                style="background-color:rgb(0, 0, 254)"
-                                            {% endif %}>{{ item.1 }}
-                                        </span>
-                                        {#<a href="{{ request.get_full_path }}&amp;selected_facets={{ key }}_exact:{{ item.0|urlencode }}">{{ item.0 }}</a>#}
-                                    </li>
+                                    {% if item.1 >= 2 %}
+                                        <li class="list-group-item">
+                                            <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp; {{ item.0 }}
+                                            <span class="label label-default label-pill pull-right badge"
+                                                {% if item.1 >= 2 and item.1 <= 4 %}
+                                                    style="background-color:rgb(222, 0, 32)"
+                                                {% elif item.1 > 4 and item.1 <= 6 %}
+                                                    style="background-color:rgb(206, 0, 48)"
+                                                {% elif item.1 > 6 and item.1 <= 10 %}
+                                                    style="background-color:rgb(190, 0, 64)"
+                                                {% elif item.1 > 10 and item.1 <= 18 %}
+                                                    style="background-color:rgb(174, 0, 80)"
+                                                {% elif item.1 > 18 and item.1 <= 32 %}
+                                                    style="background-color:rgb(158, 0, 96)"
+                                                {% elif item.1 > 32 and item.1 <= 57 %}
+                                                    style="background-color:rgb(142, 0, 112)"
+                                                {% elif item.1 > 57 and item.1 <= 100 %}
+                                                    style="background-color:rgb(127, 0, 127)"
+                                                {% elif item.1 > 100 and item.1 <= 178 %}
+                                                    style="background-color:rgb(111, 0, 143)"
+                                                {% elif item.1 > 178 and item.1 <= 317 %}
+                                                    style="background-color:rgb(95, 0, 159)"
+                                                {% elif item.1 > 317 and item.1 <= 563 %}
+                                                    style="background-color:rgb(79, 0, 175)"
+                                                {% elif item.1 > 563 and item.1 <= 1000 %}
+                                                    style="background-color:rgb(63, 0, 191)"
+                                                {% elif item.1 > 1000 and item.1 <= 1779 %}
+                                                    style="background-color:rgb(47, 0, 207)"
+                                                {% elif item.1 > 1779 and item.1 <= 3163 %}
+                                                    style="background-color:rgb(31, 0, 223)"
+                                                {% elif item.1 > 3163 and item.1 <= 5624 %}
+                                                    style="background-color:rgb(15, 0, 239)"
+                                                {% elif item.1 > 5624 and item.1 <= 10000 %}
+                                                    style="background-color:rgb(0, 0, 254)"
+                                                {% endif %}>{{ item.1 }}
+                                            </span>
+                                        </li>
+                                    {% endif %}
                                 {% endfor %}
                                 </ul>
                             </div>
@@ -114,6 +124,14 @@
                     {% empty %}
                         <p>No results found.</p>
                     {% endfor %}
+
+                    {% if page.has_previous or page.has_next %}
+                        <div>
+                            {% if page.has_previous %}<a href="?q={{ query }}&amp;page={{ page.previous_page_number }}">{% endif %}&laquo; Previous{% if page.has_previous %}</a>{% endif %}
+                            |
+                            {% if page.has_next %}<a href="?q={{ query }}&amp;page={{ page.next_page_number }}">{% endif %}Next &raquo;{% if page.has_next %}</a>{% endif %}
+                        </div>
+                    {% endif %}
                 {% endif %}
             </table>
         </div>
@@ -125,7 +143,7 @@
 {% block extra_js %}
     <script type="text/javascript">
     var reorderDivs = function(){
-        var faceted_fields = ['author', 'subjects', 'resource_type', 'public', 'creators', 'discoverable', 'language'];
+        var faceted_fields = ['author', 'subjects', 'resource_type', 'public', 'owners_names', 'discoverable'];
          var div_ordering = [];
          faceted_fields.forEach(function(field){
              var faceting_div = "faceting-"+field;
@@ -165,9 +183,26 @@
              var tokens = $(this).val().split(",");
              var key = tokens[0];
              var value = tokens[1];
-             var requestURL = window.location.href;
+             //var requestURL = window.location.href.split("&")[0];
+             var textSearch = $("#id_q").val();
+             var searchURL = "?q=" + textSearch;
+             var windowPath = window.location.pathname;
+             var requestURL =  windowPath + searchURL;
+
              if($(this).is(":checked")) {
-                 window.location = requestURL + "&selected_facets="+key+"_exact:"+value;
+                 requestURL = requestURL + "&selected_facets="+key+"_exact:"+value
+                 $(".faceted-selections").each(function () {
+                     var val = localStorage[$(this).attr("id")];
+                     //var isChecked = val !== undefined ? val == "true" : false;
+                     var isChecked = val === 'true';
+                     if(isChecked){
+                         var arr = $(this).val().split(",");
+                         var key = arr[0];
+                         var value = arr[1];
+                         requestURL += "&selected_facets="+key+"_exact:"+value;
+                     }
+                 });
+                 window.location = requestURL;
                  localStorage[$(this).attr("id")] = this.checked;
              }else{
                  localStorage.removeItem($(this).attr("id"));
