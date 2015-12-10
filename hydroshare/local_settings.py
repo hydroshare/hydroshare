@@ -1,6 +1,6 @@
 # DEVELOPMENT - local_settings.py
 #    - This file should be copied to ~/hydroshare/hydroshare/local_settings.py
-#    - The iRODS specific contents of this file contain username and password informaiton 
+#    - The iRODS specific contents of this file contain username and password informaiton
 #      that is used for a HydroShare proxy user
 
 import redis
@@ -26,7 +26,7 @@ RABBITMQ_HOST = os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR', 'localhost')
 RABBITMQ_PORT = '5672'
 
 REDIS_HOST = os.environ.get('REDIS_PORT_6379_TCP_ADDR', 'localhost')
-REDIS_PORT = 6379 
+REDIS_PORT = 6379
 POSTGIS_HOST = os.environ.get('POSTGIS_PORT_5432_TCP_ADDR', 'localhost')
 POSTGIS_PORT = 5432
 POSTGIS_DB = os.environ.get('POSTGIS_DB', 'postgres')
@@ -45,7 +45,7 @@ PERMISSIONS_DB= redis.Redis(
     host=REDIS_HOST,
     port=REDIS_PORT,
     db=6)
-   
+
 
 IPYTHON_SETTINGS=[]
 IPYTHON_BASE='/home/docker/hydroshare/static/media/ipython-notebook'

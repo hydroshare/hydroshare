@@ -276,6 +276,7 @@ INSTALLED_APPS = (
     "mezzanine.accounts",
     "mezzanine.mobile",
     "autocomplete_light",
+    "haystack",
     "jquery_ui",
     "rest_framework",
     "ga_ows",
@@ -458,8 +459,28 @@ REST_FRAMEWORK = {
     ),
 }
 
+SOLR_HOST = os.environ.get('SOLR_PORT_8983_TCP_ADDR', 'localhost')
+SOLR_PORT = '8983'
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
+        'URL': 'http://{SOLR_HOST}:{SOLR_PORT}/solr'.format(**globals()),
+        # ...or for multicore...
+        # 'URL': 'http://127.0.0.1:8983/solr/mysite',
+    },
+}
+
 # customized value for password reset token and email verification link token to expire in 1 day
 PASSWORD_RESET_TIMEOUT_DAYS = 1
+
+####################
+# OAUTH TOKEN SETTINGS #
+####################
+
+OAUTH2_PROVIDER = {
+   # 30 days
+   'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,
+}
 
 ####################
 # LOGGING SETTINGS #
