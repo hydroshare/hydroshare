@@ -47,4 +47,15 @@ class Migration(migrations.Migration):
             },
             bases=(models.Model,),
         ),
+        migrations.CreateModel(
+            name='UserStoredLabels',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('label', models.TextField(help_text=b'label to be stored by user')),
+                ('ulabels', models.ForeignKey(related_name='ul2usl', to='hs_labels.UserLabels', help_text=b'user who stored the label', null=True)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
     ]
