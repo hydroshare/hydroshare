@@ -2424,7 +2424,7 @@ h4.title {
 
 #item-selectors {
 	display: none;
-	font-size: 16px;
+	font-size: 14px;
 	border: 1px solid #ddd;
 	margin-top: 10px;
 }
@@ -2445,6 +2445,7 @@ h4.title {
 #item-selectors tr > td:first-child {
 	max-width: 100px;
 	min-width: 100px;
+	padding-right: 0;
 }
 
 .dropdown.dropdown-lg {
