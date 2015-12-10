@@ -17,7 +17,7 @@ class MyForm(FacetedSearchForm):
             return self.no_query_found()
 
         for field in self.faceted_fields:
-            sqs = sqs.facet(field, mincount=1,)
+            sqs = sqs.facet(field)
         #sqs.stats('viewers_count').stats_results()['viewers_count']['max']
         #sqs = sqs.range_facet('viewers_count', start=0.0, end=100.0, gap=20.0)
 

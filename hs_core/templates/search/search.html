@@ -45,15 +45,15 @@
                                  {% endif %}>
                                 <ul class="list-group">
                                 {% for item in values %}
-                                    {% if item.1 >= 0 %}
+                                    {% if item.1 >= 2 %}
                                         <li class="list-group-item">
-                                            <input class="faceted-selections" id="{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp; {{ item.0 }}
+                                            <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp; {{ item.0 }}
                                             <span class="label label-default label-pill pull-right badge"
-                                                {% if item.1 <= 2 %}
-                                                    style="background-color:rgb(254, 0, 0)"
-                                                {% elif item.1 > 1 and item.1 <= 2 %}
-                                                    style="background-color:rgb(238, 0, 16)"
-                                                {% elif item.1 > 2 and item.1 <= 4 %}
+                                                {# {% if item.1 <= 1 %} #}
+                                                {# style="background-color:rgb(254, 0, 0)"  #}
+                                                {# {% elif item.1 > 1 and item.1 <= 2 %} #}
+                                                {#  style="background-color:rgb(238, 0, 16)" #}
+                                                {% if item.1 >= 2 and item.1 <= 4 %}
                                                     style="background-color:rgb(222, 0, 32)"
                                                 {% elif item.1 > 4 and item.1 <= 6 %}
                                                     style="background-color:rgb(206, 0, 48)"
@@ -129,6 +129,14 @@
                     {% empty %}
                         <p>No results found.</p>
                     {% endfor %}
+
+                    {% if page.has_previous or page.has_next %}
+                        <div>
+                            {% if page.has_previous %}<a href="?q={{ query }}&amp;page={{ page.previous_page_number }}">{% endif %}&laquo; Previous{% if page.has_previous %}</a>{% endif %}
+                            |
+                            {% if page.has_next %}<a href="?q={{ query }}&amp;page={{ page.next_page_number }}">{% endif %}Next &raquo;{% if page.has_next %}</a>{% endif %}
+                        </div>
+                    {% endif %}
                 {% endif %}
             </table>
         </div>
@@ -180,9 +188,26 @@
              var tokens = $(this).val().split(",");
              var key = tokens[0];
              var value = tokens[1];
-             var requestURL = window.location.href;
+             //var requestURL = window.location.href.split("&")[0];
+             var textSearch = $("#id_q").val();
+             var searchURL = "?q=" + textSearch;
+             var windowPath = window.location.pathname;
+             var requestURL =  windowPath + searchURL;
+
              if($(this).is(":checked")) {
-                 window.location = requestURL + "&selected_facets="+key+"_exact:"+value;
+                 requestURL = requestURL + "&selected_facets="+key+"_exact:"+value
+                 $(".faceted-selections").each(function () {
+                     var val = localStorage[$(this).attr("id")];
+                     //var isChecked = val !== undefined ? val == "true" : false;
+                     var isChecked = val === 'true';
+                     if(isChecked){
+                         var arr = $(this).val().split(",");
+                         var key = arr[0];
+                         var value = arr[1];
+                         requestURL += "&selected_facets="+key+"_exact:"+value;
+                     }
+                 });
+                 window.location = requestURL;
                  localStorage[$(this).attr("id")] = this.checked;
              }else{
                  localStorage.removeItem($(this).attr("id"));
