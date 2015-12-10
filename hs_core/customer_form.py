@@ -9,7 +9,7 @@ class MyForm(FacetedSearchForm):
     #faceted_choices = (('author', 'Author'), ('creators', 'Creators'),('subjects', 'Subjects'),
                       # ('public', 'Public'),('discoverable', 'Discoverable'), ('language', 'Language'), ('resource_type', 'Resource Type'))
     #faceted_field = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=faceted_choices)
-    faceted_fields = ['author', 'subjects', 'resource_type', 'public', 'creators', 'discoverable', 'language']
+    faceted_fields = ['author', 'subjects', 'resource_type', 'public', 'owners_names', 'discoverable']
     def search(self):
         sqs = super(MyForm, self).search().filter(discoverable=True)
 
@@ -17,7 +17,7 @@ class MyForm(FacetedSearchForm):
             return self.no_query_found()
 
         for field in self.faceted_fields:
-            sqs = sqs.facet(field, mincount=2,)
+            sqs = sqs.facet(field, mincount=1,)
         #sqs.stats('viewers_count').stats_results()['viewers_count']['max']
         #sqs = sqs.range_facet('viewers_count', start=0.0, end=100.0, gap=20.0)
 
