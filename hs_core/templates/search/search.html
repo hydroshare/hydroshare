@@ -49,10 +49,6 @@
                                         <li class="list-group-item">
                                             <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp; {{ item.0 }}
                                             <span class="label label-default label-pill pull-right badge"
-                                                {# {% if item.1 <= 1 %} #}
-                                                {# style="background-color:rgb(254, 0, 0)"  #}
-                                                {# {% elif item.1 > 1 and item.1 <= 2 %} #}
-                                                {#  style="background-color:rgb(238, 0, 16)" #}
                                                 {% if item.1 >= 2 and item.1 <= 4 %}
                                                     style="background-color:rgb(222, 0, 32)"
                                                 {% elif item.1 > 4 and item.1 <= 6 %}
@@ -85,7 +81,6 @@
                                                     style="background-color:rgb(0, 0, 254)"
                                                 {% endif %}>{{ item.1 }}
                                             </span>
-                                            {#<a href="{{ request.get_full_path }}&amp;selected_facets={{ key }}_exact:{{ item.0|urlencode }}">{{ item.0 }}</a>#}
                                         </li>
                                     {% endif %}
                                 {% endfor %}
