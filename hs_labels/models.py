@@ -1,5 +1,3 @@
-__author__ = 'Alva'
-
 """
  This model supports user labeling of resources in various ways.
  For a User u, this instantiates a subobject u.ulabels (like u.uaccess)
@@ -34,7 +32,7 @@ __author__ = 'Alva'
    Get a queryset of resources in a specific folder.
 
  For a BaseResource r, this also adds a subobject rlabels that reports on labels for resources
- -	r.rlabels.get_folder(u)
+ - r.rlabels.get_folder(u)
  - r.rlabels.get_labels(u)
  - r.rlabels.is_favorite(u) (trivial, not yet implemented, tomorrow)
 """
@@ -795,9 +793,10 @@ class ResourceLabels(models.Model):
             return None
 
     def get_labels(self, this_user):
-        """ return the folder for a resource, or null if no folder
+        """
+        get a list of all user assigned labels for a resource
 
-        :return: string folder name with '/'s embedded.
+        :return: QuerySet that evaluates to a list of labels (strings)
         """
         if not isinstance(this_user, User):
             raise HSLUsageException("Target is not a user")
