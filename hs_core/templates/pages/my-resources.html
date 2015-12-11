@@ -202,17 +202,8 @@
 
                                 <div class="dropdown-menu inline-dropdown" role="menu">
                                     <div class="panel-body" role="form">
-                                        <ul class="list-group list-labels">
-                                            <li>
-                                                <label class="checkbox"><input type="checkbox" value=""></label>
-                                                <form id="form-create-label-{{ res.short_id }}" class="hidden-form" action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                                      method="post">
-                                                    {% csrf_token %}
-                                                    <input id="txtLabelName" name="label" type="text" class="form-control">
-                                                    <input type="hidden" name="label_type" value="LABEL">
-                                                    <input type="hidden" name="action" value="CREATE">
-                                                </form>
-                                            </li>
+                                        <ul data-resource-id="{{ res.short_id }}" class="list-group list-labels">
+
                                         </ul>
                                     </div>
                                 </div>
@@ -750,6 +741,16 @@
                             action.val("DELETE");
                         }
                     }
+                    else if (formType="toggle-label") {
+                        var action = form.find("input[name='action']");
+
+                        if (action.val() == "DELETE") {
+                            action.val("CREATE");
+                        }
+                        else {
+                            action.val("DELETE");
+                        }
+                    }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log("failed!")
@@ -776,11 +777,24 @@
                         '</li>'
                 );
 
-                $(".inline-dropdown ul").append(
-                        '<li>' +
-                        '<label class="checkbox"><input type="checkbox" value="' + curr + '">' + curr +'</label>' +
-                        '</li>'
-                );
+                var dropdowns = $(".inline-dropdown ul");
+
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var res_id = $(dropdowns[i]).attr("data-resource-id");
+                    var formID = "form-" + i + "-" + res_id;
+                    $(dropdowns[i]).append(
+                            '<li>'+
+                                '<label class="checkbox"><input data-form-type="toggle-label" data-form-id="' + formID + '" type="checkbox" value="' + curr + '">' + curr + '</label>'+
+                                '<form id="'+ formID + '" class="hidden-form" action="/hsapi/_internal/' + res_id + '/label-resource-action/"'+
+                                      'method="post">'+
+                                     document.getElementById("csrf").innerHTML +
+                                    '<input type="hidden" name="label" value="' + curr + '">'+
+                                    '<input type="hidden" name="label_type" value="LABEL">'+
+                                    '<input type="hidden" name="action" value="CREATE">'+
+                                '</form>'+
+                            '</li>'
+                    );
+                }
 
                 if ($(".row-selector:checked").length == 0) {
                     $("#toolbar-labels-dropdown ul").prepend(
@@ -797,7 +811,6 @@
                             '</li>'
                     );
                 }
-
 
                 $(".inline-dropdown input[type='checkbox']").change(updateLabelCount);
             }
@@ -820,6 +833,8 @@
             // -----------------   Bind events   -----------------
 
             $(".inline-dropdown .label").click(updateLabelCount);
+
+            $(".inline-dropdown input[type='checkbox']").change(label_ajax_submit);
 
             $("#toolbar-labels-dropdown input[type='checkbox']").click(function(){
                 var inlineCheckboxes = $(".row-selector:checked").parent().find(".inline-dropdown input[type='checkbox'][value='" + $(this).val() + "']")
