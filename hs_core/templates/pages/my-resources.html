@@ -158,7 +158,7 @@
             <table id="item-selectors" class="table-hover">
                 <thead>
                 <tr>
-                    <th><input class="all-rows-selector" type="checkbox" aria-label="..."></th>
+                    <th><input class="all-rows-selector" type="checkbox"></th>
                     <th>Type</th>
                     <th>Title</th>
                     <th>Owners</th>
@@ -172,7 +172,7 @@
                 </thead>
                 <tbody>
                     {# ################### #}
-                    {% for res in owned %}
+                    {% for res in collection %}
                         <tr>
                             <td>
                                 <input class="row-selector" type="checkbox">
@@ -260,7 +260,13 @@
                                     {% endif %}
                                 {% endfor %}
                             </td>
-                            <td>Owned</td>
+                            {% if res.owned %}
+                                <td>Owned</td>
+                            {% elif res.editable %}
+                                <td>Editable</td>
+                            {% elif res.viewable %}
+                                <td>Viewable</td>
+                            {% endif %}
                             <td class="col-labels">
                                 {% for label in res.labels %}
                                     <span class="labelCounter" data-label="{{ label }}">{{ label }}</span>
@@ -274,195 +280,6 @@
                         </tr>
                     {% endfor %}
 
-                    {% for res in editable %}
-                        <tr>
-                            <td>
-                                <input class="row-selector" type="checkbox">
-                                {% if res.is_favorite %}
-                                    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
-                                          class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
-
-                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                          method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="DELETE">
-                                        <input type="hidden" name="label_type" value="FAVORITE">
-                                    </form>
-                                {% else %}
-                                    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
-                                          class="glyphicon glyphicon-star btn-inline-favorite"></span>
-
-                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                          method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="CREATE">
-                                        <input type="hidden" name="label_type" value="FAVORITE">
-                                    </form>
-                                {% endif %}
-
-                                <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown" aria-expanded="false"></span>
-
-                                <div class="dropdown-menu inline-dropdown" role="menu">
-                                    <div class="panel-body" role="form">
-                                        <ul data-resource-id="{{ res.short_id }}"
-                                            data-initial-labels="{% for label in res.labels %}{% if forloop.counter0 > 0 %},{% endif %}{{ label }}{% endfor %}"
-                                            class="list-group list-labels">
-
-                                        </ul>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="resource-type-text">{{ res|resource_type }}</span>
-                                {% if res|resource_type == "Generic" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Geographic Raster" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Model Program Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Model Instance Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "SWAT Model Instance Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Multidimensional (NetCDF)" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Time Series" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% endif %}
-                            </td>
-                            <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
-                            <td>{% for owner in res.raccess.owners.all %}
-                                  {% if forloop.counter0 > 0 %} · {% endif %}
-                                <span>{{ owner|contact|safe }}</span>
-                            {% endfor %}</td>
-                            <td>{{ res.updated|date }}, {{ res.updated|time }}</td>
-                            <td>
-                                {% for kw in res.metadata.subjects.all %}
-                                   {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
-                                {% endfor %}
-                            </td>
-                            <td>
-                                {% for creator in res.metadata.creators.all %}
-                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                    {% if creator.description %}
-                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
-                                    {% else %}
-                                        <span>{{ creator.name }}</span>
-                                    {% endif %}
-                                {% endfor %}
-                            </td>
-                            <td>Editable</td>
-                            <td>{% for label in res.labels %}{% if forloop.counter0 > 0 %},{% endif %}{{ label }}{% endfor %}</td>
-                            <td>{% if res.is_favorite %}Favorite{% endif %}</td>
-                        </tr>
-                    {% endfor %}
-
-                    {% for res in view %}
-                        <tr>
-                            <td>
-                                <input class="row-selector" type="checkbox">
-                                {% if res.is_favorite %}
-                                    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
-                                          class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
-
-                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                          method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="DELETE">
-                                        <input type="hidden" name="label_type" value="FAVORITE">
-                                    </form>
-                                {% else %}
-                                    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
-                                          class="glyphicon glyphicon-star btn-inline-favorite"></span>
-
-                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                          method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="CREATE">
-                                        <input type="hidden" name="label_type" value="FAVORITE">
-                                    </form>
-                                {% endif %}
-
-                                <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown" aria-expanded="false"></span>
-
-                                <div class="dropdown-menu inline-dropdown" role="menu">
-                                    <div class="panel-body" role="form">
-                                        <ul data-resource-id="{{ res.short_id }}"
-                                            data-initial-labels="{% for label in res.labels %}{% if forloop.counter0 > 0 %},{% endif %}{{ label }}{% endfor %}"
-                                            class="list-group list-labels">
-
-                                        </ul>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="resource-type-text">{{ res|resource_type }}</span>
-                                {% if res|resource_type == "Generic" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Geographic Raster" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Model Program Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Model Instance Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "SWAT Model Instance Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Multidimensional (NetCDF)" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Time Series" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
-                                {% endif %}
-                            </td>
-                            <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
-                            <td>{% for owner in res.raccess.owners.all %}
-                                  {% if forloop.counter0 > 0 %} · {% endif %}
-                                <span>{{ owner|contact|safe }}</span>
-                            {% endfor %}</td>
-                            <td>{{ res.updated|date }}, {{ res.updated|time }}</td>
-                            <td>
-                                {% for kw in res.metadata.subjects.all %}
-                                   {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
-                                {% endfor %}
-                            </td>
-                            <td>
-                                {% for creator in res.metadata.creators.all %}
-                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                    {% if creator.description %}
-                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
-                                    {% else %}
-                                        <span>{{ creator.name }}</span>
-                                    {% endif %}
-                                {% endfor %}
-                            </td>
-                            <td>View</td>
-                            <td>{% for label in res.labels %}{% if forloop.counter0 > 0 %},{% endif %}{{ label }}{% endfor %}</td>
-                            <td>{% if res.is_favorite %}Favorite{% endif %}</td>
-                        </tr>
-                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -581,6 +398,8 @@
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css">
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
     <script type="text/javascript">
+        var resourceTable;
+
         $(document).ready(function () {
 
         /*==================================================
@@ -593,8 +412,11 @@
             5 - Subject
             6 - Authors
             7 - Permission Level
+            8 - Labels
+            9 - Favorite
         ==================================================*/
-            var resourceTable = $("#item-selectors").DataTable({
+
+            resourceTable = $("#item-selectors").DataTable({
                 "order": [[4, "asc"]],
                 "paging": false,
                 "info": false,
@@ -621,7 +443,9 @@
                     }
                 ]
             });
+
             $("#item-selectors").show();
+
 
             // Bind ajax submit events to favorite and label buttons
             $(".btn-inline-favorite").click(label_ajax_submit);
@@ -671,10 +495,6 @@
                 resourceTable.draw();
             });
 
-            $("#filter input[type='checkbox']").change(function(){
-                resourceTable.draw();
-            });
-
             $(".all-rows-selector").change(function(){
                 $(".row-selector").prop("checked", $(this).prop("checked"));
 
@@ -685,29 +505,11 @@
                 else {
                     toolbarLabels.attr("disabled", false);
                 }
+
+                refreshToolbarCheckboxState();
             });
 
-            $(".row-selector").change(function() {
-                var toolbarLabels = $("#toolbar-labels-dropdown input[type='checkbox']");
-                var selectedRows = $(".row-selector:checked");
-                if (selectedRows.length == 0) {
-                    toolbarLabels.attr("disabled", true);
-                    return;
-                }
-
-                toolbarLabels.attr("disabled", false);
-                toolbarLabels.prop("checked", true);
-
-                var inlineCheckboxes = selectedRows.parent().find(".inline-dropdown input[type='checkbox']:not(:checked)");
-
-                // Uncheck label checkbox in toolbar
-                for (var i = 0; i < inlineCheckboxes.length; i++) {
-                    var label = $(inlineCheckboxes[i]).val();
-                    $("#toolbar-labels-dropdown .list-labels input[type='checkbox'][value='" + label + "']").prop("checked", false);
-                }
-            });
-
-
+            $(".row-selector").change(refreshToolbarCheckboxState);
 
             $("#btn-favorite").click(function(){
                 var stars = $("#item-selectors input[type='checkbox']:checked").parent().find(".btn-inline-favorite");
@@ -806,6 +608,8 @@
                                     '<span class="labelCounter" data-label="' + label + '">' + label + '</span>'
                             );
                         }
+
+                        refreshToolbarCheckboxState();
                     }
 
                     updateLabelCount();
@@ -904,8 +708,15 @@
             }
 
             // -----------------   Bind events   -----------------
+            $("#filter input[type='checkbox']").change(function(){
+                resourceTable.draw();
+            });
 
-            $(".inline-dropdown .label").click(updateLabelCount);
+            $("#user-labels-left input[type='checkbox']").change(function () {
+                resourceTable.draw();
+            });
+
+{#            $(".inline-dropdown .label").click(updateLabelCount);#}
 
             $(".inline-dropdown input[type='checkbox']").change(label_ajax_submit);
 
@@ -925,15 +736,33 @@
                     inlineCheckboxes.prop("checked", true);
                     inlineCheckboxes.change();
                 }
-
-                updateLabelCount();
             });
-
 
             // Prevents dropdown form getting dismissed when clicking on items
             $('.dropdown-menu label, .list-labels label').click(function (e) {
                 e.stopPropagation();
             });
+        }
+
+        // Checks and unchecks label checkbox in the toolbar depending on which table rows are selected.
+        function refreshToolbarCheckboxState() {
+            var toolbarLabels = $("#toolbar-labels-dropdown input[type='checkbox']");
+            var selectedRows = $(".row-selector:checked");
+            if (selectedRows.length == 0) {
+                toolbarLabels.attr("disabled", true);
+                return;
+            }
+
+            toolbarLabels.attr("disabled", false);
+            toolbarLabels.prop("checked", true);
+
+            var inlineCheckboxes = selectedRows.parent().find(".inline-dropdown input[type='checkbox']:not(:checked)");
+
+            // Uncheck label checkbox in toolbar
+            for (var i = 0; i < inlineCheckboxes.length; i++) {
+                var label = $(inlineCheckboxes[i]).val();
+                $("#toolbar-labels-dropdown .list-labels input[type='checkbox'][value='" + label + "']").prop("checked", false);
+            }
         }
 
         function createLabel () {
@@ -1169,14 +998,17 @@
                     for (var i = 0; i < labelCheckboxes.length; i++) {
                         if ($(labelCheckboxes[i]).prop("checked") == true) {
                             var label = $(labelCheckboxes[i]).attr("data-label");
-                            // Check if the label doesn't exist in the column and return false
+                            var colLabel = $("#item-selectors tbody tr:nth-child(" + (dataIndex + 1) +") .col-labels");
+                            if (!colLabel.find(".labelCounter[data-label='" + label + "']").length) {
+                               return false;
+                            }
                         }
                     }
 
                     // Favorite
                     if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
-                        var row = $("#item-selectors tbody tr:nth-child(" + (dataIndex + 1) +") .col-is-favorite");
-                        if (!row.find(".isFavoriteCounter").length) {
+                        var colFav = $("#item-selectors tbody tr:nth-child(" + (dataIndex + 1) +") .col-is-favorite");
+                        if (!colFav.find(".isFavoriteCounter").length) {
                             return false;
                         }
                     }

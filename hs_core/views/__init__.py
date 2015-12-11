@@ -457,7 +457,6 @@ class FilterForm(forms.Form):
     from_date = forms.DateTimeField(required=False)
 
 
-
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
@@ -476,14 +475,64 @@ def my_resources(request, page):
     owned_resources = list(owned_resources)
     editable_resources = list(editable_resources)
     viewable_resources = list(viewable_resources)
+    favorited_resources = list(user.ulabels.favorited_resources)
+    labeled_resources = list(user.ulabels.labeled_resources)
+
+    for res in owned_resources:
+        res.owned = True
+
+    for res in editable_resources:
+        res.editable = True
+
+    for res in viewable_resources:
+        res.viewable = True
 
     for res in (owned_resources + editable_resources + viewable_resources):
-        res.is_favorite = res.rlabels.is_favorite(user)
-        res.labels = res.rlabels.get_labels(user)
+        res.is_favorite = False
+        if res in favorited_resources:
+            res.is_favorite = True
+        if res in labeled_resources:
+            res.labels = res.rlabels.get_labels(user)
 
-    context = {'owned': owned_resources, 'editable': editable_resources, 'view': viewable_resources}
+    resource_collection = (owned_resources + editable_resources + viewable_resources)
 
+    context = {'collection': resource_collection}
     return context
+
+# def my_resources(request, page):
+#     # import sys
+#     # sys.path.append("/home/docker/pycharm-debug")
+#     # import pydevd
+#     # pydevd.settrace('10.0.0.7', port=21000, suspend=False)
+#     user = request.user
+#     # get a list of resources with OWNER privilege
+#     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
+#     # get a list of resources with CHANGE privilege
+#     editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+#     # get a list of resources with VIEW privilege
+#     viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+#
+#     owned_resources = list(owned_resources)
+#     editable_resources = list(editable_resources)
+#     viewable_resources = list(viewable_resources)
+#
+#     for res in owned_resources:
+#         res.owned = True
+#
+#     for res in editable_resources:
+#         res.editable = True
+#
+#     for res in viewable_resources:
+#         res.viewable = True
+#
+#     for res in (owned_resources + editable_resources + viewable_resources):
+#         res.is_favorite = res.rlabels.is_favorite(user)
+#         res.labels = res.rlabels.get_labels(user)
+#
+#     resource_collection = (owned_resources + editable_resources + viewable_resources)
+#     context = {'collection': resource_collection}
+#
+#     return context
 
 # def my_resources_old(request, page):
 #     import sys
