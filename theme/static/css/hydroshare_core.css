@@ -2378,3 +2378,68 @@ h4.title {
 #badge-geographic-feature .badge {
     background-color:#bcbd22;
 }
+
+#color-scheme {
+    float: right;
+    padding: 5px 0 0 0;
+}
+
+.YlGnBu-q0-9 {
+    background-color:rgb(1,70,54);
+}
+.YlGnBu-q0-9-fill {
+    fill:rgb(1,70,54);
+}
+.YlGnBu-q1-9 {
+    background-color:rgb(1,108,89);
+}
+.YlGnBu-q1-9-fill {
+    fill:rgb(1,108,89);
+}
+.YlGnBu-q2-9 {
+    background-color:rgb(2,129,138);
+}
+.YlGnBu-q2-9-fill {
+    fill:rgb(2,129,138);
+}
+.YlGnBu-q3-9 {
+    background-color:rgb(54,144,192);
+}
+.YlGnBu-q3-9-fill {
+    fill:rgb(54,144,192);
+}
+.YlGnBu-q4-9 {
+    background-color:rgb(103,169,207);
+}
+.YlGnBu-q4-9-fill {
+    fill:rgb(103,169,207);
+}
+.YlGnBu-q5-9 {
+    color: red;
+    background-color:rgb(166,189,219);
+}
+.YlGnBu-q5-9-fill {
+    fill:rgb(166,189,219);
+}
+.YlGnBu-q6-9 {
+    color: red;
+    background-color:rgb(208,209,230);
+}
+.YlGnBu-q6-9-fill {
+    fill:rgb(208,209,230);
+}
+.YlGnBu-q7-9 {
+    color: red;
+    background-color:rgb(236,226,240);
+}
+.YlGnBu-q7-9-fill {
+    fill:rgb(236,226,240);
+}
+.YlGnBu-q8-9 {
+    color: red;
+    background-color:rgb(255,247,251);
+}
+.YlGnBu-q8-9-fill {
+    fill:rgb(255,247,251);
+}
+
