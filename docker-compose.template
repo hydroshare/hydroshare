@@ -8,7 +8,7 @@ solr:
   image: makuk66/docker-solr:4.10.4
   volumes:
     # hydroshare repository
-    - "HS_PATH:/hydroshare"
+    - "/home/hydro/hydroshare:/hydroshare"
   ports:
     - "8983"
 hydroshare:
@@ -25,11 +25,12 @@ hydroshare:
     SOLR_HOST: solr
   volumes:
     # hydroshare repository
-    - "HS_PATH:/home/docker/hydroshare"
+    - ".:/home/docker/hydroshare"
+    #- "/home/hydro/hydroshare:/home/docker/hydroshare"
     # pycharm debugging
     # - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
     # log files
-    - "HS_LOG_FILES:/var/log/hydroshare"
+    #- "/home/hydro/hydroshare/log:/var/log/hydroshare"
   ports:
     - "1338:22"
     - "8000:8000"
