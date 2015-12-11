@@ -214,7 +214,7 @@ loaddb_hs() {
     sleep 2s
     rebuild_solr_index
     sleep 2s
-    docker exec $CID curl "http://${FQDN_OR_IP}:8983/solr/admin/cores?action=RELOAD&core=collection1"
+    docker exec $CID curl "http://solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
     sleep 2s
     rebuild_solr_index
 }
