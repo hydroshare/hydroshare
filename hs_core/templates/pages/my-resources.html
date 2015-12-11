@@ -180,7 +180,7 @@
                                     <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
 
-                                    <form class="hidden-form" id="form-favorite-{{ res.short_id }}"
+                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
                                           action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
                                           method="post">
                                         {% csrf_token %}
@@ -191,7 +191,7 @@
                                     <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-star btn-inline-favorite"></span>
 
-                                    <form class="hidden-form" id="form-favorite-{{ res.short_id }}"
+                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
                                           action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
                                           method="post">
                                         {% csrf_token %}
@@ -207,7 +207,6 @@
                                         <ul data-resource-id="{{ res.short_id }}"
                                             data-initial-labels="{% for label in res.labels %}{% if forloop.counter0 > 0 %},{% endif %}{{ label }}{% endfor %}"
                                             class="list-group list-labels">
-
                                         </ul>
                                     </div>
                                 </div>
@@ -262,9 +261,9 @@
                                 {% endfor %}
                             </td>
                             <td>Owned</td>
-                            <td>
+                            <td class="col-labels">
                                 {% for label in res.labels %}
-                                    <span label-counter data-label="{{ label }}">{{ label }}</span>
+                                    <span class="labelCounter" data-label="{{ label }}">{{ label }}</span>
                                 {% endfor %}
                             </td>
                             <td class="col-is-favorite">
@@ -283,7 +282,7 @@
                                     <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
 
-                                    <form class="hidden-form" id="form-favorite-{{ res.short_id }}"
+                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
                                           action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
                                           method="post">
                                         {% csrf_token %}
@@ -294,7 +293,7 @@
                                     <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-star btn-inline-favorite"></span>
 
-                                    <form class="hidden-form" id="form-favorite-{{ res.short_id }}"
+                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
                                           action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
                                           method="post">
                                         {% csrf_token %}
@@ -378,7 +377,7 @@
                                     <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
 
-                                    <form class="hidden-form" id="form-favorite-{{ res.short_id }}"
+                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
                                           action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
                                           method="post">
                                         {% csrf_token %}
@@ -389,7 +388,7 @@
                                     <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-star btn-inline-favorite"></span>
 
-                                    <form class="hidden-form" id="form-favorite-{{ res.short_id }}"
+                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
                                           action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
                                           method="post">
                                         {% csrf_token %}
@@ -480,7 +479,7 @@
                     <h4 class="modal-title" id="myModalLabel">Create New Label</h4>
                 </div>
                 <div class="modal-body">
-                    <form id="form-create-label" action="/hsapi/_internal/label-resource-action/"
+                    <form data-id="form-create-label" action="/hsapi/_internal/label-resource-action/"
                           method="post">
                         {% csrf_token %}
                         <div class="form-group">
@@ -523,7 +522,7 @@
                                 <tr>
                                     <td class="user-label" data-label="{{ label }}">{{ label }}</td>
                                     <td>
-                                        <form class="hidden-form" id="form-delete-label-{{ label }}"
+                                        <form class="hidden-form" data-id="form-delete-label-{{ label }}"
                                               action="/hsapi/_internal/label-resource-action/"
                                               method="post">
                                             {% csrf_token %}
@@ -748,14 +747,15 @@
 
         });
 
-        function label_ajax_submit(formID) {
+        function label_ajax_submit() {
             var el = $(this);
-            var formID = "#" + el.attr("data-form-id");
+            var dataFormID = el.attr("data-form-id")
+            var formID = $("form[data-id='" + dataFormID + "']");
             var form = $(formID);
             var datastring = form.serialize();
             var url = form.attr('action');
             var formType = el.attr("data-form-type");
-            var label = el.attr("data-label");
+
 
             $.ajax({
                 type: "POST",
@@ -767,7 +767,8 @@
                         createLabel();
                     }
                     else if (formType == "delete-label"){
-                        $("#table-user-labels td[data-label='" + label + "']").parent().remove();
+                        var deletedLabel = el.attr("data-label");
+                        $("#table-user-labels td[data-label='" + deletedLabel + "']").parent().remove();
                         if ($("#table-user-labels .user-label").length == 0 && $("#table-user-labels .no-labels-found").length == 0) {
                             $("#table-user-labels tbody").append(
                                     '<tr class="no-labels-found"><td>No labels found.</td></tr>'
@@ -793,12 +794,17 @@
                     }
                     else if (formType="toggle-label") {
                         var action = form.find("input[name='action']");
+                        var label = el[0].value;
 
-                        if (action.val() == "DELETE") {
+                        if (action.val() == "DELETE") { // Label got unchecked
                             action.val("CREATE");
+                            form.closest("tr").find(".col-labels .labelCounter[data-label='" + label +"']").remove();
                         }
                         else {
-                            action.val("DELETE");
+                            action.val("DELETE");       // Label got checked
+                            form.closest("tr").find(".col-labels").append(
+                                    '<span class="labelCounter" data-label="' + label + '">' + label + '</span>'
+                            );
                         }
                     }
 
@@ -837,7 +843,7 @@
                     $(dropdowns[i]).append(
                             '<li>'+
                                 '<label class="checkbox"><input data-form-type="toggle-label" data-form-id="' + formID + '" type="checkbox" value="' + curr + '">' + curr + '</label>'+
-                                '<form id="'+ formID + '" class="hidden-form" action="/hsapi/_internal/' + res_id + '/label-resource-action/"'+
+                                '<form data-id="'+ formID + '" class="hidden-form" action="/hsapi/_internal/' + res_id + '/label-resource-action/"'+
                                       'method="post">'+
                                      document.getElementById("csrf").innerHTML +
                                     '<input type="hidden" name="label" value="' + curr + '">'+
@@ -905,12 +911,18 @@
 
             $("#toolbar-labels-dropdown input[type='checkbox']").change(function(){
                 var inlineCheckboxes = $(".row-selector:checked").parent().find(".inline-dropdown input[type='checkbox'][value='" + $(this).val() + "']");
-                if ($(this).prop("checked") == true) {
-                    inlineCheckboxes.prop("checked", true);
-                    inlineCheckboxes.change();
+
+                var checkedSome = false;
+                for (var i = 0; i < inlineCheckboxes.length; i++) {
+                    if ($(inlineCheckboxes[i]).prop("checked") == false) {
+                        $(inlineCheckboxes[i]).prop("checked", true);
+                        $(inlineCheckboxes[i]).change();
+                        checkedSome = true;
+                    }
                 }
-                else {
-                    inlineCheckboxes.prop("checked", false);
+
+                if (!checkedSome) {
+                    inlineCheckboxes.prop("checked", true);
                     inlineCheckboxes.change();
                 }
 
@@ -931,7 +943,7 @@
                         '<tr>' +
                             '<td class="user-label" data-label="' + $("#txtLabelName").val() + '">' + $("#txtLabelName").val() + '</td>' +
                             '<td>'+
-                                '<form class="hidden-form" id="form-delete-label-'+ $("#txtLabelName").val() + '" ' +
+                                '<form class="hidden-form" data-id="form-delete-label-'+ $("#txtLabelName").val() + '" ' +
                                       'action="/hsapi/_internal/label-resource-action/"'+
                                       'method="post">'+
                                     document.getElementById("csrf").innerHTML +
@@ -1149,6 +1161,15 @@
                     if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
                         if (data[7] == "Owned" || (data[7] != "View" && data[7] != "Editable")) {
                             return false;
+                        }
+                    }
+
+                    // Labels
+                    var labelCheckboxes = $("#user-labels-left input[type='checkbox']");
+                    for (var i = 0; i < labelCheckboxes.length; i++) {
+                        if ($(labelCheckboxes[i]).prop("checked") == true) {
+                            var label = $(labelCheckboxes[i]).attr("data-label");
+                            // Check if the label doesn't exist in the column and return false
                         }
                     }
 
