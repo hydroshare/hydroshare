@@ -1,0 +1,8 @@
+#!/usr/bin/expect -f
+
+# connect via scp
+spawn docker exec -ti hydroshare_hydroshare_1 python manage.py rebuild_index
+# Expect either add fingerprint and/or enter password
+expect "Are you sure you wish to continue.*"
+send "y\r"
+interact

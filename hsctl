@@ -207,7 +207,16 @@ loaddb_hs() {
     #docker exec $CID python manage.py makemigrations
     echo "*** manage.py migrate ***"
     docker exec $CID python manage.py migrate
+    echo "*** manage.py fix_permissions ***"
     docker exec $CID python manage.py fix_permissions
+    sleep 3s
+    solr_schema_hs
+    sleep 2s
+    rebuild_solr_index
+    sleep 2s
+    docker exec $CID curl "http://${FQDN_OR_IP}:8983/solr/admin/cores?action=RELOAD&core=collection1"
+    sleep 2s
+    rebuild_solr_index
 }
 
 rebuild_db_hs() {
@@ -254,8 +263,6 @@ rebuild_db_hs() {
     done
     echo
     loaddb_hs LOADDB
-    sleep 3s
-    solr_schema_hs
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
@@ -275,11 +282,13 @@ manage_py_hs() {
 }
 
 update_solr_index() {
-    docker exec -ti hydroshare_hydroshare_1 python manage.py update_index
+    docker exec hydroshare_hydroshare_1 python manage.py update_index
 }
 
 rebuild_solr_index() {
-    docker exec -ti hydroshare_hydroshare_1 python manage.py rebuild_index
+    cd scripts
+    ./rebuild-index-solr
+    cd -
 }
 
 ### Display usage if exactly one argument is not provided ###
