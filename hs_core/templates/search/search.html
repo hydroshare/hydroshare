@@ -6,7 +6,20 @@
 <div class="container-fluid" id="main">
     <div class="row">
         <div class="col-lg-3" id="folders">
-            <p><input class="btn btn-default" type="button" value="clear all" onclick="clearAllFaceted()"></p>
+            <input class="btn btn-default" type="button" value="clear all" onclick="clearAllFaceted()">
+            <span id="color-scheme">
+                <svg width='180' height='24'>
+                    <rect class="YellowGreenBlue-colormap-band-1-fill" x="0" width="20" height="20"></rect>
+                    <rect class="YellowGreenBlue-colormap-band-2-fill" x="20" width="20" height="20"></rect>
+                    <rect class="YellowGreenBlue-colormap-band-3-fill" x="40" width="20" height="20"></rect>
+                    <rect class="YellowGreenBlue-colormap-band-4-fill" x="60" width="20" height="20"></rect>
+                    <rect class="YellowGreenBlue-colormap-band-5-fill" x="80" width="20" height="20"></rect>
+                    <rect class="YellowGreenBlue-colormap-band-6-fill" x="100" width="20" height="20"></rect>
+                    <rect class="YellowGreenBlue-colormap-band-7-fill" x="120" width="20" height="20"></rect>
+                    <rect class="YellowGreenBlue-colormap-band-8-fill" x="140" width="20" height="20"></rect>
+                    <rect class="YellowGreenBlue-colormap-band-9-fill" x="160" width="20" height="20"></rect>
+                </svg>
+            </span>
             {% for key, values in facets.fields.items %}
                 {% if values %}
                     <div class="panel-group" id="faceting-{{ key }}">
@@ -48,38 +61,25 @@
                                     {% if item.1 >= 2 %}
                                         <li class="list-group-item">
                                             <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp; {{ item.0 }}
-                                            <span class="label label-default label-pill pull-right badge"
                                                 {% if item.1 >= 2 and item.1 <= 4 %}
-                                                    style="background-color:rgb(222, 0, 32)"
+                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-1">
                                                 {% elif item.1 > 4 and item.1 <= 6 %}
-                                                    style="background-color:rgb(206, 0, 48)"
+                                                     <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-2">
                                                 {% elif item.1 > 6 and item.1 <= 10 %}
-                                                    style="background-color:rgb(190, 0, 64)"
+                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-3">
                                                 {% elif item.1 > 10 and item.1 <= 18 %}
-                                                    style="background-color:rgb(174, 0, 80)"
+                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-4">
                                                 {% elif item.1 > 18 and item.1 <= 32 %}
-                                                    style="background-color:rgb(158, 0, 96)"
+                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
                                                 {% elif item.1 > 32 and item.1 <= 57 %}
-                                                    style="background-color:rgb(142, 0, 112)"
+                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-6">
                                                 {% elif item.1 > 57 and item.1 <= 100 %}
-                                                    style="background-color:rgb(127, 0, 127)"
+                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-7">
                                                 {% elif item.1 > 100 and item.1 <= 178 %}
-                                                    style="background-color:rgb(111, 0, 143)"
-                                                {% elif item.1 > 178 and item.1 <= 317 %}
-                                                    style="background-color:rgb(95, 0, 159)"
-                                                {% elif item.1 > 317 and item.1 <= 563 %}
-                                                    style="background-color:rgb(79, 0, 175)"
-                                                {% elif item.1 > 563 and item.1 <= 1000 %}
-                                                    style="background-color:rgb(63, 0, 191)"
-                                                {% elif item.1 > 1000 and item.1 <= 1779 %}
-                                                    style="background-color:rgb(47, 0, 207)"
-                                                {% elif item.1 > 1779 and item.1 <= 3163 %}
-                                                    style="background-color:rgb(31, 0, 223)"
-                                                {% elif item.1 > 3163 and item.1 <= 5624 %}
-                                                    style="background-color:rgb(15, 0, 239)"
-                                                {% elif item.1 > 5624 and item.1 <= 10000 %}
-                                                    style="background-color:rgb(0, 0, 254)"
-                                                {% endif %}>{{ item.1 }}
+                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-8">
+                                                {% elif item.1 > 178 %}
+                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-9">
+                                                {% endif %}{{ item.1 }}
                                             </span>
                                         </li>
                                     {% endif %}
@@ -142,7 +142,7 @@
 
 {% block extra_js %}
     <script type="text/javascript">
-    var reorderDivs = function(){
+    var reorderDivs = function() {
         var faceted_fields = ['author', 'subjects', 'resource_type', 'public', 'owners_names', 'discoverable'];
          var div_ordering = [];
          faceted_fields.forEach(function(field){
@@ -157,14 +157,15 @@
          }
     }
 
-    var clearAllFaceted = function(){
+    var clearAllFaceted = function() {
         localStorage.clear();
         var textSearch = $("#id_q").val();
         var clearURL = "/search/?q=" + textSearch;
         window.location = clearURL;
     }
 
-     $(document).ready(function () {
+    $(document).ready(function () {
+
          $("#id_q").attr('placeholder', 'Search...');
          reorderDivs();
          $('.collapse').on('shown.bs.collapse', function(){
