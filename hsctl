@@ -183,7 +183,14 @@ rebuild_nodb_hs() {
         echo -ne "$pc ...\033[0K\r"
         sleep 1
     done
+    sleep 3s
     solr_schema_hs
+    sleep 2s
+    rebuild_solr_index
+    sleep 2s
+    docker exec $CID curl "http://solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+    sleep 2s
+    rebuild_solr_index
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
