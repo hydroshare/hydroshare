@@ -266,6 +266,8 @@
                                 <td>Editable</td>
                             {% elif res.viewable %}
                                 <td>Viewable</td>
+                            {% else %}
+                                <td></td>
                             {% endif %}
                             <td class="col-labels">
                                 {% for label in res.labels %}
