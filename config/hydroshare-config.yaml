@@ -16,3 +16,5 @@ NGINX_DIR: /home/hydro/hydroshare/nginx
 SSL_CERT_DIR: /home/hydro/hydroshare/nginx/cert-files
 SSL_CERT_FILE: hydrodev-vb.example.org.cert
 SSL_KEY_FILE: hydrodev-vb.example.org.key
+
+### REQUIRES BLANK LINE AFTER LAST VARIABLE DEFINITION ###
