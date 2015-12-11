@@ -173,13 +173,46 @@
                     {% for res in owned %}
                         <tr>
                             <td>
-                                <input class="row-selector" type="checkbox" aria-label="...">
-                                <span class="glyphicon glyphicon-star btn-inline-favorite"></span>
+                                <input class="row-selector" type="checkbox">
+                                {% if res.is_favorite %}
+                                    <span data-form-id="form-favorite-{{ res.short_id }}"
+                                          class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
+
+                                    <form class="hidden-form" id="form-favorite-{{ res.short_id }}"
+                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
+                                          method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="DELETE">
+                                        <input type="hidden" name="label_type" value="FAVORITE">
+                                    </form>
+                                {% else %}
+                                    <span data-form-id="form-favorite-{{ res.short_id }}"
+                                          class="glyphicon glyphicon-star btn-inline-favorite"></span>
+
+                                    <form class="hidden-form" id="form-favorite-{{ res.short_id }}"
+                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
+                                          method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="CREATE">
+                                        <input type="hidden" name="label_type" value="FAVORITE">
+                                    </form>
+                                {% endif %}
+
                                 <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown" aria-expanded="false"></span>
 
                                 <div class="dropdown-menu inline-dropdown" role="menu">
                                     <div class="panel-body" role="form">
                                         <ul class="list-group list-labels">
+                                            <li>
+                                                <label class="checkbox"><input type="checkbox" value=""></label>
+                                                <form id="form-create-label-{{ res.short_id }}" class="hidden-form" action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
+                                                      method="post">
+                                                    {% csrf_token %}
+                                                    <input id="txtLabelName" name="label" type="text" class="form-control">
+                                                    <input type="hidden" name="label_type" value="LABEL">
+                                                    <input type="hidden" name="action" value="CREATE">
+                                                </form>
+                                            </li>
                                         </ul>
                                     </div>
                                 </div>
@@ -390,16 +423,20 @@
                     <h4 class="modal-title" id="myModalLabel">Create New Label</h4>
                 </div>
                 <div class="modal-body">
-                    <form role="form">
+                    <form id="form-create-label" action="/hsapi/_internal/label-resource-action/"
+                          method="post">
+                        {% csrf_token %}
                         <div class="form-group">
                             <label for="txtLabelName">New Label Name:</label>
-                            <input id="txtLabelName" type="text" class="form-control">
+                            <input id="txtLabelName" name="label" type="text" class="form-control">
+                            <input type="hidden" name="label_type" value="SAVEDLABEL">
+                            <input type="hidden" name="action" value="CREATE">
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button id="btn-create-label" type="button" class="btn btn-primary">Create</button>
+                    <button data-form-id="form-create-label" data-form-type="create-label" id="btn-create-label" class="btn btn-primary">Create</button>
                 </div>
             </div>
         </div>
@@ -407,6 +444,7 @@
 
     {#    To be used for querying the tabla in javascrip    t#}
     <input id="currentUserName" value="{{ user|best_name }}" style="display:none">
+    <span id="csrf">{% csrf_token %}</span>
 
     <!-- Manage Labels Modal -->
     <div class="modal fade" id="modalManageLabels" tabindex="-1" role="dialog" aria-labelledby="Manage Labels">
@@ -419,12 +457,30 @@
                 </div>
                 <div class="modal-body">
                     <table id="table-user-labels" class="table">
+                        <thead>
+                            <tr><th>Label</th><th></th></tr>
+                        </thead>
                         <tbody>
-                            <tr><td class="no-labels-found">No labels found.</td></tr>
-{#                            <tr>#}
-{#                                <td class="user-label">Test Label</td>#}
-{#                                <td><span class="glyphicon glyphicon-remove"></span></td>#}
-{#                            </tr>#}
+                            {% if user.ulabels.saved_labels %}
+                                {% for label in user.ulabels.saved_labels %}
+                                <tr>
+                                    <td class="user-label" data-label="{{ label }}">{{ label }}</td>
+                                    <td>
+                                        <form class="hidden-form" id="form-delete-label-{{ label }}"
+                                              action="/hsapi/_internal/label-resource-action/"
+                                              method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="label" value="{{ label }}">
+                                            <input type="hidden" name="label_type" value="SAVEDLABEL">
+                                            <input type="hidden" name="action" value="DELETE">
+                                        </form>
+                                        <span data-label="{{ label }}" data-form-type="delete-label" class="btn-label-remove glyphicon glyphicon-remove" data-form-id="form-delete-label-{{ label }}"></span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="no-labels-found"><td>No labels found.</td></tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>
@@ -511,6 +567,11 @@
             });
             $("#item-selectors").show();
 
+            // Bind ajax submit events to favorite and label buttons
+            $(".btn-inline-favorite").click(label_ajax_submit);
+            $(".btn-label-remove").click(label_ajax_submit);
+            $("#btn-create-label").click(label_ajax_submit);
+
             // Initialize filter badge count
             var ownedCount = parseInt($("#filter ul").attr("data-owned-count"));
             var editableCount = parseInt($("#filter ul").attr("data-editable-count"));
@@ -594,7 +655,7 @@
                 $(this).toggleClass("isfavorite");
             });
 
-            $("#btn-create-label").click(createLabel);
+            {# $("#btn-create-label").click(createLabel);#}
 
             $("#btn-favorite").click(function(){
                 var stars = $("#item-selectors input[type='checkbox']:checked").parent().find(".btn-inline-favorite");
@@ -628,6 +689,66 @@
             updateLabelLists();
 
         });
+
+
+        function favorite_ajax_submit() {
+            var formID = "#" + $(this).attr("data-form-id");
+            var form = $(formID);
+            var datastring = form.serialize();
+            var url = form.attr('action');
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                dataType: 'html',
+                data: datastring,
+                success: function (result) {
+                    console.log("success!")
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("failed!")
+                }
+            });
+            //don't submit the form
+            return false;
+        }
+
+        function label_ajax_submit(formID) {
+            var formID = "#" + $(this).attr("data-form-id");
+            var form = $(formID);
+            var datastring = form.serialize();
+            var url = form.attr('action');
+            var formType = $(this).attr("data-form-type");
+            var label = $(this).attr("data-label");
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                dataType: 'html',
+                data: datastring,
+                success: function (result) {
+                    console.log("success!")
+                    if (formType == "create-label") {
+                        createLabel();
+                    }
+                    else if (formType == "delete-label"){
+                        $("#table-user-labels td[data-label='" + label + "']").parent().remove();
+                        if ($("#table-user-labels .user-label").length == 0 && $("#table-user-labels .no-labels-found").length == 0) {
+                            $("#table-user-labels tbody").append(
+                                    '<tr class="no-labels-found"><td>No labels found.</td></tr>'
+                            )
+                        }
+
+                        updateLabelLists();
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("failed!")
+                }
+            });
+            //don't submit the form
+            return false;
+        }
 
         function updateLabelLists() {
             $("#user-labels-left").empty();
@@ -712,11 +833,28 @@
 
         function createLabel () {
             if ($("#txtLabelName").val() != "") {
-                $("#table-user-labels tbody").append(
+                var userLabelsTable = $("#table-user-labels tbody");
+                userLabelsTable.append(
                         '<tr>' +
-                            '<td class="user-label">' + $("#txtLabelName").val() + '</td>' +
-                            '<td><span class="glyphicon glyphicon-remove"></span></td>' +
-                        '</tr>')
+                            '<td class="user-label" data-label="' + $("#txtLabelName").val() + '">' + $("#txtLabelName").val() + '</td>' +
+                            '<td>'+
+                                '<form class="hidden-form" id="form-delete-label-'+ $("#txtLabelName").val() + '" ' +
+                                      'action="/hsapi/_internal/label-resource-action/"'+
+                                      'method="post">'+
+                                    document.getElementById("csrf").innerHTML +
+                                    '<input type="hidden" name="label" value="' + $("#txtLabelName").val() + '">'+
+                                    '<input type="hidden" name="label_type" value="SAVEDLABEL">'+
+                                    '<input type="hidden" name="action" value="DELETE">'+
+                                '</form>'+
+                                '<span data-label="' + $("#txtLabelName").val() + '" data-form-type="delete-label"'+
+                                      'class="btn-label-remove glyphicon glyphicon-remove"'+
+                                      'data-form-id="form-delete-label-' + $("#txtLabelName").val() + '"></span>'+
+                            '</td>'+
+                        '</tr>');
+
+                userLabelsTable.find(".no-labels-found").remove();
+
+                $(".btn-label-remove").click(label_ajax_submit);
             }
 
             $("#modalCreateLabel").modal('hide');

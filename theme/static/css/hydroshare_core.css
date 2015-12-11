@@ -2642,14 +2642,11 @@ h4.title {
 #modalManageLabels .glyphicon-remove {
 	color: rgb(217, 83, 79);
 	cursor: pointer;
+	float: right;
 }
 
 #modalManageLabels .glyphicon-remove:hover {
 	color: rgb(168, 69, 66);
-}
-
-#modalManageLabels table tr:first-child > td {
-	border-top: 0;
 }
 
 .inline-dropdown {
@@ -2678,7 +2675,6 @@ h4.title {
 
 .dataTables_wrapper {
     max-width: 100%;
-    overflow: auto;
 }
 
 .all-rows-selector {
@@ -2691,4 +2687,8 @@ h4.title {
 
 .row-selector {
 	margin-right: 8px !important;
+}
+
+.hidden-form {
+	display: none;
 }

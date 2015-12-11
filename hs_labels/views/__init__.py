@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from hs_core.views import authorize
 
 
-def resource_labeling_action(request, shortkey, *args, **kwargs):
+def resource_labeling_action(request, shortkey=None, *args, **kwargs):
     """
     This must be a POST request. The following data needs to be passed as part of the POST request:
     action: resource labeling action - has to be either 'CREATE' or 'DELETE'
@@ -22,7 +22,11 @@ def resource_labeling_action(request, shortkey, *args, **kwargs):
     SAVEDLABEL = 'SAVEDLABEL'
 
     # TODO: clear all labels, clear all saved labels
-    res, _, user = authorize(request, shortkey, view=True, full=True, superuser=True)
+    if shortkey is not None:
+        res, _, user = authorize(request, shortkey, view=True, full=True, superuser=True)
+    else:
+        user = request.user
+
     action = request.POST['action']
     label_type = request.POST['label_type']
     label = request.POST.get('label', None)

@@ -401,6 +401,7 @@ def save_ajax(request):
         value_edit = adaptor.get_value_editor(value)
         value_edit_with_filter = apply_filters(value_edit, adaptor.filters_to_edit)
         new_data[field_name] = value_edit_with_filter
+        new_data[field_name] = value_edit_with_filter
         if form.is_valid():
             adaptor.save(value_edit_with_filter)
             return _get_http_response({'errors': False,
@@ -471,8 +472,11 @@ def my_resources(request, page):
     editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
     # get a list of resources with VIEW privilege
     viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
-    all_my_resources = {'owned': owned_resources, 'editable': editable_resources, 'view': viewable_resources}
-    return all_my_resources
+    context = {'owned': owned_resources, 'editable': editable_resources, 'view': viewable_resources}
+
+    for res in list(owned_resources) + list(editable_resources) + list(editable_resources):
+        res.is_favorite = res.rlabels.is_favorite(user)
+    return context
 
 # def my_resources_old(request, page):
 #     import sys
