@@ -166,6 +166,8 @@
                     <th>Subject</th>
                     <th>Authors</th>
                     <th>Permission Level</th>
+                    <th>Labels</th>
+                    <th>Favorite</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -260,6 +262,16 @@
                                 {% endfor %}
                             </td>
                             <td>Owned</td>
+                            <td>
+                                {% for label in res.labels %}
+                                    <span label-counter data-label="{{ label }}">{{ label }}</span>
+                                {% endfor %}
+                            </td>
+                            <td class="col-is-favorite">
+                                {% if res.is_favorite %}
+                                    <span class="isFavoriteCounter">Favorite</span>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% endfor %}
 
@@ -353,6 +365,8 @@
                                 {% endfor %}
                             </td>
                             <td>Editable</td>
+                            <td>{% for label in res.labels %}{% if forloop.counter0 > 0 %},{% endif %}{{ label }}{% endfor %}</td>
+                            <td>{% if res.is_favorite %}Favorite{% endif %}</td>
                         </tr>
                     {% endfor %}
 
@@ -446,6 +460,8 @@
                                 {% endfor %}
                             </td>
                             <td>View</td>
+                            <td>{% for label in res.labels %}{% if forloop.counter0 > 0 %},{% endif %}{{ label }}{% endfor %}</td>
+                            <td>{% if res.is_favorite %}Favorite{% endif %}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -692,22 +708,22 @@
                 }
             });
 
-            $(".btn-inline-favorite").click(function(){
-                $(this).toggleClass("isfavorite");
-            });
 
-            {# $("#btn-create-label").click(createLabel);#}
 
             $("#btn-favorite").click(function(){
                 var stars = $("#item-selectors input[type='checkbox']:checked").parent().find(".btn-inline-favorite");
+                var checkedSome = false;
                 for (var i = 0; i < stars.length; i++) {
                     if (!$(stars[i]).hasClass("isfavorite")) {
-                        $(stars).addClass("isfavorite");
-                        return;
+                        $(stars[i]).click();
+                        checkedSome = true;
                     }
                 }
 
-                stars.removeClass("isfavorite");
+                // If none was checked it means we are unchecking all
+                if (checkedSome == false) {
+                    stars.click();
+                }
             });
 
             $("#item-selectors td").click(function(e){
@@ -728,39 +744,18 @@
             });
 
             updateLabelLists();
+            updateLabelCount();
 
         });
 
-
-        function favorite_ajax_submit() {
-            var formID = "#" + $(this).attr("data-form-id");
-            var form = $(formID);
-            var datastring = form.serialize();
-            var url = form.attr('action');
-
-            $.ajax({
-                type: "POST",
-                url: url,
-                dataType: 'html',
-                data: datastring,
-                success: function (result) {
-                    console.log("success!")
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    console.log("failed!")
-                }
-            });
-            //don't submit the form
-            return false;
-        }
-
         function label_ajax_submit(formID) {
-            var formID = "#" + $(this).attr("data-form-id");
+            var el = $(this);
+            var formID = "#" + el.attr("data-form-id");
             var form = $(formID);
             var datastring = form.serialize();
             var url = form.attr('action');
-            var formType = $(this).attr("data-form-type");
-            var label = $(this).attr("data-label");
+            var formType = el.attr("data-form-type");
+            var label = el.attr("data-label");
 
             $.ajax({
                 type: "POST",
@@ -768,7 +763,6 @@
                 dataType: 'html',
                 data: datastring,
                 success: function (result) {
-                    console.log("success!")
                     if (formType == "create-label") {
                         createLabel();
                     }
@@ -784,11 +778,17 @@
                     else if (formType == "toggle-favorite") {
                         var action = form.find("input[name='action']");
 
-                        if (action.val() == "DELETE") {
+                        el.toggleClass("isfavorite");
+
+                        if (action.val() == "DELETE") { // Got unchecked
                             action.val("CREATE");
+                            form.closest("tr").find(".col-is-favorite .isFavoriteCounter").remove();
                         }
-                        else {
+                        else {                          // Got checked
                             action.val("DELETE");
+                            form.closest("tr").find(".col-is-favorite").append(
+                                    '<span class="isFavoriteCounter">Favorite</span>'
+                            );
                         }
                     }
                     else if (formType="toggle-label") {
@@ -801,9 +801,11 @@
                             action.val("DELETE");
                         }
                     }
+
+                    updateLabelCount();
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    console.log("failed!")
+
                 }
             });
             //don't submit the form
@@ -981,6 +983,8 @@
             for (var key in collection) {
                 $("#labels input[data-label='" + key + "']").parent().parent().find(".badge").text(collection[key]);
             }
+
+            $("#filter .badge[data-facet='favorites']").text($(".isFavoriteCounter").length)
         }
 
         //strips query inputs from a search string
@@ -1074,6 +1078,8 @@
             5 - Subject
             6 - Authors
             7 - Permission Level
+            8 - Labels
+            9 - Favorite
         ==================================================*/
 
         /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
@@ -1142,6 +1148,14 @@
                     // Shared with me
                     if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
                         if (data[7] == "Owned" || (data[7] != "View" && data[7] != "Editable")) {
+                            return false;
+                        }
+                    }
+
+                    // Favorite
+                    if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
+                        var row = $("#item-selectors tbody tr:nth-child(" + (dataIndex + 1) +") .col-is-favorite");
+                        if (!row.find(".isFavoriteCounter").length) {
                             return false;
                         }
                     }
