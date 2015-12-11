@@ -1,13 +1,13 @@
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.contrib.contenttypes import generic
-from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
-from hs_core.models import ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement, BaseResource, ResourceManager
-from hs_core import hydroshare
-
-from mezzanine.pages.models import Page
 from mezzanine.pages.page_processors import processor_for
+
+from hs_core.models import BaseResource, ResourceManager, resource_processor, \
+    CoreMetaData, AbstractMetaDataElement
+
+from lxml import etree
 
 
 class ToolResource(BaseResource):
@@ -15,10 +15,7 @@ class ToolResource(BaseResource):
 
     class Meta:
         proxy = True
-        verbose_name = 'Tool Resource'
-
-    def extra_capabilities(self):
-        return None
+        verbose_name = 'Web App Resource'
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -35,190 +32,112 @@ class ToolResource(BaseResource):
         md = ToolMetaData()
         return self._get_metadata(md)
 
-
 processor_for(ToolResource)(resource_processor)
 
 
 class RequestUrlBase(AbstractMetaDataElement):
-    term = 'Request Url Base'
-    value = models.CharField(null=True, max_length="500") # whatever the user gives us- format is "http://www.example.com/{resource-info}"
+    term = 'RequestUrlBase'
+    value = models.CharField(max_length=1024, null=True)
+    resShortID = models.CharField(max_length=128, default="UNKNOWN")
 
-
-    @classmethod
-    def create(cls, **kwargs):
-        if 'value' in kwargs:
-            if 'content_object' in kwargs:
-                content_object = kwargs['content_object']
-                metadata_type = ContentType.objects.get_for_model(content_object)
-                url_base = RequestUrlBase.objects.filter(value__iexact=kwargs['value'], object_id=content_object.id, content_type=metadata_type).first()
-                if url_base:
-                    raise ValidationError('There can only be one Request Url Base')
-                url_base = RequestUrlBase.objects.create(value=kwargs['value'], content_object=content_object)
-                return url_base
-            else:
-                raise ValidationError('Metadata instance for which Request Url Base element to be created is missing.')
-        else:
-            raise ValidationError("Value of Request Url Base is missing.")
-
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        url_base = RequestUrlBase.objects.get(id=element_id)
-        if url_base:
-            if 'value' in kwargs:
-                url_base.value = kwargs['value']
-                url_base.save()
-            else:
-                raise ValidationError('Value of Request Url Base is missing')
-        else:
-            raise ObjectDoesNotExist("No Request Url Base element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        url_base = RequestUrlBase.objects.get(id=element_id)
-        if url_base:
-            url_base.delete()
-        else:
-            raise ObjectDoesNotExist("No Request Url Base element was found for id:%d." % element_id)
-
-#the resource types that can be used by this tool- one class instance per type
-class ToolResourceType(AbstractMetaDataElement):
-    term = 'Tool Resource Type'
-    tool_res_type = models.CharField(null=True, max_length="500")  #a string of the resource type class, lowered. like res.content_model
-
-    @classmethod
-    def create(cls, **kwargs):
-        if 'tool_res_type' in kwargs:
-            if 'content_object' in kwargs:
-                content_object = kwargs['content_object']
-                tool_res_type_res = ToolResourceType.objects.create(tool_res_type=kwargs['tool_res_type'], content_object=content_object)
-                return tool_res_type_res
-            else:
-                raise ValidationError('Metadata instance for which Resource Type element to be created is missing.')
-        else:
-            raise ValidationError("string 'tool_res_type' is missing.")
-
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        tool_res_type_res = ToolResourceType.objects.get(id=element_id)
-        if tool_res_type_res:
-            if 'tool_res_type' in kwargs:
-                tool_res_type_res.tool_res_type = kwargs['tool_res_type']
-                tool_res_type_res.save()
-            else:
-                raise ValidationError("String 'tool_res_type' is missing.")
-        else:
-            raise ObjectDoesNotExist("No Resource Type element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        tool_res_type_res = ToolResourceType.objects.get(id=element_id)
-        if tool_res_type_res:
-            tool_res_type_res.delete()
-        else:
-            raise ObjectDoesNotExist("No Resource Type element was found for id:%d." % element_id)
-
-class Fee(AbstractMetaDataElement):
-    term = 'Fee'
-    description = models.TextField()
-    value = models.DecimalField(max_digits=10, decimal_places=2)
-
-    @classmethod
-    def create(cls, **kwargs):
-        if 'content_object' in kwargs:
-            metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            fee = Fee.objects.create(value=kwargs.get('value'),
-                                     description=kwargs.get('description'),
-                                     content_object=metadata_obj)
-            return fee
-        else:
-            raise ValidationError('metadata object is missing from inputs')
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        fee = Fee.objects.get(id=element_id)
-        if fee:
-            if 'value' in kwargs:
-                fee.value = kwargs['value']
-            if 'description' in kwargs:
-                fee.description = kwargs['description']
-            fee.save()
-        else:
-            raise ObjectDoesNotExist("No Fee element was found for the provided id:%s" % kwargs['id'])
-
-    @classmethod
-    def remove(cls, element_id):
-        fee = Fee.objects.get(id=element_id)
-        if fee:
-            fee.delete()
-        else:
-            raise ObjectDoesNotExist("No Fee element was found for id:%d." % element_id)
+    class Meta:
+        # RequestUrlBase element is not repeatable
+        unique_together = ("content_type", "object_id")
 
 
 class ToolVersion(AbstractMetaDataElement):
-    term = 'Tool Version'
-    value = models.CharField(null=True, max_length="500")
+    term = 'AppVersion'
+    value = models.CharField(max_length=128, default="1.0")
+
+    class Meta:
+        # ToolVersion element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class SupportedResTypeChoices(models.Model):
+    description = models.CharField(max_length=128)
+
+    def __unicode__(self):
+        return self.description
+
+
+class SupportedResTypes(AbstractMetaDataElement):
+    term = 'SupportedResTypes'
+    supported_res_types = models.ManyToManyField(SupportedResTypeChoices, null=True, blank=True)
+
+    def get_supported_res_types_str(self):
+        return ','.join([parameter.description for parameter in self.supported_res_types.all()])
 
     @classmethod
     def create(cls, **kwargs):
-        if 'value' in kwargs:
-            if 'content_object' in kwargs:
-                content_object = kwargs['content_object']
-                metadata_type = ContentType.objects.get_for_model(content_object)
-                version = ToolVersion.objects.filter(value__iexact=kwargs['value'], object_id=content_object.id, content_type=metadata_type).first()
-                if version:
-                    raise ValidationError('There can only be one Tool Version')
-                version = ToolVersion.objects.create(value=kwargs['value'], content_object=content_object)
-                return version
-            else:
-                raise ValidationError('Metadata instance for which Tool Version element to be created is missing.')
+        if 'supported_res_types' in kwargs:
+            metadata_obj = kwargs['content_object']
+            new_meta_instance = SupportedResTypes.objects.create(content_object=metadata_obj)
+            for res_type_str in kwargs['supported_res_types']:
+                qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
+                if qs.exists():
+                    new_meta_instance.supported_res_types.add(qs[0])
+                else:
+                    new_meta_instance.supported_res_types.create(description=res_type_str)
+            return new_meta_instance
         else:
-            raise ValidationError("Value of Tool Version is missing.")
+            raise ObjectDoesNotExist("No supported_res_types parameter was found in the **kwargs list")
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        version = ToolVersion.objects.get(id=element_id)
-        if version:
-            if 'value' in kwargs:
-                version.value = kwargs['value']
-                version.save()
+        meta_instance = SupportedResTypes.objects.get(id=element_id)
+        if meta_instance:
+            if 'supported_res_types' in kwargs:
+                meta_instance.supported_res_types.clear()
+                for res_type_str in kwargs['supported_res_types']:
+                    qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
+                    if qs.exists():
+                        meta_instance.supported_res_types.add(qs[0])
+                    else:
+                        meta_instance.supported_res_types.create(description=res_type_str)
+                meta_instance.save()
+                if meta_instance.supported_res_types.all().count() == 0:
+                    meta_instance.delete()
             else:
-                raise ValidationError('Value of Tool Version is missing')
+                raise ObjectDoesNotExist("No supported_res_types parameter was found in the **kwargs list")
         else:
-            raise ObjectDoesNotExist("No Tool Version element was found for the provided id:%s" % kwargs['id'])
+            raise ObjectDoesNotExist("No SupportedResTypes object was found with the provided id: %s" % kwargs['id'])
 
     @classmethod
     def remove(cls, element_id):
-        version = ToolVersion.objects.get(id=element_id)
-        if version:
-            version.delete()
-        else:
-            raise ObjectDoesNotExist("No Tool Version element was found for id:%d." % element_id)
+        raise ValidationError("SupportedResTypes element can't be deleted.")
+
 
 class ToolMetaData(CoreMetaData):
-    # tool license is implemented via existing metadata element "rights" with attr. "statement" and "url"
-    # should be only one Request Url Base metadata element
     url_bases = generic.GenericRelation(RequestUrlBase)
-    res_types = generic.GenericRelation(ToolResourceType)
-    fees = generic.GenericRelation(Fee)
-    # should be only one Version metadata element
     versions = generic.GenericRelation(ToolVersion)
+    supported_res_types = generic.GenericRelation(SupportedResTypes)
 
     @classmethod
     def get_supported_element_names(cls):
-        # get the names of all core metadata elements
         elements = super(ToolMetaData, cls).get_supported_element_names()
-        # add the name of any additional element to the list
-        elements.append('RequestUrlBase')   # needs to match the class name
-        elements.append('ToolResourceType')
-        elements.append('Fee')
+        elements.append('RequestUrlBase')
         elements.append('ToolVersion')
+        elements.append('SupportedResTypes')
         return elements
 
+    def has_all_required_elements(self):
+        if self.get_required_missing_elements():
+            return False
+        return True
+
+    def get_required_missing_elements(self):  # show missing required meta
+        missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
+        if not self.url_bases.all().first():
+            missing_required_elements.append('App Url')
+        elif not self.url_bases.all().first().value:
+            missing_required_elements.append('App Url')
+        if not self.supported_res_types.all().first():
+            missing_required_elements.append('Supported Resource Types')
+
+        return missing_required_elements
+
     def get_xml(self):
-        from lxml import etree
         # get the xml string representation of the core metadata elements
         xml_string = super(ToolMetaData, self).get_xml(pretty_print=False)
 
@@ -228,33 +147,25 @@ class ToolMetaData(CoreMetaData):
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
-        #inject resource specific metadata elements into container element
-        for url in self.url_bases.all():
-            hsterms_method = etree.SubElement(container, '{%s}RequestUrlBase' % self.NAMESPACES['hsterms'])
-            hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = url.value
+        # inject resource specific metadata elements into container element
+        if self.url_bases.all().first():
+            url_bases_fields = ['value']
+            self.add_metadata_element_to_xml(container,
+                                             self.url_bases.all().first(),
+                                             url_bases_fields)
 
-        for type in self.res_types.all():
-            hsterms_method = etree.SubElement(container, '{%s}ResourceType' % self.NAMESPACES['hsterms'])
-            hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}type' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = type.tool_res_type
+        if self.versions.all().first():
+            versions_fields = ['value']
+            self.add_metadata_element_to_xml(container,
+                                             self.versions.all().first(),
+                                             versions_fields)
 
-        for fee in self.fees.all():
-            hsterms_method = etree.SubElement(container, '{%s}Fee' % self.NAMESPACES['hsterms'])
+        for res_type in self.supported_res_types.all():
+            hsterms_method = etree.SubElement(container, '{%s}SupportedResTypes' % self.NAMESPACES['hsterms'])
             hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = unicode(fee.value)
-            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}description' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = fee.description
-
-        for v in self.versions.all():
-            hsterms_method = etree.SubElement(container, '{%s}ToolVersion' % self.NAMESPACES['hsterms'])
-            hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = unicode(v.value)
+            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}types' % self.NAMESPACES['hsterms'])
+            hsterms_name.text = res_type.get_supported_res_types_str()
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
-import receivers
+import receivers # never delete this otherwise non of the receiver function will work

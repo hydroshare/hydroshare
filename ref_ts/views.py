@@ -191,16 +191,19 @@ def add_dublin_core(request, page):
         extended_metadata_exists = True
 
     wml2_url = ""
+    wml2_fn = ""
     for f in content_model.files.all():
         if 'visual' in str(f.resource_file.name):
             context['visfile'] = f
         if 'wml_2' in str(f.resource_file.name):
+            wml2_fn = f.resource_file.name
             wml2_url = f.resource_file.url
-
+    wml2_fn_arr=wml2_fn.split('/')
+    wml2_fn=wml2_fn_arr[-1]
     tools = context.get('relevant_tools')
     if tools:
         for tool in tools:
-            tool['url'] = "{}{}{}".format(tool['url'], "&fileurl=", request.build_absolute_uri(wml2_url))
+            tool['url'] = "{0}{1}{2}".format(tool['url'],"&fn=",wml2_fn)
     context['extended_metadata_exists'] = extended_metadata_exists
     context['site'] = content_model.metadata.sites.all().first()
     context['variable'] = content_model.metadata.variables.all().first()
