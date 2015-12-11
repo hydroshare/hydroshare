@@ -52,7 +52,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     metadata_status = _get_metadata_status(content_model)
 
-
     relevant_tools = None
     if not resource_edit: # view mode
         relevant_tools = []
@@ -62,15 +61,16 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 url_obj = res_type.content_object.url_bases.first()
                 tool_res_obj = hydroshare.get_resource_by_shortkey(url_obj.resShortID)
                 if tool_res_obj:
-                    tool_edit_mode = authorize(request, tool_res_obj.resShortID)[1]
-                    if tool_edit_mode:
+                    is_authorized = authorize(request, tool_res_obj.short_id, view=True, raises_exception=False)[1]
+                    if is_authorized:
                         tool_url = url_obj.value
                         u = user.username if len(user.username) > 0 else "anonymous"
+                        if tool_url.endswith('/'):
+                            tool_url = tool_url[:-1]
                         tl = {'title': str(res_type.content_object.title),
                               'url': "{0}{1}{2}{3}{4}{5}".format(tool_url, "/?res_id=", content_model.short_id,
                                                                  "&usr=", u, "&src=hs")}
                         relevant_tools.append(tl)
-
 
     just_created = False
     if request:

@@ -43,8 +43,7 @@ def landing_page(request, page):
         url_base = content_model.metadata.url_bases.first()
         if not url_base:
             url_base = RequestUrlBase.create(content_object=content_model.metadata,
-                                             resShortID=content_model.short_id,
-                                             value="")
+                                             resShortID=content_model.short_id)
 
         url_base_form = UrlBaseForm(instance=url_base,
                                     res_short_id=content_model.short_id,

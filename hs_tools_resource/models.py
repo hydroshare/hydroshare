@@ -130,8 +130,8 @@ class ToolMetaData(CoreMetaData):
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
         if not self.url_bases.all().first():
             missing_required_elements.append('App Url')
-        if not self.versions.all().first():
-            missing_required_elements.append('App Version')
+        elif not self.url_bases.all().first().value:
+            missing_required_elements.append('App Url')
         if not self.supported_res_types.all().first():
             missing_required_elements.append('Supported Resource Types')
 
