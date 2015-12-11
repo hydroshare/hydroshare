@@ -2396,6 +2396,70 @@ h4.title {
     background-color: #6A8593;
 }
 
+#color-scheme {
+    float: right;
+    padding: 5px 0 0 0;
+}
+
+.YellowGreenBlue-colormap-band-1 {
+    background-color:rgb(1,70,54);
+}
+.YellowGreenBlue-colormap-band-1-fill {
+    fill:rgb(1,70,54);
+}
+.YellowGreenBlue-colormap-band-2 {
+    background-color:rgb(1,108,89);
+}
+.YellowGreenBlue-colormap-band-2-fill {
+    fill:rgb(1,108,89);
+}
+.YellowGreenBlue-colormap-band-3 {
+    background-color:rgb(2,129,138);
+}
+.YellowGreenBlue-colormap-band-3-fill {
+    fill:rgb(2,129,138);
+}
+.YellowGreenBlue-colormap-band-4 {
+    background-color:rgb(54,144,192);
+}
+.YellowGreenBlue-colormap-band-4-fill {
+    fill:rgb(54,144,192);
+}
+.YellowGreenBlue-colormap-band-5 {
+    background-color:rgb(103,169,207);
+}
+.YellowGreenBlue-colormap-band-5-fill {
+    fill:rgb(103,169,207);
+}
+.YellowGreenBlue-colormap-band-6 {
+    color: red;
+    background-color:rgb(166,189,219);
+}
+.YellowGreenBlue-colormap-band-6-fill {
+    fill:rgb(166,189,219);
+}
+.YellowGreenBlue-colormap-band-7 {
+    color: red;
+    background-color:rgb(208,209,230);
+}
+.YellowGreenBlue-colormap-band-7-fill {
+    fill:rgb(208,209,230);
+}
+.YellowGreenBlue-colormap-band-8 {
+    color: red;
+    background-color:rgb(236,226,240);
+}
+.YellowGreenBlue-colormap-band-8-fill {
+    fill:rgb(236,226,240);
+}
+.YellowGreenBlue-colormap-band-9 {
+    color: red;
+    background-color:rgb(255,247,251);
+}
+.YellowGreenBlue-colormap-band-9-fill {
+    fill:rgb(255,247,251);
+}
+
 /*-------- My resources page revamp ---------*/
 
 .dropdown.dropdown-lg .dropdown-menu {
