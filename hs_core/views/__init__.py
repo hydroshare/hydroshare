@@ -472,10 +472,17 @@ def my_resources(request, page):
     editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
     # get a list of resources with VIEW privilege
     viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+
+    owned_resources = list(owned_resources)
+    editable_resources = list(editable_resources)
+    viewable_resources = list(viewable_resources)
+
+    for res in (owned_resources + editable_resources + viewable_resources):
+        res.is_favorite = res.rlabels.is_favorite(user)
+        res.labels = res.rlabels.get_labels(user)
+
     context = {'owned': owned_resources, 'editable': editable_resources, 'view': viewable_resources}
 
-    for res in list(owned_resources) + list(editable_resources) + list(editable_resources):
-        res.is_favorite = res.rlabels.is_favorite(user)
     return context
 
 # def my_resources_old(request, page):

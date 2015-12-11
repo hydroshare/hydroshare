@@ -2533,9 +2533,11 @@ h4.title {
 	background-clip: text;
 }
 
-.btn-inline-label:hover {
+.btn-inline-label:hover, .has-labels {
 	color: #0A91AB;
 }
+
+
 
 .btn-inline-favorite.isfavorite {
 	color: rgb(255, 163, 0);
