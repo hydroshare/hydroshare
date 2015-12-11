@@ -175,7 +175,7 @@
                             <td>
                                 <input class="row-selector" type="checkbox">
                                 {% if res.is_favorite %}
-                                    <span data-form-id="form-favorite-{{ res.short_id }}"
+                                    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
 
                                     <form class="hidden-form" id="form-favorite-{{ res.short_id }}"
@@ -186,7 +186,7 @@
                                         <input type="hidden" name="label_type" value="FAVORITE">
                                     </form>
                                 {% else %}
-                                    <span data-form-id="form-favorite-{{ res.short_id }}"
+                                    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-star btn-inline-favorite"></span>
 
                                     <form class="hidden-form" id="form-favorite-{{ res.short_id }}"
@@ -738,8 +738,17 @@
                                     '<tr class="no-labels-found"><td>No labels found.</td></tr>'
                             )
                         }
-
                         updateLabelLists();
+                    }
+                    else if (formType == "toggle-favorite") {
+                        var action = form.find("input[name='action']");
+
+                        if (action.val() == "DELETE") {
+                            action.val("CREATE");
+                        }
+                        else {
+                            action.val("DELETE");
+                        }
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
