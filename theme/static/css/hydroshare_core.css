@@ -1278,6 +1278,14 @@ body > .container{
     text-decoration: none;
 }
 
+#btnMyResources.btn-resource-add {
+	color: #84B85C;;
+}
+
+#btnMyResources.btn-resource-remove {
+	color: #D9534F;
+}
+
 .custom-btn-toolbar .icon-button{
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;

@@ -475,7 +475,7 @@ def my_resources(request, page):
     owned_resources = list(owned_resources)
     editable_resources = list(editable_resources)
     viewable_resources = list(viewable_resources)
-    favorited_resources = list(user.ulabels.favorited_resources)
+    favorite_resources = list(user.ulabels.favorited_resources)
     labeled_resources = list(user.ulabels.labeled_resources)
     discovered_resources = list(user.ulabels.my_resources)
 
@@ -490,7 +490,7 @@ def my_resources(request, page):
 
     for res in (owned_resources + editable_resources + viewable_resources):
         res.is_favorite = False
-        if res in favorited_resources:
+        if res in favorite_resources:
             res.is_favorite = True
         if res in labeled_resources:
             res.labels = res.rlabels.get_labels(user)

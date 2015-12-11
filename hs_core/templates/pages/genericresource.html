@@ -91,37 +91,33 @@
             {% if not metadata_form %}
                 {% if page.perms.change %}
                     <div class="custom-btn-toolbar">
-
-                        {% if is_mine %}
-                            <form class="inline" data-id="form-add-to-my-resources"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
-                                  method="post">
-                                {% csrf_token %}
-                                <div class="form-group">
+                        {% if not is_owner_user %}
+                            {% if is_mine %}
+                                <form class="pull-right" data-id="form-add-to-my-resources"
+                                      action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
+                                      method="post">
+                                    {% csrf_token %}
                                     <input type="hidden" name="label_type" value="MINE">
                                     <input type="hidden" name="action" value="DELETE">
                                     <button id="btnMyResources" data-toggle="tooltip" data-placement="auto"
                                             title="Remove from my resources" data-form-id="form-add-to-my-resources"
-                                            class="glyphicon glyphicon-inbox icon-button"></button>
-                                </div>
-                            </form>
-                        {% else %}
-                            <form class="inline" data-id="form-add-to-my-resources"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
-                                  method="post">
-                                {% csrf_token %}
-                                <div class="form-group">
+                                            class="glyphicon glyphicon-inbox icon-button btn-resource-remove"></button>
+                                </form>
+                            {% else %}
+                                <form class="pull-right" data-id="form-add-to-my-resources"
+                                      action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
+                                      method="post">
+                                    {% csrf_token %}
                                     <input type="hidden" name="label_type" value="MINE">
                                     <input type="hidden" name="action" value="CREATE">
                                     <button id="btnMyResources" data-toggle="tooltip" data-placement="auto"
                                             title="Add to my resources" data-form-id="form-add-to-my-resources"
-                                            class="glyphicon glyphicon-inbox icon-button"></button>
-                                </div>
-                            </form>
+                                            class="glyphicon glyphicon-inbox icon-button btn-resource-add"></button>
+                                </form>
+                            {% endif %}
                         {% endif %}
 
-
-                        <form class="inline" action="{{ cm.get_absolute_url }}" method="post">
+                        <form class="inline pull-right" action="{{ cm.get_absolute_url }}" method="post">
                             {% csrf_token %}
                             {% if page.perms.delete %}
                                 <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
@@ -2428,11 +2424,26 @@
                     dataType: 'html',
                     data: datastring,
                     success: function (result) {
+                        var json_response = JSON.parse(result);
+                        if (json_response.status == "success") {
+
+                            var action = form.find("input[name='action']");
+                            if (json_response.action == "CREATE") {
+                                action.val("DELETE");
+                                $("#btnMyResources").removeClass("btn-resource-add");
+                                $("#btnMyResources").addClass("btn-resource-remove");
+                            }
+                            else {
+                                action.val("CREATE");
+                                $("#btnMyResources").addClass("btn-resource-add");
+                                $("#btnMyResources").removeClass("btn-resource-remove");
+                            }
+                        }
                         console.log(result);
                         console.log("Added to my resources")
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
-
+                        console.log(result);
                     }
                 });
                 //don't submit the form
