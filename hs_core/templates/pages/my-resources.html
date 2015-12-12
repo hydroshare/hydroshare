@@ -423,20 +423,22 @@
                         "searchable": true
                     },
                     {
+                        "targets": [8],     // Labels
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [9],     // Favorite
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
                         "targets": [0],     // Actions
                         "orderable": false,
                         "searchable": false
                     }
                 ]
             });
-
-            // These columns need to be manually hidden because their layout data is needed in the UI
-            $('#item-selectors td:nth-child(6)').hide();
-            $('#item-selectors th:nth-child(6)').hide();
-            $('#item-selectors td:nth-child(7)').hide();
-            $('#item-selectors th:nth-child(7)').hide();
-            $('#item-selectors td:nth-child(8)').hide();
-            $('#item-selectors th:nth-child(8)').hide();
 
             $("#item-selectors").show();
 
@@ -1031,7 +1033,7 @@
                         }
                     }
 
-                    // Check if the label exists in the table
+                    // Labels - Check if the label exists in the table
                     var labelCheckboxes = $("#user-labels-left input[type='checkbox']");
                     for (var i = 0; i < labelCheckboxes.length; i++) {
                         if ($(labelCheckboxes[i]).prop("checked") == true) {
