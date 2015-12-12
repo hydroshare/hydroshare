@@ -67,7 +67,7 @@ class FlagCodes(object):
 class UserResourceLabels(models.Model):
     """ Labels of a user for a resource
     This model stores labels of an individual user, like an access
-    control list; T
+    control list
     """
     # provenance of label start
     start = models.DateTimeField(editable=False, auto_now=True)
