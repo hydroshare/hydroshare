@@ -101,7 +101,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
                                                 title='all about dog bones',
                                                 metadata=[],)
 
-    def test01labels(self):
+    def test_labels(self):
         cat = self.cat  # user
         scratching = self.scratching  # resource
         cat.ulabels.label_resource(scratching, "penalty clause")
@@ -112,7 +112,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists(cat.ulabels.get_resources_with_label('penalty clause'), [scratching]))
         self.assertTrue(match_lists(cat.ulabels.user_labels, ['penalty clause']))
 
-    def test03favorite(self):
+    def test_favorite(self):
         cat = self.cat  # user
         scratching = self.scratching  # resource
         cat.ulabels.favorite_resource(scratching)
@@ -121,7 +121,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(scratching.rlabels.is_favorite(cat))
         self.assertTrue(match_lists(scratching.rlabels.get_users(), [cat]))
 
-    def test04mine(self):
+    def test_mine(self):
         cat = self.cat  # user
         scratching = self.scratching  # resource
         cat.ulabels.claim_resource(scratching)
@@ -130,7 +130,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(scratching.rlabels.is_mine(cat))
         self.assertTrue(match_lists(scratching.rlabels.get_users(), [cat]))
 
-    def test05clearlabel(self):
+    def test_clear_label(self):
         cat = self.cat  # user
         scratching = self.scratching  # resource
         cat.ulabels.label_resource(scratching, "penalty clause")
@@ -144,7 +144,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists(scratching.rlabels.get_labels(cat), []))
         self.assertTrue(match_lists(scratching.rlabels.get_users(), []))
 
-    def test07clearfavorite(self):
+    def test_clear_favorite(self):
         cat = self.cat  # user
         scratching = self.scratching  # resource
         cat.ulabels.favorite_resource(scratching)
@@ -158,7 +158,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists(scratching.rlabels.get_labels(cat), []))
         self.assertTrue(match_lists(scratching.rlabels.get_users(), []))
 
-    def test08clearmine(self):
+    def test_clear_mine(self):
         cat = self.cat  # user
         scratching = self.scratching  # resource
         cat.ulabels.claim_resource(scratching)
@@ -173,7 +173,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists(scratching.rlabels.get_users(), []))
 
     # argument cleaning
-    def test09labelcleaning(self):
+    def test_label_cleaning(self):
         cat = self.cat  # user
         scratching = self.scratching  # resource
         cat.ulabels.label_resource(scratching, r'  A grevious //  label  ')
@@ -183,7 +183,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists(scratching.rlabels.get_labels(cat), ['A grevious label']))
         self.assertTrue(match_lists(scratching.rlabels.get_users(), [cat]))
 
-    def test11notexist(self):
+    def test_not_exist(self):
         cat = self.cat
         scratching = self.scratching
         self.assertTrue(match_lists(cat.ulabels.resources_of_interest, []))
@@ -194,7 +194,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(scratching.rlabels.is_mine(cat))
         self.assertTrue(match_lists(scratching.rlabels.get_labels(cat), []))
 
-    def test12crosstalk(self):
+    def test_crosstalk(self):
         cat = self.cat  # user
         dog = self.dog  # user
         scratching = self.scratching  # resource
@@ -209,7 +209,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists(bones.rlabels.get_labels(dog), ['cool!']))
         self.assertTrue(match_lists(bones.rlabels.get_users(), [cat, dog]))
 
-    def test13allclear(self):
+    def test_all_clear(self):
         cat = self.cat  # user
         scratching = self.scratching  # resource
         cat.ulabels.label_resource(scratching, r'cool!')
@@ -230,7 +230,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists(dog.ulabels.favorited_resources, []))
         self.assertTrue(match_lists(dog.ulabels.my_resources, []))
 
-    def test14savedlabels(self):
+    def test_saved_labels(self):
         cat = self.cat
         cat.ulabels.save_label('silly')
         cat.ulabels.save_label('cranky')
