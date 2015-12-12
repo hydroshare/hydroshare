@@ -6,9 +6,10 @@ from django.http import HttpResponse
 from hs_core.views import authorize
 
 
-def resource_labeling_action(request, shortkey, *args, **kwargs):
+def resource_labeling_action(request, shortkey=None, *args, **kwargs):
     """
     This must be a POST request. The following data needs to be passed as part of the POST request:
+	shortkey: Id of the resource (Must be None when the label_type is 'SAVEDLABEL')
     action: resource labeling action - has to be either 'CREATE' or 'DELETE'
     label_type: type of label - one of these: 'LABEL', 'FAVORITE', 'MINE', 'FOLDER', 'SAVEDLABEL'
     label: a string value required if the label_type is either 'LABEL', 'SAVEDLABEL',
@@ -22,15 +23,22 @@ def resource_labeling_action(request, shortkey, *args, **kwargs):
     SAVEDLABEL = 'SAVEDLABEL'
 
     # TODO: clear all labels, clear all saved labels
-    res, _, user = authorize(request, shortkey, view=True, full=True, superuser=True)
+    if shortkey:
+        res, _, user = authorize(request, shortkey, view=True, full=True, superuser=True)
+    else:
+        user = request.user
+
     action = request.POST['action']
+
     label_type = request.POST['label_type']
     label = request.POST.get('label', None)
     err_msg = None
 
     # TODO: Use form for input data validation
     # validate post data
-    if label_type not in (LABEL, FAVORITE, FOLDER, MINE, SAVEDLABEL):
+    if not user.is_authenticated():
+        err_msg = "Permission denied"
+    elif label_type not in (LABEL, FAVORITE, FOLDER, MINE, SAVEDLABEL):
         err_msg = "Invalid type of label found"
     elif label_type == LABEL or label_type == SAVEDLABEL:
         if label is None:
@@ -38,6 +46,8 @@ def resource_labeling_action(request, shortkey, *args, **kwargs):
     elif label_type == FOLDER and action == 'CREATE':
         if label is None:
             err_msg = "A folder name is missing"
+        elif label_type != SAVEDLABEL and shortkey is None:
+            err_msg = "Resource ID is missing"
 
     if err_msg is None:
         try:
@@ -73,4 +83,3 @@ def resource_labeling_action(request, shortkey, *args, **kwargs):
                               'resource_id': shortkey}
 
     return HttpResponse(json.dumps(ajax_response_data))
-

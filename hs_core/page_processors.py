@@ -40,7 +40,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
                 - split into two functions: get_readonly_page_context(...) and get_editable_page_context(...)
     """
-    file_type_error=''
+    file_type_error = ''
     if request:
         file_type_error = request.session.get("file_type_error", None)
         if file_type_error:
@@ -49,7 +49,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     content_model = page.get_content_model()
     discoverable = content_model.raccess.discoverable
     validation_error = None
-
+    content_model.is_mine = content_model.rlabels.is_mine(user)
     metadata_status = _get_metadata_status(content_model)
 
     relevant_tools = None
@@ -154,7 +154,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'just_created': just_created,
                    'bag_url': bag_url,
                    'show_content_files': show_content_files,
-                   'discoverable': discoverable
+                   'discoverable': discoverable,
+                   'is_mine': content_model.is_mine
         }
         return context
 
