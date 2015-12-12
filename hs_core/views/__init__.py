@@ -465,11 +465,11 @@ def my_resources(request, page):
     # import pydevd
     # pydevd.settrace('10.0.0.7', port=21000, suspend=False)
     user = request.user
-    # get a list of resources with OWNER privilege
+    # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-    # get a list of resources with CHANGE privilege
+    # get a list of resources with effective CHANGE privilege
     editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
-    # get a list of resources with VIEW privilege
+    # get a list of resources with effective VIEW privilege
     viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
 
     owned_resources = list(owned_resources)
