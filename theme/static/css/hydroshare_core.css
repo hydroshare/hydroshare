@@ -1286,30 +1286,9 @@ body > .container{
 	color: #D9534F;
 }
 
-.custom-btn-toolbar .icon-button{
-    -webkit-border-radius: 3px;
-    -moz-border-radius: 3px;
-    border-radius: 3px;
-    background-color: #FFF;
-    border: 1px solid#adadad;
-
-}
-
-.custom-btn-toolbar .icon-button:hover {
-    box-shadow: 0 0 5px #B2B2B2;
-    -moz-box-shadow: 0 0 5px #B2B2B2;
-    -webkit-box-shadow: 0 0 5px #B2B2B2;
-}
-
-.custom-btn-toolbar {
-    float: right;
-    background: #FFF;
-    padding: 8px 4px;
-    border: 1px solid #D3D3D3;
-    border-top: 1px solid #FFF;
-    margin-top: -6px;
-    margin-right: 20px;
-    display: block;
+.custom-btn-toolbar .icon-button, .custom-btn-toolbar .icon-button:focus {
+	border: 0;
+	outline: 0;
 }
 
 .lined-wrapper {
@@ -1514,7 +1493,7 @@ div#sharing-status {
 }
 
 .info-group {
-	width: calc(100% - 170px);
+	width: calc(100% - 110px);
 }
 
 .tag-list {
@@ -1548,6 +1527,7 @@ div#sharing-status {
 a.tag:hover {
     text-decoration: none;
     cursor:default;
+	color: #111;
 }
 
 .custom-well{

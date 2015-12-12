@@ -262,7 +262,7 @@
                             </td>
                             <td class="col-is-favorite">
                                 {% if res.is_favorite %}
-                                    <span class="isFavoriteCounter">Favorite</span>
+                                    Favorite
                                 {% endif %}
                             </td>
                         </tr>
@@ -579,16 +579,21 @@
                             var action = form.find("input[name='action']");
 
                             el.toggleClass("isfavorite");
+                            var rowIndex = parseInt(form.closest("tr").attr("data-tr-index"));
+                            var favoriteColIndex = 9;   // Index of the favorite column in the table
 
                             if (json_response.action == "DELETE") { // Got unchecked
                                 action.val("CREATE");
-                                form.closest("tr").find(".col-is-favorite .isFavoriteCounter").remove();
+{#                                form.closest("tr").find(".col-is-favorite .isFavoriteCounter").remove();#}
+                                resourceTable.cell(rowIndex,favoriteColIndex).data("").draw();
                             }
                             else {                          // Got checked
                                 action.val("DELETE");
-                                form.closest("tr").find(".col-is-favorite").append(
-                                        '<span class="isFavoriteCounter">Favorite</span>'
-                                );
+
+                                resourceTable.cell(rowIndex,favoriteColIndex).data("Favorite").draw();  // .draw refreshed the internal cache of the table object
+{#                                form.closest("tr").find(".col-is-favorite").append(#}
+{#                                        '<span class="isFavoriteCounter">Favorite</span>'#}
+{#                                );#}
                             }
                         }
                         else if (formType = "toggle-label") {
@@ -1000,7 +1005,7 @@
 
                     // Shared with me
                     if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
-                        if (data[7] == "Owned" || (data[7] != "View" && data[7] != "Editable")) {
+                        if (data[7] == "Owned" || (data[7] != "Viewable" && data[7] != "Editable")) {
                             return false;
                         }
                     }
@@ -1049,8 +1054,7 @@
 
                     // Favorite
                     if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
-                        var colFav = $("#item-selectors tbody tr[data-tr-index='" + dataIndex + "'] .col-is-favorite");
-                        if (!colFav.find(".isFavoriteCounter").length) {
+                        if (data[9] != "Favorite") {
                             return false;
                         }
                     }
