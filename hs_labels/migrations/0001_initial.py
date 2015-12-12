@@ -34,14 +34,26 @@ class Migration(migrations.Migration):
             bases=(models.Model,),
         ),
         migrations.CreateModel(
+            name='UserResourceFlags',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('kind', models.IntegerField(default=1, editable=False, choices=[(1, b'Favorite'), (2, b'Mine')])),
+                ('start', models.DateTimeField(auto_now=True)),
+                ('resource', models.ForeignKey(related_name='r2urf', editable=False, to='hs_core.BaseResource', help_text=b'resource to which a flag applies')),
+                ('user', models.ForeignKey(related_name='u2urf', editable=False, to=settings.AUTH_USER_MODEL, help_text=b'user assigning a flag')),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
             name='UserResourceLabels',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('kind', models.IntegerField(default=1, editable=False, choices=[(1, b'Label'), (2, b'Folder'), (3, b'Favorite'), (4, b'Mine')])),
                 ('start', models.DateTimeField(auto_now=True)),
                 ('label', models.TextField()),
-                ('rlabels', models.ForeignKey(related_name='rl2url', editable=False, to='hs_labels.ResourceLabels', help_text=b'resource to which a label applies')),
-                ('ulabels', models.ForeignKey(related_name='ul2url', editable=False, to='hs_labels.UserLabels', help_text=b'user assigning a label')),
+                ('resource', models.ForeignKey(related_name='r2url', editable=False, to='hs_core.BaseResource', help_text=b'resource to which a label applies')),
+                ('user', models.ForeignKey(related_name='u2url', editable=False, to=settings.AUTH_USER_MODEL, help_text=b'user assigning a label')),
             ],
             options={
             },
@@ -52,7 +64,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('label', models.TextField(help_text=b'label to be stored by user')),
-                ('ulabels', models.ForeignKey(related_name='ul2usl', to='hs_labels.UserLabels', help_text=b'user who stored the label', null=True)),
+                ('user', models.ForeignKey(related_name='ul2usl', to=settings.AUTH_USER_MODEL, help_text=b'user who stored the label', null=True)),
             ],
             options={
             },
