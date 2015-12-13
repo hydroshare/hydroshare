@@ -401,6 +401,7 @@ def save_ajax(request):
         value_edit = adaptor.get_value_editor(value)
         value_edit_with_filter = apply_filters(value_edit, adaptor.filters_to_edit)
         new_data[field_name] = value_edit_with_filter
+        new_data[field_name] = value_edit_with_filter
         if form.is_valid():
             adaptor.save(value_edit_with_filter)
             return _get_http_response({'errors': False,
@@ -457,66 +458,47 @@ class FilterForm(forms.Form):
 
 
 @processor_for('my-resources')
+@login_required
 def my_resources(request, page):
     # import sys
     # sys.path.append("/home/docker/pycharm-debug")
     # import pydevd
-    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    # pydevd.settrace('10.0.0.7', port=21000, suspend=False)
+    user = request.user
+    # get a list of resources with effective OWNER privilege
+    owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
+    # get a list of resources with effective CHANGE privilege
+    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+    # get a list of resources with effective VIEW privilege
+    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
 
-    frm = FilterForm(data=request.REQUEST)
-    if frm.is_valid():
-        res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
-        owner = frm.cleaned_data['owner'] or None
-        user = frm.cleaned_data['user'] or (request.user if request.user.is_authenticated() else None)
-        edit_permission = frm.cleaned_data['edit_permission'] or False
-        published = frm.cleaned_data['published'] or False
-        startno = frm.cleaned_data['start']
-        if(startno < 0):
-            startno = 0
-        start = startno or 0
-        from_date = frm.cleaned_data['from_date'] or None
-        words = request.REQUEST.get('text', None)
-        public = not request.user.is_authenticated()
+    owned_resources = list(owned_resources)
+    editable_resources = list(editable_resources)
+    viewable_resources = list(viewable_resources)
+    favorite_resources = list(user.ulabels.favorited_resources)
+    labeled_resources = list(user.ulabels.labeled_resources)
+    discovered_resources = list(user.ulabels.my_resources)
 
-        search_items = dict(
-            (item_type, [t.strip() for t in request.REQUEST.getlist(item_type)])
-            for item_type in ("type", "author", "contributor", "subject")
-        )
+    for res in owned_resources:
+        res.owned = True
 
-        # TODO ten separate SQL queries for basically the same data
-        reslst = get_resource_list(
-            user=user,
-            owner=owner,
-            published=published,
-            edit_permission=edit_permission,
-            from_date=from_date,
-            full_text_search=words,
-            public=public,
-            **search_items
-        )
-        total_res_cnt = len(reslst)
+    for res in editable_resources:
+        res.editable = True
 
-        # need to return total number of resources as 'ct' so have to get all resources
-        # and then filter by start and count
-        # TODO this is doing some pagination/limits before sorting, so it won't be consistent
-        if(start>=total_res_cnt):
-            start = total_res_cnt-res_cnt
-        if(start < 0):
-            start = 0
-        if(start+res_cnt > total_res_cnt):
-            res_cnt = total_res_cnt-start
+    for res in viewable_resources:
+        res.viewable = True
 
-        reslst = reslst[start : start + res_cnt]
+    for res in (owned_resources + editable_resources + viewable_resources):
+        res.is_favorite = False
+        if res in favorite_resources:
+            res.is_favorite = True
+        if res in labeled_resources:
+            res.labels = res.rlabels.get_labels(user)
 
-        # TODO sorts should be in SQL not python
-        res = sorted(reslst, key=lambda x: x.metadata.title.value)
+    resource_collection = (owned_resources + editable_resources + viewable_resources + discovered_resources)
 
-        return {
-            'resources': res,
-            'first': start,
-            'last': start+len(res),
-            'ct': total_res_cnt,
-        }
+    context = {'collection': resource_collection}
+    return context
 
 
 @processor_for(GenericResource)

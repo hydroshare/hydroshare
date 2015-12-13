@@ -33,7 +33,7 @@
                             </div>
                             <div id="faq-cat-1-sub-1" class="panel-collapse collapse">
                                 <div class="panel-body">
-                                    The Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI) is an organization representing more than 130 U.S. universities and international water-science-related organizations and is sponsored by the National Science Foundation to provide infrastructure and services to advance the development of hydrologic science and education in the United States. The CUAHSI HydroShare is being developed as an online, collaborative environment for the sharing of hydrologic data and models. It will enable people to easily share, discover and access data and models, retrieve them to their desktop or perform analysis seamlessly in a high performance computing environment, thereby enhancing research, education and application of hydrologic knowledge.
+                                    The Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI) is an organization representing more than 130 U.S. universities and international water-science-related organizations and is sponsored by the National Science Foundation to provide infrastructure and services to advance the development of hydrologic science and education in the United States. The CUAHSI HydroShare is being developed as an online, collaborative environment for the sharing of hydrologic data and models. It enables people to easily share, discover and access data and models, retrieve them to their desktop or perform analysis seamlessly in a high performance computing environment, thereby enhancing research, education and application of hydrologic knowledge.
                                 </div>
                             </div>
                         </div>
@@ -48,9 +48,9 @@
                             </div>
                             <div id="faq-cat-1-sub-2" class="panel-collapse collapse">
                                 <div class="panel-body">
-                                    <p><strong>Save your data online safely and share them to get feedback from other people.</strong> HydroShare provides convenient data uploading function and save data safely online. It also has access control ability to provide user with multiple ways of sharing their data and the corresponding metadata. Besides, the system will provide the function of commenting on the shared data and models, so as to help user get constructive feedback from other people.</p>
-                                    <p><strong>Get credit of your data and models when cited by others.</strong> Each data or model uploaded in the HydroShare system will be assigned with citation information. What’s more, in the future the system may provide the DOI for the data or models which are approved and published in the HydroShare system.</p>
-                                    <p><strong>Easy access to hydrologic data and models shared by other users or third part organizations.</strong> In the future, HydroShare will provide powerful searching functions to help user find out the data and models they are looking for.  These data and models will be from the other users or the third party organization such as USGS,   CUAHSI HydroServer, Earth Exchange, etc.</p>
+                                    <p><strong>Save your data online safely and share them to get feedback from other people.</strong> HydroShare provides convenient data uploading function and save data safely online. It also has access control ability to provide user with multiple ways of sharing their data and the corresponding metadata. Besides, the system provides the function of commenting on the shared data and models, so as to help user get constructive feedback from other people.</p>
+                                    <p><strong>Get credit of your data and models when cited by others.</strong> Each data or model uploaded in the HydroShare system is assigned citation information. What’s more, in the near future the system will provide a DOI for the data or models which are approved and published in the HydroShare system.</p>
+                                    <p><strong>Easy access to hydrologic data and models shared by other users or third part organizations.</strong>  HydroShare provides powerful searching functions to help the user find  the data and models they are looking for.  These data and models will be from other users or third party organization such as USGS, CUAHSI HydroServer, Earth Exchange, etc.</p>
                                     <p><strong>Collaborate with other people for hydrological research.</strong> HydroShare provides the social media functionality to enhance collaboration for hydrologic research. User will be able to create or join the groups they have interests in. And the group will provide functions for collaborations among group members to share data and models, participate in discussions, and add group blogs.</p>
                                 </div>
                             </div>
@@ -85,7 +85,7 @@
                             </div>
                             <div id="faq-cat-2-sub-1" class="panel-collapse collapse">
                                 <div class="panel-body">
-                                    In HydroShare, we define a resource as digital content which includes the science data files or model files and their corresponding metadata information. HydroShare will include multiple resource types such as generic, time series, geographic feature class, geographic raster, multidimensional space time array data (NetCDF), model, etc. Currently, HydroShare beta system supports resource types of generic, reference time series, and raster.
+                                    In HydroShare, we define a resource as digital content which includes the science data files or model files and their corresponding metadata information. HydroShare supports multiple resource types including Generic, Geographic Raster, Model Progam, Model Instance, SWAT Model Instance, Multidimensional (NetCDF), Time Series, Web App, and Geographic Feature (ESRI Shapefiles). 
                                 </div>
                             </div>
                         </div>
@@ -102,10 +102,12 @@
                                 <div class="panel-body">
                                     <ol>
                                         <li><a href="{% url 'login' %}">Sign in</a> to HydroShare.</li>
-                                        <li>Click on "+Create Resource" in the navigation bar at the top of the page.</li>
+					<li>Click on "My Resources" in the navigation bar at the top of the page.</li>
+                                        <li>Click on "+Create new" at the top of the page.</li>
                                         <li>Select your resource type from the dropdown menu.</li>
                                         <li>Enter a Title.</li>
                                         <li>Optionally Add your data files stored on your local computer to add to your resource. </li>
+					<li>Optionally Add your data files stored stored in your iRODS datagrid to your resource. </li>
                                         <li>Click the "Create Resource" button.</li>
                                         <li>A new page will appear where you can add or edit Metadata, Content, Sharing, Comments, and Add files. </li>
                                     </ol>
@@ -125,8 +127,9 @@
                                 <div class="panel-body">
                                     <ol>
                                         <li><a href="{% url 'login' %}">Sign in</a> to HydroShare.</li>
-                                        <li>Click on "Resources" in the navigation bar at the top of the page.</li>
-                                        <li>Click on "Owned by me" or "Editable by me" on the left of the page.</li>
+                                        <li>Click on "My resources" in the navigation bar at the top of the page.</li>
+                                        <li>Click one or more of the checkboxes "Owned by me, "Editable by me," "Shared with me," and/or "Favorites" on the top of the page.</li>
+					<li>Optionally enter search criteria in the Search box.</li>
                                         <li>Click on resource Title to take you to that resource page.</li>
                                         <li>A new page will appear where you can Share, Delete, and Download a resource as well as perform various options on it. </li>
                                     </ol>
@@ -146,7 +149,7 @@
                                 <div class="panel-body">
                                     <ol>
                                         <li><a href="{% url 'login' %}">Sign in</a> to HydroShare.</li>
-                                        <li>Click on "Resources" in the navigation bar at the top of the page.</li>
+                                        <li>Click on "My resources" in the navigation bar at the top of the page.</li>
                                         <li>Select the Title of the resource you would like to rate or comment on.</li>
                                         <li>A new page will appear where you can comment on or rate a resource as well as perform various options on it. You may also rate a comment by clicking the "+1" next to the comment.</li>
                                     </ol>
