@@ -2299,7 +2299,6 @@ table.overview tr > td:first-child {
 
 .icon-resource-type {
 	padding: 17px 10px;
-	background: #F8F8F8
 }
 
 .icon-resource-type > .glyphicon{
@@ -2482,8 +2481,7 @@ h4.title {
 }
 
 #item-selectors tbody td {
-	background: #F8F8F8;
-	border-bottom: 1px solid #ddd;
+	/*border-bottom: 1px solid #ddd;*/
 }
 
 #item-selectors thead th {
