@@ -49,7 +49,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     content_model = page.get_content_model()
     discoverable = content_model.raccess.discoverable
     validation_error = None
-    content_model.is_mine = content_model.rlabels.is_mine(user)
+    if user.is_authenticated():
+        content_model.is_mine = content_model.rlabels.is_mine(user)
+    else:
+        content_model.is_mine = False
+
     metadata_status = _get_metadata_status(content_model)
 
     relevant_tools = None
