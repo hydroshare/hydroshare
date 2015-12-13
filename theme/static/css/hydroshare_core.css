@@ -975,10 +975,45 @@ span.remove{
 #resourceSpecificTab{
     overflow-x:hidden;
 }
+
+#variables .custom-well {
+	height: 180px;
+	overflow: auto;
+	background-color:#FFF;
+}
+
+#variables .custom-well > strong{
+	font-size:18px;
+}
+
+#variables {
+	max-height: 600px;
+	overflow:auto;
+	border-radius: 0;
+}
+
+#netcdf-header-info {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    width: 100%;
+	padding: 10px;
+}
+
+#resourceSpecificTab input.form-control[type='radio'], #resourceSpecificTab input.form-control[type='checkbox'] {
+	box-shadow: none;
+}
+
+.custom-table th {
+	padding-right: 40px;
+}
+
+.custom-table th, .custom-table td {
+	vertical-align: top;
+	padding-bottom: 8px;
+}
+
 #txt-title{
-    /*width: calc(100% - 10px);*/
     font-size: 27px;
-    /*margin-bottom: 30px;*/
     height: auto;
 }
 

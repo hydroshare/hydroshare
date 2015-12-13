@@ -238,6 +238,12 @@ class UserLabels(models.Model):
         UserResourceLabels.objects.filter(resource=this_resource,
                                           user=self.user).delete()
 
+    def remove_resource_label(self, this_label):
+        """
+        clear the specified label from all assigned resources
+        """
+        UserResourceLabels.objects.filter(label__exact=this_label, user=self.user).delete()
+
     def favorite_resource(self, this_resource):
         """
         Flag a resource as favorite.
@@ -337,6 +343,9 @@ class UserLabels(models.Model):
         # remove leading and trailing spaces
         label_string = UserLabels.clean_label(this_label)
         UserStoredLabels.objects.filter(label__exact=label_string, user=self.user).delete()
+
+        # remove the same label from all assigned resources
+        self.remove_resource_label(this_label)
 
     def clear_saved_labels(self):
         """

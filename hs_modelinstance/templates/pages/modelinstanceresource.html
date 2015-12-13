@@ -6,71 +6,62 @@
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
-        <div class="row">
-        <div class="col-md-12">
-            <div>
-                {% if model_output %}
-                    <h4><strong>Model Output:</strong></h4>
-                    <hr style="margin-top: 0px;margin-bottom: 2px">
-                    <div class="row">
-                        <div class="col-sm-4"><strong>Includes output files?</strong></div>
-                        {% if model_output.includes_output == True %}
-                            <div class="col-sm-8">Yes</div>
-                        {% else %}
-                            <div class="col-sm-8">No</div>
-                        {% endif %}
-
-                    </div>
-                    <hr style="border:0">
-                {% endif %}
-            </div>
-            <div>
-                {% if executed_by.model_program_fk %}
-                    <h4><strong>Executed By:</strong></h4>
-                    <hr style="margin-top: 0px;margin-bottom: 2px">
-                    <div class="row">
-
-                            <div class="col-sm-4"><strong>Name</strong></div>
-                            <div class="col-sm-8">{{ executed_by.model_program_fk.title }}</div>
-
-                            <div class="col-sm-4"><strong>Version</strong></div>
-                            <div class="col-sm-8">
-                                {% if executed_by.model_program_fk.metadata.program.software_version.strip %}
-                                    {{ executed_by.model_program_fk.metadata.program.software_version }}
-                                {% else %}
-                                    Not Provided
-                                {% endif %}
-
-                            </div>
-
-                            <div class="col-sm-4"><strong>Resource URI</strong></div>
-
-                            <div class="col-sm-8">
-                                {% if request.is_secure %}
-                                    <a id="permalink" href="https://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/" target="_blank">https://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
-                                {% else %}
-                                    <a id="permalink" href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/" target="_blank">http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
-                                {% endif %}
-                            </div>
-
-                    </div>
-
-                    <hr>
-
-                {% else %}
-                  <h4><strong>Executed By:</strong></h4>
-                    <hr style="margin-top: 0px;margin-bottom: 2px">
-                    <div class="row">
-                            <div class="col-sm-4"><strong>Name</strong></div>
-                            <div class="col-sm-8">Unspecified</div>
-                    </div>
-
-                {% endif %}
-
-
-            </div>
-        </div>
-        </div>
+        {% if model_output %}
+            <legend>Model Output</legend>
+            <table class="custom-table">
+                <tbody>
+                    <tr>
+                        <th class="text-muted">Includes output files? </th>
+                        <td>{% if model_output.includes_output == True %}Yes{% else %}No{% endif %}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <hr style="border:0">
+        {% endif %}
+        {% if executed_by.model_program_fk %}
+            <legend>Executed By</legend>
+            <table class="custom-table">
+                <tbody>
+                    <tr>
+                        <th class="text-muted">Name </th>
+                        <td>{{ executed_by.model_program_fk.title }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Version </th>
+                        <td>
+                            {% if executed_by.model_program_fk.metadata.program.modelVersion.strip %}
+                                {{ executed_by.model_program_fk.metadata.program.modelVersion }}
+                            {% else %}
+                                <i>Not Provided</i>
+                            {% endif %}
+                        </td>
+                    </tr>
+                     <tr>
+                        <th class="text-muted">Resource URI </th>
+                         <td>{% if request.is_secure %}
+                             <a id="permalink"
+                                href="https://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/"
+                                target="_blank">https://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
+                         {% else %}
+                             <a id="permalink"
+                                href="http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}/"
+                                target="_blank">http://{{ request.get_host }}/resource/{{ executed_by.model_program_fk.short_id }}</a>
+                         {% endif %}</td>
+                     </tr>
+                </tbody>
+            </table>
+            <hr style="border:0">
+        {% else %}
+            <legend>Executed By</legend>
+            <table class="custom-table">
+                <tbody>
+                    <tr>
+                        <th class="text-muted">Name </th>
+                        <td><i>Unspecified</i></td>
+                    </tr>
+                </tbody>
+            </table>
+        {% endif %}
     {% endif %}
 {% endblock %}
 

@@ -92,19 +92,17 @@ def landing_page(request, page):
                 form.action = "/hsapi/_internal/%s/variable/add-metadata/" % content_model.short_id
 
         # get the context from hs_core
-        ext_md_layout = Layout(HTML('<div class="form-group col-lg-6 col-xs-12" id="originalcoverage"> '
-                                            '{% load crispy_forms_tags %} '
-                                            '{% crispy original_coverage_form %} '
-                                          '</div> '
-
-                                          '<div class="row" style="margin-top:10px">'
-                                            '<div class="col-md-10">'
-                                                '<input class="btn-danger btn btn-md" onclick="check_ori_meta_status()" type="button" data-toggle="modal" data-target="#delete-original-coverage-element-dialog" value="Delete Spatial Reference">'
-                                            '</div>'
-                                          '</div>'
-                                            '<hr style="border: 0;">'
-                                          '{% crispy original_coverage_form.delete_modal_form %} '
-                                     ),
+        ext_md_layout = Layout(HTML('<div class="row">'
+                                        '<div class="form-group col-sm-6 col-xs-12" id="originalcoverage"> '
+                                        '{% load crispy_forms_tags %} '
+                                        '{% crispy original_coverage_form %} '
+                                        '</div>'
+                                        '<div class="col-md-10">'
+                                            '<input style="margin-bottom:40px;" class="btn-danger btn btn-md" onclick="check_ori_meta_status()" type="button" data-toggle="modal" data-target="#delete-original-coverage-element-dialog" value="Delete Spatial Reference">'
+                                        '</div>'
+                                        '<hr style="border: 0;">'
+                                        '{% crispy original_coverage_form.delete_modal_form %}'
+                                    '</div>'),
                             VariableLayoutEdit,
                             ModalDialogLayoutAddVariable,
 
