@@ -2591,25 +2591,33 @@ h4.title {
 	margin-bottom: 10px;
 }
 
+/*Waiting on firefox support for background-clip:text*/
+/*.btn-inline-favorite, .btn-inline-label {*/
+	/*padding-top: 3px;*/
+	/*margin-left: 8px;*/
+	/*margin-right: 8px;*/
+	/*font-size: 16px;*/
+	/*cursor: pointer;*/
+	/*background-color: #888888;*/
+	/*color: transparent;*/
+	/*text-shadow: 0 2px 3px rgba(255, 255, 255, 0.5);*/
+	/*-webkit-background-clip: text;*/
+	/*-moz-background-clip: text;*/
+	/*background-clip: text;*/
+/*}*/
+
 .btn-inline-favorite, .btn-inline-label {
 	padding-top: 3px;
 	margin-left: 8px;
 	margin-right: 8px;
 	font-size: 16px;
 	cursor: pointer;
-	background-color: #888888;
-	color: transparent;
-	text-shadow: 0 2px 3px rgba(255, 255, 255, 0.5);
-	-webkit-background-clip: text;
-	-moz-background-clip: text;
-	background-clip: text;
+	color: #AAA;
 }
 
 .btn-inline-label:hover, .has-labels {
 	color: #0A91AB;
 }
-
-
 
 .btn-inline-favorite.isfavorite {
 	color: rgb(255, 163, 0);
