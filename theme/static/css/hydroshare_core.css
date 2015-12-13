@@ -1008,7 +1008,8 @@ span.remove{
 }
 
 .custom-table th, .custom-table td {
-	vertical-align: top
+	vertical-align: top;
+	padding-bottom: 8px;
 }
 
 #txt-title{
