@@ -191,8 +191,9 @@ ModalDialogLayoutAddVariable = Helper.get_element_add_modal_form('Variable', 'ad
 
 VariableLayoutEdit = Layout(
                             HTML('{% load crispy_forms_tags %} '
-                                 '{% for form in variable_formset.forms %} '
-                                     '<div class="item form-group col-xs-12 col-md-4"> '
+                                '{% if variable_formset.forms %}'
+                                 '<div id="variables" class="well"><div class="row"> {% for form in variable_formset.forms %} '
+                                     '<div class="form-group col-xs-12 col-md-4">'
                                      '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
                                      '{% crispy form %} '
                                     '<div class="row" style="margin-top:10px">'
@@ -200,8 +201,10 @@ VariableLayoutEdit = Layout(
                                             '<button type="button" class="btn btn-primary" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'  # change
                                         '</div>'
                                     '</div>'
+                                    '{% crispy form.delete_modal_form %} '
                                     '</form> '
                                     '</div> '
-                                 '{% endfor %}'
+                                 '{% endfor %}</div></div>'
+                                 '{% endif %}'
                             ),
                     )

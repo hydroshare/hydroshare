@@ -1,51 +1,26 @@
-
-.mpElement {
-    font-weight: bold;
-    padding: 2px;
-}
-
-a.mpElement::after {
-    display: block;
-    font-weight: bold;
-    height: 2px;
-    color: transparent;
-    overflow: hidden;
-    visibility: hidden;
-}
-
-div#mp.row {
-    padding: 5px 0
-}
-
 option:checked {
     background: #0073ea;
 }
-table {
-    padding: 2px;
+
+#mp-div-multiselect .btn-group, #mp-div-multiselect .btn-group button {
     width: 100%;
 }
 
-#div_section_table {
-    padding-top: 5px;
-    padding-bottom: 5px;
-    width: 100%;
-}
-#section_table {
-    width: 50%;
+#mp-div-multiselect .btn-group button > span {
+    float: left;
 }
 
-.div-multi-select {
-    max-width: 400px;
+#mp-div-multiselect .btn-group .multiselect-container {
+    left: 0;
+    background: #FFF;
+    box-shadow: 0 1px 5px #D3D3D3;
+    -moz-box-shadow: 0 1px 5px #D3D3D3;
+	-webkit-box-shadow: 0 1px 5px #D3D3D3;
+    padding: 4px 0;
 }
-.btn-group {
-    width: 100%;
-}
+
 .multiselect {
-    width: 100%;
     text-align: right;
-}
-.input-sm {
-    max-width: 550px;
 }
 
 /* Activate multi-line list elements in the droplist.
