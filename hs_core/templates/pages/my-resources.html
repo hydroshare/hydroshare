@@ -98,6 +98,7 @@
                                                     <option value="multidimensional">Multidimensional (NetCDF)</option>
                                                     <option value="swat model instance resource">Swat Model Instance</option>
                                                     <option value="time series">Time Series</option>
+                                                    <option value="web app resource">Web App</option>
                                                 </select>
                                             </div>
                                             <div class="form-group">
@@ -141,7 +142,7 @@
             </div>
 
             <!-- /input-group -->
-            <table id="item-selectors" class="table-hover">
+            <table id="item-selectors" class="table-hover table-striped">
                 <thead>
                 <tr>
                     <th><input class="all-rows-selector" type="checkbox"></th>
@@ -201,7 +202,7 @@
                                     <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
                                 {% elif res|resource_type == "Geographic Raster" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
+                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
                                 {% elif res|resource_type == "Model Program Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
@@ -219,7 +220,10 @@
                                     <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
                                 {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
+                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                {% elif res|resource_type == "Web App Resource" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
                                 {% endif %}
                             </td>
@@ -407,6 +411,10 @@
                 "paging": false,
                 "info": false,
                 "columnDefs": [
+                    {
+                        "targets": [1],     // Resource type
+                        "width": "40px"
+                    },
                     {
                         "targets": [0],     // Actions
                         "orderable": false,

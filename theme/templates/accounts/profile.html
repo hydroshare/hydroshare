@@ -200,7 +200,6 @@
                             {% endif %}
 
 
-
                             {#      AFFILIATIONS     #}
     {#                        <div class="panel panel-default">#}
     {#                            <div class="panel-heading">#}
@@ -297,7 +296,10 @@
                                         <td><span>Time Series</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
-
+                                    <tr id="badge-web-app" data-type="type-Web App Resource">
+                                        <td><span>Web App</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
 
                                 </tbody>
                             </table>
@@ -314,7 +316,7 @@
                                                  alt="{{ res|resource_type }}"
                                                  title="{{ res|resource_type }}"/>
                                         {% elif res|resource_type == "Geographic Raster" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
+                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
                                                  alt="{{ res|resource_type }}"
                                                  title="{{ res|resource_type }}"/>
                                         {% elif res|resource_type == "Model Program Resource" %}
@@ -338,7 +340,11 @@
                                                  alt="{{ res|resource_type }}"
                                                  title="{{ res|resource_type }}"/>
                                         {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/geographic48x48.png"
+                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "Web App Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
                                                  alt="{{ res|resource_type }}"
                                                  title="{{ res|resource_type }}"/>
                                         {% endif %}

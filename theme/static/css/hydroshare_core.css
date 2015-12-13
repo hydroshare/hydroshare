@@ -2333,8 +2333,7 @@ table.overview tr > td:first-child {
 }
 
 .icon-resource-type {
-	padding: 17px 10px;
-	background: #F8F8F8
+	padding: 20px 10px;
 }
 
 .icon-resource-type > .glyphicon{
@@ -2408,7 +2407,11 @@ h4.title {
 }
 
 #badge-geographic-feature .badge {
-    background-color: #6A8593;
+    background-color: #795548;
+}
+
+#badge-web-app .badge {
+    background-color: rgb(242, 67, 55);
 }
 
 #color-scheme {
@@ -2517,8 +2520,7 @@ h4.title {
 }
 
 #item-selectors tbody td {
-	background: #F8F8F8;
-	border-bottom: 1px solid #ddd;
+	/*border-bottom: 1px solid #ddd;*/
 }
 
 #item-selectors thead th {
