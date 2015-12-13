@@ -232,6 +232,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
 
     def test_saved_labels(self):
         cat = self.cat
+        scratching = self.scratching
         cat.ulabels.save_label('silly')
         cat.ulabels.save_label('cranky')
         self.assertTrue(match_lists(cat.ulabels.saved_labels, ['silly', 'cranky']))
@@ -239,3 +240,24 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists(cat.ulabels.saved_labels, ['cranky']))
         cat.ulabels.clear_saved_labels()
         self.assertTrue(match_lists(cat.ulabels.saved_labels, []))
+
+        # test cascading deletion of labels from assigned resources when a stored label is deleted
+        cat.ulabels.save_label('silly')
+        cat.ulabels.save_label('cranky')
+        cat.ulabels.label_resource(scratching, "silly")
+        cat.ulabels.label_resource(scratching, "cranky")
+        self.assertTrue(match_lists(scratching.rlabels.get_labels(cat), ['silly', 'cranky']))
+        cat.ulabels.unlabel_resource(scratching, "silly")
+        self.assertTrue(match_lists(scratching.rlabels.get_labels(cat), ['cranky']))
+        cat.ulabels.unlabel_resource(scratching, "cranky")
+        self.assertTrue(match_lists(scratching.rlabels.get_labels(cat), []))
+
+    def test_remove_label(self):
+        cat = self.cat
+        scratching = self.scratching
+        bones = self.bones
+        cat.ulabels.label_resource(scratching, "cool")
+        cat.ulabels.label_resource(bones, "cool")
+        self.assertTrue(match_lists(cat.ulabels.get_resources_with_label("cool"), [scratching, bones]))
+        cat.ulabels.remove_resource_label("cool")
+        self.assertTrue(match_lists(cat.ulabels.get_resources_with_label("cool"), []))
