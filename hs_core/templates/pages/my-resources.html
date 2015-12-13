@@ -190,9 +190,7 @@
 
                                 <div class="dropdown-menu inline-dropdown" role="menu">
                                     <div class="panel-body" role="form">
-                                        <ul data-resource-id="{{ res.short_id }}"
-                                            data-initial-labels="{% for label in res.labels %}{% if forloop.counter0 > 0 %},{% endif %}{{ label }}{% endfor %}"
-                                            class="list-group list-labels">
+                                        <ul data-resource-id="{{ res.short_id }}" class="list-group list-labels">
                                         </ul>
                                     </div>
                                 </div>
@@ -257,12 +255,12 @@
                             {% endif %}
                             <td class="col-labels">
                                 {% for label in res.labels %}
-                                    <span class="labelCounter" data-label="{{ label }}">{% if forloop.counter0 > 0 %},{% endif %}{{ label }}</span>
+                                    {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
                                 {% endfor %}
                             </td>
                             <td class="col-is-favorite">
                                 {% if res.is_favorite %}
-                                    <span class="isFavoriteCounter">Favorite</span>
+                                    Favorite
                                 {% endif %}
                             </td>
                         </tr>
@@ -425,20 +423,22 @@
                         "searchable": true
                     },
                     {
+                        "targets": [8],     // Labels
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [9],     // Favorite
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
                         "targets": [0],     // Actions
                         "orderable": false,
                         "searchable": false
                     }
                 ]
             });
-
-            // These columns need to be manually hidden because their layout data is needed in the UI
-            $('#item-selectors td:nth-child(6)').hide();
-            $('#item-selectors th:nth-child(6)').hide();
-            $('#item-selectors td:nth-child(7)').hide();
-            $('#item-selectors th:nth-child(7)').hide();
-            $('#item-selectors td:nth-child(8)').hide();
-            $('#item-selectors th:nth-child(8)').hide();
 
             $("#item-selectors").show();
 
@@ -546,12 +546,11 @@
 
         function label_ajax_submit() {
             var el = $(this);
-            var dataFormID = el.attr("data-form-id")
-            var formID = $("form[data-id='" + dataFormID + "']");
-            var form = $(formID);
+            var form = $("form[data-id='" + el.attr("data-form-id") + "']");
             var datastring = form.serialize();
             var url = form.attr('action');
             var formType = el.attr("data-form-type");
+            var tableRow = form.closest("tr");
 
 
             $.ajax({
@@ -574,47 +573,69 @@
                                 )
                             }
                             updateLabelLists();
+                            refreshToolbarCheckboxState();
                         }
                         else if (formType == "toggle-favorite") {
                             var action = form.find("input[name='action']");
 
                             el.toggleClass("isfavorite");
+                            var rowIndex = parseInt(form.closest("tr").attr("data-tr-index"));
+                            var favoriteColIndex = 9;   // Index of the favorite column in the table
 
                             if (json_response.action == "DELETE") { // Got unchecked
                                 action.val("CREATE");
-                                form.closest("tr").find(".col-is-favorite .isFavoriteCounter").remove();
+                                resourceTable.cell(rowIndex,favoriteColIndex).data("").draw();
                             }
                             else {                          // Got checked
                                 action.val("DELETE");
-                                form.closest("tr").find(".col-is-favorite").append(
-                                        '<span class="isFavoriteCounter">Favorite</span>'
-                                );
+
+                                resourceTable.cell(rowIndex,favoriteColIndex).data("Favorite").draw();  // .draw refreshed the internal cache of the table object
                             }
                         }
                         else if (formType = "toggle-label") {
                             var action = form.find("input[name='action']");
                             var label = el[0].value;
 
+                            var rowIndex = parseInt(tableRow.attr("data-tr-index"));
+                            var labelsColIndex = 8;   // Index of the labels column in the table
+                            var currentCell = resourceTable.cell(rowIndex,labelsColIndex);
+
+                            var dataColLabels = currentCell.data().replace(/\s+/g,' ').split(","); // List of labels already applied to the resource;
+
+                            // Remove extra spaces from the labels collection
+                            for (var i = 0; i < dataColLabels.length; i++) {
+                                dataColLabels[i] = dataColLabels[i].trim();
+                            }
+
                             if (json_response.action == "DELETE") { // Label got unchecked
                                 action.val("CREATE");
-                                form.closest("tr").find(".col-labels .labelCounter[data-label='" + label + "']").remove();
+                                var labelIndex = dataColLabels.indexOf(label);
+                                dataColLabels.splice(labelIndex, 1);    // Remove label
+                                currentCell.data(dataColLabels.join()).draw();
                             }
                             else {
                                 action.val("DELETE");       // Label got checked
-                                var template;
-                                if (form.closest("tr").find(".col-labels .labelCounter")) {
-                                    template = '<span class="labelCounter" data-label="' + label + '">,' + label + '</span>'
-                                }
-                                else {
-                                    template = '<span class="labelCounter" data-label="' + label + '">' + label + '</span>'
-                                }
-                                form.closest("tr").find(".col-labels").append(template);
+                                dataColLabels.push(label);
+                                currentCell.data(dataColLabels.join()).draw();
                             }
 
-                            refreshToolbarCheckboxState();
+                            // If the row has labels, color the label icon blue
+                            var labelButton = $("#item-selectors tr[data-tr-index='" + rowIndex + "']").find(".btn-inline-label");
+                            if (dataColLabels.length > 0) {
+                                if (dataColLabels.length == 1 && dataColLabels[0].trim() == "") {   // The list could have an empty []
+                                    labelButton.removeClass("has-labels");
+                                }
+                                else {
+                                    labelButton.addClass("has-labels");
+                                }
+                            }
+                            else {
+                                labelButton.removeClass("has-labels");
+                            }
                         }
 
                         updateLabelCount();
+                        refreshToolbarCheckboxState();
                     }
 
                 },
@@ -622,6 +643,7 @@
 
                 }
             });
+
             //don't submit the form
             return false;
         }
@@ -630,6 +652,7 @@
             $("#user-labels-left").empty();
             $(".inline-dropdown ul").empty();
             $("#toolbar-labels-dropdown ul :not(.persist)").empty();
+            $(".btn-inline-label").removeClass("has-labels");
 
             var labels = $("#table-user-labels td.user-label");
             for (var h = 0; h < labels.length; h++) {
@@ -681,22 +704,31 @@
                     );
                 }
 
-                $(".inline-dropdown input[type='checkbox']").change(updateLabelCount);
+{#                $(".inline-dropdown input[type='checkbox']").change(updateLabelCount);#}
             }
 
             // Check checkboxes for labels currently in the resource
             if (dropdowns) {
                 for (var i = 0; i < dropdowns.length; i++) {
-                    if ($(dropdowns[i]).attr("data-initial-labels")) {
-                        var initialLabels = $(dropdowns[i]).attr("data-initial-labels");
-                        initialLabels = initialLabels.split(",");
-                        for (var j = 0; j < initialLabels.length; j++) {
-                            var currLabel = $(dropdowns[i]).find("input[type='checkbox'][value='" + initialLabels[j] + "']")
-                            currLabel.prop("checked", true);
-                            currLabel.closest("li").find("form input[name='action']").val("DELETE");
+                    var rowIndex = parseInt($(dropdowns[i]).closest("tr").attr("data-tr-index"));
+                    var labelsColIndex = 8;
+
+                    var dataColLabels = resourceTable.cell(rowIndex,labelsColIndex).data().replace(/\s+/g,' ').split(",");
+
+                    for (var j = 0; j < dataColLabels.length; j++) {
+                        var label = dataColLabels[j].trim();
+                        var currentCheckbox = $(dropdowns[i]).find("input[type='checkbox'][value='" + label + "']");
+                        currentCheckbox.prop("checked", true);
+                        currentCheckbox.closest("li").find("form input[name='action']").val("DELETE");
+                    }
+
+                    if (dataColLabels.length > 0) {
+                        if (dataColLabels.length == 1 && dataColLabels[0].trim() == "") {
+                            $(dropdowns[i]).closest("tr").find(".btn-inline-label").removeClass("has-labels");
                         }
-                        $(dropdowns[i]).removeAttr("data-initial-labels");
-                        $(dropdowns[i]).closest("tr").find(".btn-inline-label").addClass("has-labels");
+                        else {
+                            $(dropdowns[i]).closest("tr").find(".btn-inline-label").addClass("has-labels");
+                        }
                     }
                 }
             }
@@ -725,29 +757,23 @@
                 resourceTable.draw();
             });
 
-{#            $(".inline-dropdown .label").click(updateLabelCount);#}
-
             $(".inline-dropdown input[type='checkbox']").change(label_ajax_submit);
 
             $("#toolbar-labels-dropdown input[type='checkbox']").change(function(){
                 var inlineCheckboxes = $(".row-selector:checked").parent().find(".inline-dropdown input[type='checkbox'][value='" + $(this).val() + "']");
                 var status = $(this).prop("checked");
-                var checkedSome = false;
 
                 for (var i = 0; i < inlineCheckboxes.length; i++) {
-                    if (status == false) {
-                        if ($(inlineCheckboxes[i]).prop("checked") == true) {
-                            $(inlineCheckboxes[i]).prop("checked", false);
-                            $(inlineCheckboxes[i]).change();
-                        }
+                    if (status == false && $(inlineCheckboxes[i]).prop("checked") == true) {
+                        $(inlineCheckboxes[i]).prop("checked", false);
+                        $(inlineCheckboxes[i]).trigger("change");
                     }
-                    else if (status == true) {
-                        if ($(inlineCheckboxes[i]).prop("checked") == false) {
-                            $(inlineCheckboxes[i]).prop("checked", true);
-                            $(inlineCheckboxes[i]).change();
-                        }
+                    else if (status == true && $(inlineCheckboxes[i]).prop("checked") == false) {
+                        $(inlineCheckboxes[i]).prop("checked", true);
+                        $(inlineCheckboxes[i]).trigger("change");
                     }
                 }
+{#                refreshToolbarCheckboxState();#}
             });
 
             // Prevents dropdown form getting dismissed when clicking on items
@@ -811,33 +837,35 @@
         function updateLabelCount() {
             $("#labels input[data-label]").parent().parent().find(".badge").text("0");
             $("#toolbar-labels-dropdown input[type='checkbox']").prop("checked", true);
-            $(".btn-inline-label").removeClass("has-labels");
-            var items = $(".inline-dropdown input[type='checkbox']");
+
             var collection = [];
-            for (var i = 0; i < items.length; i++) {
-                var label = items[i].value;
-                if (items[i].checked == true) {
+            var favorites = 0;
+
+            resourceTable.rows().every(function(rowIndex, tableLoop, rowLoop) {
+                var dataColLabels = this.data()[8].replace(/\s+/g, ' ').split(","); // List of labels already applied to the resource;
+                var dataColFavorite = this.data()[9];
+
+                if (dataColFavorite == "Favorite") {
+                    favorites++;
+                }
+
+                // Loop through the labels in the row and update the collection count
+                for (var i = 0; i < dataColLabels.length; i++) {
+                    var label = dataColLabels[i].trim();
                     if (!collection[label]) {
                         collection[label] = 0;
                     }
                     collection[label]++;
-
-                    $(items[i]).closest("tr").find(".btn-inline-label").addClass("has-labels");
                 }
-                else {
-                    // Update state of toolbar label chekcboxes
-                    var row = $(items[i]).closest("tr").find(".row-selector")
-                    if (row.prop("checked") == true) {
-                        $("#toolbar-labels-dropdown input[type='checkbox'][value='" + label + "']").prop("checked", false);
-                    }
-                }
-            }
+            });
 
+            // Set label counts
             for (var key in collection) {
                 $("#labels input[data-label='" + key + "']").parent().parent().find(".badge").text(collection[key]);
             }
 
-            $("#filter .badge[data-facet='favorites']").text($(".isFavoriteCounter").length)
+            // Set favorite count
+            $("#filter .badge[data-facet='favorites']").text(favorites);
         }
 
         //strips query inputs from a search string
@@ -1000,57 +1028,31 @@
 
                     // Shared with me
                     if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
-                        if (data[7] == "Owned" || (data[7] != "View" && data[7] != "Editable")) {
+                        if (data[7] == "Owned" || (data[7] != "Viewable" && data[7] != "Editable")) {
                             return false;
                         }
                     }
 
-                    // Check if the label exists in the list of labels in the original dataset
-                    // This is necessary because the table is constructed during page load.
+                    // Labels - Check if the label exists in the table
                     var labelCheckboxes = $("#user-labels-left input[type='checkbox']");
-                    var labelDataCheck = true;
                     for (var i = 0; i < labelCheckboxes.length; i++) {
                         if ($(labelCheckboxes[i]).prop("checked") == true) {
                             var label = $(labelCheckboxes[i]).attr("data-label");
 
                             var dataColLabels = data[8].replace(/\s+/g,' ').split(",");
-                            var flagContainsLabel = false;
-                            for (var j = 0; j < dataColLabels.length; j++) {
-                                if (label == dataColLabels[j].trim()) {
-                                    flagContainsLabel = true;
-                                }
+                            for (var h = 0; h < dataColLabels.length; h++) {
+                                dataColLabels[h] = dataColLabels[h].trim();
                             }
 
-                            if (!flagContainsLabel) {
-                                labelDataCheck = false;
+                            if (dataColLabels.indexOf(label) == -1) {
+                                return false;
                             }
                         }
-                    }
-
-                    // Check if the label exists in the list of labels added through the UI after the page loaded.
-                    var labelTableCheck = true;
-                    for (var i = 0; i < labelCheckboxes.length; i++) {
-                        if ($(labelCheckboxes[i]).prop("checked") == true) {
-                            var label = $(labelCheckboxes[i]).attr("data-label");
-
-                            var colLabels = data[8].replace(/\s+/g,' ').split(",");
-                            var tableColLabels = $("#item-selectors tbody tr[data-tr-index='" + dataIndex + "'] .col-labels");
-
-                            if (!tableColLabels.find(".labelCounter[data-label='" + label + "']").length) {
-                                labelTableCheck = false;
-                            }
-
-                        }
-                    }
-
-                    if (!labelDataCheck && !labelTableCheck) {
-                        return false;
                     }
 
                     // Favorite
                     if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
-                        var colFav = $("#item-selectors tbody tr[data-tr-index='" + dataIndex + "'] .col-is-favorite");
-                        if (!colFav.find(".isFavoriteCounter").length) {
+                        if (data[9] != "Favorite") {
                             return false;
                         }
                     }

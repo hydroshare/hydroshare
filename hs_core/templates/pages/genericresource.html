@@ -90,7 +90,7 @@
             <div class="lined-wrapper"></div>
             {% if not metadata_form %}
                 <div class="custom-btn-toolbar">
-                    {% if not is_owner_user %}
+                    {% if not is_owner_user and not is_edit_user and not is_view_user %}
                         {% if is_mine %}
                             <form class="pull-right" data-id="form-add-to-my-resources"
                                   action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
@@ -2439,11 +2439,9 @@
                                 $("#btnMyResources").removeClass("btn-resource-remove");
                             }
                         }
-                        console.log(result);
-                        console.log("Added to my resources")
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        console.log(result);
+
                     }
                 });
                 //don't submit the form
