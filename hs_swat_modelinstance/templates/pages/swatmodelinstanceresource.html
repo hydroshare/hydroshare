@@ -35,8 +35,8 @@
                             <tr>
                                 <th class="text-muted">Version</th>
                                 <td>
-                                    {% if executed_by.model_program_fk.metadata.program.software_version.strip %}
-                                        {{ executed_by.model_program_fk.metadata.program.software_version }}
+                                    {% if executed_by.model_program_fk.metadata.program.modelVersion.strip %}
+                                        {{ executed_by.model_program_fk.metadata.program.modelVersion }}
                                     {% else %}
                                         <i>Not Provided</i>
                                     {% endif %}
