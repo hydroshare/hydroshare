@@ -284,8 +284,7 @@
                     <h4 class="modal-title" id="myModalLabel">Create New Label</h4>
                 </div>
                 <div class="modal-body">
-                    <form data-id="form-create-label" action="/hsapi/_internal/label-resource-action/"
-                          method="post">
+                    <form data-id="form-create-label" action="/hsapi/_internal/label-resource-action/">
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="txtLabelName">New Label Name:</label>
@@ -432,6 +431,30 @@
                 ]
             });
 
+            // Trigger label creation when pressing Enter
+            $("#txtLabelName").keyup(function (event) {
+                var label = $("#txtLabelName").val().trim();
+                if (event.keyCode == 13 && label != "") {
+                    $("#btn-create-label").click();
+                }
+            });
+
+            // Disable default form submission when pressing enter
+            $(document).ready(function () {
+                $(window).keydown(function (event) {
+                    if (event.keyCode == 13) {
+                        event.preventDefault();
+                        return false;
+                    }
+                });
+            });
+
+            // Autofocus input when modal appears
+            $("#modalCreateLabel").on('shown.bs.modal', function() {
+                $("#txtLabelName").focus();
+            });
+
+
             // These columns need to be manually hidden because their layout data is needed in the UI
             $('#item-selectors td:nth-child(6)').hide();
             $('#item-selectors th:nth-child(6)').hide();
@@ -552,7 +575,6 @@
             var datastring = form.serialize();
             var url = form.attr('action');
             var formType = el.attr("data-form-type");
-
 
             $.ajax({
                 type: "POST",
@@ -801,11 +823,10 @@
                 userLabelsTable.find(".no-labels-found").remove();
 
                 $(".btn-label-remove").click(label_ajax_submit);
+                $("#modalCreateLabel").modal('hide');
+                 $("#txtLabelName").val("");
+                updateLabelLists();
             }
-
-            $("#modalCreateLabel").modal('hide');
-            $("#txtLabelName").val("");
-            updateLabelLists();
         }
 
         function updateLabelCount() {
