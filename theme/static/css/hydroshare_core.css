@@ -2495,8 +2495,8 @@ h4.title {
 }
 
 #item-selectors tr > td:first-child {
-	max-width: 100px;
-	min-width: 100px;
+	max-width: 90px;
+	min-width: 90px;
 	padding-right: 0;
 }
 
