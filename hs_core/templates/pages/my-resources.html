@@ -419,7 +419,7 @@
                     },
                     {
                         "targets": [7],     // Permission level
-                        "visible": true,
+                        "visible": false,
                         "searchable": true
                     },
                     {
@@ -435,9 +435,33 @@
                     {
                         "targets": [0],     // Actions
                         "orderable": false,
-                        "searchable": false
+                        "searchable": false,
+                        "width": "90px"
                     }
                 ]
+            });
+
+            // Trigger label creation when pressing Enter
+            $("#txtLabelName").keyup(function (event) {
+                var label = $("#txtLabelName").val().trim();
+                if (event.keyCode == 13 && label != "") {
+                    $("#btn-create-label").click();
+                }
+            });
+
+            // Disable default form submission when pressing enter
+            $(document).ready(function () {
+                $(window).keydown(function (event) {
+                    if (event.keyCode == 13) {
+                        event.preventDefault();
+                        return false;
+                    }
+                });
+            });
+
+            // Autofocus input when modal appears
+            $("#modalCreateLabel").on('shown.bs.modal', function() {
+                $("#txtLabelName").focus();
             });
 
             $("#item-selectors").show();
@@ -551,7 +575,6 @@
             var url = form.attr('action');
             var formType = el.attr("data-form-type");
             var tableRow = form.closest("tr");
-
 
             $.ajax({
                 type: "POST",
@@ -773,7 +796,6 @@
                         $(inlineCheckboxes[i]).trigger("change");
                     }
                 }
-{#                refreshToolbarCheckboxState();#}
             });
 
             // Prevents dropdown form getting dismissed when clicking on items
@@ -827,11 +849,10 @@
                 userLabelsTable.find(".no-labels-found").remove();
 
                 $(".btn-label-remove").click(label_ajax_submit);
+                $("#modalCreateLabel").modal('hide');
+                 $("#txtLabelName").val("");
+                updateLabelLists();
             }
-
-            $("#modalCreateLabel").modal('hide');
-            $("#txtLabelName").val("");
-            updateLabelLists();
         }
 
         function updateLabelCount() {
