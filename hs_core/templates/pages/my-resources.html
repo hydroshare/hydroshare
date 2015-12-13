@@ -245,11 +245,11 @@
                                 {% endfor %}
                             </td>
                             {% if res.owned %}
-                                <td><span class="ownedCounter">Owned</span></td>
+                                <td>Owned</td>
                             {% elif res.editable %}
-                                <td><span class="editableCounter">Editable</span></td>
+                                <td>Editable</td>
                             {% elif res.viewable %}
-                                <td><span class="viewableCounter">Viewable</span></td>
+                                <td>Viewable</td>
                             {% else %}
                                 <td></td>
                             {% endif %}
@@ -408,6 +408,12 @@
                 "info": false,
                 "columnDefs": [
                     {
+                        "targets": [0],     // Actions
+                        "orderable": false,
+                        "searchable": false,
+                        "width": "90px"
+                    },
+                    {
                         "targets": [5],     // Subject
                         "visible": false,
                         "searchable": true
@@ -431,13 +437,8 @@
                         "targets": [9],     // Favorite
                         "visible": false,
                         "searchable": true
-                    },
-                    {
-                        "targets": [0],     // Actions
-                        "orderable": false,
-                        "searchable": false,
-                        "width": "90px"
                     }
+
                 ]
             });
 
@@ -470,15 +471,6 @@
             $(".btn-inline-favorite").click(label_ajax_submit);
             $(".btn-label-remove").click(label_ajax_submit);
             $("#btn-create-label").click(label_ajax_submit);
-
-            // Initialize filter badge count
-            var ownedCount = parseInt($(".ownedCounter").length);
-            var editableCount = parseInt($(".editableCounter").length );
-            var viewableCount = parseInt($(".viewableCounter").length);
-
-            $("#filter .badge[data-facet='owned']").text(ownedCount);
-            $("#filter .badge[data-facet='editable']").text(ownedCount + editableCount);
-            $("#filter .badge[data-facet='shared with me']").text(viewableCount + editableCount);
 
             $("#resource-search-input").keyup(function () {
                 var searchString = removeQueryOccurrences($(this).val());
@@ -861,10 +853,30 @@
 
             var collection = [];
             var favorites = 0;
+            var ownedCount = 0;
+            var editableCount = 0;
+            var viewableCount = 0;
 
             resourceTable.rows().every(function(rowIndex, tableLoop, rowLoop) {
                 var dataColLabels = this.data()[8].replace(/\s+/g, ' ').split(","); // List of labels already applied to the resource;
-                var dataColFavorite = this.data()[9];
+                var dataColFavorite = this.data()[9].trim();
+                var dataColPermissionLevel = this.data()[7].trim();
+
+                if (dataColPermissionLevel == "Owned") {
+                    ownedCount++;
+                }
+                else if (dataColPermissionLevel == "Editable") {
+                    editableCount++;
+                }
+                else if (dataColPermissionLevel == "Viewable") {
+                    viewableCount++;
+                }
+
+
+                // Update filter badges count
+                $("#filter .badge[data-facet='owned']").text(ownedCount);
+                $("#filter .badge[data-facet='editable']").text(ownedCount + editableCount);
+                $("#filter .badge[data-facet='shared with me']").text(viewableCount + editableCount);
 
                 if (dataColFavorite == "Favorite") {
                     favorites++;
