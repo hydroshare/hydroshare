@@ -488,7 +488,7 @@ def my_resources(request, page):
     for res in viewable_resources:
         res.viewable = True
 
-    for res in (owned_resources + editable_resources + viewable_resources):
+    for res in (owned_resources + editable_resources + viewable_resources + discovered_resources):
         res.is_favorite = False
         if res in favorite_resources:
             res.is_favorite = True
