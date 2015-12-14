@@ -255,10 +255,13 @@ class UserLabels(models.Model):
 
         Resource gets flagged as favorite if it is not already flagged as favorite
         """
-
-        UserResourceFlags.objects.get_or_create(resource=this_resource,
-                                                kind=FlagCodes.FAVORITE,
-                                                user=self.user)
+        # stopgap hot patch for emergent duplicate record problem.
+        try:
+            UserResourceFlags.objects.get_or_create(resource=this_resource,
+                                                    kind=FlagCodes.FAVORITE,
+                                                    user=self.user)
+        except UserResourceFlags.MultipleObjectsReturned:
+            pass
 
     def unfavorite_resource(self, this_resource):
         """ Clear favorite flag for a resource
@@ -278,10 +281,12 @@ class UserLabels(models.Model):
 
         Resource gets flagged as mine if it is not already flagged as mine
         """
-
-        UserResourceFlags.objects.get_or_create(resource=this_resource,
-                                                kind=FlagCodes.MINE,
-                                                user=self.user)
+        try:
+            UserResourceFlags.objects.get_or_create(resource=this_resource,
+                                                    kind=FlagCodes.MINE,
+                                                    user=self.user)
+        except UserResourceFlags.MultipleObjectsReturned:
+            pass
 
     def unclaim_resource(self, this_resource):
         """ Clear 'mine' flag for a resource (removes from my resources)
@@ -402,25 +407,17 @@ class ResourceLabels(models.Model):
 
         :return: True or False
         """
-        try:
-            UserResourceFlags.objects.get(user=this_user,
-                                          resource=self.resource,
-                                          kind=FlagCodes.FAVORITE)
-            return True
-
-        except UserResourceFlags.DoesNotExist:
-            return False
+        # This is a dirty hack: change get to filter to avoid duplicate exception
+        return UserResourceFlags.objects.filter(user=this_user,
+                                                resource=self.resource,
+                                                kind=FlagCodes.FAVORITE).exists()
 
     def is_mine(self, this_user):
         """ return True if this resource has been flagged as mine by a given user
 
         :return: True or False
         """
-        try:
-            UserResourceFlags.objects.get(user=this_user,
-                                          resource=self.resource,
-                                          kind=FlagCodes.MINE)
-            return True
-
-        except UserResourceFlags.DoesNotExist:
-            return False
+        # This is a dirty hack: change get to filter to avoid duplicate exception
+        return UserResourceFlags.objects.filter(user=this_user,
+                                                resource=self.resource,
+                                                kind=FlagCodes.MINE).exists()
