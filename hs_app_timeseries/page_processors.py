@@ -60,32 +60,35 @@ def landing_page(request, page):
                                                       element_id=content_model.metadata.time_series_result.id
                                                       if content_model.metadata.time_series_result else None)
         ext_md_layout = Layout(
-                                HTML("<div class='form-group col-lg-4 col-xs-12' id='site'> "
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy site_form %} '
-                                     '</div>'),
-
-                                HTML('<div class="form-group col-lg-4 col-xs-12" id="variable"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy variable_form %} '
-                                     '</div> '),
-
-                                HTML('<div class="form-group col-lg-4 col-xs-12" id="method"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy method_form %} '
-                                     '</div> '),
-
-                                HTML('<div class="form-group col-lg-4 col-xs-12" id="processinglevel"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy processing_level_form %} '
-                                     '</div> '),
-
-                                HTML('<div class="form-group col-lg-4 col-xs-12" id="timeseriesresult"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy timeseries_result_form %} '
-                                     '</div> '),
-                        )
-
+            HTML('<div class="form-group col-sm-6 col-xs-12">'
+                     '<div id="site">'
+                         '{% load crispy_forms_tags %} '
+                         '{% crispy site_form %} '
+                         '<hr style="border:0">'
+                     '</div>'
+                     '<div id="variable">'
+                         '{% load crispy_forms_tags %} '
+                         '{% crispy variable_form %} '
+                         '<hr style="border:0">'
+                     '</div>'
+                     '<div id="method">'
+                         '{% load crispy_forms_tags %} '
+                         '{% crispy method_form %} '
+                         '<hr style="border:0">'
+                     '</div>'
+                 '</div>'
+                 '<div class="form-group col-sm-6 col-xs-12">'
+                     '<div id="processinglevel">'
+                         '{% load crispy_forms_tags %} '
+                         '{% crispy processing_level_form %} '
+                         '<hr style="border:0">'
+                     '</div>'
+                     '<div id="timeseriesresult">'
+                         '{% load crispy_forms_tags %} '
+                         '{% crispy timeseries_result_form %} '
+                     '</div>'
+                 '</div>')
+        )
 
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
@@ -97,7 +100,6 @@ def landing_page(request, page):
         context['method_form'] = method_form
         context['processing_level_form'] = processing_level_form
         context['timeseries_result_form'] = timeseries_result_form
-
 
     # TODO: can we refactor to make it impossible to skip adding the generic context
     hs_core_context = add_generic_context(request, page)

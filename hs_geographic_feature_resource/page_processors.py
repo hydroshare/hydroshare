@@ -97,7 +97,7 @@ def landing_page(request, page):
                                    '{% load crispy_forms_tags %} '
                                    '{% crispy ori_coverage_form %} '
                                    '</div>')
-        ext_md_layout = Layout(geom_information_layout, ori_coverage_layout,)
+        ext_md_layout = Layout(HTML("<div class='row'>"), geom_information_layout, ori_coverage_layout, HTML("</div>"))
 
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
                                                    extended_metadata_layout=ext_md_layout, request=request)

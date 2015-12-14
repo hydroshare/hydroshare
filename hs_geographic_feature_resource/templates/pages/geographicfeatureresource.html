@@ -5,123 +5,107 @@
 
 {% block extended_metadata %}
     <style>
-        .hr-separator {
-            margin-top: 0px;
-            margin-bottom: 2px;
-        }
         .field-table {
-            width:100%;
+            width: 100%;
         }
     </style>
 
     <div class="row">
         <div class="col-md-12">
             <div>
-            {# Add the view mode html code below for resource extended meta tab #}
-            {% if extended_metadata_exists %}
-                 {# Add the geometry information meta #}
-                <h4><strong>Geometry Information:</strong></h4>
-                {% if geometry_information %}
-                    <hr class="hr-separator">
-                    {% if geometry_information.geometryType %}
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Geometry Type:</strong></div>
-                            <div class="col-sm-8">{{ geometry_information.geometryType }}</div>
-                        </div>
-                    {% endif %}
+                {# Add the view mode html code below for resource extended meta tab #}
+                {% if extended_metadata_exists %}
+                    {# Add the geometry information meta #}
+                    <legend>Geometry Information</legend>
+                    <div style="margin-bottom:40px;">
+                        {% if geometry_information %}
 
-                    {% if geometry_information.featureCount %}
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Feature Count:</strong></div>
-                            <div class="col-sm-8">{{ geometry_information.featureCount }}</div>
-                        </div>
-                    {% endif %}
-                {% else %}
-                    <p>Geometry information is not provided.</p>
-                {% endif %}
+                            <table class="custom-table">
+                                <tbody>
+                                {% if geometry_information.geometryType %}
+                                    <tr><th class="text-muted">Geometry Type</th><td>{{ geometry_information.geometryType }}</td></tr>
+                                {% endif %}
 
-                 {# Add the original coverage meta #}
-                <h4><strong>Spatial Reference:</strong></h4>
-                {% if original_coverage %}
-                    <hr class="hr-separator">
-                    {% if original_coverage.projection_string %}
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Coordinate Reference System:</strong></div>
-                            <div class="col-sm-8">{{ original_coverage.projection_name }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Datum:</strong></div>
-                            <div class="col-sm-8">{{ original_coverage.datum }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Unit:</strong></div>
-                            <div class="col-sm-8">{{ original_coverage.unit }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Coordinate String:</strong></div>
-                            <div class="col-sm-8">{{ original_coverage.projection_string }}</div>
-                        </div>
-                    {% endif %}
-                    <div class="row">
-                        <div class="col-sm-4"><strong>Extent:</strong></div>
+                                {% if geometry_information.featureCount %}
+                                    <tr><th class="text-muted">Feature Count</th><td>{{ geometry_information.featureCount }}</td></tr>
+                                {% endif %}
+                            </tbody>
+                            </table>
+
+                        {% else %}
+                            <p><i>Geometry information is not provided.</i></p>
+                        {% endif %}
                     </div>
 
-                    {% if original_coverage.northlimit %}
-                        <div class="row">
-                            <div class="col-sm-4" style="text-indent:40px"><strong>North:</strong></div>
-                            <div class="col-sm-8">{{ original_coverage.northlimit }}</div>
-                        </div>
-                    {% endif %}
+                    {# Add the original coverage meta #}
+                    <legend>Spatial Reference</legend>
+                    <div style="margin-bottom:40px;">
+                        {% if original_coverage %}
+                            {% if original_coverage.projection_string %}
+                                <table class="custom-table">
+                                    <tbody>
+                                        <tr><th class="text-muted">Coordinate Reference System</th><td>{{ original_coverage.projection_name }}</td></tr>
+                                        <tr><th class="text-muted">Datum</th><td>{{ original_coverage.datum }}</td></tr>
+                                        <tr><th class="text-muted">Unit</th><td>{{ original_coverage.unit }}</td></tr>
+                                        <tr><th class="text-muted">Coordinate String</th><td>{{ original_coverage.projection_string }}</td></tr>
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                            <h4>Extent</h4>
 
-                    {% if original_coverage.eastlimit %}
-                        <div class="row">
-                            <div class="col-sm-4" style="text-indent:40px"><strong>East:</strong></div>
-                            <div class="col-sm-8">{{ original_coverage.eastlimit }}</div>
-                        </div>
-                    {% endif %}
+                            <table class="custom-table">
+                                <tbody>
+                                    {% if original_coverage.northlimit %}
+                                        <tr><th class="text-muted">North</th><td>{{ original_coverage.northlimit }}</td></tr>
+                                    {% endif %}
 
-                    {% if original_coverage.southlimit %}
-                        <div class="row">
-                            <div class="col-sm-4" style="text-indent:40px"><strong>South:</strong></div>
-                            <div class="col-sm-8">{{ original_coverage.southlimit }}</div>
-                        </div>
-                    {% endif %}
+                                    {% if original_coverage.eastlimit %}
+                                        <tr><th class="text-muted">East</th><td>{{ original_coverage.eastlimit }}</td></tr>
+                                    {% endif %}
 
-                    {% if original_coverage.westlimit %}
-                        <div class="row">
-                            <div class="col-sm-4" style="text-indent:40px"><strong>West:</strong></div>
-                            <div class="col-sm-8">{{ original_coverage.westlimit }}</div>
-                        </div>
-                    {% endif %}
-                    </hr>
+                                    {% if original_coverage.southlimit %}
+                                        <tr><th class="text-muted">South</th><td>{{ original_coverage.southlimit }}</td></tr>
+                                    {% endif %}
 
-                {% else %}
-                    <p>Metadata information is not provided.</p>
-                {% endif %}
+                                    {% if original_coverage.westlimit %}
+                                        <tr><th class="text-muted">West</th><td>{{ original_coverage.westlimit }}</td></tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
 
-                {# Add the Field Information meta #}
-                <h4 ><strong>Field Information:</strong></h4>
-                {% if field_information %}
-                <hr class="hr-separator">
-                         <table class="field-table">
-                             <tr class="row">
-                                 <th >Name</th> <th>Type</th> <th>Width</th> <th>Precision</th>
-                             </tr>
-                            {% for field_item in field_information %}
+                        {% else %}
+                            <p><i>Metadata information is not provided.</i></p>
+                        {% endif %}
+                    </div>
+
+                    {# Add the Field Information meta #}
+                    <legend>Field Information</legend>
+                    <div style="margin-bottom:40px;">
+                        {% if field_information %}
+                            <table class="field-table">
                                 <tr class="row">
-                                    <td>{{ field_item.fieldName }}</td>
-                                    <td>{{ field_item.fieldType }}</td>
-                                    <td>{{ field_item.fieldWidth }}</td>
-                                    <td>{{ field_item.fieldPrecision }}</td>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Width</th>
+                                    <th>Precision</th>
                                 </tr>
-                            {% endfor %}
-                        </table>
-                {% else %}
-                    <p> Metadata information is not provided.</p>
-                {% endif %} {# variable section end #}
+                                {% for field_item in field_information %}
+                                    <tr class="row">
+                                        <td>{{ field_item.fieldName }}</td>
+                                        <td>{{ field_item.fieldType }}</td>
+                                        <td>{{ field_item.fieldWidth }}</td>
+                                        <td>{{ field_item.fieldPrecision }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        {% else %}
+                            <p><i>Metadata information is not provided.</i></p>
+                        {% endif %} {# variable section end #}
+                    </div>
 
-            {% endif %}{# extended meta section end #}
-            {# Add the view mode html code for resource extended meta tababove #}
+
+                {% endif %}{# extended meta section end #}
+                {# Add the view mode html code for resource extended meta tababove #}
             </div>
         </div>
     </div>
@@ -129,40 +113,38 @@
     {#  Add the code of extended section on the landing page below #}
     {% block extended_section %}
     {% endblock %} {# extended block ends here #}
-{%  endblock %}
+{% endblock %}
 
 
 {% block extra_js %}
-{{ block.super }}
-{# put resource specific js below #}
-<script type="text/javascript">
+    {{ block.super }}
+    {# put resource specific js below #}
+    <script type="text/javascript">
 
-    var del_msg_shp_shx_dbf = "<font color='red'>BE CAREFUL!</font> The 'shp', 'shx' and 'dbf' are three mandatory files." +
-            "Missing of any of them will corrupt data integrity. So this operation is about to permanently " +
-            "<font color='red'>DELETE ALL EXISTING FILES</font> of this resource! You may upload new shapefiles later."
+        var del_msg_shp_shx_dbf = "<font color='red'>BE CAREFUL!</font> The 'shp', 'shx' and 'dbf' are three mandatory files." +
+                "Missing of any of them will corrupt data integrity. So this operation is about to permanently " +
+                "<font color='red'>DELETE ALL EXISTING FILES</font> of this resource! You may upload new shapefiles later."
 
-    var del_msg_prj = "This operation is about to <font color='red'>REMOVE COORDINATE SYSTEM METADATA!</font>"
+        var del_msg_prj = "This operation is about to <font color='red'>REMOVE COORDINATE SYSTEM METADATA!</font>"
 
-    $(document).ready(function(){
+        $(document).ready(function () {
 
-         $('.label-file-name').each(function() {
-                     var filename = $(this).text()
-                     var extension = filename.substring(filename.length-4, filename.length)
-                     if (extension == ".shp" || extension == ".shx" || extension == ".dbf")
-                     {
-                         var tag_id = $(this).parent().parent().next().children().find("span[title='Delete']").attr('data-target')
-                         var tag_id2 = tag_id.substring(1, tag_id.length)
-                         $("#" + tag_id2).children().find("div[class='modal-body']").html(del_msg_shp_shx_dbf)
-                     } // if
-                     else if (extension == ".prj")
-                     {
-                         var tag_id = $(this).parent().parent().next().children().find("span[title='Delete']").attr('data-target')
-                         var tag_id2 = tag_id.substring(1, tag_id.length)
-                         $("#" + tag_id2).children().find("div[class='modal-body']").html(del_msg_prj)
-                     } // else
-                 } // function
-         ) //each
-    })
-</script>
+            $('.label-file-name').each(function () {
+                        var filename = $(this).text()
+                        var extension = filename.substring(filename.length - 4, filename.length)
+                        if (extension == ".shp" || extension == ".shx" || extension == ".dbf") {
+                            var tag_id = $(this).parent().parent().next().children().find("span[title='Delete']").attr('data-target')
+                            var tag_id2 = tag_id.substring(1, tag_id.length)
+                            $("#" + tag_id2).children().find("div[class='modal-body']").html(del_msg_shp_shx_dbf)
+                        } // if
+                        else if (extension == ".prj") {
+                            var tag_id = $(this).parent().parent().next().children().find("span[title='Delete']").attr('data-target')
+                            var tag_id2 = tag_id.substring(1, tag_id.length)
+                            $("#" + tag_id2).children().find("div[class='modal-body']").html(del_msg_prj)
+                        } // else
+                    } // function
+            ) //each
+        })
+    </script>
 
 {% endblock %}

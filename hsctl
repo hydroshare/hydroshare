@@ -16,9 +16,9 @@ sed -i '/^\s*$/d' $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat $CONFIG_DIRECTORY/hydroshare-config.sh)
 
 ### Docker Variables ###
-HS_DOCKER_CONTAINERS=(hydroshare_hydroshare_1 hydroshare_dockerworker_1 hydroshare_defaultworker_1 )
+HS_DOCKER_CONTAINERS=(hydroshare_hydroshare_1 hydroshare_dockerworker_1 hydroshare_defaultworker_1)
 HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_dockerworker hydroshare_defaultworker)
-OTHER_DOCKER_CONTAINERS=(hydroshare_postgis_1 hydroshare_rabbitmq_1 hydroshare_redis_1 )
+OTHER_DOCKER_CONTAINERS=(hydroshare_postgis_1 hydroshare_rabbitmq_1 hydroshare_redis_1 hydroshare_solr_1)
 
 ### Pre-flight Variables ###
 HTTP_RECAPTCHA='http://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
@@ -28,14 +28,17 @@ PROD_SERVER='uwsgi --socket :8001 --ini uwsgi.ini'
 
 display_usage() {
 	echo "*** HydroShare Control script ***"
-	echo "usage: $0 loaddb         # loads database specified in hydroshare-config.yaml into running container"
-	echo "usage: $0 rebuild        # deletes hydroshare container contents only and deploys using exsiting database"
-	echo "usage: $0 rebuild --db   # deletes all database and container contents and deploys from scratch"
-	echo "usage: $0 maint_off   # removes maintenance page (only if USE_NGINX = true)"
-	echo "usage: $0 maint_on    # displays maintenance page (only if USE_NGINX = true)"
-	echo "usage: $0 restart        # restarts the hydroshare container without rebuilding"
-	echo "usage: $0 start          # attempts to start all containers"
-	echo "usage: $0 stop           # stops all running containers"
+	echo "usage: $0 loaddb          # loads database specified in hydroshare-config.yaml into running container"
+	echo "usage: $0 managepy [args] # use the arguments in a manage.py [args] call from the hydroshare container"
+	echo "usage: $0 maint_off       # removes maintenance page (only if USE_NGINX = true)"
+	echo "usage: $0 maint_on        # displays maintenance page (only if USE_NGINX = true)"
+	echo "usage: $0 rebuild         # deletes hydroshare container contents only and deploys using exsiting database"
+	echo "usage: $0 rebuild --db    # deletes all database and container contents and deploys from scratch"
+	echo "usage: $0 rebuild_index   # rebuild solr index in a non-interactive way"
+	echo "usage: $0 restart         # restarts the hydroshare container without rebuilding"
+	echo "usage: $0 start           # attempts to start all containers"
+	echo "usage: $0 stop            # stops all running containers"
+	echo "usage: $0 update_index    # update solr index in a non-interactive way to be run as a cron job"
 }
 
 start_nginx() {
@@ -81,6 +84,16 @@ maint_off_hs() {
     else
         echo "*** Unable to apply: USE_NGINX = ${USE_NGINX} ***"
     fi
+}
+
+solr_schema_hs() {
+    echo
+    echo "*** Setting up solr schema ***"
+    echo "*** From hydroshare: build_solr_schema ***"
+    docker exec hydroshare_hydroshare_1 python manage.py build_solr_schema -f schema.xml
+    sleep 1s
+    echo "*** From solr: mv schema.xml to /opt/solr/example/solr/collection1/conf/ ***"
+    docker exec hydroshare_solr_1 cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml
 }
 
 start_hs() {
@@ -170,7 +183,14 @@ rebuild_nodb_hs() {
         echo -ne "$pc ...\033[0K\r"
         sleep 1
     done
-    echo
+    sleep 3s
+    solr_schema_hs
+    sleep 2s
+    rebuild_solr_index
+    sleep 2s
+    docker exec $CID curl "http://solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+    sleep 2s
+    rebuild_solr_index
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
@@ -194,7 +214,16 @@ loaddb_hs() {
     #docker exec $CID python manage.py makemigrations
     echo "*** manage.py migrate ***"
     docker exec $CID python manage.py migrate
+    echo "*** manage.py fix_permissions ***"
     docker exec $CID python manage.py fix_permissions
+    sleep 3s
+    solr_schema_hs
+    sleep 2s
+    rebuild_solr_index
+    sleep 2s
+    docker exec $CID curl "http://solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+    sleep 2s
+    rebuild_solr_index
 }
 
 rebuild_db_hs() {
@@ -246,16 +275,6 @@ rebuild_db_hs() {
     fi
 }
 
-### Display usage if exactly one argument is not provided ###
-if [  $# -ne 1 ]
-then
-	if [ $1 != "rebuild" ] || [ $2 != "--db" ]
-	then
-	    display_usage
-	    exit 1
-	fi
-fi
-
 rebuild_hs() {
 	if [ "$2" == "--db" ]
 	then
@@ -265,8 +284,38 @@ rebuild_hs() {
 	fi
 }
 
+manage_py_hs() {
+    docker exec -ti hydroshare_hydroshare_1 python manage.py "${@:2}"
+}
+
+update_solr_index() {
+    docker exec hydroshare_hydroshare_1 python manage.py update_index
+}
+
+rebuild_solr_index() {
+    cd scripts
+    ./rebuild-index-solr
+    cd -
+}
+
+### Display usage if exactly one argument is not provided ###
+if [  $# -ne 1 ]
+then
+	if [ $1 != "rebuild" ] || [ $2 != "--db" ] && [ $1 != "managepy" ]
+	then
+	    display_usage
+	    exit 1
+	fi
+fi
+
 case "$1" in
     loaddb) loaddb_hs $1
+        ;;
+    managepy) manage_py_hs "$@"
+        ;;
+    update_index) update_solr_index $1
+        ;;
+    rebuild_index) rebuild_solr_index $1
         ;;
     maint_off) maint_off_hs $1
         ;;

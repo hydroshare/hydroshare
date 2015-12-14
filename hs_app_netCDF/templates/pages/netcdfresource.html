@@ -11,121 +11,85 @@
 
                 {% if extended_metadata_exists %}
                     {# Add the original coverage meta #}
-                    <h4 ><strong>Spatial Reference</strong></h4>
+                    <legend>Spatial Reference</legend>
                     {% if original_coverage %}
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        {% if original_coverage.projection or original_coverage.projection_string_type or original_coverage.projection_string_text %}
+                        <table class="custom-table">
+                            <tbody>
+                                {% if original_coverage.projection %}
+                                    <tr><th class="text-muted">Coordinate Reference System </th><td>{{ original_coverage.projection}}</td></tr>
+                                {% endif %}
 
-                        {% if original_coverage.projection %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate Reference System:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.projection}}</div>
-                            </div>
+                                {% if original_coverage.projection_string_type %}
+                                    <tr><th class="text-muted">Coordinate Reference System Representation Type </th><td>{{ original_coverage.projection_string_type}}</td></tr>
+                                {% endif %}
+
+                                {% if original_coverage.projection_string_text %}
+                                    <tr><th class="text-muted">Coordinate Reference System Representation Text </th><td>{{ original_coverage.projection_string_text}}</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
                         {% endif %}
 
-                        {% if original_coverage.projection_string_type %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate Reference System Representation Type:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.projection_string_type}}</div>
-                            </div>
-                        {%  endif %}
+                        <h4>Extent</h4>
 
-                        {% if original_coverage.projection_string_text %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate Reference System Representation Text:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.projection_string_text}}</div>
-                            </div>
-                        {%  endif %}
+                        <table class="custom-table">
+                            {% if original_coverage.northlimit %}
+                                <tr><th class="text-muted">North </th><td>{{ original_coverage.northlimit }}</td></tr>
+                            {% endif %}
 
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Extent:</strong></div>
-                        </div>
+                            {% if original_coverage.eastlimit %}
+                                <tr><th class="text-muted">East </th><td>{{ original_coverage.eastlimit }}</td></tr>
+                            {% endif %}
 
-                        {% if original_coverage.northlimit %}
-                            <div class="row">
-                                <div class="col-sm-4" style="text-indent:40px"><strong>North:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.northlimit }}</div>
-                            </div>
-                        {% endif %}
+                            {% if original_coverage.southlimit %}
+                                <tr><th class="text-muted">South </th><td>{{ original_coverage.southlimit }}</td></tr>
+                            {% endif %}
 
-                        {% if original_coverage.eastlimit %}
-                            <div class="row">
-                                <div class="col-sm-4" style="text-indent:40px"><strong>East:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.eastlimit }}</div>
-                            </div>
-                        {% endif %}
+                            {% if original_coverage.westlimit %}
+                                <tr><th class="text-muted">West </th><td>{{ original_coverage.westlimit }}</td></tr>
+                            {% endif %}
 
-                        {% if original_coverage.southlimit %}
-                            <div class="row">
-                                <div class="col-sm-4" style="text-indent:40px"><strong>South:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.southlimit }}</div>
-                            </div>
-                        {% endif %}
-
-                        {% if original_coverage.westlimit %}
-                            <div class="row">
-                                <div class="col-sm-4" style="text-indent:40px"><strong>West:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.westlimit}}</div>
-                            </div>
-                        {% endif %}
-
-                        {% if original_coverage.units %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Extent Unit:</strong></div>
-                                <div class="col-sm-8">{{ original_coverage.units}}</div>
-                            </div>
-                        {%  endif %}
-                        </hr>
-
+                            {% if original_coverage.units %}
+                                <tr><th class="text-muted">Extent Unit </th><td>{{ original_coverage.units }}</td></tr>
+                            {% endif %}
+                        </table>
                     {% else %}
                         <p>Metadata information is not provided. </p>
                     {% endif %}
 
                     {# Add the Variable meta #}
+                    <legend style="margin-top:20px;">Variables</legend>
                     {% if variables %}
-                        {% for variable in variables %}
-                            <h4 style="margin-top:20px"><strong>Variable</strong></h4>
-                            <hr style=" margin-top: 0px;margin-bottom: 2px">
-                            {# Required extended meta subelement for Variable #}
+                        <div id="variables" class="well clearfix">
                             <div class="row">
-                                <div class="col-sm-4"><strong>Name:</strong></div>
-                                <div class="col-sm-8">{{ variable.name }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Unit:</strong></div>
-                                <div class="col-sm-8">{{ variable.unit }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Type:</strong></div>
-                                <div class="col-sm-8">{{ variable.type }}</div>
-                            </div>
-                            <div class="row">
-                                    <div class="col-sm-4"><strong>Shape:</strong></div>
-                                    <div class="col-sm-8">{{ variable.shape }}</div>
-                            </div>
-
-                            {# Optional extended meta subelement for Variable #}
-                            {% if variable.descriptive_name %}
-                                <div class="row">
-                                    <div class="col-sm-4"><strong>Long Name:</strong></div>
-                                    <div class="col-sm-8">{{ variable.descriptive_name }}</div>
+                            {% for variable in variables %}
+                                <div class="col-xs-12 col-sm-3">
+                                    <div class="custom-well">
+                                        <strong>{{ variable.name }}</strong>
+                                        <table class="custom-table">
+                                            <tbody>
+                                                <tr><th class="text-muted">Unit </th><td>{{ variable.unit }}</td></tr>
+                                                <tr><th class="text-muted">Type </th><td>{{ variable.type }}</td></tr>
+                                                <tr><th class="text-muted">Shape </th><td>{{ variable.shape }}</td></tr>
+                                                {# Optional extended meta subelement for Variable #}
+                                                {% if variable.descriptive_name %}
+                                                    <tr><th class="text-muted">Long Name </th><td>{{ variable.descriptive_name }}</td></tr>
+                                                {% endif %}
+                                                {% if variable.missing_value %}
+                                                    <tr><th class="text-muted">Missing Value </th><td>{{ variable.missing_value }}</td></tr>
+                                                {% endif %}
+                                                {% if variable.method %}
+                                                    <tr><th class="text-muted">Comment </th><td>{{ variable.method }}</td></tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                            {% endif %}
-                            {% if variable.missing_value %}
-                                <div class="row">
-                                    <div class="col-sm-4"><strong>Missing Value:</strong></div>
-                                    <div class="col-sm-8">{{ variable.missing_value }}</div>
-                                </div>
-                            {% endif %}
-                            {% if variable.method %}
-                                <div class="row">
-                                    <div class="col-sm-4"><strong>Comment:</strong></div>
-                                    <div class="col-sm-8">{{ variable.method }}</div>
-                                </div>
-                            {% endif %}
-                            </hr>
-                        {% endfor %}
+                            {% endfor %}
+                         </div>
+                        </div>
                     {% else %}
-                        <h4 style="margin-top:20px"><strong>Variable:</strong></h4>
                         <p> Metadata information is not provided. </p>
                     {% endif %} {# variable section end #}
 
@@ -156,12 +120,12 @@
             {% for f in cm.files.all %}
                 {% if f.resource_file.name|slice:"-3:" == 'txt'%}
                     <div style="clear: both">
-                        <h3 style="margin-top:40px"> NetCDF Header Info</h3>
+                        <legend>NetCDF Header Info</legend>
                         <p>{{ f.resource_file.name|slice:"33:" }}</p>
                         {% if f.resource_file.size <= 5000000 %}
-                            <textarea readonly rows="15" style="margin-bottom:20px;border: 1px solid #ddd;width:100%">{{ f.resource_file.read}}</textarea>
+                            <textarea id="netcdf-header-info" readonly rows="15">{{ f.resource_file.read}}</textarea>
                         {% else %}
-                            <textarea readonly rows="5" style="margin-bottom:20px;border: 1px solid #ddd;width:100%">The size of the netCDF header information text file is too large for loading on the page.</textarea>
+                            <textarea id="netcdf-header-info" readonly rows="5">The size of the netCDF header information text file is too large for loading on the page.</textarea>
                     {% endif %}
                     </div>
 {#                    {% else %}#}
@@ -179,16 +143,19 @@
     {% endif %}
 
 
-    {# Add netcdf opendap button  #}
-    {% if opendap_link %}
-        <td><a style="margin-left:15px" id="btn-netcdf-opendap" type="button" class="btn btn-success" href='{{opendap_link }}'
-               title="When changing this resource's sharing status, please allow 2 minutes for the OPeNDAP service to refresh on this page" >
-            <span class="button-label"> OPeNDAP Service</span>
-        </a></td>
+    {# Add THREDDS service #}
+    {% if nc_file_name %}
+        <div id="#thredds">
+            <h3>THREDDS Data Service</h3>
+            <h4>OPeNDAP: <a href="{{ opendap }}" target="_blank"> {{ nc_file_name }} </a></h4>
+            <h4>NetCDF Subset: <a href="{{ ncss }}" target="_blank"> {{ nc_file_name }} </a></h4>
+            <h4>NCML: <a href="{{ ncml }}" target="_blank"> {{ nc_file_name }} </a></h4>
+            <h4>ISO Metadata: <a href="{{ iso }}" target="_blank"> {{ nc_file_name }} </a></h4>
+            <h4>Visualize using IDV:Requires IDV <a href="https://www.unidata.ucar.edu/software/idv/" target="_blank">installation</a>, then use OPeNDAP service link as "URL" for IDV "Data Choosers"</h4>
+        </div>
     {% endif %}
 
 {% endblock %} {# extra block ends here #}
-
 
 
 {% block extra_js %}
@@ -213,25 +180,6 @@
             $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").hide()
         }
     };
-
-{#    // netcdf tool button#}
-{#    $(document).ready(function(){#}
-{#        $("#btn-netcdf-tools").insertAfter("#btn-download-all");#}
-{#    })#}
-
-{#    // netcdf ncdump button#}
-{#    $(document).ready(function(){#}
-{#        if($('#showNcdump').length !=0){#}
-{#            $('#createNcdump').hide()#}
-{#        }#}
-{#    })#}
-
-    // netcdf opendap button
-    $(document).ready(function(){
-        if ($('#btn-netcdf-opendap').length > 0){
-           $("#btn-netcdf-opendap").insertAfter("#btn-download-all");
-        }
-    })
 
 
 </script>

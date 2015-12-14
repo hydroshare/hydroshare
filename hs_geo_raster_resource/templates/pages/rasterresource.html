@@ -6,124 +6,134 @@
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
         <div class="row">
-            <div class="col-md-12">
-                <div>
-                    {% if originalCoverage %}
-                        <h4><strong>Spatial Reference:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        {% if originalCoverage.projection %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate Reference System:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.projection}}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.units %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Coordinate Reference System Unit:</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.units}}</div>
-                            </div>
-                        {%  endif %}
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Extent:</strong></div>
-                        </div>
-                        {% if originalCoverage.northlimit %}
-                            <div class="row">
-                                <div class="col-sm-4" style="text-indent:40px"><strong>North</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.northlimit }}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.westlimit %}
-                            <div class="row">
-                                <div class="col-sm-4" style="text-indent:40px"><strong>West</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.westlimit}}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.southlimit %}
-                            <div class="row">
-                                <div class="col-sm-4" style="text-indent:40px"><strong>South</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.southlimit }}</div>
-                            </div>
-                        {% endif %}
-                        {% if originalCoverage.eastlimit %}
-                            <div class="row">
-                                <div class="col-sm-4"style="text-indent:40px"><strong>East</strong></div>
-                                <div class="col-sm-8">{{ originalCoverage.eastlimit }}</div>
-                            </div>
-                        {% endif %}
 
+        {% if originalCoverage %}
+            <div class="col-xs-12 col-sm-6" style="margin-bottom:40px;">
+                <legend>Spatial Reference</legend>
+                <table class="custom-table">
+                    <tbody>
 
-                    <hr>
+                    {% if originalCoverage.projection %}
+                        <tr>
+                            <th class="text-muted">Coordinate Reference System</th>
+                            <td>{{ originalCoverage.projection }}</td>
+                        </tr>
                     {% endif %}
-                </div>
-
-                <div>
-                    {% if cellInformation %}
-                        <h4><strong>Cell Information:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Rows:</strong></div>
-                            <div class="col-sm-8">{{ cellInformation.rows }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Columns:</strong></div>
-                            <div class="col-sm-8">{{ cellInformation.columns }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>CellSizeXValue:</strong></div>
-                            <div class="col-sm-8">{{ cellInformation.cellSizeXValue }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>CellSizeYValue:</strong></div>
-                            <div class="col-sm-8">{{ cellInformation.cellSizeYValue }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>CellDataType:</strong></div>
-                            <div class="col-sm-8">{{ cellInformation.cellDataType }}</div>
-                        </div>
-                        {% if cellInformation.noDataValue %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>NoDataValue:</strong></div>
-                                <div class="col-sm-8">{{ cellInformation.noDataValue }}</div>
-                            </div>
-                        {% endif %}
-                    <hr style="border:0">
+                    {% if originalCoverage.units %}
+                        <tr>
+                            <th class="text-muted">Coordinate Reference System Unit</th>
+                            <td>{{ originalCoverage.units }}</td>
+                        </tr>
                     {% endif %}
-                </div>
+                    </tbody>
+                </table>
 
-                <div>
-                    {% if bandInformation %}
-                        <h4><strong>Band Information:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                <h4>Extent</h4>
+
+                <table class="custom-table">
+                    <tbody>
+                    {% if originalCoverage.northlimit %}
+                        <tr>
+                            <th class="text-muted">North</th>
+                            <td>{{ originalCoverage.northlimit }}</td>
+                        </tr>
+                    {% endif %}
+                    {% if originalCoverage.westlimit %}
+                        <tr>
+                            <th class="text-muted">West</th>
+                            <td>{{ originalCoverage.westlimit }}</td>
+                        </tr>
+                    {% endif %}
+                    {% if originalCoverage.southlimit %}
+                        <tr>
+                            <th class="text-muted">South</th>
+                            <td>{{ originalCoverage.southlimit }}</td>
+                        </tr>
+                    {% endif %}
+                    {% if originalCoverage.eastlimit %}
+                        <tr>
+                            <th class="text-muted">East</th>
+                            <td>{{ originalCoverage.eastlimit }}</td>
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if cellInformation %}
+             <div class="col-xs-12 col-sm-6" style="margin-bottom:40px;">
+                <legend>Cell Information</legend>
+                <table class="custom-table">
+                    <tbody>
+                    <tr>
+                        <th class="text-muted">Rows</th>
+                        <td>{{ cellInformation.rows }}</td>
+                    </tr>
+
+                    <tr>
+                        <th class="text-muted">Columns</th>
+                        <td>{{ cellInformation.columns }}</td>
+                    </tr>
+
+                    <tr>
+                        <th class="text-muted">CellSizeXValue</th>
+                        <td{{ cellInformation.cellSizeXValue }}></td>
+                    </tr>
+
+                    <tr>
+                        <th class="text-muted">CellSizeYValue</th>
+                        <td>{{ cellInformation.cellSizeYValue }}</td>
+                    </tr>
+
+                    <tr>
+                        <th class="text-muted">CellDataType</th>
+                        <td>{{ cellInformation.cellDataType }}</td>
+                    </tr>
+
+                    {% if cellInformation.noDataValue %}
+                        <tr>
+                            <th class="text-muted">NoDataValue</th>
+                            <td>{{ cellInformation.noDataValue }}</td>
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if bandInformation %}
+            <div class="col-sm-12 pull-left" style="margin-bottom:40px;">
+                <legend>Band Information</legend>
+                <div id="variables" class="well clearfix">
+                    <div class="row">
                         {% for band in bandInformation %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>BandName:</strong></div>
-                                <div class="col-sm-8">{{ band.name }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>VariableName:</strong></div>
-                                <div class="col-sm-8">{{ band.variableName }}</div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-4"><strong>VariableUnit:</strong></div>
-                                <div class="col-sm-8">{{ band.variableUnit }}</div>
-                            </div>
-                            {% if band.method %}
-                                <div class="row">
-                                    <div class="col-sm-4"><strong>Method:</strong></div>
-                                    <div class="col-sm-8">{{ band.method }}</div>
+                            <div class="col-xs-12 col-sm-3">
+                                <div class="custom-well">
+                                    <strong>{{ band.name }}</strong>
+                                    <table class="custom-table">
+                                        <tbody>
+                                            <tr><th class="text-muted">VariableName</th><td>{{ band.variableName }}</td></tr>
+
+                                            <tr><th class="text-muted">VariableUnit</th><td>{{ band.variableUnit }}</td></tr>
+
+                                            {% if band.method %}
+                                                <tr><th class="text-muted">Method</th><td>{{ band.method }}</td></tr>
+                                            {% endif %}
+
+                                            {% if band.comment %}
+                                                <tr><th class="text-muted">Comment</th><td>{{ band.comment }}</td></tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
                                 </div>
-                            {% endif %}
-                            {% if band.comment %}
-                                <div class="row">
-                                    <div class="col-sm-4"><strong>Comment:</strong></div>
-                                    <div class="col-sm-8">{{ band.comment }}</div>
-                                </div>
-                            {% endif %}
+                            </div>
                         {% endfor %}
-                    {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
+    </div>
     {% endif %}
 {% endblock %}
 {% block extra_js %}

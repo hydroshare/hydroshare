@@ -200,7 +200,6 @@
                             {% endif %}
 
 
-
                             {#      AFFILIATIONS     #}
     {#                        <div class="panel panel-default">#}
     {#                            <div class="panel-heading">#}
@@ -265,36 +264,40 @@
                                         <td><span>Generic</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
+                                     <tr id="badge-geographic-feature" data-type="type-Geographic Feature (ESRI Shapefiles)">
+                                        <td><span>Geographic Feature</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
                                     <tr id="badge-geographic" data-type="type-Geographic Raster">
                                         <td><span>Geographic Raster</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
-                                    <tr id="badge-his" data-type="type-HIS Referenced Time Series">
-                                        <td><span>HIS Referenced Time Series</span></td>
+{#                                    <tr id="badge-his" data-type="type-HIS Referenced Time Series">#}
+{#                                        <td><span>HIS Referenced Time Series</span></td>#}
+{#                                        <td><span class="badge">0</span></td>#}
+{#                                    </tr>#}
+                                    <tr id="badge-model-instance" data-type="type-Model Instance Resource">
+                                        <td><span>Model Instance</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
                                     <tr id="badge-model-program" data-type="type-Model Program Resource">
                                         <td><span>Model Program</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
-                                    <tr id="badge-model-instance" data-type="type-Model Instance Resource">
-                                        <td><span>Model Instance</span></td>
+                                    <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
+                                        <td><span>Multidimensional (NetCDF)</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
                                     <tr id="badge-swat" data-type="type-SWAT Model Instance Resource">
                                         <td><span>SWAT Model Instance</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
-                                    <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
-                                        <td><span>Multidomensional (NetCDF)</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
                                     <tr id="badge-time-series" data-type="type-Time Series">
                                         <td><span>Time Series</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
-                                    <tr id="badge-geographic-feature" data-type="type-Geographic Feature (ESRI Shapefiles)">
-                                        <td><span>Geographic Feature</span></td>
+                                    <tr id="badge-web-app" data-type="type-Web App Resource">
+                                        <td><span>Web App</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
 
@@ -307,18 +310,45 @@
                                 <div data-type="type-{{ res|resource_type }}" class="contribution">
                                     <div class="icon-resource-type-wrapper">
                                     <span class="icon-resource-type">
-                                        <i class="glyphicon glyphicon-file"
-                                                {% if res|resource_type == "Generic" %}style="color:#1f77b4"
-                                                {% elif  res|resource_type == "Geographic Raster" %}style="color:#ff7f0e"
-                                                {% elif  res|resource_type == "HIS Referenced Time Series" %}style="color:#2ca02c"
-                                                {% elif  res|resource_type == "Model Program Resource" %}style="color:#d62728"
-                                                {% elif  res|resource_type == "Model Instance Resource" %}style="color:#9467bd"
-                                                {% elif  res|resource_type == "SWAT Model Instance Resource" %}style="color:#8c564b"
-                                                {% elif  res|resource_type == "Multidimensional (NetCDF)" %}style="color:#e377c2"
-                                                {% elif  res|resource_type == "Time Series" %}style="color:#17becf"
-                                                {% elif  res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}style="color:#bcbd22"
-                                                {% endif %}></i>
                                         <span><strong>{{ res|resource_type }}</strong></span>
+                                        {% if res|resource_type == "Generic" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "Geographic Raster" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "Model Program Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "Model Instance Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "SWAT Model Instance Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "Multidimensional (NetCDF)" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "Time Series" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "Web App Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% endif %}
+
                                     </span>
                                     </div>
                                     <div class="activity-block row">

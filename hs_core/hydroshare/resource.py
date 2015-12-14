@@ -14,6 +14,7 @@ from hs_core.models import ResourceFile, BaseResource
 from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
+from hs_labels.models import ResourceLabels
 
 file_size_limit = 10*(1024 ** 3)
 file_size_limit_for_display = '10G'
@@ -382,6 +383,9 @@ def create_resource(
         resource_access.save()
         UserResourcePrivilege(resource=resource_access, grantor=owner.uaccess, user=owner.uaccess,
                               privilege=PrivilegeCodes.OWNER).save()
+
+        resource_labels = ResourceLabels(resource=resource)
+        resource_labels.save()
 
         if edit_users:
             for user in edit_users:

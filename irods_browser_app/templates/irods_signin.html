@@ -5,26 +5,26 @@
                 <form class="form-signin" role="form" action="/irods_login/" method="post" id="irodsLogin">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                        <h4 class="modal-title" id="myModalLabel">Sign in</h4>
+                        <h4 class="modal-title" id="myModalLabel">Sign in to an iRODS Server</h4>
                     </div>
                     <div class="modal-body">
                         {% csrf_token %}
                         <input type="hidden" name="path" value="{{ request.path }}"/>
                         <div class="form-group">
-                            <label for="id_username">Username: </label>
+                            <label for="id_username">iRODS Username: </label>
                             <input id="username" class="form-control" name="username" placeholder="Username" value="" type="text" />
                         </div>
                         <div class="form-group">
-                            <label for="id_password">Password:</label>
+                            <label for="id_password">iRODS Password:</label>
                             <input id="password" class="form-control" name="password" placeholder="Password" value="" type="password" />
-                        </div>
-                        <div class="form-group">
-                            <label for="id_port">Port:</label>
-                            <input id="port" class="form-control" name="port" placeholder="port" value="1247" type="text" />
                         </div>
                         <div class="form-group">
                             <label for="id_host">Host:</label>
                             <input id="host" class="form-control" name="host" placeholder="Host" value="" type="text" />
+                        </div>
+                        <div class="form-group">
+                            <label for="id_port">Port:</label>
+                            <input id="port" class="form-control" name="port" placeholder="port" value="1247" type="text" />
                         </div>
                         <div class="form-group">
                             <label for="id_zone">Zone:</label>

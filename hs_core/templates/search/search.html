@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% block title %}Discovery{% endblock %}
+
+{% block main %}
+<div class="container-fluid" id="main">
+    <div class="row">
+        <div class="col-lg-3" id="folders">
+            {% if query %}
+                <input class="btn btn-default" type="button" value="clear all" onclick="clearAllFaceted()">
+                <span id="color-scheme">
+                    <svg width='180' height='24'>
+                        <rect class="YellowGreenBlue-colormap-band-1-fill" x="0" width="20" height="20"></rect>
+                        <rect class="YellowGreenBlue-colormap-band-2-fill" x="20" width="20" height="20"></rect>
+                        <rect class="YellowGreenBlue-colormap-band-3-fill" x="40" width="20" height="20"></rect>
+                        <rect class="YellowGreenBlue-colormap-band-4-fill" x="60" width="20" height="20"></rect>
+                        <rect class="YellowGreenBlue-colormap-band-5-fill" x="80" width="20" height="20"></rect>
+                        <rect class="YellowGreenBlue-colormap-band-6-fill" x="100" width="20" height="20"></rect>
+                        <rect class="YellowGreenBlue-colormap-band-7-fill" x="120" width="20" height="20"></rect>
+                        <rect class="YellowGreenBlue-colormap-band-8-fill" x="140" width="20" height="20"></rect>
+                        <rect class="YellowGreenBlue-colormap-band-9-fill" x="160" width="20" height="20"></rect>
+                    </svg>
+                </span>
+                {% for key, values in facets.fields.items %}
+                    {% if values %}
+                        <div class="panel-group" id="faceting-{{ key }}">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" href="#{{ key }}">
+                                        {% if key == 'author'%}
+                                            &nbsp; Filter by Author
+                                        {% elif key ==  'subjects'%}
+                                            &nbsp; Filter by Subject
+                                        {% elif key ==  'resource_type'%}
+                                            &nbsp; Filter by Resource Type
+                                        {% elif key ==  'public'%}
+                                            &nbsp; Filter by Public
+                                        {% elif key ==  'owners_names'%}
+                                            &nbsp; Filter by Owner
+                                        {% elif key ==  'discoverable'%}
+                                            &nbsp; Filter by Discoverable
+                                        {% endif %}
+                                        <span
+                                            {% if key == 'author' or key == 'subjects' or key == 'resource_type'%}
+                                                class="glyphicon glyphicon-minus pull-left"
+                                            {% else %}
+                                                class="glyphicon glyphicon-plus pull-left"
+                                            {% endif %}>
+                                        </span>
+                                    </a>
+                                </h4>
+                                </div>
+                                <div id="{{ key }}"
+                                     {% if key == 'author' or key == 'subjects' or key == 'resource_type'%}
+                                        class="panel-collapse collapse in"
+                                     {% else %}
+                                        class="panel-collapse collapse"
+                                     {% endif %}>
+                                    <ul class="list-group">
+                                    {% for item in values %}
+                                        {% if item.1 >= 2 %}
+                                            <li class="list-group-item">
+                                                <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp; {{ item.0 }}
+                                                    {% if item.1 >= 2 and item.1 <= 4 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-1">
+                                                    {% elif item.1 > 4 and item.1 <= 6 %}
+                                                         <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-2">
+                                                    {% elif item.1 > 6 and item.1 <= 10 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-3">
+                                                    {% elif item.1 > 10 and item.1 <= 18 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-4">
+                                                    {% elif item.1 > 18 and item.1 <= 32 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
+                                                    {% elif item.1 > 32 and item.1 <= 57 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-6">
+                                                    {% elif item.1 > 57 and item.1 <= 100 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-7">
+                                                    {% elif item.1 > 100 and item.1 <= 178 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-8">
+                                                    {% elif item.1 > 178 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-9">
+                                                    {% endif %}{{ item.1 }}
+                                                </span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="col-lg-9" id="items">
+            {% if not query %}
+                <h4>Enter a search term to find resources on HydroShare</h4>
+            {% endif %}
+            <div class=resource-search>
+                <form method="get" action=".">
+                    {% for field in form %}
+                        <div class="fieldWrapper">
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+                </form>
+            </div>
+            {% if query %}
+                <table class="table table-striped table-hover" id="items-discovered">
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>First Author</th>
+                        <th>Last Modified</th>
+                    </tr>
+                    {% for result in page.object_list %}
+                        <tr>
+                            <td><a href="{{ result.object.get_absolute_url }}">{{ result.object.title }}</a></td>
+                            <td>{{ result.object|resource_type }}</td>
+                            {% if result.object.first_creator.description %}
+                                <td><a href="{{ result.object.first_creator.description }}">{{ result.object.first_creator.name  }}</a></td>
+                            {% else %}
+                                <td>{{ result.object.first_creator.name }}</td>
+                            {% endif %}
+                            <td>{{ result.object.updated|date }} {{ result.object.updated|time }}</td>
+                        </tr>
+                    {% empty %}
+                        <p>No results found.</p>
+                    {% endfor %}
+
+                    {% if page.has_previous or page.has_next %}
+                        <div>
+                            {% if page.has_previous %}<a href="?q={{ query }}&amp;page={{ page.previous_page_number }}">{% endif %}&laquo; Previous{% if page.has_previous %}</a>{% endif %}
+                            |
+                            {% if page.has_next %}<a href="?q={{ query }}&amp;page={{ page.next_page_number }}">{% endif %}Next &raquo;{% if page.has_next %}</a>{% endif %}
+                        </div>
+                    {% endif %}
+                </table>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+    <script type="text/javascript">
+    var reorderDivs = function() {
+         var faceted_fields = ['author', 'subjects', 'resource_type', 'public', 'owners_names', 'discoverable'];
+         var div_ordering = [];
+         faceted_fields.forEach(function(field){
+             var faceting_div = "faceting-"+field;
+             div_ordering.push(faceting_div);
+         });
+         var i;
+         for (i = 1; i < div_ordering.length; i++) {
+             var div0 = "#" + div_ordering[i-1];
+             var div1 = "#" + div_ordering[i];
+             $(div1).insertAfter(div0);
+         }
+    }
+
+    var clearAllFaceted = function() {
+        localStorage.clear();
+        var textSearch = $("#id_q").val();
+        var clearURL = "/search/?q=" + textSearch;
+        window.location = clearURL;
+    }
+
+    $(document).ready(function () {
+         $("#id_q").attr('placeholder', 'Search...');
+         reorderDivs();
+         $('.collapse').on('shown.bs.collapse', function(){
+            $(this).parent().find(".glyphicon-plus").removeClass("glyphicon-plus").addClass("glyphicon-minus");
+         }).on('hidden.bs.collapse', function(){
+             $(this).parent().find(".glyphicon-minus").removeClass("glyphicon-minus").addClass("glyphicon-plus");
+         });
+
+         $("#id_q").keypress(function(event) {
+            if (event.which == 13) {
+                event.preventDefault();
+                localStorage.clear();
+                $("form").submit();
+            }
+         });
+         $(".faceted-selections").click(function () {
+             var tokens = $(this).val().split(",");
+             var key = tokens[0];
+             var value = tokens[1];
+             var textSearch = $("#id_q").val();
+             var searchURL = "?q=" + textSearch;
+             var windowPath = window.location.pathname;
+             var requestURL =  windowPath + searchURL;
+
+             if($(this).is(":checked")) {
+                 requestURL = requestURL + "&selected_facets="+key+"_exact:"+value
+                 $(".faceted-selections").each(function () {
+                     var val = localStorage[$(this).attr("id")];
+                     //var isChecked = val !== undefined ? val == "true" : false;
+                     var isChecked = val === 'true';
+                     if(isChecked){
+                         var arr = $(this).val().split(",");
+                         var key = arr[0];
+                         var value = arr[1];
+                         requestURL += "&selected_facets="+key+"_exact:"+value;
+                     }
+                 });
+                 window.location = requestURL;
+                 localStorage[$(this).attr("id")] = this.checked;
+             }else{
+                 localStorage.removeItem($(this).attr("id"));
+                 var textSearch = $("#id_q").val();
+                 var updateURL = "/search/?q=" + textSearch;
+                 $(".faceted-selections").each(function () {
+                     var val = localStorage[$(this).attr("id")];
+                     //var isChecked = val !== undefined ? val == "true" : false;
+                     var isChecked = val === 'true';
+                     if(isChecked){
+                         var arr = $(this).val().split(",");
+                         var key = arr[0];
+                         var value = arr[1];
+                         updateURL += "&selected_facets="+key+"_exact:"+value;
+                     }
+                 });
+                 window.location = updateURL;
+             }
+         });
+            $(".faceted-selections").each(function () {
+                var val = localStorage[$(this).attr("id")];
+                var isChecked = val !== undefined ? val == "true" : false;
+                $(this).prop("checked", isChecked);
+            });
+        $("#faceted-search").click(function(){
+            localStorage.clear();
+        });
+    });
+    </script>
+{% endblock %}

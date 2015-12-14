@@ -37,19 +37,14 @@ def landing_page(request, page):
                                           element_id=content_model.metadata.executed_by.id if content_model.metadata.executed_by else None)
 
         ext_md_layout = Layout(
-            AccordionGroup('Model Output',
                            HTML("<div class='form-group' id='modeloutput'> "
                                 '{% load crispy_forms_tags %} '
                                 '{% crispy model_output_form %} '
                                 '</div>'),
-                           ),
-
-            AccordionGroup('Executed By',
                            HTML('<div class="form-group" id="executedby"> '
                                 '{% load crispy_forms_tags %} '
                                 '{% crispy executed_by_form %} '
-                                '</div> '),
-                           ),
+                                '</div> ')
         )
 
 

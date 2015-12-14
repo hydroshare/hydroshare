@@ -1,0 +1,69 @@
+{{ object.short_id }}
+{{ object.doi }}
+{{ object.metadata.title }}
+{{ object.first_creator }}
+{{ object.metadata.description }}
+{{ object.public }}
+{{ object.discoverable }}
+{{ object.created }}
+{{ object.modified }}
+{{ object.rating_sum }}
+{{ object.metadata.publisher.name }}
+{{ object.metadata.language.code }}
+{{ object.resource_type }}
+{{ object.owners_count }}
+{{ object.viewers_count }}
+{{ object.editors_count }}
+{{ object.comments_count }}
+{% for creator in object.metadata.creators.all %}
+    {{ creator.name }}
+{% endfor %}
+{% for contributor in object.metadata.contributors.all %}
+    {{ contributor.name }}
+{% endfor %}
+{% for subject in object.metadata.subjects.all %}
+    {{ subject }}
+{% endfor %}
+{% for creator in object.metadata.creators.all %}
+    {{ creator.organization }}
+{% endfor %}
+{% for creator in object.metadata.creators.all %}
+    {{ creator.email }}
+{% endfor %}
+{% for coverage in object.metadata.coverages.all %}
+    {{ coverage.value }}
+{% endfor %}
+{% for format in object.metadata.formats.all %}
+    {{ format.value }}
+{% endfor %}
+{% for identifier in object.metadata.identifiers.all %}
+    {{ identifier.name }}
+{% endfor %}
+{% for source in object.metadata.sources.all %}
+    {{ source.derived_from }}
+{% endfor %}
+{% for relation in object.metadata.relations.all %}
+    {{ relation.value }}
+{% endfor %}
+{% for owner_login in object.owners_logins.all %}
+    {{ owner_login }}
+{% endfor %}
+{% for owner_name in object.owners_names.all %}
+    {{ owner_name }}
+{% endfor %}
+{% for viewer_login in object.viewers_logins.all %}
+    {{ viewer_login }}
+{% endfor %}
+{% for viewer_name in object.viewers_names.all %}
+    {{ viewer_name }}
+{% endfor %}
+{% for editor_login in object.editors_logins.all %}
+    {{ editor_login }}
+{% endfor %}
+{% for editor_name in object.editors_names.all %}
+    {{ editor_name }}
+{% endfor %}
+{% for comment in object.comments.all %}
+    {{ comment }}
+{% endfor %}
+{{ object.body }}

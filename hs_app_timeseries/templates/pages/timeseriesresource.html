@@ -7,165 +7,92 @@
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
         <div class="row">
-            <div class="col-md-12">
-                <div>
+            {% if site or variable or method %}
+                <div {% if not processing_level and not timeseries_result %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
                     {% if site %}
-                        <h4><strong>Site:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Code:</strong></div>
-                            <div class="col-sm-8">{{ site.site_code }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Name:</strong></div>
-                            <div class="col-sm-8">{{ site.site_name }}</div>
-                        </div>
-                        {% if site.elevation_m %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Elevation M:</strong></div>
-                                <div class="col-sm-8">{{ site.elevation_m }}</div>
-                            </div>
-                        {% endif %}
-                        {% if site.elevation_datum %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Elevation Datum:</strong></div>
-                                <div class="col-sm-8">{{ site.elevation_datum }}</div>
-                            </div>
-                        {% endif %}
-                        {% if site.site_type %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Site Type:</strong></div>
-                                <div class="col-sm-8">{{ site.site_type }}</div>
-                            </div>
-                        {% endif %}
-                    <hr style="border:0">
+                        <legend>Site</legend>
+                        <table class="custom-table">
+                            <tbody>
+                                <tr><th class="text-muted">Code </th><td>{{ site.site_code }}</td></tr>
+                                <tr><th class="text-muted">Name </th><td>{{ site.site_name }}</td></tr>
+                                <tr><th class="text-muted">Elevation M </th><td>{{ site.elevation_m }}</td></tr>
+                                <tr><th class="text-muted">Elevation Datum </th><td>{{ site.elevation_datum }}</td></tr>
+                                <tr><th class="text-muted">Site Type </th><td>{{ site.site_type }}</td></tr>
+                            </tbody>
+                        </table>
+                        <hr style="border:0">
                     {%  endif %}
-                </div>
-                <div>
-                    {% if variable %}
-                        <h4><strong>Variable:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Code:</strong></div>
-                            <div class="col-sm-8">{{ variable.variable_code }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Name:</strong></div>
-                            <div class="col-sm-8">{{ variable.variable_name }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Type:</strong></div>
-                            <div class="col-sm-8">{{ variable.variable_type }}</div>
-                        </div>
-                        <div class="row">
-                                <div class="col-sm-4"><strong>No Data Value:</strong></div>
-                                <div class="col-sm-8">{{ variable.no_data_value }}</div>
-                        </div>
-                        {% if variable.variable_definition %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Definition:</strong></div>
-                                <div class="col-sm-8">{{ variable.variable_definition }}</div>
-                            </div>
-                        {% endif %}
-                        {% if variable.speciation %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Speciation:</strong></div>
-                                <div class="col-sm-8">{{ variable.speciation }}</div>
-                            </div>
-                        {% endif %}
-                    <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if method %}
-                        <h4><strong>Method:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Code:</strong></div>
-                            <div class="col-sm-8">{{ method.method_code }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Name:</strong></div>
-                            <div class="col-sm-8">{{ method.method_name }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Type:</strong></div>
-                            <div class="col-sm-8">{{ method.method_type }}</div>
-                        </div>
-                        {% if method.method_description %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Description:</strong></div>
-                                <div class="col-sm-8">{{ method.method_description }}</div>
-                            </div>
-                        {% endif %}
-                        {% if method.method_link %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Link:</strong></div>
-                                <div class="col-sm-8">{{ method.method_link }}</div>
-                            </div>
-                        {% endif %}
-                    <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if processing_level %}
-                        <h4><strong>Processing Level:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Code:</strong></div>
-                            <div class="col-sm-8">{{ processing_level.processing_level_code }}</div>
-                        </div>
-                        {% if processing_level.definition %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Definition:</strong></div>
-                                <div class="col-sm-8">{{ processing_level.definition }}</div>
-                            </div>
-                        {% endif %}
-                        {% if processing_level.explanation %}
-                            <div class="row">
-                                <div class="col-sm-4"><strong>Explanation:</strong></div>
-                                <div class="col-sm-8">{{ processing_level.explanation }}</div>
-                            </div>
-                        {% endif %}
-                    <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if timeseries_result %}
-                        <h4><strong>Time Series Result:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Units Type:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.units_type }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Units Name:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.units_name }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Units Abbreviation:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.units_abbreviation }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Status:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.status }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Sample Medium:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.sample_medium }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Value Count:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.value_count }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Aggregation Statistics:</strong></div>
-                            <div class="col-sm-8">{{ timeseries_result.aggregation_statistics }}</div>
-                        </div>
 
+                    {% if variable %}
+                        <legend>Variable</legend>
+                        <table class="custom-table">
+                            <tbody>
+                                <tr><th class="text-muted">Code </th><td>{{ variable.variable_code }}</td></tr>
+                                <tr><th class="text-muted">Name </th><td>{{ variable.variable_name }}</td></tr>
+                                <tr><th class="text-muted">Type </th><td>{{ variable.variable_type }}</td></tr>
+                                <tr><th class="text-muted">No Data Value </th><td>{{ variable.no_data_value }}</td></tr>
+                                <tr><th class="text-muted">Definition </th><td>{{ variable.variable_definition }}</td></tr>
+                                <tr><th class="text-muted">Speciation </th><td>{{ variable.speciation }}</td></tr>
+                            </tbody>
+                        </table>
+                        <hr style="border:0">
+                    {% endif %}
+
+                    {% if method %}
+                        <legend>Method</legend>
+                        <table class="custom-table">
+                            <tbody>
+                                <tr><th class="text-muted">Code </th><td>{{ method.method_code }}</td></tr>
+                                <tr><th class="text-muted">Name </th><td>{{ method.method_name }}</td></tr>
+                                <tr><th class="text-muted">Type </th><td>{{ method.method_type }}</td></tr>
+                                {% if method.method_description %}
+                                    <tr><th class="text-muted">Description </th><td>{{ method.method_description }}</td></tr>
+                                {% endif %}
+                                {% if method.method_link %}
+                                    <tr><th class="text-muted">Link </th><td><a target="_blank" href="{{ method.method_link }}">{{ method.method_link }}</a></td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                        <hr style="border:0">
                     {% endif %}
                 </div>
-            </div>
+            {% endif %}
+
+            {% if processing_level or timeseries_result %}
+                <div {% if not site and not variable and not method %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
+                {% if processing_level %}
+                    <legend>Processing Level</legend>
+                    <table class="custom-table">
+                        <tbody>
+                            <tr><th class="text-muted">Code </th><td>{{ processing_level.processing_level_code }}</td></tr>
+                            {% if processing_level.definition %}
+                                <tr><th class="text-muted">Definition </th><td>{{ processing_level.definition }}</td></tr>
+                            {% endif %}
+                            {% if processing_level.explanation %}
+                                <tr><th class="text-muted">Explanation </th><td>{{ processing_level.explanation }}</td></tr>
+                            {% endif %}
+
+                        </tbody>
+                    </table>
+                    <hr style="border:0">
+                {% endif %}
+
+                {% if timeseries_result %}
+                    <legend>Time Series Result</legend>
+                    <table class="custom-table">
+                        <tbody>
+                            <tr><th class="text-muted">Units Type </th><td>{{ timeseries_result.units_type }}</td></tr>
+                            <tr><th class="text-muted">Units Name </th><td>{{ timeseries_result.units_name }}</td></tr>
+                            <tr><th class="text-muted">Units Abbreviation </th><td>{{ timeseries_result.units_abbreviation }}</td></tr>
+                            <tr><th class="text-muted">Status </th><td>{{ timeseries_result.status }}</td></tr>
+                            <tr><th class="text-muted">Sample Medium </th><td>{{ timeseries_result.sample_medium }}</td></tr>
+                            <tr><th class="text-muted">Value Count </th><td>{{ timeseries_result.value_count }}</td></tr>
+                            <tr><th class="text-muted">Aggregation Statistics </th><td>{{ timeseries_result.aggregation_statistics }}</td></tr>
+                        </tbody>
+                    </table>
+                {% endif %}
+                </div>
+            {% endif %}
         </div>
     {%  endif %}
 {%  endblock %}

@@ -38,6 +38,11 @@ RUN rm irods-icommands.deb
 RUN pip install coverage==3.7.1
 RUN pip install django-oauth-toolkit django-cors-headers
 
+# Install haystack and sphinx
+RUN pip install django-haystack
+RUN pip install sphinx
+RUN pip install pysolr
+
 WORKDIR /home/docker/hydroshare
 
 CMD /bin/bash
