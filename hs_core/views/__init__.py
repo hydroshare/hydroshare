@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import json
-import requests
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -83,7 +82,7 @@ def add_file_to_resource(request, shortkey, *args, **kwargs):
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['file_validation_error'] = ex.message
+        request.session['validation_error'] = ex.message
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:
@@ -91,7 +90,7 @@ def add_file_to_resource(request, shortkey, *args, **kwargs):
                                                    extract_metadata=extract_metadata)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['file_validation_error'] = ex.message
+        request.session['validation_error'] = ex.message
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -145,8 +144,10 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                     for kw in keywords:
                         res.metadata.create_element(element_name, value=kw)
                 else:
-                    element = res.metadata.create_element(element_name, **element_data_dict)
-
+                    try:
+                        element = res.metadata.create_element(element_name, **element_data_dict)
+                    except ValidationError as exp:
+                        request.session['validation_error'] = exp.message
                 is_add_success = True
                 resource_modified(res, request.user)
 
@@ -185,12 +186,13 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
         if 'is_valid' in response:
             if response['is_valid']:
                 element_data_dict = response['element_data_dict']
-                res.metadata.update_element(element_name, element_id, **element_data_dict)
+                try:
+                    res.metadata.update_element(element_name, element_id, **element_data_dict)
+                except ValidationError as exp:
+                    request.session['validation_error'] = exp.message
                 if element_name == 'title':
-                    res.title = res.metadata.title.value
-                    res.save()
                     if res.raccess.public:
-                        if not res.can_be_public:
+                        if not res.can_be_public_or_discoverable:
                             res.raccess.public = False
                             res.raccess.save()
 
@@ -334,12 +336,26 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     else:
         status = 'error'
 
+    current_user_privilege = res.raccess.get_combined_privilege(user)
+    if current_user_privilege == PrivilegeCodes.VIEW:
+        current_user_privilege = "view"
+    elif current_user_privilege == PrivilegeCodes.CHANGE:
+        current_user_privilege = "change"
+    elif current_user_privilege == PrivilegeCodes.OWNER:
+        current_user_privilege = "owner"
+
+    is_current_user = False
+    if user == user_to_share_with:
+        is_current_user = True
+
     picture_url = 'No picture provided'
     if user_to_share_with.userprofile.picture:
         picture_url = user_to_share_with.userprofile.picture.url
 
     ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
-                          'username': user_to_share_with.username, 'privilege': privilege, 'profile_pic': picture_url,
+                          'username': user_to_share_with.username, 'privilege_granted': privilege,
+                          'current_user_privilege': current_user_privilege,
+                          'profile_pic': picture_url, 'is_current_user': is_current_user,
                           'error_msg': err_message}
     return HttpResponse(json.dumps(ajax_response_data))
 
@@ -385,6 +401,7 @@ def save_ajax(request):
         value_edit = adaptor.get_value_editor(value)
         value_edit_with_filter = apply_filters(value_edit, adaptor.filters_to_edit)
         new_data[field_name] = value_edit_with_filter
+        new_data[field_name] = value_edit_with_filter
         if form.is_valid():
             adaptor.save(value_edit_with_filter)
             return _get_http_response({'errors': False,
@@ -398,26 +415,6 @@ def save_ajax(request):
     except ValidationError as error: # The error is for a field that you are editing
         message_i18n = ', '.join([u"%s" % m for m in error.messages])
         return _get_http_response({'errors': message_i18n})
-
-
-class CaptchaVerifyForm(forms.Form):
-    challenge = forms.CharField()
-    response = forms.CharField()
-
-
-def verify_captcha(request):
-    f = CaptchaVerifyForm(request.POST)
-    if f.is_valid():
-        params = dict(f.cleaned_data)
-        params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY', '6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x')
-        params['remoteip'] = request.META['REMOTE_ADDR']
-        # return HttpResponse('true', content_type='text/plain')
-        resp = requests.post('http://www.google.com/recaptcha/api/verify', params=params)
-        lines = resp.text.split('\n')
-        if lines[0].startswith('false'):
-            raise ex.PermissionDenied('captcha failed')
-        else:
-            return HttpResponse('true', content_type='text/plain')
 
 
 def verify_account(request, *args, **kwargs):
@@ -461,66 +458,47 @@ class FilterForm(forms.Form):
 
 
 @processor_for('my-resources')
+@login_required
 def my_resources(request, page):
     # import sys
     # sys.path.append("/home/docker/pycharm-debug")
     # import pydevd
-    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
+    # pydevd.settrace('10.0.0.7', port=21000, suspend=False)
+    user = request.user
+    # get a list of resources with effective OWNER privilege
+    owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
+    # get a list of resources with effective CHANGE privilege
+    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+    # get a list of resources with effective VIEW privilege
+    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
 
-    frm = FilterForm(data=request.REQUEST)
-    if frm.is_valid():
-        res_cnt = 20 # 20 is hardcoded for the number of resources to show on one page, which is also hardcoded in my-resources.html
-        owner = frm.cleaned_data['owner'] or None
-        user = frm.cleaned_data['user'] or (request.user if request.user.is_authenticated() else None)
-        edit_permission = frm.cleaned_data['edit_permission'] or False
-        published = frm.cleaned_data['published'] or False
-        startno = frm.cleaned_data['start']
-        if(startno < 0):
-            startno = 0
-        start = startno or 0
-        from_date = frm.cleaned_data['from_date'] or None
-        words = request.REQUEST.get('text', None)
-        public = not request.user.is_authenticated()
+    owned_resources = list(owned_resources)
+    editable_resources = list(editable_resources)
+    viewable_resources = list(viewable_resources)
+    favorite_resources = list(user.ulabels.favorited_resources)
+    labeled_resources = list(user.ulabels.labeled_resources)
+    discovered_resources = list(user.ulabels.my_resources)
 
-        search_items = dict(
-            (item_type, [t.strip() for t in request.REQUEST.getlist(item_type)])
-            for item_type in ("type", "author", "contributor", "subject")
-        )
+    for res in owned_resources:
+        res.owned = True
 
-        # TODO ten separate SQL queries for basically the same data
-        reslst = get_resource_list(
-            user=user,
-            owner=owner,
-            published=published,
-            edit_permission=edit_permission,
-            from_date=from_date,
-            full_text_search=words,
-            public=public,
-            **search_items
-        )
-        total_res_cnt = len(reslst)
+    for res in editable_resources:
+        res.editable = True
 
-        # need to return total number of resources as 'ct' so have to get all resources
-        # and then filter by start and count
-        # TODO this is doing some pagination/limits before sorting, so it won't be consistent
-        if(start>=total_res_cnt):
-            start = total_res_cnt-res_cnt
-        if(start < 0):
-            start = 0
-        if(start+res_cnt > total_res_cnt):
-            res_cnt = total_res_cnt-start
+    for res in viewable_resources:
+        res.viewable = True
 
-        reslst = reslst[start : start + res_cnt]
+    for res in (owned_resources + editable_resources + viewable_resources + discovered_resources):
+        res.is_favorite = False
+        if res in favorite_resources:
+            res.is_favorite = True
+        if res in labeled_resources:
+            res.labels = res.rlabels.get_labels(user)
 
-        # TODO sorts should be in SQL not python
-        res = sorted(reslst, key=lambda x: x.title)
+    resource_collection = (owned_resources + editable_resources + viewable_resources + discovered_resources)
 
-        return {
-            'resources': res,
-            'first': start,
-            'last': start+len(res),
-            'ct': total_res_cnt,
-        }
+    context = {'collection': resource_collection}
+    return context
 
 
 @processor_for(GenericResource)
@@ -581,7 +559,7 @@ def create_resource(request, *args, **kwargs):
         return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     except utils.ResourceFileValidationException as ex:
-        context = {'file_validation_error': ex.message}
+        context = {'validation_error': ex.message}
         return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     except Exception as ex:
@@ -607,7 +585,7 @@ def create_resource(request, *args, **kwargs):
     try:
         utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
-        request.session['file_validation_error'] = ex.message
+        request.session['validation_error'] = ex.message
 
     # go to resource landing page
     request.session['just_created'] = True
@@ -680,15 +658,24 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
         messages.error(request, "You don't have permission to change resource sharing status")
         return
 
-    if is_public and not resource.can_be_public:
-        messages.error(request, "Resource may not have sufficient required metadata to be public")
+    has_files = False
+    has_metadata = False
+    can_resource_be_public_or_discoverable = False
+    if is_public or is_discoverable:
+        has_files = resource.has_required_content_files()
+        has_metadata = resource.metadata.has_all_required_elements()
+        can_resource_be_public_or_discoverable = has_files and has_metadata
+
+    if is_public and not can_resource_be_public_or_discoverable:
+        messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag='public'))
     else:
         if is_discoverable:
-            if resource.can_be_public:
+            if can_resource_be_public_or_discoverable:
                 resource.raccess.public = False
                 resource.raccess.discoverable = True
             else:
-                messages.error(request, "Resource may not have sufficient required metadata to be discoverable")
+                messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata,
+                                                                               resource_flag='discoverable'))
         else:
             resource.raccess.public = is_public
             resource.raccess.discoverable = is_public
@@ -697,3 +684,16 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
         # set isPublic metadata AVU accordingly
         istorage = IrodsStorage()
         istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
+
+
+def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
+    msg = ''
+    if not has_metadata and not has_files:
+        msg = "Resource does not have sufficient required metadata and content files to be {flag}".format(
+              flag=resource_flag)
+    elif not has_metadata:
+        msg = "Resource does not have sufficient required metadata to be {flag}".format(flag=resource_flag)
+    elif not has_files:
+        msg = "Resource does not have required content files to be {flag}".format(flag=resource_flag)
+
+    return msg

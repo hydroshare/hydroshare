@@ -164,7 +164,7 @@ def upload_add(request):
             upload_from_irods(username=user, password=password, host=host, port=port,
                               zone=zone, irods_fnames=irods_fnames, res_files=res_files)
         except SessionException as ex:
-            request.session['file_validation_error'] = ex.stderr
+            request.session['validation_error'] = ex.stderr
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:
@@ -176,7 +176,7 @@ def upload_add(request):
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['file_validation_error'] = ex.message
+        request.session['validation_error'] = ex.message
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:
@@ -184,6 +184,6 @@ def upload_add(request):
                                                    extract_metadata=extract_metadata)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['file_validation_error'] = ex.message
+        request.session['validation_error'] = ex.message
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])

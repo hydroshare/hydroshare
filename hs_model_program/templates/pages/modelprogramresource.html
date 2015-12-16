@@ -2,76 +2,128 @@
 
 {% extends "pages/genericresource.html" %}
 {% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
-
+{% load staticfiles  %}
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
         <div class="row">
             <div class="col-md-12">
                 {# Add the view mode html code below #}
-                <div>
-                    {% if mpmetadata %}
-                        <hr>
+                {% if mpmetadata %}
+                    {########################}
+                    {#       DATA FILES     #}
+                    {########################}
+                    <legend>Data files</legend>
+                    <table class="custom-table">
+                        <tbody>
+                            {% for name, path in mpmetadata.get_engine_list.items %}
+                                <tr>
+                                    {% if forloop.counter0 > 0 %}
+                                        <th></th>
+                                    {% else %}
+                                        <th class="text-muted">Computational Engine</th>
+                                    {% endif %}
+                                    <td><a id="permalink"
+                                           href="http://{{ request.get_host }}/resource/{{ path }}"
+                                           target="_blank">{{ name }}</a></td>
+                                </tr>
+                            {% endfor %}
 
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Software Version:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.software_version }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Software Languages:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.software_language }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Software Repository:</strong></div>
-                            <div class="col-sm-8"><a target="_blank" href="{{ mpmetadata.software_repo }}">{{ mpmetadata.software_repo }}</a></div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Operating System:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.operating_sys }}</div>
-                        </div>
+                            {% for name, path in mpmetadata.get_software_list.items %}
+                                <tr>
+                                    {% if forloop.counter0 > 0 %}
+                                        <th></th>
+                                    {% else %}
+                                        <th class="text-muted">Software</th>
+                                    {% endif %}
+                                    <td><a id="permalink"
+                                           href="http://{{ request.get_host }}/resource/{{ path }}"
+                                           target="_blank">{{ name }}</a></td>
+                                </tr>
+                            {% endfor %}
 
-                        <hr>
+                            {% for name, path in mpmetadata.get_documentation_list.items %}
+                                <tr>
+                                    {% if forloop.counter0 > 0 %}
+                                        <th></th>
+                                    {% else %}
+                                        <th class="text-muted">Documentation</th>
+                                    {% endif %}
+                                    <td><a id="permalink"
+                                           href="http://{{ request.get_host }}/resource/{{ path }}"
+                                           target="_blank">{{ name }}</a></td>
+                                </tr>
+                            {% endfor %}
 
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Date Released:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.date_released |date:"SHORT_DATE_FORMAT" }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Website:</strong></div>
-                            <div class="col-sm-8"><a href="{{ mpmetadata.program_website }}" target="_blank">{{ mpmetadata.program_website }}</a></div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Release Notes:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.release_notes }}</div>
-                        </div>
 
-                        <hr>
+                            {% for name, path in mpmetadata.get_releasenotes_list.items %}
+                                <tr>
+                                    {% if forloop.counter0 > 0 %}
+                                        <th></th>
+                                    {% else %}
+                                        <th class="text-muted">Release Notes</th>
+                                    {% endif %}
+                                    <td>
+                                        <a id="permalink"
+                                           href="http://{{ request.get_host }}/resource/{{ path }}"
+                                           target="_blank">{{ name }}</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <hr style="border:0">
 
-                        <div class="row">
-                            <div class="col-sm-4"><strong>User Manual:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.user_manual }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Theoretical Manual:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.theoretical_manual }}</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Source Code:</strong></div>
-                            <div class="col-sm-8">{{ mpmetadata.source_code }}</div>
-                        </div>
+                    {########################}
+                    {#   MODEL  METADATA  #}
+                    {########################}
+                    <legend>General</legend>
+                    <table class="custom-table">
+                        <tbody>
+                            <tr>
+                                <th class="text-muted">Release Date </th>
+                                <td>{{ mpmetadata.modelReleaseDate |date:"SHORT_DATE_FORMAT" }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Website </th>
+                                <td><a href="{{ mpmetadata.modelWebsite }}" target="_blank">{{ mpmetadata.modelWebsite }}</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <hr style="border:0"/>
 
-                        <hr>
-                    {% endif %}
-                </div>
+                    {########################}
+                    {#  SOFTWARE  METADATA  #}
+                    {########################}
+                    <legend>Software</legend>
+                    <table class="custom-table">
+                        <tbody>
+                            <tr><th class="text-muted">Version </th><td>{{ mpmetadata.modelVersion }}</td></tr>
+                            <tr><th class="text-muted">Language </th><td>{{ mpmetadata.modelProgramLanguage }}</td></tr>
+                            <tr><th class="text-muted">Software Repository </th><td><a target="_blank" href="{{ mpmetadata.modelCodeRepository }}">{{ mpmetadata.modelCodeRepository }}</a></td></tr>
+                            <tr><th class="text-muted">Operating System </th><td>{{ mpmetadata.modelOperatingSystem }}</td></tr>
+                        </tbody>
+                    </table>
+                    <hr style="border:0"/>
 
+                {% endif %}
             </div>
         </div>
     {% endif %}
 {% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static "css/bootstrap-multiselect.css" %}" />
+    <link rel="stylesheet" type="text/css" href="{% static "css/model_program.css" %}" />
+{% endblock %}
+
 {% block extra_js %}
     {{ block.super }}
-
-    {# resource specific js can go here #}
-
+    <script src="{% static "js/bootstrap-multiselect.js"%}"></script>
+    <script src="{% static "js/model_program.js"%}"></script>
 {% endblock %}
+
+
+
+
+

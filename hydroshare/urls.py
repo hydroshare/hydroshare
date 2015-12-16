@@ -7,6 +7,8 @@ from django.contrib import admin
 from mezzanine.core.views import direct_to_template
 from mezzanine.conf import settings
 
+from haystack.views import FacetedSearchView
+from hs_core.customer_form import MyForm
 from theme import views as theme
 import autocomplete_light
 
@@ -23,6 +25,7 @@ urlpatterns = i18n_patterns("",
     # Change the admin prefix here to use an alternate URL for the
     # admin interface, which would be marginally more secure.
     url("^admin/", include(admin.site.urls)),
+    url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url("^inplaceeditform/", include("inplaceeditform.urls")),
     url('^ga_resources/', include('ga_resources.urls')),
     #url('^ga_interactive/', include('ga_interactive.urls')),
@@ -36,6 +39,7 @@ urlpatterns = i18n_patterns("",
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
+    url(r'^search/$', FacetedSearchView(form_class=MyForm), name='haystack_search'),
 )
 
 # Filebrowser admin media library.
@@ -55,6 +59,7 @@ urlpatterns += patterns('',
     #url('^hs_party/', include('hs_party.urls')),
     url('^hs_metrics/', include('hs_metrics.urls')),
     url('^hsapi/', include('hs_model_program.urls')),
+    url('^hsapi/', include('hs_labels.urls')),
 )
 
 if settings.DEBUG is False:   #if DEBUG is True it will be served automatically

@@ -31,6 +31,9 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[A-z0-9]+)/files/(?P<filename>[^/]+)/$',
         views.resource_rest_api.ResourceFileCRUD.as_view(), name='get_update_delete_resource_file'),
 
+    url(r'^userInfo/$',
+        views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
+
     # internal API
 
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/add-file-to-resource/$', views.add_file_to_resource),
@@ -46,7 +49,6 @@ urlpatterns = patterns('',
         views.share_resource_with_user),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/unshare-resource-with-user/(?P<user_id>[0-9]+)/$',
         views.unshare_resource_with_user),
-    url(r'^_internal/verify_captcha/$', views.verify_captcha),
     url(r'^_internal/publish/$', views.publish),
     url(r'^_internal/create-resource/$', views.create_resource_select_resource_type),
     url(r'^_internal/create-resource/do/$', views.create_resource),
@@ -58,4 +60,3 @@ urlpatterns = patterns('',
         views.is_multiple_file_allowed_for_resource_type),
     url(r'^_internal/search/autocomplete/', "hs_core.views.autocomplete.autocomplete"),
 )
-

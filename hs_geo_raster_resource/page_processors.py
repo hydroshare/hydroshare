@@ -75,10 +75,11 @@ def landing_page(request, page):
                                    '</div>')
 
         # update context
-        ext_md_layout = Layout(
+        ext_md_layout = Layout(HTML("<div class='row'>"),
                                 ori_coverage_layout,
                                 cellinfo_layout,
-                                BandInfoLayoutEdit
+                                BandInfoLayoutEdit,
+                               HTML("</div>")
         )
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
         context['ori_coverage_form'] = ori_coverage_form

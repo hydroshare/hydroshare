@@ -250,6 +250,8 @@ INPLACE_SAVE_URL = '/hsapi/save_inline/'
 INSTALLED_APPS = (
     "django.contrib.admin",
     "django.contrib.auth",
+    "oauth2_provider",
+    "corsheaders",
     "django.contrib.contenttypes",
     "django.contrib.redirects",
     "django.contrib.sessions",
@@ -274,6 +276,7 @@ INSTALLED_APPS = (
     "mezzanine.accounts",
     "mezzanine.mobile",
     "autocomplete_light",
+    "haystack",
     "jquery_ui",
     "rest_framework",
     "ga_ows",
@@ -281,6 +284,7 @@ INSTALLED_APPS = (
     #"dublincore",
     "hs_core",
     "hs_access_control",
+    "hs_labels",
     "hs_metrics",
     "irods_browser_app",
     #"hs_rhessys_inst_resource",
@@ -296,6 +300,27 @@ INSTALLED_APPS = (
     "hs_tools_resource",
     "hs_swat_modelinstance",
     "hs_geographic_feature_resource",
+)
+
+# These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
+# All apps beginning with "django." or "mezzanine." are also excluded by default
+APPS_TO_NOT_RUN = (
+    'ga_ows',
+    'ga_resources',
+    'jquery_ui',
+    'djcelery',
+    'rest_framework',
+    'django_docker_processes',
+    'dublincore',
+    'django_nose',
+    'inplaceeditform',
+    'grappelli_safe',
+    'django_irods',
+    'crispy_forms',
+    'autocomplete_light',
+    'widget_tweaks',
+    'oauth2_provider',
+    # etc...
 )
 
 # List of processors used by RequestContext to populate the context.
@@ -322,6 +347,7 @@ MIDDLEWARE_CLASSES = (
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -342,6 +368,13 @@ MIDDLEWARE_CLASSES = (
 # at the moment we are using custom forks of them.
 PACKAGE_NAME_FILEBROWSER = "filebrowser_safe"
 PACKAGE_NAME_GRAPPELLI = "grappelli_safe"
+
+#########################
+#  CORS/OAUTH SETTINGS  #
+#########################
+
+# TODO: change this to the actual origins we wish to support
+CORS_ORIGIN_ALLOW_ALL = True
 
 #########################
 # OPTIONAL APPLICATIONS #
@@ -413,7 +446,6 @@ except ImportError:
 else:
     set_dynamic_settings(globals())
 
-#
 AUTH_PROFILE_MODULE = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 REST_FRAMEWORK = {
@@ -424,11 +456,32 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-    )
+        'oauth2_provider.ext.rest_framework.OAuth2Authentication',
+    ),
+}
+
+SOLR_HOST = os.environ.get('SOLR_PORT_8983_TCP_ADDR', 'localhost')
+SOLR_PORT = '8983'
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
+        'URL': 'http://{SOLR_HOST}:{SOLR_PORT}/solr'.format(**globals()),
+        # ...or for multicore...
+        # 'URL': 'http://127.0.0.1:8983/solr/mysite',
+    },
 }
 
 # customized value for password reset token and email verification link token to expire in 1 day
 PASSWORD_RESET_TIMEOUT_DAYS = 1
+
+####################
+# OAUTH TOKEN SETTINGS #
+####################
+
+OAUTH2_PROVIDER = {
+   # 30 days
+   'ACCESS_TOKEN_EXPIRE_SECONDS': 2592000,
+}
 
 ####################
 # LOGGING SETTINGS #
@@ -470,6 +523,11 @@ LOGGING = {
             'handlers':['syslog', 'djangolog'],
             'propagate': True,
             'level':'DEBUG',
+        },
+        'django.db.backends': {
+            'handlers': ['syslog'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
     }
 }

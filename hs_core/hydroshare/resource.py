@@ -14,6 +14,7 @@ from hs_core.models import ResourceFile, BaseResource
 from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
+from hs_labels.models import ResourceLabels
 
 file_size_limit = 10*(1024 ** 3)
 file_size_limit_for_display = '10G'
@@ -383,6 +384,9 @@ def create_resource(
         UserResourcePrivilege(resource=resource_access, grantor=owner.uaccess, user=owner.uaccess,
                               privilege=PrivilegeCodes.OWNER).save()
 
+        resource_labels = ResourceLabels(resource=resource)
+        resource_labels.save()
+
         if edit_users:
             for user in edit_users:
                 user = utils.user_from_id(user)
@@ -414,7 +418,7 @@ def create_resource(
 
         for keyword in keywords:
             resource.metadata.create_element('subject', value=keyword)
-        
+
         hs_bagit.create_bag(resource)
 
     return resource
@@ -705,9 +709,10 @@ def delete_resource_file(pk, filename_or_id, user):
     else:
         raise ObjectDoesNotExist(filename_or_id)
 
-    if resource.raccess.public:
-        if not resource.can_be_public:
+    if resource.raccess.public or resource.raccess.discoverable:
+        if not resource.can_be_public_or_discoverable:
             resource.raccess.public = False
+            resource.raccess.discoverable = False
             resource.raccess.save()
 
     # generate bag
@@ -824,7 +829,8 @@ def _update_science_metadata(resource, metadata):
 
     # add the few of the metadata elements that need to be
     # created from the resource properties (like title, abstract, created date etc)
-    resource.metadata.create_element('title', value=resource.title)
+    # TODO: create the title metadata element
+
     if resource.content:
         resource.metadata.create_element('description', abstract=resource.content)
     else:

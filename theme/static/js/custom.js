@@ -92,7 +92,8 @@ $(document).ready(function() {
     if ($("#citation-text").length > 0){
         // Make links in citation clickable
         //===================
-        var citationText = $("#citation-text").text();
+        var oriCitationText = $("#citation-text").text();
+        var newCitationText = oriCitationText;
         var citationUrl;
 
         // Regular expression to find FTP, HTTP(S) and email URLs.
@@ -100,11 +101,15 @@ $(document).ready(function() {
 
         var matchArray
         // Extract the url
-        while( (matchArray = regexToken.exec(citationText)) !== null ){
-            citationUrl = matchArray[0];
-        }
+        while( (matchArray = regexToken.exec(oriCitationText)) !== null ){
+            if (matchArray[0].slice(-1) === "." || matchArray[0].slice(-1) === ",") {
+                citationUrl = matchArray[0].slice(0, -1);
+            }
+            else
+                citationUrl = matchArray[0];
 
-        $("#citation-text").text(citationText.replace(citationUrl, ""));                                // Remove the url
-        $("#citation-text").append("<a href='" + citationUrl + "'>" + citationUrl + "</a>");        // Append the clickable url
+            newCitationText = newCitationText.replace(citationUrl, "<a href=\"" + citationUrl + "\" target=\"_blank\">" + citationUrl + "</a>")
+        }
+        $("#citation-text").html(newCitationText);
     }
 });

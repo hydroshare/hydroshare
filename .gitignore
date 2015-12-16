@@ -13,3 +13,4 @@
 /static
 celeryd.pid
 docker-compose.yml
+schema.xml

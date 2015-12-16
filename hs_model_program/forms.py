@@ -8,22 +8,63 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import *
 from hs_model_program.models import MpMetadata
 from hs_core.forms import BaseFormHelper
-
+from django.utils.html import escape
 class mp_form_helper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
 
+        files = kwargs.pop('files')
+        file_data = {}
+        for f in files.all():
+            short_url = escape(f.resource_file.name)
+            name = short_url.split('/')[-1]
+            file_data[name] = short_url
+
+        options = '\n'.join(['<option value=%s>%s</option>'%(value, key) for key, value in file_data.iteritems() ])
+
+        multiselect_elements = ['modelSoftware', 'modelDocumentation', 'modelReleaseNotes', 'modelEngine']
+        multiselect = {}
+        for elem in multiselect_elements:
+            # build select list and selection table
+            multiselect[elem] = HTML(
+                            '<div class="div-multi-select" id="mp-div-multiselect" parent_metadata="'+elem+'">'
+                                ' <select class="multi-select" id="mp-multi-select" multiple="multiple">'
+                                        + options +
+                                '</select>'
+                            '</div><br>')
+
+
+        # Order of the Fields below determines their layout on the edit page
+        # For consistency, make sure this ordering matches models.py->get_xml()
         field_width = 'form-control input-sm'
+        css_multichar = field_width + ' multichar'
         layout = Layout(
-            Field('software_version', css_class=field_width),
-            Field('software_language', css_class=field_width),
-            Field('software_repo', css_class=field_width),
-            Field('operating_sys', css_class=field_width),
-            Field('date_released', css_class=field_width),
-            Field('program_website', css_class=field_width),
-            Field('release_notes', css_class=field_width),
-            Field('user_manual', css_class=field_width),
-            Field('theoretical_manual', css_class=field_width),
-            Field('source_code', css_class=field_width),
+            HTML('<legend>Data files</legend>'),
+            HTML('<div class="col-sm-6 col-xs-12">'),
+            Field('modelEngine', css_class=css_multichar, style="display:none"),
+            multiselect['modelEngine'],
+            Field('modelSoftware', css_class=css_multichar, style="display:none"),
+            multiselect['modelSoftware'],
+            Field('modelDocumentation', css_class=css_multichar, style="display:none"),
+            multiselect['modelDocumentation'],
+            Field('modelReleaseNotes', css_class=css_multichar, style="display:none"),
+            multiselect['modelReleaseNotes'],
+            HTML('<hr style="border:0">'),
+            HTML('</div>'),
+            HTML('<legend>General</legend>'),
+            HTML('<div class="col-sm-6 col-xs-12">'),
+            Field('modelReleaseDate', css_class=field_width, style="display:none"),
+            HTML('<input type="text" class="'+field_width+'" id="modelReleaseDate_picker">'),
+            Field('modelVersion', css_class=field_width),
+            HTML('<br>'),
+            HTML('<hr style="border:0">'),
+            HTML('</div>'),
+            HTML('<legend>Software</legend>'),
+            HTML('<div class="col-sm-6 col-xs-12">'),
+            Field('modelWebsite', css_class=field_width),
+            Field('modelProgramLanguage', css_class=field_width),
+            Field('modelOperatingSystem', css_class=field_width),
+            Field('modelCodeRepository', css_class=field_width),
+            HTML('</div>'),
         )
         super(mp_form_helper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='  ',  *args, **kwargs)
 
@@ -33,42 +74,41 @@ class mp_form(ModelForm):
         # pop files from kwargs, else metadata will fail to load in edit mode
         files = kwargs.pop('files')
         super(mp_form, self).__init__(*args, **kwargs)
-        self.helper = mp_form_helper(allow_edit, res_short_id, element_id, element_name='MpMetadata')
+        self.helper = mp_form_helper(allow_edit, res_short_id, element_id, element_name='MpMetadata', files=files)
 
+        for field in self.fields:
+            help_text = self.fields[field].help_text
+            self.fields[field].help_text = None
+            if help_text != '':
+                self.fields[field].widget.attrs.update({'class':'has-popover', 'data-content':help_text, 'data-placement':'right', 'data-container':'body'})
 
-        # Set the choice lists as the file names in the content model
-        filenames = ['       '] + [f.resource_file.name.split('/')[-1] for f in files.all()]
-        CHOICES = tuple((f, f) for f in filenames)
-        self.fields['release_notes'].choices = CHOICES
-        self.fields['user_manual'].choices = CHOICES
-        self.fields['source_code'].choices = CHOICES
-        self.fields['theoretical_manual'].choices = CHOICES
 
     class Meta:
         model = MpMetadata
 
-        fields = ['software_version',
-                  'software_language',
-                  'software_repo',
-                  'operating_sys',
-                  'date_released',
-                  'program_website',
-                  'release_notes',
-                  'user_manual',
-                  'theoretical_manual',
-                  'source_code']
+        fields = [  'modelVersion',
+                    'modelProgramLanguage',
+                    'modelOperatingSystem',
+                    'modelReleaseDate',
+                    'modelWebsite',
+                    'modelCodeRepository',
+                    'modelReleaseNotes',
+                    'modelDocumentation',
+                    'modelSoftware',
+                    'modelEngine']
         exclude = ['content_object']
 
 
 class mp_form_validation(forms.Form):
-    software_version = forms.CharField(required=False)
-    software_language = forms.CharField(required=False)
-    operating_sys = forms.CharField(required=False)
-    date_released = forms.DateTimeField(required=False)
-    program_website = forms.CharField(required=False)
-    software_repo = forms.CharField(required=False)
-    release_notes = forms.CharField(required=False)
-    user_manual = forms.CharField(required=False)
-    theoretical_manual = forms.CharField(required=False)
-    source_code = forms.CharField(required=False)
+    modelVersion = forms.CharField(required=False)
+    modelProgramLanguage = forms.CharField(required=False)
+    modelOperatingSystem = forms.CharField(required=False)
+    modelReleaseDate = forms.DateTimeField(required=False)
+    modelWebsite = forms.CharField(required=False)
+    modelCodeRepository = forms.CharField(required=False)
+    modelReleaseNotes = forms.CharField(required=False)
+    modelDocumentation = forms.CharField(required=False)
+    modelSoftware = forms.CharField(required=False)
+    modelEngine = forms.CharField(required=False)
+
 

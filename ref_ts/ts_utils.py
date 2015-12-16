@@ -656,7 +656,7 @@ def make_files(res, tempdir, ts):
     '''
     site_name = res.metadata.sites.all()[0].name
     var_name = res.metadata.variables.all()[0].name
-    title = res.title
+    title = res.metadata.title.value
 
     vals = ts['values']
     for_graph = ts['for_graph']

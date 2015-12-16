@@ -1,10 +1,15 @@
 __author__ = 'Mohamed Morsy'
-from mezzanine.pages.page_processors import processor_for
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
+from crispy_forms.bootstrap import AccordionGroup
+from crispy_forms.layout import Layout, HTML
+
 from hs_core import page_processors
-from hs_core.views import *
-from hs_swat_modelinstance.forms import *
+from hs_core.views import add_generic_context
+
 from hs_swat_modelinstance.models import SWATModelInstanceResource
+from hs_swat_modelinstance.forms import ModelOutputForm, ExecutedByForm, ModelObjectiveForm,\
+    SimulationTypeForm, ModelMethodForm, ModelParameterForm, ModelInputForm
+
+from mezzanine.pages.page_processors import processor_for
 
 @processor_for(SWATModelInstanceResource)
 def landing_page(request, page):
@@ -56,55 +61,41 @@ def landing_page(request, page):
         model_input_form = ModelInputForm(instance=content_model.metadata.model_input, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.model_input.id if content_model.metadata.model_input else None)
 
-        ext_md_layout = Layout(
-                                AccordionGroup('Model Output (required)',
-                                    HTML("<div class='form-group' id='modeloutput'> "
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy model_output_form %} '
-                                     '</div>'),
-                                ),
+        ext_md_layout = Layout(HTML("<div class='row'><div class='col-xs-12 col-sm-6'><div class='form-group' id='modeloutput'> "
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy model_output_form %} '
+                                    '</div>'),
 
-                                AccordionGroup('Executed By (required)',
-                                     HTML('<div class="form-group" id="executedby"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy executed_by_form %} '
-                                     '</div> '),
-                                ),
+                               HTML('<div class="form-group" id="executedby"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy executed_by_form %} '
+                                    '</div> '),
 
-                                AccordionGroup('Model Objective (required)',
-                                     HTML('<div class="form-group" id="modelobjective"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy model_objective_form %} '
-                                     '</div> '),
-                                ),
+                               HTML('<div class="form-group" id="modelobjective"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy model_objective_form %} '
+                                    '</div> '),
 
-                                AccordionGroup('Simulation Type',
-                                     HTML('<div class="form-group" id="simulationtype"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy simulation_type_form %} '
-                                     '</div> '),
-                                ),
+                               HTML('<div class="form-group" id="simulationtype"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy simulation_type_form %} '
+                                    '</div>'),
 
-                                AccordionGroup('Model Method',
-                                     HTML('<div class="form-group" id="modelmethod"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy model_method_form %} '
-                                     '</div> '),
-                                ),
+                               HTML('<div class="form-group" id="modelmethod"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy model_method_form %} '
+                                    '</div>'),
 
-                                AccordionGroup('Model Parameter',
-                                     HTML('<div class="form-group" id="modelparameter"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy model_parameter_form %} '
-                                     '</div> '),
-                                ),
+                               HTML('<div class="form-group" id="modelparameter"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy model_parameter_form %} '
+                                    '</div></div>'),
 
-                                AccordionGroup('Model Input',
-                                     HTML('<div class="form-group" id="modelinput"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy model_input_form %} '
-                                     '</div> '),
-                                ),
+                               HTML('<div class="col-xs-12 col-sm-6"><div class="form-group" id="modelinput"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy model_input_form %} '
+                                    '</div></div>'),
+
                         )
 
 

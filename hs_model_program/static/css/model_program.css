@@ -1,0 +1,30 @@
+option:checked {
+    background: #0073ea;
+}
+
+#mp-div-multiselect .btn-group, #mp-div-multiselect .btn-group button {
+    width: 100%;
+}
+
+#mp-div-multiselect .btn-group button > span {
+    float: left;
+}
+
+#mp-div-multiselect .btn-group .multiselect-container {
+    left: 0;
+    background: #FFF;
+    box-shadow: 0 1px 5px #D3D3D3;
+    -moz-box-shadow: 0 1px 5px #D3D3D3;
+	-webkit-box-shadow: 0 1px 5px #D3D3D3;
+    padding: 4px 0;
+}
+
+.multiselect {
+    text-align: right;
+}
+
+/* Activate multi-line list elements in the droplist.
+   This makes long filenames look nice.  */
+.multiselect-container > li > a {
+    white-space: normal;
+}

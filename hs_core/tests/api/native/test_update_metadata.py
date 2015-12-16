@@ -110,7 +110,7 @@ class TestUpdateMetadata(TestCase):
         hydroshare.update_science_metadata(pk=self.res.short_id, metadata = metadata_dict)
 
         # title element is automatically added in the science metadata update api method
-        self.assertEqual(self.res.metadata.title.value, self.res.title, msg='resource title did not match')
+        self.assertEqual(self.res.metadata.title.value, 'Test Resource', msg='resource title did not match')
 
         # resource description element is automatically added in the science metadata update api method
         self.assertEqual(self.res.metadata.description.abstract, 'Test Resource')

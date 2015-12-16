@@ -20,10 +20,7 @@ class OriginalCoverageFormHelper(BaseFormHelper):
                         Field('northlimit', css_class=field_width),
                         Field('westlimit', css_class=field_width),
                         Field('southlimit', css_class=field_width),
-                        Field('eastlimit', css_class=field_width),
-
-
-
+                        Field('eastlimit', css_class=field_width)
                  )
 
         super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Spatial Reference', *args, **kwargs)
@@ -62,7 +59,7 @@ class OriginalCoverageSpatialForm(forms.Form):
         super(OriginalCoverageSpatialForm, self).clean()
         temp_cleaned_data = copy.deepcopy(self.cleaned_data)
         is_form_errors = False
-        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit', 'units'):
             limit_data = temp_cleaned_data.get(limit, None)
             if not limit_data:
                 self._errors[limit] = ["Data for %s is missing" % limit]
@@ -110,7 +107,7 @@ class CellInfoFormHelper(BaseFormHelper):
                         Field('cellSizeXValue', css_class=field_width),
                         Field('cellSizeYValue', css_class=field_width),
                         Field('cellDataType', css_class=field_width),
-                        Field('noDataValue', css_class=field_width),
+                        Field('noDataValue', css_class=field_width)
                  )
 
         super(CellInfoFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Cell Information', *args, **kwargs)
@@ -170,16 +167,16 @@ class BandBaseFormHelper(FormHelper):
             self.layout = Layout(
                             Fieldset(element_name,
                                      element_layout,
-                                     HTML('<div style="margin-top:10px">'),
-                                     HTML('<button type="submit" class="btn btn-primary">Save changes</button>'),
-                                     HTML('</div>')
-                            ),
+                                     HTML('<div style="margin-top:10px">'
+                                          '<button type="submit" class="btn btn-primary">Save changes</button>'
+                                          '</div>')
+                            )
                          )
         else:
             self.layout = Layout(
                             Fieldset(element_name,
                                      element_layout,
-                            ),
+                            )
                           )
 
 
@@ -240,7 +237,7 @@ class BandInfoValidationForm(forms.Form):
     variableName = forms.CharField(max_length=100, required=True)
     variableUnit = forms.CharField(max_length=50, required=True)
     method = forms.CharField(required=False)
-    comment = forms.CharField(required=False)
+    comment = forms.CharField(required=True)
 
 
 class BaseBandInfoFormSet(BaseFormSet):
@@ -257,18 +254,26 @@ class BaseBandInfoFormSet(BaseFormSet):
 BandInfoFormSet = formset_factory(BandInfoForm, formset=BaseBandInfoFormSet, extra=0)
 
 BandInfoLayoutEdit = Layout(
-                        HTML('{% load crispy_forms_tags %} '
-                             '{% for form in bandinfo_formset.forms %} '
-                                 '<div class="item form-group col-xs-12 col-md-4"> '
-                                 '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
-                                 '{% crispy form %} '
-                                 '<div class="row" style="margin-top:10px">'
-                                    '<div class="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6">'
-                                        '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'
-                                    '</div>'
+    HTML('{% load crispy_forms_tags %} '
+         '<div class="col-sm-12 pull-left">'
+             '<div id="variables" class="well">'
+                 '<div class="row">'
+                     '{% for form in bandinfo_formset.forms %}'
+                     '<div class="col-sm-3 col-xs-12">'
+                         '<form id="{{form.form_id}}" action="{{ form.action }}" method="POST" enctype="multipart/form-data">'
+                             '{% crispy form %}'
+                             '<div class="row" style="margin-top:10px">'
+                                 '<div class="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6">'
+                                     '<button type="button" class="btn btn-primary pull-right" '
+                                     'onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;"'
+                                     '>Save Changes</button>'
                                  '</div>'
-                                 '</form> '
-                                 '</div> '
-                             '{% endfor %}'
-                        ),
-                    )
+                             '</div>'
+                         '</form>'
+                     '</div>'
+                     '{% endfor %}'
+                 '</div>'
+             '</div>'
+         '</div>'
+         )
+)

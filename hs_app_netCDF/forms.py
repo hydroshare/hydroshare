@@ -157,10 +157,9 @@ class VariableForm(ModelForm):
             self.action = "/hsapi/_internal/%s/variable/add-metadata/" % res_short_id
         else:
             self.action = ""
-        # if not allow_edit:
-        #     for field in self.fields.values():
-        #         field.widget.attrs['readonly'] = True
-        #         field.widget.attrs['style'] = "background-color:white;"
+        self.fields['name'].widget.attrs['readonly'] = True
+        self.fields['shape'].widget.attrs['readonly'] = True
+
     @property
     def form_id(self):
         form_id = 'id_variable_%s' % self.number
@@ -176,13 +175,6 @@ class VariableForm(ModelForm):
         # change the fields same here
         fields = ['name', 'unit', 'type', 'shape', 'descriptive_name', 'method', 'missing_value']
         exclude = ['content_object']
-        # widgets = { 'name': forms.TextInput(attrs={'readonly': 'readonly'}),
-        #             'unit': forms.TextInput(),
-        #             'type': forms.TextInput(),
-        #             'shape': forms.TextInput(attrs={'readonly': 'readonly'}),
-        #             'descriptive_name': forms.TextInput(),
-        #             'method': forms.Textarea(),#TODO row number abstract example
-        #             'missing_value': forms.TextInput()}
 
 
 class VariableValidationForm(forms.Form):
@@ -197,58 +189,22 @@ class VariableValidationForm(forms.Form):
 from hs_core.forms import Helper
 ModalDialogLayoutAddVariable = Helper.get_element_add_modal_form('Variable', 'add_variable_modal_form')
 
-# ModalDialogLayoutAddVariable = Layout(
-#                             HTML('<div class="modal fade" id="add-variable-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
-#                                     '<div class="modal-dialog">'
-#                                         '<div class="modal-content">'
-#                                             '<form action="{{ add_variable_modal_form.action }}" method="POST" enctype="multipart/form-data"> '
-#                                             '{% csrf_token %} '
-#                                             '<input name="resource-mode" type="hidden" value="edit"/>'
-#                                             '<div class="modal-header">'
-#                                                 '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
-#                                                 '<h4 class="modal-title" id="myModalLabel">Add Variable</h4>'
-#                                             '</div>'
-#                                             '<div class="modal-body">'
-#                                                 '{% csrf_token %}'
-#                                                 '<div class="form-group">'
-#                                                     '{% load crispy_forms_tags %} '
-#                                                     '{% crispy add_variable_modal_form %} '
-#                                                 '</div>'
-#                                             '</div>'
-#                                             '<div class="modal-footer">'
-#                                                 '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
-#                                                 '<button type="submit" class="btn btn-primary">Save changes</button>'
-#                                             '</div>'
-#                                             '</form>'
-#                                         '</div>'
-#                                     '</div>'
-#                                 '</div>'
-#                             )
-#                         )
-
-
 VariableLayoutEdit = Layout(
                             HTML('{% load crispy_forms_tags %} '
-                                 '{% for form in variable_formset.forms %} '
-                                     '<div class="item form-group col-xs-12 col-md-4"> '
+                                '{% if variable_formset.forms %}'
+                                 '<div id="variables" class="well"><div class="row"> {% for form in variable_formset.forms %} '
+                                     '<div class="form-group col-xs-12 col-md-4">'
                                      '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
                                      '{% crispy form %} '
                                     '<div class="row" style="margin-top:10px">'
                                         '<div class="col-md-10 col-xs-6">'
-                                            '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-variable-element-dialog_{{ form.number }}" value="Delete Variable">'
-                                        '</div>' #change
-                                        '<div class="col-md-2 col-xs-6">'
-                                            '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'  # change
+                                            '<button type="button" class="btn btn-primary" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save Changes</button>'  # change
                                         '</div>'
                                     '</div>'
                                     '{% crispy form.delete_modal_form %} '
                                     '</form> '
                                     '</div> '
-                                '{% endfor %}'
-                            ),
-                            HTML('<div style="margin-top:10px">'
-                                 '<p><a id="add-creator" class="btn btn-success" data-toggle="modal" data-target="#add-variable-dialog">'
-                                 '<i class="fa fa-plus"></i>Add another variable</a>'
-                                 '</div>'
+                                 '{% endfor %}</div></div>'
+                                 '{% endif %}'
                             ),
                     )

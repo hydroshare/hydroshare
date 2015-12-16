@@ -3,8 +3,10 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core.models import BaseResource, AbstractResource, GenericResource
 from hs_core import languages_iso
 from forms import *
-from hs_tools_resource.models import ToolResourceType
+from hs_tools_resource.models import SupportedResTypes
 from django_irods.storage import IrodsStorage
+from hs_core import hydroshare
+from hs_core.views.utils import authorize
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -38,7 +40,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
                 - split into two functions: get_readonly_page_context(...) and get_editable_page_context(...)
     """
-    file_type_error=''
+    file_type_error = ''
     if request:
         file_type_error = request.session.get("file_type_error", None)
         if file_type_error:
@@ -46,23 +48,37 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     content_model = page.get_content_model()
     discoverable = content_model.raccess.discoverable
-    file_validation_error = None
+    validation_error = None
+    if user.is_authenticated():
+        content_model.is_mine = content_model.rlabels.is_mine(user)
+    else:
+        content_model.is_mine = False
 
     metadata_status = _get_metadata_status(content_model)
 
-    relevant_tools = []
-    for res_type in ToolResourceType.objects.all():
-        if str(content_model.content_model).lower() in str(res_type.tool_res_type).lower():
-            url = res_type.content_object.url_bases.first()
-            if url:
-                tl = {'title': res_type.content_object.title,
-                      'url': "{}{}{}".format(url.value, "/?res_id=", content_model.short_id)}
-                relevant_tools.append(tl)
-
+    relevant_tools = None
+    if not resource_edit: # view mode
+        relevant_tools = []
+        content_model_str = str(content_model.content_model).lower()
+        for res_type in SupportedResTypes.objects.all():
+            if content_model_str in str(res_type.get_supported_res_types_str()).lower():
+                url_obj = res_type.content_object.url_bases.first()
+                tool_res_obj = hydroshare.get_resource_by_shortkey(url_obj.resShortID)
+                if tool_res_obj:
+                    is_authorized = authorize(request, tool_res_obj.short_id, view=True, raises_exception=False)[1]
+                    if is_authorized:
+                        tool_url = url_obj.value
+                        u = user.username if len(user.username) > 0 else "anonymous"
+                        if tool_url.endswith('/'):
+                            tool_url = tool_url[:-1]
+                        tl = {'title': str(res_type.content_object.title),
+                              'url': "{0}{1}{2}{3}{4}{5}".format(tool_url, "/?res_id=", content_model.short_id,
+                                                                 "&usr=", u, "&src=hs")}
+                        relevant_tools.append(tl)
 
     just_created = False
     if request:
-        file_validation_error = check_for_file_validation(request)
+        validation_error = check_for_validation(request)
 
         just_created = request.session.get('just_created', False)
         if 'just_created' in request.session:
@@ -136,14 +152,14 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                    'supported_file_types': content_model.get_supported_upload_file_types(),
                    'allow_multiple_file_upload': content_model.can_have_multiple_files(),
-                   'file_validation_error': file_validation_error if file_validation_error else None,
+                   'validation_error': validation_error if validation_error else None,
                    'relevant_tools': relevant_tools,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
                    'bag_url': bag_url,
                    'show_content_files': show_content_files,
-                   'discoverable': discoverable
-
+                   'discoverable': discoverable,
+                   'is_mine': content_model.is_mine
         }
         return context
 
@@ -328,8 +344,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'bag_url': bag_url,
                'current_user': user,               
                'show_content_files': show_content_files,
-               'file_validation_error': file_validation_error if file_validation_error else None,
-               'discoverable': discoverable
+               'validation_error': validation_error if validation_error else None,
+               'discoverable': discoverable,
+               'relation_source_types': Relation.SOURCE_TYPES
     }
 
     return context
@@ -367,12 +384,12 @@ def check_resource_mode(request):
 
     return edit_resource
 
-def check_for_file_validation(request):
+def check_for_validation(request):
     if request.method == "GET":
-        file_validation_error = request.session.get('file_validation_error', None)
-        if file_validation_error:
-            del request.session['file_validation_error']
-            return file_validation_error
+        validation_error = request.session.get('validation_error', None)
+        if validation_error:
+            del request.session['validation_error']
+            return validation_error
 
     return None
 
