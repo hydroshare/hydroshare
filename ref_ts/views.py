@@ -183,6 +183,12 @@ def create_ref_time_series(request, *args, **kwargs):
 
         hydroshare.resource.create_metadata_element(
             res.short_id,
+            'DataSource',
+             code=ts_dict['source_code'],
+            )
+
+        hydroshare.resource.create_metadata_element(
+            res.short_id,
             'Method',
             code=ts_dict['method_code'],
             description=ts_dict['method_description'],
@@ -200,6 +206,7 @@ def create_ref_time_series(request, *args, **kwargs):
             'Site',
             name=ts_dict['site_name'],
             code=ts_dict['site_code'],
+            net_work=ts_dict['net_work'],
             latitude=ts_dict['latitude'],
             longitude=ts_dict['longitude']
         )
@@ -211,7 +218,10 @@ def create_ref_time_series(request, *args, **kwargs):
             code=ts_dict['variable_code'],
             sample_medium=ts_dict.get('sample_medium', 'unknown')
         )
-        #release global var
+
+        if ts_dict:
+            del request.session['ts']
+
         return HttpResponseRedirect(res.get_absolute_url())
 
 @processor_for(RefTimeSeriesResource)
@@ -276,7 +286,7 @@ def download_files(request, shortkey, *args, **kwargs):
 
         res = hydroshare.get_resource_by_shortkey(shortkey)
         response = HttpResponse(in_memory_zip.getvalue(), content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename="' + res.title.replace(" ","_") + '.zip"'
+        response['Content-Disposition'] = 'attachment; filename="' + res.title.replace(" ", "_") + '.zip"'
         response['Content-Length'] = len(in_memory_zip.getvalue())
 
         return response
@@ -285,7 +295,3 @@ def download_files(request, shortkey, *args, **kwargs):
     finally:
         if tempdir is not None:
            shutil.rmtree(tempdir)
-        #release global var
-        global ts
-        if ts is not None:
-            ts = None
