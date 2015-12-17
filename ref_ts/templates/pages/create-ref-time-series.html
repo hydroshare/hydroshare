@@ -292,7 +292,7 @@
                         variable: variable},
                     success: function(data, xhr, status){
                         var preview_url = data['preview_url'];
-                        $('#preview-div').html('<img src="'+ preview_url +'" id="preview-graph" class="col-sm-offset-2"/>');
+                        $('#preview-div').html('<p style="text-align:center;"><img align="middle" src="'+ preview_url +'" id="preview-graph" class="col-sm-offset-2"/></p>');
                         $('#preview-div').show();
                         var b = $('#submit');
                         b.removeClass('disabled');
@@ -304,6 +304,8 @@
                     error: function(data, stuff){
                         $('#url-input').removeClass("has-success");
                         $('#fail-notice').show();
+                        alert(data)
+                        alert(stuff)
                         console.log(data);
                         console.log(stuff);
                         $('#preview-div').hide();

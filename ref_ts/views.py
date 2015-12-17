@@ -1,10 +1,16 @@
 from __future__ import absolute_import
 
-import tempfile, zipfile
+import os
+import tempfile
+import zipfile
 import shutil
 import requests
 from lxml import etree
 import ast
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
 
 from django.contrib.auth.decorators import login_required
 from django import forms
@@ -15,7 +21,9 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core import hydroshare, page_processors
 from ga_resources.utils import json_or_jsonp
 from .models import RefTimeSeriesResource
-from . import ts_utils
+from . import ts_utils, ReftsException
+
+preview_name = "preview.png"
 
 def get_his_urls(request):
     service_url = 'http://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'
@@ -62,7 +70,6 @@ class GetTSValuesForm(forms.Form):
     site = forms.CharField(min_length=0, required=False)
     variable = forms.CharField(min_length=0, required=False)
 
-preview_name = "preview.png"
 def time_series_from_service(request):
     f = GetTSValuesForm(request.GET)
     if f.is_valid():
@@ -72,10 +79,18 @@ def time_series_from_service(request):
         site = params.get('site')
         variable = params.get('variable')
         if ref_type == 'rest':
-            ts = ts_utils.time_series_from_service(url, ref_type)
+            ts = ts_utils.QueryHydroServerGetParsedWML(service_url=url, soap_or_rest=ref_type)
             site = ts.get('site_code')
         else:
-            ts = ts_utils.time_series_from_service(url, ref_type, site_code=site, variable_code=variable)
+            index = site.rfind(" [")
+            site = site[index+2:len(site)-1]
+            site_code = site
+
+            index = variable.rfind(" [")
+            variable_code = variable[index+2:len(variable)-1]
+
+            ts = ts_utils.QueryHydroServerGetParsedWML(service_url=url, soap_or_rest=ref_type, site_code=site_code, \
+                                                       variable_code=variable_code)
         ts['url'] = url
         ts['ref_type'] = ref_type
 
@@ -84,7 +99,7 @@ def time_series_from_service(request):
             del request.session['ts']
         request.session['ts'] = ts
 
-        for_graph = ts['for_graph']
+        data = ts['data']
         units = ts['unit_abbr']
         if units is None:
             units = ts['unit_name']
@@ -95,30 +110,43 @@ def time_series_from_service(request):
 
         try:
             tempdir = tempfile.mkdtemp()
-            vis_fn_fh_dict = ts_utils.create_vis_2(tempdir, site, for_graph, 'Date', variable_name, units, noDataValue, predefined_name=preview_name)
-            vis_fn_fh_dict["fhandle"].close()
+            vis_fn_fpath = ts_utils.create_vis_2(path=tempdir, site_name=site, data=data, xlabel='Date', \
+                                                variable_name=variable_name, units=units, noDataValue=noDataValue, \
+                                                predefined_name=preview_name)
             tempdir_last_six_chars = tempdir[-6:]
             preview_url = "/hsapi/_internal/refts/preview-figure/%s/" % (tempdir_last_six_chars)
             return json_or_jsonp(request, {'preview_url': preview_url})
         except Exception as e:
             if tempdir is not None:
                shutil.rmtree(tempdir)
-            raise e
+            return json_or_jsonp(request, {'status': "error", 'preview_url': preview_url})
+
 
 def preview_figure (request, preview_code, *args, **kwargs):
 
     response = HttpResponse()
+    preview_str = None
+    tempdir_preview = None
     try:
         tempdir_base_path = tempfile.gettempdir()
         tempdir_preview = tempdir_base_path + "/" + "tmp" + preview_code
         preview_full_path = tempdir_preview + "/" + preview_name
         preview_fhandle = open(preview_full_path,'rb')
-        response.content_type = "image/png";
-        response.write(str(preview_fhandle.read()))
-        preview_fhandle["fhandle"].close()
-        shutil.rmtree(tempdir_preview)
-        return response
+        preview_str = str(preview_fhandle.read())
+        preview_fhandle.close()
+        if preview_str is None:
+            raise
     except Exception as e:
+        module_dir = os.path.dirname(__file__)
+        error_location = os.path.join(module_dir, "static/ref_ts/img/warning.png")
+        err_hdl = open(error_location, 'rb')
+        preview_str = str(err_hdl.read())
+        err_hdl.close()
+    finally:
+        if tempdir_preview is not None and os.path.isdir(tempdir_preview):
+            shutil.rmtree(tempdir_preview)
+        response.content_type = "image/png"
+        response.write(preview_str)
         return response
 
 class VerifyRestUrlForm(forms.Form):
@@ -149,7 +177,7 @@ class CreateRefTimeSeriesForm(forms.Form):
 def create_ref_time_series(request, *args, **kwargs):
     ts_dict = request.session.get('ts', False)
     if not ts_dict:
-        raise Http404("No ts in session") # need to change
+        raise ReftsException("No ts in session")
 
     url = ts_dict['url']
     reference_type = ts_dict['ref_type']
@@ -158,13 +186,16 @@ def create_ref_time_series(request, *args, **kwargs):
         metadata = frm.cleaned_data.get('metadata')
         metadata = ast.literal_eval(metadata)
         metadata = [{"Coverage": {"type": "point",
-                          "value": {"east": ts_dict["longitude"],
-                                    "north": ts_dict["latitude"],
-                                    "units": "WGS 84 EPSG:4326"}}},
+                                  "value": {"east": ts_dict["longitude"],
+                                            "north": ts_dict["latitude"],
+                                            "units": "WGS 84 EPSG:4326"}
+                                 }
+                     },
                     {"Coverage": {"type": "period",
-                                 "value": {"start": ts_dict["start_date"], "end": ts_dict["end_date"]}}}
-
-                    ]
+                                  "value": {"start": ts_dict["start_date"],
+                                            "end": ts_dict["end_date"]}
+                                 }
+                    }]
 
         res = hydroshare.create_resource(
             resource_type='RefTimeSeriesResource',
@@ -259,29 +290,20 @@ def add_dublin_core(request, page):
     context['short_id'] = content_model.short_id
     return context
 
-def update_files(request, shortkey, *args, **kwargs):
 
-    ts_utils.generate_files(shortkey, ts=None)
-    status_code = 200
-    return json_or_jsonp(request, status_code)  # successfully generated new files
-
-
-def download_files(request, shortkey, *args, **kwargs):
-    try:
-        from cStringIO import StringIO
-    except ImportError:
-        from io import BytesIO as StringIO
+def download_resource_files(request, shortkey, *args, **kwargs):
 
     tempdir = None
     try:
         tempdir = tempfile.mkdtemp()
+        res_files_fp_arr = ts_utils.generate_resource_files(shortkey, tempdir)
 
-        fn_fh_dic_arr = ts_utils.generate_files(shortkey, None, tempdir)
         in_memory_zip = StringIO()
         archive = zipfile.ZipFile(in_memory_zip, 'w', zipfile.ZIP_DEFLATED)
-        for fn_fh_dic_item in fn_fh_dic_arr:
-            archive.writestr(fn_fh_dic_item['fname'], fn_fh_dic_item['fhandle'].read())
-            fn_fh_dic_item['fhandle'].close()
+        for fn_fp in res_files_fp_arr:
+            fh = open(fn_fp['fullpath'], 'r')
+            archive.writestr(fn_fp['fname'], fh.read())
+            fh.close()
         archive.close()
 
         res = hydroshare.get_resource_by_shortkey(shortkey)

@@ -59,9 +59,11 @@ def get_version(root):
         if '{http://www.opengis.net/waterml/2.0}Collection' in element.tag:
             wml_version = '2.0'
             break
-        if '{http://www.cuahsi.org/waterML/1.1/}timeSeriesResponse' \
-                or '{http://www.cuahsi.org/waterML/1.0/}timeSeriesResponse' in element.tag:
-            wml_version = '1'
+        elif '{http://www.cuahsi.org/waterML/1.1/}timeSeriesResponse' in element.tag:
+            wml_version = '1.1'
+            break
+        elif '{http://www.cuahsi.org/waterML/1.0/}timeSeriesResponse' in element.tag:
+            wml_version = '1.0'
             break
     return wml_version
 
@@ -171,9 +173,9 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
         wml_str, variable_code, variable_name, net_work, site_name, site_code, elevation, vertical_datum,\
         longitude, latitude, projection, srs, noDataValue, unit_abbr, unit_code, unit_name, unit_type,\
         method_code, method_id, method_description, source_code, source_id, quality_control_level_code,\
-        quality_control_level_definition, for_graph, method_code_query, source_code_query,  \
-        quality_control_level_code_query, start_date, end_date = None, None, None, None, None, None, None, None,\
-                                                                 None, None, None, None, None, None,\
+        quality_control_level_definition, data, method_code_query, source_code_query,  \
+        quality_control_level_code_query, start_date, end_date = \
+        None, None, None, None, None, None, None, None,  None, None, None, None, None, None,\
         None, None, None, None, None, None, None, None, None, None,  None, None, None, None, None, None
 
         wmlVaules = wmlParse(wml_string, wml_ver)
@@ -238,7 +240,7 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
         value_list = value_obj.values if hasattr(value_obj, "values") else None
         x = []
         y = []
-        for_graph = {"x": x, "y": y}
+        data = {"x": x, "y": y}
         if value_list:
             for val in value_list:
                 t = val.date_time
@@ -315,7 +317,7 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
                 'source_id': source_id,
                 'quality_control_level_code': quality_control_level_code,
                 'quality_control_level_definition': quality_control_level_definition,
-                'for_graph': for_graph,
+                'data': data,
                 "start_date": start_date,
                 "end_date": end_date
                 }
@@ -520,37 +522,17 @@ def map_waterml(xml_doc):
         return False
 
 # get values
-def time_series_from_service(service_url, soap_or_rest, **kwargs):
-    """ performs getValues call and returns (through parsing fxns) time series and parsed data from response
-    called by view: create_ref_time_series
-    keyword arguments are given by CAUHSI WOF standard :
-    site_name_or_code = location
-    variable
-    startDate
-    endDate
-    authToken
+def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, variable_code=None, start_date='', end_date='', auth_token=''):
+    # http://icewater.usu.edu/littlebearriver/cuahsi_1_1.asmx/GetValuesObject?
+    # location=LittleBearRiver:USU-LBR-SFLower&
+    # variable=LittleBearRiver:USU6:methodCode=2:sourceCode=2:qualityControlLevelCode=0&
+    # startDate=2007-07-26&endDate=2007-08-26&authToken=
 
-    returns:
-    a string containing a WaterML file with location metadata and data
-    """
-    # http://icewater.usu.edu/littlebearriver/cuahsi_1_1.asmx/GetValuesObject?location=LittleBearRiver:USU-LBR-SFLower&variable=LittleBearRiver:USU6:methodCode=2:sourceCode=2:qualityControlLevelCode=0&startDate=2007-07-26&endDate=2007-08-26&authToken=
     if soap_or_rest == 'soap':
-        var = kwargs['variable_code']
-        index = var.rfind(" [")
-        var = var[index+2:len(var)-1]
-
-        site = kwargs['site_code']
-        index = site.rfind(" [")
-        site = site[index+2:len(site)-1]
-
-        s_d = kwargs.get('startDate', '')
-        e_d = kwargs.get('endDate', '')
-        a_t = kwargs.get('authToken', '')
-
         wml_ver = check_url_and_version(service_url)
         client = connect_wsdl_url(service_url)
         try:
-            response = client.service.GetValues(site, var, s_d, e_d, a_t)
+            response = client.service.GetValues(site_code, variable_code, start_date, end_date, auth_token)
         except MethodNotFound:
             raise Http404("Method 'GetValues' not found")
         except WebFault:
@@ -565,152 +547,55 @@ due to incorrect formatting in the web service format.")
             response = r.text.encode('utf-8')
     root = etree.XML(response)
     wml_version = get_version(root)
-    if wml_version == '1':
+    if wml_version == '1.0' or '1.1':
         ts = parse_1_0_and_1_1_owslib(response, wml_ver)
     elif wml_version == '2.0':
         ts = parse_2_0(root)
     else:
         raise Http404()
+    ts["wml_version"] = wml_version
     return ts
 
 
-def create_vis_2(path, site_name, data, xlab, variable_name, units, noDataValue, predefined_name=None):
-    '''creates vis and returns open file'''
+def create_vis_2(path, site_name, data, xlabel, variable_name, units, noDataValue, predefined_name=None):
     x_list = data["x"]
     y_list = data["y"]
     x_list_draw = []
     y_list_draw = []
 
     for i in range(len(x_list)):
-        if noDataValue is not None and (y_list[i]) != int(noDataValue):
-            x_list_draw.append(datetime.strptime(x_list[i], "%Y-%m-%dT%H:%M:%S"))
-            y_list_draw.append(y_list[i])
+        if noDataValue is not None and (y_list[i]) == float(noDataValue):
+           continue # skip nodatavalue
+        x_list_draw.append(datetime.strptime(x_list[i], "%Y-%m-%dT%H:%M:%S"))
+        y_list_draw.append(y_list[i])
 
     fig, ax = plt.subplots()
     ax.plot_date(x_list_draw, y_list_draw, 'b-', color='g')
-    ax.set_xlabel(xlab)
+    ax.set_xlabel(xlabel)
     ax.xaxis_date()
     ax.set_ylabel(variable_name + "(" + units + ")")
     ax.grid(True)
     fig.autofmt_xdate()
 
     if predefined_name is None:
-        vis_name = 'visualization-'+site_name+'-'+variable_name+'.png'
-        vis_name = vis_name.replace(" ", "_")
+        vis_name = 'preview.png'
     else:
         vis_name = predefined_name
     vis_path = path + "/" + vis_name
     savefig(vis_path, bbox_inches='tight')
-    vis_file = open(vis_path, 'rb')
-    return {"fname": vis_name, "fhandle": vis_file}
+    # vis_file = open(vis_path, 'rb')
+    return {"fname": vis_name, "fullpath": vis_path}
 
-def create_vis(path, site_name, data, xlab, variable_name, units, noDataValue, predefined_name=None):
-    '''creates vis and returns open file'''
-    loc = AutoDateLocator()
-    fmt = AutoDateFormatter(loc)
-    fmt.scaled[365.0] = '%y'
-    fmt.scaled[30.] = '%b %y'
-    fmt.scaled[1.0] = '%b %d %y'
 
-    x = []
-    y = []
-    x1 =[]
-    y1 =[]
-    for d in data:
-        if str(int(d['y'])) != str(noDataValue):
-            x1.append(d['x'])
-            y1.append(d['y'])
-    vals_dict = dict(zip(x1, y1))
-    sorted_vals = sorted(vals_dict.items(), key=operator.itemgetter(0))
-    for d in sorted_vals:
-        t = (d[0])
-        t = datetime.fromtimestamp(t)
-        x.append(t)
-        y.append(d[1])
-    fig, ax = plt.subplots()
-    ax.plot_date(x, y, '-')
-    # ax.set_aspect(10)
-    ax.set_xlabel(xlab)
-    if 'NoneType' in str(type(units)):
-        units = 'unknown'
-    ax.set_ylabel(variable_name + "(" + units + ")")
-    ax.xaxis.set_major_locator(loc)
-    ax.xaxis.set_major_formatter(fmt)
-    #ax.xaxis.set_minor_locator(days)
-    ax.autoscale_view()
 
-    ax.grid(True)
-    if predefined_name is None:
-        vis_name = 'visualization-'+site_name+'-'+variable_name+'.png'
-        vis_name = vis_name.replace(" ","_")
-    else:
-        vis_name = predefined_name
-    vis_path = path + "/" + vis_name
-    savefig(vis_path, bbox_inches='tight')
-    vis_file = open(vis_path, 'rb')
-    return {"fname": vis_name, "fhandle": vis_file}
 
-def make_files(res, tempdir, ts):
-    '''gets time series, creates the metadata terms, creates the files and returns them
-    called by generate_files
-    '''
-    site_name = res.metadata.sites.all()[0].name
-    var_name = res.metadata.variables.all()[0].name
-    title = res.metadata.title.value
+def generate_resource_files(shortkey, tempdir):
 
-    vals = ts['values']
-    for_graph = ts['for_graph']
-    units = ts['units']
-    noDataValue = ts.get('noDataValue', None)
-    vis_file = create_vis(tempdir, site_name, for_graph, 'Date', var_name, units, noDataValue)
-    version = ts['wml_version']
-    file_base = title.replace(" ", "_")
-    csv_name = '{0}.{1}'.format(file_base, 'csv')
-    if version == '1':
-        xml_end = 'wml_1'
-        xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
-    elif version == '2.0':
-        xml_end = 'wml_2_0'
-        xml_name = '{0}-{1}.xml'.format(file_base, xml_end)
-    for_csv = []
-    od_vals = collections.OrderedDict(sorted(vals.items()))
-    for k, v in od_vals.items():
-        t = (k, v)
-        for_csv.append(t)
-    csv_name_full_path = tempdir + "/" + csv_name
-    with open(csv_name_full_path, 'wb') as csv_file:
-        w = csv.writer(csv_file)
-        w.writerow([title])
-        var = '{0}({1})'.format(ts['variable_name'], ts['units'])
-        w.writerow(['time', var])
-        for r in for_csv:
-            w.writerow(r)
-    csv_file = {"fname":csv_name, "fhandle":open(csv_name_full_path, 'r')}
-    xml_name_full_path = tempdir + "/" + xml_name
-    with open(xml_name_full_path, 'wb') as xml_file:
-        xml_file.write(ts['time_series'])
-
-    if version == '1' or version == '1.0':
-        wml1_file = {"fname": xml_name, "fhandle":open(xml_name_full_path, 'r')}
-        wml2_file = transform_file(ts, title, tempdir)
-        files = [csv_file, wml1_file, wml2_file, vis_file]
-        return files
-    if version == '2' or version == '2.0':
-        wml2_file = {"fname":xml_name, "fhandle":open(xml_name_full_path, 'r')}
-        files = [csv_file, wml2_file, vis_file]
-        return files
-
-def generate_files(shortkey, ts, tempdir):
-    ''' creates the calls the make files fxn and adds the files as resource files
-
-    called by view: create_ref_time_series, update_files
-    :param shortkey: res shortkey
-    :param ts: parsed time series dict
-    '''
     res = hydroshare.get_resource_by_shortkey(shortkey)
 
     if res.metadata.referenceURLs.all()[0].type == 'rest':
-        ts = time_series_from_service(res.metadata.referenceURLs.all()[0].value, res.metadata.referenceURLs.all()[0].type)
+        ts = QueryHydroServerGetParsedWML(res.metadata.referenceURLs.all()[0].value, \
+                                          res.metadata.referenceURLs.all()[0].type)
     else:
         site_code = res.metadata.sites.all()[0].code
         net_work = res.metadata.sites.all()[0].net_work
@@ -719,38 +604,113 @@ def generate_files(shortkey, ts, tempdir):
         source_code = res.metadata.datasources.all()[0].code
         quality_control_level_code = res.metadata.quality_levels.all()[0].code
 
-        site_code_query = "[%s:%s]" % (net_work, site_code)
-        variable_code_query = "[%s:%s:methodCode=%s:sourceCode=%s:qualityControlLevelCode=%s]" % \
+        site_code_query = "%s:%s" % (net_work, site_code)
+        variable_code_query = "%s:%s:methodCode=%s:sourceCode=%s:qualityControlLevelCode=%s" % \
         (net_work, variable_code, method_code, source_code, quality_control_level_code)
 
-        ts = time_series_from_service(res.metadata.referenceURLs.all()[0].value,
-                                  res.metadata.referenceURLs.all()[0].type,
+        ts = QueryHydroServerGetParsedWML(service_url=res.metadata.referenceURLs.all()[0].value,
+                                  soap_or_rest=res.metadata.referenceURLs.all()[0].type,
                                   site_code=site_code_query,
                                   variable_code=variable_code_query)
 
-    files = make_files(res, tempdir, ts)
+    files = save_ts_to_files(res, tempdir, ts)
     return files
 
+def save_ts_to_files(res, tempdir, ts):
+    res_file_info_array = []
 
+    site_name = res.metadata.sites.all()[0].name
+    var_name = res.metadata.variables.all()[0].name
+    title = res.metadata.title.value
+
+    # save preview figure
+    data = ts['data']
+    units = ts['unit_abbr']
+    if units is None:
+        units = ts['unit_name']
+        if units is None:
+            units = "Unknown"
+    variable_name = ts['variable_name']
+    noDataValue = ts['noDataValue']
+
+    preview_file_info = create_vis_2(path=tempdir, site_name=site_name, data=data, xlabel='Date', \
+                                      variable_name=variable_name, units=units, noDataValue=noDataValue)
+    res_file_info_array.append(preview_file_info)
+
+    # csv wml1 wml2 file name base
+    file_name_base = title.replace(" ", "_")
+    # save csv file
+    csv_name = '{0}.{1}'.format(file_name_base, 'csv')
+    csv_name_full_path = tempdir + "/" + csv_name
+    with open(csv_name_full_path, 'w') as csv_file:
+        w = csv.writer(csv_file)
+        x_data = ts['data']['x']
+        y_data = ts['data']['y']
+        for i in range(len(x_data)):
+            row_str = [x_data[i], y_data[i]]
+            w.writerow(row_str)
+
+    wml_1_0_name = '{0}_wml_1_0.xml'.format(file_name_base)
+    wml_1_0_full_path = tempdir + "/" + wml_1_0_name
+
+    wml_1_1_name = '{0}_wml_1_1.xml'.format(file_name_base)
+    wml_1_1_full_path = tempdir + "/" + wml_1_1_name
+
+    wml_2_0_name = '{0}_wml_2_0.xml'.format(file_name_base)
+    wml_2_0_full_path = tempdir + "/" + wml_2_0_name
+
+    if ts["wml_version"] == '1.0' or '1.1':
+        module_dir = os.path.dirname(__file__)
+        if ts["wml_version"] == '1.1':
+            xml_1011_name = wml_1_1_name
+            xml_1011_full_path = wml_1_1_full_path
+            xsl_location = os.path.join(module_dir, "static/ref_ts/xslt/WaterML1_1_timeSeries_to_WaterML2.xsl")
+        else: # 1.0
+            xml_1011_name = wml_1_0_name
+            xml_1011_full_path = wml_1_0_full_path
+            xsl_location = os.path.join(module_dir, "static/ref_ts/xslt/WaterML1_timeSeries_to_WaterML2.xsl")
+
+        root_wml_1 = etree.fromstring(ts['wml_str'])
+        with open(xml_1011_full_path, 'w') as xml_1_file:
+            xml_1_file.write(etree.tostring(root_wml_1, pretty_print=True))
+
+        res_file_info_array.append({"fname": xml_1011_name, "fullpath": xml_1011_full_path})
+
+        # convert to wml 2
+        xslt = etree.parse(xsl_location)
+        transform =etree.XSLT(xslt)
+        tree_wml_2 = transform(root_wml_1)
+
+        tree_wml_2.write(wml_2_0_full_path, pretty_print=True)
+        res_file_info_array.append({"fname": wml_2_0_name, "fullpath": wml_2_0_full_path})
+
+    elif ts["wml_version"] == '2.0':
+        with open(wml_2_0_full_path, 'w') as xml_2_file:
+            xml_2_file.write(ts['wml_str'])
+        res_file_info_array.append({"fname": wml_2_0_name, "fullpath": wml_2_0_full_path})
+
+    return res_file_info_array
+
+
+# #
+# def transform_file(ts, title, tempdir):
+#     ''' transforms wml1.1 to wml2.0 '''
+#     waterml_1 = ts['root']
+#     wml_string = etree.tostring(waterml_1)
+#     s = StringIO(wml_string)
+#     dom = etree.parse(s)
+#     module_dir = os.path.dirname(__file__)
+#     xsl_location = os.path.join(module_dir, "static/ref_ts/xslt/WaterML1_1_timeSeries_to_WaterML2.xsl")
+#     xslt = etree.parse(xsl_location)
+#     transform = etree.XSLT(xslt)
+#     newdom = transform(dom)
+#     xml_name = '{0}-{1}'.format(title.replace(" ", "_"), 'wml_2_0.xml')
+#     xml_2_full_path = tempdir + "/" + xml_name
 #
-def transform_file(ts, title, tempdir):
-    ''' transforms wml1.1 to wml2.0 '''
-    waterml_1 = ts['root']
-    wml_string = etree.tostring(waterml_1)
-    s = StringIO(wml_string)
-    dom = etree.parse(s)
-    module_dir = os.path.dirname(__file__)
-    xsl_location = os.path.join(module_dir, "static/ref_ts/xslt/WaterML1_1_timeSeries_to_WaterML2.xsl")
-    xslt = etree.parse(xsl_location)
-    transform = etree.XSLT(xslt)
-    newdom = transform(dom)
-    xml_name = '{0}-{1}'.format(title.replace(" ", "_"), 'wml_2_0.xml')
-    xml_2_full_path = tempdir + "/" + xml_name
-
-    with open(xml_2_full_path, 'wb') as f:
-        f.write(newdom)
-
-    xml_file = open(xml_2_full_path, 'r')
-
-    return {"fname":xml_name, "fhandle": xml_file}
-
+#     with open(xml_2_full_path, 'wb') as f:
+#         f.write(newdom)
+#
+#     xml_file = open(xml_2_full_path, 'r')
+#
+#     return {"fname":xml_name, "fhandle": xml_file}
+#
