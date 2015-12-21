@@ -34,7 +34,7 @@ class RefTimeSeriesResource(BaseResource):
 processor_for(RefTimeSeriesResource)(resource_processor)
 
 class ReferenceURL(AbstractMetaDataElement):
-    term = 'Reference URL'
+    term = 'ReferenceURL'
     value = models.CharField(max_length=500)
     type = models.CharField(max_length=4)
 
@@ -63,16 +63,17 @@ class Site(AbstractMetaDataElement):
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True)
 
+# source code
 class DataSource(AbstractMetaDataElement):
     term = 'DataSource'
     code = models.CharField(max_length=100, default="")
 
 class RefTSMetadata(CoreMetaData):
+    referenceURLs = generic.GenericRelation(ReferenceURL)
+    sites = generic.GenericRelation(Site)
+    variables = generic.GenericRelation(Variable)
     methods = generic.GenericRelation(Method)
     quality_levels = generic.GenericRelation(QualityControlLevel)
-    variables = generic.GenericRelation(Variable)
-    sites = generic.GenericRelation(Site)
-    referenceURLs = generic.GenericRelation(ReferenceURL)
     datasources = generic.GenericRelation(DataSource)
 
     @classmethod
@@ -91,7 +92,7 @@ class RefTSMetadata(CoreMetaData):
     def get_xml(self):
         from lxml import etree
         # get the xml string representation of the core metadata elements
-        xml_string = super(RefTSMetadata, self).get_xml(pretty_print=True)
+        xml_string = super(RefTSMetadata, self).get_xml(pretty_print=False)
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
 
@@ -99,55 +100,50 @@ class RefTSMetadata(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         # inject resource specific metadata elements to container element
-        for refURL in self.referenceURLs.all():
-            hsterms_refURL = etree.SubElement(container, '{%s}ReferenceURL' % self.NAMESPACES['hsterms'])
-            hsterms_refURL_rdf_Description = etree.SubElement(hsterms_refURL, '{%s}Description' % self.NAMESPACES['rdf'])
+        if self.referenceURLs.all().first():
+            referenceURLs_fields = ['value', 'type']
+            self.add_metadata_element_to_xml(container,
+                                             self.referenceURLs.all().first(),
+                                             referenceURLs_fields)
 
-            hsterms_name = etree.SubElement(hsterms_refURL_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = refURL.value
-            hsterms_name = etree.SubElement(hsterms_refURL_rdf_Description, '{%s}type' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = refURL.type
+        if self.sites.all().first():
+            sites_fields = ['name', 'code', 'net_work', 'latitude', 'longitude']
+            self.add_metadata_element_to_xml(container,
+                                             self.sites.all().first(),
+                                             sites_fields)
 
-        for method in self.methods.all():
-            hsterms_method = etree.SubElement(container, '{%s}method' % self.NAMESPACES['hsterms'])
-            hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
+        if self.variables.all().first():
+            variables_fields = ['name', 'code', 'data_type', 'sample_medium']
+            self.add_metadata_element_to_xml(container,
+                                             self.variables.all().first(),
+                                             variables_fields)
 
-            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = method.value
+        if self.methods.all().first():
+            methods_fields = ['code', 'description']
+            self.add_metadata_element_to_xml(container,
+                                             self.methods.all().first(),
+                                             methods_fields)
+        if self.quality_levels.all().first():
+            quality_levels_fields = ['code', 'definition']
+            self.add_metadata_element_to_xml(container,
+                                             self.quality_levels.all().first(),
+                                             quality_levels_fields)
 
-        for q_l in self.quality_levels.all():
-            hsterms_q_l = etree.SubElement(container, '{%s}qualitycontrollevel' % self.NAMESPACES['hsterms'])
-            hsterms_q_l_rdf_Description = etree.SubElement(hsterms_q_l, '{%s}Description' % self.NAMESPACES['rdf'])
-
-            hsterms_name = etree.SubElement(hsterms_q_l_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = q_l.value
-
-        for variable in self.variables.all():
-            hsterms_variable = etree.SubElement(container, '{%s}variable' % self.NAMESPACES['hsterms'])
-            hsterms_variable_rdf_Description = etree.SubElement(hsterms_variable, '{%s}Description' % self.NAMESPACES['rdf'])
-
-            hsterms_name = etree.SubElement(hsterms_variable_rdf_Description, '{%s}name' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = variable.name
-            hsterms_code = etree.SubElement(hsterms_variable_rdf_Description, '{%s}code' % self.NAMESPACES['hsterms'])
-            hsterms_code.text = variable.code
-            hsterms_data_type = etree.SubElement(hsterms_variable_rdf_Description, '{%s}dataType' % self.NAMESPACES['hsterms'])
-            hsterms_data_type.text = variable.data_type
-            hsterms_sample_medium = etree.SubElement(hsterms_variable_rdf_Description, '{%s}sampleMedium' % self.NAMESPACES['hsterms'])
-            hsterms_sample_medium.text = variable.sample_medium
-
-        for site in self.sites.all():
-            hsterms_site = etree.SubElement(container, '{%s}site' % self.NAMESPACES['hsterms'])
-            hsterms_site_rdf_Description = etree.SubElement(hsterms_site, '{%s}Description' % self.NAMESPACES['rdf'])
-
-            hsterms_name = etree.SubElement(hsterms_site_rdf_Description, '{%s}name' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = site.name
-            hsterms_code = etree.SubElement(hsterms_site_rdf_Description, '{%s}code' % self.NAMESPACES['hsterms'])
-            hsterms_code.text = site.code
-            hsterms_latitude = etree.SubElement(hsterms_site_rdf_Description, '{%s}latitude' % self.NAMESPACES['hsterms'])
-            hsterms_latitude.text = unicode(site.latitude) or ''
-            hsterms_longitude = etree.SubElement(hsterms_site_rdf_Description, '{%s}longitude' % self.NAMESPACES['hsterms'])
-            hsterms_longitude.text = unicode(site.longitude) or ''
+        if self.datasources.all().first():
+            datasources_fields = ['code']
+            self.add_metadata_element_to_xml(container,
+                                             self.datasources.all().first(),
+                                             datasources_fields)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
+
+    def delete_all_elements(self):
+        super(RefTSMetadata, self).delete_all_elements()
+        self.referenceURLs.all().delete()
+        self.sites.all().delete()
+        self.variables.all().delete()
+        self.methods.all().delete()
+        self.quality_levels.all().delete()
+        self.datasources.all().delete()
 
 import receivers

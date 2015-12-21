@@ -1,3 +1,7 @@
+import requests
+import csv
+import os
+import logging
 from suds import MethodNotFound, WebFault
 from suds.transport import TransportError
 from suds.client import Client
@@ -7,17 +11,12 @@ from xml.sax._exceptions import SAXParseException
 from datetime import datetime
 from matplotlib.pyplot import savefig
 import matplotlib.pyplot as plt
-from matplotlib.dates import AutoDateFormatter, AutoDateLocator
-import operator
-import requests
-import csv
-import collections
-import os
-from StringIO import StringIO
-from hs_core import hydroshare
 
+from hs_core import hydroshare
 from ref_ts.owslib_revised.waterml.wml11 import WaterML_1_1 as wml11
 from ref_ts.owslib_revised.waterml.wml10 import WaterML_1_0 as wml10
+
+logger = logging.getLogger(__name__)
 
 def wmlParse(response, ver=11):
     if ver == 11:
@@ -27,18 +26,20 @@ def wmlParse(response, ver=11):
     else:
         raise
 
-def wmlVersion(wsdl_url):
+def wmlVersionFromSoapURL(wsdl_url):
     ver = -1
     if "1_0.asmx?" in wsdl_url.lower():
         ver = 10
     elif "1_1.asmx?" in wsdl_url.lower():
         ver = 11
+    elif "2_0.asmx?" in wsdl_url.lower():
+        ver = 20
     return ver
 
 def check_url_and_version(wsdl_url):
     if not wsdl_url.lower().endswith('.asmx?wsdl'):
-        raise Http404("The correct url format ends in '.asmx?WSDL'.")
-    return wmlVersion(wsdl_url)
+        raise Exception("invalid soap endpoint")
+    return wmlVersionFromSoapURL(wsdl_url)
 
 def connect_wsdl_url(wsdl_url):
     try:
@@ -53,17 +54,17 @@ def connect_wsdl_url(wsdl_url):
         raise Http404("Sorry, but we've encountered an unexpected error.")
     return client
 
-def get_version(root):
-    wml_version = None
+def get_wml_version_from_xml_tag(root):
+    wml_version = -1
     for element in root.iter():
-        if '{http://www.opengis.net/waterml/2.0}Collection' in element.tag:
-            wml_version = '2.0'
+        if '{http://www.opengis.net/waterml/2.0}collection' in element.tag.lower():
+            wml_version = 20
             break
-        elif '{http://www.cuahsi.org/waterML/1.1/}timeSeriesResponse' in element.tag:
-            wml_version = '1.1'
+        elif '{http://www.cuahsi.org/waterml/1.1/}timeseriesresponse' in element.tag.lower():
+            wml_version = 11
             break
-        elif '{http://www.cuahsi.org/waterML/1.0/}timeSeriesResponse' in element.tag:
-            wml_version = '1.0'
+        elif '{http://www.cuahsi.org/waterml/1.0/}timeseriesresponse' in element.tag.lower():
+            wml_version = 10
             break
     return wml_version
 
@@ -74,49 +75,40 @@ def sites_from_soap(wsdl_url, locations='[:]'):
     returns:
     a list of site names and codes at the given locations
     """
-    wml_ver = check_url_and_version(wsdl_url)
-    client = connect_wsdl_url(wsdl_url)
-
     try:
+        client = connect_wsdl_url(wsdl_url)
+        wml_ver = check_url_and_version(wsdl_url)
+        response = None
         if wml_ver == 11:
             response = client.service.GetSites(locations)
         elif wml_ver == 10:
             response = client.service.GetSitesXml(locations)
-    except MethodNotFound:
-        raise Http404("Method 'GetSites' not found")
-    except WebFault:
-        raise Http404('This service does not support an all sites search. \
-        Please provide a list of locations')  # ought to be a 400, but no page implemented for that
-    except:
-        raise Http404("Sorry, but we've encountered an unexpected error. This is most likely\
-         due to incorrect formatting in the web service response.")
-
-    sites_list = []
-    try:
         response = response.encode('utf-8')
         wml_sites = wmlParse(response, wml_ver)
         counter = 0
+        sites_list = []
         for site in wml_sites.sites:
             siteName = site.name
             siteCode = site.codes[0]
             netWork = site.site_info.net_work
             counter += 1
             sites_list.append("%s. %s [%s:%s]" % (str(counter), siteName, netWork, siteCode))
-    except:
-        return "Parsing error: The Data in the WSDL Url '{0}' was not correctly formatted \
-according to the WaterOneFlow standard given at 'http://his.cuahsi.org/wofws.html#waterml'.".format(wsdl_url)
+    except Exception as e:
+        logger.exception("sites_from_soap: " + e.message)
+        raise
     return sites_list
 
 # get variable names list
 def site_info_from_soap(wsdl_url, **kwargs):
-    site = kwargs['site']
-    index = site.rfind(" [")
-    site = site[index+2:len(site)-1]
-    network = (site.split(':'))[0]
-    wml_ver = check_url_and_version(wsdl_url)
-    client = connect_wsdl_url(wsdl_url)
-    variables_list = []
     try:
+        site = kwargs['site']
+        index = site.rfind(" [")
+        site = site[index+2:len(site)-1]
+        network = (site.split(':'))[0]
+        wml_ver = check_url_and_version(wsdl_url)
+        client = connect_wsdl_url(wsdl_url)
+        variables_list = []
+
         response = client.service.GetSiteInfo(site)
         response = response.encode('utf-8')
         wml_siteinfo = wmlParse(response, wml_ver)
@@ -137,11 +129,9 @@ def site_info_from_soap(wsdl_url, **kwargs):
                                   method_id, source_id, quality_control_level_id))
 
         return variables_list
-    except MethodNotFound:
-        raise Http404("Method 'GetSiteInfo' not found")
-    except:
-        return "Parsing error: The Data in the WSDL Url '{0}' was not correctly formatted \
-according to the WaterOneFlow standard given at 'http://his.cuahsi.org/wofws.html#waterml'.".format(wsdl_url)
+    except Exception as e:
+        logger.error("site_info_from_soap: " + e)
+
 
 def time_to_int(t):
     ''' if time format looks like '2014-07-22T10:45:00.000' '''
@@ -509,16 +499,16 @@ def parse_2_0(root):
 
 def map_waterml(xml_doc):
     root = etree.XML(xml_doc)
-    version = get_version(root)
-    if version == '1':
+    version = get_wml_version_from_xml_tag(root)
+    if version == 10 or version == 11:
         ts = parse_1_0_and_1_1(root)
         units = ts['units']
         values = ts['values']
-    elif version == '2.0':
+    elif version == 20:
         ts = parse_2_0(root)
         units = ts['units']
         values = ts['values']
-    elif not version:
+    elif version == -1:
         return False
 
 # get values
@@ -528,65 +518,63 @@ def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, vari
     # variable=LittleBearRiver:USU6:methodCode=2:sourceCode=2:qualityControlLevelCode=0&
     # startDate=2007-07-26&endDate=2007-08-26&authToken=
 
-    if soap_or_rest == 'soap':
-        wml_ver = check_url_and_version(service_url)
-        client = connect_wsdl_url(service_url)
-        try:
+    try:
+        if soap_or_rest == 'soap':
+            wml_ver = check_url_and_version(service_url)
+            client = connect_wsdl_url(service_url)
             response = client.service.GetValues(site_code, variable_code, start_date, end_date, auth_token)
-        except MethodNotFound:
-            raise Http404("Method 'GetValues' not found")
-        except WebFault:
-            raise Http404('This service does not work properly.')
-        except:
-            raise Http404("Sorry, but we've encountered an unexpected error. This is most likely \
-due to incorrect formatting in the web service format.")
-
-    elif soap_or_rest == 'rest':
-        r = requests.get(service_url)
-        if r.status_code == 200:
-            response = r.text.encode('utf-8')
-    root = etree.XML(response)
-    wml_version = get_version(root)
-    if wml_version == '1.0' or '1.1':
-        ts = parse_1_0_and_1_1_owslib(response, wml_ver)
-    elif wml_version == '2.0':
-        ts = parse_2_0(root)
-    else:
-        raise Http404()
-    ts["wml_version"] = wml_version
-    return ts
+        elif soap_or_rest == 'rest':
+            r = requests.get(service_url)
+            if r.status_code == 200:
+                response = r.text.encode('utf-8')
+            else:
+                raise Exception("Query REST endpoint failed")
+        root = etree.XML(response)
+        wml_version = get_wml_version_from_xml_tag(root)
+        if wml_version == 10 or wml_version == 11:
+            ts = parse_1_0_and_1_1_owslib(response, wml_ver)
+        elif wml_version == 20:
+            ts = parse_2_0(root)
+        else: # some hydrosevers may return wml without having version info in tags (http://worldwater.byu.edu/interactive/gill_lab/services/index.php/cuahsi_1_1.asmx?WSDL)
+            raise Exception("response XML has no WML ver info")
+        ts["wml_version"] = wml_version
+        return ts
+    except Exception as e:
+        logger.error("QueryHydroServerGetParsedWML: " + e)
+        raise
 
 
 def create_vis_2(path, site_name, data, xlabel, variable_name, units, noDataValue, predefined_name=None):
-    x_list = data["x"]
-    y_list = data["y"]
-    x_list_draw = []
-    y_list_draw = []
+    try:
+        x_list = data["x"]
+        y_list = data["y"]
+        x_list_draw = []
+        y_list_draw = []
 
-    for i in range(len(x_list)):
-        if noDataValue is not None and (y_list[i]) == float(noDataValue):
-           continue # skip nodatavalue
-        x_list_draw.append(datetime.strptime(x_list[i], "%Y-%m-%dT%H:%M:%S"))
-        y_list_draw.append(y_list[i])
+        for i in range(len(x_list)):
+            if noDataValue is not None and (y_list[i]) == float(noDataValue):
+               continue # skip nodatavalue
+            x_list_draw.append(datetime.strptime(x_list[i], "%Y-%m-%dT%H:%M:%S"))
+            y_list_draw.append(y_list[i])
 
-    fig, ax = plt.subplots()
-    ax.plot_date(x_list_draw, y_list_draw, 'b-', color='g')
-    ax.set_xlabel(xlabel)
-    ax.xaxis_date()
-    ax.set_ylabel(variable_name + "(" + units + ")")
-    ax.grid(True)
-    fig.autofmt_xdate()
+        fig, ax = plt.subplots()
+        ax.plot_date(x_list_draw, y_list_draw, 'b-', color='g')
+        ax.set_xlabel(xlabel)
+        ax.xaxis_date()
+        ax.set_ylabel(variable_name + "(" + units + ")")
+        ax.grid(True)
+        fig.autofmt_xdate()
 
-    if predefined_name is None:
-        vis_name = 'preview.png'
-    else:
-        vis_name = predefined_name
-    vis_path = path + "/" + vis_name
-    savefig(vis_path, bbox_inches='tight')
-    # vis_file = open(vis_path, 'rb')
-    return {"fname": vis_name, "fullpath": vis_path}
-
-
+        if predefined_name is None:
+            vis_name = 'preview.png'
+        else:
+            vis_name = predefined_name
+        vis_path = path + "/" + vis_name
+        savefig(vis_path, bbox_inches='tight')
+        return {"fname": vis_name, "fullpath": vis_path}
+    except Exception as e:
+        logger.error("create_vis_2: " + e)
+        raise
 
 
 def generate_resource_files(shortkey, tempdir):
@@ -659,9 +647,9 @@ def save_ts_to_files(res, tempdir, ts):
     wml_2_0_name = '{0}_wml_2_0.xml'.format(file_name_base)
     wml_2_0_full_path = tempdir + "/" + wml_2_0_name
 
-    if ts["wml_version"] == '1.0' or '1.1':
+    if ts["wml_version"] == 10 or 11:
         module_dir = os.path.dirname(__file__)
-        if ts["wml_version"] == '1.1':
+        if ts["wml_version"] == 11:
             xml_1011_name = wml_1_1_name
             xml_1011_full_path = wml_1_1_full_path
             xsl_location = os.path.join(module_dir, "static/ref_ts/xslt/WaterML1_1_timeSeries_to_WaterML2.xsl")
@@ -676,41 +664,21 @@ def save_ts_to_files(res, tempdir, ts):
 
         res_file_info_array.append({"fname": xml_1011_name, "fullpath": xml_1011_full_path})
 
-        # convert to wml 2
-        xslt = etree.parse(xsl_location)
-        transform =etree.XSLT(xslt)
-        tree_wml_2 = transform(root_wml_1)
+        try:
+            # convert to wml 2
+            xslt = etree.parse(xsl_location)
+            transform =etree.XSLT(xslt)
+            tree_wml_2 = transform(root_wml_1)
 
-        tree_wml_2.write(wml_2_0_full_path, pretty_print=True)
-        res_file_info_array.append({"fname": wml_2_0_name, "fullpath": wml_2_0_full_path})
+            tree_wml_2.write(wml_2_0_full_path, pretty_print=True)
+            res_file_info_array.append({"fname": wml_2_0_name, "fullpath": wml_2_0_full_path})
+        except Exception as e:
+            print ("convert to wml2 error: {0}".format(e))
+            pass
 
-    elif ts["wml_version"] == '2.0':
+    elif ts["wml_version"] == 20:
         with open(wml_2_0_full_path, 'w') as xml_2_file:
             xml_2_file.write(ts['wml_str'])
         res_file_info_array.append({"fname": wml_2_0_name, "fullpath": wml_2_0_full_path})
 
     return res_file_info_array
-
-
-# #
-# def transform_file(ts, title, tempdir):
-#     ''' transforms wml1.1 to wml2.0 '''
-#     waterml_1 = ts['root']
-#     wml_string = etree.tostring(waterml_1)
-#     s = StringIO(wml_string)
-#     dom = etree.parse(s)
-#     module_dir = os.path.dirname(__file__)
-#     xsl_location = os.path.join(module_dir, "static/ref_ts/xslt/WaterML1_1_timeSeries_to_WaterML2.xsl")
-#     xslt = etree.parse(xsl_location)
-#     transform = etree.XSLT(xslt)
-#     newdom = transform(dom)
-#     xml_name = '{0}-{1}'.format(title.replace(" ", "_"), 'wml_2_0.xml')
-#     xml_2_full_path = tempdir + "/" + xml_name
-#
-#     with open(xml_2_full_path, 'wb') as f:
-#         f.write(newdom)
-#
-#     xml_file = open(xml_2_full_path, 'r')
-#
-#     return {"fname":xml_name, "fhandle": xml_file}
-#
