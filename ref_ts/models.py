@@ -90,7 +90,6 @@ class RefTSMetadata(CoreMetaData):
         return elements
 
     def get_xml(self):
-        from lxml import etree
         # get the xml string representation of the core metadata elements
         xml_string = super(RefTSMetadata, self).get_xml(pretty_print=False)
         # create an etree xml object
