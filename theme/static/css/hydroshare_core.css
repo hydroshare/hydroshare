@@ -2889,31 +2889,69 @@ h4.title {
 
 /*  Home page revamp */
 #home-page-carousel {
-	height: calc(100% - 100px);
+	height: calc(100% + 52px);
     overflow: hidden;
 	border: 0;
-	border-bottom: 1px solid #DDD;
 	margin-top: -52px;
+}
+
+.carousel-controls li.active  .carousel-control-block {
+	border-bottom: 3px solid #B2CCF3;
+}
+
+.carousel-control {
+	height: calc(100% - 150px);
+}
+
+.carousel-inner {
+	height: calc(100% - 150px);
+}
+
+.carousel-indicators {
+     position: initial;
+     bottom: initial;
+     left: initial;
+     z-index: initial;
+     width: initial;
+     padding-left: initial;
+     margin-left: initial;
+     text-align: initial;
+     list-style: initial;
+}
+
+.carousel-indicators li {
+	display: inline-block;
+	width: initial;
+	height: initial;
+	margin: initial;
+	text-indent: initial;
+	cursor: initial;
+	background-color: #000 \9;
+	background-color: initial;
+	border: initial;
+	border-radius: initial;
+}
+
+.carousel-indicators .active {
+     width: initial;
+     height: initial;
+     margin: initial;
+     background-color: initial;
 }
 
 .carousel-controls {
 	text-align: center;
+	list-style: none;
+	padding: 50px;
 }
 
-.carousel-inner {
-	height: 100%;
-}
 
 .carousel-control-block {
 	display: inline-block;
 	margin-bottom: 25px;
 	cursor: pointer;
 	color: #555;
-	width: 140px;
-}
-
-.carousel-control-block.active {
-	border-bottom: 3px solid #B2CCF3;
+	margin: 0 15px;
 }
 
 .carousel-control-block::after {
