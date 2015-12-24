@@ -96,18 +96,17 @@
                     {% ifinstalled mezzanine.accounts %}
                     {% if request.user.is_authenticated %}
                         <li id="profile-menu" class="display-block">
-{#                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}#}
+                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                     <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
                                          class="round-image profile-pic-thumbnail pull-left">
                                     </div>
                                 </a>
-{#                            {% else %}#}
-{#                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">#}
-{#                                    <div class="nav-bar-profile-pic-thumbnail round-image pull-left"></div>#}
-{#                                </a>#}
-{#                            {% endif %}#}
-{#                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ request.user|best_name }} <b class="caret"></b></a>#}
+                            {% else %}
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <div class="nav-bar-profile-pic-thumbnail round-image pull-left"></div>
+                                </a>
+                            {% endif %}
                         <ul class="dropdown-menu arrow_box">
                             <li class="account">
                                 {% if request.user.userprofile.picture and request.user.userprofile.picture.url%}
