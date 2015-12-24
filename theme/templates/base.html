@@ -107,32 +107,32 @@
                                     <div class="nav-bar-profile-pic-thumbnail round-image pull-left"></div>
                                 </a>
                             {% endif %}
-                        <ul class="dropdown-menu arrow_box">
-                            <li class="account">
-                                {% if request.user.userprofile.picture and request.user.userprofile.picture.url%}
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="round-image dropdown-profile-pic-thumbnail pull-left">
-                                </div>
-                                {% else %}
-                                    <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
-                                {% endif %}
+                            <ul class="dropdown-menu arrow_box">
+                                <li class="account">
+                                    {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
+                                        <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                             class="round-image dropdown-profile-pic-thumbnail pull-left">
+                                        </div>
+                                    {% else %}
+                                        <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
+                                    {% endif %}
 
-                                <div>
-                                    <strong>{{ request.user }}</strong>
-                                </div>
+                                    <div>
+                                        <strong>{{ request.user }}</strong>
+                                    </div>
 
-                                {% if request.user.email %}
-                                    <div class="text-muted">{{ request.user.email }}</div>
-                                {% endif %}
+                                    {% if request.user.email %}
+                                        <div class="text-muted">{{ request.user.email }}</div>
+                                    {% endif %}
 
-                                <div class="dropdown-footer">
-                                    <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>
-                                    <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
-                                        <span class="glyphicon glyphicon-log-out"></span> Sign out</a></span>
-                                </div>
-                            </li>
-                        </ul>
-                    </li>
+                                    <div class="dropdown-footer">
+                                        <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>
+                                        <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
+                                            <span class="glyphicon glyphicon-log-out"></span> Sign out</a></span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
                     {% else %}
                     <!-- <li id="signup-menu"><a href="{% url 'signup' %}">Sign Up</a></li> -->
                     <li id="signin-menu"><a href="{% url 'login' %}">Sign In</a></li>

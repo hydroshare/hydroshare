@@ -1467,8 +1467,25 @@ body > .container{
 
 .btn-default {
 	background-color: #eee;
-    background-image: -webkit-linear-gradient(#fcfcfc, #eee);
-    background-image: linear-gradient(#fcfcfc, #eee)
+	background-image: -webkit-linear-gradient(#fcfcfc, #eee);
+	background-image: linear-gradient(#fcfcfc, #eee);
+	text-shadow: 1px 1px #FFF;
+}
+
+.btn-primary {
+	background-color: #eee;
+	background-image: -webkit-linear-gradient(#7AB2E2, #428BCA);
+	background-image: linear-gradient(#7AB2E2, #428BCA);
+	border-color: #428BCA;
+	color: #FFF;
+}
+
+.btn-success {
+	background-color: #eee;
+	background-image: -webkit-linear-gradient(#7AB2E2, #428BCA);
+	background-image: linear-gradient(#74E274, #5CB85C);
+	border-color: #20833F;
+	color: #FFF;
 }
 
 .btn-add-access:focus,#btn-discoverable:focus, #btn-public:focus, #btn-private:focus {
@@ -2422,6 +2439,11 @@ table.overview tr > td:first-child {
     margin-bottom: 10px;
 }
 
+.table-res-type-icon {
+	background-color: #FFF;
+	box-shadow: 0 0 5px #ddd;
+}
+
 .table-user-contributions tbody > tr > td {
     border: 0;
     cursor:pointer;
@@ -2968,6 +2990,7 @@ span.carousel-control-icon {
     background: url(../img/graypattern.jpg);
 	background-color: #BBB;
 	padding: 50px 0;
+	margin:25px 0;
 	margin-top: 30px;
 	text-align: center;
 }
