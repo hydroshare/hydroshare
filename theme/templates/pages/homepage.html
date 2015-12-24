@@ -7,116 +7,172 @@
     <!-- Showcase
     ================ -->
 
-    <div class="container">
-        <div id="wrap" style="background-image: url('{{ MEDIA_URL }}{% thumbnail page.homepage.header_background 1000 500 %}');">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-6 col-md-12">
-                        {% editable page.homepage.heading %}
-                        <h1 class="animated slideInDown"><img class="img-responsive" src="{{ STATIC_URL }}img/logo-lg.png" alt="{{ page.homepage.heading }}"/>{# page.homepage.heading #}</h1>
-                        {% endeditable %}
-                        {% editable page.homepage.slide_in_one_icon page.homepage.slide_in_one page.homepage.slide_in_two_icon page.homepage.slide_in_two page.homepage.slide_in_three_icon page.homepage.slide_in_three %}
-                        <div class="list">
-                            <ul>
-                                {% if page.homepage.slide_in_one or page.homepage.slide_in_one_icon %}
-                                <li class="animated slideInLeft first"><span class="li-bg"><i class="fa {{ page.homepage.slide_in_one_icon }}"></i> <span>{{ page.homepage.slide_in_one }}</span></span></li>
-                                {% endif %}
-                                {% if page.homepage.slide_in_two or page.homepage.slide_in_two_icon %}
-                                <li class="animated slideInLeft second"><span class="li-bg"><i class="fa {{ page.homepage.slide_in_two_icon }}"></i> <span>{{ page.homepage.slide_in_two }}</span></span></li>
-                                {% endif %}
-                                {% if page.homepage.slide_in_three or page.homepage.slide_in_three_icon %}
-                                <li class="animated slideInLeft third"><span class="li-bg"><i class="fa {{ page.homepage.slide_in_three_icon }}"></i> <span>{{ page.homepage.slide_in_three }}</span></span></li>
-                                {% endif %}
-                            </ul>
-                        </div>
-                        {% endeditable %}
-                    </div>
-                    <div class="col-lg-6 col-md-12">
-                        <div class="showcase">
-                            {% if user.is_anonymous %}
-                            <div class="iMac animated fadeInDown">
+    <div id="home-page-carousel" class="carousel slide panel" data-ride="carousel">
+        <!-- Indicators -->
 
-                            <!-- signup -->
-                            <div class="front-signup js-front-signup" style="padding-top: 1.5em;">
-                               {% signup_form as form %}
-                               {% include "accounts/_signup_form.html" with form=form %}
-                            </div>
-                            <!-- signup -->
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
+        <!-- Wrapper for slides -->
+        <div class="carousel-inner" role="listbox">
+            <div class="item active">
+                <div class="gray-screen"></div>
+                <div class="item-caption">
+                    <h1><strong>Share your data and models with colleagues</strong></h1>
+                    <h4>Share, access, visualize and manipulate a broad set of hydrologic data types. Manage who has access to the content that you share.</h4>
                 </div>
+                <img class="img-responsive" src="{{ STATIC_URL }}img/carousel/carousel1.jpg" alt="Image 1">
+            </div>
+
+            <div class="item">
+                <div class="gray-screen"></div>
+                <div class="item-caption">
+                    <h1><strong>Discover</strong></h1>
+                    <h4>Discover from a range of resource types targeted for Hydrology.</h4>
+                </div>
+                <img class="img-responsive" src="{{ STATIC_URL }}img/carousel/carousel2.jpg" alt="Image 2">
+            </div>
+
+            <div class="item">
+                <div class="gray-screen"></div>
+                <div class="item-caption">
+                    <h1><strong>Collaborate</strong></h1>
+                    <h4>By impossible of in difficulty discovered celebrated ye. Justice joy manners boy met resolve
+                        produce. </h4>
+                </div>
+                <img class="img-responsive" src="{{ STATIC_URL }}img/carousel/carousel3.jpg" alt="Image 3">
             </div>
         </div>
-        {% if page.homepage.boxes.all %}
-        <div class="row">
-            <div class="col-md-12">
-                <div class="services">
-                    <ul>
-                        {% for box in page.homepage.boxes.all %}
-                        <li>
-                            {% editable box.icon box.title box.link_text box.link %}
-                            <i class="fa {{ box.icon }} fa-3x"></i>
-                            <p>{{ box.title }}<br /><a href="{{ box.link }}">{{ box.link_text }}</a></p>
-                            {% endeditable %}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    <div class="clearfix"></div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-        <div class="row">
-            <div class="col-md-11">
-                {% editable page.homepage.welcome_heading %}
-                <div class="block-header">
-                    <h2>
-                        <span class="title">{{ page.homepage.welcome_heading }}</span>
-                    </h2>
-                </div>
-                {% endeditable %}
-                {% editable page.homepage.content %}
-                {{ page.homepage.content|richtext_filters|safe }}
-                {% endeditable %}
-            </div>
-            {% comment %}
-            <div class="col-md-4">
-                {% editable page.homepage.recent_blog_heading page.homepage.number_recent_posts %}
-                <div class="block-header">
-                    <h2>
-                        <span class="title">{{ page.homepage.recent_blog_heading }}</span>
-				</h2>
-                </div>
-                {% endeditable %}
-                {% blog_recent_posts page.homepage.number_recent_posts as recent_posts %}
 
-                <div class="tab-content">
-                    <div class="tab-pane active" id="blog">
-                        {% if recent_posts %}
-                        {% for post in recent_posts %}
-                        <div class="media">
-                            {% if settings.BLOG_USE_FEATURED_IMAGE and post.featured_image %}
-                            <a class="pull-left" href="{{ post.get_absolute_url }}">
-                                <img class="media-object" src="{{ MEDIA_URL }}{% thumbnail post.featured_image 64 64 %}" alt="post featured image">
-                            </a>
-                            {% endif %}
-                            <div class="media-body">
-                                <h4 class="media-heading"><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h4>
-                                {{ post.description_from_content|truncatewords_html:15|safe }}
-                            </div>
-                        </div>
-                        {% endfor %}
-                        <a href="{% url 'blog_post_list' %}" class="read-more">Read more stories...</a>
-                        {% else %}
-                        <p>We haven't posted anything yet, check back soon!</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endcomment %}
+        <!-- Left and right controls -->
+        <a class="left carousel-control" href="#home-page-carousel" role="button" data-slide="prev">
+            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="right carousel-control" href="#home-page-carousel" role="button" data-slide="next">
+            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
+    <div class="carousel-controls">
+        <div class="carousel-control-block" data-target="#home-page-carousel" data-slide-to="0">
+            <span class="carousel-control-icon glyphicon glyphicon-share "></span>
+            <h5>SHARE</h5>
+        </div>
+
+        <div class="carousel-control-block" data-target="#home-page-carousel" data-slide-to="1">
+            <span class="carousel-control-icon glyphicon glyphicon-search"></span>
+            <h5>DISCOVER</h5>
+        </div>
+
+        <div class="carousel-control-block" data-target="#home-page-carousel" data-slide-to="2">
+            <span class="carousel-control-icon glyphicon glyphicon-user"></span>
+            <h5>COLLABORATE</h5>
         </div>
     </div>
 
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-6">
+                <h2>What you can do with HydroShare</h2>
+                <ul class="list-features">
+                    <li>
+                        <div class="glyphicon glyphicon-ok checkmark"></div>
+                        <span>Share your data and models with colleagues</span></li>
+                    <li>
+                        <div class="glyphicon glyphicon-ok checkmark"></div>
+                        <span>Manage who has access to the content that you share</span></li>
+                    <li>
+                        <div class="glyphicon glyphicon-ok checkmark"></div>
+                        <span>Share, access, visualize and manipulate a broad set of hydrologic data types</span></li>
+                    <li>
+                        <div class="glyphicon glyphicon-ok checkmark"></div>
+                        <span>Sharing and execution of models</span></li>
+                    <li>
+                        <div class="glyphicon glyphicon-ok checkmark"></div>
+                        <span>Web services API to facilitate automated and client access to almost all functionality</span>
+                    </li>
+                    <li>
+                        <div class="glyphicon glyphicon-ok checkmark"></div>
+                        <span>Access to high performance computing</span></li>
+                    <li>
+                        <div class="glyphicon glyphicon-ok checkmark"></div>
+                        <span>Publication of data and models with a DOI</span></li>
+                </ul>
+            </div>
+            <div class="col-xs-12- col-sm-6">
+                <img class="img-home-art img-responsive" src="{{ STATIC_URL }}img/research.png" alt="Research art image">
+            </div>
+        </div>
+    </div>
+
+
+    <div class="screen-sizes">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12 col-sm-6">
+{#                    Image credit: Android Design. Used under Creative Commons license.#}
+{#                    http://developer.android.com/design/style/devices-displays.html#}
+                    <img class="img-home-art img-responsive" src="{{ STATIC_URL }}img/da_devices.png"
+                         alt="Screen sizes">
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                    <h2>Available in all your devices</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <img class="img-home-art img-responsive" src="{{ STATIC_URL }}img/logo-only.png" alt="HydroShare logo">
+                <center><strong><h3>Join the community to start sharing</h3></strong></center>
+                <center>
+                    <span>HydroShare is an online collaboration environment for sharing data, models, and code.</span>
+                </center>
+                <center><a class="btn btn-primary btn-signup" href="#">Sign up now</a></center>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function fadeNav() {
+        var offset = getScrollXY();
+        if (offset[1] > 0) {
+            $("#hs-nav-bar").css("background-color", "rgb(0, 45, 62)");
+            $("#hs-nav-bar").css("border","");
+        }
+        else {
+            $("#hs-nav-bar").css("background-color", "rgba(0, 0, 0, 0.58)");
+            $("#hs-nav-bar").css("border", "0");
+        }
+    }
+
+    function getScrollXY() {
+        var scrOfX = 0, scrOfY = 0;
+        if (typeof( window.pageYOffset ) == 'number') {
+            //Netscape compliant
+            scrOfY = window.pageYOffset;
+            scrOfX = window.pageXOffset;
+        } else if (document.body && ( document.body.scrollLeft || document.body.scrollTop )) {
+            //DOM compliant
+            scrOfY = document.body.scrollTop;
+            scrOfX = document.body.scrollLeft;
+        } else if (document.documentElement && ( document.documentElement.scrollLeft ||
+                document.documentElement.scrollTop )) {
+            //IE6 standards compliant mode
+            scrOfY = document.documentElement.scrollTop;
+            scrOfX = document.documentElement.scrollLeft;
+        }
+
+        return [scrOfX, scrOfY];
+    }
+
+    $(document).ready(function () {
+        window.onscroll = fadeNav;
+        fadeNav();
+    });
+</script>
+
+
 {% endblock %}
+
+
