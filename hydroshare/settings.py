@@ -300,6 +300,7 @@ INSTALLED_APPS = (
     "hs_tools_resource",
     "hs_swat_modelinstance",
     "hs_geographic_feature_resource",
+    "hs_rscript_resource"
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
