@@ -178,7 +178,7 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         obj = comment.content_object
         if request.user.is_authenticated():
             comment.user = request.user
-            comment.user_name = comment.user.first_name + " " + comment.user.last_name
+            comment.user_name = "{first_name} {last_name}".format(first_name=comment.user.first_name, last_name=comment.user.last_name)
 
         comment.by_author = request.user == getattr(obj, "user", None)
         comment.ip_address = ip_for_request(request)
@@ -192,7 +192,7 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         if reply_to_comment is not None:
             notify_emails.append(reply_to_comment.user.email)
         if notify_emails:
-            subject = ugettext("New comment by " + comment.user.first_name + " " + comment.user.last_name + " for: ") + str(obj)
+            subject = ugettext("New comment by {c_name} for: {res_obj}".format(c_name=comment.user_name, res_obj=str(obj)))
             context = {
                 "comment": comment,
                 "comment_url": add_cache_bypass(comment.get_absolute_url()),
