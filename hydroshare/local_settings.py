@@ -80,7 +80,7 @@ CARTO_HOME='/home/docker/node_modules/carto'
 
 
 USE_SOUTH = False
-SITE_TITLE = "Hydroshare"
+SITE_TITLE = "HydroShare"
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
