@@ -925,10 +925,9 @@
                        multiple="multiple">
                         <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
                     </a>
-                    <a id="btn-signin-irods"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsSignin">
-                        <span class="glyphicon glyphicon-plus"><span class="button-label"> Sign in iRODS...</span></span>
-                    </a>
-
+                    <br>
+                    <span>If you want to add files from an iRODS server into HydroShare, please do so by logging into the iRODS server
+                    <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal" data-target="#irodsSignin">here.</a></span>
                     <span id="sign-in-info"></span>
                     <a id="btn-select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsContent" style="display:none;">
                         <span class="glyphicon glyphicon-plus"><span class="button-label">Add file from iRODS...</span></span>
@@ -940,8 +939,9 @@
                       </div>
                     {% endif %}
                 {% endif %}
-                    <div class="col-lg-12"><a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more
-                        about the Bagit archive format</a></div>
+
+                <div class="col-lg-12">
+                    <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
                 </div>
             {% else %}
                 <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;
