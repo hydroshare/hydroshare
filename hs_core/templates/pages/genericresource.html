@@ -1587,9 +1587,12 @@
                             <div class="tab-pane" id="relevantTools">
                             {% if not metadata_form %}
                                 {% for tool in relevant_tools %}
-                                    <h4>{{ tool.title }}</h4>
-                                    <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch App</button></a>
-                                    <hr>
+                                    <div style="display:inline-block; padding-left:20px;">
+                                        <h4>{{ tool.title }}</h4>
+                                        <img src="{{ tool.icon }}" style="width:100px; height:100px;"/>
+                                        <br>
+                                        <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch App</button></a>
+                                    </div>
                                 {% endfor %}
                             {% else %}
                                 ------- Relevant tools form here -------

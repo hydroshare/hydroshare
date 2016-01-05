@@ -72,6 +72,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                         if tool_url.endswith('/'):
                             tool_url = tool_url[:-1]
                         tl = {'title': str(res_type.content_object.title),
+                              'icon': res_type.content_object.tool_icon.first().icon,
                               'url': "{0}{1}{2}{3}{4}{5}".format(tool_url, "/?res_id=", content_model.short_id,
                                                                  "&usr=", u, "&src=hs")}
                         relevant_tools.append(tl)

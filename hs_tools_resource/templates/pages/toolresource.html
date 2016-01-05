@@ -16,10 +16,9 @@
             <div class="col-md-12">
                 <div>
                     {% if url_base %}
-                        <h4><strong>URL Base:</strong></h4>
+                        <h4><strong>App URL:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            <div class="col-sm-4"><strong>App URL:</strong></div>
                             <div class="col-sm-8"><a href='{{ url_base.value }}'>{{ url_base.value }}</a></div>
                         </div>
                         <hr style="border:0">
@@ -30,7 +29,6 @@
                         <h4><strong>Version:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            <div class="col-sm-4"><strong>Version:</strong></div>
                             <div class="col-sm-8">{{ version.value }}</div>
                         </div>
                     {% endif %}
@@ -42,7 +40,18 @@
                         <div class="row">
                             <div class="col-sm-8">{{ supported_res_types }}</div>
                         </div>
+                        <hr style="border:0">
                     {% endif %}
+                </div>
+                <div>
+                    {% if tool_icon_url %}
+                        <h4><strong>Tool Icon:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-8"><img src="{{ tool_icon_url }}" style="height: 100px; width: 100px;"/></div>
+                        </div>
+                        <hr style="border:0">
+                    {%  endif %}
                 </div>
             </div>
         </div>
