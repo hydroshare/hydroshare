@@ -3097,4 +3097,5 @@ span.carousel-control-icon {
 #profile-menu .profile-pic-thumbnail {
 	margin: 0;
 	margin-top: 5px;
+	cursor: default;
 }
