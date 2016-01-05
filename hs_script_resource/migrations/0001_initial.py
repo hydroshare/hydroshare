@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='RScriptMetaData',
+            name='ScriptMetaData',
             fields=[
                 ('coremetadata_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='hs_core.CoreMetaData')),
             ],
@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             bases=('hs_core.coremetadata',),
         ),
         migrations.CreateModel(
-            name='RSMetadata',
+            name='ScriptSpecificMetadata',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
@@ -32,23 +32,23 @@ class Migration(migrations.Migration):
                 ('scriptDependencies', models.CharField(help_text=b'Dependencies for the script (externally-imported packages)', max_length=400, verbose_name=b'Dependencies', blank=True)),
                 ('scriptReleaseDate', models.DateTimeField(help_text=b'The date that this version of the script was released', null=True, verbose_name=b'Release Date', blank=True)),
                 ('scriptCodeRepository', models.CharField(help_text=b'A URL to the source code repository (e.g. git, mercurial, svn)', max_length=255, verbose_name=b'Script Repository', blank=True)),
-                ('content_type', models.ForeignKey(related_name='hs_rscript_resource_rsmetadata_related', to='contenttypes.ContentType')),
+                ('content_type', models.ForeignKey(related_name='hs_script_resource_scriptspecificmetadata_related', to='contenttypes.ContentType')),
             ],
             options={
             },
             bases=(models.Model,),
         ),
         migrations.AlterUniqueTogether(
-            name='rsmetadata',
+            name='scriptspecificmetadata',
             unique_together=set([('content_type', 'object_id')]),
         ),
         migrations.CreateModel(
-            name='RScriptResource',
+            name='ScriptResource',
             fields=[
             ],
             options={
                 'ordering': ('_order',),
-                'verbose_name': 'R Script Resource',
+                'verbose_name': 'Script Resource',
                 'proxy': True,
             },
             bases=('hs_core.baseresource',),

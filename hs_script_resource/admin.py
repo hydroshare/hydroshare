@@ -3,6 +3,6 @@ from django.contrib.gis import admin
 
 from mezzanine.pages.admin import PageAdmin
 
-from .models import RScriptResource
+from .models import ScriptResource
 
-admin.site.register(RScriptResource, PageAdmin)
+admin.site.register(ScriptResource, PageAdmin)

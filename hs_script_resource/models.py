@@ -7,18 +7,17 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
 
 from lxml import etree
 
-
-class RScriptResource(BaseResource):
-    objects = ResourceManager('RScriptResource')
+class ScriptResource(BaseResource):
+    objects = ResourceManager('ScriptResource')
 
     class Meta:
         proxy = True
-        verbose_name = 'R Script Resource'
+        verbose_name = 'Script Resource'
 
     @classmethod
     def get_supported_upload_file_types(cls):
         # one file type is supported
-        return ".r"
+        return ".r", ".py", ".m"
 
     @classmethod
     def can_have_multiple_files(cls):
@@ -27,14 +26,14 @@ class RScriptResource(BaseResource):
 
     @property
     def metadata(self):
-        md = RScriptMetaData()
+        md = ScriptMetaData()
         return self._get_metadata(md)
 
-processor_for(RScriptResource)(resource_processor)
+processor_for(ScriptResource)(resource_processor)
 
 
-class RSMetadata(AbstractMetaDataElement):
-    term = "RSMetadata"
+class ScriptSpecificMetadata(AbstractMetaDataElement):
+    term = "ScriptSpecificMetadata"
 
     # program language
     scriptLanguage = models.CharField(verbose_name='Programming Language', blank=True, max_length=100, default='R',
@@ -61,21 +60,21 @@ class RSMetadata(AbstractMetaDataElement):
                                             help_text='A URL to the source code repository (e.g. git, mercurial, svn)')
 
     class Meta:
-        # RSMetadata element is not repeatable
+        # ScriptSpecificMetadata element is not repeatable
         unique_together = ("content_type", "object_id")
 
 
-class RScriptMetaData(CoreMetaData):
-    rsmetadata = generic.GenericRelation(RSMetadata)
+class ScriptMetaData(CoreMetaData):
+    scriptspecificmetadata = generic.GenericRelation(ScriptSpecificMetadata)
 
     @property
     def program(self):
-        return self.rsmetadata.all().first()
+        return self.scriptspecificmetadata.all().first()
 
     @classmethod
     def get_supported_element_names(cls):
-        elements = super(RScriptMetaData, cls).get_supported_element_names()
-        elements.append('RSMetadata')
+        elements = super(ScriptMetaData, cls).get_supported_element_names()
+        elements.append('ScriptSpecificMetadata')
         return elements
 
     def has_all_required_elements(self):
@@ -84,10 +83,10 @@ class RScriptMetaData(CoreMetaData):
         return True
 
     def get_required_missing_elements(self):  # show missing required meta
-        missing_required_elements = super(RScriptMetaData, self).get_required_missing_elements()
+        missing_required_elements = super(ScriptMetaData, self).get_required_missing_elements()
         if not self.program:
             missing_required_elements.append('Script Language')
-            missing_required_elements.append('Language Version')
+            missing_required_elements.append('Programming Language Version')
         else:
             if not self.program.scriptLanguage:
                 missing_required_elements.append('Script Language')
@@ -132,4 +131,4 @@ class RScriptMetaData(CoreMetaData):
 
         return xml_string
 
-import receivers # never delete this otherwise non of the receiver function will work
+import receivers # never delete this otherwise none of the receiver function will work

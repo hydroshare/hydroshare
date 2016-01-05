@@ -2,11 +2,11 @@ from django.forms import ModelForm, BaseFormSet
 from django import forms
 
 from crispy_forms.layout import Layout, HTML, Field
-from hs_rscript_resource.models import RSMetadata
+from hs_script_resource.models import ScriptSpecificMetadata
 from hs_core.forms import BaseFormHelper
 
 
-class RSFormHelper(BaseFormHelper):
+class ScriptFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
 
         # Order of the Fields below determines their layout on the edit page
@@ -15,7 +15,6 @@ class RSFormHelper(BaseFormHelper):
         layout = Layout(
             HTML('<legend>General</legend>'),
             HTML('<div class="col-sm-6 col-xs-12">'),
-            Field('scriptLanguage', css_class=field_width),
             Field('languageVersion', css_class=field_width),
             Field('scriptVersion', css_class=field_width),
             Field('scriptDependencies', css_class=field_width),
@@ -24,14 +23,14 @@ class RSFormHelper(BaseFormHelper):
             Field('scriptCodeRepository', css_class=field_width),
             HTML('</div>')
         )
-        super(RSFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
-                                           layout, element_name_label='  ', *args, **kwargs)
+        super(ScriptFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
+                                               layout, element_name_label='  ', *args, **kwargs)
 
 
-class RSForm(ModelForm):
+class ScriptForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        super(RSForm, self).__init__(*args, **kwargs)
-        self.helper = RSFormHelper(allow_edit, res_short_id, element_id, element_name='RSMetadata')
+        super(ScriptForm, self).__init__(*args, **kwargs)
+        self.helper = ScriptFormHelper(allow_edit, res_short_id, element_id, element_name='ScriptSpecificMetadata')
 
         for field in self.fields:
             help_text = self.fields[field].help_text
@@ -43,10 +42,9 @@ class RSForm(ModelForm):
                                                         'data-container': 'body'})
 
     class Meta:
-        model = RSMetadata
+        model = ScriptSpecificMetadata
 
-        fields = ['scriptLanguage',
-                  'languageVersion',
+        fields = ['languageVersion',
                   'scriptVersion',
                   'scriptDependencies',
                   'scriptReleaseDate',
@@ -54,8 +52,7 @@ class RSForm(ModelForm):
         exclude = ['content_object']
 
 
-class RSFormValidation(forms.Form):
-    scriptLanguage = forms.CharField(required=False)
+class ScriptFormValidation(forms.Form):
     languageVersion = forms.CharField(required=False)
     scriptVersion = forms.CharField(required=False)
     scriptDependencies = forms.CharField(required=False)

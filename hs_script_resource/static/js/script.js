@@ -1,7 +1,7 @@
 $(document).ready(function () {
 
     // check to see if the view is in edit mode
-    if ( $('#id-rsmetadata')[0] != null) {
+    if ( $('#id-scriptspecificmetadata')[0] != null) {
 
         // initialize datepicker
         $('#scriptReleaseDate_picker').datepicker({
