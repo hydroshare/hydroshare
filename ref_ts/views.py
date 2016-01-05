@@ -8,6 +8,7 @@ import requests
 from lxml import etree
 import ast
 import logging
+
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -25,7 +26,7 @@ from .forms import ReferencedSitesForm, ReferencedVariablesForm, GetTSValuesForm
 
 preview_name = "preview.png"
 his_central_url = 'http://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ref_ts")
 
 # query HIS central to get all available HydroServer urls
 def get_his_urls(request):
@@ -56,8 +57,8 @@ def search_sites(request):
         else:
             raise
     except Exception as e:
-            logger.exception("search_sites: " + e.message)
-            return json_or_jsonp(request, {"status": "error"})
+        logger.exception("search_sites: " + e.message)
+        return json_or_jsonp(request, {"status": "error"})
 
 def search_variables(request):
     try:
@@ -122,8 +123,7 @@ def time_series_from_service(request):
         else:
             raise
     except Exception as e:
-        print ("time_series_from_service: %s"  % (e.message))
-        logger.error("time_series_from_service: %s"  % (e.message))
+        logger.exception("time_series_from_service: %s" % (e.message))
         if tempdir is not None:
            shutil.rmtree(tempdir)
         return json_or_jsonp(request, {'status': "error"})
@@ -227,7 +227,7 @@ def create_ref_time_series(request, *args, **kwargs):
             return HttpResponseRedirect(res.get_absolute_url())
 
     except Exception as ex:
-        print ("create_ref_time_series: %s" % (ex.message))
+        logger.exception("create_ref_time_series: %s" % (ex.message))
         context = {'resource_creation_error': "Error: failed to create resource." }
         return render_to_response('pages/create-ref-time-series.html', context, context_instance=RequestContext(request))
 

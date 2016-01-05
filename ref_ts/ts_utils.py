@@ -2,11 +2,12 @@ import requests
 import csv
 import os
 import logging
+from datetime import datetime
+from dateutil import parser
+from lxml import etree
 from suds.transport import TransportError
 from suds.client import Client
-from lxml import etree
 from xml.sax._exceptions import SAXParseException
-from datetime import datetime
 from matplotlib.pyplot import savefig
 import matplotlib.pyplot as plt
 
@@ -14,7 +15,7 @@ from hs_core import hydroshare
 from ref_ts.owslib_revised.waterml.wml11 import WaterML_1_1 as wml11
 from ref_ts.owslib_revised.waterml.wml10 import WaterML_1_0 as wml10
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ref_ts")
 
 def wmlParse(response, ver=11):
     if ver == 11:
@@ -32,6 +33,8 @@ def wmlVersionFromSoapURL(wsdl_url):
         ver = 11
     elif "2_0.asmx?" in wsdl_url.lower():
         ver = 20
+    else:
+        ver = -1
     return ver
 
 def check_url_and_version(wsdl_url):
@@ -87,7 +90,6 @@ def sites_from_soap(wsdl_url, locations='[:]'):
             sites_list.append("%s. %s [%s:%s]" % (str(counter), siteName, netWork, siteCode))
     except Exception as e:
         logger.exception("sites_from_soap: %s" % (e.message))
-        print ("sites_from_soap: %s" % (e.message))
         raise e
     return sites_list
 
@@ -123,13 +125,170 @@ def site_info_from_soap(wsdl_url, **kwargs):
 
         return variables_list
     except Exception as e:
-        print ("site_info_from_soap: %s" % (e.message))
-        logger.error("site_info_from_soap: %s" % (e.message))
+        logger.exception("site_info_from_soap: %s" % (e.message))
         raise e
 
 def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
 
-        try:
+    try:
+        wml_str, variable_code, variable_name, net_work, site_name, site_code, elevation, vertical_datum,\
+        longitude, latitude, projection, srs, noDataValue, unit_abbr, unit_code, unit_name, unit_type,\
+        method_code, method_id, method_description, source_code, source_id, quality_control_level_code,\
+        quality_control_level_definition, data, method_code_query, source_code_query,  \
+        quality_control_level_code_query, start_date, end_date = \
+        None, None, None, None, None, None, None, None,  None, None, None, None, None, None,\
+        None, None, None, None, None, None, None, None, None, None,  None, None, None, None, None, None
+
+        wmlValues = wmlParse(wml_string, wml_ver)
+
+        variable_query = wmlValues.query_info.criteria.variable_param
+        if variable_query is None:
+            for p in wmlValues.query_info.criteria.parameters:
+                if p[0].lower() == "variable":
+                    variable_query = p[1]
+        if variable_query is not None:
+            params = variable_query.split(':')
+            for param in params:
+                if "methodcode" in param.lower():
+                    method_code_query = (param.split('='))[1]
+                elif "sourcecode" in param.lower():
+                    source_code_query = (param.split('='))[1]
+                elif "qualitycontrollevelcode" in param.lower():
+                    quality_control_level_code_query = (param.split('='))[1]
+
+        wml_str = wml_string
+        variable_code = wmlValues.variable_codes[0]
+        variable_name = wmlValues.variable_names[0]
+
+        if hasattr(wmlValues.time_series[0], "source_info"):
+            sourceInfo_obj = wmlValues.time_series[0].source_info
+            if sourceInfo_obj:
+                net_work = sourceInfo_obj.net_work if hasattr(sourceInfo_obj, "net_work") else None
+                site_name = sourceInfo_obj.site_name if hasattr(sourceInfo_obj, "site_name") else None
+                site_codes = sourceInfo_obj.site_codes if hasattr(sourceInfo_obj, "site_codes") else None
+                if site_codes and len(site_codes) > 0:
+                    site_code = site_codes[0]
+                elevation = sourceInfo_obj.elevation if hasattr(sourceInfo_obj, "elevation") else None
+                vertical_datum = sourceInfo_obj.vertical_datum if hasattr(sourceInfo_obj, "vertical_datum") else None
+                loc_obj = sourceInfo_obj.location if hasattr(sourceInfo_obj, "location") else None
+                if loc_obj:
+                    geo_coords_tuple_list = loc_obj.geo_coords if hasattr(loc_obj, "geo_coords") else None
+                    if geo_coords_tuple_list and len(geo_coords_tuple_list) > 0:
+                        longitude = geo_coords_tuple_list[0][0]
+                        latitude = geo_coords_tuple_list[0][1]
+
+                    local_coords_tuple_list = loc_obj.local_sites if hasattr(loc_obj, "local_sites") else None
+                    if local_coords_tuple_list and len(local_coords_tuple_list) > 0:
+                        local_coords_x = local_coords_tuple_list[0][0]
+                        local_coords_y = local_coords_tuple_list[0][1]
+                    projection_list = loc_obj.projections if hasattr(loc_obj, "projections") else None
+                    if projection_list and len(projection_list) > 0:
+                       projection = projection_list[0]
+                    srs_list = loc_obj.srs if hasattr(loc_obj, "srs") else None
+                    if srs_list and len(srs_list) > 0:
+                        srs = srs_list[0]
+
+        variable_obj = wmlValues.time_series[0].variable if hasattr(wmlValues.time_series[0], "variable") else None
+        noDataValue = variable_obj.no_data_value if hasattr(variable_obj, "no_data_value") else None
+        unit_obj = variable_obj.unit if hasattr(variable_obj, "unit") else None
+        if unit_obj:
+            unit_abbr = unit_obj.abbreviation if hasattr(unit_obj, "abbreviation") else None
+            unit_code = unit_obj.code if hasattr(unit_obj, "code") else None
+            unit_name = unit_obj.name if hasattr(unit_obj, "name") else None
+            unit_type = unit_obj.unit_type if hasattr(unit_obj, "unit_type") else None
+
+        value_obj = wmlValues.time_series[0].values[0]
+        value_list = value_obj.values if hasattr(value_obj, "values") else None
+        x = []
+        y = []
+        data = {"x": x, "y": y}
+        if value_list:
+            for val in value_list:
+                t = val.date_time
+                t_str = t.isoformat() # convert to datetime string
+                x.append(t_str)
+                y.append(float(val.value))
+
+        start_date = value_list[0].date_time.isoformat()
+        end_date = value_list[len(value_list)-1].date_time.isoformat()
+        method_list = value_obj.methods if hasattr(value_obj, "methods") else None
+        if method_list and len(method_list) > 0:
+            method_obj = method_list[0]
+            method_code = method_obj.code if hasattr(method_obj, "code") else None
+            method_id = method_obj.id if hasattr(method_obj, "id") else None
+            method_description = method_obj.description if hasattr(method_obj, "description") else None
+        if method_code is None:
+            method_code = method_code_query
+
+        source_list = value_obj.sources if hasattr(value_obj, "sources") else None
+        if source_list and len(source_list) > 0:
+            source_code = source_list[0].code if hasattr(source_list[0], "code") else None
+            source_id = source_list[0].code if hasattr(source_list[0], "id") else None
+        if source_code is None:
+            source_code = source_code_query
+
+        quality_control_level_list = value_obj.quality_control_levels if \
+            hasattr(value_obj, "quality_control_levels") else None
+        if quality_control_level_list and len(quality_control_level_list) > 0:
+            quality_control_level_obj = quality_control_level_list[0]
+            quality_control_level_code = quality_control_level_obj.code if \
+                hasattr(quality_control_level_obj, "code") else None
+            quality_control_level_definition = quality_control_level_obj.definition if \
+                hasattr(quality_control_level_obj, "definition") else None
+
+        if quality_control_level_code is None:
+            quality_control_level_code = quality_control_level_code_query
+
+        if quality_control_level_definition is None:
+            if quality_control_level_code is None or quality_control_level_code == "0":
+                quality_control_level_definition = "Raw Data"
+            elif quality_control_level_code == "1":
+                quality_control_level_definition = "Quality Controlled Data"
+            elif quality_control_level_code == "2":
+                quality_control_level_definition = "Derived Products"
+            elif quality_control_level_code == "3":
+                quality_control_level_definition = "Interpreted Products"
+            elif quality_control_level_code == "4":
+                quality_control_level_definition = "Knowledge Products"
+            else:
+                quality_control_level_definition = 'Unknown'
+
+        return {'wml_str': wml_str,
+                'variable_code': variable_code,
+                'variable_name': variable_name,
+                "net_work": net_work,
+                'site_name': site_name,
+                'site_code': site_code,
+                'elevation': elevation,
+                'vertical_datum': vertical_datum,
+                'latitude': latitude,
+                'longitude': longitude,
+                'projection': projection,
+                'srs': srs,
+                'noDataValue': noDataValue,
+                'unit_abbr': unit_abbr,
+                'unit_code': unit_code,
+                'unit_name': unit_name,
+                'unit_type': unit_type,
+                'method_code': method_code,
+                'method_id': method_id,
+                'method_description': method_description,
+                'source_code': source_code,
+                'source_id': source_id,
+                'quality_control_level_code': quality_control_level_code,
+                'quality_control_level_definition': quality_control_level_definition,
+                'data': data,
+                "start_date": start_date,
+                "end_date": end_date
+                }
+    except Exception as e:
+        logger.exception("parse_1_0_and_1_1_owslib: %s" % (e.message))
+        raise e
+
+def parse_2_0(root):
+    try:
+        if 'Collection' in root.tag:
+
             wml_str, variable_code, variable_name, net_work, site_name, site_code, elevation, vertical_datum,\
             longitude, latitude, projection, srs, noDataValue, unit_abbr, unit_code, unit_name, unit_type,\
             method_code, method_id, method_description, source_code, source_id, quality_control_level_code,\
@@ -138,119 +297,76 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
             None, None, None, None, None, None, None, None,  None, None, None, None, None, None,\
             None, None, None, None, None, None, None, None, None, None,  None, None, None, None, None, None
 
-            wmlValues = wmlParse(wml_string, wml_ver)
+            sample_medium = None
 
-            variable_query = wmlValues.query_info.criteria.variable_param
-            if variable_query is None:
-                for p in wmlValues.query_info.criteria.parameters:
-                    if p[0].lower() == "variable":
-                        variable_query = p[1]
-            if variable_query is not None:
-                params = variable_query.split(':')
-                for param in params:
-                    if "methodcode" in param.lower():
-                        method_code_query = (param.split('='))[1]
-                    elif "sourcecode" in param.lower():
-                        source_code_query = (param.split('='))[1]
-                    elif "qualitycontrollevelcode" in param.lower():
-                        quality_control_level_code_query = (param.split('='))[1]
+            name_is_set, site_code_set = False, False
 
-            wml_str = wml_string
-            variable_code = wmlValues.variable_codes[0]
-            variable_name = wmlValues.variable_names[0]
+            wml_str = etree.tostring(root)
 
-            if hasattr(wmlValues.time_series[0], "source_info"):
-                sourceInfo_obj = wmlValues.time_series[0].source_info
-                if sourceInfo_obj:
-                    net_work = sourceInfo_obj.net_work if hasattr(sourceInfo_obj, "net_work") else None
-                    site_name = sourceInfo_obj.site_name if hasattr(sourceInfo_obj, "site_name") else None
-                    site_codes = sourceInfo_obj.site_codes if hasattr(sourceInfo_obj, "site_codes") else None
-                    if site_codes and len(site_codes) > 0:
-                        site_code = site_codes[0]
-                    elevation = sourceInfo_obj.elevation if hasattr(sourceInfo_obj, "elevation") else None
-                    vertical_datum = sourceInfo_obj.vertical_datum if hasattr(sourceInfo_obj, "vertical_datum") else None
-                    loc_obj = sourceInfo_obj.location if hasattr(sourceInfo_obj, "location") else None
-                    if loc_obj:
-                        geo_coords_tuple_list = loc_obj.geo_coords if hasattr(loc_obj, "geo_coords") else None
-                        if geo_coords_tuple_list and len(geo_coords_tuple_list) > 0:
-                            longitude = geo_coords_tuple_list[0][0]
-                            latitude = geo_coords_tuple_list[0][1]
-
-                        local_coords_tuple_list = loc_obj.local_sites if hasattr(loc_obj, "local_sites") else None
-                        if local_coords_tuple_list and len(local_coords_tuple_list) > 0:
-                            local_coords_x = local_coords_tuple_list[0][0]
-                            local_coords_y = local_coords_tuple_list[0][1]
-                        projection_list = loc_obj.projections if hasattr(loc_obj, "projections") else None
-                        if projection_list and len(projection_list) >  0:
-                           projection = projection_list[0]
-                        srs_list = loc_obj.srs if hasattr(loc_obj, "srs") else None
-                        if srs_list and len(srs_list) > 0:
-                            srs = srs_list[0]
-
-            variable_obj = wmlValues.time_series[0].variable if hasattr(wmlValues.time_series[0], "variable") else None
-            noDataValue = variable_obj.no_data_value if hasattr(variable_obj, "no_data_value") else None
-            unit_obj = variable_obj.unit if hasattr(variable_obj, "unit") else None
-            if unit_obj:
-                unit_abbr = unit_obj.abbreviation if hasattr(unit_obj, "abbreviation") else None
-                unit_code = unit_obj.code if hasattr(unit_obj, "code") else None
-                unit_name = unit_obj.name if hasattr(unit_obj, "name") else None
-                unit_type = unit_obj.unit_type if hasattr(unit_obj, "unit_type") else None
-
-            value_obj = wmlValues.time_series[0].values[0]
-            value_list = value_obj.values if hasattr(value_obj, "values") else None
             x = []
             y = []
             data = {"x": x, "y": y}
-            if value_list:
-                for val in value_list:
-                    t = val.date_time
-                    t_str = t.isoformat() # convert to datetime string
-                    x.append(t_str)
-                    y.append(float(val.value))
 
-            start_date = value_list[0].date_time.isoformat()
-            end_date = value_list[len(value_list)-1].date_time.isoformat()
-            method_list = value_obj.methods if hasattr(value_obj, "methods") else None
-            if method_list and len(method_list) > 0:
-                method_obj = method_list[0]
-                method_code = method_obj.code if hasattr(method_obj, "code") else None
-                method_id = method_obj.id if hasattr(method_obj, "id") else None
-                method_description = method_obj.description if hasattr(method_obj, "description") else None
-            if method_code is None:
-                method_code = method_code_query
+            variable_name = root[1].text
+            for element in root.iter():
+                if 'MeasurementTVP' in element.tag:
+                        for e in element:
+                            if 'time' in e.tag:
+                                t_obj = time_str_to_datetime(e.text) # original datetime string may be improperly formatted
+                                t_str = t_obj.isoformat()
+                                x.append(t_str)
+                            if 'value' in e.tag:
+                                y.append(float(e.text))
 
-            source_list = value_obj.sources if hasattr(value_obj, "sources") else None
-            if source_list and len(source_list) > 0:
-                source_code = source_list[0].code if hasattr(source_list[0], "code") else None
-                source_id = source_list[0].code if hasattr(source_list[0], "id") else None
-            if source_code is None:
-                source_code = source_code_query
+                if 'uom' in element.tag:
+                    for a in element.attrib:
+                        if "code" in a or "umo" in a or "title" in a:
+                            unit_name = element.attrib.get(a, None)
 
-            quality_control_level_list = value_obj.quality_control_levels if \
-                hasattr(value_obj, "quality_control_levels") else None
-            if quality_control_level_list and len(quality_control_level_list) > 0:
-                quality_control_level_obj = quality_control_level_list[0]
-                quality_control_level_code = quality_control_level_obj.code if \
-                    hasattr(quality_control_level_obj, "code") else None
-                quality_control_level_definition = quality_control_level_obj.definition if \
-                    hasattr(quality_control_level_obj, "definition") else None
+                if 'MonitoringPoint' in element.tag:
+                    for e in element.iter():
+                        if 'identifier' in e.tag and not site_code_set:
+                            site_code = e.text
+                            site_code_set = True
+                        if 'name' in e.tag and not name_is_set:
+                            site_name = e.text
+                            name_is_set = True
+                        if 'pos' in e.tag:
+                            lat_long = e.text
+                            lat_long = lat_long.split(' ')
+                            latitude = lat_long[0]
+                            longitude = lat_long[1]
+                if 'observedProperty' in element.tag:
+                    for a in element.attrib:
+                        if 'title' in a:
+                            variable_name = element.attrib[a]
+                        # if 'href' in a:
+                        #     variable_code = element.attrib[a]
+                        #     variable_code = variable_code.replace('#', '')
+                if variable_name == 'Unmapped':
+                    try:
+                        if 'vocabulary' in element.attrib:
+                            variable_name = element.text
+                    except:
+                        variable_name = 'Unmapped'
+                if 'ObservationProcess' in element.tag:
+                    for e in element.iter():
+                        if 'processType' in e.tag:
+                            for a in e.attrib:
+                                if 'title' in a:
+                                    method_description = e.attrib[a]
+                if 'sampledMedium' in element.tag:
+                    for a in element.attrib.iteritems():
+                        if 'title' in a[0]:
+                            sample_medium = a[1]
 
-            if quality_control_level_code is None:
-                quality_control_level_code = quality_control_level_code_query
-
-            if quality_control_level_definition is None:
-                if quality_control_level_code is None or quality_control_level_code == "0":
-                    quality_control_level_definition = "Raw Data"
-                elif quality_control_level_code == "1":
-                    quality_control_level_definition = "Quality Controlled Data"
-                elif quality_control_level_code == "2":
-                    quality_control_level_definition = "Derived Products"
-                elif quality_control_level_code == "3":
-                    quality_control_level_definition = "Interpreted Products"
-                elif quality_control_level_code == "4":
-                    quality_control_level_definition = "Knowledge Products"
-                else:
-                    quality_control_level_definition = 'Unknown'
+            if variable_name == 'Unmapped':
+                for element in root.iter():
+                    if len(element.attrib.values()) > 0:
+                        if 'vocabulary' in element.attrib.values()[0]:
+                            variable_name = element.text
+                        if 'qualityControlLevelCode' in element.attrib.values()[0] and 'name' in element.tag:
+                            quality_control_level_definition = element.text
 
             return {'wml_str': wml_str,
                     'variable_code': variable_code,
@@ -280,94 +396,18 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
                     "start_date": start_date,
                     "end_date": end_date
                     }
-        except Exception as e:
-            print ("parse_1_0_and_1_1_owslib: %s" % (e.message))
-            raise e
+    except Exception as ex:
+        logger.error(ex.message)
+        raise Exception("parse 2.0 error")
 
-def parse_2_0(root):
-        if 'Collection' in root.tag:
-            ts = etree.tostring(root)
-            keys = []
-            vals = []
-            for_graph = []
-            QClevel, units, site_name, variable_name, latitude, longitude, method, site_code, variable_code, sample_medium = None, None, None, None, None, None, None, None, None, None
-            name_is_set, site_code_set = False, False
-            variable_name = root[1].text
-            for element in root.iter():
-                if 'MeasurementTVP' in element.tag:
-                        for e in element:
-                            if 'time' in e.tag:
-                                keys.append(e.text)
-                            if 'value' in e.tag:
-                                vals.append(e.text)
-                if 'uom' in element.tag:
-                    units = element.attrib['code']
-                if 'MonitoringPoint' in element.tag:
-                    for e in element.iter():
-                        if 'identifier' in e.tag and not site_code_set:
-                            site_code = e.text
-                            site_code_set = True
-                        if 'name' in e.tag and not name_is_set:
-                            site_name = e.text
-                            name_is_set = True
-                        if 'pos' in e.tag:
-                            lat_long = e.text
-                            lat_long = lat_long.split(' ')
-                            latitude = lat_long[0]
-                            longitude = lat_long[1]
-                if 'observedProperty' in element.tag:
-                    for a in element.attrib:
-                        if 'title' in a:
-                            variable_name = element.attrib[a]
-                        if 'href' in a:
-                            variable_code = element.attrib[a]
-                            variable_code = variable_code.replace('#', '')
-                if variable_name == 'Unmapped':
-                    try:
-                        if 'vocabulary' in element.attrib:
-                            variable_name = element.text
-                    except:
-                        variable_name = 'Unmapped'
-                if 'ObservationProcess' in element.tag:
-                    for e in element.iter():
-                        if 'processType' in e.tag:
-                            for a in e.attrib:
-                                if 'title' in a:
-                                    method = e.attrib[a]
-                if 'sampledMedium' in element.tag:
-                    for a in element.attrib.iteritems():
-                        if 'title' in a[0]:
-                            sample_medium = a[1]
-            values = dict(zip(keys, vals))
-            if variable_name=='Unmapped':
-                for element in root.iter():
-                    if len(element.attrib.values())>0:
-                        if 'vocabulary' in element.attrib.values()[0]:
-                            variable_name = element.text
-                        if 'qualityControlLevelCode' in element.attrib.values()[0] and 'name' in element.tag:
-                            QClevel = element.text
-            for k, v in values.items():
-                t = time_to_int(k)
-                for_graph.append({'x': t, 'y': float(v)})
-            smallest_time = list(values.keys())[0]
-            for t in list(values.keys()):
-                if t < smallest_time:
-                    smallest_time = t
-            return {'time_series': ts,
-                    'site_name': site_name,
-                    'site_code': site_code,
-                    'start_date': smallest_time,
-                    'variable_name': variable_name,
-                    'variable_code': variable_code,
-                    'units': units,
-                    'values': values,
-                    'for_graph': for_graph,
-                    'wml_version': '2.0',
-                    'latitude': latitude,
-                    'longitude': longitude,
-                    'QClevel': QClevel,
-                    'method': method,
-                    'sample_medium': sample_medium}
+
+def time_str_to_datetime(t):
+    try:
+        t_datetime=parser.parse(t)
+        return t_datetime
+    except ValueError:
+        logger.exception("time_str_to_datetime error: " + t)
+        raise Exception("time_str_to_datetime error: " + t)
 
 # get values
 def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, variable_code=None, start_date='', end_date='', auth_token=''):
@@ -380,28 +420,26 @@ def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, vari
 
     try:
         if soap_or_rest == 'soap':
-            wml_ver = check_url_and_version(service_url)
             client = connect_wsdl_url(service_url)
             response = client.service.GetValues(site_code, variable_code, start_date, end_date, auth_token)
         elif soap_or_rest == 'rest':
             r = requests.get(service_url)
-            if r.status_code == 200:
-                response = r.text.encode('utf-8')
-            else:
+            if r.status_code != 200:
                 raise Exception("Query REST endpoint failed")
+            response = r.text.encode('utf-8')
         root = etree.XML(response)
-        wml_version = get_wml_version_from_xml_tag(root)
-        if wml_version == 10 or wml_version == 11:
-            ts = parse_1_0_and_1_1_owslib(response, wml_version)
-        elif wml_version == 20:
+        wml_version_xml_tag = get_wml_version_from_xml_tag(root)
+        if wml_version_xml_tag == 10 or wml_version_xml_tag == 11:
+            ts = parse_1_0_and_1_1_owslib(response, wml_version_xml_tag)
+        elif wml_version_xml_tag == 20:
             ts = parse_2_0(root)
-        else: # some hydrosevers may return wml without having version info in tags (http://worldwater.byu.edu/interactive/gill_lab/services/index.php/cuahsi_1_1.asmx?WSDL)
-            raise Exception("response XML has no WML ver info")
-        ts["wml_version"] = wml_version
+         # some hydrosevers may return wml without having version info in tags (http://worldwater.byu.edu/interactive/gill_lab/services/index.php/cuahsi_1_1.asmx?WSDL)
+        else:
+            raise Exception("no version info found in wml")
+        ts["wml_version"] = wml_version_xml_tag
         return ts
     except Exception as e:
-        print ("QueryHydroServerGetParsedWML: %s" % (e.message))
-        logger.error("QueryHydroServerGetParsedWML: %s" % (e.message))
+        logger.exception("QueryHydroServerGetParsedWML: %s" % (e.message))
         raise e
 
 def create_vis_2(path, site_name, data, xlabel, variable_name, units, noDataValue, predefined_name=None):
@@ -433,8 +471,7 @@ def create_vis_2(path, site_name, data, xlabel, variable_name, units, noDataValu
         savefig(vis_path, bbox_inches='tight')
         return {"fname": vis_name, "fullpath": vis_path}
     except Exception as e:
-        print ("create_vis_2: %s" % (e.message))
-        logger.error("create_vis_2: %s" % (e.message))
+        logger.exception("create_vis_2: %s" % (e.message))
         raise e
 
 
@@ -533,7 +570,7 @@ def save_ts_to_files(res, tempdir, ts):
             tree_wml_2.write(wml_2_0_full_path, pretty_print=True)
             res_file_info_array.append({"fname": wml_2_0_name, "fullpath": wml_2_0_full_path})
         except Exception as e:
-            print ("convert to wml2 error: %s".format(e.message))
+            logger.exception("convert to wml2 error: %s".format(e.message))
 
     elif ts["wml_version"] == 20:
         with open(wml_2_0_full_path, 'w') as xml_2_file:

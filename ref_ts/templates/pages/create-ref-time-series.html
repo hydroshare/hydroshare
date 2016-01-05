@@ -121,7 +121,7 @@
             function check_url(url){
                 globurl = url;
                 $('#url-input').removeClass("has-success").removeClass("has-error").hide();
-                $('#loading-1-text').html('<h3></h3>');
+                $('#loading-1-text').html('');
                 $('#resource_creation_error').hide()
 
                 if (url.match(/WSDL$/) || url.match(/wsdl$/)){
@@ -140,6 +140,7 @@
                             if (data["status"] == "success")
                             {
                                 $('#url-input').addClass("has-success");
+                                $('#loading-1-text').html('');
                                 getVals('rest');
                             }
                             else
@@ -251,7 +252,7 @@
             }
 
             function get_variables(site){
-                $('#loading-2').show();
+
                 site_code = site;
                 var url = globurl;
                 var b = $('#submit');
@@ -259,6 +260,7 @@
                 $('#site').prop("disabled", true);
                 $('.ui-autocomplete-input').prop("disabled", true);
                 $('.cuahsi-his-3').hide();
+                $('#loading-2').hide();
 
                 $.ajax({
                     type:"GET",
@@ -303,6 +305,7 @@
             function get_variables_failed()
             {
                 $('#loading-2-text').html('<h3">There was an error retrieving variables for this site</h3>');
+                $('#loading-2').show()
                 $('#site').prop("disabled", false);
                 $('.ui-autocomplete-input').prop("disabled", false);
             }
