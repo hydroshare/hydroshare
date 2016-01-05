@@ -910,14 +910,6 @@
                         </table>
                     </div>
                 {% endif %}
-                <!-- Buttons -->
-                {% for b in cm.bags.all %}
-                    <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag_url }}">
-                        <span class="glyphicon glyphicon-download-alt">
-                            <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
-                        </span>
-                    </a>
-                {% endfor %}
 
                 {% if page.perms.change and metadata_form %}
                     <a id="btn-add-file" type="button" class="btn btn-success" data-toggle="modal"
@@ -925,13 +917,14 @@
                        multiple="multiple">
                         <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
                     </a>
-                    <br>
-                    <span>If you want to add files from an iRODS server into HydroShare, please do so by logging into the iRODS server
+                    <span id="panel-right">If you want to add files from an iRODS server into HydroShare, please do so by logging into the iRODS server
                     <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal" data-target="#irodsSignin">here.</a></span>
                     <span id="sign-in-info"></span>
+                    <div>
                     <a id="btn-select-irods-file"  type="button" class="btn btn-success" data-toggle="modal" data-target="#irodsContent" style="display:none;">
                         <span class="glyphicon glyphicon-plus"><span class="button-label">Add file from iRODS...</span></span>
                     </a>
+                    </div>
                     {% if file_type_error %}
                       <div class="alert alert-danger alert-dismissible" role="alert">
                         <button id="validation-error-close" type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -940,9 +933,15 @@
                     {% endif %}
                 {% endif %}
 
-                <div class="col-lg-12">
-                    <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
-                </div>
+                <!-- Buttons -->
+                {% for b in cm.bags.all %}
+                    <a id="btn-download-all" type="button" class="btn btn-default" href="{{ bag_url }}">
+                        <span class="glyphicon glyphicon-download-alt">
+                            <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
+                        </span>
+                        <a id="panel-right" target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
+                    </a>
+                {% endfor %}
             {% else %}
                 <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;
                 <span>You do not have permission to see these content files. Please contact the Authors if you wish to obtain access.</span>
