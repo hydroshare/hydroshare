@@ -14,6 +14,10 @@ RUN apt-get update && apt-get install -y \
     docker.io curl libssl0.9.8 libfuse2 \
     nco netcdf-bin
 
+# Add docker user
+RUN useradd -m docker -g docker
+RUN echo docker:docker | chpasswd
+
 # Build add-ons and pip install requirements.txt
 ADD . /home/docker
 WORKDIR /home/docker/pysqlite-2.6.3/
@@ -23,6 +27,13 @@ WORKDIR /home/docker
 RUN pip install -r requirements.txt
 RUN npm install carto
 
+# Install iRODS 4.1.5 packages
+RUN curl ftp://ftp.renci.org/pub/irods/releases/4.1.5/ubuntu14/irods-runtime-4.1.5-ubuntu14-x86_64.deb -o irods-runtime.deb
+RUN curl ftp://ftp.renci.org/pub/irods/releases/4.1.5/ubuntu14/irods-icommands-4.1.5-ubuntu14-x86_64.deb -o irods-icommands.deb
+RUN sudo dpkg -i irods-runtime.deb irods-icommands.deb
+RUN sudo apt-get -f install
+RUN rm irods-runtime.deb irods-icommands.deb
+
 # Install netcdf4 python
 RUN curl -O https://pypi.python.org/packages/source/n/netCDF4/netCDF4-1.1.1.tar.gz
 RUN tar -xvzf netCDF4-1.1.1.tar.gz
@@ -31,6 +42,18 @@ RUN python setup.py install
 WORKDIR /home/docker
 RUN rm netCDF4-1.1.1.tar.gz
 
-# Add docker user
-RUN useradd -m docker -g docker
-RUN echo docker:docker | chpasswd
+# Add the hydroshare directory
+ADD . /home/docker/hydroshare
+RUN chown -R docker:docker /home/docker
+WORKDIR /home/docker/hydroshare
+
+# Configure and Cleanup
+RUN rm -rf /tmp/pip-build-root
+RUN mkdir -p /var/run/sshd
+RUN echo root:docker | chpasswd
+RUN sed "s/without-password/yes/g" /etc/ssh/sshd_config > /etc/ssh/sshd_config2
+RUN sed "s/UsePAM yes/UsePAM no/g" /etc/ssh/sshd_config2 > /etc/ssh/sshd_config
+RUN mkdir -p /home/docker/hydroshare/static/media/.cache
+RUN chown -R docker:docker /home/docker
+RUN mkdir -p /tmp
+RUN chmod 777 /tmp
