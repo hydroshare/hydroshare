@@ -285,7 +285,7 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
         logger.exception("parse_1_0_and_1_1_owslib: %s" % (e.message))
         raise e
 
-def parse_2_0(root):
+def parse_2_0_old(root):
     try:
         if 'Collection' in root.tag:
 
@@ -400,6 +400,189 @@ def parse_2_0(root):
         logger.error(ex.message)
         raise Exception("parse 2.0 error")
 
+def getAttributeValueFromElement(ele, a_name, exactmatch=False):
+    for a in ele.attrib:
+        if not exactmatch:
+            if a_name in a:
+               return ele.attrib.get(a, None)
+        else:
+             if a_name == a:
+               return ele.attrib.get(a, None)
+    return None
+
+def parse_featureOfInterest(OM_Observation_element):
+    site_name = None
+
+    for featureOfInterest_element in OM_Observation_element.iter():
+        if "featureOfInterest" in featureOfInterest_element.tag:
+            site_name = getAttributeValueFromElement(featureOfInterest_element, "title")
+    return {"site_name": site_name}
+
+def parse_observedProperty(OM_Observation_element):
+    variable_name = None
+
+    for observedProperty_element in OM_Observation_element.iter():
+        if "observedProperty" in observedProperty_element.tag:
+            variable_name = getAttributeValueFromElement(observedProperty_element, "title")
+    return {"variable_name": variable_name}
+
+def parse_uom(OM_Observation_element):
+    unit_name = None
+
+    for uom_element in OM_Observation_element.iter():
+        if "uom" in uom_element.tag:
+            unit_name = getAttributeValueFromElement(uom_element, "title")
+            if unit_name is None:
+               unit_name = getAttributeValueFromElement(uom_element, "code")
+               if unit_name is None:
+                    unit_name = getAttributeValueFromElement(uom_element, "uom")
+    return {"unit_name": unit_name}
+
+def parse_qualifier(OM_Observation_element):
+    qualifier_name = None
+    for qualifier_element in OM_Observation_element.iter():
+        if "qualifier" in qualifier_element.tag:
+            qualifier_name = getAttributeValueFromElement(qualifier_element, "title")
+    return {"qualifier_name": qualifier_name}
+
+def parse_value(OM_Observation_element):
+    x = []
+    y = []
+    for point_element in OM_Observation_element.iter():
+        if "point" in point_element.tag:
+            for ele in point_element.iter():
+                if "time" in ele.tag:
+                    x.append(ele.text)
+                elif "value" in ele.tag:
+                    y.append(ele.text)
+    return {"x": x, "y": y}
+
+def parse_2_0(root):
+    OM_Observation_list = []
+    for OM_Observation_element in root.iter():
+        if "OM_Observation" in OM_Observation_element.tag:
+            site_name = parse_featureOfInterest(OM_Observation_element)["site_name"]
+            variable_name = parse_observedProperty(OM_Observation_element)["variable_name"]
+            unit_name = parse_uom(OM_Observation_element)["unit_name"]
+            qualifier_name = parse_qualifier(OM_Observation_element)["qualifier_name"]
+            x_y_dict = parse_value(OM_Observation_element)
+            x = x_y_dict['x']
+            y = x_y_dict['y']
+
+
+    try:
+        if 'Collection' in root.tag:
+
+            wml_str, variable_code, variable_name, net_work, site_name, site_code, elevation, vertical_datum,\
+            longitude, latitude, projection, srs, noDataValue, unit_abbr, unit_code, unit_name, unit_type,\
+            method_code, method_id, method_description, source_code, source_id, quality_control_level_code,\
+            quality_control_level_definition, data, method_code_query, source_code_query,  \
+            quality_control_level_code_query, start_date, end_date = \
+            None, None, None, None, None, None, None, None,  None, None, None, None, None, None,\
+            None, None, None, None, None, None, None, None, None, None,  None, None, None, None, None, None
+
+            sample_medium = None
+
+            name_is_set, site_code_set = False, False
+
+            wml_str = etree.tostring(root)
+
+            x = []
+            y = []
+            data = {"x": x, "y": y}
+
+            variable_name = root[1].text
+            for element in root.iter():
+                if 'MeasurementTVP' in element.tag:
+                        for e in element:
+                            if 'time' in e.tag:
+                                t_obj = time_str_to_datetime(e.text) # original datetime string may be improperly formatted
+                                t_str = t_obj.isoformat()
+                                x.append(t_str)
+                            if 'value' in e.tag:
+                                y.append(float(e.text))
+
+                if 'uom' in element.tag:
+                    for a in element.attrib:
+                        if "code" in a or "umo" in a or "title" in a:
+                            unit_name = element.attrib.get(a, None)
+
+                if 'MonitoringPoint' in element.tag:
+                    for e in element.iter():
+                        if 'identifier' in e.tag and not site_code_set:
+                            site_code = e.text
+                            site_code_set = True
+                        if 'name' in e.tag and not name_is_set:
+                            site_name = e.text
+                            name_is_set = True
+                        if 'pos' in e.tag:
+                            lat_long = e.text
+                            lat_long = lat_long.split(' ')
+                            latitude = lat_long[0]
+                            longitude = lat_long[1]
+                if 'observedProperty' in element.tag:
+                    for a in element.attrib:
+                        if 'title' in a:
+                            variable_name = element.attrib[a]
+                        # if 'href' in a:
+                        #     variable_code = element.attrib[a]
+                        #     variable_code = variable_code.replace('#', '')
+                if variable_name == 'Unmapped':
+                    try:
+                        if 'vocabulary' in element.attrib:
+                            variable_name = element.text
+                    except:
+                        variable_name = 'Unmapped'
+                if 'ObservationProcess' in element.tag:
+                    for e in element.iter():
+                        if 'processType' in e.tag:
+                            for a in e.attrib:
+                                if 'title' in a:
+                                    method_description = e.attrib[a]
+                if 'sampledMedium' in element.tag:
+                    for a in element.attrib.iteritems():
+                        if 'title' in a[0]:
+                            sample_medium = a[1]
+
+            if variable_name == 'Unmapped':
+                for element in root.iter():
+                    if len(element.attrib.values()) > 0:
+                        if 'vocabulary' in element.attrib.values()[0]:
+                            variable_name = element.text
+                        if 'qualityControlLevelCode' in element.attrib.values()[0] and 'name' in element.tag:
+                            quality_control_level_definition = element.text
+
+            return {'wml_str': wml_str,
+                    'variable_code': variable_code,
+                    'variable_name': variable_name,
+                    "net_work": net_work,
+                    'site_name': site_name,
+                    'site_code': site_code,
+                    'elevation': elevation,
+                    'vertical_datum': vertical_datum,
+                    'latitude': latitude,
+                    'longitude': longitude,
+                    'projection': projection,
+                    'srs': srs,
+                    'noDataValue': noDataValue,
+                    'unit_abbr': unit_abbr,
+                    'unit_code': unit_code,
+                    'unit_name': unit_name,
+                    'unit_type': unit_type,
+                    'method_code': method_code,
+                    'method_id': method_id,
+                    'method_description': method_description,
+                    'source_code': source_code,
+                    'source_id': source_id,
+                    'quality_control_level_code': quality_control_level_code,
+                    'quality_control_level_definition': quality_control_level_definition,
+                    'data': data,
+                    "start_date": start_date,
+                    "end_date": end_date
+                    }
+    except Exception as ex:
+        logger.error(ex.message)
+        raise Exception("parse 2.0 error")
 
 def time_str_to_datetime(t):
     try:
