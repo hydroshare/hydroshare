@@ -6,7 +6,7 @@ from hs_core import hydroshare
 from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_labels.models import UserLabels, ResourceLabels, \
-    UserResourceLabels, UserResourceFlags2, UserStoredLabels, FlagCodes
+    UserResourceLabels, UserResourceFlags, UserStoredLabels, FlagCodes
 
 def global_reset():
     UserResourceLabels.objects.all().delete()
