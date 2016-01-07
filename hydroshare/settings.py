@@ -284,6 +284,7 @@ INSTALLED_APPS = (
     #"dublincore",
     "hs_core",
     "hs_access_control",
+    "hs_access_control_2",
     "hs_labels",
     "hs_metrics",
     "irods_browser_app",
