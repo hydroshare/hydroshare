@@ -10,7 +10,7 @@ from hs_labels.models import UserLabels, ResourceLabels, \
 
 def global_reset():
     UserResourceLabels.objects.all().delete()
-    UserResourceFlags2.objects.all().delete()
+    UserResourceFlags.objects.all().delete()
     UserStoredLabels.objects.all().delete()
     UserLabels.objects.all().delete()
     ResourceLabels.objects.all().delete()
