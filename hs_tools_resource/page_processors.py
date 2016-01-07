@@ -88,7 +88,8 @@ def landing_page(request, page):
                 HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
                      '{% load crispy_forms_tags %} '
                      '{% crispy version_form %} '
-                     '</div> ')
+                     '</div> '),
+                HTML('<div id="checked_res_div" hidden="true">{{ checked_res }}</div>')
         )
 
         # get the context from hs_core
