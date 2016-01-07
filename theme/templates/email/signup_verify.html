@@ -1,7 +1,8 @@
 {% load i18n %}
 {% block main %}
-<p>{% trans "Welcome to HydroShare. This email address was used to request an account on HydroShare." %}</p>
+<p>{% trans "Welcome to HydroShare. This email address was used to request an account on www.hydroshare.org." %}</p>
 <p>{% trans "If you originated the request, please use the link below to verify your email address and activate your account." %}</p>
 <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ verify_url }}">{{ request.scheme }}://{{ request.get_host }}{{ verify_url }}</a></p>
-<p>{% trans "If you did not originate this request you may ignore this email and the account request will expire in 24 hours." %}</p>
+<p>{% trans "If you did not originate this request you may ignore this email." %}</p>
+<p>{% trans "The HydroShare Team" %}</p>
 {% endblock %}
