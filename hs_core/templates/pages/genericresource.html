@@ -1587,9 +1587,10 @@
                             <div class="tab-pane" id="relevantTools">
                             {% if not metadata_form %}
                                 {% for tool in relevant_tools %}
-                                    <div style="display:inline-block; padding-left:20px;">
+                                    <div style="display:inline-block; padding-left:20px; text-align:center;">
                                         <h4>{{ tool.title }}</h4>
-                                        <img src="{{ tool.icon }}" style="width:100px; height:100px;"/>
+                                        <img src="{{ tool.icon }}" style="width:100px; height:100px;"
+                                             onerror="this.src = '{{ STATIC_URL }}img/web-app-default-icon.png';"/>
                                         <br>
                                         <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch App</button></a>
                                     </div>
