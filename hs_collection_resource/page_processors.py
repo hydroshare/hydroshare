@@ -4,8 +4,8 @@ from crispy_forms.layout import Layout, HTML
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 
-from forms import UrlBaseForm, VersionForm, SupportedResTypesForm, get_res_id_list
-from models import CollectionResource, RequestUrlBase
+from forms import CollectionItemsForm, get_res_id_list
+from models import CollectionResource
 from hs_access_control.models import PrivilegeCodes, HSAccessException
 
 @processor_for(CollectionResource)
@@ -54,62 +54,39 @@ def landing_page(request, page):
                                                    extended_metadata_layout=None,
                                                    request=request)
         extended_metadata_exists = False
-        if content_model.metadata.url_bases.first() or content_model.metadata.versions.first():
+        if content_model.metadata.collection_items.first():
             extended_metadata_exists = True
 
-        new_supported_res_types_array = []
-        if content_model.metadata.supported_res_types.first():
+        if content_model.metadata.collection_items.first():
             extended_metadata_exists = True
-            supported_res_types_str = content_model.metadata.supported_res_types.first().get_supported_res_types_str()
-            supported_res_types_array = supported_res_types_str.split(',')
-            for type_name in supported_res_types_array:
-                for display_name_tuple in get_res_id_list(resource_collection):
-                    if type_name.lower() == display_name_tuple.lower():
-                        new_supported_res_types_array += [display_name_tuple]
-                        break
 
-            context['supported_res_types'] = ", ".join(new_supported_res_types_array)
+            get_info = content_model.metadata.collection_items.first().collection_items.all()
+            link_html = ""
+            for res in get_info:
+                link_html += '<a href="/resource/'+res.short_id+'">'+ res.title +':'+ res.resource_type + '</a><br/>'
+            context['collection_items'] = link_html
 
         context['extended_metadata_exists'] = extended_metadata_exists
-        context['url_base'] = content_model.metadata.url_bases.first()
-        context['version'] = content_model.metadata.versions.first()
     else:
-        url_base = content_model.metadata.url_bases.first()
-        if not url_base:
-            url_base = RequestUrlBase.create(content_object=content_model.metadata,
-                                             resShortID=content_model.short_id)
 
-        url_base_form = UrlBaseForm(instance=url_base,
-                                    res_short_id=content_model.short_id,
-                                    element_id=url_base.id
-                                    if url_base else None)
+        actual_resources = []
+        for res in resource_collection:
+            if content_model.short_id == res.short_id:
+                continue
+            actual_resources.append(res)
 
-        version = content_model.metadata.versions.first()
-        version_form = VersionForm(instance=version,
-                                   res_short_id=content_model.short_id,
-                                   element_id=version.id
-                                   if version else None)
-
-        supported_res_types_obj = content_model.metadata.supported_res_types.first()
-        supported_res_types_form = SupportedResTypesForm(instance=supported_res_types_obj,
+        collection_items_obj = content_model.metadata.collection_items.first()
+        collection_items_form = CollectionItemsForm(instance=collection_items_obj,
                                                          res_short_id=content_model.short_id,
-                                                         element_id=supported_res_types_obj.id
-                                                         if supported_res_types_obj else None,
-                                                         all_res_list=resource_collection)
+                                                         element_id=collection_items_obj.id
+                                                         if collection_items_obj else None,
+                                                         all_res_list=actual_resources)
 
         ext_md_layout = Layout(
-                                HTML('<div class="form-group" id="SupportedResTypes"> '
+                                HTML('<div class="form-group" id="CollectionItems"> '
                                     '{% load crispy_forms_tags %} '
-                                    '{% crispy supported_res_types_form %} '
-                                 '</div> '),
-                                HTML("<div class='form-group col-lg-6 col-xs-12' id='url_bases'> "
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy url_base_form %} '
-                                     '</div>'),
-                                HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
-                                        '{% load crispy_forms_tags %} '
-                                        '{% crispy version_form %} '
-                                     '</div> ')
+                                    '{% crispy collection_items_form %} '
+                                 '</div> ')
                               )
 
         # get the context from hs_core
@@ -117,15 +94,14 @@ def landing_page(request, page):
                                                    resource_edit=edit_resource,
                                                    extended_metadata_layout=ext_md_layout,
                                                    request=request)
-        context['url_base_form'] = url_base_form
-        context['version_form'] = version_form
-        context['supported_res_types_form'] = supported_res_types_form
 
-        if supported_res_types_obj:
-            supported_res_types = supported_res_types_obj.supported_res_types.all()
+        context['collection_items_form'] = collection_items_form
+
+        if collection_items_obj:
+            collection_items = collection_items_obj.collection_items.all()
             checked_res_str = ""
-            if len(supported_res_types) > 0:
-                for res in supported_res_types:
+            if len(collection_items) > 0:
+                for res in collection_items:
                     checked_res_str += str(res.short_id)
                     checked_res_str += ","
 

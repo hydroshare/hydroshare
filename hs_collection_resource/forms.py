@@ -3,80 +3,8 @@ from django import forms
 
 from crispy_forms.layout import Layout, Field
 
-from models import RequestUrlBase, ToolVersion, SupportedResTypes
+from models import CollectionItems
 from hs_core.forms import BaseFormHelper
-
-
-# TODO: reference hs_core.forms
-class UrlBaseFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
-
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
-        layout = Layout(
-            Field('value', css_class=field_width),
-            Field('resShortID', type="hidden")
-        )
-        kwargs['element_name_label'] = 'App URL'
-
-        super(UrlBaseFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
-
-
-class UrlBaseForm(ModelForm):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        super(UrlBaseForm, self).__init__(*args, **kwargs)
-        self.helper = UrlBaseFormHelper(allow_edit, res_short_id, element_id, element_name='RequestUrlBase')
-
-    class Meta:
-        model = RequestUrlBase
-        fields = ['value', 'resShortID']
-        exclude = ['content_object']
-
-
-class UrlBaseValidationForm(forms.Form):
-    value = forms.CharField(max_length=1024)
-
-# The following 3 classes need to have the "field" same as the fields defined in "ToolResourceType" table in models.py
-
-
-class VersionFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
-        layout = Layout(
-            Field('value', css_class=field_width),
-        )
-        kwargs['element_name_label'] = 'Version'
-        super(VersionFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
-
-
-class VersionForm(ModelForm):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        super(VersionForm, self).__init__(*args, **kwargs)
-        self.helper = VersionFormHelper(allow_edit, res_short_id, element_id, element_name='ToolVersion')
-
-    class Meta:
-        model = ToolVersion
-        fields = ['value']
-        exclude = ['content_object']
-
-
-class VersionValidationForm(forms.Form):
-    value = forms.CharField(max_length=128)
-
-parameters_choices = [
-    ('GenericResource', 'Generic Resource'),
-    ('RasterResource', 'Raster Resource'),
-    # ('RefTimeSeries', 'HIS Referenced Time Series Resource'),
-    ('TimeSeriesResource', 'Time Series Resource'),
-    ('NetcdfResource', 'NetCDF Resource'),
-    ('ModelProgramResource', 'Model Program Resource'),
-    ('ModelInstanceResource', 'Model Instance Resource'),
-    ('SWATModelInstanceResource', 'SWAT Model Instance Resource'),
-    ('GeographicFeatureResource', 'Geographic Feature Resource')
-]
-
-
 
 
 class MetadataField(Field):
@@ -85,75 +13,55 @@ class MetadataField(Field):
         super(MetadataField, self).__init__(*args, **kwargs)
 
 
-class SupportedResTypeFormHelper(BaseFormHelper):
+class CollectionItemsFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        layout = Layout(MetadataField('supported_res_types'))
-        kwargs['element_name_label'] = 'Supported Resource Types'
-        super(SupportedResTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+        layout = Layout(MetadataField('collection_items'))
+        kwargs['element_name_label'] = 'Collection Items'
+        super(CollectionItemsFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                          element_name, layout,  *args, **kwargs)
 def get_res_id_list(all_res_list):
      if all_res_list is not None:
         return [r.short_id for r in all_res_list]
 
-class SupportedResTypesForm(ModelForm):
-    supported_res_types = forms.MultipleChoiceField(choices=parameters_choices,
+class CollectionItemsForm(ModelForm):
+    collection_items = forms.MultipleChoiceField(choices=[],
                                                     widget=forms.CheckboxSelectMultiple(
                                                         attrs={'style': 'width:auto;margin-top:-5px'}))
     all_res_list = None
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, all_res_list=None, *args, **kwargs):
         try:
-            supported_res_types = kwargs['supported_res_types']
-            kwargs.pop('supported_res_types')
+            collection_items = kwargs['collection_items']
+            kwargs.pop('collection_items')
         except:
-            supported_res_types = None
+            collection_items = None
 
-        super(SupportedResTypesForm, self).__init__(*args, **kwargs)
-        self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id, element_name='SupportedResTypes')
+        super(CollectionItemsForm, self).__init__(*args, **kwargs)
+        self.helper = CollectionItemsFormHelper(allow_edit, res_short_id, element_id, element_name='CollectionItems')
         self.all_res_list = all_res_list
-        self.fields['supported_res_types'].choices = self.getChoices()
+        self.fields['collection_items'].choices = self.getChoices()
         if self.instance:
             try:
-                supported_res_types = self.instance.supported_res_types.all()
-                if len(supported_res_types) > 0:
+                collection_items = self.instance.collection_items.all()
+                if len(collection_items) > 0:
                     checked_item_list = []
-                    for res in supported_res_types:
+                    for res in collection_items:
                         checked_item_list.append(res.short_id)
 
-                    self.fields['supported_res_types'].initial = checked_item_list
+                    self.fields['collection_items'].initial = checked_item_list
                 else:
-                    self.fields['supported_res_types'].initial = []
+                    self.fields['collection_items'].initial = []
             except:
-                self.fields['supported_res_types'].initial = []
+                self.fields['collection_items'].initial = []
 
     class Meta:
-        model = SupportedResTypes
+        model = CollectionItems
 
     def getChoices(self):
         if self.all_res_list is not None:
-            return [(r.short_id, r.title + ":" + r.resource_type + ":" + r.short_id) for r in self.all_res_list]
+            return [(r.short_id, r.title + ":" + r.resource_type ) for r in self.all_res_list]
 
 
-class SupportedResTypesValidationForm(forms.Form):
-
-    all_res_list = None
-    # supported_res_types = forms.MultipleChoiceField(choices=parameters_choices, required=False)
-    supported_res_types = forms.MultipleChoiceField(choices=parameters_choices, required=False)
-
-    def getChoices(self):
-        if self.all_res_list is not None:
-            return [(r.short_id, str(r.id) + ": " + r.title) for r in self.all_res_list]
-
-    def __init__(self, allow_edit=True, element_id=None, all_res_list=None, *args, **kwargs):
-        try:
-            supported_res_types = kwargs['data']['supported_res_types']
-            kwargs.pop('supported_res_types')
-        except:
-            supported_res_types = None
-
-        super(SupportedResTypesForm, self).__init__(*args, **kwargs)
-        self.all_res_list = all_res_list
-        self.fields['supported_res_types'].choices = self.getChoices()
 
 

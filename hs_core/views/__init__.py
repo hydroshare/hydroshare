@@ -463,7 +463,7 @@ def my_resources(request, page):
     # import sys
     # sys.path.append("/home/docker/pycharm-debug")
     # import pydevd
-    # pydevd.settrace('10.0.0.7', port=21000, suspend=False)
+    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
     user = request.user
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)

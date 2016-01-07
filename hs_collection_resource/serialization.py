@@ -31,7 +31,7 @@ class CollectionResourceMeta(GenericResourceMeta):
     def _read_resource_metadata(self):
         super(CollectionResourceMeta, self)._read_resource_metadata()
 
-        print("--- ToolResource ---")
+        print("--- CollectionResource ---")
 
         hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
 
@@ -40,7 +40,7 @@ class CollectionResourceMeta(GenericResourceMeta):
             # Get value
             value_lit = self._rmeta_graph.value(o, hsterms.value)
             if value_lit is None:
-                msg = "RequestUrlBase for ToolResource was not found for resource {0}".format(self.root_uri)
+                msg = "RequestUrlBase for CollectionResource was not found for resource {0}".format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.url_base = str(value_lit)
 
@@ -56,7 +56,7 @@ class CollectionResourceMeta(GenericResourceMeta):
             # Get value
             value_lit = self._rmeta_graph.value(o, hsterms.value)
             if value_lit is None:
-                msg = "ToolVersion for ToolResource was not found for resource {0}".format(self.root_uri)
+                msg = "ToolVersion for CollectionResource was not found for resource {0}".format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.version = str(value_lit)
 
@@ -71,17 +71,10 @@ class CollectionResourceMeta(GenericResourceMeta):
         """
         super(CollectionResourceMeta, self).write_metadata_to_resource(resource)
 
-        if self.url_base:
-            resource.metadata.url_bases.all().delete()
-            resource.metadata.create_element('RequestUrlBase',
-                                             value=self.url_base)
         if len(self.resource_types) > 0:
             resource.metadata.res_types.all().delete()
             for t in self.resource_types:
-                resource.metadata.create_element('ToolResourceType',
+                resource.metadata.create_element('CollectionResourceType',
                                                  tool_res_type=t)
 
-        if self.version:
-            resource.metadata.versions.all().delete()
-            resource.metadata.create_element('ToolVersion',
-                                             value=self.version)
+
