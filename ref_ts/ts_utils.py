@@ -8,7 +8,6 @@ from lxml import etree
 from suds.transport import TransportError
 from suds.client import Client
 from xml.sax._exceptions import SAXParseException
-from matplotlib.pyplot import savefig
 import matplotlib.pyplot as plt
 
 from hs_core import hydroshare
@@ -651,12 +650,11 @@ def create_vis_2(path, site_name, data, xlabel, variable_name, units, noDataValu
         else:
             vis_name = predefined_name
         vis_path = path + "/" + vis_name
-        savefig(vis_path, bbox_inches='tight')
+        plt.savefig(vis_path, bbox_inches='tight')
         return {"fname": vis_name, "fullpath": vis_path}
     except Exception as e:
         logger.exception("create_vis_2: %s" % (e.message))
         raise e
-
 
 def generate_resource_files(shortkey, tempdir):
 

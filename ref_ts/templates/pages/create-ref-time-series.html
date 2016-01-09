@@ -3,9 +3,7 @@
 {% load mezzanine_tags pages_tags hydroshare_tags staticfiles%}
 
 {% block title %}
-
     Add HIS Reference Metadata for <i>{{ title }}</i> resource
-
 {% endblock %}
 
 {% block main %}
@@ -16,8 +14,8 @@
         {% csrf_token %}
 
         <div class="form-group" id="hisc-input">
-            <h4><strong>Select from HIS Central Services or input your own url:</strong></h4>
-            <p id="his-loading" style="color:#CC7A00"><i>(loading HIS Central services)</i></p>
+            <h4><strong>Select from HIS Central Services or input your own HydroServer url:</strong></h4>
+            <p id="his-loading" style="color:blue"><i>loading HIS Central services...</i></p>
             <div class="ui-widget">
                 <label for="" class="col-sm-2 control-label">URL</label>
                 <div class="col-sm-10">
@@ -26,42 +24,26 @@
             </div>
         </div>
 
-        <div class="col-sm-offset-2 col-sm-10" id="loading-1">
-            <h3 id="loading-1-text">Retrieving sites...</h3>
-        </div>
-
-        <div class="form-group cuahsi-his cuahsi-his-2">
+        <div id="site-div" class="form-group cuahsi-his cuahsi-his-2">
             <label for="" class="col-sm-2 control-label">Site</label>
             <div class="col-sm-10">
                 <select class="form-control" name="site" id="site"></select>
             </div>
         </div>
 
-        <div class="col-sm-offset-2 col-sm-10" id="loading-2">
-            <h3 id="loading-2-text">Retrieving variables...</h3>
-        </div>
-
-        <div class="form-group cuahsi-his cuahsi-his-3">
+        <div id="variable-div" class="form-group cuahsi-his cuahsi-his-3">
             <label for="" class="col-sm-2 control-label">Variable</label>
             <div class="col-sm-10">
                 <select class="form-control" name="variable" id="variable"></select>
             </div>
         </div>
 
+         <div class="col-sm-offset-2 col-sm-10" id="message-div">
+            <h3 id="message">Retrieving sites...</h3>
+        </div>
+
         <div class ="form-group" id ="preview-div" class="col-sm-offset-2 col-sm-10">
-        </div>
-
-        <div class="form-group" id="fail-notice">
-            <div class="col-sm-offset-2 col-sm-10">
-                <h3>Invalid Data! </h3>
-                <h5>This data failed to validate, which probably means that the WaterML document is not correctly formatted. This time series cannot be used to create a resource </h5>
-            </div>
-        </div>
-
-        <div class="form-group" id="resource_creation_error">
-            <div class="col-sm-offset-2 col-sm-10">
-                <h3 style="color: red">{% if resource_creation_error %} {{ resource_creation_error }} {% endif %}</h3>
-            </div>
+            <div class="col-sm-offset-2" id="preview"></div>
         </div>
 
         <div class="form-group">
@@ -70,19 +52,10 @@
             </div>
         </div>
 
-        <div class="form-group" id="metadata" style="display: none;">
-            <div class="col-sm-offset-2 col-sm-10">
-                <input type="text" class="btn btn-primary btn-lg btn-block" name='metadata' value='{{ metadata }}'>
-            </div>
-        </div>
-
-        <div class="form-group" id="title" style="display: none;">
-            <div class="col-sm-offset-2 col-sm-10">
-                <input type="text" class="btn btn-primary btn-lg btn-block" name='title' value='{{ title }}'>
-            </div>
-        </div>
+        <input type="text" style="display: none;" name='title' value='{{ title }}'>
 
     </form>
+
     <style>
         .custom-combobox {
             width:100%;
@@ -110,73 +83,41 @@
             var globurl = "";
 
             $(document).ready(function(){
+                $('#site-div').hide();
+                $('#variable-div').hide();
+                $('#message-div').hide();
                 $('#preview-div').hide();
-                $('#fail-notice').hide();
-                $('.cuahsi-his').hide();
-                $('#loading-1').hide();
-                $('#loading-2').hide();
                 get_his_central_urls();
             });
 
-            function check_url(url){
-                globurl = url;
-                $('#url-input').removeClass("has-success").removeClass("has-error").hide();
-                $('#loading-1-text').html('');
-                $('#resource_creation_error').hide()
-
-                if (url.match(/WSDL$/) || url.match(/wsdl$/)){
-                    $('.cuahsi-his-1').show();
-                    $('#preview-div').html( '<div class="col-sm-offset-2" id="preview"></div>');
-                    get_sites(url);
+            function show_message(show_it, msg, color)
+            {
+                if (show_it)
+                {
+                    $('#message').html(msg).css('color', color);
+                    $('#message-div').show();
                 }
-                else {
-                    $('#loading-1').show();
-                    $('.cuahsi-his').hide();
-                    $.ajax({
-                        type: "GET",
-                        url: '/hsapi/_internal/verify-rest-url/',
-                        data: {url: url},
-                        success: function (data, xhr, status) {
-                            if (data["status"] == "success")
-                            {
-                                $('#url-input').addClass("has-success");
-                                $('#loading-1-text').html('');
-                                getVals('rest');
-                            }
-                            else
-                            {
-                                $('#loading-1-text').html('<h3>URL did not verify. There may be a problem with the URL you entered</h3>');
-                                $('#url-input').removeClass("has-success").addClass("has-error");
-                            }
-                        },
-                        error: function(){
-                            $('#loading-1-text').html('<h3>URL did not verify. There may be a problem with the URL you entered</h3>');
-                            $('#url-input').removeClass("has-success").addClass("has-error");
-                        }
-                    });
+                else
+                {
+                    $('#message-div').hide();
                 }
-
-                $('#preview-div').hide();
-                $('#fail-notice').hide();
-                var b = $('#submit');
-                b.addClass('disabled');
-            }
+            } // function show_message()
 
             function get_his_central_urls(){
-
                 $.ajax({
                     type: "GET",
                     url: '/hsapi/_internal/get-his-urls/',
                     success: function (data, xhr, status) {
                         if (data["status"] == "success")
                         {
-                            console.log("urls:" + data["url_list"].length)
-                            var select = document.getElementsByName('url')[0];
-                            removeOptions(select);
                             $('#his-loading')
                                     .html('HIS Central Servers available')
                                     .css('color', 'Green');
-                            for (var i=0; i < data["url_list"].length; i++) {
+                            console.log("urls:" + data["url_list"].length);
+                            var select = document.getElementsByName('url')[0];
+                            removeOptions(select);
+                            for (var i=0; i < data["url_list"].length; i++)
+                            {
                                 var ln = data["url_list"][i];
                                 var opt = document.createElement('option');
                                 opt.value = ln;
@@ -197,7 +138,45 @@
                                 .css('color','Red');
                     }
                 });
-            }
+            } // function get_his_central_urls()
+
+             // check the url users input
+            function check_url(url){
+                globurl = url;
+
+                show_message(false);
+                $('#site-div').hide();
+                $('#variable-div').hide();
+                $('#preview-div').hide();
+                $('#submit').addClass('disabled');
+
+                if (url.toLowerCase().match(/wsdl$/))
+                { // SOAP
+
+                    get_sites(url);
+                }
+                else { // REST
+                    $.ajax({
+                        type: "GET",
+                        url: '/hsapi/_internal/verify-rest-url/',
+                        data: {url: url},
+                        success: function (data, xhr, status) {
+                            if (data["status"] == "success")
+                            {
+                                getVals('rest');
+                            }
+                            else
+                            {
+                                show_message(true, '<h3>URL did not verify. There may be a problem with the URL you entered</h3>', 'Red');
+                            }
+                        },
+                        error: function(){
+                            show_message(true, '<h3>URL did not verify. There may be a problem with the URL you entered</h3>', 'Red');
+                        }
+                    });
+                }
+            } // function check_url(url)
+
 
             function removeOptions(selectbox){
                 for(var i=selectbox.options.length-1; i>=0; i--)
@@ -206,12 +185,12 @@
                 }
             }
 
-            function get_sites(url){
-                $('#loading-1').show();
-                $('#loading-1-text').html('<h3>Retrieving Sites...</h3>');
+            function get_sites(url)
+            {
+                show_message(true, 'Retrieving sites...', 'Black');
+                // disable url textbox
                 $('.ui-autocomplete-input').prop("disabled", true);
-                $('.cuahsi-his-2').hide();
-                $('.cuahsi-his-3').hide();
+
                 $.ajax({
                     type:"GET",
                     url:'/hsapi/_internal/search-sites/',
@@ -219,7 +198,7 @@
                     success: function(data, xhr, status){
                         if(data["status"] == "success")
                         {
-                            console.log("sites:" + data["sites"].length)
+                            console.log("sites:" + data["sites"].length);
                             var select = document.getElementsByName('site')[0];
                             removeOptions(select);
                             for(var i=0; i < data["sites"].length; i++)
@@ -230,8 +209,9 @@
                                 opt.innerHTML = ln;
                                 select.appendChild(opt);
                             }
-                            $('.cuahsi-his-2').show();
-                            $('#loading-1').hide();
+                            show_message(false);
+                            $('#site-div').show();
+                            // enable url textbox
                             $('.ui-autocomplete-input').prop("disabled", false);
                         }
                         else
@@ -243,24 +223,32 @@
                         get_sites_failed();
                     }
                 });
-            }
+            } // get_sites(url)
 
             function get_sites_failed()
             {
-                $('#loading-1-text').html('<h3">There was an error retrieving sites for this server</h3>');
+                $('#site-div').hide();
+                $('#variable-div').hide();
+                $('#preview-div').hide();
+                show_message(true, 'There was an error retrieving sites for this server', "Red");
+                // enable url textbox
                 $('.ui-autocomplete-input').prop("disabled", false);
             }
 
-            function get_variables(site){
-
+            function get_variables(site)
+            {
                 site_code = site;
                 var url = globurl;
-                var b = $('#submit');
-                b.addClass('disabled');
-                $('#site').prop("disabled", true);
+
+                show_message(true, 'Retrieving variables...', 'Black');
+                // disable url textbox
                 $('.ui-autocomplete-input').prop("disabled", true);
-                $('.cuahsi-his-3').hide();
-                $('#loading-2').hide();
+                $('#site-div').show();
+                // disable site select box
+                $('#site').prop("disabled", true);
+                $('#variable-div').hide();
+                $('#preview-div').hide();
+                $('#submit').addClass('disabled');
 
                 $.ajax({
                     type:"GET",
@@ -271,10 +259,12 @@
                         if(data["status"] == "success")
                         {
                             console.log("var:" + data["variables"].length);
-                            $('.cuahsi-his-3').show();
-                            $('#site').prop("disabled", false);
+                            show_message(false);
                             $('.ui-autocomplete-input').prop("disabled", false);
-                            $('#loading-2').hide();
+                            $('#site-div').show();
+                            $('#site').prop("disabled", false);
+                            $('#variable-div').show();
+                            $('#variable').prop("disabled", false);
 
                             var select = document.getElementsByName('variable')[0];
                             removeOptions(select);
@@ -300,21 +290,25 @@
                         get_variables_failed();
                     }
                 })
-            }
+            } // get_variables(site)
 
             function get_variables_failed()
             {
-                $('#loading-2-text').html('<h3">There was an error retrieving variables for this site</h3>');
-                $('#loading-2').show()
-                $('#site').prop("disabled", false);
+                show_message(true, 'There was an error retrieving variables for this site', 'Red');
                 $('.ui-autocomplete-input').prop("disabled", false);
+                $('#site-div').show();
+                $('#site').prop("disabled", false);
+                $('#variable-div').hide();
+                $('#preview-div').hide();
+                $('#submit').addClass('disabled');
             }
 
-            function getVals(ref_type, _site, _var) {
-                $('#preview-div').html('<h2 class="col-sm-offset-2 col-sm-10">Retrieving Data . . .</h2>').show();
-                $('#site').prop("disabled", true);
+            function getVals(ref_type, _site, _var)
+            {
                 $('.ui-autocomplete-input').prop("disabled", true);
-                $('#variable').prop("disabled", true);
+                show_message(true, 'Retrieving Data...', "Black");
+                $('#submit').addClass('disabled');
+                $('#preview-div').hide();
 
                 var service_url = "";
                 var site = "";
@@ -325,6 +319,11 @@
                 }
                 else
                 {
+                    $('#site-div').show();
+                    $('#site').prop("disabled", true);
+                    $('#variable-div').show();
+                    $('#variable').prop("disabled", true);
+
                     service_url = globurl;
                     site = _site;
                     variable = _var;
@@ -340,15 +339,15 @@
                     success: function(data, xhr, status){
                         if (data["status"] == "success")
                         {
+                            $('.ui-autocomplete-input').prop("disabled", false);
+                            $('#site').prop("disabled", false);
+                            $('#variable').prop("disabled", false);
+                            show_message(false);
+                            $('#submit').removeClass('disabled');
+
                             var preview_url = data['preview_url'];
                             $('#preview-div').html('<p style="text-align:center;"><img align="middle" src="'+
                                     preview_url +'" id="preview-graph" class="col-sm-offset-2"/></p>').show();
-                            var b = $('#submit');
-                            b.removeClass('disabled');
-                            $('#loading-1').hide();
-                            $('#site').prop("disabled", false);
-                            $('#variable').prop("disabled", false);
-                            $('.ui-autocomplete-input').prop("disabled", false);
                         }
                         else
                         {
@@ -359,40 +358,26 @@
                         getVals_failed();
                     }
                 });
-            }
+            } // function getVals(ref_type, _site, _var)
 
             function getVals_failed()
             {
-                $('#url-input').removeClass("has-success");
-                $('#fail-notice').show();
+                $('.ui-autocomplete-input').prop("disabled", false);
+                show_message(true, "This data failed to validate, which probably means that the WaterML document is not correctly formatted. This time series cannot be used to create a resource", 'Red')
                 $('#preview-div').hide();
-                $('#loading-1').hide();
                 $('#site').prop("disabled", false);
                 $('#variable').prop("disabled", false);
-                $('.ui-autocomplete-input').prop("disabled", false);
             }
 
+            $('#site').change(function(){
+                var site = $('#site').val();
+                get_variables(site);
+            });
+
             $('#variable').change(function(){
-                $('#fail-notice').hide();
-                var b = $('#submit');
-                b.addClass('disabled');
                 var variable = $('#variable').val();
                 var site = $('#site').val();
                 getVals('soap', site, variable);
-            });
-
-            $('#site').change(function(){
-                $('.cuahsi-his-3').hide();
-                var site = $('#site').val();
-                get_variables(site);
-                $('#preview-div').hide();
-                $('#fail-notice').hide();
-                var select = $('#variable');
-                removeOptions(select);
-                var b = $('#preview-button-soap');
-                b.addClass('disabled');
-                var b = $('#submit');
-                b.addClass('disabled');
             });
 
             $('#create-form').on("keyup keypress", function(e) {

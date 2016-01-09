@@ -18,5 +18,4 @@ class VerifyRestUrlForm(forms.Form):
     url = forms.URLField(required=True)
 
 class CreateRefTimeSeriesForm(forms.Form):
-    metadata = forms.CharField(required=False)
     title = forms.CharField(required=False)

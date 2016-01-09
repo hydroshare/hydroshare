@@ -6,7 +6,6 @@ import zipfile
 import shutil
 import requests
 from lxml import etree
-import ast
 import logging
 
 try:
@@ -27,6 +26,7 @@ from .forms import ReferencedSitesForm, ReferencedVariablesForm, GetTSValuesForm
 preview_name = "preview.png"
 his_central_url = 'http://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'
 logger = logging.getLogger("ref_ts")
+blank_field_string = ""
 
 # query HIS central to get all available HydroServer urls
 def get_his_urls(request):
@@ -184,33 +184,46 @@ def create_ref_time_series(request, *args, **kwargs):
         reference_type = ts_dict['ref_type']
         frm = CreateRefTimeSeriesForm(request.POST)
         if frm.is_valid():
-            metadata = frm.cleaned_data.get('metadata')
-            metadata = ast.literal_eval(metadata)
-            metadata = [{"Coverage": {"type": "point",
+            metadata = []
+            if ts_dict["longitude"] is not None and ts_dict["latitude"] is not None:
+                coverage_point = {"Coverage": {"type": "point",
                                       "value": {"east": ts_dict["longitude"],
                                                 "north": ts_dict["latitude"],
                                                 "units": "WGS 84 EPSG:4326"}
                                      }
-                         },
-                        {"Coverage": {"type": "period",
+                                 }
+                metadata.append(coverage_point)
+
+            if ts_dict["start_date"] is None and ts_dict["end_date"] is None:
+                coverage_period ={"Coverage": {"type": "period",
                                       "value": {"start": ts_dict["start_date"],
                                                 "end": ts_dict["end_date"]}
                                      }
-                        },
-                        {"ReferenceURL": {"value": url, "type": reference_type}},
-                        {"Site": {"name": ts_dict['site_name'],
-                                  "code": ts_dict['site_code'],
-                                  "net_work": ts_dict['net_work'],
+                        }
+                metadata.append(coverage_period)
+
+            metadata += [{"ReferenceURL": {"value": url, "type": reference_type}},
+                        {"Site": {"name": ts_dict['site_name'] if ts_dict['site_name'] is not None else blank_field_string,
+                                  "code": ts_dict['site_code'] if ts_dict['site_code'] is not None else blank_field_string,
+                                  "net_work": ts_dict['net_work'] if ts_dict['net_work'] is not None else blank_field_string,
                                   "latitude": ts_dict['latitude'],
-                                  "longitude": ts_dict['longitude']}},
-                        {"Variable": {"name": ts_dict['variable_name'],
-                                      "code": ts_dict['variable_code'],
-                                      "sample_medium": ts_dict.get('sample_medium', 'unknown')}},
-                        {"DataSource": {"code": ts_dict['source_code']}},
-                        {"Method": {"code": ts_dict['method_code'], "description": ts_dict['method_description']}},
-                        {"QualityControlLevel": {"code": ts_dict['quality_control_level_code'],
-                                                 "definition": ts_dict['quality_control_level_definition']}}
-                        ]
+                                  "longitude": ts_dict['longitude']
+                                  }
+                        },
+                        {"Variable": {"name": ts_dict['variable_name'] if ts_dict['variable_name'] is not None else blank_field_string,
+                                      "code": ts_dict['variable_code'] if ts_dict['variable_code'] is not None else blank_field_string
+                                      }
+                        },
+                        {"DataSource": {"code": ts_dict['source_code'] if ts_dict['source_code'] is not None else blank_field_string}},
+                        {"Method": {"code": ts_dict['method_code'] if ts_dict['method_code'] is not None else blank_field_string,
+                                    "description": ts_dict['method_description'] if ts_dict['method_description'] is not None else blank_field_string
+                                   }
+                        },
+                        {"QualityControlLevel": {
+                            "code": ts_dict['quality_control_level_code'] if ts_dict['quality_control_level_code'] is not None else blank_field_string,
+                            "definition": ts_dict['quality_control_level_definition'] if ts_dict['quality_control_level_definition'] is not None else blank_field_string
+                                                 }
+                        }]
 
             res = hydroshare.create_resource(
                 resource_type='RefTimeSeriesResource',

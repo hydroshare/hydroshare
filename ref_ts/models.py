@@ -40,33 +40,33 @@ class ReferenceURL(AbstractMetaDataElement):
 
 class Method(AbstractMetaDataElement):
     term = 'Method'
-    code = models.CharField(max_length=200, default="")
-    description = models.CharField(max_length=200, default="")
+    code = models.CharField(max_length=200, default="", blank=True)
+    description = models.CharField(max_length=200, default="", blank=True)
 
 class QualityControlLevel(AbstractMetaDataElement):
     term = 'QualityControlLevel'
-    code = models.CharField(max_length=200, default="")
-    definition = models.CharField(max_length=200, default="")
+    code = models.CharField(max_length=200, default="", blank=True)
+    definition = models.CharField(max_length=200, default="", blank=True)
 
 class Variable(AbstractMetaDataElement):
     term = 'Variable'
-    name = models.CharField(max_length=100)
-    code = models.CharField(max_length=50)
-    data_type = models.CharField(max_length=50, null=True)
-    sample_medium = models.CharField(max_length=50, null=True)
+    name = models.CharField(max_length=100, default="", blank=True)
+    code = models.CharField(max_length=50, default="", blank=True)
+    data_type = models.CharField(max_length=50, default="", blank=True)
+    sample_medium = models.CharField(max_length=50, default="", blank=True)
 
 class Site(AbstractMetaDataElement):
     term = 'Site'
-    name = models.CharField(max_length=100)
-    code = models.CharField(max_length=50)
-    net_work = models.CharField(max_length=100, default="")
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+    name = models.CharField(max_length=100, default="", blank=True)
+    code = models.CharField(max_length=50, default="", blank=True)
+    net_work = models.CharField(max_length=100, default="", blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
 # source code
 class DataSource(AbstractMetaDataElement):
     term = 'DataSource'
-    code = models.CharField(max_length=100, default="")
+    code = models.CharField(max_length=100, default="", blank=True)
 
 class RefTSMetadata(CoreMetaData):
     referenceURLs = generic.GenericRelation(ReferenceURL)
