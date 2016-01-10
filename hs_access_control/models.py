@@ -197,6 +197,24 @@ class UserGroupPrivilege(models.Model):
     grantor = models.ForeignKey('UserAccess', null=False, editable=False, related_name='x2ugp',
                                 help_text='grantor of privilege')
 
+    usernew = models.ForeignKey(User,
+                             null=True,
+                             editable=False,
+                             related_name='u2ugpnew',
+                             help_text='user to be granted privilege')
+
+    groupnew = models.ForeignKey(Group,
+                              null=True,
+                              editable=False,
+                              related_name='g2ugpnew',
+                              help_text='group to which privilege applies')
+
+    grantornew = models.ForeignKey(User,
+                                null=True,
+                                editable=False,
+                                related_name='x2ugpnew',
+                                help_text='grantor of privilege')
+
     class Meta:
         unique_together = (('user', 'group', 'grantor'),)
 
@@ -232,6 +250,24 @@ class UserResourcePrivilege(models.Model):
                                 related_name='x2urp',
                                 help_text='grantor of privilege')
 
+    usernew = models.ForeignKey(User, 
+                             null=True, 
+                             editable=False,
+                             related_name='u2urpnew',
+                             help_text='user to be granted privilege')
+
+    resourcenew = models.ForeignKey(BaseResource, 
+                                 null=True, 
+                                 editable=False,
+                                 related_name='r2urpnew',
+                                 help_text='resource to which privilege applies')
+
+    grantornew = models.ForeignKey(User, 
+                                null=True, 
+                                editable=False,
+                                related_name='x2urpnew',
+                                help_text='grantor of privilege')
+
     class Meta:
         unique_together = (('user', 'resource', 'grantor'),)
 
@@ -265,6 +301,24 @@ class GroupResourcePrivilege(models.Model):
                                  help_text='resource to which privilege applies')
     grantor = models.ForeignKey('UserAccess', null=False, editable=False,
                                 related_name='x2grp',
+                                help_text='grantor of privilege')
+
+    groupnew = models.ForeignKey(Group, 
+                              null=True, 
+                              editable=False,
+                              related_name='g2grpnew',
+                              help_text='group to be granted privilege')
+
+    resourcenew = models.ForeignKey(BaseResource,
+                                 null=True,
+                                 editable=False,
+                                 related_name='r2grpnew',
+                                 help_text='resource to which privilege applies')
+
+    grantornew = models.ForeignKey(User,
+                                null=True,
+                                editable=False,
+                                related_name='x2grpnew',
                                 help_text='grantor of privilege')
 
     class Meta:
