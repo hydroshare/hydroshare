@@ -381,7 +381,7 @@ def create_resource(
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
         resource_access.save()
-        UserResourcePrivilege(resource=resource_access, grantor=owner.uaccess, user=owner.uaccess,
+        UserResourcePrivilege(resourcenew=resource, grantornew=owner, usernew=owner,
                               privilege=PrivilegeCodes.OWNER).save()
 
         resource_labels = ResourceLabels(resource=resource)
