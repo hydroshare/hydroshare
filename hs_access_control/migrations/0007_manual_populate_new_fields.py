@@ -26,7 +26,7 @@ def move_access_data(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_access_control', '0006_add_new_fields'),
+        ('hs_access_control', '0006_auto_add_new_fields'),
     ]
 
     operations = [
