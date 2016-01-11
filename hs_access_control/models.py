@@ -192,33 +192,34 @@ class UserGroupPrivilege(models.Model):
     # a bogus default, which would be transparently applied during
     # migrations and is a worse option.
 
-    user = models.ForeignKey('UserAccess', null=False, editable=False, related_name='u2ugp',
-                             help_text='user to be granted privilege')
-    group = models.ForeignKey('GroupAccess', null=False, editable=False, related_name='g2ugp',
-                              help_text='group to which privilege applies')
-    grantor = models.ForeignKey('UserAccess', null=False, editable=False, related_name='x2ugp',
-                                help_text='grantor of privilege')
+    # user = models.ForeignKey('UserAccess', null=False, editable=False, related_name='u2ugp',
+    #                          help_text='user to be granted privilege')
+    # group = models.ForeignKey('GroupAccess', null=False, editable=False, related_name='g2ugp',
+    #                           help_text='group to which privilege applies')
+    # grantor = models.ForeignKey('UserAccess', null=False, editable=False, related_name='x2ugp',
+    #                             help_text='grantor of privilege')
 
-    usernew = models.ForeignKey(User,
+    user = models.ForeignKey(User,
                              null=True,
                              editable=False,
-                             related_name='u2ugpnew',
+                             related_name='u2ugp',
                              help_text='user to be granted privilege')
 
-    groupnew = models.ForeignKey(Group,
+    group = models.ForeignKey(Group,
                               null=True,
                               editable=False,
-                              related_name='g2ugpnew',
+                              related_name='g2ugp',
                               help_text='group to which privilege applies')
 
-    grantornew = models.ForeignKey(User,
+    grantor = models.ForeignKey(User,
                                 null=True,
                                 editable=False,
-                                related_name='x2ugpnew',
+                                related_name='x2ugp',
                                 help_text='grantor of privilege')
 
     class Meta:
-        unique_together = (('user', 'group', 'grantor'),)
+        # unique_together = (('user', 'group', 'grantor'),)
+	pass
 
 
 ####################################
@@ -242,36 +243,37 @@ class UserResourcePrivilege(models.Model):
     # a bogus default, which would be transparently applied during
     # migrations and is a worse option.
 
-    user = models.ForeignKey('UserAccess', null=False, editable=False,
+    # user = models.ForeignKey('UserAccess', null=False, editable=False,
+    #                          related_name='u2urp',
+    #                          help_text='user to be granted privilege')
+    # resource = models.ForeignKey('ResourceAccess', null=False, editable=False,
+    #                              related_name="r2urp",
+    #                              help_text='resource to which privilege applies')
+    # grantor = models.ForeignKey('UserAccess', null=False, editable=False,
+    #                             related_name='x2urp',
+    #                             help_text='grantor of privilege')
+
+    user = models.ForeignKey(User, 
+                             null=True, 
+                             editable=False,
                              related_name='u2urp',
                              help_text='user to be granted privilege')
-    resource = models.ForeignKey('ResourceAccess', null=False, editable=False,
-                                 related_name="r2urp",
+
+    resource = models.ForeignKey(BaseResource, 
+                                 null=True, 
+                                 editable=False,
+                                 related_name='r2urp',
                                  help_text='resource to which privilege applies')
-    grantor = models.ForeignKey('UserAccess', null=False, editable=False,
+
+    grantor = models.ForeignKey(User, 
+                                null=True, 
+                                editable=False,
                                 related_name='x2urp',
                                 help_text='grantor of privilege')
 
-    usernew = models.ForeignKey(User, 
-                             null=True, 
-                             editable=False,
-                             related_name='u2urpnew',
-                             help_text='user to be granted privilege')
-
-    resourcenew = models.ForeignKey(BaseResource, 
-                                 null=True, 
-                                 editable=False,
-                                 related_name='r2urpnew',
-                                 help_text='resource to which privilege applies')
-
-    grantornew = models.ForeignKey(User, 
-                                null=True, 
-                                editable=False,
-                                related_name='x2urpnew',
-                                help_text='grantor of privilege')
-
     class Meta:
-        unique_together = (('user', 'resource', 'grantor'),)
+        #unique_together = (('user', 'resource', 'grantor'),)
+	pass
 
 
 ####################################
@@ -295,36 +297,37 @@ class GroupResourcePrivilege(models.Model):
     # a bogus default, which would be transparently applied during
     # migrations and is a worse option.
 
-    group = models.ForeignKey('GroupAccess', null=False, editable=False,
+    # group = models.ForeignKey('GroupAccess', null=False, editable=False,
+    #                           related_name='g2grp',
+    #                           help_text='group to be granted privilege')
+    # resource = models.ForeignKey('ResourceAccess', null=False, editable=False,
+    #                              related_name='r2grp',
+    #                              help_text='resource to which privilege applies')
+    # grantor = models.ForeignKey('UserAccess', null=False, editable=False,
+    #                             related_name='x2grp',
+    #                             help_text='grantor of privilege')
+
+    group = models.ForeignKey(Group, 
+                              null=True, 
+                              editable=False,
                               related_name='g2grp',
                               help_text='group to be granted privilege')
-    resource = models.ForeignKey('ResourceAccess', null=False, editable=False,
+
+    resource = models.ForeignKey(BaseResource,
+                                 null=True,
+                                 editable=False,
                                  related_name='r2grp',
                                  help_text='resource to which privilege applies')
-    grantor = models.ForeignKey('UserAccess', null=False, editable=False,
+
+    grantor = models.ForeignKey(User,
+                                null=True,
+                                editable=False,
                                 related_name='x2grp',
                                 help_text='grantor of privilege')
 
-    groupnew = models.ForeignKey(Group, 
-                              null=True, 
-                              editable=False,
-                              related_name='g2grpnew',
-                              help_text='group to be granted privilege')
-
-    resourcenew = models.ForeignKey(BaseResource,
-                                 null=True,
-                                 editable=False,
-                                 related_name='r2grpnew',
-                                 help_text='resource to which privilege applies')
-
-    grantornew = models.ForeignKey(User,
-                                null=True,
-                                editable=False,
-                                related_name='x2grpnew',
-                                help_text='grantor of privilege')
-
     class Meta:
-        unique_together = (('group', 'resource', 'grantor'),)
+        #unique_together = (('group', 'resource', 'grantor'),)
+	pass
 
 
 ######################################
@@ -352,7 +355,7 @@ class UserAccess(models.Model):
 
         :return: QuerySet of BaseResource held by user
         """
-        return BaseResource.objects.filter(r2urpnew__usernew=self.user)
+        return BaseResource.objects.filter(r2urp__user=self.user)
 
     @property
     def held_groups(self):
@@ -360,7 +363,7 @@ class UserAccess(models.Model):
 
         :return: QuerySet of Group held by user
         """
-        return Group.objects.filter(g2ugpnew__usernew=self.user)
+        return Group.objects.filter(g2ugp__user=self.user)
 
     ##########################################
     # PUBLIC METHODS: groups
@@ -383,12 +386,12 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         raw_group = Group.objects.create(name=title) # the single attribute of the group
-        access_group = GroupAccess.objects.create(groupnew=raw_group)
+        access_group = GroupAccess.objects.create(group=raw_group)
         raw_user = self.user
         # Must bootstrap access control system initially
-        UserGroupPrivilege.objects.create(groupnew=raw_group,
-                                          usernew=raw_user,
-                                          grantornew=raw_user,
+        UserGroupPrivilege.objects.create(group=raw_group,
+                                          user=raw_user,
+                                          grantor=raw_user,
                                           privilege=PrivilegeCodes.OWNER)
         return raw_group
 
@@ -416,8 +419,8 @@ class UserAccess(models.Model):
             # default is CASCADE; this is probably unnecessary
 
             # remove any group privileges that might have accumulated
-            UserGroupPrivilege.objects.filter(groupnew=this_group).delete()
-            GroupResourcePrivilege.objects.filter(groupnew=this_group).delete()
+            UserGroupPrivilege.objects.filter(group=this_group).delete()
+            GroupResourcePrivilege.objects.filter(group=this_group).delete()
 
             # remove access control object first: references main group
             access_group.delete()
@@ -471,8 +474,8 @@ class UserAccess(models.Model):
 
         """
 
-        return Group.objects.filter(g2ugpnew__usernew=self.user,
-                                    g2ugpnew__privilege=PrivilegeCodes.OWNER).distinct()
+        return Group.objects.filter(g2ugp__user=self.user,
+                                    g2ugp__privilege=PrivilegeCodes.OWNER).distinct()
 
     def get_number_of_owned_groups(self):
         """
@@ -513,9 +516,9 @@ class UserAccess(models.Model):
         if not this_group.gaccess.active:
             return False
 
-        if UserGroupPrivilege.objects.filter(groupnew=this_group,
+        if UserGroupPrivilege.objects.filter(group=this_group,
                                              privilege=PrivilegeCodes.OWNER,
-                                             usernew=self.user).exists():
+                                             user=self.user).exists():
             return True
         else:
             return False
@@ -546,9 +549,9 @@ class UserAccess(models.Model):
         if self.user.is_superuser:
             return True
 
-        if UserGroupPrivilege.objects.filter(groupnew=this_group,
+        if UserGroupPrivilege.objects.filter(group=this_group,
                                              privilege__lte=PrivilegeCodes.CHANGE,
-                                             usernew=self.user).exists():
+                                             user=self.user).exists():
             return True
         else:
             return False
@@ -581,9 +584,9 @@ class UserAccess(models.Model):
         if self.user.is_superuser or access_group.public:
             return True
 
-        if UserGroupPrivilege.objects.filter(groupnew=this_group,
+        if UserGroupPrivilege.objects.filter(group=this_group,
                                              privilege__lte=PrivilegeCodes.VIEW,
-                                             usernew=self.user).exists():
+                                             user=self.user).exists():
             return True
         else:
             return False
@@ -729,8 +732,8 @@ class UserAccess(models.Model):
             return False
 
         # must have a this_privilege greater than or equal to what we want to assign
-        if UserGroupPrivilege.objects.filter(groupnew=this_group,
-                                             usernew=self.user,
+        if UserGroupPrivilege.objects.filter(group=this_group,
+                                             user=self.user,
                                              privilege__lte=this_privilege).exists():
             return True
         else:
@@ -787,8 +790,8 @@ class UserAccess(models.Model):
             raise PermissionDenied("User is not group owner and group is not shareable")
 
         # must have a this_privilege greater than or equal to what we want to assign
-        if not self.user.is_superuser and not UserGroupPrivilege.objects.filter(groupnew=this_group,
-                                                                                usernew=self.user,
+        if not self.user.is_superuser and not UserGroupPrivilege.objects.filter(group=this_group,
+                                                                                user=self.user,
                                                                                 privilege__lte=this_privilege):
             raise PermissionDenied("User has insufficient privilege over group")
 
@@ -797,9 +800,9 @@ class UserAccess(models.Model):
 
         # This logic implicitly limits one to one record per resource and requester.
         # TODO: Make sure that the lack of transaction atomicity for get_or_create does not affect this logic!
-        record, created = UserGroupPrivilege.objects.get_or_create(groupnew=this_group,
-                                                                   usernew=this_user,
-                                                                   grantornew=self.user,
+        record, created = UserGroupPrivilege.objects.get_or_create(group=this_group,
+                                                                   user=this_user,
+                                                                   grantor=self.user,
                                                                    defaults = { 'privilege' : this_privilege })
         if not created:
             # print('updating record privilege=', record.privilege, ' this_privilege=', this_privilege)
@@ -814,8 +817,8 @@ class UserAccess(models.Model):
         if self.owns_group(this_group) or self.user.is_superuser:
             # print('invoking override for privileges < ', this_privilege)
             UserGroupPrivilege.objects\
-                              .filter(groupnew=this_group,
-                                      usernew=this_user,
+                              .filter(group=this_group,
+                                      user=this_user,
                                       privilege__lt=this_privilege)\
                               .all()\
                               .delete()
@@ -856,13 +859,13 @@ class UserAccess(models.Model):
             or self.owns_group(this_group) \
             or this_user == self.user:
             # if there is a different owner,  we're fine
-            if UserGroupPrivilege.objects.filter(groupnew=this_group,
-                                                 privilege=PrivilegeCodes.OWNER).exclude(usernew=this_user).exists():
+            if UserGroupPrivilege.objects.filter(group=this_group,
+                                                 privilege=PrivilegeCodes.OWNER).exclude(user=this_user).exists():
                 if command == CommandCodes.DO:
                     # then remove the record.
                     # this does not return an error if the object is not shared with the user
-                    UserGroupPrivilege.objects.filter(groupnew=this_group,
-                                                      usernew=this_user)\
+                    UserGroupPrivilege.objects.filter(group=this_group,
+                                                      user=this_user)\
                                       .delete()
                 return True  #  report success!
 
@@ -944,9 +947,9 @@ class UserAccess(models.Model):
 
         # handle optional grantor parameter that scopes owner-based unshare to one share.
         if this_grantor is not None:
-            if not UserGroupPrivilege.objects.filter(groupnew=this_group,
-                                                     usernew=this_user,
-                                                     grantornew=this_grantor):
+            if not UserGroupPrivilege.objects.filter(group=this_group,
+                                                     user=this_user,
+                                                     grantor=this_grantor):
                 if command == CommandCodes.DO:
                     raise PermissionDenied("Grantor did not grant privilege")
                 else:
@@ -970,22 +973,22 @@ class UserAccess(models.Model):
             else:
                 return False
         try:
-            existing = UserGroupPrivilege.objects.get(groupnew=this_group,
-                                                      usernew=this_user,
-                                                      grantornew=self.user)
+            existing = UserGroupPrivilege.objects.get(group=this_group,
+                                                      user=this_user,
+                                                      grantor=self.user)
             # if the privilege for user is not OWNER,
             # or there's another OWNER:
             if existing.privilege != PrivilegeCodes.OWNER \
                     or UserGroupPrivilege.objects \
-                          .filter(groupnew=this_group,
+                          .filter(group=this_group,
                                   privilege=PrivilegeCodes.OWNER) \
-                          .exclude(usernew=this_user, grantor=this_grantor):
+                          .exclude(user=this_user, grantor=this_grantor):
                 if command == CommandCodes.DO:
                     # then remove the record.
                     # this does not return an error if the object is not shared with the user
-                    UserGroupPrivilege.objects.filter(groupnew=this_group,
-                                                      usernew=this_user,
-                                                      grantornew=this_grantor).delete()
+                    UserGroupPrivilege.objects.filter(group=this_group,
+                                                      user=this_user,
+                                                      grantor=this_grantor).delete()
                 return True
             else:
                 if command == CommandCodes.DO:
@@ -1104,16 +1107,16 @@ class UserAccess(models.Model):
 
             if access_group.get_number_of_owners()>1:
                 # every possible undo is permitted, including self-undo
-                return User.objects.filter(u2ugpnew__groupnew=this_group)
+                return User.objects.filter(u2ugp__group=this_group)
             else:  # exclude sole owner from undo
                 # this exclude is incorrect because of many-to-many semantics.
-                return User.objects.filter(u2ugpnew__groupnew=this_group)\
-                                   .exclude(pk__in=User.objects.filter(u2ugpnew__groupnew=this_group,
-                                                                       u2ugpnew__privilege=PrivilegeCodes.OWNER))
+                return User.objects.filter(u2ugp__group=this_group)\
+                                   .exclude(pk__in=User.objects.filter(u2ugp__group=this_group,
+                                                                       u2ugp__privilege=PrivilegeCodes.OWNER))
         else:
             if this_group.get_number_of_owners()>1:
-                return User.objects.filter(u2ugpnew__grantornew=self.user,
-                                           u2ugpnew__groupnew=this_group)
+                return User.objects.filter(u2ugp__grantor=self.user,
+                                           u2ugp__group=this_group)
 
             else:  # exclude sole owner from undo
 
@@ -1125,11 +1128,11 @@ class UserAccess(models.Model):
 
                 # The exclude subquery avoids possible many-to-many anomalies in exclude (in which the
                 # phrases for u2ugp are treated as separate rather than combined).
-                return User.objects.filter(u2ugpnew__groupnew=this_group,
-                                           u2ugpnew__grantornew=self.user)\
-                                   .exclude(pk__in=User.objects.filter(u2ugpnew__groupnew=this_group,
-                                                                       u2ugpnew__grantornew=self.user,
-                                                                       u2ugpnew__privilege=PrivilegeCodes.OWNER))
+                return User.objects.filter(u2ugp__group=this_group,
+                                           u2ugp__grantor=self.user)\
+                                   .exclude(pk__in=User.objects.filter(u2ugp__group=this_group,
+                                                                       u2ugp__grantor=self.user,
+                                                                       u2ugp__privilege=PrivilegeCodes.OWNER))
 
     def get_group_unshare_users(self, this_group):
         """
@@ -1173,7 +1176,7 @@ class UserAccess(models.Model):
             if access_group.get_number_of_owners() == 1:
                 # get list of owners to exclude from main list
                 ids_exclude = User.objects\
-                        .filter(u2ugpnew__groupnew=this_group, u2ugpnew__privilege=PrivilegeCodes.OWNER)
+                        .filter(u2ugp__group=this_group, u2ugp__privilege=PrivilegeCodes.OWNER)
                 return access_group.get_members().exclude(pk__in=ids_exclude)
             else:
                 return access_group.get_members()
@@ -1181,7 +1184,7 @@ class UserAccess(models.Model):
             if access_group.get_number_of_owners == 1:
                 # if I'm not that owner
                 if not UserGroupPrivilege.objects\
-                        .filter(usernew=self.user, groupnew=this_group, privilege=PrivilegeCodes.OWNER):
+                        .filter(user=self.user, group=this_group, privilege=PrivilegeCodes.OWNER):
                     # this is a fancy way to return self as a QuerySet
                     # I can remove myself
                     return User.objects.filter(uaccess=self)
@@ -1205,7 +1208,7 @@ class UserAccess(models.Model):
 
         :return: List of resource objects accessible (in any form) to user.
         """
-        return BaseResource.objects.filter(Q(r2urpnew__usernew=self.user) | Q(r2grpnew__groupnew__g2ugpnew__usernew=self.user))
+        return BaseResource.objects.filter(Q(r2urp__user=self.user) | Q(r2grp__group__g2ugp__user=self.user))
 
     def get_number_of_held_resources(self):
         """
@@ -1214,8 +1217,8 @@ class UserAccess(models.Model):
         :return: Integer number of resources accessible for this user.
         """
         # utilize simpler join-free query that that of get_held_resources()
-        return BaseResource.objects.filter(Q(r2urpnew__usernew=self.user)
-                                         | Q(r2grpnew__groupnew__g2ugpnew__usernew=self.user)).count()
+        return BaseResource.objects.filter(Q(r2urp__user=self.user)
+                                         | Q(r2grp__group__g2ugp__user=self.user)).count()
 
     def get_owned_resources(self):
         """
@@ -1224,8 +1227,8 @@ class UserAccess(models.Model):
         :return: List of resource objects owned by this user.
         """
 
-        return BaseResource.objects.filter(r2urpnew__usernew=self.user,
-                                           r2urpnew__privilege=PrivilegeCodes.OWNER).distinct()
+        return BaseResource.objects.filter(r2urp__user=self.user,
+                                           r2urp__privilege=PrivilegeCodes.OWNER).distinct()
 
     def get_number_of_owned_resources(self):
         """
@@ -1244,8 +1247,8 @@ class UserAccess(models.Model):
 
         :return: List of resource objects that can be edited  by this user.
         """
-        return BaseResource.objects.filter(r2urpnew__usernew=self.user, raccess__immutable=False,
-                                           r2urpnew__privilege__lte=PrivilegeCodes.CHANGE).distinct()
+        return BaseResource.objects.filter(r2urp__user=self.user, raccess__immutable=False,
+                                           r2urp__privilege__lte=PrivilegeCodes.CHANGE).distinct()
 
     def get_resources_with_explicit_access(self, privilege):
         """
@@ -1259,9 +1262,9 @@ class UserAccess(models.Model):
         # The exclude subquery avoids possible many-to-many anomalies in exclude (in which the
         # phrases for u2urp are treated as separate rather than combined).
         return BaseResource.objects.filter(raccess__immutable=False)\
-                .filter(r2urpnew__usernew=self.user, r2urpnew__privilege=privilege)\
-                .exclude(id__in=BaseResource.objects.filter(r2urpnew__usernew=self.user,
-                                                            r2urpnew__privilege__lt=privilege)).distinct()
+                .filter(r2urp__user=self.user, r2urp__privilege=privilege)\
+                .exclude(id__in=BaseResource.objects.filter(r2urp__user=self.user,
+                                                            r2urp__privilege__lt=privilege)).distinct()
 
     #############################################
     # Check access permissions for self (user)
@@ -1282,9 +1285,9 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
 
-        if UserResourcePrivilege.objects.filter(resourcenew=this_resource,
+        if UserResourcePrivilege.objects.filter(resource=this_resource,
                                                 privilege=PrivilegeCodes.OWNER,
-                                                usernew=self.user).exists():
+                                                user=self.user).exists():
             return True
         else:
             return False
@@ -1320,14 +1323,14 @@ class UserAccess(models.Model):
         if self.user.is_superuser:
             return True
 
-        if UserResourcePrivilege.objects.filter(resourcenew=this_resource,
+        if UserResourcePrivilege.objects.filter(resource=this_resource,
                                                 privilege__lte=PrivilegeCodes.CHANGE,
-                                                usernew=self.user).exists():
+                                                user=self.user).exists():
             return True
 
-        if GroupResourcePrivilege.objects.filter(resourcenew=this_resource,
+        if GroupResourcePrivilege.objects.filter(resource=this_resource,
                                                  privilege__lte=PrivilegeCodes.CHANGE,
-                                                 groupnew__g2ugpnew__usernew=self.user).exists():
+                                                 group__g2ugp__user=self.user).exists():
             return True
 
         return False
@@ -1369,14 +1372,14 @@ class UserAccess(models.Model):
         if self.user.is_superuser:
             return True
 
-        if UserResourcePrivilege.objects.filter(resourcenew=this_resource,
+        if UserResourcePrivilege.objects.filter(resource=this_resource,
                                                 privilege__lte=PrivilegeCodes.VIEW,
-                                                usernew=self.user).exists():
+                                                user=self.user).exists():
             return True
 
-        if GroupResourcePrivilege.objects.filter(resourcenew=this_resource,
+        if GroupResourcePrivilege.objects.filter(resource=this_resource,
                                                  privilege__lte=PrivilegeCodes.VIEW,
-                                                 groupnew__g2ugpnew__usernew=self.user).exists():
+                                                 group__g2ugp__user=self.user).exists():
             return True
 
         return False
@@ -1503,8 +1506,8 @@ class UserAccess(models.Model):
             else:
                 return False  # non-owners cannot specify grantor
 
-        if not GroupResourcePrivilege.objects.filter(groupnew=this_group,
-                                                     resourcenew=this_resource,
+        if not GroupResourcePrivilege.objects.filter(group=this_group,
+                                                     resource=this_resource,
                                                      grantor=this_grantor).exists():
 
             if command == CommandCodes.DO:
@@ -1512,13 +1515,13 @@ class UserAccess(models.Model):
             else:
                 return False
 
-        if GroupResourcePrivilege.objects.filter(resourcenew=this_resource,
-                                                 groupnew=this_group,
-                                                 grantornew=this_grantor).exists():
+        if GroupResourcePrivilege.objects.filter(resource=this_resource,
+                                                 group=this_group,
+                                                 grantor=this_grantor).exists():
             if command == CommandCodes.DO:
-                GroupResourcePrivilege.objects.get(resourcenew=this_resource,
-                                                   groupnew=this_group,
-                                                   grantornew=this_grantor).delete()
+                GroupResourcePrivilege.objects.get(resource=this_resource,
+                                                   group=this_group,
+                                                   grantor=this_grantor).delete()
             return True  # return success
         else:
             if command == CommandCodes.DO:
@@ -1621,8 +1624,8 @@ class UserAccess(models.Model):
         # grantee_priv: current privilege of the grantee (this_user)
         # this_privilege: proposed privilege for the grantee (this_user)
         if whom_priv != PrivilegeCodes.OWNER and grantee_priv < this_privilege:
-            record = UserResourcePrivilege.objects.get(resourcenew=this_resource,
-                                                       usernew=this_user,
+            record = UserResourcePrivilege.objects.get(resource=this_resource,
+                                                       user=this_user,
                                                        privilege=grantee_priv)
 
             # current grantor (self) is not the same as the original grantor
@@ -1632,8 +1635,8 @@ class UserAccess(models.Model):
         # This logic implicitly limits one to one record per resource and requester.
         # TODO: use get_or_create pattern.
         with transaction.atomic():
-            record, create = UserResourcePrivilege.objects.get_or_create(resourcenew=this_resource,
-                                                                 usernew=this_user,
+            record, create = UserResourcePrivilege.objects.get_or_create(resource=this_resource,
+                                                                 user=this_user,
                                                                  grantor=self.user,
                                                                  defaults = {'privilege': this_privilege})
             if record.privilege == PrivilegeCodes.OWNER \
@@ -1648,8 +1651,8 @@ class UserAccess(models.Model):
         # if there exists higher privileges than what was granted now (this_privilege) then those needs to be deleted
         # TODO: check that the use of this is consistent with what pages expect.
         if self.user.is_active and (self.user.is_superuser or self.owns_resource(this_resource)):
-            UserResourcePrivilege.objects.filter(resourcenew=this_resource,
-                                                 usernew=this_user,
+            UserResourcePrivilege.objects.filter(resource=this_resource,
+                                                 user=this_user,
                                                  privilege__lt=this_privilege)\
                                  .all()\
                                  .delete()
@@ -1697,15 +1700,15 @@ class UserAccess(models.Model):
                 or access_user == self:
             # if there is some other owner
             if UserResourcePrivilege.objects \
-                    .filter(resourcenew=this_resource,
+                    .filter(resource=this_resource,
                             privilege=PrivilegeCodes.OWNER) \
-                    .exclude(usernew=this_user)\
+                    .exclude(user=this_user)\
                     .exists():
                 # then remove the record.
                 # this does not return an error if the object is not shared with the user
                 if command == CommandCodes.DO:
-                    UserResourcePrivilege.objects.filter(resourcenew=this_resource,
-                                                         usernew=this_user).delete()
+                    UserResourcePrivilege.objects.filter(resource=this_resource,
+                                                         user=this_user).delete()
                 return True  # indicate success
             else:
                 # this prevents one from removing privilege for a user
@@ -1769,8 +1772,8 @@ class UserAccess(models.Model):
 
         # handle optional grantor parameter that scopes owner-based unshare to one share.
         if this_grantor is not None:
-            if not GroupResourcePrivilege.objects.filter(usernew=this_user,
-                                                         resourcenew=this_resource,
+            if not GroupResourcePrivilege.objects.filter(user=this_user,
+                                                         resource=this_resource,
                                                          grantor=this_grantor).exists():
                 if command == CommandCodes.DO:
                     raise PermissionDenied("Grantor did not grant privilege")
@@ -1786,21 +1789,21 @@ class UserAccess(models.Model):
             this_grantor = self.user
 
         try:
-            existing = UserResourcePrivilege.objects.get(resourcenew=this_resource,
-                                                         usernew=this_user,
+            existing = UserResourcePrivilege.objects.get(resource=this_resource,
+                                                         user=this_user,
                                                          grantor=this_grantor)
             # if there is an owner other than the grantee, or the grantee is not an owner
             if existing.privilege != PrivilegeCodes.OWNER \
                     or UserResourcePrivilege.objects\
-                                            .filter(resourcenew=this_resource,
+                                            .filter(resource=this_resource,
                                                     privilege=PrivilegeCodes.OWNER)\
-                                            .exclude(resourcenew=this_resource,
-                                                     usernew=this_user).exists():
+                                            .exclude(resource=this_resource,
+                                                     user=this_user).exists():
                 # then remove the record.
                 # this does not return an error if the object is not shared with the user
                 if command == CommandCodes.DO:
-                    UserResourcePrivilege.objects.filter(resourcenew=this_resource,
-                                                         usernew=this_user,
+                    UserResourcePrivilege.objects.filter(resource=this_resource,
+                                                         user=this_user,
                                                          grantor=this_grantor).delete()
                 return True  # Indicate success!
 
@@ -1879,9 +1882,9 @@ class UserAccess(models.Model):
 
         # This logic implicitly limits one to one record per resource and requester.
         with transaction.atomic():  # get_or_create observed to be non-atomic in testing..
-            record, created = GroupResourcePrivilege.objects.get_or_create(resourcenew=this_resource,
-                                                                           groupnew=this_group,
-                                                                           grantornew=self.user,
+            record, created = GroupResourcePrivilege.objects.get_or_create(resource=this_resource,
+                                                                           group=this_group,
+                                                                           grantor=self.user,
                                                                            defaults = { 'privilege': this_privilege })
 
             # record.start=timezone.now() # now automatically set
@@ -1894,8 +1897,8 @@ class UserAccess(models.Model):
         if self.user.is_active and (self.owns_group(this_group) or self.user.is_superuser):
             # print('invoking override for privileges < ', this_privilege)
             GroupResourcePrivilege.objects\
-                              .filter(groupnew=this_group,
-                                      resourcenew=this_resource,
+                              .filter(group=this_group,
+                                      resource=this_resource,
                                       privilege__lt=this_privilege)\
                               .all()\
                               .delete()
@@ -1927,8 +1930,8 @@ class UserAccess(models.Model):
 
             # this does not return an error if the object is not shared with the user
             if command == CommandCodes.DO:
-                GroupResourcePrivilege.objects.filter(resourcenew=this_resource,
-                                                      groupnew=this_group).delete()
+                GroupResourcePrivilege.objects.filter(resource=this_resource,
+                                                      group=this_group).delete()
             return True
 
         else:
@@ -1987,34 +1990,34 @@ class UserAccess(models.Model):
 
             if access_resource.get_number_of_owners() > 1:
                 # print("Returning results for all undoes -- owners>1")
-                return User.objects.filter(u2urpnew__resourcenew=this_resource)
+                return User.objects.filter(u2urp__resource=this_resource)
             else:  # exclude sole owner from undo
                 # print("Returning results for non-owner undos -- owners==1")
                 # We need to return the users who are not owners, not the users who have privileges other than owner
                 # all candidate undos
-                ids_shared = UserResourcePrivilege.objects.filter(resourcenew=this_resource)\
+                ids_shared = UserResourcePrivilege.objects.filter(resource=this_resource)\
                                                    .values_list('user_id', flat=True).distinct()
                 # undoes that will remove sole owner
-                ids_owner = UserResourcePrivilege.objects.filter(resourcenew=this_resource,
+                ids_owner = UserResourcePrivilege.objects.filter(resource=this_resource,
                                                                  privilege=PrivilegeCodes.OWNER)\
                                                    .values_list('user_id', flat=True).distinct()
                 # return difference
-                return User.objects.filter(u2urpnew__resourcenew=this_resource, uaccess__pk__in=ids_shared)\
+                return User.objects.filter(u2urp__resource=this_resource, uaccess__pk__in=ids_shared)\
                                    .exclude(uaccess__pk__in=ids_owner)
         else:
             if access_resource.get_number_of_owners()>1:
                 # self is grantor
-                return User.objects.filter(u2urpnew__grantor=self.user,
-                                           u2urpnew__resourcenew=this_resource).distinct()
+                return User.objects.filter(u2urp__grantor=self.user,
+                                           u2urp__resource=this_resource).distinct()
 
             else:  # exclude sole owner from undo
                 # The exclude subquery avoids possible many-to-many anomalies in exclude (in which the
                 # phrases for u2urp are treated as separate rather than combined).
-                return User.objects.filter(u2urpnew__grantor=self.user,
-                                           u2urpnew__resourcenew=this_resource)\
-                                   .exclude(pk__in=User.objects.filter(u2urpnew__grantor=self.user,
-                                                                       u2urpnew__resourcenew=this_resource,
-                                                                       u2urpnew__privilege=PrivilegeCodes.OWNER))\
+                return User.objects.filter(u2urp__grantor=self.user,
+                                           u2urp__resource=this_resource)\
+                                   .exclude(pk__in=User.objects.filter(u2urp__grantor=self.user,
+                                                                       u2urp__resource=this_resource,
+                                                                       u2urp__privilege=PrivilegeCodes.OWNER))\
                                    .distinct()
 
     def get_resource_unshare_users(self, this_resource):
@@ -2042,7 +2045,7 @@ class UserAccess(models.Model):
             if access_resource.get_number_of_owners() == 1:
                 # get list of owners to exclude from main list
                 ids_exclude = UserResourcePrivilege.objects\
-                        .filter(resourcenew=this_resource, privilege=PrivilegeCodes.OWNER)\
+                        .filter(resource=this_resource, privilege=PrivilegeCodes.OWNER)\
                         .values_list('user_id', flat=True)\
                         .distinct()
                 return access_resource.get_users().exclude(uaccess__pk__in=ids_exclude)
@@ -2073,10 +2076,10 @@ class UserAccess(models.Model):
             raise PermissionDenied('Requesting user is not active')
 
         if self.user.is_superuser or self.owns_resource(this_resource):
-            return Group.objects.filter(g2grpnew__resourcenew=this_resource).distinct()
+            return Group.objects.filter(g2grp__resource=this_resource).distinct()
         else:  #  privilege only for grantor
-            return Group.objects.filter(g2grpnew__resourcenew=this_resource,
-                                        g2grpnew__grantor=self.user).distinct()
+            return Group.objects.filter(g2grp__resource=this_resource,
+                                        g2grp__grantor=self.user).distinct()
 
     def get_resource_unshare_groups(self, this_resource):
         """
@@ -2101,10 +2104,10 @@ class UserAccess(models.Model):
 
         if self.user.is_superuser or self.owns_resource(this_resource):
             # all shared groups
-            return Group.objects.filter(g2grpnew__resourcenew=this_resource)
+            return Group.objects.filter(g2grp__resource=this_resource)
         else:
-            return Group.objects.filter(g2ugpnew__usernew=self.user,
-                                        g2ugpnew__privilege=PrivilegeCodes.OWNER).distinct()
+            return Group.objects.filter(g2ugp__user=self.user,
+                                        g2ugp__privilege=PrivilegeCodes.OWNER).distinct()
 
 
 class GroupAccess(models.Model):
@@ -2164,7 +2167,7 @@ class GroupAccess(models.Model):
 
         :return: QuerySet of users
         """
-        return User.objects.filter(u2ugpnew__groupnew=self.group).distinct()
+        return User.objects.filter(u2ugp__group=self.group).distinct()
 
     @property
     def held_resources(self):
@@ -2172,7 +2175,7 @@ class GroupAccess(models.Model):
 
         :return: QuerySet of resources
         """
-        return BaseResource.objects.filter(r2grpnew__groupnew=self.group)
+        return BaseResource.objects.filter(r2grp__group=self.group)
 
     ####################################
     # compute statistics to enable "number-of-owners" logic
@@ -2205,8 +2208,8 @@ class GroupAccess(models.Model):
 
         :return: List of resource objects that can be edited  by this group.
         """
-        return BaseResource.objects.filter(r2grpnew__groupnew=self.group, raccess__immutable=False,
-                                              r2grpnew__privilege__lte=PrivilegeCodes.CHANGE).distinct()
+        return BaseResource.objects.filter(r2grp__group=self.group, raccess__immutable=False,
+                                              r2grp__privilege__lte=PrivilegeCodes.CHANGE).distinct()
 
     def get_owners(self):
         """
@@ -2217,8 +2220,8 @@ class GroupAccess(models.Model):
         This eliminates duplicates due to multiple invitations.
         """
 
-        return User.objects.filter(u2ugpnew__groupnew=self.group,
-                                   u2ugpnew__privilege=PrivilegeCodes.OWNER).distinct()
+        return User.objects.filter(u2ugp__group=self.group,
+                                   u2ugp__privilege=PrivilegeCodes.OWNER).distinct()
 
     def get_number_of_owners(self):
         """
@@ -2238,7 +2241,7 @@ class GroupAccess(models.Model):
 
         This can be *greater* than the number of owners due to duplicate owner invitations from different users.
         """
-        return UserGroupPrivilege.objects.filter(groupnew=self.group, privilege=PrivilegeCodes.OWNER).count()
+        return UserGroupPrivilege.objects.filter(group=self.group, privilege=PrivilegeCodes.OWNER).count()
 
     def get_number_of_members(self):
         """
@@ -2258,9 +2261,9 @@ class GroupAccess(models.Model):
         :param this_user: User to check
         :return: Privilege code 1-4
         """
-        p = UserGroupPrivilege.objects.filter(groupnew=self.group,
-                                              usernew=this_user,
-                                              usernew__uaccess__is_active=True)\
+        p = UserGroupPrivilege.objects.filter(group=self.group,
+                                              user=this_user,
+                                              user__uaccess__is_active=True)\
             .aggregate(models.Min('privilege'))
         val = p['privilege__min']
         if val is None:
@@ -2317,7 +2320,7 @@ class ResourceAccess(models.Model):
 
         :return: QuerySet of groups
         """
-        return Group.objects.filter(g2grpnew__resourcenew=self.resource).distinct()
+        return Group.objects.filter(g2grp__resource=self.resource).distinct()
 
     @property
     def holding_users(self):
@@ -2325,7 +2328,7 @@ class ResourceAccess(models.Model):
 
         :return: QuerySet of groups
         """
-        return User.objects.filter(u2urpnew__resourcenew=self.resource).distinct()
+        return User.objects.filter(u2urp__resource=self.resource).distinct()
 
     #############################################
     # workalike queries adapt to old access control system
@@ -2333,28 +2336,28 @@ class ResourceAccess(models.Model):
 
     @property
     def view_users(self):
-        return User.objects.filter(u2urpnew__resourcenew=self.resource,
-                                   u2urpnew__privilege__lte=PrivilegeCodes.VIEW).distinct()
+        return User.objects.filter(u2urp__resource=self.resource,
+                                   u2urp__privilege__lte=PrivilegeCodes.VIEW).distinct()
 
     @property
     def edit_users(self):
-        return User.objects.filter(u2urpnew__resourcenew=self.resource,
-                                   u2urpnew__privilege__lte=PrivilegeCodes.CHANGE).distinct()
+        return User.objects.filter(u2urp__resource=self.resource,
+                                   u2urp__privilege__lte=PrivilegeCodes.CHANGE).distinct()
 
     @property
     def view_groups(self):
-        return Group.objects.filter(g2grpnew__resourcenew=self.resource,
-                                    g2grpnew__privilege__lte=PrivilegeCodes.VIEW).distinct()
+        return Group.objects.filter(g2grp__resource=self.resource,
+                                    g2grp__privilege__lte=PrivilegeCodes.VIEW).distinct()
 
     @property
     def edit_groups(self):
-        return Group.objects.filter(g2grpnew__resourcenew=self.resource,
-                                    g2grpnew__privilege__lte=PrivilegeCodes.CHANGE).distinct()
+        return Group.objects.filter(g2grp__resource=self.resource,
+                                    g2grp__privilege__lte=PrivilegeCodes.CHANGE).distinct()
 
     @property
     def owners(self):
-        return User.objects.filter(u2urpnew__privilege=PrivilegeCodes.OWNER,
-                                   u2urpnew__resourcenew=self.resource)
+        return User.objects.filter(u2urp__privilege=PrivilegeCodes.OWNER,
+                                   u2urp__resource=self.resource)
 
     #############################################
     # Reporting of resource statistics
@@ -2367,8 +2370,8 @@ class ResourceAccess(models.Model):
 
         """
 
-        return User.objects.filter(u2urpnew__privilege=PrivilegeCodes.OWNER,
-                                   u2urpnew__resourcenew=self.resource)
+        return User.objects.filter(u2urp__privilege=PrivilegeCodes.OWNER,
+                                   u2urp__resource=self.resource)
 
     def get_number_of_owners(self):
         """
@@ -2391,7 +2394,7 @@ class ResourceAccess(models.Model):
         This can be *greater* than the number of owners due to duplicate owner
         invitations from different users.
         """
-        return UserResourcePrivilege.objects.filter(resourcenew=self.resource,
+        return UserResourcePrivilege.objects.filter(resource=self.resource,
                                                     privilege=PrivilegeCodes.OWNER).count()
 
     def get_users(self):
@@ -2400,7 +2403,7 @@ class ResourceAccess(models.Model):
 
         :return: QuerySet that evaluates to all users holding resource.
         """
-        return User.objects.filter(u2urpnew__resourcenew=self.resource)
+        return User.objects.filter(u2urp__resource=self.resource)
 
     def get_number_of_users(self):
         """
@@ -2442,8 +2445,8 @@ class ResourceAccess(models.Model):
         # We want user objects that either
         # a) have direct access to the resource or
         # b) have access to a group that has access to a resource
-        return User.objects.filter(Q(u2urpnew__resourcenew=self.resource)
-                                 | Q(u2ugpnew__groupnew__g2grpnew__resourcenew=self.resource)).distinct()
+        return User.objects.filter(Q(u2urp__resource=self.resource)
+                                 | Q(u2ugp__group__g2grp__resource=self.resource)).distinct()
 
     def get_number_of_holders(self):
         """
@@ -2477,9 +2480,9 @@ class ResourceAccess(models.Model):
 
         # compute simple user privilege over resource
         user_priv = UserResourcePrivilege.objects\
-            .filter(usernew=this_user,
-                    usernew__is_active=True,
-                    resourcenew=self.resource)\
+            .filter(user=this_user,
+                    user__is_active=True,
+                    resource=self.resource)\
             .aggregate(models.Min('privilege'))
 
         # this realizes the query early, but can't be helped, because otherwise,
@@ -2490,10 +2493,10 @@ class ResourceAccess(models.Model):
 
         # include group active flag
         group_priv = GroupResourcePrivilege.objects\
-            .filter(resourcenew=self.resource,
-                    groupnew__gaccess__active=True,
-                    groupnew__g2ugpnew__usernew=this_user,
-                    groupnew__g2ugpnew__usernew__is_active=True)\
+            .filter(resource=self.resource,
+                    group__gaccess__active=True,
+                    group__g2ugp__user=this_user,
+                    group__g2ugp__user__is_active=True)\
             .aggregate(models.Min('privilege'))
 
         # this realizes the query early, but can't be helped, because otherwise,
@@ -2520,9 +2523,9 @@ class ResourceAccess(models.Model):
             assert isinstance(this_group, Group)
 
         # compute simple user privilege over resource
-        response1 = GroupResourcePrivilege.objects.filter(groupnew=this_group,
-                                                          groupnew__gaccess__active=True,
-                                                          resourcenew=self.resource)\
+        response1 = GroupResourcePrivilege.objects.filter(group=this_group,
+                                                          group__gaccess__active=True,
+                                                          resource=self.resource)\
             .aggregate(models.Min('privilege'))['privilege__min']
 
         if response1 is None:
