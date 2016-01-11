@@ -247,6 +247,52 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res.delete()
     return HttpResponseRedirect('/my-resources/')
 
+def create_new_version_resource(request, shortkey, *args, **kwargs):
+    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+
+    url_key = "page_redirect_url"
+
+    try:
+        page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=res.resource_type, files=res.resource_files,
+                                                                    resource_title=res.res_title,
+                                                                    page_redirect_url_key=url_key, **kwargs)
+    except utils.ResourceFileSizeException as ex:
+        context = {'file_size_error': ex.message}
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
+    except utils.ResourceFileValidationException as ex:
+        context = {'validation_error': ex.message}
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
+    except Exception as ex:
+        context = {'resource_creation_error': ex.message}
+        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
+    if url_key in page_url_dict:
+        return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
+
+    # try:
+    resource = hydroshare.create_resource(
+            resource_type=request.POST['resource-type'],
+            owner=request.user,
+            title=res_title,
+            metadata=metadata,
+            files=res.resource_files,
+            content=res_title
+    )
+    # except Exception as ex:
+    #     context = {'resource_creation_error': ex.message }
+    #     return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
+    try:
+        utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)
+    except (utils.ResourceFileValidationException, Exception) as ex:
+        request.session['validation_error'] = ex.message
+
+    # go to resource landing page
+    request.session['just_created'] = True
+
+    return HttpResponseRedirect(resource.get_absolute_url())
 
 def publish(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)

@@ -119,6 +119,10 @@
                             <form class="inline pull-right" action="{{ cm.get_absolute_url }}" method="post">
                                 {% csrf_token %}
                                 {% if page.perms.delete %}
+                                    <a id="new-version" data-toggle="modal" data-target="#new-version-resource-dialog">
+                                        <span data-toggle="tooltip" data-placement="auto" title="Create a new version of this resource"
+                                              class="glyphicon glyphicon glyphicon-new-window icon-button btn-edit"></span>
+                                    </a>
                                     <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
                                         <span data-toggle="tooltip" data-placement="auto" title="Delete this resource"
                                               class="glyphicon glyphicon-trash icon-button btn-remove"></span>
@@ -2098,6 +2102,28 @@
                             <button type="submit" class="btn btn-primary">Save changes</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="new-version-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="new-version-resource-title">Create New Version of This Resource</h4>
+                    </div>
+                    <div class="modal-body">
+                        Creating a new version of this resource will obsolete this resource.
+                        This resource will be still available in HydroShare, but will not be
+                        discoverable via HydroShare search interface. Only one newer version
+                        is allowed.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a type="button" class="btn btn-danger"
+                           href="/hsapi/_internal/{{ cm.short_id }}/create-new-version-resource/">Create New Version</a>
+                    </div>
                 </div>
             </div>
         </div>
