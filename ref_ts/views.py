@@ -19,6 +19,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 from django.shortcuts import render_to_response
 
 from hs_core import hydroshare
+from hs_core.views.utils import authorize
 from ga_resources.utils import json_or_jsonp
 from . import ts_utils
 from .forms import ReferencedSitesForm, ReferencedVariablesForm, GetTSValuesForm, VerifyRestUrlForm, CreateRefTimeSeriesForm
@@ -194,7 +195,7 @@ def create_ref_time_series(request, *args, **kwargs):
                                  }
                 metadata.append(coverage_point)
 
-            if ts_dict["start_date"] is None and ts_dict["end_date"] is None:
+            if ts_dict["start_date"] is not None and ts_dict["end_date"] is not None:
                 coverage_period ={"Coverage": {"type": "period",
                                       "value": {"start": ts_dict["start_date"],
                                                 "end": ts_dict["end_date"]}
@@ -245,9 +246,14 @@ def create_ref_time_series(request, *args, **kwargs):
         return render_to_response('pages/create-ref-time-series.html', context, context_instance=RequestContext(request))
 
 def download_resource_files(request, shortkey, *args, **kwargs):
-
-    tempdir = None
     try:
+        _, authorized, _ = authorize(request, shortkey, edit=True, full=True, view=True, superuser=True, raises_exception=False)
+        if not authorized:
+            response = HttpResponse()
+            response.content = "<h1>You do not have permission to download this resource!</h1>"
+            return response
+
+        tempdir = None
         tempdir = tempfile.mkdtemp()
         res_files_fp_arr = ts_utils.generate_resource_files(shortkey, tempdir)
 
@@ -266,6 +272,7 @@ def download_resource_files(request, shortkey, *args, **kwargs):
 
         return response
     except Exception as e:
+        logger.exception("download_resource_files: %s" % (e.message))
         raise e
     finally:
         if tempdir is not None:

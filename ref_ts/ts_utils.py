@@ -419,10 +419,13 @@ def parse_featureOfInterest(OM_Observation_element):
 
 def parse_observedProperty(OM_Observation_element):
     variable_name = None
-
     for observedProperty_element in OM_Observation_element.iter():
         if "observedProperty" in observedProperty_element.tag:
             variable_name = getAttributeValueFromElement(observedProperty_element, "title")
+            if variable_name.lower() == "unmapped":
+                variable_name = getAttributeValueFromElement(observedProperty_element, "href")
+                if "#" in variable_name:
+                    variable_name = variable_name.replace("#", "")
     return {"variable_name": variable_name}
 
 def parse_uom(OM_Observation_element):
@@ -439,16 +442,23 @@ def parse_uom(OM_Observation_element):
 
 def parse_qualifier(OM_Observation_element):
     qualifier_name = None
+    qualifier_value = None
     for qualifier_element in OM_Observation_element.iter():
         if "qualifier" in qualifier_element.tag:
             qualifier_name = getAttributeValueFromElement(qualifier_element, "title")
-    return {"qualifier_name": qualifier_name}
+            if qualifier_name is None:
+                for ele in qualifier_element.iter():
+                    if "text" in ele.tag.lower():
+                        qualifier_name = getAttributeValueFromElement(ele, "definition")
+                    if "value" in ele.tag.lower():
+                        qualifier_value = ele.text
+    return {"qualifier_name": qualifier_name, "qualifier_value": qualifier_value}
 
 def parse_value(OM_Observation_element):
     x = []
     y = []
     for point_element in OM_Observation_element.iter():
-        if "point" in point_element.tag:
+        if "MeasurementTVP" in point_element.tag:
             for ele in point_element.iter():
                 if "time" in ele.tag:
                     x.append(ele.text)
@@ -456,129 +466,94 @@ def parse_value(OM_Observation_element):
                     y.append(ele.text)
     return {"x": x, "y": y}
 
-def parse_2_0(root):
-    OM_Observation_list = []
-    for OM_Observation_element in root.iter():
-        if "OM_Observation" in OM_Observation_element.tag:
-            site_name = parse_featureOfInterest(OM_Observation_element)["site_name"]
-            variable_name = parse_observedProperty(OM_Observation_element)["variable_name"]
-            unit_name = parse_uom(OM_Observation_element)["unit_name"]
-            qualifier_name = parse_qualifier(OM_Observation_element)["qualifier_name"]
-            x_y_dict = parse_value(OM_Observation_element)
-            x = x_y_dict['x']
-            y = x_y_dict['y']
+def parse_2_0(wml_string):
 
+    wml_str, variable_code, variable_name, net_work, site_name, site_code, elevation, vertical_datum,\
+    longitude, latitude, projection, srs, noDataValue, unit_abbr, unit_code, unit_name, unit_type,\
+    method_code, method_id, method_description, source_code, source_id, quality_control_level_code,\
+    quality_control_level_definition, data, method_code_query, source_code_query,  \
+    quality_control_level_code_query, start_date, end_date = \
+    None, None, None, None, None, None, None, None,  None, None, None, None, None, None,\
+    None, None, None, None, None, None, None, None, None, None,  None, None, None, None, None, None
+
+    wml_str = wml_string
+    data = {"x": [], "y": []}
+    root = etree.XML(wml_string)
 
     try:
-        if 'Collection' in root.tag:
+        for ele in root.iter():
+            if "OM_Observation" in ele.tag:
+                ele_OM_Observation = ele
+                site_name = parse_featureOfInterest(ele_OM_Observation)["site_name"]
+                variable_name = parse_observedProperty(ele_OM_Observation)["variable_name"]
+                unit_name = parse_uom(ele_OM_Observation)["unit_name"]
+                qualifier = parse_qualifier(ele_OM_Observation)
+                quality_control_level_code = qualifier["qualifier_name"]
+                quality_control_level_definition = qualifier["qualifier_value"]
 
-            wml_str, variable_code, variable_name, net_work, site_name, site_code, elevation, vertical_datum,\
-            longitude, latitude, projection, srs, noDataValue, unit_abbr, unit_code, unit_name, unit_type,\
-            method_code, method_id, method_description, source_code, source_id, quality_control_level_code,\
-            quality_control_level_definition, data, method_code_query, source_code_query,  \
-            quality_control_level_code_query, start_date, end_date = \
-            None, None, None, None, None, None, None, None,  None, None, None, None, None, None,\
-            None, None, None, None, None, None, None, None, None, None,  None, None, None, None, None, None
+                x_y_dict = parse_value(ele)
+                x = x_y_dict['x']
+                y = x_y_dict['y']
+                data['x'] = x
+                data['y'] = y
 
-            sample_medium = None
+            elif "localDictionary" in ele.tag:
+                pass
+                # for ele2 in ele:
+                #     id_value = getAttributeValueFromElement(ele2, "id")
+                #     if id_value == "phenomena":
+                #         ele_phenomena = ele2
+                #         for ele3 in ele_phenomena:
+                #             if
+                #
+                #     elif id_value == "method":
+                #
+                #     elif id_value == "quality":
+                #
+                #     elif id_value == "censorCode":
+            elif "samplingFeatureMember" in ele.tag:
+                ele_samplingFeatureMember =ele
+                for ele2 in ele_samplingFeatureMember.iter():
+                    if "pos" in ele2.tag:
+                        lat_lon_array = ele2.text.split(" ")
+                        latitude = lat_lon_array[0]
+                        longitude = lat_lon_array[1]
+            elif "ObservationProcess" in ele.tag:
+                ele_ObservationProcess = ele
+                for ele2 in ele_ObservationProcess.iter():
+                    if "NamedValue" in ele2.tag:
+                        ele_NamedValue = ele2
+                        if getAttributeValueFromElement(ele_NamedValue.getchildren()[0], "title") == "noDataValue":
+                            noDataValue = ele_NamedValue.getchildren()[1].text
 
-            name_is_set, site_code_set = False, False
-
-            wml_str = etree.tostring(root)
-
-            x = []
-            y = []
-            data = {"x": x, "y": y}
-
-            variable_name = root[1].text
-            for element in root.iter():
-                if 'MeasurementTVP' in element.tag:
-                        for e in element:
-                            if 'time' in e.tag:
-                                t_obj = time_str_to_datetime(e.text) # original datetime string may be improperly formatted
-                                t_str = t_obj.isoformat()
-                                x.append(t_str)
-                            if 'value' in e.tag:
-                                y.append(float(e.text))
-
-                if 'uom' in element.tag:
-                    for a in element.attrib:
-                        if "code" in a or "umo" in a or "title" in a:
-                            unit_name = element.attrib.get(a, None)
-
-                if 'MonitoringPoint' in element.tag:
-                    for e in element.iter():
-                        if 'identifier' in e.tag and not site_code_set:
-                            site_code = e.text
-                            site_code_set = True
-                        if 'name' in e.tag and not name_is_set:
-                            site_name = e.text
-                            name_is_set = True
-                        if 'pos' in e.tag:
-                            lat_long = e.text
-                            lat_long = lat_long.split(' ')
-                            latitude = lat_long[0]
-                            longitude = lat_long[1]
-                if 'observedProperty' in element.tag:
-                    for a in element.attrib:
-                        if 'title' in a:
-                            variable_name = element.attrib[a]
-                        # if 'href' in a:
-                        #     variable_code = element.attrib[a]
-                        #     variable_code = variable_code.replace('#', '')
-                if variable_name == 'Unmapped':
-                    try:
-                        if 'vocabulary' in element.attrib:
-                            variable_name = element.text
-                    except:
-                        variable_name = 'Unmapped'
-                if 'ObservationProcess' in element.tag:
-                    for e in element.iter():
-                        if 'processType' in e.tag:
-                            for a in e.attrib:
-                                if 'title' in a:
-                                    method_description = e.attrib[a]
-                if 'sampledMedium' in element.tag:
-                    for a in element.attrib.iteritems():
-                        if 'title' in a[0]:
-                            sample_medium = a[1]
-
-            if variable_name == 'Unmapped':
-                for element in root.iter():
-                    if len(element.attrib.values()) > 0:
-                        if 'vocabulary' in element.attrib.values()[0]:
-                            variable_name = element.text
-                        if 'qualityControlLevelCode' in element.attrib.values()[0] and 'name' in element.tag:
-                            quality_control_level_definition = element.text
-
-            return {'wml_str': wml_str,
-                    'variable_code': variable_code,
-                    'variable_name': variable_name,
-                    "net_work": net_work,
-                    'site_name': site_name,
-                    'site_code': site_code,
-                    'elevation': elevation,
-                    'vertical_datum': vertical_datum,
-                    'latitude': latitude,
-                    'longitude': longitude,
-                    'projection': projection,
-                    'srs': srs,
-                    'noDataValue': noDataValue,
-                    'unit_abbr': unit_abbr,
-                    'unit_code': unit_code,
-                    'unit_name': unit_name,
-                    'unit_type': unit_type,
-                    'method_code': method_code,
-                    'method_id': method_id,
-                    'method_description': method_description,
-                    'source_code': source_code,
-                    'source_id': source_id,
-                    'quality_control_level_code': quality_control_level_code,
-                    'quality_control_level_definition': quality_control_level_definition,
-                    'data': data,
-                    "start_date": start_date,
-                    "end_date": end_date
-                    }
+                return {'wml_str': wml_str,
+                        'variable_code': variable_code,
+                        'variable_name': variable_name,
+                        "net_work": net_work,
+                        'site_name': site_name,
+                        'site_code': site_code,
+                        'elevation': elevation,
+                        'vertical_datum': vertical_datum,
+                        'latitude': latitude,
+                        'longitude': longitude,
+                        'projection': projection,
+                        'srs': srs,
+                        'noDataValue': noDataValue,
+                        'unit_abbr': unit_abbr,
+                        'unit_code': unit_code,
+                        'unit_name': unit_name,
+                        'unit_type': unit_type,
+                        'method_code': method_code,
+                        'method_id': method_id,
+                        'method_description': method_description,
+                        'source_code': source_code,
+                        'source_id': source_id,
+                        'quality_control_level_code': quality_control_level_code,
+                        'quality_control_level_definition': quality_control_level_definition,
+                        'data': data,
+                        "start_date": start_date,
+                        "end_date": end_date
+                        }
     except Exception as ex:
         logger.error(ex.message)
         raise Exception("parse 2.0 error")
@@ -614,7 +589,7 @@ def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, vari
         if wml_version_xml_tag == 10 or wml_version_xml_tag == 11:
             ts = parse_1_0_and_1_1_owslib(response, wml_version_xml_tag)
         elif wml_version_xml_tag == 20:
-            ts = parse_2_0(root)
+            ts = parse_2_0(response)
          # some hydrosevers may return wml without having version info in tags (http://worldwater.byu.edu/interactive/gill_lab/services/index.php/cuahsi_1_1.asmx?WSDL)
         else:
             raise Exception("no version info found in wml")
@@ -634,7 +609,7 @@ def create_vis_2(path, site_name, data, xlabel, variable_name, units, noDataValu
         for i in range(len(x_list)):
             if noDataValue is not None and (y_list[i]) == float(noDataValue):
                continue # skip nodatavalue
-            x_list_draw.append(datetime.strptime(x_list[i], "%Y-%m-%dT%H:%M:%S"))
+            x_list_draw.append(time_str_to_datetime(x_list[i]))
             y_list_draw.append(y_list[i])
 
         fig, ax = plt.subplots()
@@ -726,7 +701,7 @@ def save_ts_to_files(res, tempdir, ts):
     wml_2_0_name = '{0}_wml_2_0.xml'.format(file_name_base)
     wml_2_0_full_path = tempdir + "/" + wml_2_0_name
 
-    if ts["wml_version"] == 10 or 11:
+    if ts["wml_version"] == 10 or ts["wml_version"] == 11:
         module_dir = os.path.dirname(__file__)
         if ts["wml_version"] == 11:
             xml_1011_name = wml_1_1_name
