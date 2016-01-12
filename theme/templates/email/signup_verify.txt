@@ -1,8 +1,8 @@
 {% load i18n %}
 {% block main %}
-{% trans "Welcome to HydroShare. This email address was used to request an account on HydroShare." %}
+{% trans "Welcome to HydroShare. This email address was used to request an account on www.hydroshare.org." %}
 {% trans "If you originated the request, please use the link below to verify your email address and activate your account." %}
 {{ request.scheme }}://{{ request.get_host }}{{ verify_url }}
-{% trans "If you did not originate this request you may ignore this email and the account request will expire in 24 hours." %}
+{% trans "If you did not originate this request you may ignore this email." %}
+{% trans "The HydroShare Team" %}
 {% endblock %}
-
