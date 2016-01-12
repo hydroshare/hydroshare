@@ -248,51 +248,44 @@ def delete_resource(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect('/my-resources/')
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, authorized, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
     url_key = "page_redirect_url"
 
     try:
-        page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=res.resource_type, files=res.resource_files,
-                                                                    resource_title=res.res_title,
-                                                                    page_redirect_url_key=url_key, **kwargs)
-    except utils.ResourceFileSizeException as ex:
-        context = {'file_size_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
-
-    except utils.ResourceFileValidationException as ex:
-        context = {'validation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
-
+        page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(
+                                                resource_type=res.resource_type,
+                                                resource_title=res.metadata.title.value,
+                                                page_redirect_url_key=url_key, **kwargs)
     except Exception as ex:
-        context = {'resource_creation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        request.session['new_version_resource_creation_error'] = ex.message
+        return HttpResponseRedirect(res.get_absolute_url())
 
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
 
-    # try:
-    resource = hydroshare.create_resource(
-            resource_type=request.POST['resource-type'],
+    try:
+        new_resource = hydroshare.create_resource(
+            resource_type=res.resource_type,
             owner=request.user,
             title=res_title,
             metadata=metadata,
-            files=res.resource_files,
+            files=res.files,
             content=res_title
     )
-    # except Exception as ex:
-    #     context = {'resource_creation_error': ex.message }
-    #     return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+    except Exception as ex:
+        request.session['new_version_resource_creation_error'] = ex.message
+        return HttpResponseRedirect(res.get_absolute_url())
 
     try:
-        utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)
+        utils.resource_post_create_actions(resource=new_resource, user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
 
     # go to resource landing page
     request.session['just_created'] = True
 
-    return HttpResponseRedirect(resource.get_absolute_url())
+    return HttpResponseRedirect(new_resource.get_absolute_url())
 
 def publish(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
@@ -509,7 +502,7 @@ def my_resources(request, page):
     # import sys
     # sys.path.append("/home/docker/pycharm-debug")
     # import pydevd
-    # pydevd.settrace('10.0.0.7', port=21000, suspend=False)
+    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
     user = request.user
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
