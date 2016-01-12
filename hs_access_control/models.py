@@ -1175,8 +1175,13 @@ class UserAccess(models.Model):
             # everyone who holds this resource, minus potential sole owners
             if access_group.get_number_of_owners() == 1:
                 # get list of owners to exclude from main list
+		# This should be one user but can be two due to race conditions. 
+		# Avoid races by excluding action in that case. 
                 ids_exclude = User.objects\
-                        .filter(u2ugp__group=this_group, u2ugp__privilege=PrivilegeCodes.OWNER)
+                        .filter(u2ugp__group=this_group, 
+				u2ugp__privilege=PrivilegeCodes.OWNER)\
+			.values_list('pk', flat=True)\
+			.distinct()
                 return access_group.get_members().exclude(pk__in=ids_exclude)
             else:
                 return access_group.get_members()
@@ -1190,9 +1195,9 @@ class UserAccess(models.Model):
                     return User.objects.filter(uaccess=self)
                 else:
                     # I can't remove anyone
-                    return User.objects.empty()
+                    return User.objects.none()
         else:
-            return User.objects.empty()
+            return User.objects.none()
 
     ##########################################
     # PUBLIC FUNCTIONS: resources
@@ -1995,20 +2000,18 @@ class UserAccess(models.Model):
                 # print("Returning results for non-owner undos -- owners==1")
                 # We need to return the users who are not owners, not the users who have privileges other than owner
                 # all candidate undos
-                ids_shared = UserResourcePrivilege.objects.filter(resource=this_resource)\
-                                                   .values_list('user_id', flat=True).distinct()
-                # undoes that will remove sole owner
-                ids_owner = UserResourcePrivilege.objects.filter(resource=this_resource,
-                                                                 privilege=PrivilegeCodes.OWNER)\
-                                                   .values_list('user_id', flat=True).distinct()
+                ids_owner = User.objects.filter(u2urp__resource=this_resource,
+                                                u2urp__privilege=PrivilegeCodes.OWNER)
                 # return difference
-                return User.objects.filter(u2urp__resource=this_resource, uaccess__pk__in=ids_shared)\
-                                   .exclude(uaccess__pk__in=ids_owner)
-        else:
+                return User.objects.filter(u2urp__resource=this_resource)\
+                                   .exclude(pk__in=ids_owner)
+        else: # rules for non-owners
             if access_resource.get_number_of_owners()>1:
                 # self is grantor
-                return User.objects.filter(u2urp__grantor=self.user,
-                                           u2urp__resource=this_resource).distinct()
+                return User.objects\
+			   .filter(u2urp__grantor=self.user,
+				   u2urp__resource=this_resource)\
+			   .distinct()
 
             else:  # exclude sole owner from undo
                 # The exclude subquery avoids possible many-to-many anomalies in exclude (in which the
@@ -2044,17 +2047,21 @@ class UserAccess(models.Model):
             # everyone who holds this resource, minus potential sole owners
             if access_resource.get_number_of_owners() == 1:
                 # get list of owners to exclude from main list
-                ids_exclude = UserResourcePrivilege.objects\
-                        .filter(resource=this_resource, privilege=PrivilegeCodes.OWNER)\
-                        .values_list('user_id', flat=True)\
+		# this should be one user but could be more than one 
+		# due to race conditions. To make code more robust, 
+ 		# exclude action in this case 
+                ids_exclude = User.objects\
+                        .filter(u2urp__resource=this_resource, 
+				u2urp__privilege=PrivilegeCodes.OWNER)\
+			.values_list('pk', flat=True)\
                         .distinct()
-                return access_resource.get_users().exclude(uaccess__pk__in=ids_exclude)
+                return access_resource.get_users().exclude(pk__in=ids_exclude)
             else:
                 return access_resource.get_users()
         elif self in access_resource.holding_users.all():
-            return User.objects.filter(uaccess=self)
+            return User.objects.none()
         else:
-            return User.objects.filter(uaccess=None)  # empty set
+            return User.objects.none()
 
     def get_resource_undo_groups(self, this_resource):
         """

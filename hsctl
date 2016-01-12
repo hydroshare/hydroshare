@@ -208,7 +208,7 @@ loaddb_hs() {
     docker exec $CID psql -U postgres -h postgis -w -c 'create extension postgis;'
     echo "*** load database with contents of ${HS_DATABASE} ***"
     docker exec $CID psql -U postgres -h postgis -f ${HS_DATABASE}
-    echo "*** mangae.py collectstatic ***"
+    echo "*** manage.py collectstatic ***"
     docker exec $CID python manage.py collectstatic -v0 --noinput
     #echo "*** manage.py makemigrations ***"
     #docker exec $CID python manage.py makemigrations

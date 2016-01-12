@@ -4,12 +4,13 @@ import unittest
 from django.http import Http404
 from django.test import TestCase
 from django.utils import timezone
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User, Group
 from pprint import pprint
 
 from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
     UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, \
-    PrivilegeCodes, HSAccessException, HSAUsageException, HSAIntegrityException
+    PrivilegeCodes
 
 from hs_core import hydroshare
 from hs_core.models import GenericResource, BaseResource
@@ -17,14 +18,15 @@ from hs_core.testing import MockIRODSTestCaseMixin
 
 def global_reset():
     UserResourcePrivilege.objects.all().delete()
-    GroupResourcePrivilege.objects.all().delete()
     UserGroupPrivilege.objects.all().delete()
+    GroupResourcePrivilege.objects.all().delete()
     UserAccess.objects.all().delete()
-    ResourceAccess.objects.all().delete()
     GroupAccess.objects.all().delete()
-    Group.objects.all().delete()
+    ResourceAccess.objects.all().delete()
     User.objects.all().delete()
+    Group.objects.all().delete()
     BaseResource.objects.all().delete()
+
 
 class T00Attributes(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
@@ -259,7 +261,7 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         # set john to an inactive user
         self.john.is_active = False
         self.john.save()
-        self.assertRaises(Exception, lambda: self.george.uaccess.share_resource_with_user(self.bikes, self.john,
+        self.assertRaises(PermissionDenied, lambda: self.george.uaccess.share_resource_with_user(self.bikes, self.john,
                                                                                           PrivilegeCodes.CHANGE))
 
         self.john.is_active = True
@@ -271,12 +273,12 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.bikes.raccess.get_effective_privilege(self.john) == PrivilegeCodes.CHANGE)
         self.john.is_active = False
         self.john.save()
-        self.assertRaises(Exception, lambda: self.john.uaccess.share_resource_with_user(self.bikes, self.alva,
+        self.assertRaises(PermissionDenied, lambda: self.john.uaccess.share_resource_with_user(self.bikes, self.alva,
                                                                                         PrivilegeCodes.VIEW))
         self.john.is_active = True
         self.john.save()
 
-def match_lists(l1, l2):
+def match_lists_as_sets(l1, l2):
     """ return true if two lists contain the same content
     :param l1: first list
     :param l2: second list
@@ -392,7 +394,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(cat.uaccess.get_number_of_held_groups(), 0)
 
         # metadata state
-        self.assertEqual(holes.metadata.title.value, 'all about dog holes')
+        # NOT ACCESS CONTROL: self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -412,8 +414,13 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # unsharing with cat would violate owner constraint
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_undo_users(holes)))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_unshare_users(holes)))
+
+	print("owners for holes are:")
+	pprint(holes.raccess.get_owners())
+	print("undo users for holes are:")
+        pprint(cat.uaccess.get_resource_undo_users(holes))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_undo_users(holes)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_unshare_users(holes)))
         self.assertFalse(cat.uaccess.can_unshare_resource_with_user(holes, cat))
         self.assertFalse(cat.uaccess.can_undo_share_resource_with_user(holes, cat))
 
@@ -460,10 +467,14 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # test list access functions for unshare targets
         # these return empty because allowing this would violate the last owner rule
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_undo_users(holes)))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_unshare_users(holes)))
-        self.assertTrue(match_lists([], dog.uaccess.get_resource_undo_users(holes)))
-        self.assertTrue(match_lists([], dog.uaccess.get_resource_unshare_users(holes)))
+	print("owners for holes are:")
+	pprint(holes.raccess.get_owners())
+	print("undo users for holes are:")
+        pprint(cat.uaccess.get_resource_undo_users(holes))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_undo_users(holes)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_unshare_users(holes)))
+        self.assertTrue(match_lists_as_sets([], dog.uaccess.get_resource_undo_users(holes)))
+        self.assertTrue(match_lists_as_sets([], dog.uaccess.get_resource_unshare_users(holes)))
 
     def test_06_check_flag_immutable(self):
         """Resource owner can set and reset immutable flag"""
@@ -584,16 +595,16 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # is it listed as discoverable?
-        self.assertTrue(match_lists([], GenericResource.discoverable_resources.all()))
-        self.assertTrue(match_lists([], GenericResource.public_resources.all()))
+        self.assertTrue(match_lists_as_sets([], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists_as_sets([], GenericResource.public_resources.all()))
 
         # make it discoverable
         holes.raccess.discoverable = True
         holes.raccess.save()
 
         # is it listed as discoverable?
-        self.assertTrue(match_lists([holes], GenericResource.discoverable_resources.all()))
-        self.assertTrue(match_lists([], GenericResource.public_resources.all()))
+        self.assertTrue(match_lists_as_sets([holes], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists_as_sets([], GenericResource.public_resources.all()))
 
         # metadata state
         self.assertEqual(holes.metadata.title.value, 'all about dog holes')
@@ -772,16 +783,16 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # is it listed as discoverable?
-        self.assertTrue(match_lists([], GenericResource.discoverable_resources.all()))
-        self.assertTrue(match_lists([], GenericResource.public_resources.all()))
+        self.assertTrue(match_lists_as_sets([], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists_as_sets([], GenericResource.public_resources.all()))
 
         # make it public
         holes.raccess.public = True
         holes.raccess.save()
 
         # is it listed as discoverable?
-        self.assertTrue(match_lists([holes], GenericResource.discoverable_resources.all()))
-        self.assertTrue(match_lists([holes], GenericResource.public_resources.all()))
+        self.assertTrue(match_lists_as_sets([holes], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists_as_sets([holes], GenericResource.public_resources.all()))
 
         # metadata state
         self.assertEqual(holes.metadata.title.value, 'all about dog holes')
@@ -884,9 +895,9 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(cat.uaccess.get_number_of_owned_groups(), 0)
         self.assertEqual(cat.uaccess.get_number_of_held_groups(), 0)
 
-        self.assertTrue(match_lists([arfers], dog.uaccess.get_owned_groups()),
+        self.assertTrue(match_lists_as_sets([arfers], dog.uaccess.get_owned_groups()),
                         "error in group listing")
-        self.assertTrue(match_lists([arfers], dog.uaccess.get_held_groups()),
+        self.assertTrue(match_lists_as_sets([arfers], dog.uaccess.get_held_groups()),
                         "error in group listing")
 
         # check membership list
@@ -1027,29 +1038,33 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_change_resource(holes))
         self.assertTrue(cat.uaccess.can_view_resource(holes))
 
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
-        self.assertTrue(match_lists([cat], holes.raccess.owners),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.owners),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat], holes.raccess.edit_users),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.edit_users),
                         "error in resource user listing")
-        self.assertTrue(match_lists([cat], holes.raccess.view_users),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.view_users),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.view_groups),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.view_groups),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([], holes.raccess.edit_groups),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.edit_groups),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_unshare_users(holes)))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_undo_users(holes)))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_unshare_groups(holes)))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_undo_groups(holes)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_unshare_users(holes)))
+	print("owners for holes are:")
+	pprint(holes.raccess.get_owners())
+	print("unshare users for holes are:")
+        pprint(cat.uaccess.get_resource_unshare_users(holes))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_undo_users(holes)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_unshare_groups(holes)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_undo_groups(holes)))
 
         self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.public)
@@ -1078,28 +1093,32 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         dog = self.dog
         cat = self.cat
 
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_holders()),
                         "error in resource holders listing")
-        self.assertTrue(match_lists([cat], holes.raccess.owners),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.owners),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat], holes.raccess.edit_users),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.edit_users),
                         "error in resource user listing")
-        self.assertTrue(match_lists([cat], holes.raccess.view_users),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.view_users),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.view_groups),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.view_groups),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([], holes.raccess.edit_groups),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.edit_groups),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_unshare_users(holes)))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_undo_users(holes)))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_unshare_groups(holes)))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_undo_groups(holes)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_unshare_users(holes)))
+	print("owners for holes are:")
+	pprint(holes.raccess.get_owners())
+	print("undo users for holes are:")
+        pprint(cat.uaccess.get_resource_undo_users(holes))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_undo_users(holes)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_unshare_groups(holes)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_undo_groups(holes)))
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 1)
         self.assertEqual(holes.raccess.get_number_of_owners(), 1)
@@ -1133,31 +1152,35 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         # share holes with dog as owner
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.OWNER)
 
-        self.assertTrue(match_lists([cat,dog], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat,dog], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat,dog], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat,dog], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat,dog], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat,dog], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
-        self.assertTrue(match_lists([cat,dog], holes.raccess.owners),
+        self.assertTrue(match_lists_as_sets([cat,dog], holes.raccess.owners),
                         "error in resource user listing")
-        self.assertTrue(match_lists([cat,dog], holes.raccess.edit_users),
+        self.assertTrue(match_lists_as_sets([cat,dog], holes.raccess.edit_users),
                         "error in resource user listing")
-        self.assertTrue(match_lists([cat,dog], holes.raccess.view_users),
+        self.assertTrue(match_lists_as_sets([cat,dog], holes.raccess.view_users),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.view_groups),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.view_groups),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([], holes.raccess.edit_groups),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.edit_groups),
                         "error in resource groups listing")
 
-        self.assertTrue(match_lists([cat, dog], cat.uaccess.get_resource_unshare_users(holes)))
+        self.assertTrue(match_lists_as_sets([cat, dog], cat.uaccess.get_resource_unshare_users(holes)))
         # the answer to the following should be dog, but cat is self-shared with the resource. Answer is an artifact.
-        self.assertTrue(match_lists([cat, dog], cat.uaccess.get_resource_undo_users(holes)))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_unshare_groups(holes)))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_undo_groups(holes)))
+	print("owners for holes are:")
+	pprint(holes.raccess.get_owners())
+	print("undo users for holes are:")
+        pprint(cat.uaccess.get_resource_undo_users(holes))
+        self.assertTrue(match_lists_as_sets([cat, dog], cat.uaccess.get_resource_undo_users(holes)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_unshare_groups(holes)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_undo_groups(holes)))
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 2)
         self.assertEqual(holes.raccess.get_number_of_owners(), 2)
@@ -1191,13 +1214,13 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         # test for idempotence
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.OWNER)
 
-        self.assertTrue(match_lists([cat,dog], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat,dog], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat,dog], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat,dog], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat,dog], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat,dog], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 2)
@@ -1245,13 +1268,13 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
 
         # initial state
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 1)
@@ -1285,25 +1308,32 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         self.assertFalse(cat.uaccess.can_undo_share_resource_with_user(holes, dog))
         self.assertFalse(cat.uaccess.can_unshare_resource_with_user(holes, dog))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_undo_users(holes)))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_unshare_users(holes)))
+	print("owners for holes are:")
+	pprint(holes.raccess.get_owners())
+	print("undo users for holes are:")
+        pprint(cat.uaccess.get_resource_undo_users(holes))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_undo_users(holes)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_unshare_users(holes)))
 
         # share with dog at rw privilege
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
-
         self.assertTrue(cat.uaccess.can_undo_share_resource_with_user(holes, dog))
         self.assertTrue(cat.uaccess.can_unshare_resource_with_user(holes, dog))
-        self.assertTrue(match_lists([dog], cat.uaccess.get_resource_undo_users(holes)))
-        self.assertTrue(match_lists([dog], cat.uaccess.get_resource_unshare_users(holes)))
+	print("owners for holes are:")
+	pprint(holes.raccess.get_owners())
+	print("undo users for holes are:")
+        pprint(cat.uaccess.get_resource_undo_users(holes))
+        self.assertTrue(match_lists_as_sets([dog], cat.uaccess.get_resource_undo_users(holes)))
+        self.assertTrue(match_lists_as_sets([dog], cat.uaccess.get_resource_unshare_users(holes)))
 
         # initial state
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 1)
@@ -1337,13 +1367,13 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
 
         # check for unchanged configuration
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 1)
@@ -1388,13 +1418,13 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
 
         # initial state
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 1)
@@ -1430,13 +1460,13 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
 
         # shared state
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 1)
@@ -1471,13 +1501,13 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         # check for idempotence
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
         # initial state
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 1)
@@ -1532,13 +1562,13 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
         mouse = self.mouse
         # initial state
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 1)
@@ -1571,13 +1601,13 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         # share as owner
         self.cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.OWNER)
 
-        self.assertTrue(match_lists([cat,dog], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat,dog], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat,dog], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat,dog], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat,dog], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat,dog], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 2)
@@ -1619,13 +1649,13 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
 
         # check for correctness
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 1)
@@ -1658,13 +1688,13 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         # downgrade from CHANGE to VIEW
         self.cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
         # initial state
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 1)
@@ -1697,13 +1727,13 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         # downgrade to no privilege
         self.cat.uaccess.unshare_resource_with_user(holes, dog)
         # initial state
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat], holes.raccess.get_users()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_users()),
                         "error in resource user listing")
-        self.assertTrue(match_lists([], holes.raccess.get_groups()),
+        self.assertTrue(match_lists_as_sets([], holes.raccess.get_groups()),
                         "error in resource groups listing")
-        self.assertTrue(match_lists([cat], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_holders()),
                         "error in resource holders listing")
 
         self.assertEqual(holes.raccess.get_number_of_owner_records(), 1)
@@ -1743,7 +1773,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # non owner (mouse) should not be able to downgrade privilege of dog from edit/change
         # (originally granted by cat) to view
-        self.assertRaises(Exception, lambda: self.mouse.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW))
+        self.assertRaises(PermissionDenied, lambda: self.mouse.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW))
 
         # non owner (mouse) should be able to downgrade privilege of a user (dog) originally granted by the same
         # non owner (mouse)
@@ -1775,11 +1805,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_change_group(meowers))
         self.assertTrue(cat.uaccess.can_view_group(meowers))
 
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.name, 'some random meowers')
@@ -1805,11 +1835,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         dog = self.dog
         cat = self.cat
 
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 1)
@@ -1842,11 +1872,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         # share meowers with dog as owner
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.OWNER)
 
-        self.assertTrue(match_lists([cat,dog], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat,dog], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat,dog], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat,dog], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 2)
@@ -1880,11 +1910,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         # test for idempotence
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.OWNER)
 
-        self.assertTrue(match_lists([cat,dog], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat,dog], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat,dog], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat,dog], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 2)
@@ -1934,11 +1964,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
 
         # initial state
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 1)
@@ -1970,22 +2000,22 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         # share with dog at rw privilege
         self.assertFalse(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertFalse(cat.uaccess.can_unshare_group_with_user(meowers, dog))
-        self.assertTrue(match_lists([], cat.uaccess.get_group_undo_users(meowers)))
-        self.assertTrue(match_lists([], cat.uaccess.get_group_unshare_users(meowers)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_group_undo_users(meowers)))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_group_unshare_users(meowers)))
 
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.CHANGE)
 
         self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
-        self.assertTrue(match_lists([dog], cat.uaccess.get_group_undo_users(meowers)))
-        self.assertTrue(match_lists([dog], cat.uaccess.get_group_unshare_users(meowers)))
+        self.assertTrue(match_lists_as_sets([dog], cat.uaccess.get_group_undo_users(meowers)))
+        self.assertTrue(match_lists_as_sets([dog], cat.uaccess.get_group_unshare_users(meowers)))
 
         # check other state for this change
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat, dog], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat, dog], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 1)
@@ -2022,11 +2052,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         # check for unchanged configuration
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat, dog], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat, dog], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 1)
@@ -2068,11 +2098,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
 
         # initial state
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 1)
@@ -2111,11 +2141,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         # shared state
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat, dog], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat, dog], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 1)
@@ -2152,13 +2182,13 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         # shared state
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
         # TODO: refactor get_members out of gaccess... too simple...
-        self.assertTrue(match_lists([cat, dog], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat, dog], meowers.gaccess.get_members()),
                         "error in group member listing")
         # TODO: refactor get_held_resources out of gaccess... too simple...
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 1)
@@ -2200,11 +2230,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
 
         # initial state
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 1)
@@ -2240,11 +2270,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
-        self.assertTrue(match_lists([cat,dog], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat,dog], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat,dog], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat,dog], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 2)
@@ -2287,11 +2317,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         # check for correctness
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat, dog], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat, dog], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 1)
@@ -2328,11 +2358,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         # initial state
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat, dog], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat, dog], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 1)
@@ -2370,11 +2400,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         # back to initial state
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_members()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_members()),
                         "error in group member listing")
-        self.assertTrue(match_lists([], meowers.gaccess.get_held_resources()),
+        self.assertTrue(match_lists_as_sets([], meowers.gaccess.get_held_resources()),
                         "error in group held_resources listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 1)
@@ -2419,38 +2449,43 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         dog = self.dog
         cat = self.cat
 
-        self.assertTrue(match_lists([cat], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], meowers.gaccess.get_owners()),
                         "error in group owners listing")
 
         self.assertEqual(meowers.gaccess.get_number_of_owners(), 1)
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 1)
         # make dog a co-owner
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.OWNER) # make dog a co-owner
-        self.assertTrue(match_lists([cat, dog], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat, dog], meowers.gaccess.get_owners()),
                         "error in group owners listing")
         self.assertEqual(meowers.gaccess.get_number_of_owners(), 2)
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 2)
         # repeating the command should be idempotent
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.OWNER) # make dog a co-owner
-        self.assertTrue(match_lists([cat, dog], meowers.gaccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat, dog], meowers.gaccess.get_owners()),
                         "error in group owners listing")
         self.assertEqual(meowers.gaccess.get_number_of_owners(), 2)
         self.assertEqual(meowers.gaccess.get_number_of_owner_records(), 2)
 
-        self.assertTrue(match_lists([cat], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()),
                         "error in resource owners listing")
 
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertFalse(cat.uaccess.can_unshare_resource_with_user(holes, dog))
         self.assertFalse(cat.uaccess.can_undo_share_resource_with_user(holes, dog))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_undo_users(holes)))
-        self.assertTrue(match_lists([], cat.uaccess.get_resource_unshare_users(holes)))
+	print("owners for holes are:")
+	pprint(holes.raccess.get_owners())
+	print("undo users for holes are:")
+        pprint(cat.uaccess.get_resource_undo_users(holes))
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_undo_users(holes)))
+
+        self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_unshare_users(holes)))
 
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.OWNER)
 
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_holders()),
                         "error in resource holders listing")
         self.assertTrue(dog.uaccess.owns_resource(holes))
         self.assertTrue(dog.uaccess.owns_group(meowers))
@@ -2467,21 +2502,29 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_undo_share_resource_with_user(holes, cat))
 
         # test list access functions for unshare targets
-        self.assertTrue(match_lists([cat, dog], cat.uaccess.get_resource_undo_users(holes)))
-        self.assertTrue(match_lists([cat, dog], cat.uaccess.get_resource_unshare_users(holes)))
+	print("owners for holes are:")
+	pprint(holes.raccess.get_owners())
+	print("undo users for holes are:")
+        pprint(cat.uaccess.get_resource_undo_users(holes))
+        self.assertTrue(match_lists_as_sets([cat, dog], cat.uaccess.get_resource_undo_users(holes)))
+        self.assertTrue(match_lists_as_sets([cat, dog], cat.uaccess.get_resource_unshare_users(holes)))
 
         # the following is correct only because  dog is an owner of holes
-        self.assertTrue(match_lists([cat, dog], dog.uaccess.get_resource_undo_users(holes)))
-        self.assertTrue(match_lists([cat, dog], dog.uaccess.get_resource_unshare_users(holes)))
+	print("owners for holes are:")
+	pprint(holes.raccess.get_owners())
+	print("undo users for holes are:")
+        pprint(dog.uaccess.get_resource_undo_users(holes))
+        self.assertTrue(match_lists_as_sets([cat, dog], dog.uaccess.get_resource_undo_users(holes)))
+        self.assertTrue(match_lists_as_sets([cat, dog], dog.uaccess.get_resource_unshare_users(holes)))
 
         # test idempotence of sharing
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.OWNER)
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertTrue(cat.uaccess.can_unshare_resource_with_user(holes, dog))
         self.assertTrue(cat.uaccess.can_undo_share_resource_with_user(holes, dog))
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_owners()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_owners()),
                         "error in resource owners listing")
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_holders()),
                         "error in resource holders listing")
         self.assertTrue(dog.uaccess.owns_resource(holes))
         self.assertTrue(dog.uaccess.owns_group(meowers))
@@ -2490,7 +2533,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         try:
             dog.uaccess.share_resource_with_group(holes, meowers, PrivilegeCodes.OWNER)
             self.fail("groups should not be able to own resources")
-        except HSAccessException as e:
+        except PermissionDenied as e:
             self.assertEqual(e.message, "Groups cannot own resources",
                              "Invalid exception was '"+e.message+"'")
 
@@ -2498,7 +2541,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         try:
             self.admin.uaccess.share_resource_with_group(holes, meowers, PrivilegeCodes.OWNER)
             self.fail("groups should not be able to own resources")
-        except HSAccessException as e:
+        except PermissionDenied as e:
             self.assertEqual(e.message, "Groups cannot own resources",
                              "Invalid exception was '"+e.message+"'")
 
@@ -2512,7 +2555,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # now share something with dog via group meowers
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.CHANGE)
-        self.assertTrue(match_lists([cat, dog], meowers.gaccess.get_members().all()),
+        self.assertTrue(match_lists_as_sets([cat, dog], meowers.gaccess.get_members().all()),
                         "error with group members")
 
         self.assertTrue(cat.uaccess.can_share_resource(holes, meowers))
@@ -2521,7 +2564,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_resource_with_group(holes, meowers, PrivilegeCodes.CHANGE)
         self.assertTrue(cat.uaccess.can_unshare_resource_with_group(holes, meowers))
         self.assertTrue(cat.uaccess.can_undo_share_resource_with_group(holes, meowers))
-        self.assertTrue(match_lists([cat, dog], holes.raccess.get_holders()),
+        self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_holders()),
                         "error with resource holders")
 
         # simple sharing state
@@ -2624,7 +2667,7 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat in polyamory.gaccess.get_members())
 
         # ensure that this group was created and current user is a member
-        self.assertTrue(match_lists([polyamory], cat.uaccess.get_held_groups()), "error in group listing")
+        self.assertTrue(match_lists_as_sets([polyamory], cat.uaccess.get_held_groups()), "error in group listing")
 
     def test_02_isolate(self):
         "Groups cannot be changed by non-members"
@@ -2645,13 +2688,13 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_share_group(polyamory, PrivilegeCodes.VIEW))
 
         # dog's groups should be unchanged
-        self.assertTrue(match_lists([], dog.uaccess.get_held_groups()), "error in group listing")
+        self.assertTrue(match_lists_as_sets([], dog.uaccess.get_held_groups()), "error in group listing")
 
         # dog should not be able to modify group members
         try:
             dog.uaccess.share_group_with_user(polyamory, dog, PrivilegeCodes.CHANGE)
             self.fail("non-members should not be able to add users to a group")
-        except HSAccessException as e:
+        except PermissionDenied as e:
             self.assertEqual(e.message, "User has insufficient privilege over group",
                              "Invalid exception was '"+e.message+"'")
 
@@ -2843,7 +2886,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         try:
             cat.uaccess.share_resource_with_user(bones, bat, PrivilegeCodes.VIEW)
             self.fail("should not be able to share an unshareable resource")
-        except HSAccessException as e:
+        except PermissionDenied as e:
             self.assertEqual(e.message, "User must own resource or have sharing privilege",
                              "Invalid exception was '"+e.message+"'")
 
@@ -2889,7 +2932,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(bones.raccess.discoverable)
         self.assertTrue(bones.raccess.shareable)
 
-        self.assertTrue(match_lists([bones], GenericResource.discoverable_resources.all()),
+        self.assertTrue(match_lists_as_sets([bones], GenericResource.discoverable_resources.all()),
                         "error in discoverable resource listing")
 
     def test_06_not_discoverable(self):
@@ -2975,8 +3018,8 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(chewies.raccess.discoverable)
         self.assertTrue(chewies.raccess.shareable)
 
-        self.assertTrue(match_lists([chewies], GenericResource.public_resources.all()), "error in public resource listing")
-        self.assertTrue(match_lists([chewies], GenericResource.discoverable_resources.all()),
+        self.assertTrue(match_lists_as_sets([chewies], GenericResource.public_resources.all()), "error in public resource listing")
+        self.assertTrue(match_lists_as_sets([chewies], GenericResource.discoverable_resources.all()),
                         "error in public resource listing")
 
         # can 'nobody' see the public resource owned by 'dog'
@@ -3008,8 +3051,8 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
 
         # discoverable doesn't mean public
         # TODO: get_public_resources and get_discoverable_resources should be static methods
-        self.assertTrue(match_lists([], GenericResource.public_resources.all()), "error in public resource listing")
-        self.assertTrue(match_lists([chewies], GenericResource.discoverable_resources.all()), "error in discoverable resource listing")
+        self.assertTrue(match_lists_as_sets([], GenericResource.public_resources.all()), "error in public resource listing")
+        self.assertTrue(match_lists_as_sets([chewies], GenericResource.discoverable_resources.all()), "error in discoverable resource listing")
 
         # can 'nobody' see the public resource owned by 'dog' but not explicitly shared with 'nobody'.
         self.assertFalse(nobody.uaccess.owns_resource(chewies))
@@ -3115,7 +3158,7 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         try:
             dog.uaccess.share_resource_with_group(scratching, felines, PrivilegeCodes.OWNER)
             self.fail("A group should not be able to own a resource")
-        except HSAccessException as e:
+        except PermissionDenied as e:
             self.assertEqual(e.message, "Groups cannot own resources",
                              "Invalid exception was '"+e.message+"'")
 
@@ -3131,7 +3174,7 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
 
         # is the resource just shared with this group?
         self.assertEqual(felines.gaccess.get_number_of_held_resources(), 1)
-        self.assertTrue(match_lists([scratching], felines.gaccess.get_held_resources()), "error in group sharing")
+        self.assertTrue(match_lists_as_sets([scratching], felines.gaccess.get_held_resources()), "error in group sharing")
 
         # check that flags haven't changed
         self.assertTrue(felines.gaccess.discoverable)
@@ -3150,7 +3193,7 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         try:
             nobody.uaccess.unshare_resource_with_group(scratching, felines)
             self.fail("Unrelated user was able to unshare resource with group")
-        except HSAccessException as e:
+        except PermissionDenied as e:
             self.assertEqual(e.message, 'Insufficient privilege to unshare resource',
                              "Invalid exception was '"+e.message+"'")
 
@@ -3454,7 +3497,7 @@ class T11PreserveOwnership(MockIRODSTestCaseMixin, TestCase):
             # try to downgrade your own privilege
             dog.uaccess.share_group_with_user(felines, dog, PrivilegeCodes.VIEW)
             self.fail("should not be able to remove sole owner")
-        except HSAccessException as e:
+        except PermissionDenied as e:
             self.assertEqual(e.message, 'Cannot remove last owner of group',
                              "Invalid exception was '"+e.message+"'")
 
@@ -3468,7 +3511,7 @@ class T11PreserveOwnership(MockIRODSTestCaseMixin, TestCase):
             # try to downgrade your own privilege
             dog.uaccess.share_resource_with_user(scratching, dog, PrivilegeCodes.VIEW)
             self.fail("should not be able to remove sole owner")
-        except HSAccessException as e:
+        except PermissionDenied as e:
             self.assertEqual(e.message, 'Cannot remove last owner of resource',
                              "Invalid exception was '"+e.message+"'")
 
@@ -3740,49 +3783,49 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
         A_user.uaccess.share_resource_with_user(r2_resource, C_user, PrivilegeCodes.OWNER)
         A_user.uaccess.share_resource_with_user(r3_resource, C_user, PrivilegeCodes.OWNER)
         foo = A_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-        self.assertTrue(match_lists(foo, [r1_resource, r2_resource, r3_resource]))
+        self.assertTrue(match_lists_as_sets(foo, [r1_resource, r2_resource, r3_resource]))
         foo = A_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
-        self.assertTrue(match_lists(foo, []))
+        self.assertTrue(match_lists_as_sets(foo, []))
         foo = A_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
-        self.assertTrue(match_lists(foo, []))
+        self.assertTrue(match_lists_as_sets(foo, []))
         foo = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-        self.assertTrue(match_lists(foo, [r1_resource, r2_resource, r3_resource]))
+        self.assertTrue(match_lists_as_sets(foo, [r1_resource, r2_resource, r3_resource]))
         foo = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
-        self.assertTrue(match_lists(foo, []))
+        self.assertTrue(match_lists_as_sets(foo, []))
         foo = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
-        self.assertTrue(match_lists(foo, []))
+        self.assertTrue(match_lists_as_sets(foo, []))
 
         A_user.uaccess.share_resource_with_user(r1_resource, B_user, PrivilegeCodes.OWNER)
         A_user.uaccess.share_resource_with_user(r2_resource, B_user, PrivilegeCodes.CHANGE)
         A_user.uaccess.share_resource_with_user(r3_resource, B_user, PrivilegeCodes.VIEW)
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-        self.assertTrue(match_lists(foo, [r1_resource]))
+        self.assertTrue(match_lists_as_sets(foo, [r1_resource]))
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
-        self.assertTrue(match_lists(foo, [r2_resource]))
+        self.assertTrue(match_lists_as_sets(foo, [r2_resource]))
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
-        self.assertTrue(match_lists(foo, [r3_resource]))
+        self.assertTrue(match_lists_as_sets(foo, [r3_resource]))
 
         # higher privileges are deleted when lower privileges are granted
         C_user.uaccess.share_resource_with_user(r1_resource, B_user, PrivilegeCodes.VIEW)
         C_user.uaccess.share_resource_with_user(r2_resource, B_user, PrivilegeCodes.VIEW)
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-        self.assertTrue(match_lists(foo, []))    # [r1_resource]
+        self.assertTrue(match_lists_as_sets(foo, []))    # [r1_resource]
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
-        self.assertTrue(match_lists(foo, []))    # [r2_resource]
+        self.assertTrue(match_lists_as_sets(foo, []))    # [r2_resource]
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
 
-        self.assertTrue(match_lists(foo, [r1_resource, r2_resource, r3_resource]))
+        self.assertTrue(match_lists_as_sets(foo, [r1_resource, r2_resource, r3_resource]))
         C_user.uaccess.share_resource_with_user(r1_resource, B_user, PrivilegeCodes.CHANGE)
         C_user.uaccess.share_resource_with_user(r2_resource, B_user, PrivilegeCodes.CHANGE)
         C_user.uaccess.share_resource_with_user(r3_resource, B_user, PrivilegeCodes.CHANGE)
 
         # higher privilege gets deleted when a lower privilege is granted
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-        self.assertTrue(match_lists(foo, []))    # [r1_resource]
+        self.assertTrue(match_lists_as_sets(foo, []))    # [r1_resource]
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
-        self.assertTrue(match_lists(foo, [r1_resource, r2_resource, r3_resource]))
+        self.assertTrue(match_lists_as_sets(foo, [r1_resource, r2_resource, r3_resource]))
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
-        self.assertTrue(match_lists(foo, []))
+        self.assertTrue(match_lists_as_sets(foo, []))
 
         # go from lower privilege to higher
         C_user.uaccess.share_resource_with_user(r1_resource, B_user, PrivilegeCodes.VIEW)
@@ -3791,22 +3834,22 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
 
         A_user.uaccess.share_resource_with_user(r1_resource, B_user, PrivilegeCodes.CHANGE)
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
-        self.assertTrue(match_lists(foo, [r1_resource]))
+        self.assertTrue(match_lists_as_sets(foo, [r1_resource]))
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
-        self.assertTrue(match_lists(foo, [r2_resource, r3_resource]))
+        self.assertTrue(match_lists_as_sets(foo, [r2_resource, r3_resource]))
 
         A_user.uaccess.share_resource_with_user(r1_resource, B_user, PrivilegeCodes.OWNER)
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-        self.assertTrue(match_lists(foo, [r1_resource]))
+        self.assertTrue(match_lists_as_sets(foo, [r1_resource]))
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
-        self.assertTrue(match_lists(foo, [r2_resource, r3_resource]))
+        self.assertTrue(match_lists_as_sets(foo, [r2_resource, r3_resource]))
 
         # go lower to higher
         C_user.uaccess.share_resource_with_user(r1_resource, B_user, PrivilegeCodes.VIEW)
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-        self.assertTrue(match_lists(foo, []))
+        self.assertTrue(match_lists_as_sets(foo, []))
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
-        self.assertTrue(match_lists(foo, []))
+        self.assertTrue(match_lists_as_sets(foo, []))
         foo = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
-        self.assertTrue(match_lists(foo, [r1_resource, r2_resource, r3_resource]))
+        self.assertTrue(match_lists_as_sets(foo, [r1_resource, r2_resource, r3_resource]))
 
