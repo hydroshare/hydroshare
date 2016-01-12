@@ -8,19 +8,15 @@ import requests
 from lxml import etree
 import logging
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import BytesIO as StringIO
-
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound, FileResponse
 from django.shortcuts import render_to_response
 
 from hs_core import hydroshare
 from hs_core.views.utils import authorize
 from ga_resources.utils import json_or_jsonp
+from django_irods.views import download as download_bag_from_irods
 from . import ts_utils
 from .forms import ReferencedSitesForm, ReferencedVariablesForm, GetTSValuesForm, VerifyRestUrlForm, CreateRefTimeSeriesForm
 
@@ -131,7 +127,6 @@ def time_series_from_service(request):
 
 
 def preview_figure (request, preview_code, *args, **kwargs):
-
     response = HttpResponse()
     preview_str = None
     tempdir_preview = None
@@ -246,34 +241,44 @@ def create_ref_time_series(request, *args, **kwargs):
         return render_to_response('pages/create-ref-time-series.html', context, context_instance=RequestContext(request))
 
 def download_resource_files(request, shortkey, *args, **kwargs):
+    tempdir = None
     try:
         _, authorized, _ = authorize(request, shortkey, edit=True, full=True, view=True, superuser=True, raises_exception=False)
         if not authorized:
             response = HttpResponse()
-            response.content = "<h1>You do not have permission to download this resource!</h1>"
+            response.content = "<h3>You do not have permission to download this resource!</h3>"
             return response
 
-        tempdir = None
+        path = "bags/" + str(shortkey) + ".zip"
+        response_irods = download_bag_from_irods(request, path)
+
         tempdir = tempfile.mkdtemp()
+        bag_save_to_path = tempdir + "/" + str(shortkey) + ".zip"
+
+        with open(bag_save_to_path, 'wb+') as f:
+            for chunk in response_irods.streaming_content:
+                f.write(chunk)
+
         res_files_fp_arr = ts_utils.generate_resource_files(shortkey, tempdir)
 
-        in_memory_zip = StringIO()
-        archive = zipfile.ZipFile(in_memory_zip, 'w', zipfile.ZIP_DEFLATED)
+        bag_zip_obj = zipfile.ZipFile(bag_save_to_path, "a", zipfile.ZIP_DEFLATED)
+        bag_content_base_folder = str(shortkey) + "/data/contents/"
         for fn_fp in res_files_fp_arr:
             fh = open(fn_fp['fullpath'], 'r')
-            archive.writestr(fn_fp['fname'], fh.read())
+            bag_zip_obj.writestr(bag_content_base_folder + fn_fp['fname'], fh.read())
             fh.close()
-        archive.close()
+        bag_zip_obj.close()
 
-        res = hydroshare.get_resource_by_shortkey(shortkey)
-        response = HttpResponse(in_memory_zip.getvalue(), content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename="' + res.title.replace(" ", "_") + '.zip"'
-        response['Content-Length'] = len(in_memory_zip.getvalue())
+        response = FileResponse(open(bag_save_to_path, 'rb'), content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="' + str(shortkey) + '.zip"'
+        response['Content-Length'] = os.path.getsize(bag_save_to_path)
 
         return response
     except Exception as e:
         logger.exception("download_resource_files: %s" % (e.message))
-        raise e
+        response = HttpResponse()
+        response.content = "<h3>Failed to download this resource!</h3>"
+        return response
     finally:
         if tempdir is not None:
            shutil.rmtree(tempdir)

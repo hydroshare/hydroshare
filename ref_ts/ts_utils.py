@@ -2,7 +2,6 @@ import requests
 import csv
 import os
 import logging
-from datetime import datetime
 from dateutil import parser
 from lxml import etree
 from suds.transport import TransportError
