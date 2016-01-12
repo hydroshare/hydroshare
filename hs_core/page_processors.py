@@ -66,8 +66,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 if tool_res_obj:
                     is_authorized = authorize(request, tool_res_obj.short_id, view=True, raises_exception=False)[1]
                     if is_authorized:
-                        tool_url = tool_res_obj.content_object.url_bases.first().value
-                        u = user.username if len(user.username) > 0 else "anonymous"
+                        tool_url = tool_res_obj.metadata.url_bases.first().value
+                        u = user.username if user.is_authenticated() else "anonymous"
                         if tool_url.endswith('/'):
                             tool_url = tool_url[:-1]
                         tl = {'title': str(res_type.content_object.title),
