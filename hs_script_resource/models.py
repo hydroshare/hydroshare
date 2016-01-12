@@ -98,7 +98,7 @@ class ScriptMetaData(CoreMetaData):
     def get_xml(self):
 
         # get the xml string for R Script
-        xml_string = super(RScriptMetaData, self).get_xml(pretty_print=False)
+        xml_string = super(ScriptMetaData, self).get_xml(pretty_print=False)
 
         # create  etree element
         RDF_ROOT = etree.fromstring(xml_string)

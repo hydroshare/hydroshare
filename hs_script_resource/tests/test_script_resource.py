@@ -11,7 +11,7 @@ from hs_script_resource.models import ScriptSpecificMetadata, ScriptResource
 from hs_script_resource.receivers import script_pre_create, script_metadata_pre_create_handler, script_metadata_pre_update_handler
 
 
-class TestRScriptResource(TransactionTestCase):
+class TestScriptResource(TransactionTestCase):
 
     def setUp(self):
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -25,14 +25,14 @@ class TestRScriptResource(TransactionTestCase):
         )
         self.allowance = 0.00001
 
-        self.resRScript = hydroshare.create_resource(
+        self.resScript = hydroshare.create_resource(
                 resource_type='ScriptResource',
                 owner=self.user,
                 title='Test R Script Resource',
                 keywords=['kw1', 'kw2']
         )
 
-    def test_rscript_res_specific_metadata(self):
+    def test_script_res_specific_metadata(self):
 
         #######################
         # Class: ScriptSpecificMetadata
@@ -41,7 +41,7 @@ class TestRScriptResource(TransactionTestCase):
         self.assertEqual(ScriptSpecificMetadata.objects.all().count(), 0)
 
         # create 1 ScriptSpecificMetadata obj with required params
-        resource.create_metadata_element(self.resRScript.short_id, 'ScriptSpecificMetadata', scriptLanguage='R',
+        resource.create_metadata_element(self.resScript.short_id, 'ScriptSpecificMetadata', scriptLanguage='R',
                                          languageVersion='3.5', scriptVersion='1.0',
                                          scriptDependencies='None', scriptReleaseDate='2015-12-01 00:00',
                                          scriptCodeRepository='http://www.google.com')
@@ -49,7 +49,7 @@ class TestRScriptResource(TransactionTestCase):
 
         # may not create additional instance of ScriptSpecificMetadata
         with self.assertRaises(Exception):
-            resource.create_metadata_element(self.resRScript.short_id, 'ScriptSpecificMetadata', scriptLanguage='R',
+            resource.create_metadata_element(self.resScript.short_id, 'ScriptSpecificMetadata', scriptLanguage='R',
                                              languageVersion='3.5', scriptVersion='1.0',
                                              scriptDependencies='None', scriptReleaseDate='12/01/2015',
                                              scriptCodeRepository='http://www.google.com')
@@ -57,7 +57,7 @@ class TestRScriptResource(TransactionTestCase):
         self.assertEqual(ScriptSpecificMetadata.objects.all().count(), 1)
 
         # update existing meta
-        resource.update_metadata_element(self.resRScript.short_id, 'ScriptSpecificMetadata',
+        resource.update_metadata_element(self.resScript.short_id, 'ScriptSpecificMetadata',
                                          element_id=ScriptSpecificMetadata.objects.first().id,
                                          scriptLanguage='python',
                                          languageVersion='2.7')
@@ -65,7 +65,7 @@ class TestRScriptResource(TransactionTestCase):
         self.assertEqual(ScriptSpecificMetadata.objects.first().languageVersion, '2.7')
 
         # delete ScriptSpecificMetadata obj
-        resource.delete_metadata_element(self.resRScript.short_id, 'ScriptSpecificMetadata',
+        resource.delete_metadata_element(self.resScript.short_id, 'ScriptSpecificMetadata',
                                          element_id=ScriptSpecificMetadata.objects.first().id)
         self.assertEqual(ScriptSpecificMetadata.objects.all().count(), 0)
 
