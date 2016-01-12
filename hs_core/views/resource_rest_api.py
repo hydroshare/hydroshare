@@ -156,6 +156,8 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
         filter_parms['user'] = (self.request.user if self.request.user.is_authenticated() else None)
         if len(filter_parms['type']) == 0:
             filter_parms['type'] = None
+        else:
+            filter_parms['type'] = list(filter_parms['type'])
 
         filter_parms['public'] = not self.request.user.is_authenticated()
 
