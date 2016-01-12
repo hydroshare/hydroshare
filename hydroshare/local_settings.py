@@ -80,7 +80,7 @@ CARTO_HOME='/home/docker/node_modules/carto'
 
 
 USE_SOUTH = False
-SITE_TITLE = "Hydroshare"
+SITE_TITLE = "HydroShare"
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
@@ -126,17 +126,11 @@ IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
 IRODS_BAGIT_PATH = 'bags'
 IRODS_BAGIT_POSTFIX = 'zip'
 
-# Email configuration - localhost
-# Run from second terminal: python -m smtpd -n -c DebuggingServer localhost:1025
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 1025
-
-# Email configuration - gmail - reference: https://github.com/hydroshare/hydroshare/wiki/hydroshare_email_using_gmail
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST_USER = 'YOUR_GMAIL_ACCOUNT@gmail.com'
-# EMAIL_HOST_PASSWORD = 'APP_SPECIFIC_PASSWORD'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# Email configuration
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_HOST_USER = ''
+#EMAIL_HOST_PASSWORD = ''
+#EMAIL_HOST = ''
+#EMAIL_PORT = ''
+#EMAIL_USE_TLS = True
+#DEFAULT_FROM_EMAIL = ''
