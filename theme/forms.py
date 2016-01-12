@@ -21,6 +21,7 @@ from mezzanine.conf import settings
 
 from .models import UserProfile
 from hs_core.hydroshare.users import create_account
+from hs_core.templatetags.hydroshare_tags import best_name
 
 COMMENT_MAX_LENGTH = getattr(settings,'COMMENT_MAX_LENGTH', 3000)
 
@@ -178,6 +179,7 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         obj = comment.content_object
         if request.user.is_authenticated():
             comment.user = request.user
+            comment.user_name = best_name(comment.user)
 
         comment.by_author = request.user == getattr(obj, "user", None)
         comment.ip_address = ip_for_request(request)
@@ -191,7 +193,7 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         if reply_to_comment is not None:
             notify_emails.append(reply_to_comment.user.email)
         if notify_emails:
-            subject = ugettext("New comment for: ") + str(obj)
+            subject = "New comment by {c_name} for: {res_obj}".format(c_name=comment.user_name, res_obj=str(obj))
             context = {
                 "comment": comment,
                 "comment_url": add_cache_bypass(comment.get_absolute_url()),
