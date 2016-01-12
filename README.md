@@ -1,10 +1,10 @@
-### Build Status (develop branch)
+### Nightly Build Status (develop branch)
 
-| Workflow | Stage: Clean | Stage: Build | Stage: Unit Tests | Stage: REST API Tests |
+| a: Workflow | b: Clean | c: Build | d: Unit Tests | e: REST API Tests |
 | :----- | :--- | :--- | :-------- | :------------ |
-| [![Build Status](http://ci.hydroshare.org:8080/view/2.%20Development/job/develop-workflow/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/view/2.%20Development/job/develop-workflow/) | [![Build Status](http://ci.hydroshare.org:8080/view/2.%20Development/job/develop-clean/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/view/2.%20Development/job/develop-clean/) | [![Build Status](http://ci.hydroshare.org:8080/view/2.%20Development/job/develop-branch/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/view/2.%20Development/job/develop-branch/) | [![Build Status](http://ci.hydroshare.org:8080/view/2.%20Development/job/develop-test/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/view/2.%20Development/job/develop-test/) | [![Build Status](http://ci.hydroshare.org:8080/view/2.%20Development/job/develop-rest-test/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/view/2.%20Development/job/develop-rest-test/) |
+| [![Build Status](http://ci.hydroshare.org:8080/job/develop-workflow/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-workflow/) | [![Build Status](http://ci.hydroshare.org:8080/job/develop-clean/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-clean/) | [![Build Status](http://ci.hydroshare.org:8080/job/develop-branch/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-branch/) | [![Build Status](http://ci.hydroshare.org:8080/job/develop-test/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-test/) | [![Build Status](http://ci.hydroshare.org:8080/job/develop-rest-test/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-rest-test/)|
 
-Build status based on [Jenkins CI Workflow](http://ci.hydroshare.org:8080/view/2.%20Development/)
+Build generate by [Jenkins CI](http://ci.hydroshare.org:8080)
 
 Hydroshare
 ============
