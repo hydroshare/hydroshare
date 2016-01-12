@@ -2905,6 +2905,7 @@ h4.title {
 
 .carousel-inner {
 	height: calc(100% - 150px);
+	background: #6D6D6D;
 }
 
 .carousel-indicators {
@@ -2950,7 +2951,7 @@ span.carousel-control-icon {
 .carousel-controls {
 	text-align: center;
 	list-style: none;
-	padding: 50px;
+	padding: 50px 0;
 }
 
 .carousel-control-block {
@@ -2980,19 +2981,20 @@ span.carousel-control-icon {
 }
 
 .carousel-inner > .item > img {
-	width: 100%;
+	height: 100%;
 	margin: auto;
+	object-fit: cover;
 }
 
 .carousel-inner > .item > .item-caption {
 	display: inline-block;
-	position: absolute;
-	text-align: center;
-	color: #FFF;
-	text-shadow: 1px 1px #4E4E4E;
-	width:400px;
-	margin-left: -200px;
-	margin-top: 100px;
+    position: absolute;
+    text-align: center;
+    color: #FFF;
+    text-shadow: 1px 1px #4E4E4E;
+    width: 100%;
+    margin-left: -50%;
+    top: 40%;
 }
 
 .gray-screen {
@@ -3113,4 +3115,52 @@ span.carousel-control-icon {
 
 @keyframes come-in {
   to { transform: translateY(0); }
+}
+
+.steps-container {
+    text-align: center;
+}
+
+.step-wrapper {
+    padding: 0 20px;
+    margin-top: 20px;
+    height: 70px;
+    display: inline-block;
+}
+
+.step-item {
+	border: 1px solid #D6D6D6;
+	color: #BABCBE;
+    padding: 10px;
+    background: #F7F8F8;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+	cursor: pointer;
+	margin-top: 20px;
+}
+
+.step-item:hover {
+	background: #FFF;
+}
+
+.step-item h4 {
+	color: #555 !important;
+}
+
+.step-item.active {
+	background: #FFF;
+	color: #0087BD;
+}
+
+.ste-number {
+    position: absolute;
+    border: 1px solid #A9A9A9;
+    width: 30px;
+    height: 30px;
+    background: #FFF;
+    border-radius: 50%;
+    padding-top: 4px;
+    box-shadow: 1px 1px 5px #DDD;
+    color: #000;
+    left: 6px;
+    top: 26px;
 }
