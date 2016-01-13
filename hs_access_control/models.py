@@ -1,3 +1,9 @@
+"""
+Access control classes for hydroshare. 
+
+This module implements access control for hydroshare. 
+
+"""
 __author__ = 'Alva'
 
 from django.contrib.auth.models import User, Group
@@ -21,96 +27,6 @@ from hs_core.models import BaseResource
 # TODO: ensure that user and group active flags work properly in access control queries.
 # TODO: there is a small chance of a race condition that could result in removal of the last resource or group owner.
 
-# NOTES and quandaries
-
-# 1) There is a basic problem of semantics in sharing.
-#    We need to know whether to put a "share" button on the screen.
-#    But this button can't share with just anyone, e.g., self.
-#    However, the permissions system is somewhat blind to this.
-#    Thus, we have some problems with "too much specificity" versus "too little".
-# PROPOSED SOLUTION:
-#    One can share with self but can only downgrade privilege.
-#    Thus, the user list becomes unrestricted.
-
-# 2) The options for unshare_*_with_* are too confusing. It tries to do
-#    two different kinds of things:
-#   a) completely remove a share (an owner privilege)
-#   b) undo a prior share (an unprivileged action).
-# PROPOSED SOLUTION:
-#   a) split "undo" function out of unshare_*_with_* and into
-#      undo_share_*_with_*. This eliminates the potential confusion.
-#   b) unshare_* undoes the whole share; undo_share_* undoes one sharing
-#      action.
-
-
-######################################
-# Exceptions specific to access control:
-# a) Access Exception: permission denied
-# b) Usage Exception: bad parameters
-# c) Integrity Exception: database corrupt
-######################################
-class HSAException(Exception):
-    """
-    Generic Base Exception class for HSAccess class.
-
-    *This exception is a generic base class and is never directly raised.*
-    See subclasses HSAccessException, HSUsageException, and HSIntegrityException
-    for details.
-    """
-
-
-class HSAccessException(HSAException):
-    """
-    Exception class for access control.
-
-    This exception is raised when the access control system denies a user request.
-    It can safely be caught to probe whether an operation is permitted.
-    """
-    def __str__(self):
-        return repr("HS Access Exception: " + self.message)
-
-    pass
-
-
-class HSAUsageException(HSAException):
-    """
-    Exception class for parameter usage problems.
-
-    This exception is raised when a routine is called with invalid parameters.
-    This includes references to non-existent resources, groups, and users.
-
-    This is typically a programming error and should be entered into
-    issue tracker and resolved.
-
-    *Catching this exception is not recommended.*
-    """
-    def __str__(self):
-        return repr("HS Usage Exception: " + self.message)
-
-    pass
-
-
-# in this implementation, integrity exceptions are extremely unlikely.
-class HSAIntegrityException(HSAException):
-    """
-    Exception class for database failures.
-    This is an "anti-bugging" exception that should *never* be raised unless something
-    is very seriously wrong with database configuration. This exception is only raised
-    if the database fails to meet integrity constraints.
-
-    *This cannot be a programming error.* In fact, it can only happen if the schema
-    for the database itself becomes corrupt. The only way to address this is to
-    repair the schema.
-
-    *Catching this exception is not recommended.*
-    """
-
-    def __str__(self):
-        return repr("HS Database Integrity Exception: " + self.message)
-
-    pass
-
-####################################
 ####################################
 # Privilege models determine what objects are accessible to which users
 # These models:
@@ -123,8 +39,6 @@ class HSAIntegrityException(HSAException):
 #    ii) allow "undo" operations.
 #    iii) limit each grantor to granting one privilege
 ####################################
-####################################
-
 
 ####################################
 # privileges are numeric codes 1-4
@@ -188,10 +102,7 @@ class UserGroupPrivilege(models.Model):
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    # I don't like to allow nulls, but the alternative is to supply
-    # a bogus default, which would be transparently applied during
-    # migrations and is a worse option.
-
+    # in the prior version, these fields were as follows: 
     # user = models.ForeignKey('UserAccess', null=False, editable=False, related_name='u2ugp',
     #                          help_text='user to be granted privilege')
     # group = models.ForeignKey('GroupAccess', null=False, editable=False, related_name='g2ugp',
@@ -200,26 +111,25 @@ class UserGroupPrivilege(models.Model):
     #                             help_text='grantor of privilege')
 
     user = models.ForeignKey(User,
-                             null=True,
+                             null=False,
                              editable=False,
                              related_name='u2ugp',
                              help_text='user to be granted privilege')
 
     group = models.ForeignKey(Group,
-                              null=True,
+                              null=False,
                               editable=False,
                               related_name='g2ugp',
                               help_text='group to which privilege applies')
 
     grantor = models.ForeignKey(User,
-                                null=True,
+                                null=False,
                                 editable=False,
                                 related_name='x2ugp',
                                 help_text='grantor of privilege')
 
     class Meta:
-        # unique_together = (('user', 'group', 'grantor'),)
-	pass
+        unique_together = ('user', 'group', 'grantor')
 
 
 ####################################
@@ -239,10 +149,7 @@ class UserResourcePrivilege(models.Model):
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    # I don't like to allow nulls, but the alternative is to supply
-    # a bogus default, which would be transparently applied during
-    # migrations and is a worse option.
-
+    # in the prior version, these fields were as follows: 
     # user = models.ForeignKey('UserAccess', null=False, editable=False,
     #                          related_name='u2urp',
     #                          help_text='user to be granted privilege')
@@ -254,26 +161,25 @@ class UserResourcePrivilege(models.Model):
     #                             help_text='grantor of privilege')
 
     user = models.ForeignKey(User, 
-                             null=True, 
+                             null=False, 
                              editable=False,
                              related_name='u2urp',
                              help_text='user to be granted privilege')
 
     resource = models.ForeignKey(BaseResource, 
-                                 null=True, 
+                                 null=False, 
                                  editable=False,
                                  related_name='r2urp',
                                  help_text='resource to which privilege applies')
 
     grantor = models.ForeignKey(User, 
-                                null=True, 
+                                null=False, 
                                 editable=False,
                                 related_name='x2urp',
                                 help_text='grantor of privilege')
 
     class Meta:
-        #unique_together = (('user', 'resource', 'grantor'),)
-	pass
+        unique_together = ('user', 'resource', 'grantor')
 
 
 ####################################
@@ -293,10 +199,7 @@ class GroupResourcePrivilege(models.Model):
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    # I don't like to allow nulls, but the alternative is to supply
-    # a bogus default, which would be transparently applied during
-    # migrations and is a worse option.
-
+    # Prior to this version, the following structure was used. 
     # group = models.ForeignKey('GroupAccess', null=False, editable=False,
     #                           related_name='g2grp',
     #                           help_text='group to be granted privilege')
@@ -308,26 +211,25 @@ class GroupResourcePrivilege(models.Model):
     #                             help_text='grantor of privilege')
 
     group = models.ForeignKey(Group, 
-                              null=True, 
+                              null=False, 
                               editable=False,
                               related_name='g2grp',
                               help_text='group to be granted privilege')
 
     resource = models.ForeignKey(BaseResource,
-                                 null=True,
+                                 null=False,
                                  editable=False,
                                  related_name='r2grp',
                                  help_text='resource to which privilege applies')
 
     grantor = models.ForeignKey(User,
-                                null=True,
+                                null=False,
                                 editable=False,
                                 related_name='x2grp',
                                 help_text='grantor of privilege')
 
     class Meta:
-        #unique_together = (('group', 'resource', 'grantor'),)
-	pass
+        unique_together = ('group', 'resource', 'grantor')
 
 
 ######################################
@@ -345,7 +247,9 @@ class UserAccess(models.Model):
     Here the methods that require user permission are kept.
     """
 
-    user = models.OneToOneField(User, editable=False, null=True,
+    user = models.OneToOneField(User, 
+			   	editable=False, 
+				null=False,
                                 related_name='uaccess',
                                 related_query_name='uaccess')
 
@@ -2130,7 +2034,9 @@ class GroupAccess(models.Model):
     ####################################
 
     # Django Group object: this has a side effect of creating Group.gaccess back relation.
-    group = models.OneToOneField(Group, editable=False, null=True,
+    group = models.OneToOneField(Group, 
+				 editable=False, 
+				 null=False,
                                  related_name='gaccess',
                                  related_query_name='gaccess',
                                  help_text='group object that this object protects')
@@ -2287,7 +2193,7 @@ class ResourceAccess(models.Model):
 
     resource = models.OneToOneField(BaseResource,
                                     editable=False,
-                                    null=True,
+                                    null=False,
                                     related_name='raccess',
                                     related_query_name='raccess')
 
