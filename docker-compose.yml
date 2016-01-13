@@ -25,6 +25,7 @@ hydroshare:
     SOLR_HOST: solr
   volumes:
     # hydroshare repository
+    - ".:/home/docker/hydroshare"
     #- "/home/hydro/hydroshare:/home/docker/hydroshare"
     # pycharm debugging
     # - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
@@ -79,4 +80,3 @@ dockerworker:
     - redis:redis
     - rabbitmq:rabbitmq
   command: celery worker -A hydroshare -E -Q docker_container_tasks,docker_broadcast_tasks
-
