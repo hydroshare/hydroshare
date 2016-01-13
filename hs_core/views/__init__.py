@@ -460,10 +460,10 @@ class FilterForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-    # import sys
-    # sys.path.append("/home/docker/pycharm-debug")
-    # import pydevd
-    # pydevd.settrace('10.0.0.7', port=21000, suspend=False)
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('129.123.51.193', port=21000, suspend=False)
     user = request.user
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
