@@ -140,6 +140,13 @@ def serialize_system_metadata(res):
     resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
     return json.dumps(resd)
 
+def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
+    avu_list = ['bag_modified', 'isPublic', 'resourceType']
+    istorage = IrodsStorage()
+    istorage.copyFiles(src_res_id, dest_res_id)
+    for avu_name in avu_list:
+        value = istorage.getAVU(src_res_id, avu_name)
+        istorage.setAVU(dest_res_id, avu_name, value)
 
 def resource_modified(resource, by_user=None, overwrite_bag=True):
     resource.last_changed_by = by_user

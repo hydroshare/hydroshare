@@ -304,8 +304,7 @@ def check_resource_type(resource_type):
 def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=(), metadata=None, content=None,
-        files=(), res_type_cls=None, resource=None, **kwargs):
+        keywords=(), metadata=None, files=(), create_bag=True, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
     HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method
@@ -314,11 +313,10 @@ def create_resource(
     REST URL:  POST /resource
 
     Parameters:
-    resource - The data bytes of the resource to be added to HydroShare
 
-    Returns:    The pid assigned to the newly created resource
+    Returns:    The newly created resource
 
-    Return Type:    pid
+    Return Type:    BaseResource resource object
 
     Raises:
     Exceptions.NotAuthorized - The user is not authorized to write to HydroShare
@@ -331,13 +329,13 @@ def create_resource(
 
     1. pid is called short_id.  This is because pid is a UNIX term for Process ID and could be confusing.
 
-    2. return type is an instance of a subclass of hs_core.models.AbstractResource.  This is for efficiency in the
+    2. return type is an instance of hs_core.models.BaseResource class. This is for efficiency in the
        native API.  The native API should return actual instance rather than IDs wherever possible to avoid repeated
        lookups in the database when they are unnecessary.
 
     3. resource_type is a string: see parameter list
 
-    :param resource_type: string. the classname of the resource type, such as GenericResource
+    :param resource_type: string. the type of the resource such as GenericResource
     :param owner: email address, username, or User instance. The owner of the resource
     :param title: string. the title of the resource
     :param edit_users: list of email addresses, usernames, or User instances who will be given edit permissions
@@ -347,9 +345,10 @@ def create_resource(
     :param keywords: string list. list of keywords to add to the resource
     :param metadata: list of dicts containing keys (element names) and corresponding values as dicts { 'creator': {'name':'John Smith'}}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
+    :param create_bag: whether to create a bag for the newly created resource or not. By default, the bag is created.
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
-    :return: a new resource which is an instance of resource_type.
+    :return: a new resource which is an instance of BaseResource with specificed resource_type.
     """
     with transaction.atomic():
         cls = check_resource_type(resource_type)
@@ -369,7 +368,6 @@ def create_resource(
         resource.resource_type = resource_type
 
         # by default make resource private
-        #resource.content_model = "baseresource"
         resource.set_slug('resource{0}{1}'.format('/', resource.short_id))
         resource.save()
 
@@ -419,7 +417,8 @@ def create_resource(
         for keyword in keywords:
             resource.metadata.create_element('subject', value=keyword)
 
-        hs_bagit.create_bag(resource)
+        if create_bag:
+            hs_bagit.create_bag(resource)
 
     return resource
 

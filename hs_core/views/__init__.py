@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import json
+import os
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -25,10 +26,10 @@ from hs_access_control.models import PrivilegeCodes, HSAccessException
 
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
-from hs_core.hydroshare import get_resource_list
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, copy_resource_files_and_AVUs
 from .utils import authorize, upload_from_irods
-from hs_core.models import BaseResource, GenericResource, resource_processor, CoreMetaData
+from hs_core.models import GenericResource, resource_processor, CoreMetaData, ResourceFile
+from hs_core.hydroshare import hs_bagit
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -36,7 +37,6 @@ from . import user_rest_api
 from hs_core.hydroshare import utils
 from . import utils as view_utils
 from hs_core.signals import *
-
 
 def short_url(request, *args, **kwargs):
     try:
@@ -265,14 +265,26 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
 
     try:
+        # create the resource without files and without creating bags first
         new_resource = hydroshare.create_resource(
             resource_type=res.resource_type,
             owner=request.user,
             title=res_title,
             metadata=metadata,
-            files=res.files,
-            content=res_title
-    )
+            create_bag=False
+        )
+        # add files directly via irods backend file operation
+        copy_resource_files_and_AVUs(res.short_id, new_resource.short_id)
+
+        # link copied resource files to Django resource model
+        files = ResourceFile.objects.filter(object_id=res.id)
+        for n, f in enumerate(files):
+            ResourceFile.objects.create(content_object=new_resource,
+                resource_file = os.path.join('{res_id}/data/contents/{file_name}'.format(
+                                res_id=new_resource.short_id,
+                                file_name=os.path.basename(f.resource_file.name))))
+        # create bag for the new resource
+        hs_bagit.create_bag(new_resource)
     except Exception as ex:
         request.session['new_version_resource_creation_error'] = ex.message
         return HttpResponseRedirect(res.get_absolute_url())
@@ -614,8 +626,7 @@ def create_resource(request, *args, **kwargs):
             owner=request.user,
             title=res_title,
             metadata=metadata,
-            files=resource_files,
-            content=res_title
+            files=resource_files
     )
     # except Exception as ex:
     #     context = {'resource_creation_error': ex.message }
