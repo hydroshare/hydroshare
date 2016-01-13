@@ -908,6 +908,8 @@
                             {% endfor %}
                         </table>
                     </div>
+                    {% else %}
+                        <i>No files have been uploaded.</i>
                     {% endif %}
 
                     {% if page.perms.change and metadata_form %}
