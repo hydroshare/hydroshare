@@ -1613,7 +1613,7 @@
         </div>
 
         <div class="rating col-sm-12 content-block">
-            {% comments_for cm %}
+{#            {% comments_for cm %}#}
         </div>
         {#                #}
         {# dialogs follow #}
@@ -3285,7 +3285,7 @@
                     $("#add-file-input").removeAttr('multiple');
                     if (file_count > 0) {
                         $("#btn-add-file").hide();
-                        $("#btn-signin-irods").hide();
+                        $("#log-into-irods").hide();
                         $("#sign-in-info").hide();
                         $("#btn-select-irods-file").hide();
                     }
@@ -3293,7 +3293,7 @@
                 // hide add file button if file upload is not allowed for the resource type
                 if (file_types == "()") {
                     $("#btn-add-file").hide();
-                    $("#btn-signin-irods").hide();
+                    $("#log-into-irods").hide();
                     $("#sign-in-info").hide();
                     $("#btn-select-irods-file").hide();
                 }
