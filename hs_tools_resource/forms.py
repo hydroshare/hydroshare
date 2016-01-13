@@ -14,8 +14,7 @@ class UrlBaseFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                Field('value', css_class=field_width),
-                Field('resShortID', type="hidden")
+            Field('value', css_class=field_width)
         )
         kwargs['element_name_label'] = 'App URL'
 
@@ -29,7 +28,7 @@ class UrlBaseForm(ModelForm):
 
     class Meta:
         model = RequestUrlBase
-        fields = ['value', 'resShortID']
+        fields = ['value']
         exclude = ['content_object']
 
 

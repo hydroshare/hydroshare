@@ -38,7 +38,6 @@ processor_for(ToolResource)(resource_processor)
 class RequestUrlBase(AbstractMetaDataElement):
     term = 'RequestUrlBase'
     value = models.CharField(max_length=1024, null=True)
-    resShortID = models.CharField(max_length=128, default="UNKNOWN")
 
     class Meta:
         # RequestUrlBase element is not repeatable
