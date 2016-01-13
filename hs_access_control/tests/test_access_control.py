@@ -136,8 +136,9 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.bikes.raccess.get_combined_privilege(self.alva) == PrivilegeCodes.NONE)
         self.assertTrue(self.bikes.raccess.get_effective_privilege(self.alva) == PrivilegeCodes.NONE)
         self.george.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.OWNER)
+        print("number of holders is ", self.bikes.raccess.get_number_of_holders()) 
+        print("number of users is ", self.bikes.raccess.get_number_of_users()) 
         self.assertTrue(self.bikes.raccess.get_number_of_users() == 2)
-
         self.assertTrue(self.bikes.raccess.get_number_of_holders() == 2)
         self.assertTrue(self.bikes.raccess.get_number_of_groups() == 0)
         self.assertTrue(self.alva.uaccess.owns_resource(self.bikes))
@@ -262,7 +263,7 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.john.is_active = False
         self.john.save()
         with self.assertRaises(PermissionDenied): 
-	    self.george.uaccess.share_resource_with_user(self.bikes, self.john, PrivilegeCodes.CHANGE))
+	    self.george.uaccess.share_resource_with_user(self.bikes, self.john, PrivilegeCodes.CHANGE)
 
         self.john.is_active = True
         self.john.save()
@@ -274,7 +275,7 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.john.is_active = False
         self.john.save()
         with self.assertRaises(PermissionDenied): 
-	    self.john.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.VIEW))
+	    self.john.uaccess.share_resource_with_user(self.bikes, self.alva, PrivilegeCodes.VIEW)
         self.john.is_active = True
         self.john.save()
 
@@ -1744,7 +1745,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         # non owner (mouse) should not be able to downgrade privilege of dog from edit/change
         # (originally granted by cat) to view
         with self.assertRaises(PermissionDenied): 
-	    self.mouse.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW))
+	    self.mouse.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
 
         # non owner (mouse) should be able to downgrade privilege of a user (dog) originally granted by the same
         # non owner (mouse)
