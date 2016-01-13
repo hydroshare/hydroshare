@@ -16,33 +16,31 @@
                 <div class="gray-screen"></div>
                 <div class="item-caption">
                     <h1><strong>Share your data and models with colleagues</strong></h1>
-                    <h4>Share, access, visualize and manipulate a broad set of hydrologic data types. Manage who has
-                        access to the content that you share.</h4>
+                    <h4>Upload, share, and access a broad set of hydrologic data types and models. Manage who has access to the content that you share.</h4>
                 </div>
-                <img class="img-responsive" src="{{ STATIC_URL }}img/carousel/carousel1.jpg" alt="Image 1">
+                <img class="img-responsive" src="{{ STATIC_URL }}img/carousel/bg1.jpg" alt="Image 1">
             </div>
 
             <div class="item">
                 <div class="gray-screen"></div>
                 <div class="item-caption">
                     <h1><strong>Discover</strong></h1>
-                    <h4>Discover from a range of resource types targeted for Hydrology.</h4>
+                    <h4>Discover content shared by your colleagues and other users. Access a broad range of resource types used in hydrology.</h4>
                 </div>
-                <img class="img-responsive" src="{{ STATIC_URL }}img/carousel/carousel2.jpg" alt="Image 2">
+                <img class="img-responsive" src="{{ STATIC_URL }}img/carousel/bg2.jpg" alt="Image 2">
             </div>
 
             <div class="item">
                 <div class="gray-screen"></div>
                 <div class="item-caption">
                     <h1><strong>Collaborate</strong></h1>
-                    <h4>By impossible of in difficulty discovered celebrated ye. Justice joy manners boy met resolve
-                        produce. </h4>
+                    <h4>Upload your data or models and share them with other users. You control who has access.</h4>
                 </div>
-                <img class="img-responsive" src="{{ STATIC_URL }}img/carousel/carousel3.jpg" alt="Image 3">
+                <img class="img-responsive" src="{{ STATIC_URL }}img/carousel/bg4.jpg" alt="Image 3">
             </div>
         </div>
 
-        <ol class="carousel-controls carousel-indicators slideInBlock">
+        <ol class="carousel-controls carousel-indicators">
             <li data-target="#home-page-carousel" data-slide-to="0" class="active">
                 <div class="carousel-control-block">
                     <span class="carousel-control-icon glyphicon glyphicon-share "></span>
@@ -74,10 +72,22 @@
         </a>
     </div>
 
+    <div class="row home-page-block">
+        <div class="col-xs-12">
+            <img class="img-home-art img-responsive" src="{{ STATIC_URL }}img/logo-only.png"
+                 alt="HydroShare logo">
+            <center><strong><h3>Join the community to start sharing</h3></strong></center>
+            <center>
+                <span>HydroShare is an online collaboration environment for sharing data, models, and code.</span>
+            </center>
+            <center><a class="btn btn-primary btn-signup" href="#">Sign up now</a></center>
+        </div>
+    </div>
+
     <div>
-        <div class="container">
+        <div class="container home-page-block">
             <div class="row">
-                <div class="col-xs-12 col-sm-6 slideInBlock">
+                <div class="col-xs-12 col-sm-7 slideInBlock">
                     <h2>What you can do with HydroShare</h2>
                     <ul class="list-features">
                         <li>
@@ -88,64 +98,105 @@
                             <span>Manage who has access to the content that you share</span></li>
                         <li>
                             <div class="glyphicon glyphicon-ok checkmark"></div>
-                            <span>Share, access, visualize and manipulate a broad set of hydrologic data types</span>
+                            <span>Share, access, visualize and manipulate a broad set of hydrologic data types and models</span>
                         </li>
                         <li>
                             <div class="glyphicon glyphicon-ok checkmark"></div>
-                            <span>Sharing and execution of models</span></li>
+                            <span>Access our web services API to facilitate automated and client access to almost all functionality</span></li>
                         <li>
                             <div class="glyphicon glyphicon-ok checkmark"></div>
-                            <span>Web services API to facilitate automated and client access to almost all functionality</span>
+                            <span>Publish data and models to meet the requirements of your data management plan</span>
                         </li>
-                        <li>
-                            <div class="glyphicon glyphicon-ok checkmark"></div>
-                            <span>Access to high performance computing</span></li>
-                        <li>
-                            <div class="glyphicon glyphicon-ok checkmark"></div>
-                            <span>Publication of data and models with a DOI</span></li>
                     </ul>
                 </div>
-                <div class="col-xs-12- col-sm-6 slideInBlock">
-                    <img class="img-home-art img-responsive" src="{{ STATIC_URL }}img/research.png"
-                         alt="Research art image">
+                <div class="col-xs-12- col-sm-5 slideInBlock">
+                    <img class="img-responsive" src="{{ STATIC_URL }}img/home-page/step2.png"
+                         alt="computer">
                 </div>
             </div>
         </div>
 
-        <div class="container slideInBlock" style="margin-bottom:80px; margin-top:40px">
+        <div class="container slideInBlock">
             <h2>How it works</h2>
-            <div class="row">
+            <div class="row home-page-block">
                 <div class="steps-container">
                     <div class="col-xs-12 col-sm-3 step-wrapper">
-                        <div class="step-item active">
-                            <div class="ste-number">1</div>
+                        <div class="step-item active" data-id="0">
+                            <div class="step-number">1</div>
                             <span class="carousel-control-icon glyphicon glyphicon-plus"></span>
                             <h4>Create data</h4>
                         </div>
                     </div>
                     <div class="col-xs-12 col-sm-3 step-wrapper">
-                        <div class="step-item">
-                            <div class="ste-number">2</div>
+                        <div class="step-item" data-id="1">
+                            <div class="step-number">2</div>
                             <span class="carousel-control-icon glyphicon glyphicon-upload"></span>
                             <h4>Upload to HydroShare</h4>
                         </div>
                     </div>
                     <div class="col-xs-12 col-sm-3 step-wrapper">
-                        <div class="step-item">
-                            <div class="ste-number">3</div>
+                        <div class="step-item" data-id="2">
+                            <div class="step-number">3</div>
                             <span class="carousel-control-icon glyphicon glyphicon-pencil"></span>
                             <h4>Describe with metadata</h4>
                         </div>
                     </div>
                     <div class="col-xs-12 col-sm-3 step-wrapper">
-                        <div class="step-item">
-                            <div class="ste-number">4</div>
+                        <div class="step-item" data-id="3">
+                            <div class="step-number">4</div>
                             <span class="carousel-control-icon glyphicon glyphicon-share"></span>
                             <h4>Share with colleagues</h4>
                         </div>
                     </div>
                 </div>
+            </div>
 
+            <div class="row home-page-block description active" data-id="0">
+                <div class="col-xs-6">
+                    <div class="description-container">
+                        <span class="step-description">Collect your data using the same methods you use now. HydroShare supports a broad set of hydrologic data types.</span>
+                    </div>
+                </div>
+                <div class="col-xs-6">
+                    <img class="img-responsive img-home-art" src="{{ STATIC_URL }}img/home-page/step1.png"
+                         alt="Create data">
+                </div>
+            </div>
+
+            <div class="row home-page-block description" data-id="1">
+                <div class="col-xs-6">
+                    <div class="description-container">
+                        <span class="step-description">Upload your data files to HydroShare through the web user interface. HydroShare will automatically extract as much metadata as it can from the files you upload.</span>
+                    </div>
+                </div>
+                <div class="col-xs-6">
+                    <img class="img-responsive img-home-art" src="{{ STATIC_URL }}img/home-page/step2.png"
+                         alt="Create data">
+                </div>
+            </div>
+
+            <div class="row home-page-block description" data-id="2">
+                <div class="col-xs-6">
+                    <div class="description-container">
+                        <span class="step-description">Use HydroShare's simple metadata entry forms to finish describing your data so that your colleagues can find, access, and interpret it.</span>
+                    </div>
+                </div>
+                <div class="col-xs-6">
+                    <img class="img-responsive img-home-art" src="{{ STATIC_URL }}img/home-page/step2.png"
+                         alt="Create data">
+                </div>
+            </div>
+
+            <div class="row home-page-block description" data-id="3">
+                <div class="col-xs-6">
+                    <div class="description-container">
+                        <span class="step-description">You choose who has access to the data and models you have uploaded to HydroShare. You can share with individual users or publish your resources for everyone to access.</span>
+                    </div>
+                </div>
+                <div class="col-xs-6">
+                    <img class="img-responsive img-home-art" src="{{ STATIC_URL }}img/home-page/step2.png"
+                         alt="Create data">
+                </div>
             </div>
         </div>
 
@@ -165,19 +216,6 @@
             </div>
         </div>
 
-        <div class="container slideInBlock">
-            <div class="row">
-                <div class="col-xs-12">
-                    <img class="img-home-art img-responsive" src="{{ STATIC_URL }}img/logo-only.png"
-                         alt="HydroShare logo">
-                    <center><strong><h3>Join the community to start sharing</h3></strong></center>
-                    <center>
-                        <span>HydroShare is an online collaboration environment for sharing data, models, and code.</span>
-                    </center>
-                    <center><a class="btn btn-primary btn-signup" href="#">Sign up now</a></center>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -235,6 +273,15 @@
             // Prevents dropdown form getting dismissed when clicking on items inside
             $('.dropdown-menu').click(function (e) {
                 e.stopPropagation();
+            });
+
+            $('.step-item').click(function (e) {
+                var dataID = $(this).attr("data-id");
+                $('.step-item').removeClass("active");
+                $(this).addClass("active");
+
+                $('div.description').removeClass("active");
+                $('div.description[data-id="' + dataID + '"]').addClass("active");
             });
 
             $(".slideInBlock").each(function (i, el) {
