@@ -41,25 +41,21 @@ class TestWebAppFeature(TransactionTestCase):
         self.assertEqual(RequestUrlBase.objects.all().count(), 0)
 
         # create 1 RequestUrlBase obj with required params
-        resource.create_metadata_element(self.resWebApp.short_id, 'RequestUrlBase', value='https://www.google.com',
-                                         resShortID='xyz')
+        resource.create_metadata_element(self.resWebApp.short_id, 'RequestUrlBase', value='https://www.google.com')
         self.assertEqual(RequestUrlBase.objects.all().count(), 1)
 
         # may not create additional instance of RequestUrlBase
         with self.assertRaises(Exception):
             resource.create_metadata_element(self.resWebApp.short_id, 'RequestUrlBase',
-                                             value='https://www.facebook.com',
-                                             resShortID='abc')
+                                             value='https://www.facebook.com')
 
         self.assertEqual(RequestUrlBase.objects.all().count(), 1)
 
         # update existing meta
         resource.update_metadata_element(self.resWebApp.short_id, 'RequestUrlBase',
                                          element_id=RequestUrlBase.objects.first().id,
-                                         value='https://www.yahoo.com',
-                                         resShortID='lmn')
+                                         value='https://www.yahoo.com')
         self.assertEqual(RequestUrlBase.objects.first().value, 'https://www.yahoo.com')
-        self.assertEqual(RequestUrlBase.objects.first().resShortID, 'lmn')
 
         # delete RequestUrlBase obj
         resource.delete_metadata_element(self.resWebApp.short_id, 'RequestUrlBase',
@@ -125,7 +121,7 @@ class TestWebAppFeature(TransactionTestCase):
         request = HttpRequest()
 
         # RequestUrlBase
-        request.POST = {'value': 'https://www.msn.com', 'resShortID': 'test'}
+        request.POST = {'value': 'https://www.msn.com'}
 
         data = metadata_element_pre_create_handler(sender=ToolResource,
                                                    element_name="RequestUrlBase",
