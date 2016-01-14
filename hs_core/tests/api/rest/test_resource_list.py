@@ -32,11 +32,9 @@ class TestResourceList(APITestCase):
 
     def test_resource_list(self):
 
-        new_res = resource.create_resource(
-            'GenericResource',
-            self.user,
-            'My Test Resource'
-            )
+        new_res = resource.create_resource('GenericResource',
+                                           self.user,
+                                           'My Test Resource')
         pid = new_res.short_id
 
         response = self.client.get('/hsapi/resourceList/', format='json')
@@ -47,20 +45,16 @@ class TestResourceList(APITestCase):
 
     def test_resource_list_by_type(self):
 
-        gen_res = resource.create_resource(
-            'GenericResource',
-            self.user,
-            'My Test Resource'
-            )
+        gen_res = resource.create_resource('GenericResource',
+                                           self.user,
+                                           'My Test Resource')
         gen_pid = gen_res.short_id
 
         raster = open('hs_core/tests/data/cea.tif')
-        geo_res = resource.create_resource(
-            'RasterResource',
-            self.user,
-            'My raster resource',
-            files=(raster,)
-        )
+        geo_res = resource.create_resource('RasterResource',
+                                           self.user,
+                                           'My raster resource',
+                                           files=(raster,))
         geo_pid = geo_res.short_id
 
         response = self.client.get('/hsapi/resourceList/', format='json')
