@@ -76,7 +76,7 @@
         <div class="col-xs-12">
             <img class="img-home-art img-responsive" src="{{ STATIC_URL }}img/logo-only.png"
                  alt="HydroShare logo">
-            <center><strong><h3>Join the community to start sharing</h3></strong></center>
+            <center><strong><h3 class="home-page-block-title">Join the community to start sharing</h3></strong></center>
             <center>
                 <span>HydroShare is an online collaboration environment for sharing data, models, and code.</span>
             </center>
@@ -88,7 +88,7 @@
         <div class="container home-page-block">
             <div class="row">
                 <div class="col-xs-12 col-sm-7 slideInBlock">
-                    <h2>What you can do with HydroShare</h2>
+                    <h2 class="home-page-block-title">What you can do with HydroShare</h2>
                     <ul class="list-features">
                         <li>
                             <div class="glyphicon glyphicon-ok checkmark"></div>
@@ -117,7 +117,7 @@
         </div>
 
         <div class="container slideInBlock">
-            <h2>How it works</h2>
+            <h2 class="home-page-block-title">How it works</h2>
             <div class="row home-page-block">
                 <div class="steps-container">
                     <div class="col-xs-12 col-sm-3 step-wrapper">
@@ -182,7 +182,7 @@
                     </div>
                 </div>
                 <div class="col-xs-6">
-                    <img class="img-responsive img-home-art" src="{{ STATIC_URL }}img/home-page/step2.png"
+                    <img class="img-responsive img-home-art" src="{{ STATIC_URL }}img/home-page/step3.png"
                          alt="Create data">
                 </div>
             </div>
@@ -194,7 +194,7 @@
                     </div>
                 </div>
                 <div class="col-xs-6">
-                    <img class="img-responsive img-home-art" src="{{ STATIC_URL }}img/home-page/step2.png"
+                    <img class="img-responsive img-home-art" src="{{ STATIC_URL }}img/home-page/step4.png"
                          alt="Create data">
                 </div>
             </div>
@@ -219,38 +219,6 @@
     </div>
 
     <script>
-        // Fade nav bar background when scroll is at the top
-        function fadeNav() {
-            var offset = getScrollXY();
-            if (offset[1] > 0) {
-                $("#hs-nav-bar").css("background-color", "rgb(0, 45, 62)");
-                $("#hs-nav-bar").css("border-color", "");
-            }
-            else {
-                $("#hs-nav-bar").css("background-color", "rgba(0, 0, 0, 0.58)");
-                $("#hs-nav-bar").css("border-color", "rgba(0, 0, 0, 0)");
-            }
-        }
-
-        function getScrollXY() {
-            var scrOfX = 0, scrOfY = 0;
-            if (typeof( window.pageYOffset ) == 'number') {
-                //Netscape compliant
-                scrOfY = window.pageYOffset;
-                scrOfX = window.pageXOffset;
-            } else if (document.body && ( document.body.scrollLeft || document.body.scrollTop )) {
-                //DOM compliant
-                scrOfY = document.body.scrollTop;
-                scrOfX = document.body.scrollLeft;
-            } else if (document.documentElement && ( document.documentElement.scrollLeft ||
-                    document.documentElement.scrollTop )) {
-                //IE6 standards compliant mode
-                scrOfY = document.documentElement.scrollTop;
-                scrOfX = document.documentElement.scrollLeft;
-            }
-
-            return [scrOfX, scrOfY];
-        }
 
         $.fn.visible = function (partial) {
             var $t = $(this),
@@ -267,8 +235,6 @@
         };
 
         $(document).ready(function () {
-            window.onscroll = fadeNav;
-            fadeNav();
 
             // Prevents dropdown form getting dismissed when clicking on items inside
             $('.dropdown-menu').click(function (e) {

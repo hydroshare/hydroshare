@@ -35,7 +35,7 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 }
 
 .navbar-inverse {
-  background-color: rgb(0, 45, 62);
+  background-color: #FFF;
   border: none;
 }
 
@@ -46,9 +46,8 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 .navbar-inverse .navbar-nav > .active > a,
 .navbar-inverse .navbar-nav > .active > a:hover,
 .navbar-inverse .navbar-nav > .active > a:focus {
-  	color: #FFF;
-    font-weight: bold !important;
-    background-color: #38712A !important;
+  	color: #333;
+    background-color: #FFF !important;
 }
 
 .navbar-inverse .navbar-brand {
@@ -56,8 +55,8 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 }
 
 .navbar-inverse .navbar-nav > li > a {
-	color: #FFF;
-	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+	color: #777;
+    font: 13px/18px 'Open Sans',arial,sans-serif;
 }
 
 .navbar-nav > li > .dropdown-menu {
@@ -77,22 +76,18 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 }
 
 .navbar-inverse .navbar-nav > li > a:hover, .navbar-inverse .navbar-nav > li > a:focus {
-	color: #FFF;
-	background-color: #63AC3C;
-	-webkit-transition: background-color 100ms linear;
-	-moz-transition: background-color 100ms linear;
-	-o-transition: background-color 100ms linear;
-	-ms-transition: background-color 100ms linear;
-	transition: background-color 100ms linear;
+	color: #333;
+	-webkit-transition: color 100ms linear;
+	-moz-transition: color 100ms linear;
+	-o-transition: color 100ms linear;
+	-ms-transition: color 100ms linear;
+	transition: color 100ms linear;
 }
 
 .navbar-inverse {
-	font-family: 'Lato', sans-serif;
-	text-transform: uppercase;
-	font-size: 12px;
-	border-bottom: 1px solid #001D61;
-	border-top: 1px solid #001D61;
-	box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+    text-transform: uppercase;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid #DDD;
 }
 
 .navbar-inverse .navbar-nav > .dropdown > a .caret {
@@ -607,7 +602,7 @@ footer {
     overflow: hidden;
 }
 footer a {
-	color: #81D685;
+	color: #B5E655;
 }
 footer a:hover {
 	color: #81D685;
@@ -618,14 +613,14 @@ footer .headline {
 }
 footer .headline h3{
 	text-transform: uppercase;
-	color: #00C1F8;
+	color: #FFF;
 }
 .legal {
-	padding: 20px 0 10px 0;
+	padding: 40px 0;
 	border-top: 1px solid #555;
 }
 .legal a {
-	color: #81D685;
+	color: #B5E655;
 	text-decoration: none;
 }
 .social ul {
@@ -657,7 +652,7 @@ footer .headline h3{
 }
 
 .social li:hover a {
-    color: #63AC3C;
+    color: #B5E655;
 }
 
 .social li:hover a {
@@ -2889,10 +2884,9 @@ h4.title {
 
 /*  Home page revamp */
 #home-page-carousel {
-	height: 75%;
+	height: 70%;
     overflow: hidden;
 	border: 0;
-	margin-top: -52px;
 }
 
 .carousel-controls li.active  .carousel-control-block {
@@ -3047,9 +3041,9 @@ span.carousel-control-icon {
 	content: "\e008";
 	font-family: "Glyphicons Halflings";
 	float: left;
-	font-size: 28px;
+	font-size: 30px;
 	color: #2D9EB3;
-	border: 2px solid #ddd;
+	border: 1px solid #9C9C9C;
 	height: 30px;
 	width: 30px;
 	border-radius: 50%;
@@ -3138,7 +3132,7 @@ span.carousel-control-icon {
 
 .step-item.active {
 	background: #FFF;
-	color: #0087BD;
+	color: #4BB5C1;
 }
 
 .step-number {
@@ -3169,9 +3163,15 @@ div.description.active {
 
 .step-description {
     text-align: center;
+    font-size: 18px;
+    color: #666;
 }
 
 .description-container {
     text-align: center;
-        margin-top: 25%;
+    margin-top: 15%;
+}
+
+.home-page-block-title {
+    color: #4BB5C1;
 }
