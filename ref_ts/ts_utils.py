@@ -25,11 +25,11 @@ def wmlParse(response, ver=11):
 
 def wmlVersionFromSoapURL(wsdl_url):
     ver = -1
-    if "1_0.asmx?" in wsdl_url.lower():
+    if "1_0." in wsdl_url.lower():
         ver = 10
-    elif "1_1.asmx?" in wsdl_url.lower():
+    elif "1_1." in wsdl_url.lower():
         ver = 11
-    elif "2_0.asmx?" in wsdl_url.lower():
+    elif "2_0." in wsdl_url.lower():
         ver = 20
     else:
         ver = -1
@@ -37,7 +37,8 @@ def wmlVersionFromSoapURL(wsdl_url):
 
 def check_url_and_version(wsdl_url):
     if not wsdl_url.lower().endswith('.asmx?wsdl'):
-        raise Exception("invalid soap endpoint")
+        if not wsdl_url.lower().endswith('.php?wsdl'):
+            raise Exception("invalid soap endpoint")
     return wmlVersionFromSoapURL(wsdl_url)
 
 def connect_wsdl_url(wsdl_url):
@@ -215,6 +216,8 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
             method_code = method_obj.code if hasattr(method_obj, "code") else None
             method_id = method_obj.id if hasattr(method_obj, "id") else None
             method_description = method_obj.description if hasattr(method_obj, "description") else None
+            if type(method_description) is unicode:
+                method_description = method_description.encode('ascii', 'ignore')
         if method_code is None:
             method_code = method_code_query
 

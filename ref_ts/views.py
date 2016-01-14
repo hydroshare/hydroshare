@@ -33,7 +33,7 @@ def get_his_urls(request):
             response = r.text.encode('utf-8')
             root = etree.XML(response)
         else:
-            raise
+            raise Exception("Query HIS central error.")
         url_list = []
         for element in root.iter():
             if "servURL" in element.tag:
@@ -52,7 +52,7 @@ def search_sites(request):
             sites = ts_utils.sites_from_soap(url)
             return json_or_jsonp(request, {"status": "success", "sites": sites})
         else:
-            raise
+            raise Exception("search_sites form validation failed.")
     except Exception as e:
         logger.exception("search_sites: " + e.message)
         return json_or_jsonp(request, {"status": "error"})
@@ -67,8 +67,9 @@ def search_variables(request):
             variables = ts_utils.site_info_from_soap(url, site=site)
             return json_or_jsonp(request, {"status": "success", "variables": variables})
         else:
-            raise
+            raise Exception("search_variables form validation failed.")
     except Exception as e:
+        logger.exception("search_variables: %s" % (e.message))
         return json_or_jsonp(request, {"status": "error"})
 
 def time_series_from_service(request):
@@ -116,9 +117,9 @@ def time_series_from_service(request):
                                 predefined_name=preview_name)
             tempdir_last_six_chars = tempdir[-6:]
             preview_url = "/hsapi/_internal/refts/preview-figure/%s/" % (tempdir_last_six_chars)
-            return json_or_jsonp(request, {'status': "success",'preview_url': preview_url})
+            return json_or_jsonp(request, {'status': "success", 'preview_url': preview_url})
         else:
-            raise
+            raise Exception("GetTSValuesForm form validation failed.")
     except Exception as e:
         logger.exception("time_series_from_service: %s" % (e.message))
         if tempdir is not None:
@@ -165,7 +166,9 @@ def verify_rest_url(request):
             elif ts.status_code == 200 and 'collection' in ts_xml.tag.lower():
                 return json_or_jsonp(request, {"status": "success"})
             else:
-                return json_or_jsonp(request, {"status": "error"})
+                raise Exception("Test REST url failed.")
+        else:
+            raise Exception("Invalid REST url.")
     except:
         return json_or_jsonp(request, {"status": "error"})
 
@@ -225,9 +228,7 @@ def create_ref_time_series(request, *args, **kwargs):
                 resource_type='RefTimeSeriesResource',
                 owner=request.user,
                 title=frm.cleaned_data.get('title'),
-                metadata=metadata,
-                content=frm.cleaned_data.get('title')
-            )
+                metadata=metadata)
 
             if ts_dict:
                 del request.session['ts']
@@ -245,7 +246,7 @@ def download_resource_files(request, shortkey, *args, **kwargs):
     try:
         _, authorized, _ = authorize(request, shortkey, edit=True, full=True, view=True, superuser=True, raises_exception=False)
         if not authorized:
-            response = HttpResponse()
+            response = HttpResponse(status=401)
             response.content = "<h3>You do not have permission to download this resource!</h3>"
             return response
 
@@ -262,7 +263,7 @@ def download_resource_files(request, shortkey, *args, **kwargs):
         res_files_fp_arr = ts_utils.generate_resource_files(shortkey, tempdir)
 
         bag_zip_obj = zipfile.ZipFile(bag_save_to_path, "a", zipfile.ZIP_DEFLATED)
-        bag_content_base_folder = str(shortkey) + "/data/contents/"
+        bag_content_base_folder = str(shortkey) + "/data/contents/" # _RESOURCE_ID_/data/contents/
         for fn_fp in res_files_fp_arr:
             fh = open(fn_fp['fullpath'], 'r')
             bag_zip_obj.writestr(bag_content_base_folder + fn_fp['fname'], fh.read())
@@ -276,7 +277,7 @@ def download_resource_files(request, shortkey, *args, **kwargs):
         return response
     except Exception as e:
         logger.exception("download_resource_files: %s" % (e.message))
-        response = HttpResponse()
+        response = HttpResponse(status=503)
         response.content = "<h3>Failed to download this resource!</h3>"
         return response
     finally:

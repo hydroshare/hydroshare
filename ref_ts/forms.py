@@ -7,7 +7,6 @@ class ReferencedVariablesForm(forms.Form):
     url = forms.URLField(required=True)
     site = forms.CharField(required=True)
 
-
 class GetTSValuesForm(forms.Form):
     ref_type = forms.CharField(required=True)
     service_url = forms.CharField(required=True)

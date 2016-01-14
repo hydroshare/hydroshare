@@ -39,7 +39,11 @@
         </div>
 
          <div class="col-sm-offset-2 col-sm-10" id="message-div">
-            <h3 id="message">Retrieving sites...</h3>
+            <h3 id="message">
+                {%  if resource_creation_error %}
+                {{ resource_creation_error }}
+                {% endif %}
+            </h3>
         </div>
 
         <div class ="form-group" id ="preview-div" class="col-sm-offset-2 col-sm-10">
@@ -85,7 +89,7 @@
             $(document).ready(function(){
                 $('#site-div').hide();
                 $('#variable-div').hide();
-                $('#message-div').hide();
+                $('#message-div').show();
                 $('#preview-div').hide();
                 get_his_central_urls();
             });
