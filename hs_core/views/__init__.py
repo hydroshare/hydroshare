@@ -250,31 +250,21 @@ def delete_resource(request, shortkey, *args, **kwargs):
 def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
-    url_key = "page_redirect_url"
-
-    try:
-        page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(
-                                                resource_type=res.resource_type,
-                                                resource_title=res.metadata.title.value,
-                                                page_redirect_url_key=url_key, **kwargs)
-    except Exception as ex:
-        request.session['new_version_resource_creation_error'] = ex.message
-        return HttpResponseRedirect(res.get_absolute_url())
-
-    if url_key in page_url_dict:
-        return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
-
     try:
         # create the resource without files and without creating bags first
         new_resource = hydroshare.create_resource(
             resource_type=res.resource_type,
             owner=request.user,
-            title=res_title,
-            metadata=metadata,
+            title=res.metadata.title.value,
             create_bag=False
         )
+        # newly created new resource version is private initially
+        set_to_private = False
+        if res.raccess.public:
+            set_to_private = True
+
         # add files directly via irods backend file operation
-        copy_resource_files_and_AVUs(res.short_id, new_resource.short_id)
+        copy_resource_files_and_AVUs(res.short_id, new_resource.short_id, set_to_private)
 
         # link copied resource files to Django resource model
         files = ResourceFile.objects.filter(object_id=res.id)
@@ -283,6 +273,13 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
                 resource_file = os.path.join('{res_id}/data/contents/{file_name}'.format(
                                 res_id=new_resource.short_id,
                                 file_name=os.path.basename(f.resource_file.name))))
+
+        # copy metadata from source resource to target new-versioned resource
+        md = res.metadata
+        md.pk = None
+        md.id = None
+        md.save()
+
         # create bag for the new resource
         hs_bagit.create_bag(new_resource)
     except Exception as ex:
