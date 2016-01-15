@@ -1504,6 +1504,53 @@ class CoreMetaData(models.Model):
         self.sources.all().delete()
         self.relations.all().delete()
 
+    def copy_all_elements_to(self, tgt_res):
+        new_md = tgt_res.metadata
+        if self.title:
+            new_md.create_element('title', value=self.title.value)
+        if self.description:
+            new_md.create_element('description', abstract=self.description.abstract)
+        if self.language:
+            new_md.create_element('language', code=self.language.code)
+        if self.rights:
+            new_md.create_element('rights', url=self.rights.url, statement=self.rights.statement)
+        if self.publisher:
+            new_md.create_element('publisher', name=self.publisher.name, url=self.publisher.url)
+        if self.type:
+            new_md.create_element('type', url=self.type.url)
+
+        for cr in self.creators.all():
+            new_md.create_element('creator', name=cr.name, email=cr.email, description=cr.description, phone=cr.phone,
+                                  address=cr.address, organization=cr.organization, homepage=cr.homepage)
+
+        for ct in self.contributors.all():
+            new_md.create_element('contributor', name=ct.name, email=ct.email, description=ct.description, phone=ct.phone,
+                                  address=ct.address, organization=ct.organization, homepage=ct.homepage)
+
+        for dt in self.dates.all():
+            new_md.create_element('date', type=dt.type, start_date=dt.start_date, end_date=dt.end_date)
+
+        for id in self.identifiers.all():
+            if id.name == 'hydroShareIdentifier':
+                new_md.create_element('identifier', name=id.name, url='http://hydroshare.org/resource{0}{1}'.format('/', tgt_res.short_id))
+            else:
+                new_md.create_element('identifier', name=id.name, url=id.url)
+
+        for co in self.coverages.all():
+            new_md.create_element('coverage', type=co.type, value=co.value)
+
+        for fm in self.formats.all():
+            new_md.create_element('format', value=fm.value)
+
+        for sub in self.subjects.all():
+            new_md.create_element('subject', value=sub.value)
+
+        for sc in self.sources.all():
+            new_md.create_element('source', derived_from=sc.derived_from)
+
+        for rel in self.relations.all():
+            new_md.create_element('relation', type=rel.type, value=rel.value)
+
     def get_xml(self, pretty_print=True):
         from lxml import etree
         # importing here to avoid circular import problem

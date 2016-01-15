@@ -304,7 +304,7 @@ def check_resource_type(resource_type):
 def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=(), metadata=None, files=(), create_bag=True, **kwargs):
+        keywords=(), metadata=None, files=(), create_metadata=True, create_bag=True, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
     HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method
@@ -405,17 +405,18 @@ def create_resource(
                 group = utils.group_from_id(group)
                 owner.uaccess.share_resource_with_group(resource, group, PrivilegeCodes.VIEW)
 
-        # prepare default metadata
-        utils.prepare_resource_default_metadata(resource=resource, metadata=metadata, res_title=title)
+        if create_metadata:
+            # prepare default metadata
+            utils.prepare_resource_default_metadata(resource=resource, metadata=metadata, res_title=title)
 
-        for element in metadata:
-            # here k is the name of the element
-            # v is a dict of all element attributes/field names and field values
-            k, v = element.items()[0]
-            resource.metadata.create_element(k, **v)
+            for element in metadata:
+                # here k is the name of the element
+                # v is a dict of all element attributes/field names and field values
+                k, v = element.items()[0]
+                resource.metadata.create_element(k, **v)
 
-        for keyword in keywords:
-            resource.metadata.create_element('subject', value=keyword)
+            for keyword in keywords:
+                resource.metadata.create_element('subject', value=keyword)
 
         if create_bag:
             hs_bagit.create_bag(resource)

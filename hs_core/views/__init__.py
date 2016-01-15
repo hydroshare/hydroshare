@@ -256,6 +256,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             resource_type=res.resource_type,
             owner=request.user,
             title=res.metadata.title.value,
+            create_metadata=False,
             create_bag=False
         )
         # newly created new resource version is private initially
@@ -275,21 +276,15 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
                                 file_name=os.path.basename(f.resource_file.name))))
 
         # copy metadata from source resource to target new-versioned resource
-        md = res.metadata
-        md.pk = None
-        md.id = None
-        md.save()
+        res.metadata.copy_all_elements_to(new_resource)
 
         # create bag for the new resource
         hs_bagit.create_bag(new_resource)
     except Exception as ex:
+        if new_resource:
+            new_resource.delete()
         request.session['new_version_resource_creation_error'] = ex.message
         return HttpResponseRedirect(res.get_absolute_url())
-
-    try:
-        utils.resource_post_create_actions(resource=new_resource, user=request.user, metadata=metadata, **kwargs)
-    except (utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
 
     # go to resource landing page
     request.session['just_created'] = True
