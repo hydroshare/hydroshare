@@ -145,6 +145,21 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(scratching.rlabels.is_mine(cat))
         self.assertTrue(match_lists_as_sets(scratching.rlabels.get_users(), [cat]))
 
+    def test_flag(self):
+        cat = self.cat  # user
+        scratching = self.scratching  # resource
+        self.assertTrue(match_lists_as_sets(cat.ulabels.get_flagged_resources(FlagCodes.MINE), []))
+        self.assertTrue(match_lists_as_sets(cat.ulabels.get_flagged_resources(FlagCodes.FAVORITE), []))
+        self.assertFalse(scratching.rlabels.is_flagged(cat, FlagCodes.MINE))
+        self.assertFalse(scratching.rlabels.is_flagged(cat, FlagCodes.FAVORITE))
+        cat.ulabels.flag_resource(scratching, FlagCodes.MINE) 
+        self.assertTrue(match_lists_as_sets(cat.ulabels.my_resources, [scratching]))
+        self.assertTrue(match_lists_as_sets(cat.ulabels.favorited_resources, []))
+        self.assertTrue(match_lists_as_sets(cat.ulabels.get_flagged_resources(FlagCodes.MINE), [scratching]))
+        self.assertTrue(match_lists_as_sets(cat.ulabels.get_flagged_resources(FlagCodes.FAVORITE), []))
+        self.assertTrue(scratching.rlabels.is_flagged(cat, FlagCodes.MINE))
+        self.assertTrue(match_lists_as_sets(scratching.rlabels.get_users(), [cat]))
+
     def test_clear_label(self):
         cat = self.cat  # user
         scratching = self.scratching  # resource
@@ -153,7 +168,13 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists_as_sets(cat.ulabels.resources_of_interest, [scratching]))
         self.assertTrue(match_lists_as_sets(scratching.rlabels.get_labels(cat), ['penalty clause']))
         self.assertTrue(match_lists_as_sets(scratching.rlabels.get_users(), [cat]))
+        cat.ulabels.label_resource(scratching, "penalty claws")
+        self.assertTrue(match_lists_as_sets(cat.ulabels.labeled_resources, [scratching]))
+        self.assertTrue(match_lists_as_sets(cat.ulabels.resources_of_interest, [scratching]))
+        self.assertTrue(match_lists_as_sets(scratching.rlabels.get_labels(cat), ['penalty clause', 'penalty claws']))
+        self.assertTrue(match_lists_as_sets(scratching.rlabels.get_users(), [cat]))
         cat.ulabels.unlabel_resource(scratching, "penalty clause")
+        cat.ulabels.unlabel_resource(scratching, "penalty claws")
         self.assertTrue(match_lists_as_sets(cat.ulabels.labeled_resources, []))
         self.assertTrue(match_lists_as_sets(cat.ulabels.resources_of_interest, []))
         self.assertTrue(match_lists_as_sets(scratching.rlabels.get_labels(cat), []))
@@ -183,6 +204,22 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists_as_sets(scratching.rlabels.get_users(), [cat]))
         cat.ulabels.unclaim_resource(scratching)
         self.assertTrue(match_lists_as_sets(cat.ulabels.labeled_resources, []))
+        self.assertTrue(match_lists_as_sets(cat.ulabels.resources_of_interest, []))
+        self.assertTrue(match_lists_as_sets(scratching.rlabels.get_labels(cat), []))
+        self.assertTrue(match_lists_as_sets(scratching.rlabels.get_users(), []))
+
+    def test_clear_flag(self):
+        cat = self.cat  # user
+        scratching = self.scratching  # resource
+        cat.ulabels.claim_resource(scratching)
+        self.assertTrue(match_lists_as_sets(cat.ulabels.my_resources, [scratching]))
+        self.assertTrue(match_lists_as_sets(cat.ulabels.get_flagged_resources(FlagCodes.MINE), [scratching]))
+        self.assertTrue(match_lists_as_sets(cat.ulabels.resources_of_interest, [scratching]))
+        self.assertTrue(scratching.rlabels.is_mine(cat))
+        self.assertTrue(match_lists_as_sets(scratching.rlabels.get_users(), [cat]))
+        cat.ulabels.unflag_resource(scratching, FlagCodes.MINE)
+        self.assertTrue(match_lists_as_sets(cat.ulabels.get_flagged_resources(FlagCodes.MINE), []))
+        self.assertFalse(scratching.rlabels.is_flagged(cat, FlagCodes.MINE))
         self.assertTrue(match_lists_as_sets(cat.ulabels.resources_of_interest, []))
         self.assertTrue(match_lists_as_sets(scratching.rlabels.get_labels(cat), []))
         self.assertTrue(match_lists_as_sets(scratching.rlabels.get_users(), []))

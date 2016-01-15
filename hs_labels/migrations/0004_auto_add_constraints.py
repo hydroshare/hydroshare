@@ -8,7 +8,7 @@ from django.conf import settings
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_labels', '0003_auto_20160107_1847'),
+        ('hs_labels', '0003_manual_delete_duplicates'),
     ]
 
     operations = [

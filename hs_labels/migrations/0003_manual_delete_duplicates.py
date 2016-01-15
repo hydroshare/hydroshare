@@ -8,8 +8,8 @@ def delete_duplicates(apps, schema_editor):
     UserResourceLabels = apps.get_model("hs_labels", "UserResourceLabels")
     oldrecord = None 
     # order by reverse start so that the first object should be preserved
-    for record in UserResourceLabels.objects.all()\
-	.order_by("user", "resource", "label", "-start"):
+    for record in list(UserResourceLabels.objects.all()\
+	.order_by("user", "resource", "label", "-start")):
 	# since these are pointer comparisons, no access to models is needed
 	if (oldrecord is not None 
         and oldrecord.user==record.user

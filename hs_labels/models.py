@@ -25,7 +25,7 @@
  * u.ulabels.labeled_resources
    A queryset of resources that are labeled.
 
- * u.ulabels.favorite_resources (trivial, not yet implemented, available tomorrow)
+ * u.ulabels.favorited_resources
    A queryset of resources that have been favorited
 
  * u.ulabels.get_resources_with_label(label)
@@ -40,8 +40,7 @@
  * r.rlabels.is_mine(u)
 
 """
-# TODO: deprecate direct labeling
-# TODO: combine filtering with access control
+# TODO: combine label filtering with access control
 
 import re
 
@@ -69,8 +68,6 @@ class FlagCodes(object):
         (MINE, 'Mine'),         # marked as mine in discovery page.
     )
 
-# class BaseResource(models.Model):
-#     title = models.TextField()
 
 class UserResourceLabels(models.Model):
     """
@@ -93,7 +90,7 @@ class UserResourceLabels(models.Model):
     label = models.TextField(null=False)
 
     class Meta:
-        unique_together = (('user', 'resource', 'label'),)
+        unique_together = ('user', 'resource', 'label')
 
 
 class UserResourceFlags(models.Model):
@@ -121,7 +118,7 @@ class UserResourceFlags(models.Model):
                                  on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = (('user', 'resource', 'kind'),)
+        unique_together = ('user', 'resource', 'kind')
 
 
 class UserStoredLabels(models.Model):
@@ -134,7 +131,7 @@ class UserStoredLabels(models.Model):
                               on_delete=models.CASCADE)
     label = models.TextField(help_text='label to be stored by user')
     class Meta:
-        unique_together = (('user', 'label'),)
+        unique_together = ('user', 'label')
 
 
 class UserLabels(models.Model):
