@@ -33,9 +33,9 @@
                         {% if missing_metadata_elements  %}
                             {% if just_created %}
                                 <strong>Congratulations! </strong>
-                                <span>Now that your resource has been created the following metadata are still required to make it public or discoverable:</span>
+                                <span>Now that your resource has been created the following metadata are still required to publish it or make it public or discoverable:</span>
                             {% else %}
-                                <span>The following metadata are still required to make the resource public or discoverable:</span>
+                                <span>The following metadata are still required to publish the resource or make the resource public or discoverable:</span>
                             {% endif %}
                             <ul>
                                 {% for element in missing_metadata_elements %}
@@ -48,7 +48,7 @@
                         {%  endif %}
                         {%  if not cm.has_required_content_files %}
                                 <br>
-                                <span>Content files are required to make the resource public or discoverable.</span>
+                                <span>Content files are required to publish the resource or make the resource public or discoverable.</span>
                         {% endif %}
                         <hr>
                         <span class="glyphicon glyphicon-question-sign"></span>
@@ -119,6 +119,12 @@
                             <form class="inline pull-right" action="{{ cm.get_absolute_url }}" method="post">
                                 {% csrf_token %}
                                 {% if page.perms.delete %}
+                                    {% if cm.can_be_public_or_discoverable %}
+                                         <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog">
+                                            <span data-toggle="tooltip" data-placement="auto" title="Publish this resource"
+                                                  class="glyphicon glyphicon-book icon-button btn-edit"></span>
+                                        </a>
+                                    {% endif %}
                                     <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
                                         <span data-toggle="tooltip" data-placement="auto" title="Delete this resource"
                                               class="glyphicon glyphicon-trash icon-button btn-remove"></span>
@@ -2004,16 +2010,18 @@
                         </div>
                         <div class="modal-body">
                             <p>
-                                Once you submit the resource for publication it cannot be changed again. This will assign a
-                                DOI to the
-                                resource as it stands now and mark it as permanent. To make any changes after this, you
-                                <strong>must</strong>
-                                create a brand new resource. Click "Publish" if you really intend to do this.
+                                Once you submit the resource for publication it cannot be changed. The resource will be
+                                assigned a DOI and will be permanently published. The resource will become immutable
+                                after being published. However, the owners of this resource can still create new versions
+                                of this resource after it is published. <strong> You must check the checkbox below to agree
+                                to the data publication agreement before you can submit the resource for publication. </strong>
                             </p>
+                            <p>Data publication agreement text to be completed by Dave ..</p>
+                            <input type="checkbox" id="agree-chk">I agree to the data publication agreement above.
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/">Publish</a>
+                            <a type="button" id="publish-btn" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/" disabled>Publish</a>
                         </div>
                     </div>
                 </div>
@@ -3124,6 +3132,9 @@
             }
 
             $(document).ready(function () {
+                $('#submit-for-publication-dialog, [type=checkbox]').click(function() {
+                    $('#submit-for-publication-dialog,#publish-btn').disabled = !this.checked;
+                })
                 $("#btnMyResources").click(label_ajax_submit);
                 $("#coverageTabBtn").click(function(){
                     setTimeout( function(){
