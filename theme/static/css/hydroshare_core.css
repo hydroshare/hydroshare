@@ -3106,23 +3106,20 @@ span.carousel-control-icon {
 
 .steps-container {
     text-align: center;
-    margin-top: -20px;
+    margin-top: -40px;
 }
 
 .step-wrapper {
     padding: 20px;
-    margin-top: 20px;
-    height: 70px;
-    display: inline-block;
+    margin-top: 40px;
 }
 
 .step-item {
 	border: 1px solid #D6D6D6;
-	color: #BABCBE;
     padding: 10px;
-    background: #F7F8F8;
     box-shadow: 0 1px 1px rgba(0,0,0,0.05);
-	cursor: pointer;
+    background: #FFF;
+	color: #4BB5C1;
 }
 
 .step-item:hover {
@@ -3133,9 +3130,8 @@ span.carousel-control-icon {
 	color: #555 !important;
 }
 
-.step-item.active {
-	background: #FFF;
-	color: #4BB5C1;
+.step-item {
+
 }
 
 .step-number {
@@ -3156,9 +3152,9 @@ span.carousel-control-icon {
     margin-bottom: 60px;
 }
 
-div.description {
-    display:none
-}
+/*div.description {*/
+    /*display:none*/
+/*}*/
 
 div.description.active {
     display: block;
@@ -3166,15 +3162,14 @@ div.description.active {
 
 .step-description {
     text-align: center;
-    font-size: 18px;
     color: #666;
     display: table-cell;
-    text-align: center;
     vertical-align: middle;
+    line-height:20px;
 }
 
 .description-container {
-    height: 200px;
+    height: 150px;
     display: table;
 }
 
@@ -3183,7 +3178,7 @@ div.description.active {
 }
 
 .img-step {
-    width: 200px;
-    height: 200px;
+    width: 150px;
+    height: 150px;
     margin: auto;
 }
