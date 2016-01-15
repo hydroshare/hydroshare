@@ -3447,12 +3447,12 @@
                         $(this).closest("form").find("button").show();
                     });
                 });
-                $('.user-webapp-icon').error(function() {
+                $('.user-webapp-icon').on('error', function() {
                     $(this)
                             .attr('src', '{{ STATIC_URL }}img/web-app-default-icon.png')
                             .removeClass('user-webapp-icon')
                             .addClass('default-webapp-icon');
-                })
+                });
 
             });
         </script>
