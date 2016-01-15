@@ -112,7 +112,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         george = self.george
         bikers = self.bikers
         self.assertTrue(match_lists_as_sets(george.uaccess.get_held_groups(), [bikers]))
-		# test_user_delete_group also tests this routine
+        # test_user_delete_group also tests this routine
 
     def test_user_get_owned_groups(self):
         george = self.george
@@ -206,9 +206,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists_as_sets(bikers.gaccess.get_members(), [george]))
         self.assertTrue(george.uaccess.share_group_with_user(bikers, alva, PrivilegeCodes.VIEW))
         self.assertTrue(match_lists_as_sets(bikers.gaccess.get_members(), [george, alva]))
-        self.assertTrue(george.uaccess.undo_share_group_with_user(bikers, alva)) 
-        # print("after undo share, get members is:")
-        # pprint(bikers.gaccess.get_members())
+        self.assertTrue(george.uaccess.undo_share_group_with_user(bikers, alva))
         self.assertTrue(match_lists_as_sets(bikers.gaccess.get_members(), [george]))
 
     def test_user_can_undo_share_group_with_user(self):
@@ -786,7 +784,7 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.john.is_active = True
         self.john.save()
         ## inactive grantor can't grant access
-        # let first grant John access privilege
+        # let's first grant John access privilege
         self.george.uaccess.share_resource_with_user(self.bikes, self.john, PrivilegeCodes.CHANGE)
         self.assertEqual(self.bikes.raccess.get_combined_privilege(self.john), PrivilegeCodes.CHANGE)
         self.assertEqual(self.bikes.raccess.get_effective_privilege(self.john), PrivilegeCodes.CHANGE)
@@ -1047,7 +1045,6 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         holes.raccess.save()
 
         # metadata state
-        # self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -1077,7 +1074,6 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
                                            metadata=[],)
 
         # metadata state
-        # self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -1097,19 +1093,18 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # is it listed as discoverable?
-        # self.assertTrue(match_lists_as_sets([], GenericResource.discoverable_resources.all()))
-        # self.assertTrue(match_lists_as_sets([], GenericResource.public_resources.all()))
+        self.assertTrue(match_lists_as_sets([], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists_as_sets([], GenericResource.public_resources.all()))
 
         # make it discoverable
         holes.raccess.discoverable = True
         holes.raccess.save()
 
         # is it listed as discoverable?
-        # self.assertTrue(match_lists_as_sets([holes], GenericResource.discoverable_resources.all()))
-        # self.assertTrue(match_lists_as_sets([], GenericResource.public_resources.all()))
+        self.assertTrue(match_lists_as_sets([holes], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists_as_sets([], GenericResource.public_resources.all()))
 
         # metadata state
-        # self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertTrue(holes.raccess.discoverable)
@@ -1133,7 +1128,6 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         holes.raccess.save()
 
         # metadata state
-        # self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -1173,7 +1167,6 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
                                            metadata=[],)
 
         # metadata state
-        # self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -1197,7 +1190,6 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         holes.raccess.save()
 
         # metadata state
-        # self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertTrue(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -1232,7 +1224,6 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         holes.raccess.save()
 
         # metadata state
-        # self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -1250,8 +1241,6 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
-
-        # TODO: test get_discoverable_resources and get_public_resources
 
     def test_09_check_flag_public(self):
         """Resource owner can set and reset public flag"""
@@ -1265,7 +1254,6 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
                                            metadata=[],)
 
         # metadata state
-        # self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -1285,19 +1273,18 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # is it listed as discoverable?
-        # self.assertTrue(match_lists_as_sets([], GenericResource.discoverable_resources.all()))
-        # self.assertTrue(match_lists_as_sets([], GenericResource.public_resources.all()))
+        self.assertTrue(match_lists_as_sets([], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists_as_sets([], GenericResource.public_resources.all()))
 
         # make it public
         holes.raccess.public = True
         holes.raccess.save()
 
         # is it listed as discoverable?
-        # self.assertTrue(match_lists_as_sets([holes], GenericResource.discoverable_resources.all()))
-        # self.assertTrue(match_lists_as_sets([holes], GenericResource.public_resources.all()))
+        self.assertTrue(match_lists_as_sets([holes], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists_as_sets([holes], GenericResource.public_resources.all()))
 
         # metadata state
-        # self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -1321,7 +1308,6 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         holes.raccess.save()
 
         # metadata state
-        # self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.immutable)
         self.assertFalse(holes.raccess.published)
         self.assertFalse(holes.raccess.discoverable)
@@ -1404,7 +1390,6 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(arfers.gaccess.get_members().count(), 1)
 
         # metadata state
-        # NOT ACCESS CONTROL: self.assertEqual(arfers.name, 'arfers')
         self.assertTrue(arfers.gaccess.public)
         self.assertTrue(arfers.gaccess.discoverable)
         self.assertTrue(arfers.gaccess.shareable)
@@ -1553,7 +1538,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_unshare_groups(holes)))
         self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_undo_groups(holes)))
 
-        # NOT ACCESS CONTROL: self.assertEqual(holes.metadata.title.value, 'all about dog holes')
+        # metadata state
         self.assertFalse(holes.raccess.public)
         self.assertFalse(holes.raccess.discoverable)
         self.assertFalse(holes.raccess.published)
@@ -1636,7 +1621,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(match_lists_as_sets([], holes.raccess.edit_groups))
 
         self.assertTrue(match_lists_as_sets([cat, dog], cat.uaccess.get_resource_unshare_users(holes)))
-        # the answer to the following should be dog, but cat is self-shared with the resource. Answer is an artifact.
+        # the answer to the following should be dog, but cat is self-shared with the resource. Fixed.
         self.assertTrue(match_lists_as_sets([dog], cat.uaccess.get_resource_undo_users(holes)))
         self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_unshare_groups(holes)))
         self.assertTrue(match_lists_as_sets([], cat.uaccess.get_resource_undo_groups(holes)))
@@ -1706,7 +1691,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # recheck metadata state: should not have changed
-        # NOT ACCESS CONTROL: self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.public)
         self.assertFalse(holes.raccess.discoverable)
         self.assertFalse(holes.raccess.published)
@@ -1834,7 +1818,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # recheck metadata state
-        # NOT ACCESS CONTROL: self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.public)
         self.assertFalse(holes.raccess.discoverable)
         self.assertFalse(holes.raccess.published)
@@ -1920,7 +1903,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # check for idempotence
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
-        # initial state
+
+        # same state
         self.assertTrue(match_lists_as_sets([cat], holes.raccess.get_owners()))
         self.assertTrue(match_lists_as_sets([cat, dog], holes.raccess.get_holding_users()))
         self.assertTrue(match_lists_as_sets([], holes.raccess.get_holding_groups()))
@@ -1955,7 +1939,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # recheck metadata state
-        # NOT ACCESS CONTROL: self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.public)
         self.assertFalse(holes.raccess.discoverable)
         self.assertFalse(holes.raccess.published)
@@ -1963,7 +1946,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(holes.raccess.shareable)
 
         # ensure that nothing changed
-        # NOT ACCESS CONTROL: self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.public)
         self.assertFalse(holes.raccess.discoverable)
         self.assertFalse(holes.raccess.published)
@@ -2043,7 +2025,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # metadata state
-        # NOT ACCESS CONTROL: self.assertEqual(holes.metadata.title.value, 'all about dog holes')
         self.assertFalse(holes.raccess.public)
         self.assertFalse(holes.raccess.discoverable)
         self.assertFalse(holes.raccess.published)
@@ -2235,6 +2216,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_group(meowers))
         self.assertTrue(cat.uaccess.can_change_group(meowers))
         self.assertTrue(cat.uaccess.can_view_group(meowers))
+
         # composite django state
         self.assertTrue(cat.uaccess.can_change_group_flags(meowers))
         self.assertTrue(cat.uaccess.can_delete_group(meowers))
@@ -2323,7 +2305,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_group(meowers, PrivilegeCodes.VIEW))
 
         # recheck metadata state: should not have changed
-        # NOT ACCESS CONTROL: self.assertEqual(meowers.name, 'some random meowers')
         self.assertTrue(meowers.gaccess.public)
         self.assertTrue(meowers.gaccess.discoverable)
         self.assertTrue(meowers.gaccess.shareable)
@@ -2445,7 +2426,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_group(meowers, PrivilegeCodes.VIEW))
 
         # recheck metadata state
-        # NOT ACCESS CONTROL: self.assertEqual(meowers.name, 'some random meowers')
         self.assertTrue(meowers.gaccess.public)
         self.assertTrue(meowers.gaccess.discoverable)
         self.assertTrue(meowers.gaccess.shareable)
@@ -2563,7 +2543,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_group(meowers, PrivilegeCodes.VIEW))
 
         # recheck metadata state
-        # NOT ACCESS CONTROL: self.assertEqual(meowers.name, 'some random meowers')
         self.assertTrue(meowers.gaccess.public)
         self.assertTrue(meowers.gaccess.discoverable)
         self.assertTrue(meowers.gaccess.shareable)
@@ -2641,7 +2620,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_group(meowers, PrivilegeCodes.VIEW))
 
         # metadata state
-        # NOT ACCESS CONTROL: self.assertEqual(meowers.name, 'some random meowers')
         self.assertTrue(meowers.gaccess.public)
         self.assertTrue(meowers.gaccess.discoverable)
         self.assertTrue(meowers.gaccess.shareable)
@@ -3176,7 +3154,6 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         dog.uaccess.share_resource_with_user(bones, cat, PrivilegeCodes.VIEW)
 
         # cat should not be able to reshare
-
         with self.assertRaises(PermissionDenied) as cm:
             cat.uaccess.share_resource_with_user(bones, bat, PrivilegeCodes.VIEW)
         self.assertEqual(cm.exception.message, 'User must own resource or have sharing privilege')
@@ -3223,7 +3200,7 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(bones.raccess.discoverable)
         self.assertTrue(bones.raccess.shareable)
 
-        # self.assertTrue(match_lists_as_sets([bones], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists_as_sets([bones], GenericResource.discoverable_resources.all()))
 
     def test_06_not_discoverable(self):
         """Resource can be made not discoverable and not public"""
@@ -3239,8 +3216,8 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(bones.raccess.discoverable)
         self.assertTrue(bones.raccess.shareable)
 
-        # names = GenericResource.discoverable_resources.all()
-        # self.assertEqual(names.count(), 0)
+        names = GenericResource.discoverable_resources.all()
+        self.assertEqual(names.count(), 0)
 
     def test_07_immutable(self):
         """An immutable resource cannot be changed"""
@@ -3291,7 +3268,6 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         chewies = self.chewies
         dog = self.dog
         nobody = self.nobody
-        # test making a resource public
 
         self.assertFalse(chewies.raccess.immutable)
         self.assertFalse(chewies.raccess.public)
@@ -3308,8 +3284,8 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(chewies.raccess.discoverable)
         self.assertTrue(chewies.raccess.shareable)
 
-        # self.assertTrue(match_lists_as_sets([chewies], GenericResource.public_resources.all()))
-        # self.assertTrue(match_lists_as_sets([chewies], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists_as_sets([chewies], GenericResource.public_resources.all()))
+        self.assertTrue(match_lists_as_sets([chewies], GenericResource.discoverable_resources.all()))
 
         # can 'nobody' see the public resource owned by 'dog'
         # but not explicitly shared with 'nobody'.
@@ -3340,24 +3316,24 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
 
         # discoverable doesn't mean public
         # TODO: get_public_resources and get_discoverable_resources should be static methods
-        # self.assertTrue(match_lists_as_sets([], GenericResource.public_resources.all()))
-        # self.assertTrue(match_lists_as_sets([chewies], GenericResource.discoverable_resources.all()))
+        self.assertTrue(match_lists_as_sets([], GenericResource.public_resources.all()))
+        self.assertTrue(match_lists_as_sets([chewies], GenericResource.discoverable_resources.all()))
 
         # can 'nobody' see the public resource owned by 'dog' but not explicitly shared with 'nobody'.
         self.assertFalse(nobody.uaccess.owns_resource(chewies))
         self.assertFalse(nobody.uaccess.can_change_resource(chewies))
         self.assertFalse(nobody.uaccess.can_view_resource(chewies))
 
-    # def test_09_retract(self):
-    #     """Retracted resources cannot be accessed"""
-    #     chewies = self.chewies
-    #
-    #     # test whether we can retract a resource
-    #     resource_short_id = chewies.short_id
-    #     hydroshare.delete_resource(chewies.short_id)
-    #
-    #     with self.assertRaises(Http404):
-    #         hydroshare.get_resource(resource_short_id)
+    def test_09_retract(self):
+        """Retracted resources cannot be accessed"""
+        chewies = self.chewies
+
+        # test whether we can retract a resource
+        resource_short_id = chewies.short_id
+        hydroshare.delete_resource(chewies.short_id)
+
+        with self.assertRaises(Http404):
+            hydroshare.get_resource(resource_short_id)
 
 
 class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
@@ -4257,7 +4233,6 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied): 
             foo = cat.uaccess.get_resource_unshare_groups(scratching)
 
-
     def test_01_reporting(self):
         """User records disappear when user is inactive"""
         scratching = self.scratching
@@ -4269,11 +4244,7 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_group_with_user(felines, dog, PrivilegeCodes.OWNER) 
 
         self.assertTrue(match_lists_as_sets(cat.uaccess.get_group_unshare_users(felines), [cat, dog]))
-        # print("group undo users are:")
-        # pprint(cat.uaccess.get_group_undo_users(felines))
         self.assertTrue(match_lists_as_sets(cat.uaccess.get_group_undo_users(felines), [dog]))
-        # print("resource undo users are:")
-        # pprint(cat.uaccess.get_resource_undo_users(scratching))
         self.assertTrue(match_lists_as_sets(cat.uaccess.get_resource_undo_users(scratching), [dog]))
         self.assertTrue(match_lists_as_sets(cat.uaccess.get_resource_unshare_users(scratching), [cat, dog]))
 
