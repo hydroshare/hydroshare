@@ -2435,8 +2435,11 @@ table.overview tr > td:first-child {
 }
 
 .table-res-type-icon {
-	background-color: #FFF;
-	box-shadow: 0 0 5px #ddd;
+    background-color: #FFF;
+    border: 1px solid #ddd;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
 }
 
 .table-user-contributions tbody > tr > td {
@@ -3006,7 +3009,7 @@ span.carousel-control-icon {
 }
 
 .img-home-art {
-	max-height: 250px;
+	max-height: 200px;
 	margin: auto;
 	display: block;
 }
@@ -3014,7 +3017,7 @@ span.carousel-control-icon {
 .screen-sizes {
     background: url(../img/graypattern.jpg);
 	background-color: #BBB;
-	padding: 50px 0;
+	padding: 20px 0;
 	margin:25px 0;
 	margin-top: 30px;
     margin-bottom: -60px;
@@ -3165,13 +3168,22 @@ div.description.active {
     text-align: center;
     font-size: 18px;
     color: #666;
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .description-container {
-    text-align: center;
-    margin-top: 15%;
+    height: 200px;
+    display: table;
 }
 
 .home-page-block-title {
     color: #4BB5C1;
+}
+
+.img-step {
+    width: 200px;
+    height: 200px;
+    margin: auto;
 }
