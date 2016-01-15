@@ -57,16 +57,31 @@ class TestResourceList(APITestCase):
                                            files=(raster,))
         geo_pid = geo_res.short_id
 
+        app_res = resource.create_resource('ToolResource',
+                                           self.user,
+                                           'My Test App Resource')
+        app_pid = app_res.short_id
+
         response = self.client.get('/hsapi/resourceList/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
-        self.assertEqual(content['count'], 2)
+        self.assertEqual(content['count'], 3)
         self.assertEqual(content['results'][0]['resource_id'], gen_pid)
         self.assertEqual(content['results'][1]['resource_id'], geo_pid)
+        self.assertEqual(content['results'][2]['resource_id'], app_pid)
 
-        # Filter by type
+        # Filter by type (single)
         response = self.client.get('/hsapi/resourceList/', {'type': 'RasterResource'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 1)
         self.assertEqual(content['results'][0]['resource_id'], geo_pid)
+
+        # Filter by type (multiple)
+        response = self.client.get('/hsapi/resourceList/', {'type': ['RasterResource', 'ToolResource']},
+                                   format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 2)
+        self.assertEqual(content['results'][0]['resource_id'], geo_pid)
+        self.assertEqual(content['results'][1]['resource_id'], app_pid)
