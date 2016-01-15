@@ -1587,11 +1587,12 @@
                             <div class="tab-pane" id="relevantTools">
                             {% if not metadata_form %}
                                 {% for tool in relevant_tools %}
-                                    <div style="display:inline-block; padding-left:20px; text-align:center;">
+                                    <a href="{{ tool.url }}" target="_blank">
+                                    <div id="web-app-item">
                                         <h4>{{ tool.title }}</h4>
-                                        <a href="{{ tool.url }}" target="_blank"><img src="{{ tool.icon }}" style="width:100px; height:100px;"
-                                             onerror="this.src = '{{ STATIC_URL }}img/web-app-default-icon.png';"/></a>
+                                        <img class="user-webapp-icon" src="{{ tool.icon }}">
                                     </div>
+                                    </a>
                                 {% endfor %}
                             {% else %}
                                 ------- Relevant tools form here -------
@@ -3446,10 +3447,21 @@
                         $(this).closest("form").find("button").show();
                     });
                 });
+                $('.user-webapp-icon').error(function() {
+                    $(this)
+                            .attr('src', '{{ STATIC_URL }}img/web-app-default-icon.png')
+                            .removeClass('user-webapp-icon')
+                            .addClass('default-webapp-icon');
+                })
 
             });
         </script>
     {% endblock %}
     <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=drawing&callback=initMap"></script>
+
+    {% block extra_css %}
+        {{ block.super }}
+        <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+    {%  endblock %}
 
 {% endblock %}

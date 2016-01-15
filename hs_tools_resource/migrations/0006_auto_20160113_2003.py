@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('contenttypes', '0001_initial'),
-        ('hs_tools_resource', '0004_auto_20151204_2301'),
+        ('hs_tools_resource', '0005_remove_requesturlbase_resshortid'),
     ]
 
     operations = [
