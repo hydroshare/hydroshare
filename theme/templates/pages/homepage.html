@@ -123,11 +123,11 @@
             </div>
         </div>
 
-        <div class="container slideInBlock">
+        <div class="container">
             <h2 class="home-page-block-title">How it works</h2>
             <div class="row home-page-block">
                 <div class="steps-container">
-                    <div class="col-xs-12 col-sm-3 step-wrapper">
+                    <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
                         <div class="step-item">
                             <div class="step-number">1</div>
                             <span class="carousel-control-icon glyphicon glyphicon-plus"></span>
@@ -139,13 +139,12 @@
                             </div>
                         </div>
                         <div>
-                            <div style="background-image: url('{{ STATIC_URL }}img/home-page/step1.jpg');"
-                                 class="round-image img-step">
-                            </div>
+                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step1.png"
+                                 alt="Create data">
                         </div>
                     </div>
 
-                    <div class="col-xs-12 col-sm-3 step-wrapper">
+                    <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
                         <div class="step-item">
                             <div class="step-number">2</div>
                             <span class="carousel-control-icon glyphicon glyphicon-upload"></span>
@@ -157,12 +156,12 @@
                             </div>
                         </div>
                         <div>
-                            <img class="img-responsive img-home-art" src="{{ STATIC_URL }}img/home-page/step2.png"
+                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step2.png"
                                  alt="Create data">
                         </div>
                     </div>
 
-                    <div class="col-xs-12 col-sm-3 step-wrapper">
+                    <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
                         <div class="step-item">
                             <div class="step-number">3</div>
                             <span class="carousel-control-icon glyphicon glyphicon-pencil"></span>
@@ -174,12 +173,12 @@
                             </div>
                         </div>
                         <div>
-                            <img class="img-responsive img-home-art" src="{{ STATIC_URL }}img/home-page/step3.png"
+                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step3.png"
                                  alt="Create data">
                         </div>
                     </div>
 
-                    <div class="col-xs-12 col-sm-3 step-wrapper">
+                    <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
                         <div class="step-item">
                             <div class="step-number">4</div>
                             <span class="carousel-control-icon glyphicon glyphicon-share"></span>
@@ -192,7 +191,7 @@
                             </div>
                         </div>
                         <div>
-                            <img class="img-responsive img-home-art" src="{{ STATIC_URL }}img/home-page/step4.png"
+                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step4.png"
                                  alt="Create data">
                         </div>
                     </div>
@@ -250,7 +249,7 @@
             var win = $(window);
             var allMods = $(".slideInBlock");
 
-// Already visible modules
+            // Already visible modules
             allMods.each(function (i, el) {
                 var el = $(el);
                 if (el.visible(true)) {
