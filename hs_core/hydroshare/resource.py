@@ -1,5 +1,7 @@
 ### resource API
 import os
+import zipfile
+import tempfile
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
@@ -18,6 +20,14 @@ from hs_labels.models import ResourceLabels
 
 file_size_limit = 10*(1024 ** 3)
 file_size_limit_for_display = '10G'
+
+
+def TempFileList(object):
+    def __init__(self, temp_dir):
+        self.temp_dir = temp_dir
+
+    def get_files(self):
+        pass
 
 
 def get_resource(pk):
@@ -305,7 +315,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, content=None,
-        files=(), res_type_cls=None, resource=None, **kwargs):
+        files=(), res_type_cls=None, resource=None, unpack_file=False, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
     HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method
@@ -347,6 +357,8 @@ def create_resource(
     :param keywords: string list. list of keywords to add to the resource
     :param metadata: list of dicts containing keys (element names) and corresponding values as dicts { 'creator': {'name':'John Smith'}}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
+    :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
+    the unpacked contents of the zip file will be added to the resource instead of the zip file.
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
     :return: a new resource which is an instance of resource_type.
@@ -375,6 +387,19 @@ def create_resource(
 
         if not metadata:
             metadata = []
+
+        if len(files) == 1:
+            if unpack_file and zipfile.is_zipfile(files[0]):
+                try:
+                    tmp_dir = tempfile.mkdtemp()
+                    zfile = zipfile.ZipFile(files[0])
+                    zfile.extractall(tmp_dir)
+
+
+                except:
+                    pass
+                finally:
+                    pass
 
         add_resource_files(resource.short_id, *files)
 
