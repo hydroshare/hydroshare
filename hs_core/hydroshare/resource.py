@@ -3,7 +3,6 @@ import os
 import zipfile
 import tempfile
 import shutil
-import logging
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
@@ -24,29 +23,13 @@ file_size_limit = 10*(1024 ** 3)
 file_size_limit_for_display = '10G'
 
 
-class ZipContents(object):
-    def __init__(self, zip_file):
-        self.zip_file = zip_file
-
-    def black_list(self, f_name):
-        return f_name.startswith('__MACOSX/')
+def TempFileList(object):
+    def __init__(self, temp_dir):
+        self.temp_dir = temp_dir
 
     def get_files(self):
-        logger = logging.getLogger('django')
-        temp_dir = tempfile.mkdtemp()
-        try:
-            for name_path in self.zip_file.namelist():
-                if not self.black_list(name_path):
-                    logger.debug(name_path)
-                    name = os.path.basename(name_path)
-                    if name != '':
-                        self.zip_file.extract(name_path, temp_dir)
-                        file_path = os.path.join(temp_dir, name_path)
-                        f = UploadedFile(file=open(file_path, 'rb'),
-                                         name=name, size=os.stat(file_path).st_size)
-                        yield f
-        finally:
-            shutil.rmtree(temp_dir)
+        pass
+
 
 def get_resource(pk):
     """
@@ -333,7 +316,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, content=None,
-        files=(), res_type_cls=None, resource=None, unpack_file=True, **kwargs):
+        files=(), res_type_cls=None, resource=None, unpack_file=False, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
     HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method
@@ -411,13 +394,15 @@ def create_resource(
                 try:
                     tmp_dir = tempfile.mkdtemp()
                     zfile = zipfile.ZipFile(files[0])
-                    zcontents = ZipContents(zfile)
-                    files = zcontents.get_files()
-                except Exception as e:
-                    zfile.close()
-                    raise e
+                    zfile.extractall(tmp_dir)
 
-        add_resource_files(resource.short_id, files)
+
+                except:
+                    pass
+                finally:
+                    pass
+
+        add_resource_files(resource.short_id, *files)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
