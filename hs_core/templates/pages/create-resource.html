@@ -77,20 +77,23 @@
             </tr>
             <tr>
                 <td>
-                    If you want to load files from an iRODS server into HydroShare, please do so by logging into the iRODS server
-                    <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal" data-target="#irodsSignin">here.</a>
-                    <span id="sign-in-info"></span>
-                    <br>
+                    <span id="log-into-irods">
+                        To load files from an iRODS server,
+                        <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal" data-target="#irodsSignin">log in to iRODS</a>
+                        <span id="sign-in-info"></span>
+                        <br>
+                    </span>
                     <input type="hidden" id="irods-username" name="irods-username" value="">
                     <input type="hidden" id="irods-password" name="irods-password" value="">
                     <input type="hidden" id="irods-host" name="irods-host" value="">
                     <input type="hidden" id="irods-port" name="irods-port" value="">
                     <input type="hidden" id="irods-zone" name="irods-zone" value="">
                     <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
-                    <a id="btn-select-irods-file"  type="button" class="btn btn-default" data-toggle="modal" data-target="#irodsContent" style="display: none">
+                    <a id="btn-select-irods-file"  type="button" class="btn btn-default row-selector hidden-form" data-toggle="modal" data-target="#irodsContent" >
                         Browse iRODS...
                     </a>
                     <span id="irods-sel-file"></span>
+                    <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of iRODS</a>
                 </td>
             </tr>
         </tbody>
