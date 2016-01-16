@@ -3026,9 +3026,9 @@ span.carousel-control-icon {
 
 .screen-sizes h2 {
     font-family: 'webfont_light', Helvetica, Arial, sans-serif;
-    color: #5A5A5A;
+    color: #777;
     padding: 50px 0;
-    text-shadow: 1px 1px #E0E0E0;
+    text-shadow: 0 1px rgba(255, 255, 255, 0.6);
 }
 
 .btn-signup {
@@ -3142,7 +3142,6 @@ span.carousel-control-icon {
     background: #FFF;
     border-radius: 50%;
     padding-top: 4px;
-    box-shadow: 1px 1px 5px #DDD;
     color: #000;
     left: 6px;
     top: 50px;
