@@ -60,12 +60,10 @@ class TestCoreMetadata(TestCase):
         Language.objects.all().delete()
 
     def test_auto_element_creation(self):
-        # this test will pass only if are adding the relevant metadata elements
-        # in the resource post-save signal handler
-        # all these will fail as these elements are not being created in the resource creation signal handler yet
+        # The following metadata elements are automatically generated upon resource creation
+
         self.assertEqual(self.res.metadata.title.value, 'Generic resource', msg='resource title did not match')
 
-        #self.assertNotEqual(self.res.metadata.description, None, msg="resource abstract doesn't exist")
         # number of creators at this point should be 1
         self.assertEqual(self.res.metadata.creators.all().count(), 1, msg='Number of creators not equal to 1')
 
@@ -88,10 +86,31 @@ class TestCoreMetadata(TestCase):
         self.assertIn('kw2', [sub.value for sub in self.res.metadata.subjects.all()],
                       msg="Subject value 'kw2' was not found.")
 
-        # TODO: there should be a resource 'Type' element - can't test this until we have an url for resource
-        # type description.
-        #type_url = '{0}/terms/{1}'.format(hydroshare.utils.current_site_url(), 'GenericResource')
-        #self.assertEqual(self.res.metadata.type.url, type_url, msg='type element url is wrong')
+        # 'Type' element should have been created
+        type_url = '{0}/terms/{1}'.format(hydroshare.utils.current_site_url(), 'GenericResource')
+        self.assertEqual(self.res.metadata.type.url, type_url, msg='type element url is wrong')
+
+        # Language element should have been created
+        self.assertNotEqual(self.res.metadata.language, None, msg="Resource has no language element.")
+
+        # the default language should be english
+        self.assertEqual(self.res.metadata.language.code, 'eng', msg="Resource has language element which is not "
+                                                                     "English.")
+        # By default a resource should have the rights element
+        self.assertNotEqual(self.res.metadata.rights, None, msg="Resource has no rights element.")
+
+        default_rights_statement = 'This resource is shared under the Creative Commons Attribution CC BY.'
+        default_rights_url = 'http://creativecommons.org/licenses/by/4.0/'
+        self.assertEqual(self.res.metadata.rights.statement,
+                         default_rights_statement, msg="Rights statement didn't match")
+        self.assertEqual(self.res.metadata.rights.url, default_rights_url, msg="URL of rights did not match.")
+
+        # test that when a resource is created it already generates the 'created' and 'modified' date elements
+        self.assertEqual(self.res.metadata.dates.all().count(), 2, msg="Number of date elements not equal to 2.")
+        self.assertIn('created', [dt.type for dt in self.res.metadata.dates.all()],
+                      msg="Date element type 'Created' does not exist")
+        self.assertIn('modified', [dt.type for dt in self.res.metadata.dates.all()],
+                      msg="Date element type 'Modified' does not exist")
 
     def test_title_create(self):
         # this test will pass only if have added the title element for the resource
@@ -417,8 +436,6 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total overages not equal 2.")
 
     def test_date(self):
-        # this test will pass only if we have added the creation and modified dates for the resource
-        # in the resource post-save signal handler
         # test that when a resource is created it already generates the 'created' and 'modified' date elements
         self.assertEqual(self.res.metadata.dates.all().count(), 2, msg="Number of date elements not equal to 2.")
         self.assertIn('created', [dt.type for dt in self.res.metadata.dates.all()],
@@ -526,7 +543,7 @@ class TestCoreMetadata(TestCase):
         # trying to delete date type 'modified' should raise exception
         dt_modified = self.res.metadata.dates.all().filter(type='modified').first()
         self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id,'date',
-                                                                               dt_modified.id))
+                                                                              dt_modified.id))
 
         # trying to delete date type 'published' should work
         dt_published = self.res.metadata.dates.all().filter(type='published').first()
@@ -682,10 +699,6 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(self.res.metadata.language.code, 'eng', msg="Resource has language element which is not "
                                                                      "English.")
 
-        # add a language element
-        #resource.create_metadata_element(self.res.short_id,'language', code='eng')
-        #self.assertEqual(self.res.metadata.language.code, 'eng', msg="Resource has a language that is not English.")
-
         # no more than one language element per resource - raises exception
         self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'language', code='fre'))
 
@@ -698,6 +711,7 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(self.res.metadata.language, None, msg="Resource has a language element.")
 
     def test_publisher(self):
+        # TODO: This needs fix (PK 1-16/2016)
         if not self.res.metadata.publisher:
             # publisher element can't be added when the resource is not shared
             self.res.raccess.public = False
@@ -990,11 +1004,11 @@ class TestCoreMetadata(TestCase):
         self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id, 'subject', sub_2.id))
 
     def test_type(self):
-        # type element should be auto created at the resource creation
-        if not self.res.metadata.type:
-            resource.create_metadata_element(self.res.short_id, 'type', url="http://hydroshare.org/genericResource")
-            self.assertEqual(self.res.metadata.type.url, "http://hydroshare.org/genericResource",
-                             msg="Resource type url did not match.")
+        # type element should be auto created at the resource creation (see test_auto_element_creation)
+        # if not self.res.metadata.type:
+        #     resource.create_metadata_element(self.res.short_id, 'type', url="http://hydroshare.org/genericResource")
+        #     self.assertEqual(self.res.metadata.type.url, "http://hydroshare.org/genericResource",
+        #                      msg="Resource type url did not match.")
 
         # adding a 2nd type element should raise exception
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'type',
@@ -1074,7 +1088,7 @@ class TestCoreMetadata(TestCase):
         #               'elevation': '34.6789', 'zunits': 'rad deg', 'projection': 'NAD83'}
         # self.res.metadata.create_element('coverage', type='point', value=value_dict)
 
-        # TODO: test box type coverage - uncommet this one and comment the above point type test
+        # TODO: test box type coverage - uncomment this one and comment the above point type test
         value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789',
                       'units': 'decimal deg','name': 'Bear river', 'uplimit': '45.234', 'downlimit': '12.345',
                       'zunits': 'decimal deg', 'projection': 'NAD83'}
