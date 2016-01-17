@@ -604,7 +604,7 @@ class TestCoreMetadata(TestCase):
         # test that it possible to update an existing format value
         fmt_element = self.res.metadata.formats.all().filter(value__iexact=format_csv).first()
         format_CSV = 'csv/text'
-        resource.update_metadata_element(self.res.short_id,'format', fmt_element.id, value=format_CSV)
+        resource.update_metadata_element(self.res.short_id, 'format', fmt_element.id, value=format_CSV)
         fmt_element = self.res.metadata.formats.all().filter(value__iexact=format_CSV).first()
         self.assertEqual(fmt_element.value, format_CSV)
 
@@ -616,6 +616,63 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(self.res.metadata.formats.all().count(), 0, msg="Number of format elements not equal to 0.")
 
         # TODO: test a format element is created automatically if a resource is created with content files
+
+    def test_auto_format_element_creation(self):
+        # when a resource is created with content file(s), one ore more format elements are created automatically
+
+        # create a file that will be used for creating a resource
+        res_file_1 = "file_one.txt"
+        open(res_file_1, "w").close()
+
+        # open the file for read
+        file_obj_1 = open(res_file_1, "r")
+        res = hydroshare.create_resource(resource_type='GenericResource',
+                                         owner=self.user,
+                                         title='Generic resource',
+                                         files=(file_obj_1,)
+                                        )
+        format_CSV = 'text/plain'
+        # there should be only one format element at this point
+        self.assertEquals(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
+        fmt_element = res.metadata.formats.all().first()
+        self.assertEqual(fmt_element.value, format_CSV)
+
+        # test adding more files of same mime type creates only one format element
+        res_file_2 = "file_two.txt"
+        open(res_file_2, "w").close()
+
+        # open the file for read
+        file_obj_2 = open(res_file_2, "r")
+        res = hydroshare.create_resource(resource_type='GenericResource',
+                                         owner=self.user,
+                                         title='Generic resource',
+                                         files=(file_obj_1, file_obj_2)
+                                        )
+
+        # there should be only one format element at this point
+        self.assertEquals(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
+        fmt_element = res.metadata.formats.all().first()
+        self.assertEqual(fmt_element.value, format_CSV)
+
+        # test adding files of different mime types creates one format element for each mime type
+        res_file_3 = "file_three.tif"
+        open(res_file_3, "w").close()
+
+        # open the file for read
+        file_obj_3 = open(res_file_3, "r")
+        res = hydroshare.create_resource(resource_type='GenericResource',
+                                         owner=self.user,
+                                         title='Generic resource',
+                                         files=(file_obj_1, file_obj_3)
+                                        )
+        # there should be two format elements at this point
+        self.assertEquals(res.metadata.formats.all().count(), 2, msg="Number of format elements is not equal to 2")
+        fmt_element = res.metadata.formats.all().filter(value__iexact=format_CSV).first()
+        self.assertEqual(fmt_element.value, format_CSV)
+
+        format_tif = "image/tiff"
+        fmt_element = res.metadata.formats.all().filter(value__iexact=format_tif).first()
+        self.assertEqual(fmt_element.value, format_tif)
 
     def test_identifier(self):
         # when a resource is created there should be one identifier element
