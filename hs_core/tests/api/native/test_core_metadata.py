@@ -113,15 +113,11 @@ class TestCoreMetadata(TestCase):
                       msg="Date element type 'Modified' does not exist")
 
     def test_title_create(self):
-        # this test will pass only if have added the title element for the resource
-        # in the resource post-save signal handler
         # trying to create a title element for a resource should raise an exception
-        self.assertRaises(Exception, lambda :resource.create_metadata_element(self.res.short_id,'title',
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'title',
                                                                               value='new resource'))
 
     def test_creator(self):
-        # this test will pass only if we have added the first creator for the resource
-        # in the resource post-save signal handler
         # add a creator element
         resource.create_metadata_element(self.res.short_id,'creator', name='John Smith')
 
@@ -140,7 +136,7 @@ class TestCoreMetadata(TestCase):
         self.assertIn('jsmith@gmail.com', [cr.email for cr in self.res.metadata.creators.all()],
                       msg="Creator 'John Smith' email was not found")
 
-        #test adding a creators with all sub_elements
+        # test adding a creator with all sub-elements
         cr_name = 'Mike Sundar'
         cr_des = 'http://hydroshare.org/user/001'
         cr_org = "USU"
@@ -150,14 +146,14 @@ class TestCoreMetadata(TestCase):
         cr_homepage = 'http://usu.edu/homepage/001'
 
         resource.create_metadata_element(self.res.short_id,'creator',
-                                name=cr_name,
-                                description=cr_des,
-                                organization=cr_org,
-                                email=cr_email,
-                                address=cr_address,
-                                phone=cr_phone,
-                                homepage=cr_homepage,
-                                )
+                                         name=cr_name,
+                                         description=cr_des,
+                                         organization=cr_org,
+                                         email=cr_email,
+                                         address=cr_address,
+                                         phone=cr_phone,
+                                         homepage=cr_homepage,
+                                        )
 
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
         self.assertNotEqual(cr_mike, None, msg='Creator Mike was not found')
@@ -187,7 +183,7 @@ class TestCoreMetadata(TestCase):
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
         self.assertEqual(cr_mike.homepage, None)
 
-        #test that the resource must have at least one creator - trying to delete the last creator should fail
+        # test that the resource must have at least one creator - trying to delete the last creator should fail
         # delete John
         resource.delete_metadata_element(self.res.short_id, 'creator', cr_john.id )
         self.assertEqual(Creator.objects.filter(id=cr_john.id).first(), None)
@@ -220,7 +216,7 @@ class TestCoreMetadata(TestCase):
         self.assertIn('jsmith@gmail.com', [con.email for con in self.res.metadata.contributors.all()],
                       msg="Contributor 'John Smith' email was not found")
 
-        #test adding a contributor with all sub_elements
+        # test adding a contributor with all sub_elements
         con_name = 'Mike Sundar'
         con_des = 'http://hydroshare.org/user/001'
         con_org = "USU"
@@ -229,14 +225,14 @@ class TestCoreMetadata(TestCase):
         con_phone = '435-567-0989'
         con_homepage = 'http://usu.edu/homepage/001'
         resource.create_metadata_element(self.res.short_id,'contributor',
-                                name=con_name,
-                                description=con_des,
-                                organization=con_org,
-                                email=con_email,
-                                address=con_address,
-                                phone=con_phone,
-                                homepage=con_homepage,
-                                )
+                                         name=con_name,
+                                         description=con_des,
+                                         organization=con_org,
+                                         email=con_email,
+                                         address=con_address,
+                                         phone=con_phone,
+                                         homepage=con_homepage,
+                                        )
 
         # number of contributors at this point should be 2
         self.assertEqual(self.res.metadata.contributors.all().count(), 2, msg='Number of contributors not equal to 2')
@@ -261,7 +257,7 @@ class TestCoreMetadata(TestCase):
         con_mike = self.res.metadata.contributors.all().filter(email=con_email).first()
         self.assertEqual(con_mike.homepage, None)
 
-        #test that all resource contributors can be deleted
+        # test that all resource contributors can be deleted
         # delete John
         resource.delete_metadata_element(self.res.short_id, 'contributor', con_john.id )
         self.assertEqual(Contributor.objects.filter(id=con_john.id).first(), None)
@@ -350,13 +346,13 @@ class TestCoreMetadata(TestCase):
                       msg="Contributor 'Lisa' does not have link url: 'http://usu.edu/profile/LH001'")
 
     def test_title(self):
-        # test a 2nd title can't be added
-        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'title',
-                                                                               value="another title"))
+        # test that a 2nd title can't be added
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'title',
+                                                                              value="another title"))
 
         # test that the existing title can't be deleted
-        self.assertRaises(Exception, lambda : resource.delete_metadata_element(self.res.short_id,'title',
-                                                                               self.res.metadata.title.id))
+        self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id,'title',
+                                                                              self.res.metadata.title.id))
 
         # test that title can be updated
         resource.update_metadata_element(self.res.short_id,'title', self.res.metadata.title.id, value="another title")
@@ -416,7 +412,7 @@ class TestCoreMetadata(TestCase):
         self.assertRaises(Exception, lambda : resource.delete_metadata_element(self.res.short_id, 'coverage',
                                                                                cov_pt.id ))
 
-        #change the point coverage to type box
+        # change the point coverage to type box
         value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789',
                       'units':'decimal deg' }
         resource.update_metadata_element(self.res.short_id,'coverage', cov_pt.id, type='box', value=value_dict)
@@ -444,19 +440,20 @@ class TestCoreMetadata(TestCase):
                       msg="Date element type 'Modified' does not exist")
 
         # add another date of type 'created' - which should raise an exception
-        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'date',
-                                                                               type='created',
-                                                                               start_date=parser.parse("8/10/2014")))
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'date',
+                                                                              type='created',
+                                                                              start_date=parser.parse("8/10/2014")))
 
         # add another date of type 'modified' - which should raise an exception
-        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'date',
-                                                                               type='modified',
-                                                                               start_date=parser.parse("8/10/2014")))
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'date',
+                                                                              type='modified',
+                                                                              start_date=parser.parse("8/10/2014")))
 
-        # add another date of type 'published' - which should raise an exception since the resource is not yet published.
-        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'date',
-                                                                               type='published',
-                                                                               start_date=parser.parse("8/10/2014")))
+        # add another date of type 'published' - which should raise an exception since the resource is not yet
+        # published.
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'date',
+                                                                              type='published',
+                                                                              start_date=parser.parse("8/10/2014")))
 
         # make the resource published and then add the date type published - which should work
         self.res.raccess.published = True
@@ -480,7 +477,7 @@ class TestCoreMetadata(TestCase):
                       msg="Date element type 'Available' does not exist")
 
         # add date type 'valid' - it seems there is no restriction for this date type
-        resource.create_metadata_element(self.res.short_id,'date', type='valid', start_date=parser.parse("8/10/2014"))
+        resource.create_metadata_element(self.res.short_id, 'date', type='valid', start_date=parser.parse("8/10/2014"))
         self.assertIn('valid', [dt.type for dt in self.res.metadata.dates.all()],
                       msg="Date element type 'Valid' does not exist")
 
@@ -559,10 +556,10 @@ class TestCoreMetadata(TestCase):
 
     def test_description(self):
 
-        # test that the resource metadata doesnot contain abstract
+        # test that the resource metadata does not contain abstract
         self.assertEqual(self.res.metadata.description, None, msg='Abstract exists for the resource')
 
-        # create a abstarct for the resource
+        # create a abstract for the resource
         resource.create_metadata_element(self.res.short_id,'description', abstract='new abstract for the resource')
 
         # update the abstract
@@ -579,19 +576,21 @@ class TestCoreMetadata(TestCase):
                                                                               self.res.metadata.description.id))
 
     def test_format(self):
-        # when the resource is created there should not be any formats elements associated with it
+        # when a resource is created with no content files, there should not be any formats elements
+        # associated with it
         self.assertEqual(self.res.metadata.formats.all().count(), 0, msg="Number of format elements not equal to 0.")
 
         # add a format element
         format_csv = 'text/csv'
-        resource.create_metadata_element(self.res.short_id,'format', value=format_csv)
+        resource.create_metadata_element(self.res.short_id, 'format', value=format_csv)
         self.assertEqual(self.res.metadata.formats.all().count(), 1, msg="Number of format elements not equal to 1.")
         self.assertIn(format_csv, [fmt.value for fmt in self.res.metadata.formats.all()],
                       msg="Format element with value of %s does not exist." % format_csv)
 
         # duplicate formats are not allowed - exception is thrown
         format_CSV = 'text/csv'
-        self.assertRaises(Exception, lambda :resource.create_metadata_element(self.res.short_id,'format', value=format_CSV))
+        self.assertRaises(Exception, lambda:resource.create_metadata_element(self.res.short_id,'format',
+                                                                             value=format_CSV))
 
         # test that a resource can have multiple formats
         format_zip = 'zip'
@@ -616,15 +615,16 @@ class TestCoreMetadata(TestCase):
         # there should not be any format elements at this point
         self.assertEqual(self.res.metadata.formats.all().count(), 0, msg="Number of format elements not equal to 0.")
 
+        # TODO: test a format element is created automatically if a resource is created with content files
+
     def test_identifier(self):
-        # this test will pass only if we have added the hydroshare identifier for the resource
-        # in the resource post-save signal handler
-        # when a resource is created there should be 1 identifier element
+        # when a resource is created there should be one identifier element
         self.assertEqual(self.res.metadata.identifiers.all().count(), 1,
                          msg="Number of identifier elements not equal to 1.")
         self.assertIn('hydroShareIdentifier', [id.name for id in self.res.metadata.identifiers.all()],
                       msg="hydroShareIdentifier name was not found.")
         id_url = '{}/resource/{}'.format(hydroshare.utils.current_site_url(), self.res.short_id)
+
         #id_url = 'http://hydroshare.org/resource{}{}'.format('/', self.res.short_id)
         self.assertIn(id_url, [id.url for id in self.res.metadata.identifiers.all()],
                       msg="Identifier url was not found.")
@@ -700,7 +700,8 @@ class TestCoreMetadata(TestCase):
                                                                      "English.")
 
         # no more than one language element per resource - raises exception
-        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'language', code='fre'))
+        self.assertRaises(Exception, lambda : resource.create_metadata_element(self.res.short_id,'language',
+                                                                               code='fre'))
 
         # should be able to update language
         resource.update_metadata_element(self.res.short_id,'language', self.res.metadata.language.id, code='fre')
@@ -771,14 +772,15 @@ class TestCoreMetadata(TestCase):
                                                                                   self.res.metadata.publisher.id,
                                                                                   name="USGS", url="http://usgs.gov"))
 
-            # publisher element can't be deleted when the resource has public or published status - should raise exception
+            # publisher element can't be deleted when the resource has public or published status - should
+            # raise exception
             self.assertRaises(Exception, lambda:resource.delete_metadata_element(self.res.short_id, 'publisher',
                                                                                  self.res.metadata.publisher.id))
 
             # delete the file the resource has and then try to change the name of the publisher to anything you
             # want - that should work
             hydroshare.delete_resource_file(self.res.short_id, original_file_name, self.user)
-            resource.update_metadata_element(self.res.short_id,'publisher', self.res.metadata.publisher.id,
+            resource.update_metadata_element(self.res.short_id, 'publisher', self.res.metadata.publisher.id,
                                              name="USGS", url="http://usgs.gov")
             self.assertEqual(self.res.metadata.publisher.name, "USGS", msg="Resource publisher name did not match.")
 
@@ -803,6 +805,7 @@ class TestCoreMetadata(TestCase):
         # add another relation element of uri type
         resource.create_metadata_element(self.res.short_id,'relation', type='isDataFor',
                                 value='http://hydroshare.org/resource/002')
+
         # at this point there should be 2 relation elements
         self.assertEqual(self.res.metadata.relations.all().count(), 2,
                          msg="Number of source elements is not equal to 2")
@@ -814,6 +817,7 @@ class TestCoreMetadata(TestCase):
         # add another relation element with isHostedBy type
         resource.create_metadata_element(self.res.short_id,'relation', type='isHostedBy',
                                 value='https://www.cuahsi.org/')
+
         # at this point there should be 3 relation elements
         self.assertEqual(self.res.metadata.relations.all().count(), 3,
                          msg="Number of source elements is not equal to 3")
@@ -826,18 +830,16 @@ class TestCoreMetadata(TestCase):
 
         # test isHostedBy and isCopiedFrom are mutually exclusive
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'relation',
-                                                                      type='isCopiedFrom',
-                                                                      value='Another Source'))
+                                                                              type='isCopiedFrom',
+                                                                              value='Another Source'))
 
         rel_to_update = self.res.metadata.relations.all().filter(type='isHostedBy').first()
-        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id,'relation',
-                                                                      rel_to_update.id, type='isCopiedFrom'))
+        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'relation',
+                                                                              rel_to_update.id, type='isCopiedFrom'))
 
         # test that duplicate relation types are not allowed
-        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'relation',
-                                                                      type='isDataFor',
-                                                                      value='http://hydroshare.org/resource/003'))
-
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(
+            self.res.short_id, 'relation', type='isDataFor', value='http://hydroshare.org/resource/003'))
 
         # test update relation type
         rel_to_update = self.res.metadata.relations.all().filter(type='isPartOf').first()
@@ -847,20 +849,24 @@ class TestCoreMetadata(TestCase):
 
         # test that duplicate relation types are not allowed during update - exception
         self.assertRaises(Exception, lambda : resource.update_metadata_element(self.res.short_id, 'relation',
-                                                                      rel_to_update.id, type='isDataFor'))
+                                                                               rel_to_update.id, type='isDataFor'))
 
         # test update relation value
         rel_to_update = self.res.metadata.relations.all().filter(type='isVersionOf').first()
-        resource.update_metadata_element(self.res.short_id, 'relation', rel_to_update.id, type='isVersionOf', value='Another resource')
-        self.assertIn('isVersionOf', [rel.type for rel in self.res.metadata.relations.all()], msg="No relation element of type 'isVersionOf' was found")
-        self.assertIn('Another resource', [rel.value for rel in self.res.metadata.relations.all()], msg="No relation element of value 'Another resource' was found")
+        resource.update_metadata_element(self.res.short_id, 'relation', rel_to_update.id, type='isVersionOf',
+                                         value='Another resource')
+        self.assertIn('isVersionOf', [rel.type for rel in self.res.metadata.relations.all()],
+                      msg="No relation element of type 'isVersionOf' was found")
+        self.assertIn('Another resource', [rel.value for rel in self.res.metadata.relations.all()],
+                      msg="No relation element of value 'Another resource' was found")
 
         # test that it is possible to delete all relation elements
         for rel in self.res.metadata.relations.all():
             resource.delete_metadata_element(self.res.short_id,'relation', rel.id)
 
         # at this point there should not be any relation elements
-        self.assertEqual(self.res.metadata.relations.all().count(), 0, msg="Resource has relation element(s) after deleting all.")
+        self.assertEqual(self.res.metadata.relations.all().count(), 0,
+                         msg="Resource has relation element(s) after deleting all.")
 
         # test to add relation element with isCopiedFrom type
         resource.create_metadata_element(self.res.short_id,'relation', type='isCopiedFrom',
@@ -873,25 +879,29 @@ class TestCoreMetadata(TestCase):
 
         # test update relation value
         rel_to_update = self.res.metadata.relations.all().filter(type='isCopiedFrom').first()
-        resource.update_metadata_element(self.res.short_id, 'relation', rel_to_update.id, type='isCopiedFrom', value='Another Source')
-        self.assertIn('isCopiedFrom', [rel.type for rel in self.res.metadata.relations.all()], msg="No relation element of type 'isCopiedFrom' was found")
-        self.assertIn('Another Source', [rel.value for rel in self.res.metadata.relations.all()], msg="No relation element of value 'Another Source' was found")
+        resource.update_metadata_element(self.res.short_id, 'relation', rel_to_update.id, type='isCopiedFrom',
+                                         value='Another Source')
+        self.assertIn('isCopiedFrom', [rel.type for rel in self.res.metadata.relations.all()],
+                      msg="No relation element of type 'isCopiedFrom' was found")
+        self.assertIn('Another Source', [rel.value for rel in self.res.metadata.relations.all()],
+                      msg="No relation element of value 'Another Source' was found")
 
         # test isHostedBy and isCopiedFrom are mutually exclusive
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'relation',
-                                                                      type='isHostedBy',
-                                                                      value='https://www.cuahsi.org/'))
+                                                                              type='isHostedBy',
+                                                                              value='https://www.cuahsi.org/'))
 
         rel_to_update = self.res.metadata.relations.all().filter(type='isCopiedFrom').first()
         self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id,'relation',
-                                                                      rel_to_update.id, type='isHostedBy'))
+                                                                              rel_to_update.id, type='isHostedBy'))
 
         # test that it is possible to delete all relation elements
         for rel in self.res.metadata.relations.all():
-            resource.delete_metadata_element(self.res.short_id,'relation', rel.id)
+            resource.delete_metadata_element(self.res.short_id, 'relation', rel.id)
 
         # at this point there should not be any relation elements
-        self.assertEqual(self.res.metadata.relations.all().count(), 0, msg="Resource has relation element(s) after deleting all.")
+        self.assertEqual(self.res.metadata.relations.all().count(), 0,
+                         msg="Resource has relation element(s) after deleting all.")
 
     def test_rights(self):
         # By default a resource should have the rights element
@@ -933,7 +943,7 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(self.res.metadata.sources.all().count(), 1, msg="Number of sources is not equal to 1.")
         self.assertIn('http://hydroshare.org/resource/0001', [src.derived_from for src in
                                                               self.res.metadata.sources.all()],
-                      msg="Source element with derived from avlue of %s does not exist." %
+                      msg="Source element with derived from a value of %s does not exist." %
                           'http://hydroshare.org/resource/0001')
 
         #test update
@@ -952,8 +962,8 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(self.res.metadata.sources.all().count(), 2, msg="Number of sources is not equal to 2.")
 
         # duplicate source elements are not allowed- exception raised
-        self.assertRaises(Exception, lambda:resource.create_metadata_element(self.res.short_id,'source',
-                                                                              derived_from='http://hydroshare.org/resource/0002'))
+        self.assertRaises(Exception, lambda:resource.create_metadata_element(
+            self.res.short_id, 'source', derived_from='http://hydroshare.org/resource/0002'))
 
         # test that it is possible to delete all source elements
         for src in self.res.metadata.sources.all():
@@ -1005,11 +1015,6 @@ class TestCoreMetadata(TestCase):
 
     def test_type(self):
         # type element should be auto created at the resource creation (see test_auto_element_creation)
-        # if not self.res.metadata.type:
-        #     resource.create_metadata_element(self.res.short_id, 'type', url="http://hydroshare.org/genericResource")
-        #     self.assertEqual(self.res.metadata.type.url, "http://hydroshare.org/genericResource",
-        #                      msg="Resource type url did not match.")
-
         # adding a 2nd type element should raise exception
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'type',
                                                                               url="http://hydroshare.org/generic"))
@@ -1043,21 +1048,21 @@ class TestCoreMetadata(TestCase):
         cr_homepage = 'http://usu.edu/homepage/001'
 
         self.res.metadata.create_element('creator',
-                                name=cr_name,
-                                description=cr_des,
-                                organization=cr_org,
-                                email=cr_email,
-                                address=cr_address,
-                                phone=cr_phone,
-                                homepage=cr_homepage,
-                                profile_links=[{'type': 'researchID', 'url': 'http://research.org/001'},
+                                         name=cr_name,
+                                         description=cr_des,
+                                         organization=cr_org,
+                                         email=cr_email,
+                                         address=cr_address,
+                                         phone=cr_phone,
+                                         homepage=cr_homepage,
+                                         profile_links=[{'type': 'researchID', 'url': 'http://research.org/001'},
                                                {'type': 'researchGateID', 'url': 'http://research-gate.org/001'}]
-                            )
+                                        )
 
         # add another creator with only the name
         self.res.metadata.create_element('creator', name='Lisa Holley')
 
-        #test adding a contributor with all sub_elements
+        # test adding a contributor with all sub_elements
         con_name = 'Sujan Peterson'
         con_des = 'http://hydroshare.org/user/002'
         con_org = "USU"
@@ -1067,15 +1072,14 @@ class TestCoreMetadata(TestCase):
         con_homepage = 'http://usu.edu/homepage/009'
 
         self.res.metadata.create_element('contributor',
-                                name=con_name,
-                                description=con_des,
-                                organization=con_org,
-                                email=con_email,
-                                address=con_address,
-                                phone=con_phone,
-                                homepage=con_homepage,
-                                )
-
+                                         name=con_name,
+                                         description=con_des,
+                                         organization=con_org,
+                                         email=con_email,
+                                         address=con_address,
+                                         phone=con_phone,
+                                         homepage=con_homepage,
+                                        )
         # add another creator with only the name
         self.res.metadata.create_element('contributor', name='Andrew Smith')
 
@@ -1123,11 +1127,11 @@ class TestCoreMetadata(TestCase):
 
         # add a relation element of uri type
         self.res.metadata.create_element('relation', type='isPartOf',
-                                value='http://hydroshare.org/resource/001')
+                                         value='http://hydroshare.org/resource/001')
 
         # add another relation element of non-uri type
         self.res.metadata.create_element('relation', type='isDataFor',
-                                value='This resource is for another resource')
+                                         value='This resource is for another resource')
 
 
         # add a source element of uri type
