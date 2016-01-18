@@ -3122,10 +3122,8 @@ span.carousel-control-icon {
 }
 
 .step-item {
-	border: 1px solid #D6D6D6;
+	border-top: 1px solid #D6D6D6;
     padding: 10px;
-    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
-    background: #FFF;
 	color: #4BB5C1;
 }
 
@@ -3135,10 +3133,6 @@ span.carousel-control-icon {
 
 .step-item h4 {
 	color: #555 !important;
-}
-
-.step-item {
-
 }
 
 .step-number {
@@ -3156,10 +3150,6 @@ span.carousel-control-icon {
 .home-page-block {
     margin-bottom: 60px;
 }
-
-/*div.description {*/
-    /*display:none*/
-/*}*/
 
 div.description.active {
     display: block;
