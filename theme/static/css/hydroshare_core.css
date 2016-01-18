@@ -159,7 +159,10 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     margin-bottom: 0.5em;
     background: white;
     border-radius: 4px;
-    border: 1px solid;
+}
+
+.recaptchatable {
+    width: 100%;
 }
 
 /* ===== Showcase ===== */
@@ -624,7 +627,6 @@ footer .headline h3{
 }
 .legal {
 	padding: 40px 0;
-	border-top: 1px solid #555;
 }
 .legal a {
 	color: #B5E655;
@@ -824,6 +826,7 @@ li.account p{
 
 #signup{
     margin-bottom: 10px;
+    float: right;
 }
 
 /* ===== Site search ===== */
