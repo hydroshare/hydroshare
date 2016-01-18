@@ -65,7 +65,7 @@ def authorize(request, res_id, discoverable=False, edit=False, view=False,
                      (edit and user.uaccess.can_change_resource(res)) or \
                      (full and user.uaccess.owns_resource(res)) or \
                      (discoverable and res.raccess.discoverable) or \
-                     (superuser and (user.uaccess.admin or user.is_superuser))
+                     (superuser and user.is_superuser)
     else:
         authorized = (view and res.raccess.public) or \
                      (discoverable and res.raccess.discoverable)
