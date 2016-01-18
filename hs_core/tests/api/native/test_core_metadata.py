@@ -734,8 +734,6 @@ class TestCoreMetadata(TestCase):
         self.assertIn('hydroShareIdentifier', [id.name for id in self.res.metadata.identifiers.all()],
                       msg="hydroShareIdentifier name was not found.")
         id_url = '{}/resource/{}'.format(hydroshare.utils.current_site_url(), self.res.short_id)
-
-        #id_url = 'http://hydroshare.org/resource{}{}'.format('/', self.res.short_id)
         self.assertIn(id_url, [id.url for id in self.res.metadata.identifiers.all()],
                       msg="Identifier url was not found.")
 
@@ -758,7 +756,7 @@ class TestCoreMetadata(TestCase):
         self.assertIn('someOtherIdentifier', [id.name for id in self.res.metadata.identifiers.all()],
                       msg="Identifier name was not found.")
 
-        # hydroshare identifier can't be updated - exception will occur
+        # hydroshare internal identifier can't be updated - exception will occur
         hs_idf = self.res.metadata.identifiers.all().filter(name='hydroShareIdentifier').first()
         self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'identifier',
                                                                               hs_idf.id,
@@ -767,16 +765,17 @@ class TestCoreMetadata(TestCase):
                                                                               hs_idf.id,
                                                                               url='http://resources.org/001'))
 
-        # test adding an identifier with name 'DOI' when the resource does not have a DoI - should raise an exception
+        # test adding an identifier with name 'DOI' when the resource does not have a DOI - should raise an exception
         self.res.doi = None
         self.res.save()
+        url_doi = "http://dx.doi.org/10.4211/hs.{res_id}".format(res_id=self.res.short_id)
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,'identifier',
-                                                                     name='DOI', url="http://dx.doi.org/001"))
+                                                                              name='DOI',  url=url_doi))
 
         # test adding identifier 'DOI' when the resource has a DOI and that should work
         self.res.doi = 'doi1000100010001'
         self.res.save()
-        resource.create_metadata_element(self.res.short_id,'identifier', name='DOI', url="http://dx.doi.org/001")
+        resource.create_metadata_element(self.res.short_id,'identifier', name='DOI', url=url_doi)
 
         # test that Identifier name 'DOI' can't be changed - should raise exception
         doi_idf = self.res.metadata.identifiers.all().filter(name='DOI').first()
