@@ -821,82 +821,107 @@ class TestCoreMetadata(TestCase):
         self.assertEqual(self.res.metadata.language, None, msg="Resource has a language element.")
 
     def test_publisher(self):
-        # TODO: This needs fix (PK 1-16/2016)
-        if not self.res.metadata.publisher:
-            # publisher element can't be added when the resource is not shared
-            self.res.raccess.public = False
-            self.res.raccess.save()
-            self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'publisher',
-                                                                                  name='HydroShare',
-                                                                                  url="http://hydroshare.org"))
+        # publisher element can't be added when the resource is not published
+        self.res.raccess.published = False
+        self.res.raccess.save()
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'publisher',
+                                                                              name='HydroShare',
+                                                                              url="http://hydroshare.org"))
 
-            # publisher element can be added when the resource is shared
-            self.res.raccess.public = True
-            self.res.raccess.save()
-            resource.create_metadata_element(self.res.short_id, 'publisher', name='USGS', url="http://usgs.gov")
-            self.assertEqual(self.res.metadata.publisher.url, "http://usgs.gov",
-                             msg="Resource publisher url did not match.")
-            self.assertEqual(self.res.metadata.publisher.name, "USGS", msg="Resource publisher name did not match.")
+        # publisher element can be added when the resource is published
+        self.res.raccess.published = True
+        self.res.raccess.save()
+        resource.create_metadata_element(self.res.short_id, 'publisher', name='USGS', url="http://usgs.gov")
+        self.assertEqual(self.res.metadata.publisher.url, "http://usgs.gov",
+                         msg="Resource publisher url did not match.")
+        self.assertEqual(self.res.metadata.publisher.name, "USGS", msg="Resource publisher name did not match.")
 
-            # a 2nd publisher element can't be created - exception
-            self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'publisher',
-                                                                                  name='USU', url="http://usu.edu"))
+        # a 2nd publisher element can't be created - should raise exception
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'publisher',
+                                                                              name='USU', url="http://usu.edu"))
 
-            # can't change the publisher name to "HydroShare" when the resource does not have any content files
-            self.assertRaises(Exception, lambda:resource.update_metadata_element(self.res.short_id,'publisher',
-                                                                                 self.res.metadata.publisher.id,
-                                                                                 name="HydroShare",
-                                                                                 url="http://hydroshare.org"))
+        # can't change the publisher name to "CUAHSI" when the resource does not have any content files
+        publisher_CUAHSI = "Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)"
+        url_CUAHSI = 'https://www.cuahsi.org'
+        self.assertRaises(Exception, lambda:resource.update_metadata_element(self.res.short_id,'publisher',
+                                                                             self.res.metadata.publisher.id,
+                                                                             name=publisher_CUAHSI,
+                                                                             url=url_CUAHSI))
 
-            # Test that when a resource has one or more content files, the publisher can be updated to
-            # publisher name 'HydroShare' only and publisher url to 'http://hydroshare.org only.
-            # create a file
-            original_file_name = 'original.txt'
-            original_file = open(original_file_name, 'w')
-            original_file.write("original text")
-            original_file.close()
+        # Test that when a resource has one or more content files, the publisher can be updated to
+        # publisher name 'CUAHSI' only and publisher url to 'https://www.cuahsi.org' only.
+        # create a file
+        original_file_name = 'original.txt'
+        original_file = open(original_file_name, 'w')
+        original_file.write("original text")
+        original_file.close()
 
-            original_file = open(original_file_name, 'r')
-            # add the file to the resource
-            hydroshare.add_resource_files(self.res.short_id, original_file)
-            resource.update_metadata_element(self.res.short_id,'publisher', self.res.metadata.publisher.id,
-                                             name="HydroShare", url="http://hydroshare.org")
-            self.assertEqual(self.res.metadata.publisher.name, "HydroShare",
-                             msg="Resource publisher name did not match.")
+        original_file = open(original_file_name, 'r')
+        # add the file to the resource
+        hydroshare.add_resource_files(self.res.short_id, original_file)
+        resource.update_metadata_element(self.res.short_id,'publisher', self.res.metadata.publisher.id,
+                                         name=publisher_CUAHSI, url=url_CUAHSI)
+        self.assertEqual(self.res.metadata.publisher.name, publisher_CUAHSI,
+                         msg="Resource publisher name did not match.")
+        self.assertEqual(self.res.metadata.publisher.url, url_CUAHSI,
+                         msg="Resource publisher url did not match.")
 
-            # can't change publisher name from 'HydroShare' to something else when the resource has
-            # content has files - should raise exception
-            self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'publisher',
-                                                                                  self.res.metadata.publisher.id,
-                                                                                  name="HydroShare-1",
-                                                                                  url="http://hydroshare.org"))
+        # can't change publisher name from 'CUAHSI' to something else when the resource has
+        # content files - should raise exception
+        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'publisher',
+                                                                              self.res.metadata.publisher.id,
+                                                                              name="HydroShare"))
 
-            resource.update_metadata_element(self.res.short_id,'publisher', self.res.metadata.publisher.id,
-                                             url="http://hydroshare-1.org")
-            self.assertNotEqual(self.res.metadata.publisher.url, "http://hydroshare-1.org",
-                                msg="Resource publisher name matches.")
+        # can't change publisher url from 'https://www.cuahsi.org' to something else when the resource has
+        # content files - should raise exception
+        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id,'publisher',
+                                                                              self.res.metadata.publisher.id,
+                                                                              url="http://hydroshare.org"))
 
-            # publisher name nor the url can't be changed for a resource that has file(s) - should raise exception
-            self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'publisher',
-                                                                                  self.res.metadata.publisher.id,
-                                                                                  name="USGS", url="http://usgs.gov"))
+        # publisher name nor the url can't be changed for a resource that has file(s) - should raise exception
+        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'publisher',
+                                                                              self.res.metadata.publisher.id,
+                                                                              name="USGS", url="http://usgs.gov"))
 
-            # publisher element can't be deleted when the resource has public or published status - should
-            # raise exception
-            self.assertRaises(Exception, lambda:resource.delete_metadata_element(self.res.short_id, 'publisher',
-                                                                                 self.res.metadata.publisher.id))
+        # publisher element can't be deleted when the resource has published=True status - should
+        # raise exception
+        self.assertRaises(Exception, lambda:resource.delete_metadata_element(self.res.short_id, 'publisher',
+                                                                             self.res.metadata.publisher.id))
 
-            # delete the file the resource has and then try to change the name of the publisher to anything you
-            # want - that should work
-            hydroshare.delete_resource_file(self.res.short_id, original_file_name, self.user)
-            resource.update_metadata_element(self.res.short_id, 'publisher', self.res.metadata.publisher.id,
-                                             name="USGS", url="http://usgs.gov")
-            self.assertEqual(self.res.metadata.publisher.name, "USGS", msg="Resource publisher name did not match.")
+        # delete the file the resource has and then try to change the name of the publisher to anything you
+        # want - that should work
+        hydroshare.delete_resource_file(self.res.short_id, original_file_name, self.user)
+        resource.update_metadata_element(self.res.short_id, 'publisher', self.res.metadata.publisher.id,
+                                         name="USGS", url="http://usgs.gov")
+        self.assertEqual(self.res.metadata.publisher.name, "USGS", msg="Resource publisher name did not match.")
+        self.assertEqual(self.res.metadata.publisher.url, "http://usgs.gov", msg="Resource publisher url did not match.")
 
-            # test that the publisher element can be deleted if the resource is private (not shared)
-            self.res.raccess.public = False
-            self.res.raccess.save()
-            resource.delete_metadata_element(self.res.short_id,'publisher', self.res.metadata.publisher.id)
+        # test that the publisher element can be deleted if the resource is not published
+        self.res.raccess.published = False
+        self.res.raccess.save()
+        resource.delete_metadata_element(self.res.short_id,'publisher', self.res.metadata.publisher.id)
+
+        # "CUAHSI" can't be the publisher when resource has no content files
+        self.assertEquals(self.res.files.all().count(), 0, msg="Resource has content files.")
+        self.res.raccess.published = True
+        self.res.raccess.save()
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'publisher',
+                                                                              name=publisher_CUAHSI, url=url_CUAHSI))
+
+        # Publisher can't be anyone else other than "CUAHSI" when resource has content files
+        hydroshare.add_resource_files(self.res.short_id, original_file)
+        self.assertEquals(self.res.metadata.publisher, None)
+
+        # This call to create publisher element would set CUAHSI as the publisher even if we specify "HydroShare' as the
+        # publisher
+        resource.create_metadata_element(self.res.short_id, 'publisher', name='HydroShare',
+                                         url="http://hydroshare.org")
+
+        # Only CUAHSI can be publisher when resource has content files
+        self.assertEqual(self.res.metadata.publisher.name, publisher_CUAHSI,
+                         msg="Resource publisher name did not match.")
+        self.assertEqual(self.res.metadata.publisher.url, url_CUAHSI,
+                         msg="Resource publisher url did not match.")
 
     def test_relation(self):
         # at this point there should not be any relation elements
@@ -1232,7 +1257,12 @@ class TestCoreMetadata(TestCase):
         original_file = open(original_file_name, 'r')
         # add the file to the resource
         hydroshare.add_resource_files(self.res.short_id, original_file)
-        self.res.metadata.create_element('publisher', name="HydroShare", url="http://hydroshare.org")
+
+        publisher_CUAHSI = "Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)"
+        url_CUAHSI = 'https://www.cuahsi.org'
+        self.res.raccess.published=True
+        self.res.raccess.save()
+        self.res.metadata.create_element('publisher', name=publisher_CUAHSI, url=url_CUAHSI)
 
         # add a relation element of uri type
         self.res.metadata.create_element('relation', type='isPartOf',
