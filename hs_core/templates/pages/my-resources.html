@@ -155,6 +155,7 @@
                     <th>Permission Level</th>
                     <th>Labels</th>
                     <th>Favorite</th>
+                    <th>Last modified (for sorting)</th>
                     <th>Sharing status</th>
                 </tr>
                 </thead>
@@ -268,6 +269,7 @@
                                     Favorite
                                 {% endif %}
                             </td>
+                        <td>{{ res.updated|date:"Y/m/d" }}</td>
                             <td>
                                 {% if res.raccess.public %}
                                     <strong style="color:#5cb85c">&nbspPublic</strong>
@@ -414,6 +416,7 @@
             7 - Permission Level
             8 - Labels
             9 - Favorite
+            10 - Last modified (sortable format)
         ==================================================*/
 
             resourceTable = $("#item-selectors").DataTable({
@@ -432,6 +435,10 @@
                         "orderable": false,
                         "searchable": false,
                         "width": "90px"
+                    },
+                    {
+                        "targets": [4],     // Last modified
+                        "iDataSort": 10
                     },
                     {
                         "targets": [5],     // Subject
@@ -455,6 +462,11 @@
                     },
                     {
                         "targets": [9],     // Favorite
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [10],     // Last modified (for sorting)
                         "visible": false,
                         "searchable": true
                     }
@@ -1014,6 +1026,7 @@
             7 - Permission Level
             8 - Labels
             9 - Favorite
+            10 - Last modified (sortable format)
         ==================================================*/
 
         /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
