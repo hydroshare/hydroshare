@@ -2797,3 +2797,15 @@ h4.title {
 .hidden-form {
 	display: none;
 }
+
+.label-public {
+    color: #5cb85c;
+}
+
+.label-discoverable {
+    color: #f0ad4e;
+}
+
+.label-private {
+    color: #d9534f;
+}

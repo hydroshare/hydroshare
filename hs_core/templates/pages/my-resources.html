@@ -160,7 +160,6 @@
                 </tr>
                 </thead>
                 <tbody>
-                    {# ################### #}
                     {% for res in collection %}
                         <tr data-tr-index="{{ forloop.counter0 }}">
                             <td>
@@ -269,14 +268,14 @@
                                     Favorite
                                 {% endif %}
                             </td>
-                        <td>{{ res.updated|date:"Y/m/d" }}</td>
+                            <td>{{ res.updated|date:"Y/m/d" }}</td>
                             <td>
                                 {% if res.raccess.public %}
-                                    <strong style="color:#5cb85c">&nbspPublic</strong>
-                                {% elif not res.raccess.public and res.raccess.discoverable %}
-                                    <strong style="color:#f0ad4e">&nbspDiscoverable</strong>
-                                {% elif not res.raccess.public and not res.raccess.discoverable %}
-                                    <strong style="color:#d9534f">&nbspPrivate</strong>
+                                    <strong class="label-public">&nbspPublic</strong>
+                                {% elif res.raccess.discoverable %}
+                                    <strong class="label-discoverable">&nbspDiscoverable</strong>
+                                {% else %}
+                                    <strong class="label-private">&nbspPrivate</strong>
                                 {% endif %}
                             </td>
                         </tr>
