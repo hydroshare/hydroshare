@@ -1,4 +1,4 @@
-$('#btn-signin-irods').on('click',function(){
+$('#btn-signin-irods').on('click',function() {
     if(sessionStorage.IRODS_username) {
         $("#username").val(sessionStorage.IRODS_username);
     }
@@ -31,7 +31,16 @@ $('#btn-signin-irods').on('click',function(){
     }
 });
 
-$('#btn-select-irods-file').on('click',function(){
+$('#btn-signout-irods').on('click', function() {
+    $("#sign-in-info").text('');
+    sessionStorage.IRODS_signininfo = '';
+    $("#irods-sel-file").text('');
+    $("#btn-select-irods-file").hide();
+    $("#log-into-irods").show();
+    $("#btn-signout-irods").hide();
+});
+
+$('#btn-select-irods-file').on('click',function() {
     $('#res_type').val($('#resource-type').val());
     $('#file_struct').children().remove();
     $('.ajax-loader').hide();
@@ -51,7 +60,7 @@ $('#btn-select-irods-file').on('click',function(){
     $('body').on('click', '.folder', click_folder_opr);
 });
 
-function get_store(store, parent, margin){
+function get_store(store, parent, margin) {
     $.ajax({
         mode: "queue",
         url: '/irods/store/',
@@ -190,7 +199,7 @@ $('#irods_view_store').keypress(function(e) {
     }
 });
 
-$("#irodsContent form").bind("keypress", function (e) {
+$("#irodsContent form").bind("keypress", function(e) {
     if (e.keyCode == 13) {
         $("#btnSearch").attr('value');
         //add more buttons here
@@ -198,7 +207,7 @@ $("#irodsContent form").bind("keypress", function (e) {
     }
 });
 
-$('#iget_irods').on('click',function(){
+$('#iget_irods').on('click',function() {
     var selected = [];
     $('.selected').each( function() {
         selected.push($(this).attr('name'));
@@ -230,6 +239,8 @@ function irods_login() {
                 $("#sign-in-info").text(signInStr);
                 $("#irods_content_label").text(json.user);
                 $('#root_store').val(json.datastore);
+                $("#log-into-irods").hide();
+                $("#btn-signout-irods").show();
                 $("#btn-select-irods-file").show();
                 $("#irods-sel-file").text("No file selected");
                 sessionStorage.IRODS_signininfo = signInStr;
@@ -242,7 +253,7 @@ function irods_login() {
             }
             else {
                 $("#sign-in-info").text('iRODS login failed');
-                sessionStorage.IRODS_signininfo ='';
+                sessionStorage.IRODS_signininfo = '';
                 $("#btn-select-irods-file").hide();
             }
             $('#irodsSignin').modal('hide');
@@ -264,7 +275,7 @@ function irods_login() {
     });
 }
 
-$('#irodsLogin').on('submit', function(event){
+$('#irodsLogin').on('submit', function(event) {
     event.preventDefault();
     irods_login();
 });
@@ -291,7 +302,7 @@ function irods_upload() {
     });
 }
 
-$('#irodsUpload').on('submit', function(event){
+$('#irodsUpload').on('submit', function(event) {
     event.preventDefault();
     irods_upload();
 });
