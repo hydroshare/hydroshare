@@ -938,7 +938,7 @@ class TestCoreMetadata(TestCase):
 
         # add another relation element of uri type
         resource.create_metadata_element(self.res.short_id,'relation', type='isDataFor',
-                                value='http://hydroshare.org/resource/002')
+                                         value='http://hydroshare.org/resource/002')
 
         # at this point there should be 2 relation elements
         self.assertEqual(self.res.metadata.relations.all().count(), 2,
@@ -1059,7 +1059,7 @@ class TestCoreMetadata(TestCase):
                                                                                self.res.metadata.rights.id))
 
         # should be able to update the rights element
-        resource.update_metadata_element(self.res.short_id,'rights', self.res.metadata.rights.id,
+        resource.update_metadata_element(self.res.short_id, 'rights', self.res.metadata.rights.id,
                                          statement='This is the modified rights statement for this resource',
                                          url='http://rights-modified.ord/001')
         self.assertEqual(self.res.metadata.rights.statement, 'This is the modified rights statement for this resource',
@@ -1086,7 +1086,7 @@ class TestCoreMetadata(TestCase):
                                          derived_from='http://hydroshare.org/resource/0002')
         self.assertIn('http://hydroshare.org/resource/0002', [src.derived_from for src in
                                                               self.res.metadata.sources.all()],
-                      msg="Source element with derived from avlue of %s does not exist."
+                      msg="Source element with derived from a value of %s does not exist."
                           % 'http://hydroshare.org/resource/0002')
 
         # add another source element of string type
@@ -1095,7 +1095,7 @@ class TestCoreMetadata(TestCase):
         # at this point there should be 2 source element
         self.assertEqual(self.res.metadata.sources.all().count(), 2, msg="Number of sources is not equal to 2.")
 
-        # duplicate source elements are not allowed- exception raised
+        # duplicate source elements are not allowed - exception raised
         self.assertRaises(Exception, lambda:resource.create_metadata_element(
             self.res.short_id, 'source', derived_from='http://hydroshare.org/resource/0002'))
 
@@ -1104,7 +1104,7 @@ class TestCoreMetadata(TestCase):
             resource.delete_metadata_element(self.res.short_id,'source', src.id)
 
     def test_subject(self):
-        # there should be 2 subject elements for this resource as we provided to keywords when creating the resource
+        # there should be 2 subject elements for this resource as we provided two keywords when creating the resource
         self.assertEqual(self.res.metadata.subjects.all().count(), 2, msg="Number of subject elements found not be 2.")
 
         # delete all existing subject elements
@@ -1132,13 +1132,13 @@ class TestCoreMetadata(TestCase):
         self.assertRaises(Exception, lambda :resource.create_metadata_element(self.res.short_id, 'subject',
                                                                               value='sub-2'))
 
-        # test subelement update
+        # test sub-element update
         sub_1 = self.res.metadata.subjects.all().filter(value='sub-1').first()
         resource.update_metadata_element(self.res.short_id, 'subject', sub_1.id, value='sub-1.1')
         self.assertIn('sub-1.1', [sub.value for sub in self.res.metadata.subjects.all()],
                       msg="Subject element with value of %s does not exist." % 'sub-1.1')
 
-        # test deleting of subject elements- all but the last one can be deleted
+        # test deleting of subject elements - all but the last one can be deleted
         resource.delete_metadata_element(self.res.short_id, 'subject', sub_1.id)
         # there should be 1 subject element for this resource
         self.assertEqual(self.res.metadata.subjects.all().count(), 1, msg="Number of subject elements found not be 1.")
@@ -1148,7 +1148,7 @@ class TestCoreMetadata(TestCase):
         self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id, 'subject', sub_2.id))
 
     def test_type(self):
-        # type element should be auto created at the resource creation (see test_auto_element_creation)
+        # type element is auto created at the resource creation (see test_auto_element_creation)
         # adding a 2nd type element should raise exception
         self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'type',
                                                                               url="http://hydroshare.org/generic"))
@@ -1161,10 +1161,7 @@ class TestCoreMetadata(TestCase):
 
         # deleting of type element is not allowed.
         self.assertRaises(Exception, lambda: resource.delete_metadata_element(self.res.short_id, 'type',
-                                                                             self.res.metadata.type.id))
-
-    def test_element_name(self):
-        pass
+                                                                              self.res.metadata.type.id))
 
     def test_get_xml(self):
 
@@ -1245,8 +1242,7 @@ class TestCoreMetadata(TestCase):
         self.res.save()
         self.res.metadata.create_element('identifier', name='DOI', url="http://dx.doi.org/001")
 
-        # add a language element
-        #self.res.metadata.create_element('language', code='eng')
+        # no need to add a language element - language element is created at the time of resource creation
 
         # add 'Publisher' element
         original_file_name = 'original.txt'
@@ -1276,9 +1272,7 @@ class TestCoreMetadata(TestCase):
         # add a source element of uri type
         self.res.metadata.create_element('source', derived_from='http://hydroshare.org/resource/0002')
 
-        # add a rights element
-        # self.res.metadata.create_element('rights', statement='This is the rights statement for this resource',
-        #                         url='http://rights.ord/001')
+        # No need to ass rights element as this one gets created at the time of resource creation
 
         # add a subject element
         self.res.metadata.create_element('subject', value='sub-1')
