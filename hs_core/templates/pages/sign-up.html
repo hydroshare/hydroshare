@@ -1,17 +1,19 @@
 {% extends "pages/page.html" %}
 
-{% load mezzanine_tags static blog_tags accounts_tags %}
+{% load accounts_tags %}
 
 {% block main %}
-    <h2>Sign Up</h2>
+    <h2 class="page-title">Sign Up</h2>
     {% if user.is_anonymous %}
         <div class="col-sm-6">
             <!-- signup -->
-            <div class="front-signup js-front-signup" style="padding-top: 1.5em;">
+            <div class="front-signup js-front-signup">
                 {% signup_form as form %}
                 {% include "accounts/account_signup.html" with form=form %}
             </div>
             <!-- signup -->
         </div>
+    {% else %}
+        <p>You're already logged in. If you'd like to create a new account, you'll need to log out first.</p>
     {% endif %}
 {% endblock %}

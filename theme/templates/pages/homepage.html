@@ -4,9 +4,6 @@
 
 
 {% block all_content %}
-    <!-- Showcase
-    ================ -->
-
     <div id="home-page-carousel" class="carousel slide" data-ride="carousel">
         <!-- Indicators -->
 
@@ -73,7 +70,6 @@
             <span class="sr-only">Next</span>
         </a>
     </div>
-
     {% if user.is_anonymous %}
     <div>
         <div class="container">
@@ -203,14 +199,9 @@
                 </div>
             </div>
         </div>
-
     </div>
 
-
-
-
     <script>
-
         $.fn.visible = function (partial) {
             var $t = $(this),
                     $w = $(window),
@@ -250,19 +241,17 @@
                 }
             });
 
+            // SlideIn blocks on scroll trigger
             win.scroll(function (event) {
-
                 allMods.each(function (i, el) {
                     var el = $(el);
                     if (el.visible(true)) {
                         el.addClass("come-in");
                     }
                 });
-
             });
         });
     </script>
-
 
 {% endblock %}
 
