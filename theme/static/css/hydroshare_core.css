@@ -1484,7 +1484,7 @@ body > .container{
 
 .btn-success {
 	background-color: #eee;
-	background-image: -webkit-linear-gradient(#7AB2E2, #428BCA);
+	background-image: -webkit-linear-gradient(#74E274, #5CB85C);
 	background-image: linear-gradient(#74E274, #5CB85C);
 	border-color: #20833F;
 	color: #FFF;
@@ -2876,10 +2876,6 @@ h4.title {
     max-width: 100%;
 }
 
-.all-rows-selector {
-
-}
-
 .resource-type-text {
 	display:none;
 }
@@ -2894,7 +2890,8 @@ h4.title {
 
 /*  Home page revamp */
 #home-page-carousel {
-	height: 70%;
+	height: calc(100% - 254px);
+    min-height:400px;
     overflow: hidden;
 	border: 0;
 }
@@ -2903,12 +2900,11 @@ h4.title {
 	border-bottom: 3px solid #B2CCF3;
 }
 
-.carousel-control {
-	height: calc(100% - 150px);
+.carousel-control, .carousel-inner {
+	height: calc(100% - 142px);
 }
 
 .carousel-inner {
-	height: calc(100% - 150px);
 	background: #6D6D6D;
 }
 
@@ -2955,7 +2951,7 @@ span.carousel-control-icon {
 .carousel-controls {
 	text-align: center;
 	list-style: none;
-	padding: 50px 0;
+	padding-top: 50px;
 }
 
 .carousel-control-block {
@@ -2964,37 +2960,31 @@ span.carousel-control-icon {
 	margin-bottom: 25px;
 	cursor: pointer;
 	color: #808080;
-
 }
 
 .carousel-inner > .item {
 	text-align: center;
     height: 100%;
-}
-
-.carousel-inner > .item > img {
     width: 100%;
-    height: 100%;
-    margin: auto;
-    object-fit: cover;
+    background-size: cover;
+    background-position: center center;
 }
 
-.carousel-inner > .item > .item-caption {
-	display: inline-block;
-    position: absolute;
-    text-align: center;
+
+.carousel-inner .item-caption {
+	display: table-cell;
     color: #FFF;
     text-shadow: 1px 1px #4E4E4E;
-    width: 100%;
-    margin-left: -50%;
-    top: 40%;
+    vertical-align: middle;
+    background: rgba(0,0,0,0.25);
+    padding: 0 60px;
 }
 
-.gray-screen {
-	height: 100%;
-	width: 100%;
-	position: absolute;
-	background: rgba(0, 0, 0, 0.25);
+
+.carousel-inner .caption-wrapper {
+    width: 100%;
+    height: 100%;
+    display: table;
 }
 
 .home-panel-info {
