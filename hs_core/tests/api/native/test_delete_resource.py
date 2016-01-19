@@ -1,18 +1,17 @@
-from django.http import Http404
-
-__author__ = 'tonycastronova'
-
 from unittest import TestCase
+
+from django.contrib.auth.models import User, Group
+
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
 from hs_core.models import GenericResource
-from django.contrib.auth.models import User, Group
-import datetime as dt
+from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestGetResource(TestCase):
+class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
 
     def setUp(self):
+        super(TestDeleteResource, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
         self.user = users.create_account(
@@ -22,15 +21,6 @@ class TestGetResource(TestCase):
             last_name='some_last_name',
             superuser=False,
             groups=[])
-
-        # get the user's id
-        self.userid = User.objects.get(username=self.user).pk
-
-        self.group = users.create_group(
-            'MytestGroup1',
-            members=[self.user],
-            owners=[self.user]
-            )
 
     def tearDown(self):
         self.user.delete()
@@ -42,24 +32,16 @@ class TestGetResource(TestCase):
             self.user,
             'My Test Resource'
             )
-        self.pid = new_res.short_id
 
-        # get the resource by pid
-        try:
-            resource.get_resource(self.pid)
-        except Http404:
-            self.fail('just created resource doesnt exist for some reason')
+        # there should be one resource at this point
+        self.assertEquals(GenericResource.objects.all().count(), 1, msg="Number of resources not equal to 1")
 
         # delete the resource
-        resource.delete_resource(self.pid)
+        resource.delete_resource(new_res.short_id)
 
-        # try to get the resource again
-        try:
-            resource.get_resource(self.pid), Http404
-        except Http404:
-            pass
-        else:
-            self.fail('resource continues to persist')
+        # there should be no resource at this point
+        self.assertEquals(GenericResource.objects.all().count(), 0, msg="Number of resources not equal to 0")
+
 
 
 
