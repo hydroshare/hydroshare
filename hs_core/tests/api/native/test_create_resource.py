@@ -1,20 +1,22 @@
 __author__ = 'tonycastronova'
 
-import unittest
-
+from dateutil import parser
 from unittest import TestCase
-import datetime as dt
+import datetime as dtime
 
 from django.contrib.auth.models import Group
+from django.utils import timezone
 
 from hs_core.hydroshare import resource, get_resource_by_shortkey
 from hs_core.hydroshare import users
 from hs_core.models import GenericResource
+from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core import hydroshare
 
 
-class TestCreateResource(TestCase):
-
+class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
+        super(TestCreateResource, self).setUp()
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
         self.user = users.create_account(
@@ -32,7 +34,7 @@ class TestCreateResource(TestCase):
         self.hs_group.delete()
         GenericResource.objects.all().delete()
 
-    def test_create_resource(self):
+    def test_create_resource_without_content_files(self):
         new_res = resource.create_resource(
             'GenericResource',
             self.user,
@@ -47,14 +49,61 @@ class TestCreateResource(TestCase):
         self.assertTrue(isinstance(res, GenericResource), type(res))
         self.assertTrue(res.metadata.title.value == 'My Test Resource')
         self.assertTrue(res.created.strftime('%m/%d/%Y %H:%M') == res.updated.strftime('%m/%d/%Y %H:%M') )
-        self.assertTrue(res.created.strftime('%m/%d/%Y') == dt.datetime.today().strftime('%m/%d/%Y'))
+        self.assertTrue(res.created.strftime('%m/%d/%Y') == dtime.datetime.today().strftime('%m/%d/%Y'))
         self.assertTrue(res.creator == self.user)
         self.assertTrue(res.short_id is not None, 'Short ID has not been created!')
-        self.assertTrue(res.bags.exists(), 'Bagit has not been created!')
         self.assertEqual(res.files.all().count(), 0, 'Resource has content files')
 
+    def test_create_resource_with_content_files(self):
+        # create files
+        file_one = "test1.txt"
+        file_two = "test2.tif"
+
+        open(file_one, "w").close()
+        open(file_two, "w").close()
+
+        # open files for read
+        file_one_obj = open(file_one, "r")
+        file_two_obj = open(file_two, "r")
+
+        new_res = resource.create_resource(
+            'GenericResource',
+            self.user,
+            'My Test Resource',
+            files=(file_one_obj,)
+            )
+
+        # test resource has one file
+        self.assertEquals(new_res.files.all().count(), 1, msg="Number of content files is not equal to 1")
+
+        self.assertEqual(new_res.resource_type, 'GenericResource')
+        self.assertTrue(isinstance(new_res, GenericResource), type(new_res))
+        self.assertTrue(new_res.metadata.title.value == 'My Test Resource')
+        self.assertTrue(new_res.created.strftime('%m/%d/%Y %H:%M') == new_res.updated.strftime('%m/%d/%Y %H:%M') )
+        self.assertTrue(new_res.created.strftime('%m/%d/%Y') == dtime.datetime.today().strftime('%m/%d/%Y'))
+        self.assertTrue(new_res.creator == self.user)
+        self.assertTrue(new_res.short_id is not None, 'Short ID has not been created!')
+        self.assertEqual(new_res.files.all().count(), 1, msg='Resource does not contain 1 content file')
+
+        # test creating resource with multiple files
+        new_res = resource.create_resource(
+            'GenericResource',
+            self.user,
+            'My Test Resource',
+            files=(file_one_obj, file_two_obj)
+            )
+
+        # test resource has one file
+        self.assertEquals(new_res.files.all().count(), 2, msg="Number of content files is not equal to 2")
+
     def test_create_resource_with_metadata(self):
-        # TODO: add more metadata elements to the following dict
+        # Note: if element 'type' or 'format' is added to the following dictionary, they will be ignored
+        # see: 'test_create_resource_with_metadata_for_type' and 'test_create_resource_with_metadata_for_format'
+        # element 'publisher' can't be part of the following dictionary - resource creation will fail otherwise
+        # 'publisher' element can be created only after the resource is published
+        # see: 'test_create_resource_with_metadata_for_publisher'
+        # only date element of type 'valid' is honored. Other date types metadata is ignored
+        # see: 'test_create_resource_with_metadata_for_date'
         metadata_dict = [
             {'description': {'abstract': 'My test abstract'}},
             {'creator': {'name': 'John Smith', 'email': 'jsmith@gmail.com'}},
@@ -66,12 +115,16 @@ class TestCreateResource(TestCase):
                                                       'end': '12/12/2012'}}},
             {'coverage': {'type': 'point', 'value': {'name': 'Name for point coverage', 'east': '56.45678',
                                                      'north': '12.6789', 'units': 'deg'}}},
-            {'identifier': {'name':'someIdentifier', 'url':"http://some.org/001"}},
+            {'identifier': {'name': 'someIdentifier', 'url':"http://some.org/001"}},
             {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
-            {'rights': {'statement': 'This is the rights statement for this resource', 'url': 'http://rights.org/001'}},
+            {'rights': {'statement': 'This is the rights statement for this resource',
+                        'url': 'http://rights.org/001'}},
             {'source': {'derived_from': 'http://hydroshare.org/resource/0001'}},
             {'subject': {'value': 'sub-1'}},
             {'subject': {'value': 'sub-2'}},
+            {'language': {'code': 'fre'}},
+            {'date': {'type': 'valid', 'start_date': parser.parse('01/20/2016'),
+                      'end_date': parser.parse('02/20/2016')}},
         ]
 
         res = resource.create_resource(
@@ -87,15 +140,17 @@ class TestCreateResource(TestCase):
         # resource description element is created as part of resource creation
         self.assertEqual(res.metadata.description.abstract, 'My test abstract')
 
-        # the following 2 date elements should have been created as part of resource creation
-        self.assertEqual(res.metadata.dates.all().count(), 2, msg="Number of date elements not equal to 2.")
+        # the following 3 date elements should have been created as part of resource creation
+        self.assertEqual(res.metadata.dates.all().count(), 3, msg="Number of date elements not equal to 3.")
         self.assertIn('created', [dt.type for dt in res.metadata.dates.all()],
                       msg="Date element type 'Created' does not exist")
         self.assertIn('modified', [dt.type for dt in res.metadata.dates.all()],
                       msg="Date element type 'Modified' does not exist")
+        self.assertIn('valid', [dt.type for dt in res.metadata.dates.all()],
+                      msg="Date element type 'Modified' does not exist")
 
-        # number of creators at this point should be 3 (2 we are creating here one is automatically
-        # generated as part of the resource creation
+        # number of creators at this point should be 3 (2 are created based on supplied metadata and one is
+        # automatically generated as part of the resource creation
         self.assertEqual(res.metadata.creators.all().count(), 3, msg='Number of creators not equal to 3')
         self.assertIn('John Smith', [cr.name for cr in res.metadata.creators.all()],
                       msg="Creator 'John Smith' was not found")
@@ -105,19 +160,21 @@ class TestCreateResource(TestCase):
         # number of contributors at this point should be 1
         self.assertEqual(res.metadata.contributors.all().count(), 1, msg='Number of contributors not equal to 1')
 
-        # there should be now 2 coverage elements
+        # there should be now 2 coverage elements as per the supplied metadata
         self.assertEqual(res.metadata.coverages.all().count(), 2, msg="Number of coverages not equal to 2.")
 
-        # there should be now 2 format elements
-        #self.assertEqual(res.metadata.formats.all().count(), 2, msg="Number of format elements not equal to 2.")
+        # there should be no format elements
+        self.assertEqual(res.metadata.formats.all().count(), 0, msg="Number of format elements not equal to 0.")
 
-        # there should be now 2 identifier elements ( 1 we are creating here + 1 auto generated at the time of resource creation)
+        # there should be now 2 identifier elements (one was created from the supplied metadat and the
+        # other one was auto generated at the time of resource creation)
         self.assertEqual(res.metadata.identifiers.all().count(), 2, msg="Number of identifier elements not equal to 1.")
 
-        self.assertEqual(res.metadata.language.code, 'eng', msg="Resource has a language that is not English.")
+        # Language element created based on supplied metadata
+        self.assertEqual(res.metadata.language.code, 'fre', msg="Resource has a language that is not French.")
 
         self.assertEqual(res.metadata.relations.all().count(), 1,
-                         msg="Number of source elements is not equal to 1")
+                         msg="Number of relation elements is not equal to 1")
 
         self.assertEqual(res.metadata.rights.statement, 'This is the rights statement for this resource',
                          msg="Statement of rights did not match.")
@@ -135,3 +192,102 @@ class TestCreateResource(TestCase):
                       msg="Subject element with value of %s does not exist." % 'sub-1')
         self.assertIn('sub-2', [sub.value for sub in res.metadata.subjects.all()],
                       msg="Subject element with value of %s does not exist." % 'sub-1')
+
+        # valid date should have been created
+        self.assertEquals(res.metadata.dates.filter(type='valid').count(), 1)
+        valid_date_element = res.metadata.dates.filter(type='valid').first()
+        valid_start_date = timezone.make_aware(dtime.datetime.strptime('01/20/2016', "%m/%d/%Y"),
+                                               timezone.get_default_timezone())
+        valid_end_date = timezone.make_aware(dtime.datetime.strptime('02/20/2016', "%m/%d/%Y"),
+                                             timezone.get_default_timezone())
+        self.assertEquals(valid_date_element.start_date, valid_start_date)
+        self.assertEquals(valid_date_element.end_date, valid_end_date)
+
+    def test_create_resource_with_metadata_for_publisher(self):
+        # trying to create a resource with metadata for publisher should fail due to the fact that the
+        # resource is not yet published
+        metadata_dict = [{'publisher': {'name': 'HydroShare', 'url': 'https://hydroshare.org'}},]
+        self.assertRaises(Exception, lambda: resource.create_resource(
+            resource_type='GenericResource',
+            owner=self.user,
+            title='My Test Resource',
+            metadata=metadata_dict
+        ))
+
+    def test_create_resource_with_metadata_for_type(self):
+        # trying to create a resource with metadata for type element should ignore the provided type element data
+        # and create the system generated type element
+        metadata_dict = [{'type': {'url': 'https://hydroshare.org/GenericResource'}},]
+        res = resource.create_resource(
+            resource_type='GenericResource',
+            owner=self.user,
+            title='My Test Resource',
+            metadata=metadata_dict
+        )
+
+        type_url = '{0}/terms/{1}'.format(hydroshare.utils.current_site_url(), 'GenericResource')
+        self.assertEqual(res.metadata.type.url, type_url, msg='type element url is wrong')
+
+    def test_create_resource_with_metadata_for_format(self):
+        # trying to create a resource with metadata for format element should ignore the provided format element data
+        # as format elements are system generated based on resource content files
+        metadata_dict = [{'format': {'value': 'plain/text'}}, {'format': {'value': 'image/tiff'}}]
+        res = resource.create_resource(
+            resource_type='GenericResource',
+            owner=self.user,
+            title='My Test Resource',
+            metadata=metadata_dict
+        )
+        self.assertEqual(res.metadata.formats.all().count(), 0, msg="Number of format elements not equal to 0.")
+
+    def test_create_resource_with_metadata_for_date(self):
+        # trying to create a resource with metadata for 'date' element of type 'created' or 'modified' should ignore
+        # the provided date metadata as date of type created and modified are system generated based on resource
+        # creation time.
+        # trying to create a resource with metadata for 'date' element of type 'published' should ignore the provided
+        # metadata as date of type published is created when the resource is published
+        # trying to create a resource with metadata for 'date' element of type 'available' should ignore the provided
+        # metadata as date of type available is created when the resource is made public.
+        # the only date element that can be created at the time of resource creation by specifying necessary data is
+        # of the type 'valid'
+        metadata_dict = [{'date': {'type': 'created', 'start_date': parser.parse('01/16/2016')}},
+                         {'date': {'type': 'modified', 'start_date': parser.parse('01/16/2016')}},
+                         {'date': {'type': 'published', 'start_date': parser.parse('01/16/2016')}},
+                         {'date': {'type': 'available', 'start_date': parser.parse('01/16/2016')}},
+                         {'date': {'type': 'valid', 'start_date': parser.parse('01/20/2016'),
+                                   'end_date': parser.parse('02/20/2016')}}]
+        res = resource.create_resource(
+            resource_type='GenericResource',
+            owner=self.user,
+            title='My Test Resource',
+            metadata=metadata_dict
+        )
+
+        self.assertIn('created', [dt.type for dt in res.metadata.dates.all()],
+                      msg="Date element type 'Created' does not exist")
+        self.assertIn('modified', [dt.type for dt in res.metadata.dates.all()],
+                      msg="Date element type 'Modified' does not exist")
+
+        # skipped dates are created, modified, published, and available
+        skipped_date = timezone.make_aware(dtime.datetime.strptime('01/16/2016', "%m/%d/%Y"),
+                                           timezone.get_default_timezone())
+
+        self.assertNotIn(skipped_date, [dat.start_date for dat in res.metadata.dates.all()],
+                         msg="Matching date value was found")
+
+        self.assertEquals(res.metadata.dates.filter(type='publisher').count(), 0, msg="Publisher date was found.")
+        self.assertEquals(res.metadata.dates.filter(type='available').count(), 0, msg="Available date was found.")
+
+        # valid date should have been created
+        self.assertEquals(res.metadata.dates.filter(type='valid').count(), 1)
+        valid_start_date = timezone.make_aware(dtime.datetime.strptime('01/20/2016', "%m/%d/%Y"),
+                                               timezone.get_default_timezone())
+        valid_end_date = timezone.make_aware(dtime.datetime.strptime('02/20/2016', "%m/%d/%Y"),
+                                             timezone.get_default_timezone())
+
+        self.assertIn(valid_start_date, [dt.start_date for dt in res.metadata.dates.all()],
+                      msg="Matching date value was not found")
+
+        self.assertIn(valid_end_date, [dt.end_date for dt in res.metadata.dates.all()],
+                      msg="Matching date value was not found")
+

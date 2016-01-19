@@ -306,8 +306,20 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
                              }
                         })
 
-    metadata.append({'identifier': {'name':'hydroShareIdentifier',
-                                    'url':'{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id)}})
+    metadata.append({'identifier': {'name': 'hydroShareIdentifier',
+                                    'url': '{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id)}})
+
+    # remove if there exists the 'type' element as system generates this element
+    # remove if there exists 'format' elements - since format elements are system generated based
+    # on resource content files
+    # remove any 'date' element which is not of type 'valid'. All other date elements are system generated
+    for element in list(metadata):
+        if 'type' in element or 'format' in element:
+            metadata.remove(element)
+        if 'date' in element:
+            if 'type' in element['date']:
+                if element['date']['type'] != 'valid':
+                    metadata.remove(element)
 
     metadata.append({'type': {'url': '{0}/terms/{1}'.format(current_site_url(), resource.__class__.__name__)}})
 
