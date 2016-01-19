@@ -1473,7 +1473,10 @@ body > .container{
 	background-color: #eee;
 	background-image: -webkit-linear-gradient(#fcfcfc, #eee);
 	background-image: linear-gradient(#fcfcfc, #eee);
-	text-shadow: 1px 1px #FFF;
+}
+
+.btn-default:not(.active) {
+    text-shadow: 1px 1px #FFF;
 }
 
 .btn-primary {

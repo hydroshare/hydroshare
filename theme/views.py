@@ -122,7 +122,7 @@ def rating(request):
     return response
 
 
-def signup(request, template="accounts/sign_up_form.html"):
+def signup(request, template="accounts/account_signup.html"):
     """
     Signup form.
     """
