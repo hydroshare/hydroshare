@@ -468,11 +468,11 @@
                     </div>
                 {% else %}
                     {% if cm.raccess.public %}
-                        <strong style="color:#5cb85c">&nbspPublic</strong>
-                    {% elif not cm.raccess.public and discoverable %}
-                        <strong style="color:#f0ad4e">&nbspDiscoverable</strong>
-                    {% elif not cm.raccess.public and not discoverable %}
-                        <strong style="color:#d9534f">&nbspPrivate</strong>
+                        <strong class="label-public">&nbspPublic</strong>
+                    {% elif cm.raccess.discoverable %}
+                        <strong class="label-discoverable">&nbspDiscoverable</strong>
+                    {% else %}
+                        <strong class="label-private">&nbspPrivate</strong>
                     {% endif %}
                 {% endif %}
             </div>
@@ -1601,9 +1601,12 @@
                             <div class="tab-pane" id="relevantTools">
                             {% if not metadata_form %}
                                 {% for tool in relevant_tools %}
-                                    <h4>{{ tool.title }}</h4>
-                                    <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch App</button></a>
-                                    <hr>
+                                    <a href="{{ tool.url }}" target="_blank">
+                                    <div id="web-app-item">
+                                        <h4>{{ tool.title }}</h4>
+                                        <img class="user-webapp-icon" src="{{ tool.icon }}">
+                                    </div>
+                                    </a>
                                 {% endfor %}
                             {% else %}
                                 ------- Relevant tools form here -------
@@ -3466,10 +3469,21 @@
                         $(this).closest("form").find("button").show();
                     });
                 });
+                $('.user-webapp-icon').on('error', function() {
+                    $(this)
+                            .attr('src', '{{ STATIC_URL }}img/web-app-default-icon.png')
+                            .removeClass('user-webapp-icon')
+                            .addClass('default-webapp-icon');
+                });
 
             });
         </script>
     {% endblock %}
     <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=drawing&callback=initMap"></script>
+
+    {% block extra_css %}
+        {{ block.super }}
+        <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+    {%  endblock %}
 
 {% endblock %}
