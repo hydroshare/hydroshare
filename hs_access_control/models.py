@@ -1125,8 +1125,7 @@ class UserAccess(models.Model):
         Returns: list of resource objects (QuerySet)
 
         """
-        return BaseResource.objects.filter(raccess__immutable=False)\
-                .filter(raccess__r2urp__user=self, raccess__r2urp__privilege=privilege)\
+        return BaseResource.objects.filter(raccess__r2urp__user=self, raccess__r2urp__privilege=privilege)\
                 .exclude(id__in=BaseResource.objects.filter(raccess__r2urp__user=self,
                                                             raccess__r2urp__privilege__lt=privilege)).distinct()
 

@@ -270,7 +270,9 @@
                             </td>
                             <td>{{ res.updated|date:"Y/m/d" }}</td>
                             <td>
-                                {% if res.raccess.public %}
+                                {% if res.raccess.published %}
+                                    <strong class="label-public">&nbspPublished</strong>
+                                {% elif res.raccess.public %}
                                     <strong class="label-public">&nbspPublic</strong>
                                 {% elif res.raccess.discoverable %}
                                     <strong class="label-discoverable">&nbspDiscoverable</strong>
