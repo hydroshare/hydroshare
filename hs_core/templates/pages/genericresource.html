@@ -2017,8 +2017,7 @@
                                 to the data publication agreement before you can submit the resource for publication. </strong>
                             </p>
                             <p>Data publication agreement text to be completed by Dave ..</p>
-                            <input type="checkbox" id="agree-chk">I agree to the data publication agreement above.
-                        </div>
+                            <input type="checkbox" id="agree-chk"><label for="agree-chk" class="checkbox-label">I agree to the data publication agreement above.</label>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                             <a type="button" id="publish-btn" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/" disabled>Publish</a>
@@ -2810,8 +2809,8 @@
                             if (json_response.hasOwnProperty('metadata_status')) {
                                 if (json_response.metadata_status !== $('#metadata-status').text()) {
                                     $('#metadata-status').text(json_response.metadata_status);
-                                    if (json_response.metadata_status == "Sufficient to make public") {
-                                        customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to make public", 3000);
+                                    if (json_response.metadata_status.toLowerCase().indexOf("sufficient") != -1) {
+                                        customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to publish or make public", 3000);
                                         $("#btn-public").prop("disabled", false);
                                         $("#btn-discoverable").prop("disabled", false);
                                     }
@@ -3132,8 +3131,12 @@
             }
 
             $(document).ready(function () {
-                $('#submit-for-publication-dialog, [type=checkbox]').click(function() {
-                    $('#submit-for-publication-dialog,#publish-btn').disabled = !this.checked;
+                $("#agree-chk").on('click', function(e) {
+                    e.stopImmediatePropagation();
+                    if (e.currentTarget.checked)
+                        $('#publish-btn').removeAttr('disabled');
+                    else
+                        $('#publish-btn').attr('disabled', 'disabled');
                 })
                 $("#btnMyResources").click(label_ajax_submit);
                 $("#coverageTabBtn").click(function(){

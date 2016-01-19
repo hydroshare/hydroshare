@@ -29,6 +29,7 @@ from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods
 from hs_core.models import BaseResource, GenericResource, resource_processor, CoreMetaData
+from hs_core.hydroshare.resource import metadata_status_sufficient, metadata_status_insufficient
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -154,9 +155,9 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     if request.is_ajax():
         if is_add_success:
             if res.metadata.has_all_required_elements():
-                metadata_status = "Sufficient to make public"
+                metadata_status = metadata_status_sufficient
             else:
-                metadata_status = "Insufficient to make public"
+                metadata_status = metadata_status_insufficient
 
             if element_name == 'subject':
                 ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
@@ -202,9 +203,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
     if request.is_ajax():
         if is_update_success:
             if res.metadata.has_all_required_elements():
-                metadata_status = "Sufficient to make public"
+                metadata_status = metadata_status_sufficient
             else:
-                metadata_status = "Insufficient to make public"
+                metadata_status = metadata_status_insufficient
 
             ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
             return HttpResponse(json.dumps(ajax_response_data))

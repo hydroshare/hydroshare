@@ -7,6 +7,7 @@ from hs_tools_resource.models import SupportedResTypes, ToolResource
 from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
 from hs_core.views.utils import authorize
+from hs_core.hydroshare.resource import metadata_status_sufficient, metadata_status_insufficient
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -394,8 +395,8 @@ def check_for_validation(request):
 
 def _get_metadata_status(resource):
     if resource.metadata.has_all_required_elements():
-        metadata_status = "Sufficient to make public"
+        metadata_status = metadata_status_sufficient
     else:
-        metadata_status = "Insufficient to make public"
+        metadata_status = metadata_status_insufficient
 
     return metadata_status

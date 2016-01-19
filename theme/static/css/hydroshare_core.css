@@ -2791,3 +2791,7 @@ h4.title {
 .hidden-form {
 	display: none;
 }
+
+.checkbox-label {
+	padding: 0.5em;
+}
