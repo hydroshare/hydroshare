@@ -467,7 +467,9 @@
                         {% endif %}
                     </div>
                 {% else %}
-                    {% if cm.raccess.public %}
+                    {% if cm.raccess.published %}
+                        <strong class="label-public">&nbspPublished and Immutable</strong>
+                    {% elif cm.raccess.public %}
                         <strong class="label-public">&nbspPublic</strong>
                     {% elif cm.raccess.discoverable %}
                         <strong class="label-discoverable">&nbspDiscoverable</strong>
@@ -2812,7 +2814,7 @@
                             if (json_response.hasOwnProperty('metadata_status')) {
                                 if (json_response.metadata_status !== $('#metadata-status').text()) {
                                     $('#metadata-status').text(json_response.metadata_status);
-                                    if (json_response.metadata_status.toLowerCase().indexOf("sufficient") != -1) {
+                                    if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
                                         customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to publish or make public", 3000);
                                         $("#btn-public").prop("disabled", false);
                                         $("#btn-discoverable").prop("disabled", false);
@@ -3140,7 +3142,7 @@
                         $('#publish-btn').removeAttr('disabled');
                     else
                         $('#publish-btn').attr('disabled', 'disabled');
-                })
+                });
                 $("#btnMyResources").click(label_ajax_submit);
                 $("#coverageTabBtn").click(function(){
                     setTimeout( function(){

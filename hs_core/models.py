@@ -85,7 +85,11 @@ class ResourcePermissionsMixin(Ownable):
     def can_delete(self, request):
         user = get_user(request)
         if user.is_authenticated():
-            if user.is_superuser or self.raccess.owners.filter(pk=user.pk).exists():
+            if user.is_superuser:
+                return True
+            elif self.raccess.immutable:
+                return False
+            elif self.raccess.owners.filter(pk=user.pk).exists():
                 return True
             else:
                 return False
@@ -98,6 +102,8 @@ class ResourcePermissionsMixin(Ownable):
         if user.is_authenticated():
             if user.is_superuser:
                 return True
+            elif self.raccess.immutable:
+                return False
             elif self.raccess.owners.filter(pk=user.pk).exists():
                 return True
             elif self.raccess.edit_users.filter(pk=user.pk).exists():
@@ -112,7 +118,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_view(self, request):
         user = get_user(request)
 
-        if self.raccess.public or self.raccess.discoverable:
+        if self.raccess.public or self.raccess.discoverable or self.raccess.immutable:
             return True
         if user.is_authenticated():
             if user.is_superuser:

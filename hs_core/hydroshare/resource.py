@@ -746,6 +746,7 @@ def publish_resource(pk):
     resource = utils.get_resource_by_shortkey(pk)
     resource.raccess.published = True
     resource.raccess.immutable = True
+    resource.raccess.public = True
     resource.raccess.save()
     resource.doi = "to be assigned"
     resource.save()

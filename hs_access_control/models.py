@@ -1212,7 +1212,7 @@ class UserAccess(models.Model):
         if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
 
-        return self.user.is_active and (self.user.is_superuser or self.owns_resource(this_resource))
+        return self.user.is_active and (self.user.is_superuser or (not this_resource.raccess.immutable and self.owns_resource(this_resource)))
 
     def can_view_resource(self, this_resource):
         """
@@ -1230,7 +1230,7 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             return False
 
-        if access_resource.public:
+        if access_resource.public or access_resource.published:
             return True
 
         if self.user.is_superuser:
@@ -1259,7 +1259,7 @@ class UserAccess(models.Model):
         if not isinstance(this_resource, BaseResource):
             raise HSAUsageException("Target is not a resource")
 
-        return self.user.is_active and (self.user.is_superuser or self.owns_resource(this_resource))
+        return self.user.is_active and (self.user.is_superuser or (not this_resource.raccess.immutable and self.owns_resource(this_resource)))
 
     ##########################################
     # check sharing rights
