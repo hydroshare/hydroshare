@@ -2,7 +2,7 @@
 {% load i18n future %}
 {% block title %}Sign In{% endblock %}
 
-{% block main_cols %}col-md-6 col-md-offset-3{% endblock %}
+{% block main_cols %}col-md-6{% endblock %}
 
 {% block main %}
 
@@ -11,6 +11,7 @@
 {% else %}
     {{ block.super }}
 
+    <h2>Sign In</h2>
     <form class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
         {% csrf_token %}
 
@@ -36,7 +37,7 @@
             {% block account_form_actions %}
                 <div class="row">
                     <div class="col-md-12">
-                        <input class="hl-btn hl-btn-green" type="submit" value="Sign In" style="width: 100%;">
+                        <input class="btn btn-primary" type="submit" value="Sign In">
                     </div>
                 </div>
             {% endblock %}

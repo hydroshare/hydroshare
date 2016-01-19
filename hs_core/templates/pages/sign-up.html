@@ -3,8 +3,9 @@
 {% load accounts_tags %}
 
 {% block main %}
-    <h2 class="page-title">Sign Up</h2>
+
     {% if user.is_anonymous %}
+        <h2 class="page-title">Sign Up</h2>
         <div class="col-sm-6">
             <!-- signup -->
             <div class="front-signup js-front-signup">

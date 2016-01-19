@@ -826,7 +826,6 @@ li.account p{
 
 #signup{
     margin-bottom: 10px;
-    float: right;
 }
 
 /* ===== Site search ===== */
@@ -2894,7 +2893,8 @@ h4.title {
 /*  Home page revamp */
 #home-page-carousel {
 	height: calc(100% - 254px);
-    min-height:400px;
+    min-height: 400px;
+    max-height: 500px;
     overflow: hidden;
 	border: 0;
 }
@@ -3009,7 +3009,7 @@ span.carousel-control-icon {
 }
 
 .img-home-art {
-	max-height: 200px;
+	max-height: 100px;
 	margin: auto;
 	display: block;
 }
@@ -3019,7 +3019,6 @@ span.carousel-control-icon {
 	background-color: #BBB;
 	padding: 20px 0;
 	margin:25px 0;
-	margin-top: 30px;
     margin-bottom: -60px;
 	text-align: center;
 }
@@ -3027,7 +3026,6 @@ span.carousel-control-icon {
 .screen-sizes h2 {
     font-family: 'webfont_light', Helvetica, Arial, sans-serif;
     color: #777;
-    padding: 50px 0;
     text-shadow: 0 1px rgba(255, 255, 255, 0.6);
 }
 
@@ -3151,14 +3149,22 @@ div.description.active {
 .step-description {
     text-align: center;
     color: #666;
-    display: table-cell;
-    vertical-align: middle;
     line-height:20px;
 }
 
 .description-container {
     height: 150px;
+}
+
+.table-display {
     display: table;
+    width: 100%
+}
+
+.table-cell-display {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
 }
 
 .home-page-block-title {
@@ -3169,5 +3175,9 @@ div.description.active {
     width: 150px;
     height: 150px;
     margin: auto;
+}
+
+.availability-description {
+    height:100px;
 }
 
