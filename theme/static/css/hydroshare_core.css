@@ -2918,76 +2918,19 @@ h4.title {
 /*  Home page revamp */
 #home-page-carousel {
 	height: calc(100% - 254px);
+    margin-bottom: 60px;
     min-height: 400px;
     max-height: 500px;
     overflow: hidden;
 	border: 0;
 }
 
-.carousel-controls li.active  .carousel-control-block {
-	border-bottom: 3px solid #B2CCF3;
-}
-
 .carousel-control, .carousel-inner {
-	height: calc(100% - 142px);
+	height: 100%;
 }
 
 .carousel-inner {
 	background: #6D6D6D;
-}
-
-.carousel-indicators {
-     position: initial;
-     bottom: initial;
-     left: initial;
-     z-index: initial;
-     width: initial;
-     padding-left: initial;
-     margin-left: initial;
-     text-align: initial;
-     list-style: initial;
-}
-
-.carousel-indicators li {
-	display: inline-block;
-	width: initial;
-	height: initial;
-	margin: initial;
-	text-indent: initial;
-	cursor: initial;
-	background-color: #000 \9;
-	background-color: initial;
-	border: initial;
-	border-radius: initial;
-}
-
-.carousel-indicators .active {
-     width: initial;
-     height: initial;
-     margin: initial;
-     background-color: initial;
-}
-
-span.carousel-control-icon {
-	font-size: 24px;
-}
-
-.carousel-indicators .active .carousel-control-block {
-	color: #7189AD;
-}
-
-.carousel-controls {
-	text-align: center;
-	list-style: none;
-	padding-top: 50px;
-}
-
-.carousel-control-block {
-	display: inline-block;
-	margin: 0 15px;
-	margin-bottom: 25px;
-	cursor: pointer;
-	color: #808080;
 }
 
 .carousel-inner > .item {
@@ -2998,7 +2941,6 @@ span.carousel-control-icon {
     background-position: center center;
 }
 
-
 .carousel-inner .item-caption {
 	display: table-cell;
     color: #FFF;
@@ -3007,7 +2949,6 @@ span.carousel-control-icon {
     background: rgba(0,0,0,0.25);
     padding: 0 60px;
 }
-
 
 .carousel-inner .caption-wrapper {
     width: 100%;
@@ -3033,16 +2974,15 @@ span.carousel-control-icon {
 	margin-right: 20px;
 }
 
-.img-home-art {
+.img-devices {
 	max-height: 100px;
 	margin: auto;
-	display: block;
 }
 
 .screen-sizes {
     background: url(../img/graypattern.jpg);
 	background-color: #BBB;
-	padding: 20px 0;
+	padding: 15px 0;
 	margin:25px 0;
     margin-bottom: -60px;
 	text-align: center;
