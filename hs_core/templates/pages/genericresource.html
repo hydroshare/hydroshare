@@ -462,11 +462,11 @@
                     </div>
                 {% else %}
                     {% if cm.raccess.public %}
-                        <strong style="color:#5cb85c">&nbspPublic</strong>
-                    {% elif not cm.raccess.public and discoverable %}
-                        <strong style="color:#f0ad4e">&nbspDiscoverable</strong>
-                    {% elif not cm.raccess.public and not discoverable %}
-                        <strong style="color:#d9534f">&nbspPrivate</strong>
+                        <strong class="label-public">&nbspPublic</strong>
+                    {% elif cm.raccess.discoverable %}
+                        <strong class="label-discoverable">&nbspDiscoverable</strong>
+                    {% else %}
+                        <strong class="label-private">&nbspPrivate</strong>
                     {% endif %}
                 {% endif %}
             </div>

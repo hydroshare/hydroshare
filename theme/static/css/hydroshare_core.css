@@ -2513,22 +2513,28 @@ h4.title {
 }
 
 #item-selectors {
-	display: none;
-	font-size: 14px;
-	border: 1px solid #ddd;
-	margin-top: 10px;
+    display: none;
+    font-size: 14px;
+}
+
+.dataTables_scroll {
+    border: 1px solid #ddd;
 }
 
 #item-selectors tbody td {
-	/*border-bottom: 1px solid #ddd;*/
+	border-bottom: 1px solid #EEE;
 }
 
-#item-selectors thead th {
-	border-bottom: 1px solid #ddd;
+.dataTables_scrollHeadInner thead th, .dataTables_scrollBody {
+    border-bottom: 0 !important;
 }
 
-#item-selectors tr:first-child th:first-child {
+.dataTables_scrollHeadInner tr:first-child th:first-child {
 	padding-left: 10px;
+}
+
+.dataTables_scrollBody {
+    border-top: 1px solid #DDD;
 }
 
 #item-selectors tr > td:first-child {
@@ -2790,4 +2796,16 @@ h4.title {
 
 .hidden-form {
 	display: none;
+}
+
+.label-public {
+    color: #5cb85c;
+}
+
+.label-discoverable {
+    color: #f0ad4e;
+}
+
+.label-private {
+    color: #d9534f;
 }
