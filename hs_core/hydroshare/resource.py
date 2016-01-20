@@ -34,13 +34,16 @@ class ZipContents(object):
         logger = logging.getLogger('django')
         temp_dir = tempfile.mkdtemp()
         try:
-            for f in self.zip_file.namelist():
-                if not self.black_list(f):
-                    logger.debug(f)
-                    f_name = os.path.basename(f)
-                    if f_name != '':
-                        self.zip_file.extract(f, temp_dir)
-                        yield open(os.path.join(temp_dir, f))
+            for name_path in self.zip_file.namelist():
+                if not self.black_list(name_path):
+                    logger.debug(name_path)
+                    name = os.path.basename(name_path)
+                    if name != '':
+                        self.zip_file.extract(name_path, temp_dir)
+                        file_path = os.path.join(temp_dir, name_path)
+                        f = UploadedFile(file=open(file_path, 'rb'),
+                                         name=name, size=os.stat(file_path).st_size)
+                        yield f
         finally:
             shutil.rmtree(temp_dir)
 
@@ -413,7 +416,7 @@ def create_resource(
                     zfile.close()
                     raise e
 
-        add_resource_files(resource.short_id, *files)
+        add_resource_files(resource.short_id, files)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
