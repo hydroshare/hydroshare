@@ -429,7 +429,7 @@ class TestCoreMetadata(TestCase):
         resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         # there should be now 2 coverage elements
-        self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total overages not equal 2.")
+        self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total overages not equal to 2.")
 
     def test_date(self):
         # test that when a resource is created it already generates the 'created' and 'modified' date elements
@@ -929,7 +929,7 @@ class TestCoreMetadata(TestCase):
 
         # add a relation element of uri type
         resource.create_metadata_element(self.res.short_id,'relation', type='isPartOf',
-                                value='http://hydroshare.org/resource/001')
+                                         value='http://hydroshare.org/resource/001')
         # at this point there should be 1 relation element
         self.assertEqual(self.res.metadata.relations.all().count(), 1,
                          msg="Number of source elements is not equal to 1")
@@ -1313,4 +1313,101 @@ class TestCoreMetadata(TestCase):
         #print (container.get('{%s}title' % self.res.metadata.NAMESPACES['dc']))
         # print self.res.metadata.get_xml()
         #print (bad)
+
+    def test_metadata_delete_on_resource_delete(self):
+        # when a resource is deleted all the associated metadata elements should be deleted
+        # create a abstract for the resource
+        resource.create_metadata_element(self.res.short_id, 'description', abstract='new abstract for the resource')
+        # add a format element
+        format_csv = 'text/csv'
+        resource.create_metadata_element(self.res.short_id, 'format', value=format_csv)
+        # add a contributor element
+        resource.create_metadata_element(self.res.short_id, 'contributor', name='John Smith')
+        # add a period type coverage
+        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2000', 'end': '12/12/2012'}
+        resource.create_metadata_element(self.res.short_id,'coverage', type='period', value=value_dict)
+        # add another identifier
+        resource.create_metadata_element(self.res.short_id,'identifier',
+                                         name='someIdentifier', url="http://some.org/001")
+
+        # add a source element of uri type
+        resource.create_metadata_element(self.res.short_id,'source', derived_from='http://hydroshare.org/resource/0001')
+        core_metadata_obj = self.res.metadata
+        # add a relation element of uri type
+        resource.create_metadata_element(self.res.short_id,'relation', type='isPartOf',
+                                value='http://hydroshare.org/resource/001')
+
+        # add publisher element
+        self.res.raccess.published = True
+        self.res.raccess.save()
+        resource.create_metadata_element(self.res.short_id, 'publisher', name='USGS', url="http://usgs.gov")
+
+        # before resource delete
+        self.assertEquals(CoreMetaData.objects.all().count(), 1, msg="# of CoreMetadata objects is not equal to 1.")
+        # there should be Creator metadata objects
+        self.assertTrue(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Contributor metadata objects
+        self.assertTrue(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Identifier metadata objects
+        self.assertTrue(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Type metadata objects
+        self.assertTrue(Type.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Source metadata objects
+        self.assertTrue(Source.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Relation metadata objects
+        self.assertTrue(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Publisher metadata objects
+        self.assertTrue(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Title metadata objects
+        self.assertTrue(Title.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Description (Abstract) metadata objects
+        self.assertTrue(Description.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Date metadata objects
+        self.assertTrue(Date.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Subject metadata objects
+        self.assertTrue(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Coverage metadata objects
+        self.assertTrue(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Format metadata objects
+        self.assertTrue(Format.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Language metadata objects
+        self.assertTrue(Language.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Rights metadata objects
+        self.assertTrue(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
+
+        # delete resource
+        hydroshare.delete_resource(self.res.short_id)
+        self.assertEquals(CoreMetaData.objects.all().count(), 0, msg="CoreMetadata object was found")
+
+        # there should be no Creator metadata objects
+        self.assertFalse(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Contributor metadata objects
+        self.assertFalse(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Identifier metadata objects
+        self.assertFalse(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Type metadata objects
+        self.assertFalse(Type.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Source metadata objects
+        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Relation metadata objects
+        self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Publisher metadata objects
+        self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Title metadata objects
+        self.assertFalse(Title.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Description (Abstract) metadata objects
+        self.assertFalse(Description.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Date metadata objects
+        self.assertFalse(Date.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Subject metadata objects
+        self.assertFalse(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Coverage metadata objects
+        self.assertFalse(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Format metadata objects
+        self.assertFalse(Format.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Language metadata objects
+        self.assertFalse(Language.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Rights metadata objects
+        self.assertFalse(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
+
 
