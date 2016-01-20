@@ -2917,10 +2917,8 @@ h4.title {
 
 /*  Home page revamp */
 #home-page-carousel {
-	height: calc(100% - 254px);
+	height: 400px;
     margin-bottom: 60px;
-    min-height: 400px;
-    max-height: 500px;
     overflow: hidden;
 	border: 0;
 }
@@ -2956,15 +2954,13 @@ h4.title {
     display: table;
 }
 
+#table-features td {
+    padding: 8px 0;
+}
+
 .home-panel-info {
 	min-height: 300px;
 	margin: 15px 0;
-}
-
-.list-features {
-	list-style: none;
-	padding-left: 0;
-	line-height: 32px;
 }
 
 .checkmark {
