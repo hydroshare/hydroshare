@@ -3,6 +3,9 @@ from __future__ import absolute_import
 import mimetypes
 import os
 import json
+import tempfile
+import logging
+import shutil
 
 from django.db.models import get_model, get_models
 from django.http import Http404
@@ -11,11 +14,13 @@ from django.utils.timezone import now
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
 from django.core.serializers import get_serializer
+from django.core.files import File
+from django.core.files.uploadedfile import UploadedFile
 
 from mezzanine.conf import settings
 
 from hs_core.signals import *
-from hs_core.models import AbstractResource, ResourceManager, BaseResource
+from hs_core.models import AbstractResource, ResourceManager, BaseResource, ResourceFile
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from django_irods.storage import IrodsStorage
 
@@ -359,3 +364,42 @@ def resource_file_add_process(resource, files, user, extract_metadata=False, **k
     resource_modified(resource, user)
     return resource_file_objects
 
+
+def add_file_to_resource(resource, f):
+    """
+    Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
+    :param resource: Resource to which file should be added
+    :param f: File-like object to add to a resource
+    :return: The identifier of the ResourceFile added.
+    """
+    ret = ResourceFile.objects.create(content_object=resource,
+                                      resource_file=File(f) if not isinstance(f, UploadedFile) else f)
+    # add format metadata element if necessary
+    file_format_type = get_file_mime_type(f.name)
+    if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
+        resource.metadata.create_element('format', value=file_format_type)
+
+
+class ZipContents(object):
+    def __init__(self, zip_file):
+        self.zip_file = zip_file
+
+    def black_list(self, f_name):
+        return f_name.startswith('__MACOSX/')
+
+    def get_files(self):
+        logger = logging.getLogger('django')
+        temp_dir = tempfile.mkdtemp()
+        try:
+            for name_path in self.zip_file.namelist():
+                if not self.black_list(name_path):
+                    logger.debug(name_path)
+                    name = os.path.basename(name_path)
+                    if name != '':
+                        self.zip_file.extract(name_path, temp_dir)
+                        file_path = os.path.join(temp_dir, name_path)
+                        f = UploadedFile(file=open(file_path, 'rb'),
+                                         name=name, size=os.stat(file_path).st_size)
+                        yield f
+        finally:
+            shutil.rmtree(temp_dir)

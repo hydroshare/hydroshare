@@ -1,8 +1,5 @@
 ### resource API
 import os
-import zipfile
-import tempfile
-import logging
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
@@ -22,30 +19,6 @@ from hs_labels.models import ResourceLabels
 file_size_limit = 10*(1024 ** 3)
 file_size_limit_for_display = '10G'
 
-
-class ZipContents(object):
-    def __init__(self, zip_file):
-        self.zip_file = zip_file
-
-    def black_list(self, f_name):
-        return f_name.startswith('__MACOSX/')
-
-    def get_files(self):
-        logger = logging.getLogger('django')
-        temp_dir = tempfile.mkdtemp()
-        try:
-            for name_path in self.zip_file.namelist():
-                if not self.black_list(name_path):
-                    logger.debug(name_path)
-                    name = os.path.basename(name_path)
-                    if name != '':
-                        self.zip_file.extract(name_path, temp_dir)
-                        file_path = os.path.join(temp_dir, name_path)
-                        f = UploadedFile(file=open(file_path, 'rb'),
-                                         name=name, size=os.stat(file_path).st_size)
-                        yield f
-        finally:
-            shutil.rmtree(temp_dir)
 
 def get_resource(pk):
     """
@@ -332,7 +305,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, content=None,
-        files=(), res_type_cls=None, resource=None, unpack_file=True, **kwargs):
+        files=(), res_type_cls=None, resource=None, unpack_file=False, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
     HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method
@@ -405,18 +378,7 @@ def create_resource(
         if not metadata:
             metadata = []
 
-        if len(files) == 1:
-            if unpack_file and zipfile.is_zipfile(files[0]):
-                try:
-                    tmp_dir = tempfile.mkdtemp()
-                    zfile = zipfile.ZipFile(files[0])
-                    zcontents = ZipContents(zfile)
-                    files = zcontents.get_files()
-                except Exception as e:
-                    zfile.close()
-                    raise e
-
-        add_resource_files(resource.short_id, files)
+        add_resource_files(resource.short_id, *files)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
@@ -556,7 +518,8 @@ def update_resource(
 
     return resource
 
-def add_resource_files(pk, files):
+
+def add_resource_files(pk, *files):
     """
     Called by clients to update a resource in HydroShare by adding a single file.
 
@@ -564,7 +527,8 @@ def add_resource_files(pk, files):
 
     Parameters:
     pid - Unique HydroShare identifier for the resource that is to be updated.
-    files - A list of file-like objects that will be added to the existing resource identified by pid
+    files - A list of file-like objects representing files that will be added
+    to the existing resource identified by pid
 
     Returns:    The pid assigned to the updated resource
 
@@ -590,18 +554,10 @@ def add_resource_files(pk, files):
     """
     resource = utils.get_resource_by_shortkey(pk)
     ret = []
-    for file in files:
-        ret.append(ResourceFile.objects.create(
-            content_object=resource,
-            resource_file=File(file) if not isinstance(file, UploadedFile) else file
-        ))
-
-        # add format metadata element if necessary
-        file_format_type = utils.get_file_mime_type(file.name)
-        if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
-            resource.metadata.create_element('format', value=file_format_type)
-
+    for f in files:
+        ret.append(utils.add_file_to_resource(resource, f))
     return ret
+
 
 def update_system_metadata(pk, **kwargs):
     """
