@@ -26,9 +26,9 @@ def get_res_id_list(all_res_list):
         return [r.short_id for r in all_res_list]
 
 class CollectionItemsForm(ModelForm):
-    collection_items = forms.MultipleChoiceField(choices=[],
-                                                    widget=forms.CheckboxSelectMultiple(
-                                                        attrs={'style': 'width:auto;margin-top:-5px'}))
+    collection_items = forms.MultipleChoiceField(choices=[])
+                                                    # widget=forms.CheckboxSelectMultiple(
+                                                    #     attrs={'style': 'width:auto;margin-top:-5px'}))
     all_res_list = None
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, all_res_list=None, *args, **kwargs):
         try:
@@ -41,6 +41,7 @@ class CollectionItemsForm(ModelForm):
         self.helper = CollectionItemsFormHelper(allow_edit, res_short_id, element_id, element_name='CollectionItems')
         self.all_res_list = all_res_list
         self.fields['collection_items'].choices = self.getChoices()
+
         if self.instance:
             try:
                 collection_items = self.instance.collection_items.all()

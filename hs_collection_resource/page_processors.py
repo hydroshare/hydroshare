@@ -63,7 +63,7 @@ def landing_page(request, page):
             get_info = content_model.metadata.collection_items.first().collection_items.all()
             link_html = ""
             for res in get_info:
-                link_html += '<a href="/resource/'+res.short_id+'">'+ res.title +':'+ res.resource_type + '</a><br/>'
+                link_html += '<a href="/resource/'+res.short_id+'" target="_blank">'+ res.title +':'+ res.resource_type + '</a><br/>'
             context['collection_items'] = link_html
 
         context['extended_metadata_exists'] = extended_metadata_exists
@@ -75,19 +75,62 @@ def landing_page(request, page):
                 continue
             actual_resources.append(res)
 
-        collection_items_obj = content_model.metadata.collection_items.first()
-        collection_items_form = CollectionItemsForm(instance=collection_items_obj,
-                                                         res_short_id=content_model.short_id,
-                                                         element_id=collection_items_obj.id
-                                                         if collection_items_obj else None,
-                                                         all_res_list=actual_resources)
+        # collection_items_obj = content_model.metadata.collection_items.first()
+        # collection_items_form = CollectionItemsForm(instance=collection_items_obj,
+        #                                                  res_short_id=content_model.short_id,
+        #                                                  element_id=collection_items_obj.id
+        #                                                  if collection_items_obj else None,
+        #                                                  all_res_list=actual_resources)
+
+
+        html_stuff = ""
+
+        for res in resource_collection:
+            if content_model.short_id == res.short_id:
+                continue
+            elif content_model.metadata.collection_items.first() is not None and res in content_model.metadata.collection_items.first().collection_items.all():
+                continue
+            html_stuff += '<option name='+res.title+' value='+res.short_id+'>'+ res.title +':'+ res.resource_type + '</option>'
+
+
+        html_db = ""
+        if content_model.metadata.collection_items.first() is not None:
+            for res_checked in content_model.metadata.collection_items.first().collection_items.all():
+                html_db += '<option name='+res_checked.title+' value='+res_checked.short_id+'>'+ res_checked.title +':'+ res_checked.resource_type + '</option>'
+
 
         ext_md_layout = Layout(
-                                HTML('<div class="form-group" id="CollectionItems"> '
-                                    '{% load crispy_forms_tags %} '
-                                    '{% crispy collection_items_form %} '
-                                 '</div> ')
-                              )
+                                HTML('<input type="text" id="collection_res_id" value="'+content_model.short_id+'" class="hidden" />'),
+                                HTML(   '<form role="form" id="collector" action="/hsapi/_internal/update-collection/" method="POST" >'
+                                        '<div class="form-group" id="CollectionItems"> '
+                                        '</div>'
+                                 ),
+                                HTML(
+
+                                    '<h4>All Resources</h4>'
+                                    '<select class="form-control" multiple="multiple" id="select1">'
+                                ),
+                                HTML(
+                                    html_stuff
+                                ),
+                                HTML(
+                                    '</select>'
+                                    '<input class="btn btn-success" type="button" id="add" value ="Add to Collection" />'
+                                    ),
+                                HTML(
+                                    '<h4>Resources in your Collection</h4>'
+                                    '<select class="form-control" multiple="multiple" id="select2" >'
+                                ),
+                                 HTML(html_db),
+                                 HTML('</select>'
+                                 '<br/>'
+                                    '<input class="btn btn-danger" type="button" id="remove" value ="Remove from Collection" />'
+                                ),
+            HTML(
+                 '</form>'
+                 '<br/><input class="btn btn-primary" type="button" id="save" value ="Save Changes" />')
+                                )
+
 
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user,
@@ -95,17 +138,19 @@ def landing_page(request, page):
                                                    extended_metadata_layout=ext_md_layout,
                                                    request=request)
 
-        context['collection_items_form'] = collection_items_form
+        # context['collection_items_form'] = collection_items_form
+        context['html_stuff']= html_stuff
+        context['html_db'] = html_db
 
-        if collection_items_obj:
-            collection_items = collection_items_obj.collection_items.all()
-            checked_res_str = ""
-            if len(collection_items) > 0:
-                for res in collection_items:
-                    checked_res_str += str(res.short_id)
-                    checked_res_str += ","
-
-            context['checked_res'] = checked_res_str
+        # if collection_items_obj:
+        #     collection_items = collection_items_obj.collection_items.all()
+        #     checked_res_str = ""
+        #     if len(collection_items) > 0:
+        #         for res in collection_items:
+        #             checked_res_str += str(res.short_id)
+        #             checked_res_str += ","
+        #
+        #     context['checked_res'] = checked_res_str
 
     hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)
