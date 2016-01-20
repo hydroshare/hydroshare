@@ -31,9 +31,6 @@ class TestUserInfo(APITestCase):
 
         self.client.force_authenticate(user=self.user)
 
-    def tearDown(self):
-        self.user.delete()
-
     def test_user_info(self):
         response = self.client.get('/hsapi/userInfo/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
