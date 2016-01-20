@@ -253,6 +253,18 @@ def publish(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
     hydroshare.publish_resource(shortkey)
+
+    # downgrade all editor privilege to view privilege with ownership retained
+    owners = set(res.raccess.owners.all())
+    editors = set(res.raccess.edit_users.all()) - owners
+
+    for user in editors:
+        try:
+            request.user.uaccess.share_resource_with_user(res, user, PrivilegeCodes.VIEW)
+        except HSAccessException as exp:
+            messages.error(request, exp.message)
+            break
+
     resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
