@@ -25,6 +25,7 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
     def tearDown(self):
         self.user.delete()
         self.group.delete()
+        super(TestDeleteResource, self).tearDown()
 
     def test_delete_resource(self):
         new_res = resource.create_resource(

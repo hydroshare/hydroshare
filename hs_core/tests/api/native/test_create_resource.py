@@ -33,6 +33,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.user.delete()
         self.hs_group.delete()
         GenericResource.objects.all().delete()
+        super(TestCreateResource, self).tearDown()
 
     def test_create_resource_without_content_files(self):
         new_res = resource.create_resource(
