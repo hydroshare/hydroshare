@@ -721,7 +721,6 @@ def delete_resource_file(pk, filename_or_id, user):
 
     return filename_or_id
 
-
 def publish_resource(pk):
     """
     Formally publishes a resource in HydroShare. Triggers the creation of a DOI for the resource, and triggers the
@@ -748,7 +747,7 @@ def publish_resource(pk):
     resource.raccess.immutable = True
     resource.raccess.public = True
     resource.raccess.save()
-    resource.doi = "to be assigned"
+    resource.doi = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=pk)
     resource.save()
 
 
