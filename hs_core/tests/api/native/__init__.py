@@ -4,7 +4,6 @@ from test_comment_on_resource import *
 from test_core_metadata import *
 from test_create_account import *
 from test_create_resource import *
-from test_delete_group_owner import *
 from test_delete_resource_file import *
 from test_delete_resource import *
 from test_endorse_comment import *
