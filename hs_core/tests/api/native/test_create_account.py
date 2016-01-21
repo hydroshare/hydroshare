@@ -80,7 +80,7 @@ class CreateAccountTest(unittest.TestCase):
         g1 = user.uaccess.create_group('group1')
         g2 = user.uaccess.create_group('group2')
 
-	# TODO: no order assumption -> poor test. 
+        # TODO from @alvacouch: no order assumption -> poor test. 
         user_groups = list(Group.objects.filter(g2ugp__user=user))
 
         groups = [g0, g1, g2]
