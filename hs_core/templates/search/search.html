@@ -8,19 +8,6 @@
         <div class="col-lg-3" id="folders">
             {% if query %}
                 <input class="btn btn-default" type="button" value="clear all" onclick="clearAllFaceted()">
-                <span id="color-scheme">
-                    <svg width='180' height='24'>
-                        <rect class="YellowGreenBlue-colormap-band-1-fill" x="0" width="20" height="20"></rect>
-                        <rect class="YellowGreenBlue-colormap-band-2-fill" x="20" width="20" height="20"></rect>
-                        <rect class="YellowGreenBlue-colormap-band-3-fill" x="40" width="20" height="20"></rect>
-                        <rect class="YellowGreenBlue-colormap-band-4-fill" x="60" width="20" height="20"></rect>
-                        <rect class="YellowGreenBlue-colormap-band-5-fill" x="80" width="20" height="20"></rect>
-                        <rect class="YellowGreenBlue-colormap-band-6-fill" x="100" width="20" height="20"></rect>
-                        <rect class="YellowGreenBlue-colormap-band-7-fill" x="120" width="20" height="20"></rect>
-                        <rect class="YellowGreenBlue-colormap-band-8-fill" x="140" width="20" height="20"></rect>
-                        <rect class="YellowGreenBlue-colormap-band-9-fill" x="160" width="20" height="20"></rect>
-                    </svg>
-                </span>
                 {% for key, values in facets.fields.items %}
                     {% if values %}
                         <div class="panel-group" id="faceting-{{ key }}">
@@ -59,27 +46,29 @@
                                      {% endif %}>
                                     <ul class="list-group">
                                     {% for item in values %}
-                                        {% if item.1 >= 2 %}
+                                        {% if item.1 > 0 %}
                                             <li class="list-group-item">
                                                 <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp; {{ item.0 }}
-                                                    {% if item.1 >= 2 and item.1 <= 4 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-1">
+                                                    {% if item.1 >= 1 and item.1 < 2 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-9">
+                                                    {% elif item.1 >= 2 and item.1 <= 4 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-9">
                                                     {% elif item.1 > 4 and item.1 <= 6 %}
-                                                         <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-2">
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-8">
                                                     {% elif item.1 > 6 and item.1 <= 10 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-3">
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-7">
                                                     {% elif item.1 > 10 and item.1 <= 18 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-4">
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-6">
                                                     {% elif item.1 > 18 and item.1 <= 32 %}
                                                         <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
                                                     {% elif item.1 > 32 and item.1 <= 57 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-6">
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-4">
                                                     {% elif item.1 > 57 and item.1 <= 100 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-7">
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-3">
                                                     {% elif item.1 > 100 and item.1 <= 178 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-8">
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-2">
                                                     {% elif item.1 > 178 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-9">
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-1">
                                                     {% endif %}{{ item.1 }}
                                                 </span>
                                             </li>
