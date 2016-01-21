@@ -263,7 +263,7 @@ def get_checksum(pk):
     Exceptions.NotFound - The resource specified by pid does not exist
     Exception.ServiceFailure - The service is unable to process the request
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
 def check_resource_files(files=()):
     """
