@@ -1142,11 +1142,9 @@ a[data-toggle='tab']{
     border-bottom-right-radius: 0;
 }
 
-
-
 #status-btn-group {
     margin-left: 10px;
-    top: -5px;
+    float: left;
 }
 
 .btn-success {
@@ -1159,6 +1157,10 @@ a[data-toggle='tab']{
 
 .btn{
     box-shadow: 0 1px 0 rgba(255,255,255,0.3) inset;
+}
+
+.clear-fix {
+    clear: both;
 }
 
 #id_user-wrapper{
@@ -1523,8 +1525,7 @@ body > .container{
 }
 
 div#sharing-status {
-    height: 34px;
-	margin-top: 20px;
+    overflow: hidden; /* Fixes height for floating elements */
 }
 
 .info-group {
@@ -1962,6 +1963,14 @@ td.user-actions > span:hover {
 
 .user-roles.no-caret .caret{
 	display:none;
+}
+
+#user-permission-msg {
+    margin-top: 20px;
+}
+
+#shareable-container {
+    margin-left: 100px;
 }
 
 button.loading {

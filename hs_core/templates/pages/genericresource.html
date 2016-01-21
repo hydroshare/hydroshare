@@ -397,9 +397,8 @@
 
             <div id="permission-panel">
                 <div id="sharing-status">
-                <span class="pull-left text-muted">Sharing status:</span>
+                <span class="pull-left">Sharing status:</span>
                 {% if page.perms.change and metadata_form and can_change_resource_flags%}
-
                     <div id="status-btn-group" class="btn-group" role="group" aria-label="...">
                         {# -------- PUBLIC -------- #}
                         {% if cm.raccess.public %}
@@ -460,6 +459,27 @@
                             </form>
                         {% endif %}
                     </div>
+
+                    <div class="clear-fix" id="shareable-container">
+                        {#   Shareable flag    #}
+                        <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                              method="POST">
+                            {% csrf_token %}
+                            {% if cm.raccess.shareable %}
+                                <input name="t" type="hidden" value="make_not_shareable"/>
+                                <div class="checkbox" data-toggle="tooltip"
+                                     title="When checked, users other than owners may grant access to the resource.">
+                                    <label><input id="btn-shareable" type="checkbox" checked>Shareable</label>
+                                </div>
+                            {% else %}
+                                <input name="t" type="hidden" value="make_shareable"/>
+                                <div class="checkbox" data-toggle="tooltip"
+                                     title="When checked, users other than owners may grant access to the resource.">
+                                    <label><input id="btn-shareable" type="checkbox">Shareable</label>
+                                </div>
+                            {% endif %}
+                        </form>
+                    </div>
                 {% else %}
                     {% if cm.raccess.public %}
                         <strong class="label-public">&nbspPublic</strong>
@@ -471,14 +491,15 @@
                 {% endif %}
             </div>
 
-            {% if is_owner_user %}
-                <div><p>You are the owner of this resource.</p></div>
-            {% elif is_edit_user %}
-                <p>You have been given specific permission to edit this resource.</p>
-            {% elif is_view_user %}
-                <p>You have been given specific permission to view this resource.</p>
-            {% endif %}
-
+            <div id="user-permission-msg">
+                {% if is_owner_user %}
+                    <div class="clear-fix"><i>You are the owner of this resource.</i></div>
+                {% elif is_edit_user %}
+                     <div class="clear-fix"><i>You have been given specific permission to edit this resource.</i></div>
+                {% elif is_view_user %}
+                     <div class="clear-fix"><i>You have been given specific permission to view this resource.</i></div>
+                {% endif %}
+            </div>
             {% if page.perms.change and metadata_form %}
                     <a type="button" class="btn btn-default" data-toggle="modal" data-target="#manage-access">
                             <span class="glyphicon glyphicon-lock"><span
@@ -1618,7 +1639,7 @@
         </div>
 
         <div class="rating col-sm-12 content-block">
-            {% comments_for cm %}
+{#            {% comments_for cm %}#}
         </div>
         {#                #}
         {# dialogs follow #}
@@ -2402,25 +2423,6 @@
     {% block extra_js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/irods.js"></script>
         <script type="text/javascript">
-
-            $("#citation-text").on("click", function(e){
-                // document.selection logic is added in for IE 8 and lower
-                if (document.selection) {
-                    document.selection.empty();
-                    var range = document.body.createTextRange();
-                    range.moveToElementText(this);
-                    range.select();
-                }
-                else if (window.getSelection) {
-                    // Get the selection object
-                    var selection = window.getSelection();
-                    selection.removeAllRanges();
-                    var range = document.createRange();
-                    range.selectNode(this);
-                    selection.addRange(range);
-                }
-            });
-
             function label_ajax_submit() {
                 var el = $(this);
                 var dataFormID = el.attr("data-form-id")
@@ -2492,6 +2494,46 @@
                     $(".access-table").css("pointer-events", "auto");
                     $("#manage-access .modal-content").css("pointer-events", "auto");
                 }
+            }
+
+            function shareable_ajax_submit() {
+                var form = $(this).closest("form");
+                var datastring = form.serialize();
+                var url = form.attr('action');
+                var element = $(this);
+                var action = $(this).closest("form").find("input[name='t']").val();
+
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    dataType: 'html',
+                    data: datastring,
+                    success: function (result) {
+                        if (result.status == "success") {
+                            if (action == "make_not_shareable") {
+                                element.closest("form").find("input[name='t']").val("make_shareable")
+                            }
+                            else {
+                                element.closest("form").find("input[name='t']").val("make_not_shareable")
+                            }
+                        }
+                        else {
+                            if (action == "make_not_shareable") {
+                                element.attr("checked", true);
+                            }
+                            else {
+                                element.attr("checked", false);
+                            }
+                             console.log(result.error_msg);
+                        }
+
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                    }
+                });
+                //don't submit the form
+                return false;
             }
 
             function unshare_resource_ajax_submit(form_id) {
@@ -3127,8 +3169,27 @@
             }
 
             $(document).ready(function () {
+                $("#citation-text").on("click", function (e) {
+                    // document.selection logic is added in for IE 8 and lower
+                    if (document.selection) {
+                        document.selection.empty();
+                        var range = document.body.createTextRange();
+                        range.moveToElementText(this);
+                        range.select();
+                    }
+                    else if (window.getSelection) {
+                        // Get the selection object
+                        var selection = window.getSelection();
+                        selection.removeAllRanges();
+                        var range = document.createRange();
+                        range.selectNode(this);
+                        selection.addRange(range);
+                    }
+                });
+
+                $("#btn-shareable").on("change", shareable_ajax_submit);
                 $("#btnMyResources").click(label_ajax_submit);
-                $("#coverageTabBtn").click(function(){
+                $("#coverageTabBtn").click(function () {
                     setTimeout( function(){
                         // Call resize to re-render the map since it wasn't visible during load.
                         google.maps.event.trigger(coverageMap, "resize");
