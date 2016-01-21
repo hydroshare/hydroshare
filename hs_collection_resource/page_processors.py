@@ -69,11 +69,14 @@ def landing_page(request, page):
         context['extended_metadata_exists'] = extended_metadata_exists
     else:
 
-        actual_resources = []
+        collection_itmes_meta = content_model.metadata.collection_items.first()
+        candidate_resources_list = []
         for res in resource_collection:
             if content_model.short_id == res.short_id:
-                continue
-            actual_resources.append(res)
+                continue # skip current collection resource object
+            elif collection_itmes_meta is not None and res in collection_itmes_meta.collection_items.all():
+                continue # skip resources that are already in current collection
+            candidate_resources_list.append(res)
 
         # collection_items_obj = content_model.metadata.collection_items.first()
         # collection_items_form = CollectionItemsForm(instance=collection_items_obj,
@@ -83,26 +86,21 @@ def landing_page(request, page):
         #                                                  all_res_list=actual_resources)
 
 
-        html_stuff = ""
-
-        for res in resource_collection:
-            if content_model.short_id == res.short_id:
-                continue
-            elif content_model.metadata.collection_items.first() is not None and res in content_model.metadata.collection_items.first().collection_items.all():
-                continue
-            html_stuff += '<option name='+res.title+' value='+res.short_id+'>'+ res.title +':'+ res.resource_type + '</option>'
+        html_candidate = ""
+        for res in candidate_resources_list:
+            html_candidate += '<option value="'+res.short_id+'">'+ res.title +':'+ res.resource_type + '</option>'
 
 
-        html_db = ""
-        if content_model.metadata.collection_items.first() is not None:
-            for res_checked in content_model.metadata.collection_items.first().collection_items.all():
-                html_db += '<option name='+res_checked.title+' value='+res_checked.short_id+'>'+ res_checked.title +':'+ res_checked.resource_type + '</option>'
+        html_collection = ""
+        if collection_itmes_meta is not None:
+            for res_checked in collection_itmes_meta.collection_items.all():
+                html_collection += '<option value="'+res_checked.short_id+'">'+ res_checked.title +':'+ res_checked.resource_type + '</option>'
+                # html_collection += '<option value='+res_checked.short_id+'>'+ res_checked.title +':'+ res_checked.resource_type + '</option>'
 
 
         ext_md_layout = Layout(
                                 HTML('<input type="text" id="collection_res_id" value="'+content_model.short_id+'" class="hidden" />'),
-                                HTML(   '<form role="form" id="collector" action="/hsapi/_internal/update-collection/" method="POST" >'
-                                        '<div class="form-group" id="CollectionItems"> '
+                                HTML(   '<div class="form-group" id="CollectionItems"> '
                                         '</div>'
                                  ),
                                 HTML(
@@ -111,23 +109,23 @@ def landing_page(request, page):
                                     '<select class="form-control" multiple="multiple" id="select1">'
                                 ),
                                 HTML(
-                                    html_stuff
+                                    html_candidate
                                 ),
                                 HTML(
                                     '</select>'
                                     '<input class="btn btn-success" type="button" id="add" value ="Add to Collection" />'
                                     ),
-                                HTML(
+                                HTML('<form id="collector" name="collector" action="/hsapi/_internal/update-collection/" method="POST" >'
                                     '<h4>Resources in your Collection</h4>'
-                                    '<select class="form-control" multiple="multiple" id="select2" >'
+                                    '<select class="form-control" multiple="multiple" id="select2" name="collection">'
                                 ),
-                                 HTML(html_db),
+                                 HTML(html_collection),
                                  HTML('</select>'
+                                  '</form>'
                                  '<br/>'
                                     '<input class="btn btn-danger" type="button" id="remove" value ="Remove from Collection" />'
                                 ),
             HTML(
-                 '</form>'
                  '<br/><input class="btn btn-primary" type="button" id="save" value ="Save Changes" />')
                                 )
 
@@ -139,8 +137,8 @@ def landing_page(request, page):
                                                    request=request)
 
         # context['collection_items_form'] = collection_items_form
-        context['html_stuff']= html_stuff
-        context['html_db'] = html_db
+        context['html_candidate']= html_candidate
+        context['html_collection'] = html_collection
 
         # if collection_items_obj:
         #     collection_items = collection_items_obj.collection_items.all()
