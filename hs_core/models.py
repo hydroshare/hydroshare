@@ -1535,7 +1535,7 @@ class CoreMetaData(models.Model):
         etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
         etree.SubElement(depositor, 'email_address').text = 'support@hydroshare.org'
         # The organization that owns the information being registered.
-        etree.SubElement(head, 'registrant').text = 'HydroShare'
+        etree.SubElement(head, 'registrant').text = 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)'
 
         # create the body sub element
         body = etree.SubElement(ROOT, 'body')

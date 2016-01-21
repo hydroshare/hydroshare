@@ -252,7 +252,23 @@ def delete_resource(request, shortkey, *args, **kwargs):
 def publish(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
-    hydroshare.publish_resource(shortkey)
+    hydroshare.publish_resource(res)
+
+    # change "Publisher" element of science metadata to CUAHSI
+    try:
+        md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)',
+                    'url': 'https://www.cuahsi.org/'}
+        res.metadata.create_element('Publisher', **md_args)
+    except ValidationError as exp:
+        request.session['validation_error'] = exp.message
+
+    # add doi to "Identifier" element of science metadata
+    try:
+        md_args = {'name': 'doi',
+                    'url': res.doi}
+        res.metadata.create_element('Identifier', **md_args)
+    except ValidationError as exp:
+        request.session['validation_error'] = exp.message
 
     # downgrade all editor privilege to view privilege with ownership retained
     owners = set(res.raccess.owners.all())
@@ -476,7 +492,7 @@ def my_resources(request, page):
     # import sys
     # sys.path.append("/home/docker/pycharm-debug")
     # import pydevd
-    # pydevd.settrace('10.0.0.7', port=21000, suspend=False)
+    # pydevd.settrace('172.17.0.1', port=21000, suspend=False)
     user = request.user
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)

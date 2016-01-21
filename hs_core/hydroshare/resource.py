@@ -721,7 +721,7 @@ def delete_resource_file(pk, filename_or_id, user):
 
     return filename_or_id
 
-def publish_resource(pk):
+def publish_resource(resource):
     """
     Formally publishes a resource in HydroShare. Triggers the creation of a DOI for the resource, and triggers the
     exposure of the resource to the HydroShare DataONE Member Node. The user must be an owner of a resource or an
@@ -745,8 +745,7 @@ def publish_resource(pk):
     import shutil
     import errno
 
-    resource = utils.get_resource_by_shortkey(pk)
-    resource.doi = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=pk)
+    resource.doi = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=resource.short_id)
     resource.save()
 
     tmp_path = '/tmp/crossref/'
