@@ -742,14 +742,30 @@ def publish_resource(pk):
 
     Note:  This is different than just giving public access to a resource via access control rul
     """
+    import shutil
+    import errno
+
     resource = utils.get_resource_by_shortkey(pk)
-    resource.raccess.published = True
-    resource.raccess.immutable = True
-    resource.raccess.public = True
-    resource.raccess.save()
     resource.doi = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=pk)
     resource.save()
 
+    tmp_path = '/tmp/crossref/'
+    try:
+        os.makedirs(tmp_path)
+    except OSError as ex:
+        if ex.errno == errno.EEXIST:
+            shutil.rmtree(tmp_path)
+            os.makedirs(tmp_path)
+        else:
+            raise Exception(ex.message)
+    xml_file_name = '{path}/resourcemetadata.xml'.format(path=tmp_path)
+    with open(xml_file_name, 'w') as out:
+        out.write(resource.metadata.get_crossref_deposit_xml())
+
+    resource.raccess.public = True
+    resource.raccess.immutable = True
+    resource.raccess.published = True
+    resource.raccess.save()
 
 def resolve_doi(doi):
     """

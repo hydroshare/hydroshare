@@ -1516,9 +1516,11 @@ class CoreMetaData(models.Model):
     def get_crossref_deposit_xml(self, pretty_print=True):
         # importing here to avoid circular import problem
         from hydroshare.utils import get_resource_types
-
-        ROOT = etree.Element('doi_batch', version="4.3.6")
-        ROOT.set('xsi:schemaLocation', 'http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schemas/crossref4.3.6.xsd')
+        xsi = "http://www.w3.org/2001/XMLSchema-instance"
+        schemaLocation = 'http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schemas/crossref4.3.6.xsd'
+        ns = "http://www.crossref.org/schema/4.3.6"
+        ROOT = etree.Element('{%s}doi_batch' % ns, version="4.3.6", nsmap={None:ns},
+                             attrib={"{%s}schemaLocation" % xsi : schemaLocation})
 
         # get the resource object associated with this metadata container object - needed to get the verbose_name
         resource = BaseResource.objects.filter(object_id=self.id).first()
@@ -1535,13 +1537,25 @@ class CoreMetaData(models.Model):
         # The organization that owns the information being registered.
         etree.SubElement(head, 'registrant').text = 'HydroShare'
 
-        # create the database sub element
+        # create the body sub element
         body = etree.SubElement(ROOT, 'body')
+        # create the database sub element
         db = etree.SubElement(body, 'database')
+        # create the database_metadata sub element
         db_md = etree.SubElement(db, 'database_metadata', language="en")
+        # titles is required element for database_metadata
         titles = etree.SubElement(db_md, 'titles')
-        etree.SubElement(titles, 'title').text = self.title.value
-        return etree.tostring(ROOT, pretty_print=pretty_print)
+        etree.SubElement(titles, 'title').text = "HydroShare Resources"
+        # create the dataset sub element, dataset_type can be record or collection, set it to collection for HydroShare resources
+        dataset = etree.SubElement(db, 'dataset', dataset_type="collection")
+        ds_titles = etree.SubElement(dataset, 'titles')
+        etree.SubElement(ds_titles, 'title').text = self.title.value
+        # doi_data is required element for dataset
+        doi_data = etree.SubElement(dataset, 'doi_data')
+        etree.SubElement(doi_data, 'doi').text = resource.doi
+        etree.SubElement(doi_data, 'resource').text = self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
+
+        return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(ROOT, pretty_print=pretty_print)
 
     def get_xml(self, pretty_print=True):
         # importing here to avoid circular import problem
