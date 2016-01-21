@@ -1,19 +1,18 @@
-# test file for delete_resource_file   Tian Gan
-
-
 from __future__ import absolute_import
 
 import unittest
 import os
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
 from hs_core.models import ResourceFile, GenericResource
+from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestDeleteResourceFile(unittest.TestCase):
+class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
     def setUp(self):
+        super(TestDeleteResourceFile, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
             'jamy2@gmail.com',
@@ -30,7 +29,7 @@ class TestDeleteResourceFile(unittest.TestCase):
                                               metadata=[],)
 
         open('myfile.txt', "w").close()
-        self.file = open('myfile.txt','r')
+        self.file = open('myfile.txt', 'r')
 
         hydroshare.add_resource_files(self.res.short_id, self.file)
 
@@ -44,6 +43,7 @@ class TestDeleteResourceFile(unittest.TestCase):
 
         GenericResource.objects.all().delete()
         ResourceFile.objects.all().delete()
+        super(TestDeleteResourceFile, self).tearDown()
 
     def test_delete_file(self):
         # test if the test file is added to the resource
