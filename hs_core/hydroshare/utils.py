@@ -384,22 +384,27 @@ class ZipContents(object):
     def __init__(self, zip_file):
         self.zip_file = zip_file
 
-    def black_list(self, f_name):
-        return f_name.startswith('__MACOSX/')
+    def black_list_path(self, file_path):
+        return file_path.startswith('__MACOSX/')
+
+    def black_list_name(self, file_name):
+        return file_name == '.DS_Store'
 
     def get_files(self):
         logger = logging.getLogger('django')
         temp_dir = tempfile.mkdtemp()
         try:
             for name_path in self.zip_file.namelist():
-                if not self.black_list(name_path):
-                    logger.debug(name_path)
+                if not self.black_list_path(name_path):
                     name = os.path.basename(name_path)
                     if name != '':
-                        self.zip_file.extract(name_path, temp_dir)
-                        file_path = os.path.join(temp_dir, name_path)
-                        f = UploadedFile(file=open(file_path, 'rb'),
-                                         name=name, size=os.stat(file_path).st_size)
-                        yield f
+                        if not self.black_list_name(name):
+                            self.zip_file.extract(name_path, temp_dir)
+                            file_path = os.path.join(temp_dir, name_path)
+                            logger.debug("Opening {0} as File with name {1}".format(file_path, name_path))
+                            f = File(file=open(file_path, 'rb'),
+                                     name=name_path)
+                            f.size = os.stat(file_path).st_size
+                            yield f
         finally:
             shutil.rmtree(temp_dir)

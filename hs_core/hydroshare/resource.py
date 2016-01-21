@@ -1,5 +1,7 @@
 ### resource API
 import os
+import zipfile
+import shutil
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
@@ -15,6 +17,8 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
+
+from hs_core.tasks import add_zip_file_contents_to_resource
 
 file_size_limit = 10*(1024 ** 3)
 file_size_limit_for_display = '10G'
@@ -305,7 +309,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, content=None,
-        files=(), res_type_cls=None, resource=None, unpack_file=False, **kwargs):
+        files=(), res_type_cls=None, resource=None, unpack_file=True, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
     HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method
@@ -378,7 +382,23 @@ def create_resource(
         if not metadata:
             metadata = []
 
-        add_resource_files(resource.short_id, *files)
+        if len(files) > 1:
+            # Add resource files now
+            add_resource_files(resource.short_id, *files)
+        elif len(files) == 1:
+            if unpack_file and zipfile.is_zipfile(files[0]):
+                # Add contents of zipfile asynchronously; wait 30 seconds to be "sure" that resource creation
+                # has finished.
+                import logging
+                logger = logging.getLogger('django')
+                tmp_dir = '/shared_temp'
+                logger.debug("Copying uploaded file from {0} to {1}".format(files[0].temporary_file_path(),
+                                                                            tmp_dir))
+                shutil.copy(files[0].temporary_file_path(), tmp_dir)
+                zfile_name = os.path.join(tmp_dir, os.path.basename(files[0].temporary_file_path()))
+                logger.debug("Retained upload as {0}".format(zfile_name))
+                add_zip_file_contents_to_resource.apply_async((resource.short_id, zfile_name),
+                                                              countdown=30)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
