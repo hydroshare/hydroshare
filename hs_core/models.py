@@ -1,8 +1,10 @@
 import os.path
 import json
+import arrow
 from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
+from lxml import etree
 
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group
@@ -1510,8 +1512,38 @@ class CoreMetaData(models.Model):
         self.sources.all().delete()
         self.relations.all().delete()
 
+    # create crossref deposit xml for resource publication
+    def get_crossref_deposit_xml(self, pretty_print=True):
+        # importing here to avoid circular import problem
+        from hydroshare.utils import get_resource_types
+
+        ROOT = etree.Element('doi_batch', version="4.3.6")
+        ROOT.set('xsi:schemaLocation', 'http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schemas/crossref4.3.6.xsd')
+
+        # get the resource object associated with this metadata container object - needed to get the verbose_name
+        resource = BaseResource.objects.filter(object_id=self.id).first()
+        rt = [rt for rt in get_resource_types() if rt._meta.object_name == resource.resource_type][0]
+        resource = rt.objects.get(id=resource.id)
+
+        # create the head sub element
+        head = etree.SubElement(ROOT, 'head')
+        etree.SubElement(head, 'doi_batch_id').text = resource.short_id
+        etree.SubElement(head, 'timestamp').text = arrow.get(resource.updated).format("YYYYMMDDHHmmss")
+        depositor = etree.SubElement(head, 'depositor')
+        etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
+        etree.SubElement(depositor, 'email_address').text = 'support@hydroshare.org'
+        # The organization that owns the information being registered.
+        etree.SubElement(head, 'registrant').text = 'HydroShare'
+
+        # create the database sub element
+        body = etree.SubElement(ROOT, 'body')
+        db = etree.SubElement(body, 'database')
+        db_md = etree.SubElement(db, 'database_metadata', language="en")
+        titles = etree.SubElement(db_md, 'titles')
+        etree.SubElement(titles, 'title').text = self.title.value
+        return etree.tostring(ROOT, pretty_print=pretty_print)
+
     def get_xml(self, pretty_print=True):
-        from lxml import etree
         # importing here to avoid circular import problem
         from hydroshare.utils import current_site_url, get_resource_types
 
