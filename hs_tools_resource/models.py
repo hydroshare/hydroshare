@@ -38,7 +38,6 @@ processor_for(ToolResource)(resource_processor)
 class RequestUrlBase(AbstractMetaDataElement):
     term = 'RequestUrlBase'
     value = models.CharField(max_length=1024, null=True)
-    resShortID = models.CharField(max_length=128, default="UNKNOWN")
 
     class Meta:
         # RequestUrlBase element is not repeatable
@@ -108,10 +107,20 @@ class SupportedResTypes(AbstractMetaDataElement):
         raise ValidationError("SupportedResTypes element can't be deleted.")
 
 
+class ToolIcon(AbstractMetaDataElement):
+    term = 'ToolIcon'
+    icon = models.CharField(max_length=1024, null=True)
+
+    class Meta:
+        # ToolVersion element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
 class ToolMetaData(CoreMetaData):
     url_bases = generic.GenericRelation(RequestUrlBase)
     versions = generic.GenericRelation(ToolVersion)
     supported_res_types = generic.GenericRelation(SupportedResTypes)
+    tool_icon = generic.GenericRelation(ToolIcon)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -119,6 +128,7 @@ class ToolMetaData(CoreMetaData):
         elements.append('RequestUrlBase')
         elements.append('ToolVersion')
         elements.append('SupportedResTypes')
+        elements.append('ToolIcon')
         return elements
 
     def has_all_required_elements(self):

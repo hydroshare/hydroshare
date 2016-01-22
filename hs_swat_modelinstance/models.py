@@ -197,7 +197,7 @@ class ModelInput(AbstractMetaDataElement):
     routingTimeStepValue = models.CharField(max_length=100, null=True, blank=True, verbose_name='Routing time step value')
     simulationTimeStepType = models.CharField(max_length=100,choices=simulation_type_choices, null=True, blank=True, verbose_name='Simulation time step type')
     simulationTimeStepValue = models.CharField(max_length=100, null=True, blank=True, verbose_name='Simulation time step value')
-    watershedArea = models.CharField(max_length=100, null=True, blank=True, verbose_name='Waterhsed area in square kilometers')
+    watershedArea = models.CharField(max_length=100, null=True, blank=True, verbose_name='Watershed area in square kilometers')
     numberOfSubbasins = models.CharField(max_length=100, null=True, blank=True, verbose_name='Number of subbasins')
     numberOfHRUs = models.CharField(max_length=100, null=True, blank=True, verbose_name='Number of HRUs')
     demResolution = models.CharField(max_length=100, null=True, blank=True, verbose_name='DEM resolution in meters')

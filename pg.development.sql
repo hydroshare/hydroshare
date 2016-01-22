@@ -5403,7 +5403,6 @@ CREATE TABLE hs_tools_resource_requesturlbase (
     object_id integer NOT NULL,
     value character varying(1024),
     content_type_id integer NOT NULL,
-    "resShortID" character varying(128) NOT NULL,
     CONSTRAINT hs_tools_resource_requesturlbase_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -8532,6 +8531,8 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 72	hs_tools_resource	0004_auto_20151204_2301	2015-12-16 15:54:53.208148+00
 73	oauth2_provider	0001_initial	2015-12-16 15:54:53.55474+00
 74	oauth2_provider	0002_08_updates	2015-12-16 15:54:53.986837+00
+75	hs_tools_resource	0005_remove_requesturlbase_resshortid	2016-01-14 15:06:17.535427+00
+76	hs_swat_modelinstance	0006_auto_20160114_1508	2016-01-14 15:08:33.244751+00
 \.
 
 
@@ -8539,7 +8540,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 74, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 76, true);
 
 
 --
@@ -9849,7 +9850,7 @@ COPY hs_swat_modelinstance_swatmodelinstancemetadata (modelinstancemetadata_ptr_
 -- Data for Name: hs_tools_resource_requesturlbase; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_tools_resource_requesturlbase (id, object_id, value, content_type_id, "resShortID") FROM stdin;
+COPY hs_tools_resource_requesturlbase (id, object_id, value, content_type_id) FROM stdin;
 \.
 
 
