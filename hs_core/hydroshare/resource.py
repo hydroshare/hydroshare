@@ -1,16 +1,20 @@
 ### resource API
 import os
+import requests
+import shutil
+import errno
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
+from django.conf import settings
+from rest_framework import status
 
 from mezzanine.generic.models import Keyword, AssignedKeyword
 
 from hs_core.hydroshare import hs_bagit
-from hs_core.hydroshare.utils import get_resource_types
-from hs_core.models import ResourceFile, BaseResource
+from hs_core.models import ResourceFile
 from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
@@ -294,7 +298,7 @@ def check_resource_type(resource_type):
     resource_type: the resource type string to check
     Returns:  the resource type class matching the resource type string; if no match is found, returns None
     """
-    for tp in get_resource_types():
+    for tp in utils.get_resource_types():
         if resource_type == tp.__name__:
             res_cls = tp
             break
@@ -721,15 +725,17 @@ def delete_resource_file(pk, filename_or_id, user):
 
     return filename_or_id
 
-def publish_resource(resource):
+def publish_resource(user, pk):
     """
     Formally publishes a resource in HydroShare. Triggers the creation of a DOI for the resource, and triggers the
     exposure of the resource to the HydroShare DataONE Member Node. The user must be an owner of a resource or an
     adminstrator to perform this action.
 
-    REST URL:  PUT /publishResource/{pid}
+    REST URL:  PUT /resource/{pid}
 
-    Parameters:    pid - Unique HydroShare identifier for the resource to be formally published.
+    Parameters:
+        user - requesting user to publish the resource who must be one of the owners of the resource
+        pid - Unique HydroShare identifier for the resource to be formally published.
 
     Returns:    The pid of the resource that was published
 
@@ -739,32 +745,51 @@ def publish_resource(resource):
     Exceptions.NotAuthorized - The user is not authorized
     Exceptions.NotFound - The resource identified by pid does not exist
     Exception.ServiceFailure - The service is unable to process the request
+    and other general exceptions
 
-    Note:  This is different than just giving public access to a resource via access control rul
+    Note:  This is different than just giving public access to a resource via access control rule
     """
-    import shutil
-    import errno
-
-    resource.doi = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=resource.short_id)
+    resource = utils.get_resource_by_shortkey(pk)
+    resource.doi = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=pk)
     resource.save()
 
-    tmp_path = '/tmp/crossref/'
-    try:
-        os.makedirs(tmp_path)
-    except OSError as ex:
-        if ex.errno == errno.EEXIST:
-            shutil.rmtree(tmp_path)
-            os.makedirs(tmp_path)
-        else:
-            raise Exception(ex.message)
-    xml_file_name = '{path}/resourcemetadata.xml'.format(path=tmp_path)
-    with open(xml_file_name, 'w') as out:
-        out.write(resource.metadata.get_crossref_deposit_xml())
+    xml_file_name = '{uuid}_deposit_metadata.xml'.format(uuid=pk)
+    # using HTTP to POST deposit xml file to crossref
+    post_data = {'operation': 'doMDUpload',
+                 'login_id': settings.CROSSREF_LOGIN_ID,
+                 'login_passwd': settings.CROSSREF_LOGIN_PWD
+                }
+    files = {'file': (xml_file_name, resource.metadata.get_crossref_deposit_xml())}
+    # exceptions will be raised if POST request fails
+    response = requests.post('https://test.crossref.org/servlet/deposit', data=post_data, files=files)
+    if response.status_code == status.HTTP_200_OK:
+        content = response.content
 
-    resource.raccess.public = True
-    resource.raccess.immutable = True
-    resource.raccess.published = True
-    resource.raccess.save()
+        # change "Publisher" element of science metadata to CUAHSI
+        md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)',
+                   'url': 'https://www.cuahsi.org/'}
+        resource.metadata.create_element('Publisher', **md_args)
+
+        # add doi to "Identifier" element of science metadata
+        md_args = {'name': 'doi',
+                   'url': resource.doi}
+        resource.metadata.create_element('Identifier', **md_args)
+
+        # downgrade all editor privilege to view privilege with ownership retained
+        owners = set(resource.raccess.owners.all())
+        editors = set(resource.raccess.edit_users.all()) - owners
+
+        for user in editors:
+            user.uaccess.share_resource_with_user(resource, user, PrivilegeCodes.VIEW)
+
+        utils.resource_modified(resource, user)
+
+        resource.raccess.public = True
+        resource.raccess.immutable = True
+        resource.raccess.published = True
+        resource.raccess.save()
+
+    return pk
 
 def resolve_doi(doi):
     """

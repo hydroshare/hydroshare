@@ -252,38 +252,14 @@ def delete_resource(request, shortkey, *args, **kwargs):
 def publish(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
-    hydroshare.publish_resource(res)
-
-    # change "Publisher" element of science metadata to CUAHSI
     try:
-        md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)',
-                    'url': 'https://www.cuahsi.org/'}
-        res.metadata.create_element('Publisher', **md_args)
+        hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
         request.session['validation_error'] = exp.message
+    except HSAccessException as exp:
+        messages.error(request, exp.message)
 
-    # add doi to "Identifier" element of science metadata
-    try:
-        md_args = {'name': 'doi',
-                    'url': res.doi}
-        res.metadata.create_element('Identifier', **md_args)
-    except ValidationError as exp:
-        request.session['validation_error'] = exp.message
-
-    # downgrade all editor privilege to view privilege with ownership retained
-    owners = set(res.raccess.owners.all())
-    editors = set(res.raccess.edit_users.all()) - owners
-
-    for user in editors:
-        try:
-            request.user.uaccess.share_resource_with_user(res, user, PrivilegeCodes.VIEW)
-        except HSAccessException as exp:
-            messages.error(request, exp.message)
-            break
-
-    resource_modified(res, request.user)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
 
 # TOD0: this view function needs refactoring once the new access control UI works
 def change_permissions(request, shortkey, *args, **kwargs):

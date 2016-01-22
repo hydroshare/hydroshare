@@ -1533,7 +1533,8 @@ class CoreMetaData(models.Model):
         etree.SubElement(head, 'timestamp').text = arrow.get(resource.updated).format("YYYYMMDDHHmmss")
         depositor = etree.SubElement(head, 'depositor')
         etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
-        etree.SubElement(depositor, 'email_address').text = 'support@hydroshare.org'
+        #etree.SubElement(depositor, 'email_address').text = 'support@hydroshare.org'
+        etree.SubElement(depositor, 'email_address').text = 'hongyi@renci.org'
         # The organization that owns the information being registered.
         etree.SubElement(head, 'registrant').text = 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)'
 
@@ -1552,7 +1553,11 @@ class CoreMetaData(models.Model):
         etree.SubElement(ds_titles, 'title').text = self.title.value
         # doi_data is required element for dataset
         doi_data = etree.SubElement(dataset, 'doi_data')
-        etree.SubElement(doi_data, 'doi').text = resource.doi
+        res_doi = resource.doi
+        idx = res_doi.find('10.4211')
+        if idx >= 0:
+            res_doi = res_doi[idx:]
+        etree.SubElement(doi_data, 'doi').text = res_doi
         etree.SubElement(doi_data, 'resource').text = self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(ROOT, pretty_print=pretty_print)
