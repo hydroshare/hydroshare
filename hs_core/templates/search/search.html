@@ -7,7 +7,7 @@
     <div class="row">
         <div class="col-lg-3" id="folders">
             {% if query %}
-                <input class="btn btn-default" type="button" value="clear all" onclick="clearAllFaceted()">
+                <input id="btn-clear-all" class="btn btn-default" type="button" value="Clear All" onclick="clearAllFaceted()">
                 {% for key, values in facets.fields.items %}
                     {% if values %}
                         <div class="panel-group" id="faceting-{{ key }}">
