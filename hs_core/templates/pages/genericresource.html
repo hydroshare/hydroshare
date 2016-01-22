@@ -1598,7 +1598,7 @@
                                     <a href="{{ tool.url }}" target="_blank">
                                     <div id="web-app-item">
                                         <h4>{{ tool.title }}</h4>
-                                        <img class="user-webapp-icon" src="{{ tool.icon }}">
+                                        <img class="user-webapp-icon" src="{{ tool.icon_url }}">
                                     </div>
                                     </a>
                                 {% endfor %}
@@ -3455,11 +3455,18 @@
                         $(this).closest("form").find("button").show();
                     });
                 });
-                $('.user-webapp-icon').on('error', function() {
-                    $(this)
+                var setDefaultIcon = function($this) {
+                    $this
                             .attr('src', '{{ STATIC_URL }}img/web-app-default-icon.png')
                             .removeClass('user-webapp-icon')
                             .addClass('default-webapp-icon');
+                };
+                $('.user-webapp-icon').each(function() {
+                    if ($(this).attr('src') == '') {
+                        setDefaultIcon($(this));
+                    }
+                }).on('error', function() {
+                    setDefaultIcon($(this));
                 });
 
             });

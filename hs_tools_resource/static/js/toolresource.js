@@ -6,13 +6,13 @@ $(document).ready(function() {
         $("input[value='"+checked_res_item+"']").attr("checked","true");
     }
     var get_icon_input_element = function() {
-        return $('#id_icon');
+        return $('#resourceSpecificTab #div_id_url');
     };
-    if ($('#tool-icon-preview-').length == 0) {
+    if ($('#tool-icon-preview').length == 0) {
         get_icon_input_element().after('<span id="icon-preview-label" class="control-label">Preview</span><br>' +
-            '<img id="icon-preview-img" src="' + get_icon_input_element().val() + '">');
+            '<img id="tool-icon-preview" src="' + get_icon_input_element().val() + '">');
     }
     get_icon_input_element().keyup(function() {
-        $('#tool-icon-preview').attr('src', $('#id_icon').val());
+        $('#tool-icon-preview').attr('src', $('#resourceSpecificTab #id_url').val());
     })
 });
