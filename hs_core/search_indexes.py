@@ -26,7 +26,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     language = indexes.CharField(faceted=True)
     sources = indexes.MultiValueField()
     relations = indexes.MultiValueField()
-    resource_type = indexes.CharField(model_attr='resource_type', faceted=True)
+    resource_type = indexes.CharField(faceted=True)
     comments = indexes.MultiValueField()
     comments_count = indexes.IntegerField(faceted=True)
     owners_logins = indexes.MultiValueField(faceted=True)
@@ -142,3 +142,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_editors_count(self, obj):
         return obj.raccess.edit_users.all().count()
+
+    def prepare_resource_type(self, obj):
+        return obj.get_content_model()._meta.verbose_name
