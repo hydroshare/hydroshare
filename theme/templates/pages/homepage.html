@@ -6,7 +6,11 @@
 {% block all_content %}
     <div id="home-page-carousel" class="carousel slide" data-ride="carousel">
         <!-- Indicators -->
-
+        <ol class="carousel-indicators">
+            <li data-target="#home-page-carousel" data-slide-to="0" class="active"></li>
+            <li data-target="#home-page-carousel" data-slide-to="1"></li>
+            <li data-target="#home-page-carousel" data-slide-to="2"></li>
+        </ol>
         <!-- Wrapper for slides -->
         <div class="carousel-inner" role="listbox">
             <div class="item active" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)">
@@ -175,7 +179,7 @@
     <script>
         // Disable carousel auto slide
         $('.carousel').carousel({
-            interval: 12000
+            interval: 10000
         });
 
         $.fn.visible = function (partial) {
