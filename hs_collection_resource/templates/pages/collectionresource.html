@@ -38,7 +38,6 @@
     <script type="text/javascript">
         $(document).ready(function(){
 
-
              $('#add').click(function(e) {
                 var selectedOpts = $('#select1 option:selected');
                 if (selectedOpts.length == 0) {
@@ -50,13 +49,11 @@
                 e.preventDefault();
             });
 
-
             $('#remove').click(function(e) {
                 var selectedOpts = $('#select2 option:selected');
                 if (selectedOpts.length == 0) {
                     e.preventDefault();
                 }
-
 
                 $('#select1').append($(selectedOpts).clone());
                 $(selectedOpts).remove();
@@ -68,32 +65,13 @@
                 $(this).attr('selected', true);
                 });
 
-                metadata_update_ajax_submit("collector"); return false;
-{#                 all_options = []#}
-{#                $('#select2 option').each(function () {#}
-{#                    all_options.push($(this).val())#}
-{#                });#}
-{#                var collection_resource_id = $("#collection_res_id").val();#}
-{##}
-{#                $.ajax({#}
-{#                    url: '/hsapi/_internal/update-collection/',#}
-{#                    type: 'POST',#}
-{#                    dataType: 'json',#}
-{#                    data: {all_options:all_options,collection_resource_id:collection_resource_id},#}
-{#                    success: function(data){#}
-{##}
-{#                    }#}
-{#    });#}
+                metadata_update_ajax_submit("collector");
 
+                $('#select2 option').each(function () {
+                $(this).attr('selected', false);
+                });
+                return false;
             });
-
-{#            var checked_res_str=$("#checked_res_div").text();#}
-{#            var checked_res_array=checked_res_str.split(",");#}
-{#            for (var i = 0; i < checked_res_array.length; i++)#}
-{#            {#}
-{#                var checked_res_item=checked_res_array[i];#}
-{#                $("input[value='"+checked_res_item+"']").attr("checked","true");#}
-{#            }#}
         })
     </script>
 {% endblock %}
