@@ -336,7 +336,7 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     else:
         status = 'error'
 
-    current_user_privilege = res.raccess.get_combined_privilege(user)
+    current_user_privilege = res.raccess.get_effective_privilege(user)
     if current_user_privilege == PrivilegeCodes.VIEW:
         current_user_privilege = "view"
     elif current_user_privilege == PrivilegeCodes.CHANGE:

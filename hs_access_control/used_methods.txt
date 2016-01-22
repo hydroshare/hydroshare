@@ -1,0 +1,50 @@
+gaccess.get_editable_resources() -> get_edit_resources()
+gaccess.get_held_resources() -> get_view_resources()
+gaccess.edit_users ***needed***
+gaccess.view_users ***needed***
+raccess.get_combined_privilege(user) ***DEPRECATED***
+raccess.owners
+raccess.edit_groups
+raccess.edit_users
+raccess.view_groups
+raccess.view_users
+
+uaccess.get_owned_resources()
+uaccess.get_editable_resources() -> get_edit_resources()
+uaccess.get_held_resources() -> get_view_resources()
+uaccess.get_resources_with_explicit_access(privilege)
+
+uaccess.owns_resource(resource) 
+uaccess.can_change_resource(resource) 
+uaccess.can_change_resource_flags(resource):
+uaccess.can_view_resource(resource) 
+
+uaccess.create_group(title)
+uaccess.get_owned_groups() ***needed***
+uaccess.get_editable_groups() ***needed*** -> get_edit_groups()
+uaccess.get_held_groups() ***needed*** -> get_view_groups()
+uaccess.get_groups_with_explicit_access(privilege)  ***needed***
+
+uaccess.owns_group(group)  ***needed***
+uaccess.can_change_group(group)  ***needed***
+uaccess.can_change_group_flags(group): ***needed***
+uaccess.can_view_group(group)  ***needed***
+
+uaccess.share_resource_with_user(resource, user, privilege)
+uaccess.unshare_resource_with_user(resource, user)
+uaccess.can_unshare_resource_with_user(resource, user)
+uaccess.undo_share_resource_with_user(resource, user)
+uaccess.can_undo_share_resource_with_user(resource, user)
+
+uaccess.share_resource_with_group(resource, group, privilege)
+uaccess.unshare_resource_with_group(resource, group) ***needed***
+uaccess.can_unshare_resource_with_group(resource, group) ***needed***
+uaccess.undo_share_resource_with_group(resource, group) ***needed***
+uaccess.can_undo_share_resource_with_group(resource, group) ***needed***
+
+uaccess.share_group_with_user(resource, user, privilege) ***needed***
+uaccess.unshare_group_with_user(resource, user) ***needed***
+uaccess.can_unshare_group_with_user(resource, user) ***needed***
+uaccess.undo_share_group_with_user(resource, user) ***needed***
+uaccess.can_undo_share_group_with_user(resource, user) ***needed***
+

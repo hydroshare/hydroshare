@@ -52,7 +52,7 @@ class UserProfileView(TemplateView):
                     pass
                 else:
                     # filter out any resources the requesting user doesn't have access
-                    resources = resources.filter(Q(pk__in=self.request.user.uaccess.get_held_resources()) |
+                    resources = resources.filter(Q(pk__in=self.request.user.uaccess.get_view_resources()) |
                                                  Q(raccess__public=True) | Q(raccess__discoverable=True))
 
             else:

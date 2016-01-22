@@ -644,7 +644,7 @@ def get_resource_list(creator=None,
     if edit_permission:
         if group:
             group = group_from_id(group)
-            q.append(Q(gaccess__resource__in=group.gaccess.get_editable_resources()))
+            q.append(Q(gaccess__resource__in=group.gaccess.get_edit_resources()))
 
         q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=True, query=q)
 
@@ -655,7 +655,7 @@ def get_resource_list(creator=None,
 
         if group:
             group = group_from_id(group)
-            q.append(Q(gaccess__resource__in=group.gaccess.get_held_resources()))
+            q.append(Q(gaccess__resource__in=group.gaccess.get_view_resources()))
 
         q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False, query=q)
 
@@ -727,16 +727,16 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, query):
                         # if some non-admin authenticated user is asking for resources owned by another user then
                         # get other user's owned resources that are public or discoverable, or if requesting user
                         # has access to those private resources
-                        query.append(Q(pk__in=user.uaccess.get_held_resources()) | Q(raccess__public=True) |
+                        query.append(Q(pk__in=user.uaccess.get_view_resources()) | Q(raccess__public=True) |
                                      Q(raccess__discoverable=True))
         else:
             if user.is_superuser:
                 # admin sees all resources
                 pass
             elif is_editable:
-                query.append(Q(pk__in=user.uaccess.get_editable_resources()))
+                query.append(Q(pk__in=user.uaccess.get_edit_resources()))
             else:
-                query.append(Q(pk__in=user.uaccess.get_held_resources()) | Q(raccess__public=True) |
+                query.append(Q(pk__in=user.uaccess.get_view_resources()) | Q(raccess__public=True) |
                              Q(raccess__discoverable=True))
     else:
         query.append(Q(raccess__public=True) | Q(raccess__discoverable=True))
