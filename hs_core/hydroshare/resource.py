@@ -1,8 +1,6 @@
 ### resource API
 import os
 import requests
-import shutil
-import errno
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
