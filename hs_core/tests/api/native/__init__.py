@@ -17,7 +17,6 @@ from test_get_resource_file import *
 from test_get_resource import *
 from test_get_resource_types import *
 from test_get_revisions import *
-from test_get_serializer import *
 from test_group_from_id import *
 from test_list_group_members import *
 from test_list_groups import *

@@ -18,6 +18,7 @@ class TestGetRevisionsAPI(TestCase):
 
     @unittest.skip
     def test_get_revisions(self):
+        # TODO: fix this after resource versioning is implemented
         # create a user to be used for creating the resource
         user_creator = hydroshare.create_account(
             'creator@usu.edu',
