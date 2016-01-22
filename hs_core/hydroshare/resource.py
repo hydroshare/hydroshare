@@ -399,6 +399,8 @@ def create_resource(
                 logger.debug("Retained upload as {0}".format(zfile_name))
                 add_zip_file_contents_to_resource.apply_async((resource.short_id, zfile_name),
                                                               countdown=30)
+                resource.file_unpack_status = 'Pending'
+                resource.save()
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
