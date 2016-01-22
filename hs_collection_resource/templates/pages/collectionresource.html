@@ -64,21 +64,26 @@
             });
 
             $('#save').click(function() {
-                 all_options = []
                 $('#select2 option').each(function () {
-                    all_options.push($(this).val())
+                $(this).attr('selected', true);
                 });
-                var collection_resource_id = $("#collection_res_id").val();
 
-                $.ajax({
-                    url: '/hsapi/_internal/update-collection/',
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {all_options:all_options,collection_resource_id:collection_resource_id},
-                    success: function(data){
-
-                    }
-    });
+                metadata_update_ajax_submit("collector"); return false;
+{#                 all_options = []#}
+{#                $('#select2 option').each(function () {#}
+{#                    all_options.push($(this).val())#}
+{#                });#}
+{#                var collection_resource_id = $("#collection_res_id").val();#}
+{##}
+{#                $.ajax({#}
+{#                    url: '/hsapi/_internal/update-collection/',#}
+{#                    type: 'POST',#}
+{#                    dataType: 'json',#}
+{#                    data: {all_options:all_options,collection_resource_id:collection_resource_id},#}
+{#                    success: function(data){#}
+{##}
+{#                    }#}
+{#    });#}
 
             });
 

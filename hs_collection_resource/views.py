@@ -27,6 +27,7 @@ def update_collection(request):
     collection_resource_id = request.POST["collection_resource_id"]
 
 
+
     is_authorized = authorize(request, collection_resource_id, edit=True, raises_exception=False)[1]
     if is_authorized:
         collection_res_obj = hydroshare.get_resource_by_shortkey(collection_resource_id)
