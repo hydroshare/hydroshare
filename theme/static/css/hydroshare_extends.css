@@ -47,8 +47,7 @@ li.account{
 
 /* accounts */
 .account-form input{
-  width: 100%;
-  max-width: 100% !important;
+
 }
 
 .account-form input[type=checkbox] {

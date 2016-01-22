@@ -1,5 +1,5 @@
-$(document).ready(function() {
 
+$(document).ready(function() {
 	// Search box toggle
 	// =================
 	$('#search-btn').on('click', function() {
