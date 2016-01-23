@@ -309,7 +309,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, content=None,
-        files=(), res_type_cls=None, resource=None, unpack_file=True, **kwargs):
+        files=(), res_type_cls=None, resource=None, unpack_file=False, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
     HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method
@@ -382,25 +382,24 @@ def create_resource(
         if not metadata:
             metadata = []
 
-        if len(files) > 1:
-            # Add resource files now
+        if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
+            # Add contents of zipfile asynchronously; wait 30 seconds to be "sure" that resource creation
+            # has finished.
+            import logging
+            logger = logging.getLogger('django')
+            tmp_dir = '/shared_temp'
+            logger.debug("Copying uploaded file from {0} to {1}".format(files[0].temporary_file_path(),
+                                                                        tmp_dir))
+            shutil.copy(files[0].temporary_file_path(), tmp_dir)
+            zfile_name = os.path.join(tmp_dir, os.path.basename(files[0].temporary_file_path()))
+            logger.debug("Retained upload as {0}".format(zfile_name))
+            add_zip_file_contents_to_resource.apply_async((resource.short_id, zfile_name),
+                                                          countdown=30)
+            resource.file_unpack_status = 'Pending'
+            resource.save()
+        else:
+            # Add resource file(s) now
             add_resource_files(resource.short_id, *files)
-        elif len(files) == 1:
-            if unpack_file and zipfile.is_zipfile(files[0]):
-                # Add contents of zipfile asynchronously; wait 30 seconds to be "sure" that resource creation
-                # has finished.
-                import logging
-                logger = logging.getLogger('django')
-                tmp_dir = '/shared_temp'
-                logger.debug("Copying uploaded file from {0} to {1}".format(files[0].temporary_file_path(),
-                                                                            tmp_dir))
-                shutil.copy(files[0].temporary_file_path(), tmp_dir)
-                zfile_name = os.path.join(tmp_dir, os.path.basename(files[0].temporary_file_path()))
-                logger.debug("Retained upload as {0}".format(zfile_name))
-                add_zip_file_contents_to_resource.apply_async((resource.short_id, zfile_name),
-                                                              countdown=30)
-                resource.file_unpack_status = 'Pending'
-                resource.save()
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
