@@ -2213,7 +2213,7 @@ button.loading {
 .profile-pic {
     width: 150px;
     height: 150px;
-    margin-right: 30px;
+    margin: auto;
 }
 
 .profile-pic:before {
@@ -2242,24 +2242,12 @@ button.loading {
     margin-bottom: 10px;
 }
 
-.profile-info-wrapper {
-    padding-top: 10px;
-}
-
-.profile-header {
-    margin: 40px 0;
-}
-
-#btn-edit-profile {
-    border: 1px solid #adadad;
-    border-radius: 3px;
+#btn-edit-profile, #btn-cancel-profile-edit {
     color: #428bca;
 }
 
-#btn-edit-profile:hover {
-    box-shadow: 0 0 5px #B2B2B2;
-    -moz-box-shadow: 0 0 5px #B2B2B2;
-    -webkit-box-shadow: 0 0 5px #B2B2B2;
+#btn-save-profile {
+    color: #20833F;
 }
 
 .round-image {

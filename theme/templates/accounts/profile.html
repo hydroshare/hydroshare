@@ -6,60 +6,120 @@
 {% block main %}
     {% with profile_user.userprofile as profile %}
 
-        <div class="row profile-header">
-            {% if profile_user.id == user.id %}
-                <div class="col-xs-12 col-sm-2 pull-right">
-                    <a id="btn-edit-profile" data-toggle="tooltip" data-placement="auto"
-                       title="Edit profile" href="{% url 'profile_update' %}"
-                       class="glyphicon glyphicon-pencil icon-button btn-edit"></a>
-                </div>
-            {% endif %}
+        <form class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
+        {% csrf_token %}
+        <div class="row">
 
-            <div {% if profile_user.id == user.id %}class="col-xs-12 col-sm-10"{% else %}class="col-sm-12"{% endif %}>
+            <div class="col-sm-12">
                 {#        Profile picture       #}
-                {% if profile.picture and profile.picture.url %}
-                    <div style="background-image: url('{{ profile.picture.url }}')"
-                         class="profile-pic round-image pull-left">
+                <div class="row">
+                    <div class="col-sm-3">
+                        {% if profile.picture and profile.picture.url %}
+                            <div style="background-image: url('{{ profile.picture.url }}')"
+                                 class="profile-pic round-image">
+                            </div>
+                        {% else %}
+                            <div class="profile-pic round-image user-icon"></div>
+                        {% endif %}
                     </div>
-                {% else %}
-                    <div class="profile-pic round-image user-icon pull-left"></div>
-                {% endif %}
 
-                <div class="profile-info-wrapper">
-                    {% if profile_user.first_name or profile_user.last_name %}
-                        <h2>{{ profile_user.first_name }} {{ profile_user.last_name }}</h2>
-                    {% else %}
-                        <h2>{{ profile_user.username }}</h2>
-                    {% endif %}
+                    <div class="col-xs-12 col-sm-6">
+                        <div data-page-mode="view">
+                            {% if profile_user.first_name or profile_user.last_name %}
+                                <h2>{{ profile_user.first_name }} {{ profile_user.last_name }}</h2>
+                            {% else %}
+                                <h2>{{ profile_user.username }}</h2>
+                            {% endif %}
 
-                    {% if profile.organization or profile.title %}
-                    <h4 class="text-muted">
-                        {% if profile.organization %}{{ profile.organization }}{% endif %}
-                        {% if profile.organization and profile.title %} | {% endif %}
-                        {% if profile.title %}{{ profile.title }}{% endif %}
-                    </h4>
-                    {% endif %}
-                    {% if profile.subject_areas or profile.profession %}
-                    <table class="overview">
-                        <tbody>
-                        {% if profile.subject_areas %}
-                            <tr>
-                                <td><span class="text-muted">Subject Areas: </span></td>
-                                <td>{{ profile.subject_areas }}</td>
-                            </tr>
-                        {% endif %}
+                            {% if profile.organization or profile.title %}
+                                <h4 class="text-muted">
+                                    {% if profile.organization %}{{ profile.organization }}{% endif %}
+                                    {% if profile.organization and profile.title %} | {% endif %}
+                                    {% if profile.title %}{{ profile.title }}{% endif %}
+                                </h4>
+                            {% endif %}
 
-                        {% if profile.profession %}
-                            <tr>
-                                <td><span class="text-muted">Profession</span></td>
-                                <td>{{ profile.profession }}</td>
-                            </tr>
-                        {% endif %}
-                        </tbody>
-                    </table>
-                    {% endif %}
+                            {% if profile.subject_areas or profile.profession %}
+                                <table class="overview">
+                                    <tbody>
+                                    {% if profile.subject_areas %}
+                                        <tr>
+                                            <td><span class="text-muted">Subject Areas: </span></td>
+                                            <td>{{ profile.subject_areas }}</td>
+                                        </tr>
+                                    {% endif %}
+
+                                    {% if profile.profession %}
+                                        <tr>
+                                            <td><span class="text-muted">Profession</span></td>
+                                            <td>{{ profile.profession }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        </div>
+                        <div data-page-mode="edit">
+                            <div class="row">
+                                {# First name #}
+                                <fieldset class="col-sm-4">
+                                    <label>First name</label>
+                                    <input class="form-control" value="{{ profile_user.first_name }}">
+                                </fieldset>
+
+                                {# Last name #}
+                                <fieldset class="col-sm-4">
+                                    <label>Last name</label>
+                                    <input class="form-control" value="{{ profile_user.last_name }}">
+                                </fieldset>
+
+                                {# Username #}
+                                <fieldset class="col-sm-4">
+                                    <label>Username</label>
+                                    <input class="form-control" value="{{ profile_user.username }}">
+                                    <small class="text-muted">Only letters, numbers, dashes or
+                                        underscores.
+                                    </small>
+                                </fieldset>
+                            </div>
+
+                            <div class="row">
+                                {# Organization #}
+                                <fieldset class="col-sm-6">
+                                    <label>Organization</label>
+                                    <input class="form-control" value="{{ profile.organization }}">
+                                </fieldset>
+                                {# Title #}
+                                <fieldset class="col-sm-6">
+                                    <label>Title</label>
+                                    <input class="form-control" value="{{ profile.title }}">
+                                    <small class="text-muted">e.g. Assistant Professor, Program Director, Adjunct
+                                        Professor, Software Developer.
+                                    </small>
+                                </fieldset>
+                            </div>
+
+                            <div class="row">
+                                {# Subject areas #}
+                                <fieldset class="col-sm-12">
+                                    <label>Subject areas</label>
+                                    <input class="form-control" value="{{ profile.subject_areas }}">
+                                    <small class="text-muted">A comma-separated list of subject areas you are interested
+                                        in researching. e.g. "Computer Science, Hydrology, Water Management"
+                                    </small>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+            {% if profile_user.id == user.id %}
+                <div class="col-xs-12 col-sm-12">
+                    <span data-page-mode="view" id="btn-edit-profile" title="Edit profile" class="glyphicon glyphicon-pencil icon-button btn-edit"></span>
+                    <span data-page-mode="edit" id="btn-save-profile" title="Save" class="glyphicon glyphicon-floppy-save icon-button"></span>
+                    <span data-page-mode="edit" id="btn-cancel-profile-edit" title="Cancel" class="glyphicon glyphicon-circle-arrow-left icon-button"></span>
+                </div>
+            {% endif %}
         </div>
 
         <div class="full-width-tabs-container">
@@ -72,9 +132,6 @@
                     <a href="#contributions" aria-controls="profile" role="tab" data-toggle="tab">
                         <i class="glyphicon glyphicon-file"></i> CONTRIBUTIONS</a>
                 </li>
-{#                <li role="presentation">#}
-{#                    <a href="#social" aria-controls="messages" role="tab"#}
-{#                       data-toggle="tab"><i class="glyphicon glyphicon-user"></i> SOCIAL</a></li>#}
             </ul>
 
             <!-- Tab panes -->
@@ -137,14 +194,18 @@
 
                         <div class="col-md-5">
                             {#        DESCRIPTION       #}
-
                             {% if profile.details and not user.is_anonymous %}
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                     <h3 class="panel-title"><span class="glyphicon glyphicon-user">&nbsp;</span>About {{ profile_user.first_name }}</h3>
                                 </div>
                                 <div class="panel-body">
-                                    {{ profile.details }}
+                                    <div data-page-mode="view">{{ profile.details }}</div>
+
+                                    <fieldset data-page-mode="edit">
+                                        <label>Description</label>
+                                        <textarea class="form-control" id="exampleTextarea" rows="3" placeholder="About {{ profile_user.first_name }}">{{ profile.details }}</textarea>
+                                    </fieldset>
                                 </div>
                             </div>
                             {% endif %}
@@ -153,99 +214,104 @@
                             {% if profile.public or profile_user.id == user.id and not user.is_anonymous %} {# Show only if profile is public and user is logged in #}
                                 <div class="panel panel-default">
                                     <div class="panel-heading">
-                                    <h3 class="panel-title"><span class="glyphicon glyphicon-phone-alt">&nbsp;</span>Contact</h3>
-                                </div>
+                                        <h3 class="panel-title"><span
+                                                class="glyphicon glyphicon-phone-alt">&nbsp;</span>Contact</h3>
+                                    </div>
 
-                                <div class="panel-body">
-                                    <table class="overview">
-                                    <tbody>
-                                    {% if profile.phone_1 %}
-                                        <tr>
-                                            <td><span class="text-muted">{% if profile.phone_1_type %}
-                                                {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
-                                            <td>{{ profile.phone_1 }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if profile.phone_2 %}
-                                        <tr>
-                                            <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
-                                            <td>{{ profile.phone_2 }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if profile_user.email %}
-                                        {% if not user.is_anonymous %}
-                                            <tr>
-                                                <td><span class="text-muted">Email</span></td>
-                                                <td>
-                                                    <a href="mailto:{{ profile_user.email }}">send email to
-                                                        {% if profile_user.first_name or profile_user.last_name %}
-                                                            {{ profile_user.first_name }} {{ profile_user.last_name }}
-                                                        {% else %}
-                                                            {{ profile_user.username }}
-                                                        {% endif %}
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        {% else %}
-                                            <tr>
-                                                <td><span class="text-muted">Email</span></td>
-                                                <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
-                                            </tr>
-                                        {% endif %}
-                                    {% endif %}
-                                    </tbody>
-                                </table>
+                                    <div class="panel-body">
+                                        <table class="overview" data-page-mode="view">
+                                            <tbody>
+                                            {% if profile.phone_1 %}
+                                                <tr>
+                                                    <td><span class="text-muted">{% if profile.phone_1_type %}
+                                                        {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
+                                                    <td>{{ profile.phone_1 }}</td>
+                                                </tr>
+                                            {% endif %}
+                                            {% if profile.phone_2 %}
+                                                <tr>
+                                                    <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
+                                                    <td>{{ profile.phone_2 }}</td>
+                                                </tr>
+                                            {% endif %}
+                                            {% if profile_user.email %}
+                                                {% if not user.is_anonymous %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Email</span></td>
+                                                        <td>
+                                                            <a href="mailto:{{ profile_user.email }}">send email to
+                                                                {% if profile_user.first_name or profile_user.last_name %}
+                                                                    {{ profile_user.first_name }}
+                                                                    {{ profile_user.last_name }}
+                                                                {% else %}
+                                                                    {{ profile_user.username }}
+                                                                {% endif %}
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                {% else %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Email</span></td>
+                                                        <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
+                                                    </tr>
+                                                {% endif %}
+                                            {% endif %}
+                                            </tbody>
+                                        </table>
+
+                                        <div class="row" data-page-mode="edit">
+                                            <fieldset>
+                                                <div class="col-sm-12"><label>Phone 1</label></div>
+
+                                                <div class="col-sm-6">
+                                                    <select class="form-control">
+                                                        <option {% if profile.phone_1_type == "Mobile" %}selected{% endif %}
+                                                                value="Mobile">Mobile
+                                                        </option>
+                                                        <option {% if profile.phone_1_type == "Home" %}selected{% endif %}value="Home">
+                                                            Home
+                                                        </option>
+                                                        <option {% if profile.phone_1_type == "Work" %}selected{% endif %}value="Work">
+                                                            Work
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <input class="form-control" placeholder="Subject areas"
+                                                           value="{{ profile.phone_1 }}">
+                                                </div>
+                                            </fieldset>
+
+                                            <fieldset>
+                                                <div class="col-sm-12"><label>Phone 2</label></div>
+
+                                                <div class="col-sm-6">
+                                                    <select class="form-control">
+                                                        <option {% if profile.phone_2_type == "Mobile" %}selected{% endif %}
+                                                                value="Mobile">Mobile
+                                                        </option>
+                                                        <option {% if profile.phone_2_type == "Home" %}selected{% endif %}value="Home">
+                                                            Home
+                                                        </option>
+                                                        <option {% if profile.phone_2_type == "Work" %}selected{% endif %}value="Work">
+                                                            Work
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <input class="form-control" placeholder="Subject areas"
+                                                           value="{{ profile.phone_2 }}">
+                                                </div>
+                                            </fieldset>
+                                            <fieldset class="col-sm-12">
+                                                <label>Email address</label>
+                                                <input readonly class="form-control" placeholder="Email address"
+                                                       value="{{ profile_user.email }}">
+                                            </fieldset>
+                                        </div>
                                 </div>
                             </div>
                             {% endif %}
-
-
-                            {#      AFFILIATIONS     #}
-    {#                        <div class="panel panel-default">#}
-    {#                            <div class="panel-heading">#}
-    {#                                <h3 class="panel-title">Affiliations</h3>#}
-    {#                            </div>#}
-    {#                            <div class="panel-body">#}
-    {#                                <ul class="list-affiliations list-unstyled">#}
-    {#                                    <li>#}
-    {#                                        <div class="col-sm-3" style="padding:0">#}
-    {#                                            <a href="http://www.usu.edu/" target="_blank"><img#}
-    {#                                                    class="img-responsive affiliation-logo"#}
-    {#                                                    src="http://www.usu.edu/prm/identity/logos/vertical-blue.jpg"#}
-    {#                                                    alt="USU logo"></a>#}
-    {#                                        </div>#}
-    {#                                        <div class="col-sm-9" style="padding:0 10px">#}
-    {#                                            <a href="http://www.usu.edu/" target="_blank">#}
-    {#                                                <span class="organization_name">Utah State University</span></a>#}
-    {#                                            <span class="text-muted">(2001-2015)</span>#}
-    {#                                            <h5 class="text-muted">8200 Old Main Hill, Logan, UT, 84322</h5>#}
-    {#                                            <h5 class="text-muted">Civil and Environmental Engineering | Professor</h5>#}
-    {#                                            <h5 class="text-muted">(904) 343 3074</h5>#}
-    {#                                        </div>#}
-    {#                                    </li>#}
-    {##}
-    {#                                    <li>#}
-    {#                                        <div class="col-sm-3" style="padding:0">#}
-    {#                                            <a href="http://uwrl.usu.edu/" target="_blank"><img#}
-    {#                                                    class="img-responsive affiliation-logo"#}
-    {#                                                    src="http://uwrl.usu.edu/sites/default/files/uwrllogo.gif"#}
-    {#                                                    alt="UWRL logo"></a>#}
-    {#                                        </div>#}
-    {#                                        <div class="col-sm-9" style="padding:0 10px">#}
-    {#                                            <a href="http://www.usu.edu/" target="_blank">#}
-    {#                                        <span class="organization_name">Utah Water Research#}
-    {#                                        Laboratory</span></a>#}
-    {#                                            <span class="text-muted">(2001-2015)</span>#}
-    {#                                            <h5 class="text-muted">1600 Canyon Road, Logan, UT, 84321</h5>#}
-    {#                                            <h5 class="text-muted">Software Programming and Research Support | Web#}
-    {#                                                Developer</h5>#}
-    {#                                            <h5 class="text-muted">(904) 343 3074</h5>#}
-    {#                                        </div>#}
-    {#                                    </li>#}
-    {#                                </ul>#}
-    {##}
-    {#                            </div>#}
-    {#                        </div>#}
                         </div>
                     </div>
                 </div>
@@ -272,10 +338,6 @@
                                         <td><span>Geographic Raster</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
-{#                                    <tr id="badge-his" data-type="type-HIS Referenced Time Series">#}
-{#                                        <td><span>HIS Referenced Time Series</span></td>#}
-{#                                        <td><span class="badge">0</span></td>#}
-{#                                    </tr>#}
                                     <tr id="badge-model-instance" data-type="type-Model Instance Resource">
                                         <td><span>Model Instance</span></td>
                                         <td><span class="badge">0</span></td>
@@ -300,7 +362,6 @@
                                         <td><span>Web App</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
-
                                 </tbody>
                             </table>
                         </div>
@@ -385,115 +446,26 @@
                         </div>
                     </div>
                 </div>
-
-{#                <div role="tabpanel" class="tab-pane fade" id="social">#}
-{#                    <div class="col-sm-12 col-md-6">#}
-{#                        <h4 class="title">Groups</h4>#}
-{#                        <strong><span>{% if profile_user.first_name or profile_user.last_name %}#}
-{#                            {{ profile_user.first_name }} {{ profile_user.last_name }}#}
-{#                        {% else %}#}
-{#                            {{ profile_user.username }}#}
-{#                        {% endif %}</span></strong>#}
-{#                        is a member of:#}
-{##}
-{#                        <ul class="list-group" style="list-style-type: none;">#}
-{#                            <li><span class="badge">4 members</span> <a href="#">Utah State University</a></li>#}
-{#                            <li><span class="badge">7 members</span> <a href="#">Utah Water Research Laboratory</a></li>#}
-{#                        </ul>#}
-{##}
-{##}
-{#                        <h4 class="title" style="margin-top:30px;">Following</h4>#}
-{##}
-{#                        <div>#}
-{#                            {% if profile.picture and profile.picture.url %}#}
-{#                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                     class="profile-pic-thumbnail round-image"#}
-{#                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                                </div>#}
-{#                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                     class="profile-pic-thumbnail round-image"#}
-{#                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                                </div>#}
-{#                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                     class="profile-pic-thumbnail round-image"#}
-{#                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                                </div>#}
-{#                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                     class="profile-pic-thumbnail round-image"#}
-{#                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                                </div>#}
-{#                            {% endif %}#}
-{#                        <a href="#" style="float: left;clear: both;margin-top: 10px;">View all</a>#}
-{#                        </div>#}
-{##}
-{##}
-{#                        <h4 class="title" style="margin-top: 120px;">Followers</h4>#}
-{##}
-{#                        <div>#}
-{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                 class="profile-pic-thumbnail round-image"#}
-{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                            </div>#}
-{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                 class="profile-pic-thumbnail round-image"#}
-{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                            </div>#}
-{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                 class="profile-pic-thumbnail round-image"#}
-{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                            </div>#}
-{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                 class="profile-pic-thumbnail round-image"#}
-{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                            </div>#}
-{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                 class="profile-pic-thumbnail round-image"#}
-{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                            </div>#}
-{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                 class="profile-pic-thumbnail round-image"#}
-{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                            </div>#}
-{#                            <a href="#" style="float: left;clear: both;margin-top: 10px;">View all</a>#}
-{#                        </div>                    #}
-{#                    </div>#}
-{##}
-{#                    <div class="col-sm-12 col-md-6">#}
-{##}
-{#                        <h4>External profile urls</h4>#}
-{##}
-{#                        <div class="content social">#}
-{#                            <ul>#}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-twitter"></i></a></li>#}
-{##}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-facebook"></i></a></li>#}
-{##}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-pinterest"></i></a></li>#}
-{##}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-youtube"></i></a></li>#}
-{##}
-{#                                <li><a hhref="#" target="_blank"><i class="fa fa-github"></i></a></li>#}
-{##}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-linkedin"></i></a></li>#}
-{##}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-vk"></i></a></li>#}
-{##}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-google-plus"></i></a></li>#}
-{#                            </ul>#}
-{#                        </div>#}
-{##}
-{#                    </div>#}
-{#                </div>#}
-                </div>
+            </div>
         </div>
-
-
+        </form>
     {% endwith %}
 {% endblock %}
 
 {% block extra_js %}
     <script type="text/javascript">
     $(document).ready(function () {
+        $("[data-page-mode='edit']").hide();
+        $("#btn-edit-profile").click(function(){
+            $("[data-page-mode='view']").hide();
+            $("[data-page-mode='edit']").fadeIn();
+        });
+
+        $("#btn-cancel-profile-edit").click(function(){
+            $("[data-page-mode='edit']").hide();
+            $("[data-page-mode='view']").fadeIn();
+        });
+
         // Abstract collapse toggle
         $(".show-more-btn").click(function () {
             if ($(this).parent().find(".activity-description").css("max-height") == "50px") {
