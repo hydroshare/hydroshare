@@ -19,7 +19,6 @@ from test_get_resource_types import *
 from test_get_revisions import *
 from test_group_from_id import *
 from test_list_group_members import *
-from test_list_users import *
 from test_publish_resource import *
 from test_resolve_doi import *
 from test_resource_modified import *
