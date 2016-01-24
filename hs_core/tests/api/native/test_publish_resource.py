@@ -12,10 +12,11 @@ from django.contrib.auth.models import User, Group
 
 from hs_core import hydroshare
 from hs_core.models import GenericResource
+from hs_core.testing import MockIRODSTestCaseMixin
 
-
-class TestPublishResource(unittest.TestCase):
+class TestPublishResource(MockIRODSTestCaseMixin, unittest.TestCase):
     def setUp(self):
+        super(TestPublishResource, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
         self.user = hydroshare.create_account(
@@ -35,6 +36,7 @@ class TestPublishResource(unittest.TestCase):
         )
 
     def tearDown(self):
+        super(TestPublishResource, self).tearDown()
         self.user.uaccess.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
