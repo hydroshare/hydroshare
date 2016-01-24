@@ -22,7 +22,6 @@ from test_list_group_members import *
 from test_publish_resource import *
 from test_resolve_doi import *
 from test_resource_modified import *
-from test_resource import *
 from test_set_access_rules import *
 from test_set_group_owner import *
 from test_set_resource_owner import *
