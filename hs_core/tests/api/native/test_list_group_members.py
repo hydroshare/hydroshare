@@ -1,10 +1,14 @@
 __author__ = 'Tian Gan'
 
-## unit test for list_group_member() from users.py
+# TODO: The api being tested here (hydroshare.list_group_members() is an old api
+# and does not use the new access control app code. This test can only be fixed
+# after the api being tested get fixed
+
 import unittest
 
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
+
 from hs_core import hydroshare
 
 
