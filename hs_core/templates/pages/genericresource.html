@@ -468,7 +468,7 @@
                     </div>
                 {% else %}
                     {% if cm.raccess.published %}
-                        <strong class="label-public">&nbspPublished and Immutable</strong>
+                        <span><strong class="label-public">&nbspPublished and Immutable</strong> &#8210; Note that the DOI will not be available until it has been registered and activated.</span>
                     {% elif cm.raccess.public %}
                         <strong class="label-public">&nbspPublic</strong>
                     {% elif cm.raccess.discoverable %}
@@ -2016,13 +2016,15 @@
                         <div class="modal-body">
                             <p>
                                 Once you submit the resource for publication it cannot be changed. The resource will be
-                                assigned a DOI and will be permanently published. The resource will become immutable
-                                after being published. However, the owners of this resource can still create new versions
-                                of this resource after it is published. <strong> You must check the checkbox below to agree
-                                to the data publication agreement before you can submit the resource for publication. </strong>
+                                assigned a DOI and will become immutable and be permanently published. However, the owners
+                                of this resource can still create new versions of this resource after it is published.
+                                <strong> You must check the checkbox to agree to HydroShare publication agreement below
+                                    before you can submit the resource for publication. </strong>
                             </p>
-                            <p>Data publication agreement text to be completed by Dave ..</p>
-                            <input type="checkbox" id="agree-chk"><label for="agree-chk" class="checkbox-label">I agree to the data publication agreement above.</label>
+                            <div class="iframe-border">
+                                <iframe id="pub-agreement-frame" scrolling="no" src="https://www.hydroshare.org/publication-agreement/"></iframe>
+                            </div>
+                            <input type="checkbox" id="agree-chk"><label for="agree-chk" class="checkbox-label">I agree to the HydroShare Publication Agreement</label>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>

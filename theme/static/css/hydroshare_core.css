@@ -2813,3 +2813,15 @@ h4.title {
 .label-private {
     color: #d9534f;
 }
+
+.iframe-border {
+	border: 2px solid #DDD;
+	overflow: scroll;
+}
+#pub-agreement-frame {
+	border: 0px none;
+	height: 1030px;
+	margin-top: -160px;
+	margin-bottom: -630px;
+	width: 740px;
+}
