@@ -317,7 +317,7 @@ def change_permissions(request, shortkey, *args, **kwargs):
 
 # Needed for new access control UI functionality being developed by Mauriel
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
     user_to_share_with = utils.user_from_id(user_id)
     status = 'success'
     err_message = ''
@@ -366,7 +366,7 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
 
 # Needed for new access control UI functionality being developed by Mauriel
 def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
     user_to_unshare_with = utils.user_from_id(user_id)
 
     try:
