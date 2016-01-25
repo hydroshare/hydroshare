@@ -44,6 +44,7 @@
 <script src='{% static 'js/jquery-ui.js' %}'></script>
 <script src="{% static "js/bootstrap.3.0.2.min.js" %}"></script>
 <script src="{% static "js/bootstrap-extras.js" %}"></script>
+{% block extra_js %}{% endblock %}
 {% endcompress %}
 {% include 'autocomplete_light/static.html' %}
 
