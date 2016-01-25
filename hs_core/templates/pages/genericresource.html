@@ -3466,6 +3466,27 @@
 
             });
         </script>
+        {% if relevant_tools %}
+            <script>
+                $(document).ready(function() {
+                    $('.user-webapp-icon').on('error', function() {
+                        $(this)
+                                .attr('src', '{{ STATIC_URL }}img/web-app-default-icon.png')
+                                .removeClass('user-webapp-icon')
+                                .addClass('default-webapp-icon');
+                    });
+                    $('.dropdown-webapp-icon').on('error', function() {
+                        $(this)
+                                .attr('src', '{{ STATIC_URL }}img/web-app-default-icon.png')
+                                .removeClass('dropdown-webapp-icon')
+                                .addClass('default-dropdown-webapp-icon');
+                    });
+                    if ($('#apps-dropdown').length == 1) {
+                        $('h2').attr('style', 'width: calc(100% - 110px);');
+                    }
+                });
+            </script>
+        {% endif %}
     {% endblock %}
     <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=drawing&callback=initMap"></script>
 

@@ -16,3 +16,19 @@
     width: 100px;
     height: 100px;
 }
+.dropdown-webapp-icon {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 4px;
+    margin: 5px;
+}
+.default-dropdown-webapp-icon {
+    width: 50px;
+    height: 50px;
+}
+#apps-dropdown {
+    position: absolute;
+    right: 14px;
+    bottom: 0;
+}
