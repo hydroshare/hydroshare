@@ -2,7 +2,7 @@
 {% load i18n future %}
 {% block title %}Sign In{% endblock %}
 
-{% block main_cols %}col-md-6 col-md-offset-3{% endblock %}
+{% block main_cols %}col-md-6{% endblock %}
 
 {% block main %}
 
@@ -11,6 +11,7 @@
 {% else %}
     {{ block.super }}
 
+    <h2>Sign In</h2>
     <form class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
         {% csrf_token %}
 
@@ -36,14 +37,14 @@
             {% block account_form_actions %}
                 <div class="row">
                     <div class="col-md-12">
-                        <input class="hl-btn hl-btn-green" type="submit" value="Sign In" style="width: 100%;">
+                        <input class="btn btn-primary" type="submit" value="Sign In">
                     </div>
                 </div>
             {% endblock %}
         </fieldset>
     </form>
 
-    <p>{% blocktrans with request.GET.next as next %}If you don't have an account you can <a href="/?next={{ next }}">join HydroShare</a> now.{% endblocktrans %}</p>
+    <p>{% blocktrans with request.GET.next as next %}If you don't have an account you can <a href="/sign-up/?next={{ next }}">join HydroShare</a> now.{% endblocktrans %}</p>
     {% url "mezzanine_password_reset" as password_reset_url %}
     {% url "profile_update" as profile_update_url %}
     {% blocktrans %}<p>You can also <a href="{{ password_reset_url }}?next={{ profile_update_url }}">reset your password</a> if you've forgotten it.</p>{% endblocktrans %}</p>

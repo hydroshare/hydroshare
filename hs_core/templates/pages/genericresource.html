@@ -971,14 +971,14 @@
                 <div class="panel-tabs">
                     <ul class="nav nav-tabs">
                         <li class="active col-xs-2 col-md-2">
-                            <a href="#contactTab" data-toggle="tab">
+                            <a href="#contactTab" data-toggle="tab" title="Contact">
                                 <span class="glyphicon glyphicon-user"> </span>
                                 &nbspContact
                             </a>
                         </li>
                         {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
                             <li class="col-xs-2 col-md-2">
-                                <a id="coverageTabBtn" href="#coverageTab" data-toggle="tab">
+                                <a id="coverageTabBtn" href="#coverageTab" data-toggle="tab" title="Coverage">
                                     <span class="glyphicon glyphicon-globe"></span>
                                     &nbspCoverage
                                 </a>
@@ -986,7 +986,7 @@
                         {% endif %}
                         {% if sources or relations or metadata_form %}
                             <li class="col-xs-2 col-md-2">
-                                <a href="#relatedResourcesTab" data-toggle="tab">
+                                <a href="#relatedResourcesTab" data-toggle="tab" title="Related resources">
                                     <span class="glyphicon glyphicon-book"></span>
                                     &nbspRelated Resources
                                 </a>
@@ -997,7 +997,7 @@
                             {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
                                 {% if  cm|resource_type != "Generic" %}
                                     <li class="col-xs-2 col-md-2">
-                                        <a href="#resourceSpecificTab" data-toggle="tab">
+                                        <a href="#resourceSpecificTab" data-toggle="tab" title="Resource specific">
                                             <span class="glyphicon glyphicon-folder-close"></span>
                                             &nbspResource Specific
                                         </a>
@@ -1007,7 +1007,7 @@
                         {% endif %}
                         {% if relevant_tools  %}
                             <li class="col-xs-2 col-md-2">
-                                <a href="#relevantTools" data-toggle="tab">
+                                <a href="#relevantTools" data-toggle="tab" title="Relevant tools">
                                     <span class="glyphicon glyphicon-wrench"></span>
                                     &nbsp; Web Apps
                                 </a>
@@ -1628,6 +1628,7 @@
         <div class="rating col-sm-12 content-block">
             {% comments_for cm %}
         </div>
+
         {#                #}
         {# dialogs follow #}
         {#                #}
@@ -2410,6 +2411,7 @@
         {%  endblock %}
         {%  endblock %}
     {% endwith %}
+    {% endblock %}
 
     {% block extra_js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/irods.js"></script>
@@ -3491,4 +3493,4 @@
         <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
     {%  endblock %}
 
-{% endblock %}
+
