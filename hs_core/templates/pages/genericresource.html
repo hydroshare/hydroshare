@@ -1620,6 +1620,7 @@
         <div class="rating col-sm-12 content-block">
             {% comments_for cm %}
         </div>
+
         {#                #}
         {# dialogs follow #}
         {#                #}
@@ -2398,6 +2399,7 @@
         {%  endblock %}
         {%  endblock %}
     {% endwith %}
+    {% endblock %}
 
     {% block extra_js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/irods.js"></script>
@@ -3472,4 +3474,4 @@
         <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
     {%  endblock %}
 
-{% endblock %}
+
