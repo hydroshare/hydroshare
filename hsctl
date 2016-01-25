@@ -148,7 +148,9 @@ preflight_hs() {
             echo "*** Using SSL: USE_SSL = ${USE_SSL} ***"
             # copy ssl cert and ssl key to hs-certs directory
             yes | cp -rf ${SSL_CERT_DIR}/${SSL_CERT_FILE} ${HOST_SSL_DIR}
-            yes | cp -rf ${SSL_CERT_DIR}/${SSL_KEY_FILE} ${HOST_SSL_DIR};
+            yes | cp -rf ${SSL_CERT_DIR}/${SSL_KEY_FILE} ${HOST_SSL_DIR}
+            # disable SSH server from running
+            sed -i 's!'"/usr/sbin/sshd"'!'"# REMOVED SSH COMPONENT"'!g' ${HS_PATH}/init;
         else
             echo "*** Not using SSL: USE_SSL = ${USE_SSL} ***"
         fi
