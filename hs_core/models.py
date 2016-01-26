@@ -11,6 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_save
+from django.db import transaction
 from django.dispatch import receiver
 from django import forms
 from django.utils.timezone import now
@@ -468,7 +469,7 @@ class Date(AbstractMetaDataElement):
             if not kwargs['type'] in dict(cls.DATE_TYPE_CHOICES).keys():
                 raise ValidationError('Invalid date type:%s' % kwargs['type'])
 
-             # get matching resource
+            # get matching resource
             metadata_obj = kwargs['content_object']
             resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
 
@@ -476,14 +477,19 @@ class Date(AbstractMetaDataElement):
                 if 'end_date' in kwargs:
                     del kwargs['end_date']
 
+            if 'start_date' in kwargs:
+                if isinstance(kwargs['start_date'], basestring):
+                    kwargs['start_date'] = parser.parse(kwargs['start_date'])
             if kwargs['type'] == 'published':
                 if not resource.raccess.published:
                     raise ValidationError("Resource is not published yet.")
             elif kwargs['type'] == 'available':
                 if not resource.raccess.public:
-                    raise ValidationError("Resource has not been shared yet.")
+                    raise ValidationError("Resource has not been made public yet.")
             elif kwargs['type'] == 'valid':
                 if 'end_date' in kwargs:
+                    if isinstance(kwargs['end_date'], basestring):
+                        kwargs['end_date'] = parser.parse(kwargs['end_date'])
                     if kwargs['start_date'] > kwargs['end_date']:
                         raise ValidationError("For date type valid, end date must be a date after the start date.")
 
@@ -497,6 +503,8 @@ class Date(AbstractMetaDataElement):
         dt = Date.objects.get(id=element_id)
 
         if 'start_date' in kwargs:
+            if isinstance(kwargs['start_date'], basestring):
+                kwargs['start_date'] = parser.parse(kwargs['start_date'])
             if dt.type == 'created':
                 raise ValidationError("Resource creation date can't be changed")
             elif dt.type == 'modified':
@@ -504,6 +512,8 @@ class Date(AbstractMetaDataElement):
                 dt.save()
             elif dt.type == 'valid':
                 if 'end_date' in kwargs:
+                    if isinstance(kwargs['end_date'], basestring):
+                        kwargs['end_date'] = parser.parse(kwargs['end_date'])
                     if kwargs['start_date'] > kwargs['end_date']:
                         raise ValidationError("For date type valid, end date must be a date after the start date.")
                     dt.start_date = kwargs['start_date']
@@ -1497,6 +1507,45 @@ class CoreMetaData(models.Model):
         self.sources.all().delete()
         self.relations.all().delete()
 
+    # this method needs to be overriden by any subclass of this class
+    # to allow updating of extended (resource specific) metadata
+    def update(self, metadata):
+        # updating non-repeatable elements
+        with transaction.atomic():
+            for element_name in ('title', 'description', 'language', 'rights'):
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        element = getattr(self, element_name, None)
+                        if element:
+                            self.update_element(element_id=element.id, element_model_name=element_name,
+                                                **dict_item[element_name])
+                        else:
+                            self.create_element(element_model_name=element_name, **dict_item[element_name])
+
+            for element_name in ('creator', 'contributor', 'coverage', 'source', 'relation', 'subject'):
+                self._update_repeatable_element(element_name=element_name, metadata=metadata)
+
+            # allow only updating or creating date element of type valid
+            element_name = 'date'
+            date_list = [date_dict for date_dict in metadata if element_name in date_dict]
+            if len(date_list) > 0:
+                for date_item in date_list:
+                    if 'type' in date_item[element_name]:
+                        if date_item[element_name]['type'] == 'valid':
+                            self.dates.filter(type='valid').delete()
+                            self.create_element(element_model_name=element_name, **date_item[element_name])
+                            break
+
+            # allow only updating or creating identifiers which does not have name value 'hydroShareIdentifier'
+            element_name = 'identifier'
+            identifier_list = [id_dict for id_dict in metadata if element_name in id_dict]
+            if len(identifier_list) > 0:
+                for id_item in identifier_list:
+                    if 'name' in id_item[element_name]:
+                        if id_item[element_name]['name'].lower() != 'hydroshareidentifier':
+                            self.identifiers.filter(name=id_item[element_name]['name']).delete()
+                            self.create_element(element_model_name=element_name, **id_item[element_name])
+
     def get_xml(self, pretty_print=True):
         from lxml import etree
         # importing here to avoid circular import problem
@@ -1804,6 +1853,15 @@ class CoreMetaData(models.Model):
     def _is_valid_element(self, element_name):
         allowed_elements = [el.lower() for el in self.get_supported_element_names()]
         return element_name.lower() in allowed_elements
+
+    def _update_repeatable_element(self, element_name, metadata):
+        # make a list of dict that are for a specific element as specified by element_name
+        element_list = [element_dict for element_dict in metadata if element_name in element_dict]
+        if len(element_list) > 0:
+            elements = getattr(self, element_name + 's')
+            elements.all().delete()
+            for element in element_list:
+                self.create_element(element_model_name=element_name, **element[element_name])
 
 
 def resource_processor(request, page):
