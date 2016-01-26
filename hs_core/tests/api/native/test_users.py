@@ -7,6 +7,8 @@ from django.test import TestCase
 from hs_core import hydroshare
 from hs_core.models import GroupOwnership, GenericResource
 
+# TODO: These unit tests can't be part of the test run until the api(s) being tested here are fixed
+
 
 class TestUsersAPI(TestCase):
     def setUp(self):
@@ -38,7 +40,6 @@ class TestUsersAPI(TestCase):
             'A Group',
             members=[user1, user2],
             owners=[user1])
-
 
         # test that the group is the same in the database
         self.assertEqual(
