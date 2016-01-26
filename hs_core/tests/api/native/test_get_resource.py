@@ -4,8 +4,11 @@ from unittest import TestCase
 
 from django.contrib.auth.models import User, Group
 
+from hs_core.models import GenericResource
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
+
+# iRODS mocking has not been used here as we want test bag creation
 
 
 class TestGetResource(TestCase):
@@ -20,15 +23,6 @@ class TestGetResource(TestCase):
             superuser=False,
             groups=[])
 
-        # get the user's id
-        self.userid = User.objects.get(username=self.user).pk
-
-        self.group = users.create_group(
-            'MytestGroup',
-            members=[self.user],
-            owners=[self.user]
-            )
-
         self.res = resource.create_resource(
             'GenericResource',
             self.user,
@@ -36,16 +30,15 @@ class TestGetResource(TestCase):
             )
 
     def tearDown(self):
-        self.user.delete()
-        self.group.delete()
-        self.hydroshare_author_group.delete()
-        self.res.delete()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        GenericResource.objects.all().delete()
 
     def test_get_resource(self):
-        # function to test: hydroshare.get_resource() which returns a Bags object
-        # TODO: I (Pabitra) don't see any useful way of using the hydroshare.get_resource() function
+        # function to test: hydroshare.get_resource() which returns a Bags object (not the actual bag file)
+        # TODO: Don't see any useful way of using the hydroshare.get_resource() function
         # One can't do much with a Bags object. For downloading a bag we are using resource.bag_url.
-        # So I suggest we delete the get_resource() function and remove this test
+        # So it is better that we delete the get_resource() function and remove this test
         
         res_bag = resource.get_resource(self.res.short_id)
         self.assertTrue(res_bag is not None)
