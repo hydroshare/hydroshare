@@ -1,35 +1,30 @@
-__author__ = 'Pabitra'
-
-import unittest
 from dateutil import parser
 from lxml import etree
-
 from unittest import TestCase
+
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, User
 
-from hs_core.hydroshare import utils, users, resource
+from hs_core.hydroshare import resource
 from hs_core.models import GenericResource, Creator, Contributor, CoreMetaData, \
     Coverage, Rights, Title, Language, Publisher, Identifier, \
     Type, Subject, Description, Date, Format, Relation, Source
 from hs_core import hydroshare
+from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestCoreMetadata(TestCase):
+class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
-        try:
-            self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-            self.user = hydroshare.create_account(
-                'user1@nowhere.com',
-                username='user1',
-                first_name='Creator_FirstName',
-                last_name='Creator_LastName',
-                superuser=False,
-                groups=[self.group]
-            )
-        except:
-            self.tearDown()
-            self.user = User.objects.create_user('user1', email='user1@nowhere.com')
+        super(TestCoreMetadata, self).setUp()
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.user = hydroshare.create_account(
+            'user1@nowhere.com',
+            username='user1',
+            first_name='Creator_FirstName',
+            last_name='Creator_LastName',
+            superuser=False,
+            groups=[]
+        )
 
         self.res = hydroshare.create_resource(
             resource_type='GenericResource',
@@ -39,6 +34,7 @@ class TestCoreMetadata(TestCase):
         )
 
     def tearDown(self):
+        super(TestCoreMetadata, self).tearDown()
         User.objects.all().delete()
         Group.objects.all().delete()
         GenericResource.objects.all().delete()
