@@ -36,9 +36,9 @@
                                         <input type="checkbox" data-facet="editable" value="Editable">Editable by me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="shared with me" class="badge">0</span>
+                                    <span data-facet="viewable by me" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="shared with me" value="View">Viewable by me</label>
+                                        <input type="checkbox" data-facet="viewable by me" value="View">Viewable by me</label>
                                 </li>
                                 <li class="list-group-item">
                                     <span data-facet="favorites" class="badge">0</span>
@@ -887,6 +887,7 @@
             var collection = [];
             var favorites = 0;
             var ownedCount = 0;
+            var ownedEditableCount = 0;
             var editableCount = 0;
             var viewableCount = 0;
 
@@ -894,9 +895,12 @@
                 var dataColLabels = this.data()[8].replace(/\s+/g, ' ').split(","); // List of labels already applied to the resource;
                 var dataColFavorite = this.data()[9].trim();
                 var dataColPermissionLevel = this.data()[7].trim();
+                var sharingStatus = this.data()[11].trim();
 
                 if (dataColPermissionLevel == "Owned") {
                     ownedCount++;
+                    if (sharingStatus.indexOf('Published') == -1)
+                        ownedEditableCount++;
                 }
                 else if (dataColPermissionLevel == "Editable") {
                     editableCount++;
@@ -908,8 +912,8 @@
 
                 // Update filter badges count
                 $("#filter .badge[data-facet='owned']").text(ownedCount);
-                $("#filter .badge[data-facet='editable']").text(ownedCount + editableCount);
-                $("#filter .badge[data-facet='shared with me']").text(viewableCount + editableCount);
+                $("#filter .badge[data-facet='editable']").text(ownedEditableCount+editableCount);
+                $("#filter .badge[data-facet='viewable by me']").text(viewableCount);
 
                 if (dataColFavorite == "Favorite") {
                     favorites++;
@@ -1088,12 +1092,17 @@
 
                     // Editable by me
                     if ($('#filter input[type="checkbox"][value="Editable"]').prop("checked") == true) {
+                        // published resources are not editable
+                        var sharingStatus = data[11].trim();
+                        if (sharingStatus.indexOf('Published') != -1)
+                            return false
+
                         if (data[7] != "Owned" && data[7] != "Editable") {
                             return false;
                         }
                     }
 
-                    // Shared with me
+                    // Viewable by me
                     if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
                         if (data[7] == "Owned" || (data[7] != "Viewable" && data[7] != "Editable")) {
                             return false;
