@@ -32,6 +32,7 @@
                         <div class="row">
                             <div class="col-sm-8">{{ version.value }}</div>
                         </div>
+                        <hr style="border:0">
                     {% endif %}
                 </div>
                 <div>
@@ -46,12 +47,11 @@
                 </div>
                 <div>
                     {% if tool_icon_url %}
-                        <h4><strong>Tool Icon:</strong></h4>
+                        <h4><strong>App Icon:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-8"><img id="tool-icon" src="{{ tool_icon_url }}"/></div>
                         </div>
-                        <hr style="border:0">
                     {%  endif %}
                 </div>
             </div>
