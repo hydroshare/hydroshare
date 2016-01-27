@@ -466,19 +466,15 @@
                             <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
                                   method="POST">
                                 {% csrf_token %}
-                                {% if cm.raccess.shareable %}
-                                    <input name="t" type="hidden" value="make_not_shareable"/>
-                                    <div class="checkbox" data-toggle="tooltip"
-                                         title="When checked, users other than owners may grant access to the resource.">
-                                        <label><input id="btn-shareable" type="checkbox" checked>Shareable</label>
-                                    </div>
-                                {% else %}
-                                    <input name="t" type="hidden" value="make_shareable"/>
-                                    <div class="checkbox" data-toggle="tooltip"
-                                         title="When checked, users other than owners may grant access to the resource.">
-                                        <label><input id="btn-shareable" type="checkbox">Shareable</label>
-                                    </div>
-                                {% endif %}
+
+                                <input name="t" type="hidden" {% if cm.raccess.shareable %}value="make_not_shareable"
+                                       {% else %}value="make_shareable"{% endif %}/>
+
+                                <div class="checkbox" data-toggle="tooltip"
+                                     title="When checked, users other than owners may grant access to the resource.">
+                                    <label><input id="btn-shareable" type="checkbox"
+                                                  {% if cm.raccess.shareable %}checked{% endif %}>Shareable</label>
+                                </div>
                             </form>
                         </div>
                     {% endif %}
