@@ -72,7 +72,7 @@ def landing_page(request, page):
 
             link_html = ""
             for res in collection_items_accessible:
-                link_html += '<a href="/resource/' + res.short_id + '" target="_blank">' + \
+                link_html += '<a style="color: blue" href="/resource/' + res.short_id + '" target="_blank">' + \
                              res.resource_type + ' : ' + res.title + '</a><br/>'
             for res in collection_items_inaccessible:
                 link_html += '<a style="color: grey" href="/resource/' + res.short_id + '" target="_blank">' + \
@@ -98,20 +98,26 @@ def landing_page(request, page):
 
         html_candidate = ""
         for res in candidate_resources_list:
-            html_candidate += '<option value="' + res.short_id+'">' + \
+            html_candidate += '<option style= "color: blue" value="' + res.short_id+'">' + \
                               res.resource_type + ' : ' + res.title + \
                               '</option>'
 
         html_collection = ""
         if collection_itmes_meta is not None:
             for res_checked in collection_itmes_meta.collection_items.all():
-                html_collection += '<option value="' + res_checked.short_id+'">' + \
+                if res_checked in user_all_accessible_resource_list:
+                    html_collection += '<option style= "color: blue" value="' + res_checked.short_id+'">' + \
+                                   res_checked.resource_type + ' : ' + res_checked.title + \
+                                   '</option>'
+                else:
+                    html_collection += '<option style= "color: grey" value="' + res_checked.short_id+'">' + \
                                    res_checked.resource_type + ' : ' + res_checked.title + \
                                    '</option>'
 
+
         ext_md_layout = Layout(
                                 HTML(
-                                    '<h4>Resource Pool</h4>'
+                                    '<h4>Your Resource Pool</h4>'
                                     '<select class="form-control" multiple="multiple" id="select1">'
                                 ),
                                 HTML(
