@@ -2918,6 +2918,7 @@ h4.title {
 .iframe-border {
 	border: 2px solid #DDD;
 	overflow: scroll;
+    overflow-x: hidden;
 }
 #pub-agreement-frame {
 	border: 0px none;
