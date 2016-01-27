@@ -3,7 +3,7 @@ Unittest for def get_capabilities(pk)
 
 author's notes- 
 I think this should be renamed get_extra_capabilities
-must be extended to test other types of resources for release 3
+must be extended to test other types of resources
 
 """
 
@@ -13,24 +13,25 @@ from django.contrib.auth.models import User, Group
 
 from hs_core import hydroshare
 from hs_core.models import GenericResource
-from hs_core.hydroshare.resource import create_resource, get_capabilities
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
 class TestGetCapabilities(MockIRODSTestCaseMixin, unittest.TestCase):
     def setUp(self):
         super(TestGetCapabilities, self).setUp()
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
     def tearDown(self):
+        super(TestGetCapabilities, self).tearDown()
         GenericResource.objects.all().delete()
         User.objects.filter(username='shaun').delete()
         Group.objects.all().delete()
-        super(TestGetCapabilities, self).tearDown()
 
     def test_generic(self):
-        hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         user = hydroshare.create_account(email='shauntheta@gmail.com', username='shaun', first_name='shaun',
-                                         last_name='livingston', superuser=False, groups=[hydroshare_author_group])
-        res1 = create_resource('GenericResource', user, 'res1')
-        extras = get_capabilities(res1.short_id)
+                                         last_name='livingston', superuser=False, groups=[self.group])
+        res1 = hydroshare.create_resource('GenericResource', user, 'Test Resource')
+
+        # this is the api call we are testing
+        extras = hydroshare.get_capabilities(res1.short_id)
         self.assertIsNone(extras)
