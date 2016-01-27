@@ -69,7 +69,7 @@ CELERY_QUEUES = (
 CELERY_DEFAULT_EXCHANGE = 'tasks'
 CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
-CELERY_ROUTES = ('django_docker_processes.router.DockerRouter',)
+CELERY_ROUTES = ('hs_core.router.HSTaskRouter', 'django_docker_processes.router.DockerRouter',)
 
 DOCKER_URL = 'unix://docker.sock/'
 DOCKER_API_VERSION = '1.12'
