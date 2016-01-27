@@ -1,4 +1,3 @@
-
 from django.test import TestCase
 from hs_core import hydroshare
 from hs_core.models import BaseResource
