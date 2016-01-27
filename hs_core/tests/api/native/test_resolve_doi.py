@@ -15,8 +15,8 @@ class TestResolveDOIAPI(MockIRODSTestCaseMixin, unittest.TestCase):
 
     def tearDown(self):
         super(TestResolveDOIAPI, self).tearDown()
-        self.user_creator.uaccess.delete()
         User.objects.all().delete()
+        Group.objects.all().delete()
         GenericResource.objects.all().delete()
 
     def test_resolve_doi(self):
