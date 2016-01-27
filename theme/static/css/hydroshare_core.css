@@ -2648,8 +2648,8 @@ h4.title {
 }
 
 #item-selectors tr > td:first-child {
-	max-width: 90px;
-	min-width: 90px;
+	max-width: 100px;
+	min-width: 100px;
 	padding-right: 0;
 }
 
@@ -2886,14 +2886,6 @@ h4.title {
 
 .inline-dropdown ul, .list-labels {
 	list-style-type: none;
-}
-
-.dataTables_wrapper {
-    max-width: 100%;
-}
-
-.all-rows-selector {
-
 }
 
 .resource-type-text {
