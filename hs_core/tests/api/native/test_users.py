@@ -7,7 +7,9 @@ from django.test import TestCase
 from hs_core import hydroshare
 from hs_core.models import GroupOwnership, GenericResource
 
-# TODO: These unit tests can't be part of the test run until the api(s) being tested here are fixed
+# TODO: These unit tests can't be part of the test run until the api(s) being tested here are fixed based on access
+# control api. May be since similar api for listing members of a group is already there and being tested, we don't
+# need this test in hs_core. Suggestion - delete this file.
 
 
 class TestUsersAPI(TestCase):
