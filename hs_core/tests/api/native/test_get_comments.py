@@ -1,17 +1,21 @@
 __author__ = 'Tian Gan'
 
-## unit test for get_comments() from social.py
+# unit test for get_comments() from social.py
 
 import unittest
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from mezzanine.generic.models import ThreadedComment
+
 from hs_core import hydroshare
 from hs_core.models import GenericResource
-from unittest import TestCase
+from hs_core.testing import MockIRODSTestCaseMixin
 
-class TestGetComments(TestCase):
+
+class TestGetComments(MockIRODSTestCaseMixin, unittest.TestCase):
     def setUp(self):
+        super(TestGetComments, self).setUp()
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create 2 users
         self.user1 = hydroshare.create_account(
             'user1@gmail.com',
@@ -56,12 +60,14 @@ class TestGetComments(TestCase):
                                                         in_reply_to=self.comment_2.pk)
 
     def tearDown(self):
-        ThreadedComment.objects.all().delete()
+        super(TestGetComments, self).setUp()
         User.objects.all().delete()
+        Group.objects.all().delete()
+        ThreadedComment.objects.all().delete()
         GenericResource.objects.all().delete()
 
-    @unittest.skip
     def test_get_comments(self):
+        # this is the api call we are testing
         res_comments = hydroshare.get_comments(self.res.short_id)
 
         # test the length of the comments
