@@ -37,7 +37,7 @@ def landing_page(request, page):
             context['supported_res_types'] = ", ".join(new_supported_res_types_array)
 
         if content_model.metadata.tool_icon.first():
-            context['tool_icon_url'] = content_model.metadata.tool_icon.first().icon
+            context['tool_icon_url'] = content_model.metadata.tool_icon.first().url
 
         context['extended_metadata_exists'] = extended_metadata_exists
         context['url_base'] = content_model.metadata.url_bases.first()
@@ -45,9 +45,6 @@ def landing_page(request, page):
 
     else:
         url_base = content_model.metadata.url_bases.first()
-        if not url_base:
-            url_base = RequestUrlBase.create(content_object=content_model.metadata)
-
         url_base_form = UrlBaseForm(instance=url_base,
                                     res_short_id=content_model.short_id,
                                     element_id=url_base.id
@@ -76,10 +73,6 @@ def landing_page(request, page):
                      '{% load crispy_forms_tags %} '
                      '{% crispy supported_res_types_form %} '
                      '</div> '),
-                HTML('<div class="form-group col-lg-6 col-xs-12" id="tool_icon"> '
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy tool_icon_form %} '
-                     '</div> '),
                 HTML("<div class='form-group col-lg-6 col-xs-12' id='url_bases'> "
                      '{% load crispy_forms_tags %} '
                      '{% crispy url_base_form %} '
@@ -87,6 +80,10 @@ def landing_page(request, page):
                 HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
                      '{% load crispy_forms_tags %} '
                      '{% crispy version_form %} '
+                     '</div> '),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="tool_icon"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy tool_icon_form %} '
                      '</div> '),
                 HTML('<div id="checked_res_div" hidden="true">{{ checked_res }}</div>')
         )
