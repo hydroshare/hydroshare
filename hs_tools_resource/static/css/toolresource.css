@@ -3,7 +3,6 @@
     box-sizing: border-box;
     padding-left: 1vw;
     text-align:center;
-
 }
 .user-webapp-icon, #tool-icon-preview, #tool-icon{
     width:80px;
@@ -16,14 +15,14 @@
     width: 100px;
     height: 100px;
 }
-.dropdown-webapp-icon {
+.dropdown-user-webapp-icon {
     width: 40px;
     height: 40px;
     border: 0;
     border-radius: 4px;
     margin: 5px;
 }
-.default-dropdown-webapp-icon {
+.dropdown-default-webapp-icon {
     width: 50px;
     height: 50px;
 }
@@ -31,4 +30,7 @@
     position: absolute;
     right: 14px;
     bottom: 0;
+}
+.dropdown-menu > li > a {
+    padding: 0;
 }

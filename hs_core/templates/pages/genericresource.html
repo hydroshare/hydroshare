@@ -70,7 +70,7 @@
                         {% for tool in relevant_tools %}
                             <li>
                                 <a href="{{ tool.url }}" target="_blank">
-                                    <img class="dropdown-webapp-icon" src="{{ tool.icon }}">
+                                    <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">
                                     <span>{{ tool.title }}</span>
                                 </a>
                             </li>
@@ -1613,7 +1613,7 @@
                                     <a href="{{ tool.url }}" target="_blank">
                                     <div id="web-app-item">
                                         <h4>{{ tool.title }}</h4>
-                                        <img class="user-webapp-icon" src="{{ tool.icon }}">
+                                        <img class="user-webapp-icon" src="{{ tool.icon_url }}">
                                     </div>
                                     </a>
                                 {% endfor %}
@@ -3475,23 +3475,7 @@
             });
         </script>
         {% if relevant_tools %}
-            <script>
-                $(document).ready(function() {
-                    $('.user-webapp-icon').on('error', function() {
-                        $(this)
-                                .attr('src', '{{ STATIC_URL }}img/web-app-default-icon.png')
-                                .removeClass('user-webapp-icon')
-                                .addClass('default-webapp-icon');
-                    });
-                    $('.dropdown-webapp-icon').on('error', function() {
-                        $(this)
-                                .attr('src', '{{ STATIC_URL }}img/web-app-default-icon.png')
-                                .removeClass('dropdown-webapp-icon')
-                                .addClass('default-dropdown-webapp-icon');
-                    });
-                    $('h2').attr('style', 'width: calc(100% - 110px);');
-                });
-            </script>
+            <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>
         {% endif %}
     {% endblock %}
     <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=drawing&callback=initMap"></script>

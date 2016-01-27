@@ -74,10 +74,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                 tool_url = tool_url[:-1]
                         else:
                             tool_url = ""
-                        tool_icon = tool_res_obj.metadata.tool_icon.first().icon \
+                        tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
                             if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
                         tl = {'title': str(tool_res_obj.metadata.title.value),
-                              'icon': tool_icon,
+                              'icon_url': tool_icon_url,
                               'url': "{0}{1}{2}{3}{4}{5}".format(tool_url, "/?res_id=", content_model.short_id,
                                                                  "&usr=", u, "&src=hs")}
                         relevant_tools.append(tl)

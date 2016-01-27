@@ -46,7 +46,7 @@ class RequestUrlBase(AbstractMetaDataElement):
 
 class ToolVersion(AbstractMetaDataElement):
     term = 'AppVersion'
-    value = models.CharField(max_length=128, default="1.0")
+    value = models.CharField(max_length=128, blank=True)
 
     class Meta:
         # ToolVersion element is not repeatable
@@ -109,7 +109,7 @@ class SupportedResTypes(AbstractMetaDataElement):
 
 class ToolIcon(AbstractMetaDataElement):
     term = 'ToolIcon'
-    icon = models.CharField(max_length=1024, null=True)
+    url = models.CharField(max_length=1024, null=True, blank=True)
 
     class Meta:
         # ToolVersion element is not repeatable
@@ -146,36 +146,5 @@ class ToolMetaData(CoreMetaData):
             missing_required_elements.append('Supported Resource Types')
 
         return missing_required_elements
-
-    def get_xml(self):
-        # get the xml string representation of the core metadata elements
-        xml_string = super(ToolMetaData, self).get_xml(pretty_print=False)
-
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
-
-        # get root 'Description' element that contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-        # inject resource specific metadata elements into container element
-        if self.url_bases.all().first():
-            url_bases_fields = ['value']
-            self.add_metadata_element_to_xml(container,
-                                             self.url_bases.all().first(),
-                                             url_bases_fields)
-
-        if self.versions.all().first():
-            versions_fields = ['value']
-            self.add_metadata_element_to_xml(container,
-                                             self.versions.all().first(),
-                                             versions_fields)
-
-        for res_type in self.supported_res_types.all():
-            hsterms_method = etree.SubElement(container, '{%s}SupportedResTypes' % self.NAMESPACES['hsterms'])
-            hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}types' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = res_type.get_supported_res_types_str()
-
-        return etree.tostring(RDF_ROOT, pretty_print=True)
 
 import receivers # never delete this otherwise non of the receiver function will work
