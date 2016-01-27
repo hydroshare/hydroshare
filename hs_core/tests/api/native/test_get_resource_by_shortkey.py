@@ -1,4 +1,3 @@
-
 import unittest
 
 from django.contrib.auth.models import User, Group
@@ -14,11 +13,10 @@ class TestGetResourceByShortkeyAPI(MockIRODSTestCaseMixin, unittest.TestCase):
         self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
     def tearDown(self):
-        self.user_creator.uaccess.delete()
-        User.objects.all().delete()
-        self.hydroshare_author_group.delete()
-        GenericResource.objects.all().delete()
         super(TestGetResourceByShortkeyAPI, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        GenericResource.objects.all().delete()
 
     def test_get_resource_by_shortkey(self):
         # create a user to be used for creating the resource
