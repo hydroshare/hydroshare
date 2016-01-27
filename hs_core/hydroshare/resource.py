@@ -3,6 +3,7 @@ import os
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
+from django.utils.timezone import now
 from django.db import transaction
 
 from mezzanine.generic.models import Keyword, AssignedKeyword
@@ -748,6 +749,7 @@ def publish_resource(pk):
     resource.raccess.immutable = True
     resource.raccess.save()
     resource.doi = "to be assigned"
+    resource.metadata.create_element('date', type='published', start_date=now().isoformat())
     resource.save()
 
 
