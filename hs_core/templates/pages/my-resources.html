@@ -913,7 +913,8 @@
                 // Update filter badges count
                 $("#filter .badge[data-facet='owned']").text(ownedCount);
                 $("#filter .badge[data-facet='editable']").text(ownedEditableCount+editableCount);
-                $("#filter .badge[data-facet='viewable by me']").text(viewableCount);
+                ownedPublishedCount = ownedCount - ownedEditableCount
+                $("#filter .badge[data-facet='viewable by me']").text(viewableCount+ownedPublishedCount);
 
                 if (dataColFavorite == "Favorite") {
                     favorites++;
@@ -1104,6 +1105,11 @@
 
                     // Viewable by me
                     if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
+                        // published resources are viewable
+                        var sharingStatus = data[11].trim();
+                        if (sharingStatus.indexOf('Published') != -1)
+                            return true
+
                         if (data[7] == "Owned" || (data[7] != "Viewable" && data[7] != "Editable")) {
                             return false;
                         }
