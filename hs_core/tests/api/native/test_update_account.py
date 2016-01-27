@@ -62,8 +62,7 @@ class UpdateAccountTest(unittest.TestCase):
         # username should not get changed
         self.assertEqual(self.user.username, 'shaunjl')
 
-
-    def test_profile_upadte(self):
+    def test_profile_update(self):
         # test default profile data
         user_profile = hydroshare.utils.get_profile(self.user)
         self.assertEqual(user_profile.title, None)
