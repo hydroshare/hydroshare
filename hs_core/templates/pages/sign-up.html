@@ -1,0 +1,20 @@
+{% extends "pages/page.html" %}
+
+{% load accounts_tags %}
+
+{% block main %}
+
+    {% if user.is_anonymous %}
+        <h2 class="page-title">Sign Up</h2>
+        <div class="col-sm-6">
+            <!-- signup -->
+            <div class="front-signup js-front-signup">
+                {% signup_form as form %}
+                {% include "accounts/account_signup.html" with form=form %}
+            </div>
+            <!-- signup -->
+        </div>
+    {% else %}
+        <p>You're already logged in. If you'd like to create a new account, you'll need to log out first.</p>
+    {% endif %}
+{% endblock %}

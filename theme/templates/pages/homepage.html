@@ -4,119 +4,234 @@
 
 
 {% block all_content %}
-    <!-- Showcase
-    ================ -->
+    <div id="home-page-carousel" class="carousel slide" data-ride="carousel">
+        <!-- Indicators -->
+        <ol class="carousel-indicators">
+            <li data-target="#home-page-carousel" data-slide-to="0" class="active"></li>
+            <li data-target="#home-page-carousel" data-slide-to="1"></li>
+            <li data-target="#home-page-carousel" data-slide-to="2"></li>
+        </ol>
+        <!-- Wrapper for slides -->
+        <div class="carousel-inner" role="listbox">
+            <div class="item active" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)">
+                <div class="caption-wrapper">
+                    <div class="item-caption">
+                        <h1><strong>Share your data and models with colleagues</strong></h1>
+                        <h4>Upload, share, and access a broad set of hydrologic data types and models. Manage who has
+                            access to the content that you share.</h4>
+                    </div>
+                </div>
+            </div>
 
-    <div class="container">
-        <div id="wrap" style="background-image: url('{{ MEDIA_URL }}{% thumbnail page.homepage.header_background 1000 500 %}');">
+            <div class="item" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)">
+                <div class="caption-wrapper">
+                    <div class="item-caption">
+                        <h1><strong>Discover</strong></h1>
+                        <h4>Discover content shared by your colleagues and other users. Access a broad range of resource
+                            types used in hydrology.</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="item" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.JPG)">
+                <div class="caption-wrapper">
+                    <div class="item-caption">
+                        <h1><strong>Collaborate</strong></h1>
+                        <h4>Upload your data or models and share them with other users. You control who has access.</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Left and right controls -->
+        <a class="left carousel-control" href="#home-page-carousel" role="button" data-slide="prev">
+            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="right carousel-control" href="#home-page-carousel" role="button" data-slide="next">
+            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
+    {% if user.is_anonymous %}
+    <div>
+        <div class="container">
+            <div class="row home-page-block">
+                <div class="col-xs-12">
+                    <center><strong><h3 class="home-page-block-title">Join the community to start sharing</h3></strong>
+                    </center>
+                    <center>
+                        <span>HydroShare is an online collaboration environment for sharing data, models, and code.</span>
+                    </center>
+                    <center><a class="btn btn-primary btn-signup slideInBlock" href="sign-up/">Sign up now</a></center>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div>
+        <div class="container home-page-block">
+            <div class="row">
+                <div class="col-sm-12"><h2 class="home-page-block-title">What you can do with HydroShare</h2></div>
+                <div class="col-xs-12 col-sm-7 slideInBlock">
+                    <table id="table-features">
+                        <tbody>
+                            <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Share your data and models with colleagues</td></tr>
+                                <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Manage who has access to the content that you share</td></tr>
+                                <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Share, access, visualize and manipulate a broad set of hydrologic data types and models</td></tr>
+                                <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Use the web services API to program automated and client access</td></tr>
+                                <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Publish data and models to meet the requirements of your data management plan</td></tr>
+                                <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Discover and access data and models published by others</td></tr>
+                                <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Use web apps to visualize, analyze and run models on data in HydroShare</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-xs-12- col-sm-5 slideInBlock">
+                    <img class="img-responsive" src="{{ STATIC_URL }}img/home-page/laptop.png"
+                         alt="Browsing HydroShare">
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <h2 class="home-page-block-title">How it works</h2>
+            <div class="row home-page-block">
+                <div class="steps-container">
+                    <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <h4>Create data</h4>
+                            <div class="description-container table-display">
+                                <span class="step-description table-cell-display">Collect your data using the same methods you use now. HydroShare supports a broad set of hydrologic data types.</span>
+                            </div>
+                            <div>
+                                <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step1.png"
+                                     alt="Create data">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <h4>Upload to HydroShare</h4>
+                            <div class="description-container table-display">
+                                <span class="step-description table-cell-display">Upload your data files to HydroShare through the web user interface. HydroShare will automatically extract as much metadata as it can from the files you upload.</span>
+                            </div>
+                            <div>
+                                <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step2.png"
+                                     alt="Upload to HydroShare">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <h4>Describe with metadata</h4>
+                            <div class="description-container table-display">
+                                <span class="step-description table-cell-display">Use HydroShare's simple metadata entry forms to finish describing your data so that your colleagues can find, access, and interpret it.</span>
+                            </div>
+                            <div>
+                                <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step3.png"
+                                     alt="Describe with metadata">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <h4>Share with colleagues</h4>
+                            <div class="description-container table-display">
+                                <span class="step-description table-cell-display">You choose who has access to the data and models you have uploaded to HydroShare. You can share with individual users or publish your resources for everyone to access.</span>
+                            </div>
+                            <div>
+                                <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step4.png"
+                                     alt="Share with colleagues">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="screen-sizes">
             <div class="container">
                 <div class="row">
-                    <div class="col-lg-6 col-md-12">
-                        {% editable page.homepage.heading %}
-                        <h1 class="animated slideInDown"><img class="img-responsive" src="{{ STATIC_URL }}img/logo-lg.png" alt="{{ page.homepage.heading }}"/>{# page.homepage.heading #}</h1>
-                        {% endeditable %}
-                        {% editable page.homepage.slide_in_one_icon page.homepage.slide_in_one page.homepage.slide_in_two_icon page.homepage.slide_in_two page.homepage.slide_in_three_icon page.homepage.slide_in_three %}
-                        <div class="list">
-                            <ul>
-                                {% if page.homepage.slide_in_one or page.homepage.slide_in_one_icon %}
-                                <li class="animated slideInLeft first"><span class="li-bg"><i class="fa {{ page.homepage.slide_in_one_icon }}"></i> <span>{{ page.homepage.slide_in_one }}</span></span></li>
-                                {% endif %}
-                                {% if page.homepage.slide_in_two or page.homepage.slide_in_two_icon %}
-                                <li class="animated slideInLeft second"><span class="li-bg"><i class="fa {{ page.homepage.slide_in_two_icon }}"></i> <span>{{ page.homepage.slide_in_two }}</span></span></li>
-                                {% endif %}
-                                {% if page.homepage.slide_in_three or page.homepage.slide_in_three_icon %}
-                                <li class="animated slideInLeft third"><span class="li-bg"><i class="fa {{ page.homepage.slide_in_three_icon }}"></i> <span>{{ page.homepage.slide_in_three }}</span></span></li>
-                                {% endif %}
-                            </ul>
-                        </div>
-                        {% endeditable %}
+                    <div class="col-xs-12 col-sm-6">
+                        {# Image credit: Android Design. Used under Creative Commons license. http://developer.android.com/design/style/devices-displays.html #}
+                        <img class="img-devices img-responsive" src="{{ STATIC_URL }}img/da_devices.png"
+                             alt="Screen sizes">
                     </div>
-                    <div class="col-lg-6 col-md-12">
-                        <div class="showcase">
-                            {% if user.is_anonymous %}
-                            <div class="iMac animated fadeInDown">
-
-                            <!-- signup -->
-                            <div class="front-signup js-front-signup" style="padding-top: 1.5em;">
-                               {% signup_form as form %}
-                               {% include "accounts/_signup_form.html" with form=form %}
-                            </div>
-                            <!-- signup -->
-                            </div>
-                            {% endif %}
+                    <div class="col-xs-12 col-sm-6 ">
+                        <div class="table-display">
+                            <h2 class="table-cell-display availability-description">Available on all your devices</h2>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        {% if page.homepage.boxes.all %}
-        <div class="row">
-            <div class="col-md-12">
-                <div class="services">
-                    <ul>
-                        {% for box in page.homepage.boxes.all %}
-                        <li>
-                            {% editable box.icon box.title box.link_text box.link %}
-                            <i class="fa {{ box.icon }} fa-3x"></i>
-                            <p>{{ box.title }}<br /><a href="{{ box.link }}">{{ box.link_text }}</a></p>
-                            {% endeditable %}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    <div class="clearfix"></div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-        <div class="row">
-            <div class="col-md-11">
-                {% editable page.homepage.welcome_heading %}
-                <div class="block-header">
-                    <h2>
-                        <span class="title">{{ page.homepage.welcome_heading }}</span>
-                    </h2>
-                </div>
-                {% endeditable %}
-                {% editable page.homepage.content %}
-                {{ page.homepage.content|richtext_filters|safe }}
-                {% endeditable %}
-            </div>
-            {% comment %}
-            <div class="col-md-4">
-                {% editable page.homepage.recent_blog_heading page.homepage.number_recent_posts %}
-                <div class="block-header">
-                    <h2>
-                        <span class="title">{{ page.homepage.recent_blog_heading }}</span>
-				</h2>
-                </div>
-                {% endeditable %}
-                {% blog_recent_posts page.homepage.number_recent_posts as recent_posts %}
-
-                <div class="tab-content">
-                    <div class="tab-pane active" id="blog">
-                        {% if recent_posts %}
-                        {% for post in recent_posts %}
-                        <div class="media">
-                            {% if settings.BLOG_USE_FEATURED_IMAGE and post.featured_image %}
-                            <a class="pull-left" href="{{ post.get_absolute_url }}">
-                                <img class="media-object" src="{{ MEDIA_URL }}{% thumbnail post.featured_image 64 64 %}" alt="post featured image">
-                            </a>
-                            {% endif %}
-                            <div class="media-body">
-                                <h4 class="media-heading"><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h4>
-                                {{ post.description_from_content|truncatewords_html:15|safe }}
-                            </div>
-                        </div>
-                        {% endfor %}
-                        <a href="{% url 'blog_post_list' %}" class="read-more">Read more stories...</a>
-                        {% else %}
-                        <p>We haven't posted anything yet, check back soon!</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endcomment %}
         </div>
     </div>
 
+    <script>
+        // Disable carousel auto slide
+        $('.carousel').carousel({
+            interval: 10000
+        });
+
+        $.fn.visible = function (partial) {
+            var $t = $(this),
+                    $w = $(window),
+                    viewTop = $w.scrollTop(),
+                    viewBottom = viewTop + $w.height(),
+                    _top = $t.offset().top,
+                    _bottom = _top + $t.height(),
+                    compareTop = partial === true ? _bottom : _top,
+                    compareBottom = partial === true ? _top : _bottom;
+
+            return ((compareBottom <= viewBottom) && (compareTop >= viewTop));
+        };
+
+        $(document).ready(function () {
+
+            // Prevents dropdown form getting dismissed when clicking on items inside
+            $('.dropdown-menu').click(function (e) {
+                e.stopPropagation();
+            });
+
+            $(".slideInBlock").each(function (i, el) {
+                var el = $(el);
+                if (el.visible(true)) {
+                    el.addClass("come-in");
+                }
+            });
+
+            var win = $(window);
+            var allMods = $(".slideInBlock");
+
+            // Already visible modules
+            allMods.each(function (i, el) {
+                var el = $(el);
+                if (el.visible(true)) {
+                    el.addClass("already-visible");
+                }
+            });
+
+            // SlideIn blocks on scroll trigger
+            win.scroll(function (event) {
+                allMods.each(function (i, el) {
+                    var el = $(el);
+                    if (el.visible(true)) {
+                        el.addClass("come-in");
+                    }
+                });
+            });
+        });
+    </script>
+
 {% endblock %}
+
+

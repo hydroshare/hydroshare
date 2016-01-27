@@ -155,10 +155,11 @@
                     <th>Permission Level</th>
                     <th>Labels</th>
                     <th>Favorite</th>
+                    <th>Last modified (for sorting)</th>
+                    <th>Sharing status</th>
                 </tr>
                 </thead>
                 <tbody>
-                    {# ################### #}
                     {% for res in collection %}
                         <tr data-tr-index="{{ forloop.counter0 }}">
                             <td>
@@ -200,31 +201,31 @@
                                 <span class="resource-type-text">{{ res|resource_type }}</span>
                                 {% if res|resource_type == "Generic" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Geographic Raster" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Model Program Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "SWAT Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Multidimensional (NetCDF)" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Time Series" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Web App Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% endif %}
                             </td>
                             <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
@@ -265,6 +266,16 @@
                             <td class="col-is-favorite">
                                 {% if res.is_favorite %}
                                     Favorite
+                                {% endif %}
+                            </td>
+                            <td>{{ res.updated|date:"Y/m/d" }}</td>
+                            <td>
+                                {% if res.raccess.public %}
+                                    <strong class="label-public">&nbspPublic</strong>
+                                {% elif res.raccess.discoverable %}
+                                    <strong class="label-discoverable">&nbspDiscoverable</strong>
+                                {% else %}
+                                    <strong class="label-private">&nbspPrivate</strong>
                                 {% endif %}
                             </td>
                         </tr>
@@ -404,12 +415,15 @@
             7 - Permission Level
             8 - Labels
             9 - Favorite
+            10 - Last modified (sortable format)
         ==================================================*/
 
             resourceTable = $("#item-selectors").DataTable({
                 "order": [[4, "asc"]],
                 "paging": false,
                 "info": false,
+                "scrollY": "523px",
+                "scrollCollapse": true,
                 "columnDefs": [
                     {
                         "targets": [1],     // Resource type
@@ -420,6 +434,10 @@
                         "orderable": false,
                         "searchable": false,
                         "width": "90px"
+                    },
+                    {
+                        "targets": [4],     // Last modified
+                        "iDataSort": 10
                     },
                     {
                         "targets": [5],     // Subject
@@ -443,6 +461,11 @@
                     },
                     {
                         "targets": [9],     // Favorite
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [10],     // Last modified (for sorting)
                         "visible": false,
                         "searchable": true
                     }
@@ -1002,6 +1025,7 @@
             7 - Permission Level
             8 - Labels
             9 - Favorite
+            10 - Last modified (sortable format)
         ==================================================*/
 
         /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */

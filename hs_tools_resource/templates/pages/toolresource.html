@@ -1,5 +1,6 @@
 {% extends "pages/genericresource.html" %}
 {% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
+{% load staticfiles  %}
 
 {#{% block tools %}#}
 {#{% endblock %}#}
@@ -16,10 +17,9 @@
             <div class="col-md-12">
                 <div>
                     {% if url_base %}
-                        <h4><strong>URL Base:</strong></h4>
+                        <h4><strong>App URL:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            <div class="col-sm-4"><strong>App URL:</strong></div>
                             <div class="col-sm-8"><a href='{{ url_base.value }}'>{{ url_base.value }}</a></div>
                         </div>
                         <hr style="border:0">
@@ -30,9 +30,9 @@
                         <h4><strong>Version:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            <div class="col-sm-4"><strong>Version:</strong></div>
                             <div class="col-sm-8">{{ version.value }}</div>
                         </div>
+                        <hr style="border:0">
                     {% endif %}
                 </div>
                 <div>
@@ -42,7 +42,17 @@
                         <div class="row">
                             <div class="col-sm-8">{{ supported_res_types }}</div>
                         </div>
+                        <hr style="border:0">
                     {% endif %}
+                </div>
+                <div>
+                    {% if tool_icon_url %}
+                        <h4><strong>App Icon:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-8"><img id="tool-icon" src="{{ tool_icon_url }}"/></div>
+                        </div>
+                    {%  endif %}
                 </div>
             </div>
         </div>
@@ -51,17 +61,5 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <div id="checked_res_div" hidden="true">{{ checked_res }}</div>
-    {# put resource specific js below #}
-    <script type="text/javascript">
-        $(document).ready(function(){
-            var checked_res_str=$("#checked_res_div").text();
-            var checked_res_array=checked_res_str.split(",");
-            for (var i = 0; i < checked_res_array.length; i++)
-            {
-                var checked_res_item=checked_res_array[i];
-                $("input[value='"+checked_res_item+"']").attr("checked","true");
-            }
-        })
-    </script>
+    <script src="{% static "js/toolresource.js"%}"></script>
 {% endblock %}

@@ -90,26 +90,50 @@
                 <ul class="nav navbar-nav navbar-right hidden-xs">
                     {% ifinstalled mezzanine.accounts %}
                     {% if request.user.is_authenticated %}
-                    <li id="profile-menu" class="display-block">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ request.user }} <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            <li class="account">
-                                {% if request.user.userprofile.picture and request.user.userprofile.picture.url%}
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}'); float:left;"
-                                     class="round-image profile-pic-thumbnail">
-                                </div>
-                                {% endif %}
-                                <span>
-                                    <strong>{{ request.user }}</strong>
-                                    {% if request.user.email %}<br/>{{ request.user.email }}{% endif %}
-                                </span>
-                                <span><a href="/user/{{ user.id }}/">Profile</a> | <a href="{% url 'logout' %}" id="signout-menu">Sign out</a></span>
-                            </li>
-                        </ul>
-                    </li>
+                        <li id="profile-menu" class="display-block">
+                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                         class="round-image profile-pic-thumbnail pull-left">
+                                    </div>
+                                </a>
+                            {% else %}
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <div class="nav-bar-profile-pic-thumbnail round-image pull-left"></div>
+                                </a>
+                            {% endif %}
+                            <ul class="dropdown-menu arrow_box">
+                                <li class="account">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
+                                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                                     class="round-image dropdown-profile-pic-thumbnail pull-left">
+                                                </div>
+                                            {% else %}
+                                                <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <div><strong>{{ request.user }}</strong></div>
+                                            {% if request.user.email %}
+                                                <div class="text-muted">{{ request.user.email }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+
+                                    <div class="dropdown-footer">
+                                        <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>
+                                        <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
+                                            <span class="glyphicon glyphicon-log-out"></span> Sign out</a></span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
                     {% else %}
-                    <li id="signup-menu"><a href="{% url 'signup' %}">Sign Up</a></li>
-                    <li id="signin-menu"><a href="{% url 'login' %}">Sign In</a></li>
+                    <!-- <li id="signup-menu"><a href="{% url 'signup' %}">Sign Up</a></li> -->
+                    <li id="signin-menu"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
                     {% endif %}
                     {% endifinstalled %}
                     {% comment %}
