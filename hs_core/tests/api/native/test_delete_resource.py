@@ -23,9 +23,9 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
             groups=[])
 
     def tearDown(self):
-        self.user.delete()
-        self.group.delete()
         super(TestDeleteResource, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
 
     def test_delete_resource(self):
         new_res = resource.create_resource(
@@ -37,7 +37,7 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
         # there should be one resource at this point
         self.assertEquals(GenericResource.objects.all().count(), 1, msg="Number of resources not equal to 1")
 
-        # delete the resource
+        # delete the resource - this is the api we are testing
         resource.delete_resource(new_res.short_id)
 
         # there should be no resource at this point
