@@ -1,14 +1,15 @@
 __author__ = 'tonycastronova'
 
+import os
 from dateutil import parser
 from unittest import TestCase
 import datetime as dtime
 
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.utils import timezone
 
-from hs_core.hydroshare import resource, get_resource_by_shortkey
-from hs_core.hydroshare import users
+from hs_core.hydroshare import resource
+
 from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
@@ -19,7 +20,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         super(TestCreateResource, self).setUp()
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
-        self.user = users.create_account(
+        self.user = hydroshare.create_account(
             'test_user@email.com',
             username='mytestuser',
             first_name='some_first_name',
@@ -27,27 +28,36 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             superuser=False,
             groups=[self.hs_group]
         )
+        # create files
+        file_one = "test1.txt"
+        file_two = "test2.tif"
+
+        open(file_one, "w").close()
+        open(file_two, "w").close()
+
+        # open files for read and upload
+        self.file_one = open(file_one, "r")
+        self.file_two = open(file_two, "r")
 
     def tearDown(self):
-        self.user.uaccess.delete()
-        self.user.delete()
-        self.hs_group.delete()
-        GenericResource.objects.all().delete()
         super(TestCreateResource, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        GenericResource.objects.all().delete()
+        self.file_one.close()
+        os.remove(self.file_one.name)
+        self.file_two.close()
+        os.remove(self.file_two.name)
 
     def test_create_resource_without_content_files(self):
-        new_res = resource.create_resource(
+        res = resource.create_resource(
             'GenericResource',
             self.user,
             'My Test Resource'
             )
 
-        pid = new_res.short_id
-
-        # get the resource by pid
-        res = get_resource_by_shortkey(pid)
         self.assertEqual(res.resource_type, 'GenericResource')
-        self.assertTrue(isinstance(res, GenericResource), type(res))
+        self.assertTrue(isinstance(res, GenericResource))
         self.assertTrue(res.metadata.title.value == 'My Test Resource')
         self.assertTrue(res.created.strftime('%m/%d/%Y %H:%M') == res.updated.strftime('%m/%d/%Y %H:%M') )
         self.assertTrue(res.created.strftime('%m/%d/%Y') == dtime.datetime.today().strftime('%m/%d/%Y'))
@@ -56,22 +66,11 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(res.files.all().count(), 0, 'Resource has content files')
 
     def test_create_resource_with_content_files(self):
-        # create files
-        file_one = "test1.txt"
-        file_two = "test2.tif"
-
-        open(file_one, "w").close()
-        open(file_two, "w").close()
-
-        # open files for read
-        file_one_obj = open(file_one, "r")
-        file_two_obj = open(file_two, "r")
-
         new_res = resource.create_resource(
             'GenericResource',
             self.user,
             'My Test Resource',
-            files=(file_one_obj,)
+            files=(self.file_one,)
             )
 
         # test resource has one file
@@ -84,17 +83,17 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(new_res.created.strftime('%m/%d/%Y') == dtime.datetime.today().strftime('%m/%d/%Y'))
         self.assertTrue(new_res.creator == self.user)
         self.assertTrue(new_res.short_id is not None, 'Short ID has not been created!')
-        self.assertEqual(new_res.files.all().count(), 1, msg='Resource does not contain 1 content file')
+        self.assertEqual(new_res.files.all().count(), 1, msg="Number of content files is not equal to 1")
 
         # test creating resource with multiple files
         new_res = resource.create_resource(
             'GenericResource',
             self.user,
             'My Test Resource',
-            files=(file_one_obj, file_two_obj)
+            files=(self.file_one, self.file_two)
             )
 
-        # test resource has one file
+        # test resource has 2 files
         self.assertEquals(new_res.files.all().count(), 2, msg="Number of content files is not equal to 2")
 
     def test_create_resource_with_metadata(self):
@@ -207,18 +206,18 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
     def test_create_resource_with_metadata_for_publisher(self):
         # trying to create a resource with metadata for publisher should fail due to the fact that the
         # resource is not yet published
-        metadata_dict = [{'publisher': {'name': 'HydroShare', 'url': 'https://hydroshare.org'}},]
-        self.assertRaises(Exception, lambda: resource.create_resource(
-            resource_type='GenericResource',
-            owner=self.user,
-            title='My Test Resource',
-            metadata=metadata_dict
-        ))
+        metadata_dict = [{'publisher': {'name': 'HydroShare', 'url': 'https://hydroshare.org'}}, ]
+        with self.assertRaises(Exception):
+            resource.create_resource(resource_type='GenericResource',
+                                     owner=self.user,
+                                     title='My Test Resource',
+                                     metadata=metadata_dict
+                                    )
 
     def test_create_resource_with_metadata_for_type(self):
         # trying to create a resource with metadata for type element should ignore the provided type element data
         # and create the system generated type element
-        metadata_dict = [{'type': {'url': 'https://hydroshare.org/GenericResource'}},]
+        metadata_dict = [{'type': {'url': 'https://hydroshare.org/GenericResource'}}, ]
         res = resource.create_resource(
             resource_type='GenericResource',
             owner=self.user,
