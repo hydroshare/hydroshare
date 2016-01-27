@@ -69,9 +69,9 @@ class ToolIconFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                Field('icon', css_class=field_width),
+                Field('url', css_class=field_width)
         )
-        kwargs['element_name_label'] = 'Tool Icon URL'
+        kwargs['element_name_label'] = 'Tool Icon'
         super(ToolIconFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 
@@ -79,15 +79,16 @@ class ToolIconForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ToolIconForm, self).__init__(*args, **kwargs)
         self.helper = ToolIconFormHelper(allow_edit, res_short_id, element_id, element_name='ToolIcon')
+        self.fields['url'].label = "URL"
 
     class Meta:
         model = ToolIcon
-        fields = ['icon']
+        fields = ['url']
         exclude = ['content_object']
 
 
 class ToolIconValidationForm(forms.Form):
-    icon = forms.CharField(max_length=1024)
+    url = forms.CharField(max_length=1024)
 
 parameters_choices = (
     ('GenericResource', 'Generic Resource'),
@@ -99,7 +100,7 @@ parameters_choices = (
     ('ModelInstanceResource', 'Model Instance Resource'),
     ('SWATModelInstanceResource', 'SWAT Model Instance Resource'),
     ('GeographicFeatureResource', 'Geographic Feature Resource'),
-    ('RScriptResource', 'R Script Resource')
+    ('ScriptResource', 'Script Resource')
 )
 
 
@@ -126,6 +127,7 @@ class SupportedResTypesForm(ModelForm):
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(SupportedResTypesForm, self).__init__(*args, **kwargs)
+        self.fields['supported_res_types'].label = "Choices: "
         self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id, element_name='SupportedResTypes')
         if self.instance:
             try:
