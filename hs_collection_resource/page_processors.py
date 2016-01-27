@@ -24,8 +24,6 @@ def landing_page(request, page):
     owned_resources = list(owned_resources)
     editable_resources = list(editable_resources)
     viewable_resources = list(viewable_resources)
-    favorite_resources = list(user.ulabels.favorited_resources)
-    labeled_resources = list(user.ulabels.labeled_resources)
     discovered_resources = list(user.ulabels.my_resources)
 
     for res in owned_resources:
@@ -37,14 +35,29 @@ def landing_page(request, page):
     for res in viewable_resources:
         res.viewable = True
 
-    for res in (owned_resources + editable_resources + viewable_resources + discovered_resources):
-        res.is_favorite = False
-        if res in favorite_resources:
-            res.is_favorite = True
-        if res in labeled_resources:
-            res.labels = res.rlabels.get_labels(user)
+    user_all_accessible_resource_list = (owned_resources + editable_resources + viewable_resources + discovered_resources)
 
-    resource_collection = (owned_resources + editable_resources + viewable_resources + discovered_resources)
+
+    collection_items_list = None
+    collection_items_accessible = []
+    collection_items_inaccessible = []
+    if content_model.metadata.collection_items.first():
+        collection_items_list = list(content_model.metadata.collection_items.first().collection_items.all())
+        for res in collection_items_list:
+            if res in user_all_accessible_resource_list:
+                collection_items_accessible.append(res)
+            else:
+                collection_items_inaccessible.append(res)
+
+
+    collection_message = ""
+    if collection_items_list is not None:
+        collection_count = len(collection_items_list)
+        collection_message = "This collection holds {0} resource(s) in total. ".format(collection_count)
+        hide_count = len(collection_items_inaccessible)
+        if hide_count > 0:
+            collection_message += "You have NO permission on {0}.".format(hide_count)
+
 
     if not edit_resource:
         # get the context from hs_core
@@ -53,25 +66,28 @@ def landing_page(request, page):
                                                    extended_metadata_layout=None,
                                                    request=request)
         extended_metadata_exists = False
-        if content_model.metadata.collection_items.first():
+
+        if collection_items_list is not None:
             extended_metadata_exists = True
 
-        if content_model.metadata.collection_items.first():
-            extended_metadata_exists = True
-
-            get_info = content_model.metadata.collection_items.first().collection_items.all()
             link_html = ""
-            for res in get_info:
-                link_html += '<a href="/resource/'+res.short_id + '" target="_blank">' + \
+            for res in collection_items_accessible:
+                link_html += '<a href="/resource/' + res.short_id + '" target="_blank">' + \
+                             res.resource_type + ' : ' + res.title + '</a><br/>'
+            for res in collection_items_inaccessible:
+                link_html += '<a style="color: grey" href="/resource/' + res.short_id + '" target="_blank">' + \
                              res.resource_type + ' : ' + res.title + '</a><br/>'
             context['collection_items'] = link_html
+
+            if hide_count > 0:
+                context['collection_message'] = collection_message
 
         context['extended_metadata_exists'] = extended_metadata_exists
     else:
 
         collection_itmes_meta = content_model.metadata.collection_items.first()
         candidate_resources_list = []
-        for res in resource_collection:
+        for res in user_all_accessible_resource_list:
             if content_model.short_id == res.short_id:
                 continue # skip current collection resource object
             elif collection_itmes_meta is not None and res in collection_itmes_meta.collection_items.all():
