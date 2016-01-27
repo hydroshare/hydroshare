@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import unittest
 import os
 
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 
 from hs_core import hydroshare
 from hs_core.models import ResourceFile, GenericResource
@@ -34,16 +34,13 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
         hydroshare.add_resource_files(self.res.short_id, self.file)
 
     def tearDown(self):
-        self.user.uaccess.delete()
-        self.user.delete()
-        self.group.delete()
-
-        self.file.close()
-        os.remove(self.file.name)
+        super(TestDeleteResourceFile, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
 
         GenericResource.objects.all().delete()
-        ResourceFile.objects.all().delete()
-        super(TestDeleteResourceFile, self).tearDown()
+        self.file.close()
+        os.remove(self.file.name)
 
     def test_delete_file(self):
         # test if the test file is added to the resource
@@ -54,8 +51,9 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
             msg='the test file is not added to the resource'
         )
 
-        # test if the added test file is deleted
+        # delete the resource file - this is the api we are testing
         hydroshare.delete_resource_file(self.res.short_id, self.file.name, self.user)
+        # test if the added test file is deleted
         resource_file_objects = ResourceFile.objects.filter(object_id=self.res.pk)
         self.assertNotIn(
             self.file.name,
