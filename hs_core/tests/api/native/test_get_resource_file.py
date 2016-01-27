@@ -22,11 +22,11 @@ class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.res = GenericResource.objects.create(
-            user=self.user,
+        self.res = hydroshare.create_resource(
+            resource_type='GenericResource',
+            owner=self.user,
             title='My resource',
-            creator=self.user,
-            last_changed_by=self.user,
+            metadata=[],
         )
 
         open('myfile.txt', "w").close()
