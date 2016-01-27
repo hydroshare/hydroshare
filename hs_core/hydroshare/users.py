@@ -609,7 +609,10 @@ def get_resource_list(creator=None,
     q = []
 
     if type:
-        q.append(Q(resource_type=type[0]))
+        query = Q(resource_type=type[0])
+        for t in type[1:]:
+            query = query | Q(resource_type=t)
+        q.append(query)
 
     if published:
         q.append(Q(doi__isnull=False))

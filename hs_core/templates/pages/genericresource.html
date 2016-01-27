@@ -462,11 +462,11 @@
                     </div>
                 {% else %}
                     {% if cm.raccess.public %}
-                        <strong style="color:#5cb85c">&nbspPublic</strong>
-                    {% elif not cm.raccess.public and discoverable %}
-                        <strong style="color:#f0ad4e">&nbspDiscoverable</strong>
-                    {% elif not cm.raccess.public and not discoverable %}
-                        <strong style="color:#d9534f">&nbspPrivate</strong>
+                        <strong class="label-public">&nbspPublic</strong>
+                    {% elif cm.raccess.discoverable %}
+                        <strong class="label-discoverable">&nbspDiscoverable</strong>
+                    {% else %}
+                        <strong class="label-private">&nbspPrivate</strong>
                     {% endif %}
                 {% endif %}
             </div>
@@ -965,14 +965,14 @@
                 <div class="panel-tabs">
                     <ul class="nav nav-tabs">
                         <li class="active col-xs-2 col-md-2">
-                            <a href="#contactTab" data-toggle="tab">
+                            <a href="#contactTab" data-toggle="tab" title="Contact">
                                 <span class="glyphicon glyphicon-user"> </span>
                                 &nbspContact
                             </a>
                         </li>
                         {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
                             <li class="col-xs-2 col-md-2">
-                                <a id="coverageTabBtn" href="#coverageTab" data-toggle="tab">
+                                <a id="coverageTabBtn" href="#coverageTab" data-toggle="tab" title="Coverage">
                                     <span class="glyphicon glyphicon-globe"></span>
                                     &nbspCoverage
                                 </a>
@@ -980,7 +980,7 @@
                         {% endif %}
                         {% if sources or relations or metadata_form %}
                             <li class="col-xs-2 col-md-2">
-                                <a href="#relatedResourcesTab" data-toggle="tab">
+                                <a href="#relatedResourcesTab" data-toggle="tab" title="Related resources">
                                     <span class="glyphicon glyphicon-book"></span>
                                     &nbspRelated Resources
                                 </a>
@@ -991,7 +991,7 @@
                             {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
                                 {% if  cm|resource_type != "Generic" %}
                                     <li class="col-xs-2 col-md-2">
-                                        <a href="#resourceSpecificTab" data-toggle="tab">
+                                        <a href="#resourceSpecificTab" data-toggle="tab" title="Resource specific">
                                             <span class="glyphicon glyphicon-folder-close"></span>
                                             &nbspResource Specific
                                         </a>
@@ -1001,7 +1001,7 @@
                         {% endif %}
                         {% if relevant_tools  %}
                             <li class="col-xs-2 col-md-2">
-                                <a href="#relevantTools" data-toggle="tab">
+                                <a href="#relevantTools" data-toggle="tab" title="Relevant tools">
                                     <span class="glyphicon glyphicon-wrench"></span>
                                     &nbsp; Web Apps
                                 </a>
@@ -1597,9 +1597,12 @@
                             <div class="tab-pane" id="relevantTools">
                             {% if not metadata_form %}
                                 {% for tool in relevant_tools %}
-                                    <h4>{{ tool.title }}</h4>
-                                    <a href="{{ tool.url }}" target="_blank"><button class="btn btn-primary">Launch App</button></a>
-                                    <hr>
+                                    <a href="{{ tool.url }}" target="_blank">
+                                    <div id="web-app-item">
+                                        <h4>{{ tool.title }}</h4>
+                                        <img class="user-webapp-icon" src="{{ tool.icon_url }}">
+                                    </div>
+                                    </a>
                                 {% endfor %}
                             {% else %}
                                 ------- Relevant tools form here -------
@@ -1619,6 +1622,7 @@
         <div class="rating col-sm-12 content-block">
             {% comments_for cm %}
         </div>
+
         {#                #}
         {# dialogs follow #}
         {#                #}
@@ -2397,6 +2401,7 @@
         {%  endblock %}
         {%  endblock %}
     {% endwith %}
+    {% endblock %}
 
     {% block extra_js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/irods.js"></script>
@@ -3454,10 +3459,28 @@
                         $(this).closest("form").find("button").show();
                     });
                 });
+                var setDefaultIcon = function($this) {
+                    $this
+                            .attr('src', '{{ STATIC_URL }}img/web-app-default-icon.png')
+                            .removeClass('user-webapp-icon')
+                            .addClass('default-webapp-icon');
+                };
+                $('.user-webapp-icon').each(function() {
+                    if ($(this).attr('src') == '') {
+                        setDefaultIcon($(this));
+                    }
+                }).on('error', function() {
+                    setDefaultIcon($(this));
+                });
 
             });
         </script>
     {% endblock %}
     <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=drawing&callback=initMap"></script>
 
-{% endblock %}
+    {% block extra_css %}
+        {{ block.super }}
+        <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+    {%  endblock %}
+
+

@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update
 
 from hs_tools_resource.models import ToolResource
-from hs_tools_resource.forms import SupportedResTypesValidationForm, UrlBaseForm, VersionForm
+from hs_tools_resource.forms import SupportedResTypesValidationForm, UrlBaseForm, VersionForm, ToolIconForm
 
 
 @receiver(pre_metadata_element_create, sender=ToolResource)
@@ -27,6 +27,8 @@ def validate_form(request, element_name):
         element_form = VersionForm(data=request.POST)
     elif element_name == 'supportedrestypes':
         element_form = SupportedResTypesValidationForm(data=request.POST)
+    elif element_name == 'toolicon':
+        element_form = ToolIconForm(data=request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
