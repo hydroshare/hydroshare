@@ -209,7 +209,7 @@
                                 var ln = data["sites"][i];
                                 var opt = document.createElement('option');
                                 opt.value = ln;
-                                opt.innerHTML = ln;
+                                opt.innerHTML = ln.substring(0, ln.indexOf(" ["));
                                 select.appendChild(opt);
                             }
                             show_message(false);
@@ -276,7 +276,7 @@
                                 var ln = data["variables"][i];
                                 var opt = document.createElement('option');
                                 opt.value = ln;
-                                opt.innerHTML = ln;
+                                opt.innerHTML = ln.substring(0, ln.indexOf(" ["));
                                 select.appendChild(opt);
                             }
 

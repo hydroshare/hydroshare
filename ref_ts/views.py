@@ -22,7 +22,7 @@ from .forms import ReferencedSitesForm, ReferencedVariablesForm, GetTSValuesForm
 
 preview_name = "preview.png"
 his_central_url = 'http://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'
-logger = logging.getLogger("ref_ts")
+logger = logging.getLogger("django")
 blank_field_string = ""
 
 # query HIS central to get all available HydroServer urls

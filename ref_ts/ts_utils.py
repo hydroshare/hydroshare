@@ -10,10 +10,12 @@ from xml.sax._exceptions import SAXParseException
 import matplotlib.pyplot as plt
 
 from hs_core import hydroshare
-from ref_ts.owslib_revised.waterml.wml11 import WaterML_1_1 as wml11
-from ref_ts.owslib_revised.waterml.wml10 import WaterML_1_0 as wml10
+# from ref_ts.owslib_revised.waterml.wml11 import WaterML_1_1 as wml11
+# from ref_ts.owslib_revised.waterml.wml10 import WaterML_1_0 as wml10
+from owslib.waterml.wml11 import WaterML_1_1 as wml11
+from owslib.waterml.wml10 import WaterML_1_0 as wml10
 
-logger = logging.getLogger("ref_ts")
+logger = logging.getLogger("django")
 
 def wmlParse(response, ver=11):
     if ver == 11:
@@ -84,9 +86,10 @@ def sites_from_soap(wsdl_url, locations='[:]'):
         for site in wml_sites.sites:
             siteName = site.name
             siteCode = site.codes[0]
-            netWork = site.site_info.net_work
+            # netWork = site.site_info.net_work
             counter += 1
-            sites_list.append("%s. %s [%s:%s]" % (str(counter), siteName, netWork, siteCode))
+            # sites_list.append("%s. %s [%s:%s]" % (str(counter), siteName, netWork, siteCode))
+            sites_list.append("%s. %s [network:%s]" % (str(counter), siteName, siteCode))
     except Exception as e:
         logger.exception("sites_from_soap: %s" % (e.message))
         raise e
@@ -98,7 +101,6 @@ def site_info_from_soap(wsdl_url, **kwargs):
         site = kwargs['site']
         index = site.rfind(" [")
         site = site[index+2:len(site)-1]
-        network = (site.split(':'))[0]
         wml_ver = check_url_and_version(wsdl_url)
         client = connect_wsdl_url(wsdl_url)
         variables_list = []
@@ -111,16 +113,18 @@ def site_info_from_soap(wsdl_url, **kwargs):
             wml_variable = series.variable
             variable_name = wml_variable.variable_name
             variable_code = wml_variable.variable_code
-            method_id = series.method_id
-            source_id = series.source_id
+            method_id = series.method_id if series.method_id is not None else "Unknown"
+            source_id = series.source_id if series.source_id is not None else "Unknown"
             value_count = series.value_count
-            quality_control_level_id = series.quality_control_level_id
+            quality_control_level_id = series.quality_control_level_id if series.quality_control_level_id is not None else "Unknown"
             start_date = series.begin_date_time
             end_date = series.end_date_time
             counter += 1
-            variables_list.append("%s. %s (ID:%s, Count:%s) [%s:%s:methodCode=%s:sourceCode=%s:qualityControlLevelCode=%s]" %
-                                 (str(counter), variable_name, variable_code, str(value_count), network, variable_code,
-                                  method_id, source_id, quality_control_level_id))
+            variables_list.append("%s. %s (Count:%s, ID:%s, methodCode:%s, sourceCode:%s, qualityControlLevelCode:%s)\
+             [network:%s:methodCode=%s:sourceCode=%s:qualityControlLevelCode=%s]" %
+                                 (str(counter), variable_name, str(value_count), variable_code, method_id, \
+                                  source_id, quality_control_level_id, \
+                                  variable_code, method_id, source_id, quality_control_level_id))
 
         return variables_list
     except Exception as e:
@@ -162,7 +166,7 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
         if hasattr(wmlValues.time_series[0], "source_info"):
             sourceInfo_obj = wmlValues.time_series[0].source_info
             if sourceInfo_obj:
-                net_work = sourceInfo_obj.net_work if hasattr(sourceInfo_obj, "net_work") else None
+                # net_work = sourceInfo_obj.net_work if hasattr(sourceInfo_obj, "net_work") else None
                 site_name = sourceInfo_obj.site_name if hasattr(sourceInfo_obj, "site_name") else None
                 site_codes = sourceInfo_obj.site_codes if hasattr(sourceInfo_obj, "site_codes") else None
                 if site_codes and len(site_codes) > 0:
@@ -286,121 +290,6 @@ def parse_1_0_and_1_1_owslib(wml_string, wml_ver):
         logger.exception("parse_1_0_and_1_1_owslib: %s" % (e.message))
         raise e
 
-def parse_2_0_old(root):
-    try:
-        if 'Collection' in root.tag:
-
-            wml_str, variable_code, variable_name, net_work, site_name, site_code, elevation, vertical_datum,\
-            longitude, latitude, projection, srs, noDataValue, unit_abbr, unit_code, unit_name, unit_type,\
-            method_code, method_id, method_description, source_code, source_id, quality_control_level_code,\
-            quality_control_level_definition, data, method_code_query, source_code_query,  \
-            quality_control_level_code_query, start_date, end_date = \
-            None, None, None, None, None, None, None, None,  None, None, None, None, None, None,\
-            None, None, None, None, None, None, None, None, None, None,  None, None, None, None, None, None
-
-            sample_medium = None
-
-            name_is_set, site_code_set = False, False
-
-            wml_str = etree.tostring(root)
-
-            x = []
-            y = []
-            data = {"x": x, "y": y}
-
-            variable_name = root[1].text
-            for element in root.iter():
-                if 'MeasurementTVP' in element.tag:
-                        for e in element:
-                            if 'time' in e.tag:
-                                t_obj = time_str_to_datetime(e.text) # original datetime string may be improperly formatted
-                                t_str = t_obj.isoformat()
-                                x.append(t_str)
-                            if 'value' in e.tag:
-                                y.append(float(e.text))
-
-                if 'uom' in element.tag:
-                    for a in element.attrib:
-                        if "code" in a or "umo" in a or "title" in a:
-                            unit_name = element.attrib.get(a, None)
-
-                if 'MonitoringPoint' in element.tag:
-                    for e in element.iter():
-                        if 'identifier' in e.tag and not site_code_set:
-                            site_code = e.text
-                            site_code_set = True
-                        if 'name' in e.tag and not name_is_set:
-                            site_name = e.text
-                            name_is_set = True
-                        if 'pos' in e.tag:
-                            lat_long = e.text
-                            lat_long = lat_long.split(' ')
-                            latitude = lat_long[0]
-                            longitude = lat_long[1]
-                if 'observedProperty' in element.tag:
-                    for a in element.attrib:
-                        if 'title' in a:
-                            variable_name = element.attrib[a]
-                        # if 'href' in a:
-                        #     variable_code = element.attrib[a]
-                        #     variable_code = variable_code.replace('#', '')
-                if variable_name == 'Unmapped':
-                    try:
-                        if 'vocabulary' in element.attrib:
-                            variable_name = element.text
-                    except:
-                        variable_name = 'Unmapped'
-                if 'ObservationProcess' in element.tag:
-                    for e in element.iter():
-                        if 'processType' in e.tag:
-                            for a in e.attrib:
-                                if 'title' in a:
-                                    method_description = e.attrib[a]
-                if 'sampledMedium' in element.tag:
-                    for a in element.attrib.iteritems():
-                        if 'title' in a[0]:
-                            sample_medium = a[1]
-
-            if variable_name == 'Unmapped':
-                for element in root.iter():
-                    if len(element.attrib.values()) > 0:
-                        if 'vocabulary' in element.attrib.values()[0]:
-                            variable_name = element.text
-                        if 'qualityControlLevelCode' in element.attrib.values()[0] and 'name' in element.tag:
-                            quality_control_level_definition = element.text
-
-            return {'wml_str': wml_str,
-                    'variable_code': variable_code,
-                    'variable_name': variable_name,
-                    "net_work": net_work,
-                    'site_name': site_name,
-                    'site_code': site_code,
-                    'elevation': elevation,
-                    'vertical_datum': vertical_datum,
-                    'latitude': latitude,
-                    'longitude': longitude,
-                    'projection': projection,
-                    'srs': srs,
-                    'noDataValue': noDataValue,
-                    'unit_abbr': unit_abbr,
-                    'unit_code': unit_code,
-                    'unit_name': unit_name,
-                    'unit_type': unit_type,
-                    'method_code': method_code,
-                    'method_id': method_id,
-                    'method_description': method_description,
-                    'source_code': source_code,
-                    'source_id': source_id,
-                    'quality_control_level_code': quality_control_level_code,
-                    'quality_control_level_definition': quality_control_level_definition,
-                    'data': data,
-                    "start_date": start_date,
-                    "end_date": end_date
-                    }
-    except Exception as ex:
-        logger.error(ex.message)
-        raise Exception("parse 2.0 error")
-
 def getAttributeValueFromElement(ele, a_name, exactmatch=False):
     for a in ele.attrib:
         if not exactmatch:
@@ -501,18 +390,6 @@ def parse_2_0(wml_string):
 
             elif "localDictionary" in ele.tag:
                 pass
-                # for ele2 in ele:
-                #     id_value = getAttributeValueFromElement(ele2, "id")
-                #     if id_value == "phenomena":
-                #         ele_phenomena = ele2
-                #         for ele3 in ele_phenomena:
-                #             if
-                #
-                #     elif id_value == "method":
-                #
-                #     elif id_value == "quality":
-                #
-                #     elif id_value == "censorCode":
             elif "samplingFeatureMember" in ele.tag:
                 ele_samplingFeatureMember =ele
                 for ele2 in ele_samplingFeatureMember.iter():
@@ -642,15 +519,15 @@ def generate_resource_files(shortkey, tempdir):
                                           res.metadata.referenceURLs.all()[0].type)
     else:
         site_code = res.metadata.sites.all()[0].code
-        net_work = res.metadata.sites.all()[0].net_work
+        # net_work = res.metadata.sites.all()[0].net_work
         variable_code = res.metadata.variables.all()[0].code
         method_code = res.metadata.methods.all()[0].code
         source_code = res.metadata.datasources.all()[0].code
         quality_control_level_code = res.metadata.quality_levels.all()[0].code
 
-        site_code_query = "%s:%s" % (net_work, site_code)
+        site_code_query = "%s:%s" % ("network", site_code)
         variable_code_query = "%s:%s:methodCode=%s:sourceCode=%s:qualityControlLevelCode=%s" % \
-        (net_work, variable_code, method_code, source_code, quality_control_level_code)
+        ("network", variable_code, method_code, source_code, quality_control_level_code)
 
         ts = QueryHydroServerGetParsedWML(service_url=res.metadata.referenceURLs.all()[0].value,
                                   soap_or_rest=res.metadata.referenceURLs.all()[0].type,

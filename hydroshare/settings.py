@@ -529,11 +529,6 @@ LOGGING = {
             'handlers': ['syslog'],
             'level': 'DEBUG',
             'propagate': False,
-        },
-        'ref_ts': {
-            'handlers':['djangolog'],
-            'propagate': False,
-            'level':'DEBUG',
-        },
+        }
     }
 }

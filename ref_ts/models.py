@@ -106,7 +106,7 @@ class RefTSMetadata(CoreMetaData):
                                              referenceURLs_fields)
 
         if self.sites.all().first():
-            sites_fields = ['name', 'code', 'net_work', 'latitude', 'longitude']
+            sites_fields = ['name', 'code', 'latitude', 'longitude']
             self.add_metadata_element_to_xml(container,
                                              self.sites.all().first(),
                                              sites_fields)
