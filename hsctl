@@ -296,9 +296,7 @@ update_solr_index() {
 }
 
 rebuild_solr_index() {
-    cd scripts
-    ./rebuild-index-solr
-    cd -
+    docker exec hydroshare_hydroshare_1 python manage.py rebuild_index --noinput
 }
 
 reset_all_hs() {
