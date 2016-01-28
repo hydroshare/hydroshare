@@ -26,23 +26,33 @@ ALTER TABLE ONLY public.pages_richtextpage DROP CONSTRAINT pages_richtextpage_pa
 ALTER TABLE ONLY public.pages_page DROP CONSTRAINT pages_page_parent_id_fkey;
 ALTER TABLE ONLY public.pages_link DROP CONSTRAINT pages_link_page_ptr_id_fkey;
 ALTER TABLE ONLY public.forms_form DROP CONSTRAINT page_ptr_id_refs_id_fe19b67b;
-ALTER TABLE ONLY public.hs_tools_resource_toolresourcetype DROP CONSTRAINT hs_to_content_type_id_c1e8b932248645d_fk_django_content_type_id;
+ALTER TABLE ONLY public.oauth2_provider_refreshtoken DROP CONSTRAINT oauth2_provider_refres_user_id_3f695b639cfbc9a3_fk_auth_user_id;
+ALTER TABLE ONLY public.oauth2_provider_grant DROP CONSTRAINT oauth2_provider_grant_user_id_3111344894d452da_fk_auth_user_id;
+ALTER TABLE ONLY public.oauth2_provider_application DROP CONSTRAINT oauth2_provider_applic_user_id_7fa13387c260b798_fk_auth_user_id;
+ALTER TABLE ONLY public.oauth2_provider_accesstoken DROP CONSTRAINT oauth2_provider_access_user_id_5e2f004fdebea22d_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes DROP CONSTRAINT hs_t_content_type_id_767d162d9152deeb_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbase DROP CONSTRAINT hs_t_content_type_id_62b8f4790407354c_fk_django_content_type_id;
-ALTER TABLE ONLY public.hs_tools_resource_fee DROP CONSTRAINT hs_t_content_type_id_5ec1c49e6fcf0e12_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_tools_resource_toolversion DROP CONSTRAINT hs_t_content_type_id_51e17884abf9eddc_fk_django_content_type_id;
-ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstancemetadata DROP CONSTRAINT hs_swat_modelinstance_swatmodelinstanc_coremetadata_ptr_id_fkey;
-ALTER TABLE ONLY public.hs_swat_modelinstance_simulationtype DROP CONSTRAINT hs_swat_modelinstance_simulationtype_content_type_id_fkey;
-ALTER TABLE ONLY public.hs_swat_modelinstance_modeloutput DROP CONSTRAINT hs_swat_modelinstance_modeloutput_content_type_id_fkey;
-ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective DROP CONSTRAINT hs_swat_modelinstance_modelobjective_content_type_id_fkey;
-ALTER TABLE ONLY public.hs_swat_modelinstance_modelinput DROP CONSTRAINT hs_swat_modelinstance_modelinput_content_type_id_fkey;
-ALTER TABLE ONLY public.hs_swat_modelinstance_executedby DROP CONSTRAINT hs_swat_modelinstance_executedby_content_type_id_fkey;
+ALTER TABLE ONLY public.hs_tools_resource_toolicon DROP CONSTRAINT hs_t_content_type_id_4054d4b11537b3be_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelmethod DROP CONSTRAINT hs_s_content_type_id_7a0e6caa7ea88974_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter DROP CONSTRAINT hs_s_content_type_id_67e73462ac6a1f3b_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective DROP CONSTRAINT hs_s_content_type_id_62f727efbef81583_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_script_resource_scriptspecificmetadata DROP CONSTRAINT hs_s_content_type_id_60bff7e50d58202e_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_swat_modelinstance_simulationtype DROP CONSTRAINT hs_s_content_type_id_36a685eb8e70f0ba_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelinput DROP CONSTRAINT hs_s_content_type_id_2525bc5c55d4bdb6_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_modelinstance_executedby DROP CONSTRAINT hs_m_content_type_id_5e722b4c4e52db18_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_model_program_mpmetadata DROP CONSTRAINT hs_m_content_type_id_4a5aea7c91a836fc_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_modelinstance_modeloutput DROP CONSTRAINT hs_m_content_type_id_495bac403aded459_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_labels_userstoredlabels DROP CONSTRAINT hs_labels_userstoredla_user_id_534d602d9683725a_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_labels_userresourcelabels DROP CONSTRAINT hs_labels_userresourcel_user_id_ca1355f4a3868e3_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_labels_userresourceflags DROP CONSTRAINT hs_labels_userresource_user_id_17c2ac15d94c26f8_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_labels_userlabels DROP CONSTRAINT hs_labels_userlabels_user_id_67d4ad8ba6073785_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_originalcoverage DROP CONSTRAINT hs_g_content_type_id_66d126c2b3cf7352_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_geo_raster_resource_bandinformation DROP CONSTRAINT hs_g_content_type_id_63f5acc301191318_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_geometryinformation DROP CONSTRAINT hs_g_content_type_id_4dbd862ddd6248f6_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_geo_raster_resource_originalcoverage DROP CONSTRAINT hs_g_content_type_id_3c68392c27f3db93_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_originalfileinfo DROP CONSTRAINT hs_g_content_type_id_3a67e16436568536_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_fieldinformation DROP CONSTRAINT hs_g_content_type_id_322c34901bfae5cb_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_geo_raster_resource_cellinformation DROP CONSTRAINT hs_g_content_type_id_2f01db94cd029b0f_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_core_groupownership DROP CONSTRAINT hs_core_groupownershi_owner_id_1c73b09f1651e342_fk_auth_user_id;
 ALTER TABLE ONLY public.hs_core_groupownership DROP CONSTRAINT hs_core_groupownersh_group_id_73ab445f0d3ce28a_fk_auth_group_id;
@@ -108,6 +118,7 @@ ALTER TABLE ONLY public.forms_field DROP CONSTRAINT forms_field_form_id_fkey;
 ALTER TABLE ONLY public.django_docker_processes_overridevolume DROP CONSTRAINT fffc21cda66b01603a10a01bdad6da7a;
 ALTER TABLE ONLY public.hs_geo_raster_resource_rastermetadata DROP CONSTRAINT fa281325d2f3328932b8c7c7f4606aee;
 ALTER TABLE ONLY public.hs_access_control_userresourceprivilege DROP CONSTRAINT f044e0280cf04a0a65fed914082c4369;
+ALTER TABLE ONLY public.oauth2_provider_grant DROP CONSTRAINT ed9fd5eb4f62c9b049823c4a9799fadb;
 ALTER TABLE ONLY public.django_docker_processes_overrideport DROP CONSTRAINT ed07907c5bbff48aa33f866d15220f0a;
 ALTER TABLE ONLY public.django_docker_processes_overrideenvvar DROP CONSTRAINT e5fed3f499b0200346f7d75572f21043;
 ALTER TABLE ONLY public.djcelery_taskstate DROP CONSTRAINT djcelery_taskstate_worker_id_fkey;
@@ -119,11 +130,16 @@ ALTER TABLE ONLY public.django_docker_processes_dockerprocess DROP CONSTRAINT dj
 ALTER TABLE ONLY public.django_comment_flags DROP CONSTRAINT django_comment_flags_comment_id_fkey;
 ALTER TABLE ONLY public.django_admin_log DROP CONSTRAINT django_admin_log_user_id_52fdd58701c5f563_fk_auth_user_id;
 ALTER TABLE ONLY public.django_admin_log DROP CONSTRAINT djan_content_type_id_697914295151027a_fk_django_content_type_id;
+ALTER TABLE ONLY public.oauth2_provider_refreshtoken DROP CONSTRAINT da2196e2988877260c8db8e9bb03265e;
+ALTER TABLE ONLY public.hs_labels_resourcelabels DROP CONSTRAINT d4e9b3137507001988ea891be22e9789;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_geographicfeaturemetadata DROP CONSTRAINT coremetadata_ptr_id_94bd0d87da46011_fk_hs_core_coremetadata_id;
 ALTER TABLE ONLY public.generic_threadedcomment DROP CONSTRAINT comment_ptr_id_refs_id_d4c241e5;
 ALTER TABLE ONLY public.django_docker_processes_dockerlink DROP CONSTRAINT ca4a9cd99a95a85ce7365a740304c84e;
 ALTER TABLE ONLY public.blog_blogpost_categories DROP CONSTRAINT blogpost_id_refs_id_6a2ad936;
 ALTER TABLE ONLY public.blog_blogpost_categories DROP CONSTRAINT blogcategory_id_refs_id_91693b1c;
+ALTER TABLE ONLY public.hs_labels_userresourceflags DROP CONSTRAINT b880a3861b1b4ee955080e12d158b7e7;
 ALTER TABLE ONLY public.hs_access_control_resourceaccess DROP CONSTRAINT b63b96a572d7b3efb2f8fb476540a554;
+ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstancemetadata DROP CONSTRAINT b47420973174e99d60b21c97419b7e7d;
 ALTER TABLE ONLY public.auth_user_user_permissions DROP CONSTRAINT auth_user_user_permiss_user_id_7f0938558328534a_fk_auth_user_id;
 ALTER TABLE ONLY public.auth_user_groups DROP CONSTRAINT auth_user_groups_user_id_4b5ed4ffdb8fd9b0_fk_auth_user_id;
 ALTER TABLE ONLY public.auth_user_groups DROP CONSTRAINT auth_user_groups_group_id_33ac548dcf5f8e37_fk_auth_group_id;
@@ -134,14 +150,19 @@ ALTER TABLE ONLY public.auth_permission DROP CONSTRAINT auth_content_type_id_508
 ALTER TABLE ONLY public.hs_modelinstance_modelinstancemetadata DROP CONSTRAINT ad492224ba8c27b74282fb2c6035021e;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter_model_parameters DROP CONSTRAINT ad127dae388d348e8d57f9ed18647c59;
 ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege DROP CONSTRAINT a3e4f6918ca63681b55a6ef19f2b7860;
+ALTER TABLE ONLY public.oauth2_provider_accesstoken DROP CONSTRAINT a17250f96ea449de36002be9c6c6acfb;
+ALTER TABLE ONLY public.oauth2_provider_refreshtoken DROP CONSTRAINT "D9aead397b25d8154e554023da34d33b";
 ALTER TABLE ONLY public.ref_ts_reftimeseries DROP CONSTRAINT "D90ce1b78bee1ce52cbd3c2e51980f13";
 ALTER TABLE ONLY public.ga_resources_renderedlayer DROP CONSTRAINT "D7e7cede746315ab9e08ce902995fd0e";
+ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types DROP CONSTRAINT "D792bbec64dddad2dfcdc3c0be032f83";
 ALTER TABLE ONLY public.django_docker_processes_dockerenvvar DROP CONSTRAINT "D6f5f0817512c0e51eb157b953080433";
 ALTER TABLE ONLY public.ga_resources_renderedlayer_styles DROP CONSTRAINT "D6b8a9e44c81b6ef0edc08ba3acdf181";
 ALTER TABLE ONLY public.ga_ows_ogrdataset DROP CONSTRAINT "D66abd734664aa960007027384fa6de8";
 ALTER TABLE ONLY public.django_docker_processes_containeroverrides DROP CONSTRAINT "D608e8d602265386bd6d7afacb14cc09";
 ALTER TABLE ONLY public.django_docker_processes_overridelink DROP CONSTRAINT "D5b97bbd43dc74b22e279a355699342b";
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesmetadata DROP CONSTRAINT "D59977fad305f0130e8e94d0cf611f50";
+ALTER TABLE ONLY public.hs_script_resource_scriptmetadata DROP CONSTRAINT "D467aacf426b069679ea1cdc7ff9cc2a";
+ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types DROP CONSTRAINT "D45bbb0995f328a0a002d8f6df90b6c5";
 ALTER TABLE ONLY public.ga_resources_renderedlayer DROP CONSTRAINT "D4494202da9df682a8acda71be9628f3";
 ALTER TABLE ONLY public.hs_tools_resource_toolmetadata DROP CONSTRAINT "D4174b69c892f2b9a3bd164e041c7307";
 ALTER TABLE ONLY public.ga_resources_relatedresource DROP CONSTRAINT "D3ddf29327dcf888bd232c7b0fc88c25";
@@ -150,6 +171,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerport DROP CONSTRAINT "D33e
 ALTER TABLE ONLY public.django_docker_processes_dockerlink DROP CONSTRAINT "D31c29d49b8f7ec3acaeadd6d03d4a4f";
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter_model_parameters DROP CONSTRAINT "D298685713846fce4c3b8f825f6971fc";
 ALTER TABLE ONLY public.hs_model_program_modelprogrammetadata DROP CONSTRAINT "D28d4ec87c18a4f707acafb3b265fe0b";
+ALTER TABLE ONLY public.hs_labels_userresourcelabels DROP CONSTRAINT "D2339626414192982538d20c2f5e41c1";
 ALTER TABLE ONLY public.django_docker_processes_dockervolume DROP CONSTRAINT "D1cd11468aed7088c8176baf1733f0a9";
 ALTER TABLE ONLY public.django_docker_processes_dockerprocess DROP CONSTRAINT "D1c0b5309109a103589fe605907962d9";
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective_swat_model_objectives DROP CONSTRAINT "D1aa88a4e8e7c50866281523397c0b8e";
@@ -168,25 +190,51 @@ DROP INDEX public.ref_ts_qualitycontrollevel_417f1b1c;
 DROP INDEX public.ref_ts_method_417f1b1c;
 DROP INDEX public.pages_page_site_id;
 DROP INDEX public.pages_page_parent_id;
+DROP INDEX public.oauth2_provider_refreshtoken_token_1e4e9388e6a22527_like;
+DROP INDEX public.oauth2_provider_refreshtoken_e8701ad4;
+DROP INDEX public.oauth2_provider_refreshtoken_94a08da1;
+DROP INDEX public.oauth2_provider_refreshtoken_6bc0a4eb;
+DROP INDEX public.oauth2_provider_grant_e8701ad4;
+DROP INDEX public.oauth2_provider_grant_code_a5c88732687483b_like;
+DROP INDEX public.oauth2_provider_grant_c1336794;
+DROP INDEX public.oauth2_provider_grant_6bc0a4eb;
+DROP INDEX public.oauth2_provider_application_e8701ad4;
+DROP INDEX public.oauth2_provider_application_client_secret_7a03c41cdcace5e9_like;
+DROP INDEX public.oauth2_provider_application_client_id_58c909672dac14b2_like;
+DROP INDEX public.oauth2_provider_application_9d667c2b;
+DROP INDEX public.oauth2_provider_accesstoken_token_3f77f86fb4ecbe0f_like;
+DROP INDEX public.oauth2_provider_accesstoken_e8701ad4;
+DROP INDEX public.oauth2_provider_accesstoken_94a08da1;
+DROP INDEX public.oauth2_provider_accesstoken_6bc0a4eb;
 DROP INDEX public.hs_tools_resource_toolversion_417f1b1c;
-DROP INDEX public.hs_tools_resource_toolresourcetype_417f1b1c;
+DROP INDEX public.hs_tools_resource_toolicon_417f1b1c;
+DROP INDEX public.hs_tools_resource_supportedrestypes_supported_res_types_ae94a0b;
+DROP INDEX public.hs_tools_resource_supportedrestypes_supported_res_types_a538657;
+DROP INDEX public.hs_tools_resource_supportedrestypes_417f1b1c;
 DROP INDEX public.hs_tools_resource_requesturlbase_417f1b1c;
-DROP INDEX public.hs_tools_resource_fee_417f1b1c;
-DROP INDEX public.hs_swat_modelinstance_simulationtype_content_type_id;
+DROP INDEX public.hs_swat_modelinstance_simulationtype_417f1b1c;
 DROP INDEX public.hs_swat_modelinstance_modelparameter_model_parameters_d6566261;
 DROP INDEX public.hs_swat_modelinstance_modelparameter_model_parameters_614dbbb6;
 DROP INDEX public.hs_swat_modelinstance_modelparameter_417f1b1c;
-DROP INDEX public.hs_swat_modelinstance_modeloutput_content_type_id;
 DROP INDEX public.hs_swat_modelinstance_modelobjective_swat_model_objectives_5316;
 DROP INDEX public.hs_swat_modelinstance_modelobjective_swat_model_objectives_402b;
-DROP INDEX public.hs_swat_modelinstance_modelobjective_content_type_id;
+DROP INDEX public.hs_swat_modelinstance_modelobjective_417f1b1c;
 DROP INDEX public.hs_swat_modelinstance_modelmethod_417f1b1c;
-DROP INDEX public.hs_swat_modelinstance_modelinput_content_type_id;
-DROP INDEX public.hs_swat_modelinstance_executedby_content_type_id;
+DROP INDEX public.hs_swat_modelinstance_modelinput_417f1b1c;
+DROP INDEX public.hs_script_resource_scriptspecificmetadata_417f1b1c;
 DROP INDEX public.hs_modelinstance_modeloutput_417f1b1c;
 DROP INDEX public.hs_modelinstance_executedby_417f1b1c;
 DROP INDEX public.hs_modelinstance_executedby_13081cb2;
 DROP INDEX public.hs_model_program_mpmetadata_417f1b1c;
+DROP INDEX public.hs_labels_userstoredlabels_e8701ad4;
+DROP INDEX public.hs_labels_userresourcelabels_e8701ad4;
+DROP INDEX public.hs_labels_userresourcelabels_e2f3ef5b;
+DROP INDEX public.hs_labels_userresourceflags_e8701ad4;
+DROP INDEX public.hs_labels_userresourceflags_e2f3ef5b;
+DROP INDEX public.hs_geographic_feature_resource_originalfileinfo_417f1b1c;
+DROP INDEX public.hs_geographic_feature_resource_originalcoverage_417f1b1c;
+DROP INDEX public.hs_geographic_feature_resource_geometryinformation_417f1b1c;
+DROP INDEX public.hs_geographic_feature_resource_fieldinformation_417f1b1c;
 DROP INDEX public.hs_geo_raster_resource_originalcoverage_417f1b1c;
 DROP INDEX public.hs_geo_raster_resource_cellinformation_417f1b1c;
 DROP INDEX public.hs_geo_raster_resource_bandinformation_417f1b1c;
@@ -199,10 +247,13 @@ DROP INDEX public.hs_core_resourcefile_417f1b1c;
 DROP INDEX public.hs_core_relation_417f1b1c;
 DROP INDEX public.hs_core_publisher_417f1b1c;
 DROP INDEX public.hs_core_language_417f1b1c;
+DROP INDEX public.hs_core_identifier_url_5612dd61d821222e_like;
 DROP INDEX public.hs_core_identifier_417f1b1c;
 DROP INDEX public.hs_core_groupownership_5e7b1936;
 DROP INDEX public.hs_core_groupownership_0e939a4f;
+DROP INDEX public.hs_core_genericresource_short_id_1ccf03b27239c9d9_like;
 DROP INDEX public.hs_core_genericresource_e8701ad4;
+DROP INDEX public.hs_core_genericresource_doi_1fd041a54c9b75f0_like;
 DROP INDEX public.hs_core_genericresource_7258c37c;
 DROP INDEX public.hs_core_genericresource_6e3c2cc2;
 DROP INDEX public.hs_core_genericresource_44cc026e;
@@ -222,8 +273,8 @@ DROP INDEX public.hs_app_timeseries_timeseriesresult_417f1b1c;
 DROP INDEX public.hs_app_timeseries_site_417f1b1c;
 DROP INDEX public.hs_app_timeseries_processinglevel_417f1b1c;
 DROP INDEX public.hs_app_timeseries_method_417f1b1c;
-DROP INDEX public.hs_app_netcdf_variable_417f1b1c;
-DROP INDEX public.hs_app_netcdf_originalcoverage_417f1b1c;
+DROP INDEX public."hs_app_netCDF_variable_417f1b1c";
+DROP INDEX public."hs_app_netCDF_originalcoverage_417f1b1c";
 DROP INDEX public.hs_access_control_userresourceprivilege_e8701ad4;
 DROP INDEX public.hs_access_control_userresourceprivilege_e2f3ef5b;
 DROP INDEX public.hs_access_control_userresourceprivilege_7e847bf8;
@@ -254,10 +305,14 @@ DROP INDEX public.ga_resources_dataresource_c17888f6;
 DROP INDEX public.ga_resources_dataresource_bounding_box_id;
 DROP INDEX public.ga_resources_dataresource_5e7b1936;
 DROP INDEX public.ga_resources_catalogpage_5e7b1936;
+DROP INDEX public.ga_ows_ogrlayer_name_440515aa32d1fbcb_like;
+DROP INDEX public.ga_ows_ogrlayer_human_name_517fb130c5bed6d7_like;
 DROP INDEX public.ga_ows_ogrlayer_extent_id;
 DROP INDEX public.ga_ows_ogrlayer_d366d308;
 DROP INDEX public.ga_ows_ogrlayer_b068931c;
 DROP INDEX public.ga_ows_ogrlayer_81aebe41;
+DROP INDEX public.ga_ows_ogrdataset_name_5ef251b0d7fbd366_like;
+DROP INDEX public.ga_ows_ogrdataset_human_name_2718979caa46bdd6_like;
 DROP INDEX public.ga_ows_ogrdataset_extent_id;
 DROP INDEX public.ga_ows_ogrdataset_b068931c;
 DROP INDEX public.ga_ows_ogrdataset_81aebe41;
@@ -278,7 +333,9 @@ DROP INDEX public.djcelery_taskstate_hidden;
 DROP INDEX public.djcelery_periodictask_name_like;
 DROP INDEX public.djcelery_periodictask_interval_id;
 DROP INDEX public.djcelery_periodictask_crontab_id;
+DROP INDEX public.django_session_session_key_461cfeaa630ca218_like;
 DROP INDEX public.django_session_de54fa62;
+DROP INDEX public.django_redirect_old_path_9db3e423470cdaf_like;
 DROP INDEX public.django_redirect_9365d6e7;
 DROP INDEX public.django_redirect_91a0b591;
 DROP INDEX public.django_irods_rodsenvironment_5e7b1936;
@@ -288,8 +345,10 @@ DROP INDEX public.django_docker_processes_overridelink_f4faa4b8;
 DROP INDEX public.django_docker_processes_overridelink_064a291d;
 DROP INDEX public.django_docker_processes_overrideenvvar_064a291d;
 DROP INDEX public.django_docker_processes_dockervolume_3885db4e;
+DROP INDEX public.django_docker_processes_dockerprofil_name_75d7d5a2a3b969e3_like;
 DROP INDEX public.django_docker_processes_dockerprocess_e8701ad4;
 DROP INDEX public.django_docker_processes_dockerprocess_83a0eb3f;
+DROP INDEX public.django_docker_processes_dockerproce_token_1211961caacdde18_like;
 DROP INDEX public.django_docker_processes_dockerport_3885db4e;
 DROP INDEX public.django_docker_processes_dockerlink_f4faa4b8;
 DROP INDEX public.django_docker_processes_dockerlink_621534b3;
@@ -319,6 +378,7 @@ DROP INDEX public.blog_blogpost_related_posts_from_blogpost_id;
 DROP INDEX public.blog_blogpost_categories_blogpost_id;
 DROP INDEX public.blog_blogpost_categories_blogcategory_id;
 DROP INDEX public.blog_blogcategory_site_id;
+DROP INDEX public.auth_user_username_51b3b110094b8aae_like;
 DROP INDEX public.auth_user_user_permissions_e8701ad4;
 DROP INDEX public.auth_user_user_permissions_8373b171;
 DROP INDEX public.auth_user_groups_e8701ad4;
@@ -326,6 +386,7 @@ DROP INDEX public.auth_user_groups_0e939a4f;
 DROP INDEX public.auth_permission_417f1b1c;
 DROP INDEX public.auth_group_permissions_8373b171;
 DROP INDEX public.auth_group_permissions_0e939a4f;
+DROP INDEX public.auth_group_name_253ae2a6331666e8_like;
 ALTER TABLE ONLY public.theme_userprofile DROP CONSTRAINT theme_userprofile_user_id_key;
 ALTER TABLE ONLY public.theme_userprofile DROP CONSTRAINT theme_userprofile_pkey;
 ALTER TABLE ONLY public.theme_siteconfiguration DROP CONSTRAINT theme_siteconfiguration_pkey;
@@ -341,31 +402,68 @@ ALTER TABLE ONLY public.ref_ts_method DROP CONSTRAINT ref_ts_method_pkey;
 ALTER TABLE ONLY public.pages_richtextpage DROP CONSTRAINT pages_richtextpage_pkey;
 ALTER TABLE ONLY public.pages_page DROP CONSTRAINT pages_page_pkey;
 ALTER TABLE ONLY public.pages_link DROP CONSTRAINT pages_link_pkey;
+ALTER TABLE ONLY public.oauth2_provider_refreshtoken DROP CONSTRAINT oauth2_provider_refreshtoken_pkey;
+ALTER TABLE ONLY public.oauth2_provider_refreshtoken DROP CONSTRAINT oauth2_provider_refreshtoken_access_token_id_key;
+ALTER TABLE ONLY public.oauth2_provider_grant DROP CONSTRAINT oauth2_provider_grant_pkey;
+ALTER TABLE ONLY public.oauth2_provider_application DROP CONSTRAINT oauth2_provider_application_pkey;
+ALTER TABLE ONLY public.oauth2_provider_application DROP CONSTRAINT oauth2_provider_application_client_id_key;
+ALTER TABLE ONLY public.oauth2_provider_accesstoken DROP CONSTRAINT oauth2_provider_accesstoken_pkey;
 ALTER TABLE ONLY public.hs_tools_resource_toolversion DROP CONSTRAINT hs_tools_resource_toolversion_pkey;
-ALTER TABLE ONLY public.hs_tools_resource_toolresourcetype DROP CONSTRAINT hs_tools_resource_toolresourcetype_pkey;
+ALTER TABLE ONLY public.hs_tools_resource_toolversion DROP CONSTRAINT hs_tools_resource_toolver_content_type_id_2a1bdb955c1a5eb5_uniq;
 ALTER TABLE ONLY public.hs_tools_resource_toolmetadata DROP CONSTRAINT hs_tools_resource_toolmetadata_pkey;
+ALTER TABLE ONLY public.hs_tools_resource_toolicon DROP CONSTRAINT hs_tools_resource_toolicon_pkey;
+ALTER TABLE ONLY public.hs_tools_resource_toolicon DROP CONSTRAINT hs_tools_resource_toolico_content_type_id_2eb114df398af35f_uniq;
+ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types DROP CONSTRAINT hs_tools_resource_supportedrestypes_supported_res_types_pkey;
+ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes DROP CONSTRAINT hs_tools_resource_supportedrestypes_pkey;
+ALTER TABLE ONLY public.hs_tools_resource_supportedrestypechoices DROP CONSTRAINT hs_tools_resource_supportedrestypechoices_pkey;
+ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types DROP CONSTRAINT hs_tools_resource_supportedre_supportedrestypes_id_supporte_key;
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbase DROP CONSTRAINT hs_tools_resource_requesturlbase_pkey;
-ALTER TABLE ONLY public.hs_tools_resource_fee DROP CONSTRAINT hs_tools_resource_fee_pkey;
+ALTER TABLE ONLY public.hs_tools_resource_requesturlbase DROP CONSTRAINT hs_tools_resource_request_content_type_id_4247c7cfc01d751b_uniq;
 ALTER TABLE ONLY public.hs_swat_modelinstance_swatmodelinstancemetadata DROP CONSTRAINT hs_swat_modelinstance_swatmodelinstancemetadata_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_simulationtype DROP CONSTRAINT hs_swat_modelinstance_simulationtype_pkey;
+ALTER TABLE ONLY public.hs_swat_modelinstance_simulationtype DROP CONSTRAINT hs_swat_modelinstance_sim_content_type_id_2fdb321047680e89_uniq;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameterschoices DROP CONSTRAINT hs_swat_modelinstance_modelparameterschoices_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter DROP CONSTRAINT hs_swat_modelinstance_modelparameter_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter_model_parameters DROP CONSTRAINT hs_swat_modelinstance_modelparameter_model_parameters_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter_model_parameters DROP CONSTRAINT hs_swat_modelinstance_modelpa_modelparameter_id_modelparame_key;
-ALTER TABLE ONLY public.hs_swat_modelinstance_modeloutput DROP CONSTRAINT hs_swat_modelinstance_modeloutput_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjectivechoices DROP CONSTRAINT hs_swat_modelinstance_modelobjectivechoices_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective_swat_model_objectives DROP CONSTRAINT hs_swat_modelinstance_modelobjective_swat_model_objectives_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective DROP CONSTRAINT hs_swat_modelinstance_modelobjective_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective_swat_model_objectives DROP CONSTRAINT hs_swat_modelinstance_modelob_modelobjective_id_modelobject_key;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelmethod DROP CONSTRAINT hs_swat_modelinstance_modelmethod_pkey;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelinput DROP CONSTRAINT hs_swat_modelinstance_modelinput_pkey;
-ALTER TABLE ONLY public.hs_swat_modelinstance_executedby DROP CONSTRAINT hs_swat_modelinstance_executedby_pkey;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective DROP CONSTRAINT hs_swat_modelinstance_mod_content_type_id_42514385fa10eab4_uniq;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelinput DROP CONSTRAINT hs_swat_modelinstance_mod_content_type_id_25b988ceed439ad3_uniq;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter DROP CONSTRAINT hs_swat_modelinstance_mod_content_type_id_2589e0316a36326c_uniq;
+ALTER TABLE ONLY public.hs_swat_modelinstance_modelmethod DROP CONSTRAINT hs_swat_modelinstance_mod_content_type_id_12914098fd213943_uniq;
+ALTER TABLE ONLY public.hs_script_resource_scriptspecificmetadata DROP CONSTRAINT hs_script_resource_scriptspecificmetadata_pkey;
+ALTER TABLE ONLY public.hs_script_resource_scriptmetadata DROP CONSTRAINT hs_script_resource_scriptmetadata_pkey;
+ALTER TABLE ONLY public.hs_script_resource_scriptspecificmetadata DROP CONSTRAINT hs_script_resource_script_content_type_id_5eae48b373d35aeb_uniq;
 ALTER TABLE ONLY public.hs_modelinstance_modeloutput DROP CONSTRAINT hs_modelinstance_modeloutput_pkey;
+ALTER TABLE ONLY public.hs_modelinstance_modeloutput DROP CONSTRAINT hs_modelinstance_modeloutp_content_type_id_34b90c2dff9368a_uniq;
 ALTER TABLE ONLY public.hs_modelinstance_modelinstancemetadata DROP CONSTRAINT hs_modelinstance_modelinstancemetadata_pkey;
 ALTER TABLE ONLY public.hs_modelinstance_executedby DROP CONSTRAINT hs_modelinstance_executedby_pkey;
+ALTER TABLE ONLY public.hs_modelinstance_executedby DROP CONSTRAINT hs_modelinstance_executed_content_type_id_4f66b59ecd8e1887_uniq;
 ALTER TABLE ONLY public.hs_model_program_mpmetadata DROP CONSTRAINT hs_model_program_mpmetadata_pkey;
-ALTER TABLE ONLY public.hs_model_program_mpmetadata DROP CONSTRAINT hs_model_program_mpmetada_content_type_id_6d7804f108cda18d_uniq;
 ALTER TABLE ONLY public.hs_model_program_modelprogrammetadata DROP CONSTRAINT hs_model_program_modelprogrammetadata_pkey;
+ALTER TABLE ONLY public.hs_labels_userstoredlabels DROP CONSTRAINT hs_labels_userstoredlabels_user_id_7fcfa0bbb19f026e_uniq;
+ALTER TABLE ONLY public.hs_labels_userstoredlabels DROP CONSTRAINT hs_labels_userstoredlabels_pkey;
+ALTER TABLE ONLY public.hs_labels_userresourcelabels DROP CONSTRAINT hs_labels_userresourcelabels_user_id_b650ac9425073db_uniq;
+ALTER TABLE ONLY public.hs_labels_userresourcelabels DROP CONSTRAINT hs_labels_userresourcelabels_pkey;
+ALTER TABLE ONLY public.hs_labels_userresourceflags DROP CONSTRAINT hs_labels_userresourceflags_user_id_69a243739138a875_uniq;
+ALTER TABLE ONLY public.hs_labels_userresourceflags DROP CONSTRAINT hs_labels_userresourceflags_pkey;
+ALTER TABLE ONLY public.hs_labels_userlabels DROP CONSTRAINT hs_labels_userlabels_user_id_key;
+ALTER TABLE ONLY public.hs_labels_userlabels DROP CONSTRAINT hs_labels_userlabels_pkey;
+ALTER TABLE ONLY public.hs_labels_resourcelabels DROP CONSTRAINT hs_labels_resourcelabels_resource_id_key;
+ALTER TABLE ONLY public.hs_labels_resourcelabels DROP CONSTRAINT hs_labels_resourcelabels_pkey;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_originalfileinfo DROP CONSTRAINT hs_geographic_feature_resource_originalfileinfo_pkey;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_originalcoverage DROP CONSTRAINT hs_geographic_feature_resource_originalcoverage_pkey;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_geometryinformation DROP CONSTRAINT hs_geographic_feature_resource_geometryinformation_pkey;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_geographicfeaturemetadata DROP CONSTRAINT hs_geographic_feature_resource_geographicfeaturemetadata_pkey;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_fieldinformation DROP CONSTRAINT hs_geographic_feature_resource_fieldinformation_pkey;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_geometryinformation DROP CONSTRAINT hs_geographic_feature_res_content_type_id_580ebce926dd9f27_uniq;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_originalcoverage DROP CONSTRAINT hs_geographic_feature_res_content_type_id_304dc81d9f5c66f1_uniq;
+ALTER TABLE ONLY public.hs_geographic_feature_resource_originalfileinfo DROP CONSTRAINT hs_geographic_feature_res_content_type_id_28e85abff23b5f53_uniq;
 ALTER TABLE ONLY public.hs_geo_raster_resource_rastermetadata DROP CONSTRAINT hs_geo_raster_resource_rastermetadata_pkey;
 ALTER TABLE ONLY public.hs_geo_raster_resource_originalcoverage DROP CONSTRAINT hs_geo_raster_resource_originalcoverage_pkey;
 ALTER TABLE ONLY public.hs_geo_raster_resource_originalcoverage DROP CONSTRAINT hs_geo_raster_resource_or_content_type_id_721e66b15ced348a_uniq;
@@ -376,26 +474,33 @@ ALTER TABLE ONLY public.hs_core_type DROP CONSTRAINT hs_core_type_pkey;
 ALTER TABLE ONLY public.hs_core_type DROP CONSTRAINT hs_core_type_content_type_id_18ed89604613f1ed_uniq;
 ALTER TABLE ONLY public.hs_core_title DROP CONSTRAINT hs_core_title_pkey;
 ALTER TABLE ONLY public.hs_core_title DROP CONSTRAINT hs_core_title_content_type_id_558a1cad4b729d8a_uniq;
+ALTER TABLE ONLY public.hs_core_subject DROP CONSTRAINT hs_core_subject_value_4ec0e8f3e12395cd_uniq;
 ALTER TABLE ONLY public.hs_core_subject DROP CONSTRAINT hs_core_subject_pkey;
 ALTER TABLE ONLY public.hs_core_source DROP CONSTRAINT hs_core_source_pkey;
+ALTER TABLE ONLY public.hs_core_source DROP CONSTRAINT hs_core_source_derived_from_76cd74fc0518456b_uniq;
 ALTER TABLE ONLY public.hs_core_rights DROP CONSTRAINT hs_core_rights_pkey;
 ALTER TABLE ONLY public.hs_core_rights DROP CONSTRAINT hs_core_rights_content_type_id_ef5b26c774a3f32_uniq;
 ALTER TABLE ONLY public.hs_core_resourcefile DROP CONSTRAINT hs_core_resourcefile_pkey;
+ALTER TABLE ONLY public.hs_core_relation DROP CONSTRAINT hs_core_relation_type_191141a8918183f4_uniq;
 ALTER TABLE ONLY public.hs_core_relation DROP CONSTRAINT hs_core_relation_pkey;
 ALTER TABLE ONLY public.hs_core_publisher DROP CONSTRAINT hs_core_publisher_pkey;
 ALTER TABLE ONLY public.hs_core_publisher DROP CONSTRAINT hs_core_publisher_content_type_id_1d402c032dd55330_uniq;
 ALTER TABLE ONLY public.hs_core_language DROP CONSTRAINT hs_core_language_pkey;
+ALTER TABLE ONLY public.hs_core_language DROP CONSTRAINT hs_core_language_content_type_id_3effcbe0af54718f_uniq;
 ALTER TABLE ONLY public.hs_core_identifier DROP CONSTRAINT hs_core_identifier_url_key;
 ALTER TABLE ONLY public.hs_core_identifier DROP CONSTRAINT hs_core_identifier_pkey;
 ALTER TABLE ONLY public.hs_core_groupownership DROP CONSTRAINT hs_core_groupownership_pkey;
 ALTER TABLE ONLY public.hs_core_genericresource DROP CONSTRAINT hs_core_genericresource_pkey;
+ALTER TABLE ONLY public.hs_core_format DROP CONSTRAINT hs_core_format_value_8b10e84db4524d5_uniq;
 ALTER TABLE ONLY public.hs_core_format DROP CONSTRAINT hs_core_format_pkey;
 ALTER TABLE ONLY public.hs_core_externalprofilelink DROP CONSTRAINT hs_core_externalprofilelink_type_46054d89a4834f60_uniq;
 ALTER TABLE ONLY public.hs_core_externalprofilelink DROP CONSTRAINT hs_core_externalprofilelink_pkey;
 ALTER TABLE ONLY public.hs_core_description DROP CONSTRAINT hs_core_description_pkey;
 ALTER TABLE ONLY public.hs_core_description DROP CONSTRAINT hs_core_description_content_type_id_101f8a6db2013e88_uniq;
+ALTER TABLE ONLY public.hs_core_date DROP CONSTRAINT hs_core_date_type_51dc7e471f315ec_uniq;
 ALTER TABLE ONLY public.hs_core_date DROP CONSTRAINT hs_core_date_pkey;
 ALTER TABLE ONLY public.hs_core_creator DROP CONSTRAINT hs_core_creator_pkey;
+ALTER TABLE ONLY public.hs_core_coverage DROP CONSTRAINT hs_core_coverage_type_5e44b8195dffb14e_uniq;
 ALTER TABLE ONLY public.hs_core_coverage DROP CONSTRAINT hs_core_coverage_pkey;
 ALTER TABLE ONLY public.hs_core_coremetadata DROP CONSTRAINT hs_core_coremetadata_pkey;
 ALTER TABLE ONLY public.hs_core_contributor DROP CONSTRAINT hs_core_contributor_pkey;
@@ -483,6 +588,7 @@ ALTER TABLE ONLY public.django_comments DROP CONSTRAINT django_comments_pkey;
 ALTER TABLE ONLY public.django_comment_flags DROP CONSTRAINT django_comment_flags_user_id_comment_id_flag_key;
 ALTER TABLE ONLY public.django_comment_flags DROP CONSTRAINT django_comment_flags_pkey;
 ALTER TABLE ONLY public.django_admin_log DROP CONSTRAINT django_admin_log_pkey;
+ALTER TABLE ONLY public.corsheaders_corsmodel DROP CONSTRAINT corsheaders_corsmodel_pkey;
 ALTER TABLE ONLY public.core_sitepermission DROP CONSTRAINT core_sitepermission_user_id_key;
 ALTER TABLE ONLY public.core_sitepermission_sites DROP CONSTRAINT core_sitepermission_sites_sitepermission_id_site_id_key;
 ALTER TABLE ONLY public.core_sitepermission_sites DROP CONSTRAINT core_sitepermission_sites_pkey;
@@ -519,24 +625,38 @@ ALTER TABLE public.ref_ts_referenceurl ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.ref_ts_qualitycontrollevel ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.ref_ts_method ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.pages_page ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.oauth2_provider_refreshtoken ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.oauth2_provider_grant ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.oauth2_provider_application ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.oauth2_provider_accesstoken ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_tools_resource_toolversion ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.hs_tools_resource_toolresourcetype ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_tools_resource_toolicon ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_tools_resource_supportedrestypes_supported_res_types ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_tools_resource_supportedrestypes ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_tools_resource_supportedrestypechoices ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_tools_resource_requesturlbase ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.hs_tools_resource_fee ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_simulationtype ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_modelparameterschoices ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_modelparameter_model_parameters ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_modelparameter ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.hs_swat_modelinstance_modeloutput ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_modelobjectivechoices ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_modelobjective_swat_model_objectives ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_modelobjective ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_modelmethod ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_swat_modelinstance_modelinput ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.hs_swat_modelinstance_executedby ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_script_resource_scriptspecificmetadata ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_modelinstance_modeloutput ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_modelinstance_executedby ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_model_program_mpmetadata ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_labels_userstoredlabels ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_labels_userresourcelabels ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_labels_userresourceflags ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_labels_userlabels ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_labels_resourcelabels ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_geographic_feature_resource_originalfileinfo ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_geographic_feature_resource_originalcoverage ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_geographic_feature_resource_geometryinformation ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_geographic_feature_resource_fieldinformation ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_geo_raster_resource_originalcoverage ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_geo_raster_resource_cellinformation ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_geo_raster_resource_bandinformation ALTER COLUMN id DROP DEFAULT;
@@ -609,6 +729,7 @@ ALTER TABLE public.django_content_type ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.django_comments ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.django_comment_flags ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.django_admin_log ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.corsheaders_corsmodel ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.core_sitepermission_sites ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.core_sitepermission ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.conf_setting ALTER COLUMN id DROP DEFAULT;
@@ -647,15 +768,27 @@ DROP TABLE public.pages_richtextpage;
 DROP SEQUENCE public.pages_page_id_seq;
 DROP TABLE public.pages_page;
 DROP TABLE public.pages_link;
+DROP SEQUENCE public.oauth2_provider_refreshtoken_id_seq;
+DROP TABLE public.oauth2_provider_refreshtoken;
+DROP SEQUENCE public.oauth2_provider_grant_id_seq;
+DROP TABLE public.oauth2_provider_grant;
+DROP SEQUENCE public.oauth2_provider_application_id_seq;
+DROP TABLE public.oauth2_provider_application;
+DROP SEQUENCE public.oauth2_provider_accesstoken_id_seq;
+DROP TABLE public.oauth2_provider_accesstoken;
 DROP SEQUENCE public.hs_tools_resource_toolversion_id_seq;
 DROP TABLE public.hs_tools_resource_toolversion;
-DROP SEQUENCE public.hs_tools_resource_toolresourcetype_id_seq;
-DROP TABLE public.hs_tools_resource_toolresourcetype;
 DROP TABLE public.hs_tools_resource_toolmetadata;
+DROP SEQUENCE public.hs_tools_resource_toolicon_id_seq;
+DROP TABLE public.hs_tools_resource_toolicon;
+DROP SEQUENCE public.hs_tools_resource_supportedrestypes_supported_res_types_id_seq;
+DROP TABLE public.hs_tools_resource_supportedrestypes_supported_res_types;
+DROP SEQUENCE public.hs_tools_resource_supportedrestypes_id_seq;
+DROP TABLE public.hs_tools_resource_supportedrestypes;
+DROP SEQUENCE public.hs_tools_resource_supportedrestypechoices_id_seq;
+DROP TABLE public.hs_tools_resource_supportedrestypechoices;
 DROP SEQUENCE public.hs_tools_resource_requesturlbase_id_seq;
 DROP TABLE public.hs_tools_resource_requesturlbase;
-DROP SEQUENCE public.hs_tools_resource_fee_id_seq;
-DROP TABLE public.hs_tools_resource_fee;
 DROP TABLE public.hs_swat_modelinstance_swatmodelinstancemetadata;
 DROP SEQUENCE public.hs_swat_modelinstance_simulationtype_id_seq;
 DROP TABLE public.hs_swat_modelinstance_simulationtype;
@@ -665,8 +798,6 @@ DROP SEQUENCE public.hs_swat_modelinstance_modelparameter_model_parameters_id_se
 DROP TABLE public.hs_swat_modelinstance_modelparameter_model_parameters;
 DROP SEQUENCE public.hs_swat_modelinstance_modelparameter_id_seq;
 DROP TABLE public.hs_swat_modelinstance_modelparameter;
-DROP SEQUENCE public.hs_swat_modelinstance_modeloutput_id_seq;
-DROP TABLE public.hs_swat_modelinstance_modeloutput;
 DROP SEQUENCE public.hs_swat_modelinstance_modelobjectivechoices_id_seq;
 DROP TABLE public.hs_swat_modelinstance_modelobjectivechoices;
 DROP SEQUENCE public.hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq;
@@ -677,8 +808,9 @@ DROP SEQUENCE public.hs_swat_modelinstance_modelmethod_id_seq;
 DROP TABLE public.hs_swat_modelinstance_modelmethod;
 DROP SEQUENCE public.hs_swat_modelinstance_modelinput_id_seq;
 DROP TABLE public.hs_swat_modelinstance_modelinput;
-DROP SEQUENCE public.hs_swat_modelinstance_executedby_id_seq;
-DROP TABLE public.hs_swat_modelinstance_executedby;
+DROP SEQUENCE public.hs_script_resource_scriptspecificmetadata_id_seq;
+DROP TABLE public.hs_script_resource_scriptspecificmetadata;
+DROP TABLE public.hs_script_resource_scriptmetadata;
 DROP SEQUENCE public.hs_modelinstance_modeloutput_id_seq;
 DROP TABLE public.hs_modelinstance_modeloutput;
 DROP TABLE public.hs_modelinstance_modelinstancemetadata;
@@ -687,6 +819,25 @@ DROP TABLE public.hs_modelinstance_executedby;
 DROP SEQUENCE public.hs_model_program_mpmetadata_id_seq;
 DROP TABLE public.hs_model_program_mpmetadata;
 DROP TABLE public.hs_model_program_modelprogrammetadata;
+DROP SEQUENCE public.hs_labels_userstoredlabels_id_seq;
+DROP TABLE public.hs_labels_userstoredlabels;
+DROP SEQUENCE public.hs_labels_userresourcelabels_id_seq;
+DROP TABLE public.hs_labels_userresourcelabels;
+DROP SEQUENCE public.hs_labels_userresourceflags_id_seq;
+DROP TABLE public.hs_labels_userresourceflags;
+DROP SEQUENCE public.hs_labels_userlabels_id_seq;
+DROP TABLE public.hs_labels_userlabels;
+DROP SEQUENCE public.hs_labels_resourcelabels_id_seq;
+DROP TABLE public.hs_labels_resourcelabels;
+DROP SEQUENCE public.hs_geographic_feature_resource_originalfileinfo_id_seq;
+DROP TABLE public.hs_geographic_feature_resource_originalfileinfo;
+DROP SEQUENCE public.hs_geographic_feature_resource_originalcoverage_id_seq;
+DROP TABLE public.hs_geographic_feature_resource_originalcoverage;
+DROP SEQUENCE public.hs_geographic_feature_resource_geometryinformation_id_seq;
+DROP TABLE public.hs_geographic_feature_resource_geometryinformation;
+DROP TABLE public.hs_geographic_feature_resource_geographicfeaturemetadata;
+DROP SEQUENCE public.hs_geographic_feature_resource_fieldinformation_id_seq;
+DROP TABLE public.hs_geographic_feature_resource_fieldinformation;
 DROP TABLE public.hs_geo_raster_resource_rastermetadata;
 DROP SEQUENCE public.hs_geo_raster_resource_originalcoverage_id_seq;
 DROP TABLE public.hs_geo_raster_resource_originalcoverage;
@@ -846,6 +997,8 @@ DROP SEQUENCE public.django_comment_flags_id_seq;
 DROP TABLE public.django_comment_flags;
 DROP SEQUENCE public.django_admin_log_id_seq;
 DROP TABLE public.django_admin_log;
+DROP SEQUENCE public.corsheaders_corsmodel_id_seq;
+DROP TABLE public.corsheaders_corsmodel;
 DROP SEQUENCE public.core_sitepermission_sites_id_seq;
 DROP TABLE public.core_sitepermission_sites;
 DROP SEQUENCE public.core_sitepermission_id_seq;
@@ -879,13 +1032,6 @@ DROP TABLE public.auth_group;
 DROP EXTENSION postgis;
 DROP EXTENSION plpgsql;
 DROP SCHEMA public;
---
--- Name: postgres; Type: COMMENT; Schema: -; Owner: postgres
---
-
-COMMENT ON DATABASE postgres IS 'default administrative connection database';
-
-
 --
 -- Name: public; Type: SCHEMA; Schema: -; Owner: postgres
 --
@@ -1480,6 +1626,39 @@ ALTER TABLE public.core_sitepermission_sites_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE core_sitepermission_sites_id_seq OWNED BY core_sitepermission_sites.id;
+
+
+--
+-- Name: corsheaders_corsmodel; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE corsheaders_corsmodel (
+    id integer NOT NULL,
+    cors character varying(255) NOT NULL
+);
+
+
+ALTER TABLE public.corsheaders_corsmodel OWNER TO postgres;
+
+--
+-- Name: corsheaders_corsmodel_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE corsheaders_corsmodel_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.corsheaders_corsmodel_id_seq OWNER TO postgres;
+
+--
+-- Name: corsheaders_corsmodel_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE corsheaders_corsmodel_id_seq OWNED BY corsheaders_corsmodel.id;
 
 
 --
@@ -3120,8 +3299,6 @@ ALTER SEQUENCE hs_access_control_resourceaccess_id_seq OWNED BY hs_access_contro
 
 CREATE TABLE hs_access_control_useraccess (
     id integer NOT NULL,
-    active boolean NOT NULL,
-    admin boolean NOT NULL,
     user_id integer
 );
 
@@ -3533,7 +3710,6 @@ ALTER SEQUENCE hs_app_timeseries_variable_id_seq OWNED BY hs_app_timeseries_vari
 CREATE TABLE hs_core_bags (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    bag character varying(500),
     "timestamp" timestamp with time zone NOT NULL,
     content_type_id integer NOT NULL,
     CONSTRAINT hs_core_bags_object_id_check CHECK ((object_id >= 0))
@@ -4340,7 +4516,6 @@ CREATE TABLE hs_geo_raster_resource_cellinformation (
     columns integer,
     "cellSizeXValue" double precision,
     "cellSizeYValue" double precision,
-    "cellSizeUnit" character varying(50),
     "cellDataType" character varying(50),
     "noDataValue" double precision,
     content_type_id integer NOT NULL,
@@ -4419,6 +4594,348 @@ CREATE TABLE hs_geo_raster_resource_rastermetadata (
 ALTER TABLE public.hs_geo_raster_resource_rastermetadata OWNER TO postgres;
 
 --
+-- Name: hs_geographic_feature_resource_fieldinformation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geographic_feature_resource_fieldinformation (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    "fieldName" character varying(128) NOT NULL,
+    "fieldType" character varying(128) NOT NULL,
+    "fieldTypeCode" character varying(50),
+    "fieldWidth" integer,
+    "fieldPrecision" integer,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_geographic_feature_resource_fieldinformation_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.hs_geographic_feature_resource_fieldinformation OWNER TO postgres;
+
+--
+-- Name: hs_geographic_feature_resource_fieldinformation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_geographic_feature_resource_fieldinformation_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_geographic_feature_resource_fieldinformation_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_geographic_feature_resource_fieldinformation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_geographic_feature_resource_fieldinformation_id_seq OWNED BY hs_geographic_feature_resource_fieldinformation.id;
+
+
+--
+-- Name: hs_geographic_feature_resource_geographicfeaturemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geographic_feature_resource_geographicfeaturemetadata (
+    coremetadata_ptr_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_geographic_feature_resource_geographicfeaturemetadata OWNER TO postgres;
+
+--
+-- Name: hs_geographic_feature_resource_geometryinformation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geographic_feature_resource_geometryinformation (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    "featureCount" integer NOT NULL,
+    "geometryType" character varying(128) NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_geographic_feature_resource_geometryinformat_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.hs_geographic_feature_resource_geometryinformation OWNER TO postgres;
+
+--
+-- Name: hs_geographic_feature_resource_geometryinformation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_geographic_feature_resource_geometryinformation_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_geographic_feature_resource_geometryinformation_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_geographic_feature_resource_geometryinformation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_geographic_feature_resource_geometryinformation_id_seq OWNED BY hs_geographic_feature_resource_geometryinformation.id;
+
+
+--
+-- Name: hs_geographic_feature_resource_originalcoverage; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geographic_feature_resource_originalcoverage (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    northlimit double precision NOT NULL,
+    southlimit double precision NOT NULL,
+    westlimit double precision NOT NULL,
+    eastlimit double precision NOT NULL,
+    projection_string text,
+    projection_name text,
+    datum text,
+    unit text,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_geographic_feature_resource_originalcoverage_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.hs_geographic_feature_resource_originalcoverage OWNER TO postgres;
+
+--
+-- Name: hs_geographic_feature_resource_originalcoverage_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_geographic_feature_resource_originalcoverage_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_geographic_feature_resource_originalcoverage_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_geographic_feature_resource_originalcoverage_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_geographic_feature_resource_originalcoverage_id_seq OWNED BY hs_geographic_feature_resource_originalcoverage.id;
+
+
+--
+-- Name: hs_geographic_feature_resource_originalfileinfo; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_geographic_feature_resource_originalfileinfo (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    "fileType" text NOT NULL,
+    "baseFilename" text NOT NULL,
+    "fileCount" integer NOT NULL,
+    "filenameString" text,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_geographic_feature_resource_originalfileinfo_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.hs_geographic_feature_resource_originalfileinfo OWNER TO postgres;
+
+--
+-- Name: hs_geographic_feature_resource_originalfileinfo_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_geographic_feature_resource_originalfileinfo_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_geographic_feature_resource_originalfileinfo_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_geographic_feature_resource_originalfileinfo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_geographic_feature_resource_originalfileinfo_id_seq OWNED BY hs_geographic_feature_resource_originalfileinfo.id;
+
+
+--
+-- Name: hs_labels_resourcelabels; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_labels_resourcelabels (
+    id integer NOT NULL,
+    resource_id integer
+);
+
+
+ALTER TABLE public.hs_labels_resourcelabels OWNER TO postgres;
+
+--
+-- Name: hs_labels_resourcelabels_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_labels_resourcelabels_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_labels_resourcelabels_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_labels_resourcelabels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_labels_resourcelabels_id_seq OWNED BY hs_labels_resourcelabels.id;
+
+
+--
+-- Name: hs_labels_userlabels; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_labels_userlabels (
+    id integer NOT NULL,
+    user_id integer
+);
+
+
+ALTER TABLE public.hs_labels_userlabels OWNER TO postgres;
+
+--
+-- Name: hs_labels_userlabels_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_labels_userlabels_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_labels_userlabels_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_labels_userlabels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_labels_userlabels_id_seq OWNED BY hs_labels_userlabels.id;
+
+
+--
+-- Name: hs_labels_userresourceflags; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_labels_userresourceflags (
+    id integer NOT NULL,
+    kind integer NOT NULL,
+    start timestamp with time zone NOT NULL,
+    resource_id integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_labels_userresourceflags OWNER TO postgres;
+
+--
+-- Name: hs_labels_userresourceflags_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_labels_userresourceflags_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_labels_userresourceflags_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_labels_userresourceflags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_labels_userresourceflags_id_seq OWNED BY hs_labels_userresourceflags.id;
+
+
+--
+-- Name: hs_labels_userresourcelabels; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_labels_userresourcelabels (
+    id integer NOT NULL,
+    start timestamp with time zone NOT NULL,
+    label text NOT NULL,
+    resource_id integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_labels_userresourcelabels OWNER TO postgres;
+
+--
+-- Name: hs_labels_userresourcelabels_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_labels_userresourcelabels_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_labels_userresourcelabels_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_labels_userresourcelabels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_labels_userresourcelabels_id_seq OWNED BY hs_labels_userresourcelabels.id;
+
+
+--
+-- Name: hs_labels_userstoredlabels; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_labels_userstoredlabels (
+    id integer NOT NULL,
+    label text NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_labels_userstoredlabels OWNER TO postgres;
+
+--
+-- Name: hs_labels_userstoredlabels_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_labels_userstoredlabels_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_labels_userstoredlabels_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_labels_userstoredlabels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_labels_userstoredlabels_id_seq OWNED BY hs_labels_userstoredlabels.id;
+
+
+--
 -- Name: hs_model_program_modelprogrammetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -4436,17 +4953,17 @@ ALTER TABLE public.hs_model_program_modelprogrammetadata OWNER TO postgres;
 CREATE TABLE hs_model_program_mpmetadata (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    software_version character varying(255),
-    software_language character varying(100),
-    operating_sys character varying(255),
-    date_released timestamp with time zone,
-    program_website character varying(255),
-    software_repo character varying(255),
-    release_notes character varying(400),
-    user_manual character varying(400),
-    theoretical_manual character varying(400),
-    source_code character varying(400),
     content_type_id integer NOT NULL,
+    "modelCodeRepository" character varying(255),
+    "modelDocumentation" character varying(400),
+    "modelOperatingSystem" character varying(255),
+    "modelProgramLanguage" character varying(100),
+    "modelReleaseDate" timestamp with time zone,
+    "modelReleaseNotes" character varying(400),
+    "modelSoftware" character varying(400),
+    "modelVersion" character varying(255),
+    "modelWebsite" character varying(255),
+    "modelEngine" character varying(400),
     CONSTRAINT hs_model_program_mpmetadata_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -4559,26 +5076,41 @@ ALTER SEQUENCE hs_modelinstance_modeloutput_id_seq OWNED BY hs_modelinstance_mod
 
 
 --
--- Name: hs_swat_modelinstance_executedby; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_script_resource_scriptmetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE TABLE hs_swat_modelinstance_executedby (
-    id integer NOT NULL,
-    object_id integer NOT NULL,
-    content_type_id integer NOT NULL,
-    name character varying(200) NOT NULL,
-    url character varying(200) NOT NULL,
-    CONSTRAINT hs_swat_modelinstance_executedby_object_id_check CHECK ((object_id >= 0))
+CREATE TABLE hs_script_resource_scriptmetadata (
+    coremetadata_ptr_id integer NOT NULL
 );
 
 
-ALTER TABLE public.hs_swat_modelinstance_executedby OWNER TO postgres;
+ALTER TABLE public.hs_script_resource_scriptmetadata OWNER TO postgres;
 
 --
--- Name: hs_swat_modelinstance_executedby_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: hs_script_resource_scriptspecificmetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE SEQUENCE hs_swat_modelinstance_executedby_id_seq
+CREATE TABLE hs_script_resource_scriptspecificmetadata (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    "scriptLanguage" character varying(100) NOT NULL,
+    "languageVersion" character varying(255) NOT NULL,
+    "scriptVersion" character varying(255) NOT NULL,
+    "scriptDependencies" character varying(400) NOT NULL,
+    "scriptReleaseDate" timestamp with time zone,
+    "scriptCodeRepository" character varying(255) NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_script_resource_scriptspecificmetadata_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.hs_script_resource_scriptspecificmetadata OWNER TO postgres;
+
+--
+-- Name: hs_script_resource_scriptspecificmetadata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_script_resource_scriptspecificmetadata_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -4586,13 +5118,13 @@ CREATE SEQUENCE hs_swat_modelinstance_executedby_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_swat_modelinstance_executedby_id_seq OWNER TO postgres;
+ALTER TABLE public.hs_script_resource_scriptspecificmetadata_id_seq OWNER TO postgres;
 
 --
--- Name: hs_swat_modelinstance_executedby_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: hs_script_resource_scriptspecificmetadata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE hs_swat_modelinstance_executedby_id_seq OWNED BY hs_swat_modelinstance_executedby.id;
+ALTER SEQUENCE hs_script_resource_scriptspecificmetadata_id_seq OWNED BY hs_script_resource_scriptspecificmetadata.id;
 
 
 --
@@ -4602,24 +5134,24 @@ ALTER SEQUENCE hs_swat_modelinstance_executedby_id_seq OWNED BY hs_swat_modelins
 CREATE TABLE hs_swat_modelinstance_modelinput (
     id integer NOT NULL,
     object_id integer NOT NULL,
+    "warmupPeriodValue" character varying(100),
+    "rainfallTimeStepType" character varying(100),
+    "rainfallTimeStepValue" character varying(100),
+    "routingTimeStepType" character varying(100),
+    "routingTimeStepValue" character varying(100),
+    "simulationTimeStepType" character varying(100),
+    "simulationTimeStepValue" character varying(100),
+    "watershedArea" character varying(100),
+    "numberOfSubbasins" character varying(100),
+    "numberOfHRUs" character varying(100),
+    "demResolution" character varying(100),
+    "demSourceName" character varying(200),
+    "demSourceURL" character varying(200),
+    "landUseDataSourceName" character varying(200),
+    "landUseDataSourceURL" character varying(200),
+    "soilDataSourceName" character varying(200),
+    "soilDataSourceURL" character varying(200),
     content_type_id integer NOT NULL,
-    rainfall_time_step_value character varying(100),
-    simulation_time_step_value character varying(100),
-    watershed_area character varying(100),
-    number_of_subbasins character varying(100),
-    "number_of_HRUs" character varying(100),
-    "DEM_resolution" character varying(100),
-    "DEM_source_name" character varying(200),
-    "DEM_source_URL" character varying(200),
-    "landUse_data_source_name" character varying(200),
-    "landUse_data_source_URL" character varying(200),
-    soil_data_source_name character varying(200),
-    "soil_data_source_URL" character varying(200),
-    routing_time_step_value character varying(100),
-    warm_up_period character varying(100),
-    rainfall_time_step_type character varying(100),
-    routing_time_step_type character varying(100),
-    simulation_time_step_type character varying(100),
     CONSTRAINT hs_swat_modelinstance_modelinput_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -4654,9 +5186,9 @@ ALTER SEQUENCE hs_swat_modelinstance_modelinput_id_seq OWNED BY hs_swat_modelins
 CREATE TABLE hs_swat_modelinstance_modelmethod (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    runoff_calculation_method character varying(200),
-    flow_routing_method character varying(200),
-    "PET_estimation_method" character varying(200),
+    "runoffCalculationMethod" character varying(200),
+    "petEstimationMethod" character varying(200),
+    "flowRoutingMethod" character varying(200),
     content_type_id integer NOT NULL,
     CONSTRAINT hs_swat_modelinstance_modelmethod_object_id_check CHECK ((object_id >= 0))
 );
@@ -4692,8 +5224,8 @@ ALTER SEQUENCE hs_swat_modelinstance_modelmethod_id_seq OWNED BY hs_swat_modelin
 CREATE TABLE hs_swat_modelinstance_modelobjective (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    content_type_id integer NOT NULL,
     other_objectives character varying(200),
+    content_type_id integer NOT NULL,
     CONSTRAINT hs_swat_modelinstance_modelobjective_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -4786,42 +5318,6 @@ ALTER TABLE public.hs_swat_modelinstance_modelobjectivechoices_id_seq OWNER TO p
 --
 
 ALTER SEQUENCE hs_swat_modelinstance_modelobjectivechoices_id_seq OWNED BY hs_swat_modelinstance_modelobjectivechoices.id;
-
-
---
--- Name: hs_swat_modelinstance_modeloutput; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE hs_swat_modelinstance_modeloutput (
-    id integer NOT NULL,
-    object_id integer NOT NULL,
-    content_type_id integer NOT NULL,
-    includes_output boolean NOT NULL,
-    CONSTRAINT hs_swat_modelinstance_modeloutput_object_id_check CHECK ((object_id >= 0))
-);
-
-
-ALTER TABLE public.hs_swat_modelinstance_modeloutput OWNER TO postgres;
-
---
--- Name: hs_swat_modelinstance_modeloutput_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE hs_swat_modelinstance_modeloutput_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.hs_swat_modelinstance_modeloutput_id_seq OWNER TO postgres;
-
---
--- Name: hs_swat_modelinstance_modeloutput_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE hs_swat_modelinstance_modeloutput_id_seq OWNED BY hs_swat_modelinstance_modeloutput.id;
 
 
 --
@@ -4934,8 +5430,8 @@ ALTER SEQUENCE hs_swat_modelinstance_modelparameterschoices_id_seq OWNED BY hs_s
 CREATE TABLE hs_swat_modelinstance_simulationtype (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    content_type_id integer NOT NULL,
     simulation_type_name character varying(100) NOT NULL,
+    content_type_id integer NOT NULL,
     CONSTRAINT hs_swat_modelinstance_simulationtype_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -4968,48 +5464,11 @@ ALTER SEQUENCE hs_swat_modelinstance_simulationtype_id_seq OWNED BY hs_swat_mode
 --
 
 CREATE TABLE hs_swat_modelinstance_swatmodelinstancemetadata (
-    coremetadata_ptr_id integer NOT NULL
+    modelinstancemetadata_ptr_id integer NOT NULL
 );
 
 
 ALTER TABLE public.hs_swat_modelinstance_swatmodelinstancemetadata OWNER TO postgres;
-
---
--- Name: hs_tools_resource_fee; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE hs_tools_resource_fee (
-    id integer NOT NULL,
-    object_id integer NOT NULL,
-    description text NOT NULL,
-    value numeric(10,2) NOT NULL,
-    content_type_id integer NOT NULL,
-    CONSTRAINT hs_tools_resource_fee_object_id_check CHECK ((object_id >= 0))
-);
-
-
-ALTER TABLE public.hs_tools_resource_fee OWNER TO postgres;
-
---
--- Name: hs_tools_resource_fee_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE hs_tools_resource_fee_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.hs_tools_resource_fee_id_seq OWNER TO postgres;
-
---
--- Name: hs_tools_resource_fee_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE hs_tools_resource_fee_id_seq OWNED BY hs_tools_resource_fee.id;
-
 
 --
 -- Name: hs_tools_resource_requesturlbase; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -5018,7 +5477,7 @@ ALTER SEQUENCE hs_tools_resource_fee_id_seq OWNED BY hs_tools_resource_fee.id;
 CREATE TABLE hs_tools_resource_requesturlbase (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    value character varying(500),
+    value character varying(1024),
     content_type_id integer NOT NULL,
     CONSTRAINT hs_tools_resource_requesturlbase_object_id_check CHECK ((object_id >= 0))
 );
@@ -5048,6 +5507,144 @@ ALTER SEQUENCE hs_tools_resource_requesturlbase_id_seq OWNED BY hs_tools_resourc
 
 
 --
+-- Name: hs_tools_resource_supportedrestypechoices; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tools_resource_supportedrestypechoices (
+    id integer NOT NULL,
+    description character varying(128) NOT NULL
+);
+
+
+ALTER TABLE public.hs_tools_resource_supportedrestypechoices OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_supportedrestypechoices_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tools_resource_supportedrestypechoices_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_tools_resource_supportedrestypechoices_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_supportedrestypechoices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tools_resource_supportedrestypechoices_id_seq OWNED BY hs_tools_resource_supportedrestypechoices.id;
+
+
+--
+-- Name: hs_tools_resource_supportedrestypes; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tools_resource_supportedrestypes (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_tools_resource_supportedrestypes_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.hs_tools_resource_supportedrestypes OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_supportedrestypes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tools_resource_supportedrestypes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_tools_resource_supportedrestypes_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_supportedrestypes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tools_resource_supportedrestypes_id_seq OWNED BY hs_tools_resource_supportedrestypes.id;
+
+
+--
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tools_resource_supportedrestypes_supported_res_types (
+    id integer NOT NULL,
+    supportedrestypes_id integer NOT NULL,
+    supportedrestypechoices_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_tools_resource_supportedrestypes_supported_res_types OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tools_resource_supportedrestypes_supported_res_types_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_tools_resource_supportedrestypes_supported_res_types_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tools_resource_supportedrestypes_supported_res_types_id_seq OWNED BY hs_tools_resource_supportedrestypes_supported_res_types.id;
+
+
+--
+-- Name: hs_tools_resource_toolicon; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tools_resource_toolicon (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    icon character varying(1024),
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_tools_resource_toolicon_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.hs_tools_resource_toolicon OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_toolicon_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tools_resource_toolicon_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.hs_tools_resource_toolicon_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tools_resource_toolicon_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tools_resource_toolicon_id_seq OWNED BY hs_tools_resource_toolicon.id;
+
+
+--
 -- Name: hs_tools_resource_toolmetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -5059,49 +5656,13 @@ CREATE TABLE hs_tools_resource_toolmetadata (
 ALTER TABLE public.hs_tools_resource_toolmetadata OWNER TO postgres;
 
 --
--- Name: hs_tools_resource_toolresourcetype; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE hs_tools_resource_toolresourcetype (
-    id integer NOT NULL,
-    object_id integer NOT NULL,
-    tool_res_type character varying(500),
-    content_type_id integer NOT NULL,
-    CONSTRAINT hs_tools_resource_toolresourcetype_object_id_check CHECK ((object_id >= 0))
-);
-
-
-ALTER TABLE public.hs_tools_resource_toolresourcetype OWNER TO postgres;
-
---
--- Name: hs_tools_resource_toolresourcetype_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE hs_tools_resource_toolresourcetype_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.hs_tools_resource_toolresourcetype_id_seq OWNER TO postgres;
-
---
--- Name: hs_tools_resource_toolresourcetype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE hs_tools_resource_toolresourcetype_id_seq OWNED BY hs_tools_resource_toolresourcetype.id;
-
-
---
 -- Name: hs_tools_resource_toolversion; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
 CREATE TABLE hs_tools_resource_toolversion (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    value character varying(500),
+    value character varying(128) NOT NULL,
     content_type_id integer NOT NULL,
     CONSTRAINT hs_tools_resource_toolversion_object_id_check CHECK ((object_id >= 0))
 );
@@ -5128,6 +5689,157 @@ ALTER TABLE public.hs_tools_resource_toolversion_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE hs_tools_resource_toolversion_id_seq OWNED BY hs_tools_resource_toolversion.id;
+
+
+--
+-- Name: oauth2_provider_accesstoken; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE oauth2_provider_accesstoken (
+    id integer NOT NULL,
+    token character varying(255) NOT NULL,
+    expires timestamp with time zone NOT NULL,
+    scope text NOT NULL,
+    application_id integer NOT NULL,
+    user_id integer
+);
+
+
+ALTER TABLE public.oauth2_provider_accesstoken OWNER TO postgres;
+
+--
+-- Name: oauth2_provider_accesstoken_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE oauth2_provider_accesstoken_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.oauth2_provider_accesstoken_id_seq OWNER TO postgres;
+
+--
+-- Name: oauth2_provider_accesstoken_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE oauth2_provider_accesstoken_id_seq OWNED BY oauth2_provider_accesstoken.id;
+
+
+--
+-- Name: oauth2_provider_application; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE oauth2_provider_application (
+    id integer NOT NULL,
+    client_id character varying(100) NOT NULL,
+    redirect_uris text NOT NULL,
+    client_type character varying(32) NOT NULL,
+    authorization_grant_type character varying(32) NOT NULL,
+    client_secret character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    user_id integer NOT NULL,
+    skip_authorization boolean NOT NULL
+);
+
+
+ALTER TABLE public.oauth2_provider_application OWNER TO postgres;
+
+--
+-- Name: oauth2_provider_application_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE oauth2_provider_application_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.oauth2_provider_application_id_seq OWNER TO postgres;
+
+--
+-- Name: oauth2_provider_application_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE oauth2_provider_application_id_seq OWNED BY oauth2_provider_application.id;
+
+
+--
+-- Name: oauth2_provider_grant; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE oauth2_provider_grant (
+    id integer NOT NULL,
+    code character varying(255) NOT NULL,
+    expires timestamp with time zone NOT NULL,
+    redirect_uri character varying(255) NOT NULL,
+    scope text NOT NULL,
+    application_id integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.oauth2_provider_grant OWNER TO postgres;
+
+--
+-- Name: oauth2_provider_grant_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE oauth2_provider_grant_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.oauth2_provider_grant_id_seq OWNER TO postgres;
+
+--
+-- Name: oauth2_provider_grant_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE oauth2_provider_grant_id_seq OWNED BY oauth2_provider_grant.id;
+
+
+--
+-- Name: oauth2_provider_refreshtoken; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE oauth2_provider_refreshtoken (
+    id integer NOT NULL,
+    token character varying(255) NOT NULL,
+    access_token_id integer NOT NULL,
+    application_id integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.oauth2_provider_refreshtoken OWNER TO postgres;
+
+--
+-- Name: oauth2_provider_refreshtoken_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE oauth2_provider_refreshtoken_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.oauth2_provider_refreshtoken_id_seq OWNER TO postgres;
+
+--
+-- Name: oauth2_provider_refreshtoken_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE oauth2_provider_refreshtoken_id_seq OWNED BY oauth2_provider_refreshtoken.id;
 
 
 --
@@ -5683,6 +6395,13 @@ ALTER TABLE ONLY core_sitepermission_sites ALTER COLUMN id SET DEFAULT nextval('
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY corsheaders_corsmodel ALTER COLUMN id SET DEFAULT nextval('corsheaders_corsmodel_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY django_admin_log ALTER COLUMN id SET DEFAULT nextval('django_admin_log_id_seq'::regclass);
 
 
@@ -6187,6 +6906,69 @@ ALTER TABLE ONLY hs_geo_raster_resource_originalcoverage ALTER COLUMN id SET DEF
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY hs_geographic_feature_resource_fieldinformation ALTER COLUMN id SET DEFAULT nextval('hs_geographic_feature_resource_fieldinformation_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_geometryinformation ALTER COLUMN id SET DEFAULT nextval('hs_geographic_feature_resource_geometryinformation_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_originalcoverage ALTER COLUMN id SET DEFAULT nextval('hs_geographic_feature_resource_originalcoverage_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_originalfileinfo ALTER COLUMN id SET DEFAULT nextval('hs_geographic_feature_resource_originalfileinfo_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_labels_resourcelabels ALTER COLUMN id SET DEFAULT nextval('hs_labels_resourcelabels_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_labels_userlabels ALTER COLUMN id SET DEFAULT nextval('hs_labels_userlabels_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_labels_userresourceflags ALTER COLUMN id SET DEFAULT nextval('hs_labels_userresourceflags_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_labels_userresourcelabels ALTER COLUMN id SET DEFAULT nextval('hs_labels_userresourcelabels_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_labels_userstoredlabels ALTER COLUMN id SET DEFAULT nextval('hs_labels_userstoredlabels_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY hs_model_program_mpmetadata ALTER COLUMN id SET DEFAULT nextval('hs_model_program_mpmetadata_id_seq'::regclass);
 
 
@@ -6208,7 +6990,7 @@ ALTER TABLE ONLY hs_modelinstance_modeloutput ALTER COLUMN id SET DEFAULT nextva
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY hs_swat_modelinstance_executedby ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_executedby_id_seq'::regclass);
+ALTER TABLE ONLY hs_script_resource_scriptspecificmetadata ALTER COLUMN id SET DEFAULT nextval('hs_script_resource_scriptspecificmetadata_id_seq'::regclass);
 
 
 --
@@ -6250,13 +7032,6 @@ ALTER TABLE ONLY hs_swat_modelinstance_modelobjectivechoices ALTER COLUMN id SET
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY hs_swat_modelinstance_modeloutput ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_modeloutput_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
 ALTER TABLE ONLY hs_swat_modelinstance_modelparameter ALTER COLUMN id SET DEFAULT nextval('hs_swat_modelinstance_modelparameter_id_seq'::regclass);
 
 
@@ -6285,13 +7060,6 @@ ALTER TABLE ONLY hs_swat_modelinstance_simulationtype ALTER COLUMN id SET DEFAUL
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY hs_tools_resource_fee ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_fee_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
 ALTER TABLE ONLY hs_tools_resource_requesturlbase ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_requesturlbase_id_seq'::regclass);
 
 
@@ -6299,7 +7067,28 @@ ALTER TABLE ONLY hs_tools_resource_requesturlbase ALTER COLUMN id SET DEFAULT ne
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY hs_tools_resource_toolresourcetype ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_toolresourcetype_id_seq'::regclass);
+ALTER TABLE ONLY hs_tools_resource_supportedrestypechoices ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_supportedrestypechoices_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_supportedrestypes ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_supportedrestypes_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_supportedrestypes_supported_res_types ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_supportedrestypes_supported_res_types_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_toolicon ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_toolicon_id_seq'::regclass);
 
 
 --
@@ -6307,6 +7096,34 @@ ALTER TABLE ONLY hs_tools_resource_toolresourcetype ALTER COLUMN id SET DEFAULT 
 --
 
 ALTER TABLE ONLY hs_tools_resource_toolversion ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_toolversion_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY oauth2_provider_accesstoken ALTER COLUMN id SET DEFAULT nextval('oauth2_provider_accesstoken_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY oauth2_provider_application ALTER COLUMN id SET DEFAULT nextval('oauth2_provider_application_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY oauth2_provider_grant ALTER COLUMN id SET DEFAULT nextval('oauth2_provider_grant_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY oauth2_provider_refreshtoken ALTER COLUMN id SET DEFAULT nextval('oauth2_provider_refreshtoken_id_seq'::regclass);
 
 
 --
@@ -6393,237 +7210,243 @@ SELECT pg_catalog.setval('auth_group_id_seq', 1, true);
 --
 
 COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
-1162	1	124
-1163	1	125
-1164	1	126
-1165	1	127
-1166	1	128
-1167	1	129
-1168	1	130
-1169	1	131
-1170	1	132
-1171	1	133
-1172	1	134
-1173	1	135
-1174	1	136
-1175	1	137
-1176	1	138
-1177	1	139
-1178	1	140
-1179	1	141
-1180	1	142
-1181	1	143
-1182	1	144
-1183	1	145
-1184	1	146
-1185	1	147
-1186	1	148
-1187	1	149
-1188	1	150
-1189	1	151
-1190	1	152
-1191	1	153
-1192	1	154
-1193	1	155
-1194	1	156
-1195	1	157
-1196	1	158
-1197	1	159
-1198	1	160
-1199	1	161
-1200	1	162
-1201	1	163
-1202	1	164
-1203	1	165
-1204	1	166
-1205	1	167
-1206	1	168
-1207	1	169
-1208	1	170
-1209	1	171
-1210	1	172
-1211	1	173
-1212	1	174
-1213	1	175
-1214	1	176
-1215	1	177
-1216	1	178
-1217	1	179
-1218	1	180
-1219	1	181
-1220	1	182
-1221	1	183
-1222	1	184
-1223	1	185
-1224	1	186
-1225	1	221
-1226	1	222
-1227	1	223
-1228	1	224
-1229	1	225
-1230	1	226
-1231	1	227
-1232	1	228
-1233	1	229
-1234	1	230
-1235	1	231
-1236	1	232
-1237	1	233
-1238	1	234
-1239	1	235
-1240	1	236
-1241	1	237
-1242	1	238
-1243	1	239
-1244	1	240
-1245	1	241
-1246	1	242
-1247	1	243
-1248	1	244
-1249	1	245
-1250	1	246
-1251	1	247
-1252	1	248
-1253	1	249
-1254	1	250
-1255	1	251
-1256	1	252
-1257	1	253
-1258	1	254
-1259	1	255
-1260	1	256
-1261	1	257
-1262	1	258
-1263	1	259
-1264	1	260
-1265	1	261
-1266	1	262
-1267	1	263
-1268	1	264
-1269	1	265
-1270	1	266
-1271	1	267
-1272	1	268
-1273	1	269
-1274	1	270
-1275	1	271
-1276	1	272
-1277	1	273
-1278	1	274
-1279	1	275
-1280	1	276
-1281	1	277
-1282	1	278
-1283	1	279
-1284	1	280
-1285	1	281
-1286	1	282
-1287	1	283
-1288	1	284
-1289	1	285
-1290	1	286
-1291	1	287
-1292	1	288
-1293	1	289
-1294	1	290
-1295	1	291
-1296	1	292
-1297	1	293
-1298	1	294
-1299	1	295
-1300	1	296
-1301	1	297
-1302	1	298
-1303	1	299
-1304	1	300
-1305	1	301
-1306	1	302
-1307	1	303
-1308	1	304
-1309	1	305
-1310	1	306
-1311	1	307
-1312	1	341
-1313	1	342
-1314	1	343
-1315	1	344
-1316	1	345
-1317	1	346
-1318	1	347
-1319	1	348
-1320	1	349
-1321	1	350
-1322	1	351
-1323	1	352
-1324	1	353
-1325	1	354
-1326	1	355
-1327	1	356
-1328	1	357
-1329	1	358
-1330	1	359
-1331	1	360
-1332	1	361
-1333	1	362
-1334	1	363
-1335	1	364
-1336	1	365
-1337	1	366
-1338	1	367
-1339	1	368
-1340	1	369
-1341	1	370
-1342	1	371
-1343	1	372
-1344	1	373
-1345	1	380
-1346	1	381
-1347	1	382
-1348	1	383
-1349	1	384
-1350	1	385
-1351	1	386
-1352	1	387
-1353	1	388
-1354	1	389
-1355	1	390
-1356	1	391
-1357	1	392
-1358	1	393
-1359	1	394
-1360	1	395
-1361	1	396
-1362	1	397
-1363	1	398
-1364	1	399
-1365	1	400
-1366	1	401
-1367	1	402
-1368	1	403
-1369	1	404
-1370	1	405
-1371	1	406
-1372	1	425
-1373	1	426
-1374	1	427
-1375	1	428
-1376	1	429
-1377	1	430
-1378	1	431
-1379	1	432
-1380	1	433
-1381	1	434
-1382	1	435
-1383	1	436
-1384	1	437
-1385	1	438
-1386	1	439
-1387	1	440
-1388	1	441
-1389	1	442
-1390	1	443
-1391	1	444
-1392	1	445
+358	1	139
+359	1	140
+360	1	141
+361	1	142
+362	1	143
+363	1	144
+364	1	145
+365	1	146
+366	1	147
+367	1	148
+368	1	149
+369	1	150
+370	1	151
+371	1	152
+372	1	153
+373	1	154
+374	1	155
+375	1	156
+376	1	157
+377	1	158
+378	1	159
+379	1	160
+380	1	161
+381	1	162
+382	1	163
+383	1	164
+384	1	165
+385	1	166
+386	1	167
+387	1	168
+388	1	169
+389	1	170
+390	1	171
+391	1	172
+392	1	173
+393	1	174
+394	1	175
+395	1	176
+396	1	177
+397	1	178
+398	1	179
+399	1	180
+400	1	181
+401	1	182
+402	1	183
+403	1	184
+404	1	185
+405	1	186
+406	1	187
+407	1	188
+408	1	189
+409	1	190
+410	1	191
+411	1	192
+412	1	193
+413	1	194
+414	1	195
+415	1	196
+416	1	197
+417	1	198
+418	1	199
+419	1	200
+420	1	201
+421	1	202
+422	1	203
+423	1	204
+424	1	271
+425	1	272
+426	1	273
+427	1	274
+428	1	275
+429	1	276
+430	1	277
+431	1	278
+432	1	279
+433	1	280
+434	1	281
+435	1	282
+436	1	283
+437	1	284
+438	1	285
+439	1	310
+440	1	311
+441	1	312
+442	1	313
+443	1	314
+444	1	315
+445	1	316
+446	1	317
+447	1	318
+448	1	319
+449	1	320
+450	1	321
+451	1	322
+452	1	323
+453	1	324
+454	1	325
+455	1	326
+456	1	327
+457	1	328
+458	1	329
+459	1	330
+460	1	331
+461	1	332
+462	1	333
+463	1	334
+464	1	335
+465	1	336
+466	1	337
+467	1	338
+468	1	339
+469	1	340
+470	1	341
+471	1	342
+472	1	343
+473	1	344
+474	1	345
+475	1	346
+476	1	347
+477	1	348
+478	1	349
+479	1	350
+480	1	351
+481	1	352
+482	1	353
+483	1	354
+484	1	355
+485	1	356
+486	1	357
+487	1	358
+488	1	359
+489	1	360
+490	1	361
+491	1	362
+492	1	363
+493	1	364
+494	1	365
+495	1	366
+496	1	367
+497	1	368
+498	1	369
+499	1	370
+500	1	371
+501	1	372
+502	1	373
+503	1	374
+504	1	375
+505	1	376
+506	1	377
+507	1	378
+508	1	379
+509	1	380
+510	1	381
+511	1	382
+512	1	383
+513	1	384
+514	1	385
+515	1	386
+516	1	387
+517	1	388
+518	1	389
+519	1	390
+520	1	391
+521	1	392
+522	1	393
+523	1	394
+524	1	395
+525	1	396
+526	1	397
+527	1	398
+528	1	399
+529	1	400
+530	1	401
+531	1	402
+532	1	403
+533	1	404
+534	1	405
+535	1	406
+536	1	407
+537	1	408
+538	1	409
+539	1	410
+540	1	411
+541	1	412
+542	1	413
+543	1	414
+544	1	415
+545	1	416
+546	1	417
+547	1	418
+548	1	419
+549	1	420
+550	1	421
+551	1	422
+552	1	423
+553	1	424
+554	1	425
+555	1	426
+556	1	427
+557	1	428
+558	1	429
+559	1	430
+560	1	431
+561	1	432
+562	1	433
+563	1	434
+564	1	435
+565	1	436
+566	1	437
+567	1	438
+568	1	439
+569	1	440
+570	1	441
+571	1	442
+572	1	443
+573	1	444
+574	1	445
+575	1	446
+576	1	447
+577	1	448
+578	1	449
+579	1	450
+580	1	451
+581	1	452
+582	1	453
+583	1	454
+584	1	455
+585	1	456
+586	1	457
+587	1	458
+588	1	459
+589	1	460
+590	1	461
+591	1	462
+592	1	463
+593	1	464
+594	1	465
 \.
 
 
@@ -6631,7 +7454,7 @@ COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_group_permissions_id_seq', 1392, true);
+SELECT pg_catalog.setval('auth_group_permissions_id_seq', 594, true);
 
 
 --
@@ -6648,436 +7471,472 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 7	Can add user	3	add_user
 8	Can change user	3	change_user
 9	Can delete user	3	delete_user
-10	Can add content type	4	add_contenttype
-11	Can change content type	4	change_contenttype
-12	Can delete content type	4	delete_contenttype
-13	Can add redirect	5	add_redirect
-14	Can change redirect	5	change_redirect
-15	Can delete redirect	5	delete_redirect
-16	Can add session	6	add_session
-17	Can change session	6	change_session
-18	Can delete session	6	delete_session
-19	Can add site	7	add_site
-20	Can change site	7	change_site
-21	Can delete site	7	delete_site
-22	Can add post gis geometry columns	8	add_postgisgeometrycolumns
-23	Can change post gis geometry columns	8	change_postgisgeometrycolumns
-24	Can delete post gis geometry columns	8	delete_postgisgeometrycolumns
-25	Can add post gis spatial ref sys	9	add_postgisspatialrefsys
-26	Can change post gis spatial ref sys	9	change_postgisspatialrefsys
-27	Can delete post gis spatial ref sys	9	delete_postgisspatialrefsys
-28	Can add iRODS Environment	10	add_rodsenvironment
-29	Can change iRODS Environment	10	change_rodsenvironment
-30	Can delete iRODS Environment	10	delete_rodsenvironment
-31	Can add Site Configuration	11	add_siteconfiguration
-32	Can change Site Configuration	11	change_siteconfiguration
-33	Can delete Site Configuration	11	delete_siteconfiguration
-34	Can add Home page	12	add_homepage
-35	Can change Home page	12	change_homepage
-36	Can delete Home page	12	delete_homepage
-37	Can add icon box	13	add_iconbox
-38	Can change icon box	13	change_iconbox
-39	Can delete icon box	13	delete_iconbox
-40	Can add user profile	14	add_userprofile
-41	Can change user profile	14	change_userprofile
-42	Can delete user profile	14	delete_userprofile
-43	Can add Setting	15	add_setting
-44	Can change Setting	15	change_setting
-45	Can delete Setting	15	delete_setting
-46	Can add Site permission	16	add_sitepermission
-47	Can change Site permission	16	change_sitepermission
-48	Can delete Site permission	16	delete_sitepermission
-49	Can add Comment	17	add_threadedcomment
-50	Can change Comment	17	change_threadedcomment
-51	Can delete Comment	17	delete_threadedcomment
-52	Can add Keyword	18	add_keyword
-53	Can change Keyword	18	change_keyword
-54	Can delete Keyword	18	delete_keyword
-55	Can add assigned keyword	19	add_assignedkeyword
-56	Can change assigned keyword	19	change_assignedkeyword
-57	Can delete assigned keyword	19	delete_assignedkeyword
-58	Can add Rating	20	add_rating
-59	Can change Rating	20	change_rating
-60	Can delete Rating	20	delete_rating
-61	Can add Blog post	21	add_blogpost
-62	Can change Blog post	21	change_blogpost
-63	Can delete Blog post	21	delete_blogpost
-64	Can add Blog Category	22	add_blogcategory
-65	Can change Blog Category	22	change_blogcategory
-66	Can delete Blog Category	22	delete_blogcategory
-67	Can add Form	23	add_form
-68	Can change Form	23	change_form
-69	Can delete Form	23	delete_form
-70	Can add Field	24	add_field
-71	Can change Field	24	change_field
-72	Can delete Field	24	delete_field
-73	Can add Form entry	25	add_formentry
-74	Can change Form entry	25	change_formentry
-75	Can delete Form entry	25	delete_formentry
-76	Can add Form field entry	26	add_fieldentry
-77	Can change Form field entry	26	change_fieldentry
-78	Can delete Form field entry	26	delete_fieldentry
-79	Can add Page	27	add_page
-80	Can change Page	27	change_page
-81	Can delete Page	27	delete_page
-82	Can add Rich text page	28	add_richtextpage
-83	Can change Rich text page	28	change_richtextpage
-84	Can delete Rich text page	28	delete_richtextpage
-85	Can add Link	29	add_link
-86	Can change Link	29	change_link
-87	Can delete Link	29	delete_link
-88	Can add Gallery	30	add_gallery
-89	Can change Gallery	30	change_gallery
-90	Can delete Gallery	30	delete_gallery
-91	Can add Image	31	add_galleryimage
-92	Can change Image	31	change_galleryimage
-93	Can delete Image	31	delete_galleryimage
-94	Can add ogr dataset collection	32	add_ogrdatasetcollection
-95	Can change ogr dataset collection	32	change_ogrdatasetcollection
-96	Can delete ogr dataset collection	32	delete_ogrdatasetcollection
-97	Can add ogr dataset	33	add_ogrdataset
-98	Can change ogr dataset	33	change_ogrdataset
-99	Can delete ogr dataset	33	delete_ogrdataset
-100	Can add ogr layer	34	add_ogrlayer
-101	Can change ogr layer	34	change_ogrlayer
-102	Can delete ogr layer	34	delete_ogrlayer
-103	Can add catalog page	35	add_catalogpage
-104	Can change catalog page	35	change_catalogpage
-105	Can delete catalog page	35	delete_catalogpage
-106	Can add data resource	36	add_dataresource
-107	Can change data resource	36	change_dataresource
-108	Can delete data resource	36	delete_dataresource
-109	Can add ordered resource	37	add_orderedresource
-110	Can change ordered resource	37	change_orderedresource
-111	Can delete ordered resource	37	delete_orderedresource
-112	Can add resource group	38	add_resourcegroup
-113	Can change resource group	38	change_resourcegroup
-114	Can delete resource group	38	delete_resourcegroup
-115	Can add related resource	39	add_relatedresource
-116	Can change related resource	39	change_relatedresource
-117	Can delete related resource	39	delete_relatedresource
-118	Can add style	40	add_style
-119	Can change style	40	change_style
-120	Can delete style	40	delete_style
-121	Can add rendered layer	41	add_renderedlayer
-122	Can change rendered layer	41	change_renderedlayer
-123	Can delete rendered layer	41	delete_renderedlayer
-124	Can add group ownership	42	add_groupownership
-125	Can change group ownership	42	change_groupownership
-126	Can delete group ownership	42	delete_groupownership
-127	Can add external profile link	43	add_externalprofilelink
-128	Can change external profile link	43	change_externalprofilelink
-129	Can delete external profile link	43	delete_externalprofilelink
-130	Can add contributor	44	add_contributor
-131	Can change contributor	44	change_contributor
-132	Can delete contributor	44	delete_contributor
-133	Can add creator	45	add_creator
-134	Can change creator	45	change_creator
-135	Can delete creator	45	delete_creator
-136	Can add description	46	add_description
-137	Can change description	46	change_description
-138	Can delete description	46	delete_description
-139	Can add title	47	add_title
-140	Can change title	47	change_title
-141	Can delete title	47	delete_title
-142	Can add type	48	add_type
-143	Can change type	48	change_type
-144	Can delete type	48	delete_type
-145	Can add date	49	add_date
-146	Can change date	49	change_date
-147	Can delete date	49	delete_date
-148	Can add relation	50	add_relation
-149	Can change relation	50	change_relation
-150	Can delete relation	50	delete_relation
-151	Can add identifier	51	add_identifier
-152	Can change identifier	51	change_identifier
-153	Can delete identifier	51	delete_identifier
-154	Can add publisher	52	add_publisher
-155	Can change publisher	52	change_publisher
-156	Can delete publisher	52	delete_publisher
-157	Can add language	53	add_language
-158	Can change language	53	change_language
-159	Can delete language	53	delete_language
-160	Can add coverage	54	add_coverage
-161	Can change coverage	54	change_coverage
-162	Can delete coverage	54	delete_coverage
-163	Can add format	55	add_format
-164	Can change format	55	change_format
-165	Can delete format	55	delete_format
-166	Can add subject	56	add_subject
-167	Can change subject	56	change_subject
-168	Can delete subject	56	delete_subject
-169	Can add source	57	add_source
-170	Can change source	57	change_source
-171	Can delete source	57	delete_source
-172	Can add rights	58	add_rights
-173	Can change rights	58	change_rights
-174	Can delete rights	58	delete_rights
-175	Can add resource file	59	add_resourcefile
-176	Can change resource file	59	change_resourcefile
-177	Can delete resource file	59	delete_resourcefile
-178	Can add bags	60	add_bags
-179	Can change bags	60	change_bags
-180	Can delete bags	60	delete_bags
-181	Can add Generic	61	add_genericresource
-182	Can change Generic	61	change_genericresource
-183	Can delete Generic	61	delete_genericresource
-184	Can add core meta data	62	add_coremetadata
-185	Can change core meta data	62	change_coremetadata
-186	Can delete core meta data	62	delete_coremetadata
-187	Can add task state	63	add_taskmeta
-188	Can change task state	63	change_taskmeta
-189	Can delete task state	63	delete_taskmeta
-190	Can add saved group result	64	add_tasksetmeta
-191	Can change saved group result	64	change_tasksetmeta
-192	Can delete saved group result	64	delete_tasksetmeta
-193	Can add interval	65	add_intervalschedule
-194	Can change interval	65	change_intervalschedule
-195	Can delete interval	65	delete_intervalschedule
-196	Can add crontab	66	add_crontabschedule
-197	Can change crontab	66	change_crontabschedule
-198	Can delete crontab	66	delete_crontabschedule
-199	Can add periodic tasks	67	add_periodictasks
-200	Can change periodic tasks	67	change_periodictasks
-201	Can delete periodic tasks	67	delete_periodictasks
-202	Can add periodic task	68	add_periodictask
-203	Can change periodic task	68	change_periodictask
-204	Can delete periodic task	68	delete_periodictask
-205	Can add worker	69	add_workerstate
-206	Can change worker	69	change_workerstate
-207	Can delete worker	69	delete_workerstate
-208	Can add task	70	add_taskstate
-209	Can change task	70	change_taskstate
-210	Can delete task	70	delete_taskstate
-211	Can add log entry	71	add_logentry
-212	Can change log entry	71	change_logentry
-213	Can delete log entry	71	delete_logentry
-214	Can add comment	72	add_comment
-215	Can change comment	72	change_comment
-216	Can delete comment	72	delete_comment
-217	Can moderate comments	72	can_moderate
-218	Can add comment flag	73	add_commentflag
-219	Can change comment flag	73	change_commentflag
-220	Can delete comment flag	73	delete_commentflag
-221	Can add original coverage	74	add_originalcoverage
-222	Can change original coverage	74	change_originalcoverage
-223	Can delete original coverage	74	delete_originalcoverage
-224	Can add band information	75	add_bandinformation
-225	Can change band information	75	change_bandinformation
-226	Can delete band information	75	delete_bandinformation
-227	Can add cell information	76	add_cellinformation
-228	Can change cell information	76	change_cellinformation
-229	Can delete cell information	76	delete_cellinformation
-230	Can add Geographic Raster	77	add_rasterresource
-231	Can change Geographic Raster	77	change_rasterresource
-232	Can delete Geographic Raster	77	delete_rasterresource
-233	Can add raster meta data	78	add_rastermetadata
-234	Can change raster meta data	78	change_rastermetadata
-235	Can delete raster meta data	78	delete_rastermetadata
-236	Can add HIS Referenced Time Series	79	add_reftimeseries
-237	Can change HIS Referenced Time Series	79	change_reftimeseries
-238	Can delete HIS Referenced Time Series	79	delete_reftimeseries
-239	Can add reference url	80	add_referenceurl
-240	Can change reference url	80	change_referenceurl
-241	Can delete reference url	80	delete_referenceurl
-242	Can add method	81	add_method
-243	Can change method	81	change_method
-244	Can delete method	81	delete_method
-245	Can add quality control level	82	add_qualitycontrollevel
-246	Can change quality control level	82	change_qualitycontrollevel
-247	Can delete quality control level	82	delete_qualitycontrollevel
-248	Can add variable	83	add_variable
-249	Can change variable	83	change_variable
-250	Can delete variable	83	delete_variable
-251	Can add site	84	add_site
-252	Can change site	84	change_site
-253	Can delete site	84	delete_site
-254	Can add ref ts metadata	85	add_reftsmetadata
-255	Can change ref ts metadata	85	change_reftsmetadata
-256	Can delete ref ts metadata	85	delete_reftsmetadata
-257	Can add site	86	add_site
-258	Can change site	86	change_site
-259	Can delete site	86	delete_site
-260	Can add variable	87	add_variable
-261	Can change variable	87	change_variable
-262	Can delete variable	87	delete_variable
-263	Can add method	88	add_method
-264	Can change method	88	change_method
-265	Can delete method	88	delete_method
-266	Can add processing level	89	add_processinglevel
-267	Can change processing level	89	change_processinglevel
-268	Can delete processing level	89	delete_processinglevel
-269	Can add time series result	90	add_timeseriesresult
-270	Can change time series result	90	change_timeseriesresult
-271	Can delete time series result	90	delete_timeseriesresult
-272	Can add Time Series	91	add_timeseriesresource
-273	Can change Time Series	91	change_timeseriesresource
-274	Can delete Time Series	91	delete_timeseriesresource
-275	Can add time series meta data	92	add_timeseriesmetadata
-276	Can change time series meta data	92	change_timeseriesmetadata
-277	Can delete time series meta data	92	delete_timeseriesmetadata
-278	Can add original coverage	93	add_originalcoverage
-279	Can change original coverage	93	change_originalcoverage
-280	Can delete original coverage	93	delete_originalcoverage
-281	Can add variable	94	add_variable
-282	Can change variable	94	change_variable
-283	Can delete variable	94	delete_variable
-284	Can add Multidimensional (NetCDF)	95	add_netcdfresource
-285	Can change Multidimensional (NetCDF)	95	change_netcdfresource
-286	Can delete Multidimensional (NetCDF)	95	delete_netcdfresource
-287	Can add netcdf meta data	96	add_netcdfmetadata
-288	Can change netcdf meta data	96	change_netcdfmetadata
-289	Can delete netcdf meta data	96	delete_netcdfmetadata
-290	Can add Tool Resource	97	add_toolresource
-291	Can change Tool Resource	97	change_toolresource
-292	Can delete Tool Resource	97	delete_toolresource
-293	Can add request url base	98	add_requesturlbase
-294	Can change request url base	98	change_requesturlbase
-295	Can delete request url base	98	delete_requesturlbase
-296	Can add tool resource type	99	add_toolresourcetype
-297	Can change tool resource type	99	change_toolresourcetype
-298	Can delete tool resource type	99	delete_toolresourcetype
-299	Can add fee	100	add_fee
-300	Can change fee	100	change_fee
-301	Can delete fee	100	delete_fee
-302	Can add tool version	101	add_toolversion
-303	Can change tool version	101	change_toolversion
-304	Can delete tool version	101	delete_toolversion
-305	Can add tool meta data	102	add_toolmetadata
-306	Can change tool meta data	102	change_toolmetadata
-307	Can delete tool meta data	102	delete_toolmetadata
-308	Can add docker profile	103	add_dockerprofile
-309	Can change docker profile	103	change_dockerprofile
-310	Can delete docker profile	103	delete_dockerprofile
-311	Can add container overrides	104	add_containeroverrides
-312	Can change container overrides	104	change_containeroverrides
-313	Can delete container overrides	104	delete_containeroverrides
-314	Can add override env var	105	add_overrideenvvar
-315	Can change override env var	105	change_overrideenvvar
-316	Can delete override env var	105	delete_overrideenvvar
-317	Can add override volume	106	add_overridevolume
-318	Can change override volume	106	change_overridevolume
-319	Can delete override volume	106	delete_overridevolume
-320	Can add override link	107	add_overridelink
-321	Can change override link	107	change_overridelink
-322	Can delete override link	107	delete_overridelink
-323	Can add override port	108	add_overrideport
-324	Can change override port	108	change_overrideport
-325	Can delete override port	108	delete_overrideport
-326	Can add docker link	109	add_dockerlink
-327	Can change docker link	109	change_dockerlink
-328	Can delete docker link	109	delete_dockerlink
-329	Can add docker env var	110	add_dockerenvvar
-330	Can change docker env var	110	change_dockerenvvar
-331	Can delete docker env var	110	delete_dockerenvvar
-332	Can add docker volume	111	add_dockervolume
-333	Can change docker volume	111	change_dockervolume
-334	Can delete docker volume	111	delete_dockervolume
-335	Can add docker port	112	add_dockerport
-336	Can change docker port	112	change_dockerport
-337	Can delete docker port	112	delete_dockerport
-338	Can add docker process	113	add_dockerprocess
-339	Can change docker process	113	change_dockerprocess
-340	Can delete docker process	113	delete_dockerprocess
-341	Can add mp metadata	114	add_mpmetadata
-342	Can change mp metadata	114	change_mpmetadata
-343	Can delete mp metadata	114	delete_mpmetadata
-344	Can add Model Program Resource	115	add_modelprogramresource
-345	Can change Model Program Resource	115	change_modelprogramresource
-346	Can delete Model Program Resource	115	delete_modelprogramresource
-347	Can add model program meta data	116	add_modelprogrammetadata
-348	Can change model program meta data	116	change_modelprogrammetadata
-349	Can delete model program meta data	116	delete_modelprogrammetadata
-350	Can add model output	117	add_modeloutput
-351	Can change model output	117	change_modeloutput
-352	Can delete model output	117	delete_modeloutput
-353	Can add executed by	118	add_executedby
-354	Can change executed by	118	change_executedby
-355	Can delete executed by	118	delete_executedby
-356	Can add Model Instance Resource	119	add_modelinstanceresource
-357	Can change Model Instance Resource	119	change_modelinstanceresource
-358	Can delete Model Instance Resource	119	delete_modelinstanceresource
-359	Can add model instance meta data	120	add_modelinstancemetadata
-360	Can change model instance meta data	120	change_modelinstancemetadata
-361	Can delete model instance meta data	120	delete_modelinstancemetadata
-362	Can add model output	121	add_modeloutput
-363	Can change model output	121	change_modeloutput
-364	Can delete model output	121	delete_modeloutput
-365	Can add executed by	122	add_executedby
-366	Can change executed by	122	change_executedby
-367	Can delete executed by	122	delete_executedby
-368	Can add model objective	123	add_modelobjective
-369	Can change model objective	123	change_modelobjective
-370	Can delete model objective	123	delete_modelobjective
-371	Can add simulation type	124	add_simulationtype
-372	Can change simulation type	124	change_simulationtype
-373	Can delete simulation type	124	delete_simulationtype
-380	Can add model input	127	add_modelinput
-381	Can change model input	127	change_modelinput
-382	Can delete model input	127	delete_modelinput
-383	Can add SWAT Model Instance Resource	128	add_swatmodelinstanceresource
-384	Can change SWAT Model Instance Resource	128	change_swatmodelinstanceresource
-385	Can delete SWAT Model Instance Resource	128	delete_swatmodelinstanceresource
-386	Can add swat model instance meta data	129	add_swatmodelinstancemetadata
-387	Can change swat model instance meta data	129	change_swatmodelinstancemetadata
-388	Can delete swat model instance meta data	129	delete_swatmodelinstancemetadata
-389	Can add model objective choices	130	add_modelobjectivechoices
-390	Can change model objective choices	130	change_modelobjectivechoices
-391	Can delete model objective choices	130	delete_modelobjectivechoices
-392	Can add model method	131	add_modelmethod
-393	Can change model method	131	change_modelmethod
-394	Can delete model method	131	delete_modelmethod
-395	Can add model parameters choices	132	add_modelparameterschoices
-396	Can change model parameters choices	132	change_modelparameterschoices
-397	Can delete model parameters choices	132	delete_modelparameterschoices
-398	Can add model parameter	133	add_modelparameter
-399	Can change model parameter	133	change_modelparameter
-400	Can delete model parameter	133	delete_modelparameter
-401	Can add Generic	134	add_baseresource
-402	Can change Generic	134	change_baseresource
-403	Can delete Generic	134	delete_baseresource
-404	Can add Generic	134	add_genericresource
-405	Can change Generic	134	change_genericresource
-406	Can delete Generic	134	delete_genericresource
-407	Can add user group privilege	135	add_usergroupprivilege
-408	Can change user group privilege	135	change_usergroupprivilege
-409	Can delete user group privilege	135	delete_usergroupprivilege
-410	Can add user resource privilege	136	add_userresourceprivilege
-411	Can change user resource privilege	136	change_userresourceprivilege
-412	Can delete user resource privilege	136	delete_userresourceprivilege
-413	Can add group resource privilege	137	add_groupresourceprivilege
-414	Can change group resource privilege	137	change_groupresourceprivilege
-415	Can delete group resource privilege	137	delete_groupresourceprivilege
-416	Can add user access	138	add_useraccess
-417	Can change user access	138	change_useraccess
-418	Can delete user access	138	delete_useraccess
-419	Can add group access	139	add_groupaccess
-420	Can change group access	139	change_groupaccess
-421	Can delete group access	139	delete_groupaccess
-422	Can add resource access	140	add_resourceaccess
-423	Can change resource access	140	change_resourceaccess
-424	Can delete resource access	140	delete_resourceaccess
-425	Can add Geographic Raster	134	add_rasterresource
-426	Can change Geographic Raster	134	change_rasterresource
-427	Can delete Geographic Raster	134	delete_rasterresource
-428	Can add Time Series	134	add_timeseriesresource
-429	Can change Time Series	134	change_timeseriesresource
-430	Can delete Time Series	134	delete_timeseriesresource
-431	Can add Multidimensional (NetCDF)	134	add_netcdfresource
-432	Can change Multidimensional (NetCDF)	134	change_netcdfresource
-433	Can delete Multidimensional (NetCDF)	134	delete_netcdfresource
-434	Can add Model Program Resource	134	add_modelprogramresource
-435	Can change Model Program Resource	134	change_modelprogramresource
-436	Can delete Model Program Resource	134	delete_modelprogramresource
-437	Can add Model Instance Resource	134	add_modelinstanceresource
-438	Can change Model Instance Resource	134	change_modelinstanceresource
-439	Can delete Model Instance Resource	134	delete_modelinstanceresource
-440	Can add Tool Resource	134	add_toolresource
-441	Can change Tool Resource	134	change_toolresource
-442	Can delete Tool Resource	134	delete_toolresource
-443	Can add SWAT Model Instance Resource	134	add_swatmodelinstanceresource
-444	Can change SWAT Model Instance Resource	134	change_swatmodelinstanceresource
-445	Can delete SWAT Model Instance Resource	134	delete_swatmodelinstanceresource
+10	Can add application	4	add_application
+11	Can change application	4	change_application
+12	Can delete application	4	delete_application
+13	Can add grant	5	add_grant
+14	Can change grant	5	change_grant
+15	Can delete grant	5	delete_grant
+16	Can add access token	6	add_accesstoken
+17	Can change access token	6	change_accesstoken
+18	Can delete access token	6	delete_accesstoken
+19	Can add refresh token	7	add_refreshtoken
+20	Can change refresh token	7	change_refreshtoken
+21	Can delete refresh token	7	delete_refreshtoken
+22	Can add cors model	8	add_corsmodel
+23	Can change cors model	8	change_corsmodel
+24	Can delete cors model	8	delete_corsmodel
+25	Can add content type	9	add_contenttype
+26	Can change content type	9	change_contenttype
+27	Can delete content type	9	delete_contenttype
+28	Can add redirect	10	add_redirect
+29	Can change redirect	10	change_redirect
+30	Can delete redirect	10	delete_redirect
+31	Can add session	11	add_session
+32	Can change session	11	change_session
+33	Can delete session	11	delete_session
+34	Can add site	12	add_site
+35	Can change site	12	change_site
+36	Can delete site	12	delete_site
+37	Can add post gis geometry columns	13	add_postgisgeometrycolumns
+38	Can change post gis geometry columns	13	change_postgisgeometrycolumns
+39	Can delete post gis geometry columns	13	delete_postgisgeometrycolumns
+40	Can add post gis spatial ref sys	14	add_postgisspatialrefsys
+41	Can change post gis spatial ref sys	14	change_postgisspatialrefsys
+42	Can delete post gis spatial ref sys	14	delete_postgisspatialrefsys
+43	Can add iRODS Environment	15	add_rodsenvironment
+44	Can change iRODS Environment	15	change_rodsenvironment
+45	Can delete iRODS Environment	15	delete_rodsenvironment
+46	Can add Site Configuration	16	add_siteconfiguration
+47	Can change Site Configuration	16	change_siteconfiguration
+48	Can delete Site Configuration	16	delete_siteconfiguration
+49	Can add Home page	17	add_homepage
+50	Can change Home page	17	change_homepage
+51	Can delete Home page	17	delete_homepage
+52	Can add icon box	18	add_iconbox
+53	Can change icon box	18	change_iconbox
+54	Can delete icon box	18	delete_iconbox
+55	Can add user profile	19	add_userprofile
+56	Can change user profile	19	change_userprofile
+57	Can delete user profile	19	delete_userprofile
+58	Can add Setting	20	add_setting
+59	Can change Setting	20	change_setting
+60	Can delete Setting	20	delete_setting
+61	Can add Site permission	21	add_sitepermission
+62	Can change Site permission	21	change_sitepermission
+63	Can delete Site permission	21	delete_sitepermission
+64	Can add Comment	22	add_threadedcomment
+65	Can change Comment	22	change_threadedcomment
+66	Can delete Comment	22	delete_threadedcomment
+67	Can add Keyword	23	add_keyword
+68	Can change Keyword	23	change_keyword
+69	Can delete Keyword	23	delete_keyword
+70	Can add assigned keyword	24	add_assignedkeyword
+71	Can change assigned keyword	24	change_assignedkeyword
+72	Can delete assigned keyword	24	delete_assignedkeyword
+73	Can add Rating	25	add_rating
+74	Can change Rating	25	change_rating
+75	Can delete Rating	25	delete_rating
+76	Can add Blog post	26	add_blogpost
+77	Can change Blog post	26	change_blogpost
+78	Can delete Blog post	26	delete_blogpost
+79	Can add Blog Category	27	add_blogcategory
+80	Can change Blog Category	27	change_blogcategory
+81	Can delete Blog Category	27	delete_blogcategory
+82	Can add Form	28	add_form
+83	Can change Form	28	change_form
+84	Can delete Form	28	delete_form
+85	Can add Field	29	add_field
+86	Can change Field	29	change_field
+87	Can delete Field	29	delete_field
+88	Can add Form entry	30	add_formentry
+89	Can change Form entry	30	change_formentry
+90	Can delete Form entry	30	delete_formentry
+91	Can add Form field entry	31	add_fieldentry
+92	Can change Form field entry	31	change_fieldentry
+93	Can delete Form field entry	31	delete_fieldentry
+94	Can add Page	32	add_page
+95	Can change Page	32	change_page
+96	Can delete Page	32	delete_page
+97	Can add Rich text page	33	add_richtextpage
+98	Can change Rich text page	33	change_richtextpage
+99	Can delete Rich text page	33	delete_richtextpage
+100	Can add Link	34	add_link
+101	Can change Link	34	change_link
+102	Can delete Link	34	delete_link
+103	Can add Gallery	35	add_gallery
+104	Can change Gallery	35	change_gallery
+105	Can delete Gallery	35	delete_gallery
+106	Can add Image	36	add_galleryimage
+107	Can change Image	36	change_galleryimage
+108	Can delete Image	36	delete_galleryimage
+109	Can add ogr dataset collection	37	add_ogrdatasetcollection
+110	Can change ogr dataset collection	37	change_ogrdatasetcollection
+111	Can delete ogr dataset collection	37	delete_ogrdatasetcollection
+112	Can add ogr dataset	38	add_ogrdataset
+113	Can change ogr dataset	38	change_ogrdataset
+114	Can delete ogr dataset	38	delete_ogrdataset
+115	Can add ogr layer	39	add_ogrlayer
+116	Can change ogr layer	39	change_ogrlayer
+117	Can delete ogr layer	39	delete_ogrlayer
+118	Can add catalog page	40	add_catalogpage
+119	Can change catalog page	40	change_catalogpage
+120	Can delete catalog page	40	delete_catalogpage
+121	Can add data resource	41	add_dataresource
+122	Can change data resource	41	change_dataresource
+123	Can delete data resource	41	delete_dataresource
+124	Can add ordered resource	42	add_orderedresource
+125	Can change ordered resource	42	change_orderedresource
+126	Can delete ordered resource	42	delete_orderedresource
+127	Can add resource group	43	add_resourcegroup
+128	Can change resource group	43	change_resourcegroup
+129	Can delete resource group	43	delete_resourcegroup
+130	Can add related resource	44	add_relatedresource
+131	Can change related resource	44	change_relatedresource
+132	Can delete related resource	44	delete_relatedresource
+133	Can add style	45	add_style
+134	Can change style	45	change_style
+135	Can delete style	45	delete_style
+136	Can add rendered layer	46	add_renderedlayer
+137	Can change rendered layer	46	change_renderedlayer
+138	Can delete rendered layer	46	delete_renderedlayer
+139	Can add group ownership	47	add_groupownership
+140	Can change group ownership	47	change_groupownership
+141	Can delete group ownership	47	delete_groupownership
+142	Can add external profile link	48	add_externalprofilelink
+143	Can change external profile link	48	change_externalprofilelink
+144	Can delete external profile link	48	delete_externalprofilelink
+145	Can add contributor	49	add_contributor
+146	Can change contributor	49	change_contributor
+147	Can delete contributor	49	delete_contributor
+148	Can add creator	50	add_creator
+149	Can change creator	50	change_creator
+150	Can delete creator	50	delete_creator
+151	Can add description	51	add_description
+152	Can change description	51	change_description
+153	Can delete description	51	delete_description
+154	Can add title	52	add_title
+155	Can change title	52	change_title
+156	Can delete title	52	delete_title
+157	Can add type	53	add_type
+158	Can change type	53	change_type
+159	Can delete type	53	delete_type
+160	Can add date	54	add_date
+161	Can change date	54	change_date
+162	Can delete date	54	delete_date
+163	Can add relation	55	add_relation
+164	Can change relation	55	change_relation
+165	Can delete relation	55	delete_relation
+166	Can add identifier	56	add_identifier
+167	Can change identifier	56	change_identifier
+168	Can delete identifier	56	delete_identifier
+169	Can add publisher	57	add_publisher
+170	Can change publisher	57	change_publisher
+171	Can delete publisher	57	delete_publisher
+172	Can add language	58	add_language
+173	Can change language	58	change_language
+174	Can delete language	58	delete_language
+175	Can add coverage	59	add_coverage
+176	Can change coverage	59	change_coverage
+177	Can delete coverage	59	delete_coverage
+178	Can add format	60	add_format
+179	Can change format	60	change_format
+180	Can delete format	60	delete_format
+181	Can add subject	61	add_subject
+182	Can change subject	61	change_subject
+183	Can delete subject	61	delete_subject
+184	Can add source	62	add_source
+185	Can change source	62	change_source
+186	Can delete source	62	delete_source
+187	Can add rights	63	add_rights
+188	Can change rights	63	change_rights
+189	Can delete rights	63	delete_rights
+190	Can add resource file	64	add_resourcefile
+191	Can change resource file	64	change_resourcefile
+192	Can delete resource file	64	delete_resourcefile
+193	Can add bags	65	add_bags
+194	Can change bags	65	change_bags
+195	Can delete bags	65	delete_bags
+196	Can add Generic	66	add_baseresource
+197	Can change Generic	66	change_baseresource
+198	Can delete Generic	66	delete_baseresource
+199	Can add Generic	67	add_genericresource
+200	Can change Generic	67	change_genericresource
+201	Can delete Generic	67	delete_genericresource
+202	Can add core meta data	68	add_coremetadata
+203	Can change core meta data	68	change_coremetadata
+204	Can delete core meta data	68	delete_coremetadata
+205	Can add user group privilege	69	add_usergroupprivilege
+206	Can change user group privilege	69	change_usergroupprivilege
+207	Can delete user group privilege	69	delete_usergroupprivilege
+208	Can add user resource privilege	70	add_userresourceprivilege
+209	Can change user resource privilege	70	change_userresourceprivilege
+210	Can delete user resource privilege	70	delete_userresourceprivilege
+211	Can add group resource privilege	71	add_groupresourceprivilege
+212	Can change group resource privilege	71	change_groupresourceprivilege
+213	Can delete group resource privilege	71	delete_groupresourceprivilege
+214	Can add user access	72	add_useraccess
+215	Can change user access	72	change_useraccess
+216	Can delete user access	72	delete_useraccess
+217	Can add group access	73	add_groupaccess
+218	Can change group access	73	change_groupaccess
+219	Can delete group access	73	delete_groupaccess
+220	Can add resource access	74	add_resourceaccess
+221	Can change resource access	74	change_resourceaccess
+222	Can delete resource access	74	delete_resourceaccess
+223	Can add user resource labels	75	add_userresourcelabels
+224	Can change user resource labels	75	change_userresourcelabels
+225	Can delete user resource labels	75	delete_userresourcelabels
+226	Can add user resource flags	76	add_userresourceflags
+227	Can change user resource flags	76	change_userresourceflags
+228	Can delete user resource flags	76	delete_userresourceflags
+229	Can add user stored labels	77	add_userstoredlabels
+230	Can change user stored labels	77	change_userstoredlabels
+231	Can delete user stored labels	77	delete_userstoredlabels
+232	Can add user labels	78	add_userlabels
+233	Can change user labels	78	change_userlabels
+234	Can delete user labels	78	delete_userlabels
+235	Can add resource labels	79	add_resourcelabels
+236	Can change resource labels	79	change_resourcelabels
+237	Can delete resource labels	79	delete_resourcelabels
+238	Can add docker profile	80	add_dockerprofile
+239	Can change docker profile	80	change_dockerprofile
+240	Can delete docker profile	80	delete_dockerprofile
+241	Can add container overrides	81	add_containeroverrides
+242	Can change container overrides	81	change_containeroverrides
+243	Can delete container overrides	81	delete_containeroverrides
+244	Can add override env var	82	add_overrideenvvar
+245	Can change override env var	82	change_overrideenvvar
+246	Can delete override env var	82	delete_overrideenvvar
+247	Can add override volume	83	add_overridevolume
+248	Can change override volume	83	change_overridevolume
+249	Can delete override volume	83	delete_overridevolume
+250	Can add override link	84	add_overridelink
+251	Can change override link	84	change_overridelink
+252	Can delete override link	84	delete_overridelink
+253	Can add override port	85	add_overrideport
+254	Can change override port	85	change_overrideport
+255	Can delete override port	85	delete_overrideport
+256	Can add docker link	86	add_dockerlink
+257	Can change docker link	86	change_dockerlink
+258	Can delete docker link	86	delete_dockerlink
+259	Can add docker env var	87	add_dockerenvvar
+260	Can change docker env var	87	change_dockerenvvar
+261	Can delete docker env var	87	delete_dockerenvvar
+262	Can add docker volume	88	add_dockervolume
+263	Can change docker volume	88	change_dockervolume
+264	Can delete docker volume	88	delete_dockervolume
+265	Can add docker port	89	add_dockerport
+266	Can change docker port	89	change_dockerport
+267	Can delete docker port	89	delete_dockerport
+268	Can add docker process	90	add_dockerprocess
+269	Can change docker process	90	change_dockerprocess
+270	Can delete docker process	90	delete_dockerprocess
+271	Can add original coverage	91	add_originalcoverage
+272	Can change original coverage	91	change_originalcoverage
+273	Can delete original coverage	91	delete_originalcoverage
+274	Can add band information	92	add_bandinformation
+275	Can change band information	92	change_bandinformation
+276	Can delete band information	92	delete_bandinformation
+277	Can add cell information	93	add_cellinformation
+278	Can change cell information	93	change_cellinformation
+279	Can delete cell information	93	delete_cellinformation
+280	Can add Geographic Raster	94	add_rasterresource
+281	Can change Geographic Raster	94	change_rasterresource
+282	Can delete Geographic Raster	94	delete_rasterresource
+283	Can add raster meta data	95	add_rastermetadata
+284	Can change raster meta data	95	change_rastermetadata
+285	Can delete raster meta data	95	delete_rastermetadata
+286	Can add task state	96	add_taskmeta
+287	Can change task state	96	change_taskmeta
+288	Can delete task state	96	delete_taskmeta
+289	Can add saved group result	97	add_tasksetmeta
+290	Can change saved group result	97	change_tasksetmeta
+291	Can delete saved group result	97	delete_tasksetmeta
+292	Can add interval	98	add_intervalschedule
+293	Can change interval	98	change_intervalschedule
+294	Can delete interval	98	delete_intervalschedule
+295	Can add crontab	99	add_crontabschedule
+296	Can change crontab	99	change_crontabschedule
+297	Can delete crontab	99	delete_crontabschedule
+298	Can add periodic tasks	100	add_periodictasks
+299	Can change periodic tasks	100	change_periodictasks
+300	Can delete periodic tasks	100	delete_periodictasks
+301	Can add periodic task	101	add_periodictask
+302	Can change periodic task	101	change_periodictask
+303	Can delete periodic task	101	delete_periodictask
+304	Can add worker	102	add_workerstate
+305	Can change worker	102	change_workerstate
+306	Can delete worker	102	delete_workerstate
+307	Can add task	103	add_taskstate
+308	Can change task	103	change_taskstate
+309	Can delete task	103	delete_taskstate
+310	Can add HIS Referenced Time Series	104	add_reftimeseries
+311	Can change HIS Referenced Time Series	104	change_reftimeseries
+312	Can delete HIS Referenced Time Series	104	delete_reftimeseries
+313	Can add reference url	105	add_referenceurl
+314	Can change reference url	105	change_referenceurl
+315	Can delete reference url	105	delete_referenceurl
+316	Can add method	106	add_method
+317	Can change method	106	change_method
+318	Can delete method	106	delete_method
+319	Can add quality control level	107	add_qualitycontrollevel
+320	Can change quality control level	107	change_qualitycontrollevel
+321	Can delete quality control level	107	delete_qualitycontrollevel
+322	Can add variable	108	add_variable
+323	Can change variable	108	change_variable
+324	Can delete variable	108	delete_variable
+325	Can add site	109	add_site
+326	Can change site	109	change_site
+327	Can delete site	109	delete_site
+328	Can add ref ts metadata	110	add_reftsmetadata
+329	Can change ref ts metadata	110	change_reftsmetadata
+330	Can delete ref ts metadata	110	delete_reftsmetadata
+331	Can add site	111	add_site
+332	Can change site	111	change_site
+333	Can delete site	111	delete_site
+334	Can add variable	112	add_variable
+335	Can change variable	112	change_variable
+336	Can delete variable	112	delete_variable
+337	Can add method	113	add_method
+338	Can change method	113	change_method
+339	Can delete method	113	delete_method
+340	Can add processing level	114	add_processinglevel
+341	Can change processing level	114	change_processinglevel
+342	Can delete processing level	114	delete_processinglevel
+343	Can add time series result	115	add_timeseriesresult
+344	Can change time series result	115	change_timeseriesresult
+345	Can delete time series result	115	delete_timeseriesresult
+346	Can add Time Series	116	add_timeseriesresource
+347	Can change Time Series	116	change_timeseriesresource
+348	Can delete Time Series	116	delete_timeseriesresource
+349	Can add time series meta data	117	add_timeseriesmetadata
+350	Can change time series meta data	117	change_timeseriesmetadata
+351	Can delete time series meta data	117	delete_timeseriesmetadata
+352	Can add original coverage	118	add_originalcoverage
+353	Can change original coverage	118	change_originalcoverage
+354	Can delete original coverage	118	delete_originalcoverage
+355	Can add variable	119	add_variable
+356	Can change variable	119	change_variable
+357	Can delete variable	119	delete_variable
+358	Can add Multidimensional (NetCDF)	120	add_netcdfresource
+359	Can change Multidimensional (NetCDF)	120	change_netcdfresource
+360	Can delete Multidimensional (NetCDF)	120	delete_netcdfresource
+361	Can add netcdf meta data	121	add_netcdfmetadata
+362	Can change netcdf meta data	121	change_netcdfmetadata
+363	Can delete netcdf meta data	121	delete_netcdfmetadata
+364	Can add mp metadata	122	add_mpmetadata
+365	Can change mp metadata	122	change_mpmetadata
+366	Can delete mp metadata	122	delete_mpmetadata
+367	Can add Model Program Resource	123	add_modelprogramresource
+368	Can change Model Program Resource	123	change_modelprogramresource
+369	Can delete Model Program Resource	123	delete_modelprogramresource
+370	Can add model program meta data	124	add_modelprogrammetadata
+371	Can change model program meta data	124	change_modelprogrammetadata
+372	Can delete model program meta data	124	delete_modelprogrammetadata
+373	Can add model output	125	add_modeloutput
+374	Can change model output	125	change_modeloutput
+375	Can delete model output	125	delete_modeloutput
+376	Can add executed by	126	add_executedby
+377	Can change executed by	126	change_executedby
+378	Can delete executed by	126	delete_executedby
+379	Can add Model Instance Resource	127	add_modelinstanceresource
+380	Can change Model Instance Resource	127	change_modelinstanceresource
+381	Can delete Model Instance Resource	127	delete_modelinstanceresource
+382	Can add model instance meta data	128	add_modelinstancemetadata
+383	Can change model instance meta data	128	change_modelinstancemetadata
+384	Can delete model instance meta data	128	delete_modelinstancemetadata
+385	Can add Web App Resource	129	add_toolresource
+386	Can change Web App Resource	129	change_toolresource
+387	Can delete Web App Resource	129	delete_toolresource
+388	Can add request url base	130	add_requesturlbase
+389	Can change request url base	130	change_requesturlbase
+390	Can delete request url base	130	delete_requesturlbase
+391	Can add tool version	131	add_toolversion
+392	Can change tool version	131	change_toolversion
+393	Can delete tool version	131	delete_toolversion
+394	Can add supported res type choices	132	add_supportedrestypechoices
+395	Can change supported res type choices	132	change_supportedrestypechoices
+396	Can delete supported res type choices	132	delete_supportedrestypechoices
+397	Can add supported res types	133	add_supportedrestypes
+398	Can change supported res types	133	change_supportedrestypes
+399	Can delete supported res types	133	delete_supportedrestypes
+400	Can add tool icon	134	add_toolicon
+401	Can change tool icon	134	change_toolicon
+402	Can delete tool icon	134	delete_toolicon
+403	Can add tool meta data	135	add_toolmetadata
+404	Can change tool meta data	135	change_toolmetadata
+405	Can delete tool meta data	135	delete_toolmetadata
+406	Can add model output	136	add_modeloutput
+407	Can change model output	136	change_modeloutput
+408	Can delete model output	136	delete_modeloutput
+409	Can add executed by	137	add_executedby
+410	Can change executed by	137	change_executedby
+411	Can delete executed by	137	delete_executedby
+412	Can add model objective choices	138	add_modelobjectivechoices
+413	Can change model objective choices	138	change_modelobjectivechoices
+414	Can delete model objective choices	138	delete_modelobjectivechoices
+415	Can add model objective	139	add_modelobjective
+416	Can change model objective	139	change_modelobjective
+417	Can delete model objective	139	delete_modelobjective
+418	Can add simulation type	140	add_simulationtype
+419	Can change simulation type	140	change_simulationtype
+420	Can delete simulation type	140	delete_simulationtype
+421	Can add model method	141	add_modelmethod
+422	Can change model method	141	change_modelmethod
+423	Can delete model method	141	delete_modelmethod
+424	Can add model parameters choices	142	add_modelparameterschoices
+425	Can change model parameters choices	142	change_modelparameterschoices
+426	Can delete model parameters choices	142	delete_modelparameterschoices
+427	Can add model parameter	143	add_modelparameter
+428	Can change model parameter	143	change_modelparameter
+429	Can delete model parameter	143	delete_modelparameter
+430	Can add model input	144	add_modelinput
+431	Can change model input	144	change_modelinput
+432	Can delete model input	144	delete_modelinput
+433	Can add SWAT Model Instance Resource	145	add_swatmodelinstanceresource
+434	Can change SWAT Model Instance Resource	145	change_swatmodelinstanceresource
+435	Can delete SWAT Model Instance Resource	145	delete_swatmodelinstanceresource
+436	Can add swat model instance meta data	146	add_swatmodelinstancemetadata
+437	Can change swat model instance meta data	146	change_swatmodelinstancemetadata
+438	Can delete swat model instance meta data	146	delete_swatmodelinstancemetadata
+439	Can add original file info	147	add_originalfileinfo
+440	Can change original file info	147	change_originalfileinfo
+441	Can delete original file info	147	delete_originalfileinfo
+442	Can add original coverage	148	add_originalcoverage
+443	Can change original coverage	148	change_originalcoverage
+444	Can delete original coverage	148	delete_originalcoverage
+445	Can add field information	149	add_fieldinformation
+446	Can change field information	149	change_fieldinformation
+447	Can delete field information	149	delete_fieldinformation
+448	Can add geometry information	150	add_geometryinformation
+449	Can change geometry information	150	change_geometryinformation
+450	Can delete geometry information	150	delete_geometryinformation
+451	Can add Geographic Feature (ESRI Shapefiles)	151	add_geographicfeatureresource
+452	Can change Geographic Feature (ESRI Shapefiles)	151	change_geographicfeatureresource
+453	Can delete Geographic Feature (ESRI Shapefiles)	151	delete_geographicfeatureresource
+454	Can add geographic feature meta data	152	add_geographicfeaturemetadata
+455	Can change geographic feature meta data	152	change_geographicfeaturemetadata
+456	Can delete geographic feature meta data	152	delete_geographicfeaturemetadata
+457	Can add Script Resource	153	add_scriptresource
+458	Can change Script Resource	153	change_scriptresource
+459	Can delete Script Resource	153	delete_scriptresource
+460	Can add script specific metadata	154	add_scriptspecificmetadata
+461	Can change script specific metadata	154	change_scriptspecificmetadata
+462	Can delete script specific metadata	154	delete_scriptspecificmetadata
+463	Can add script meta data	155	add_scriptmetadata
+464	Can change script meta data	155	change_scriptmetadata
+465	Can delete script meta data	155	delete_scriptmetadata
+466	Can add log entry	156	add_logentry
+467	Can change log entry	156	change_logentry
+468	Can delete log entry	156	delete_logentry
+469	Can add comment	157	add_comment
+470	Can change comment	157	change_comment
+471	Can delete comment	157	delete_comment
+472	Can moderate comments	157	can_moderate
+473	Can add comment flag	158	add_commentflag
+474	Can change comment flag	158	change_commentflag
+475	Can delete comment flag	158	delete_commentflag
 \.
 
 
@@ -7085,7 +7944,7 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_permission_id_seq', 445, true);
+SELECT pg_catalog.setval('auth_permission_id_seq', 475, true);
 
 
 --
@@ -7093,7 +7952,7 @@ SELECT pg_catalog.setval('auth_permission_id_seq', 445, true);
 --
 
 COPY auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-1	pbkdf2_sha256$15000$c1qVrblLfgou$mFXWCdaxHo88UpSUdraLVrAuppA9UUVDIT2X9cK/Mgk=	2015-09-17 15:10:25.45515+00	t	admin			admin@example.com	t	t	2015-05-15 20:13:47.142214+00
+4	pbkdf2_sha256$15000$TspKDYXwKiVD$W/kxbibVrpsVzxVl9A2ZhtK5MDmgjaih2KAUBfdtBgY=	2016-01-25 19:53:55.584812+00	t	admin	HydroShare	Administrator	admin@example.com	t	t	2016-01-25 19:47:54+00
 \.
 
 
@@ -7102,6 +7961,7 @@ COPY auth_user (id, password, last_login, is_superuser, username, first_name, la
 --
 
 COPY auth_user_groups (id, user_id, group_id) FROM stdin;
+2	4	1
 \.
 
 
@@ -7109,14 +7969,14 @@ COPY auth_user_groups (id, user_id, group_id) FROM stdin;
 -- Name: auth_user_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_user_groups_id_seq', 1, false);
+SELECT pg_catalog.setval('auth_user_groups_id_seq', 2, true);
 
 
 --
 -- Name: auth_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_user_id_seq', 1, true);
+SELECT pg_catalog.setval('auth_user_id_seq', 4, true);
 
 
 --
@@ -7270,36 +8130,29 @@ SELECT pg_catalog.setval('core_sitepermission_sites_id_seq', 1, false);
 
 
 --
+-- Data for Name: corsheaders_corsmodel; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY corsheaders_corsmodel (id, cors) FROM stdin;
+\.
+
+
+--
+-- Name: corsheaders_corsmodel_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('corsheaders_corsmodel_id_seq', 1, false);
+
+
+--
 -- Data for Name: django_admin_log; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, change_message, content_type_id, user_id) FROM stdin;
-1	2015-05-15 20:15:43.828661+00	2	Home	1		12	1
-2	2015-05-15 20:16:30.645951+00	1	Blog	3		27	1
-3	2015-05-15 20:17:23.608429+00	3	Resources	1		28	1
-4	2015-05-15 20:18:26.02854+00	4	Support	1		28	1
-5	2015-05-15 20:19:58.650646+00	5	Verify account	1		28	1
-6	2015-05-15 20:21:44.91789+00	6	Resend Verification Email	1		23	1
-7	2015-05-15 20:24:13.99116+00	7	Terms of Use	1		28	1
-8	2015-05-15 20:25:37.573913+00	8	Statement of Privacy	1		28	1
-9	2015-05-15 20:26:29.822375+00	9	Create Resource	1		28	1
-10	2015-05-15 20:28:34.826912+00	1	SiteConfiguration object	2	Changed col1_content and id.	11	1
-11	2015-05-15 20:29:37.78295+00	1	SiteConfiguration object	2	Changed twitter_link, facebook_link, youtube_link, github_link, linkedin_link and id.	11	1
-12	2015-05-15 20:30:07.183891+00	1	SiteConfiguration object	2	Changed col3_heading, col3_content and id.	11	1
-13	2015-05-15 20:30:33.727913+00	1	SiteConfiguration object	2	Changed copyright and id.	11	1
-14	2015-05-15 20:31:45.084895+00	7	Terms of Use	2	Changed content and id.	28	1
-15	2015-05-15 20:34:04.218912+00	1	SiteConfiguration object	2	Changed col3_content and id.	11	1
-16	2015-05-15 20:42:57.269772+00	1	localhost:8000	2	Changed domain and name.	7	1
-17	2015-05-15 20:43:23.247666+00	1	Hydroshare Author	1		2	1
-18	2015-05-15 20:43:36.435414+00	1	Hydroshare Author	2	Changed permissions.	2	1
-19	2015-05-15 20:43:46.81734+00	1	Hydroshare Author	2	Changed permissions.	2	1
-20	2015-05-15 20:44:02.134912+00	1	Hydroshare Author	2	Changed permissions.	2	1
-21	2015-05-15 20:44:20.804514+00	1	Hydroshare Author	2	Changed permissions.	2	1
-22	2015-05-15 20:44:31.749912+00	1	Hydroshare Author	2	Changed permissions.	2	1
-23	2015-05-15 20:44:52.579663+00	1	Hydroshare Author	2	Changed permissions.	2	1
-24	2015-05-15 20:45:41.250747+00	1	Hydroshare Author	2	No fields changed.	2	1
-25	2015-07-10 20:33:43.7036+00	1	Hydroshare Author	2	Changed permissions.	2	1
-26	2015-09-17 15:10:41.364223+00	1	Hydroshare Author	2	Changed permissions.	2	1
+31	2016-01-25 19:51:43.038754+00	4	Discover	2	Changed _meta_title and keywords.	33	4
+32	2016-01-25 19:52:16.941687+00	4	Discover	2	Changed slug and keywords.	33	4
+33	2016-01-25 19:52:37.395438+00	4	Discover	2	Changed _meta_title and keywords.	33	4
+34	2016-01-25 19:54:21.104577+00	2	root	3		3	4
 \.
 
 
@@ -7307,7 +8160,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_admin_log_id_seq', 26, true);
+SELECT pg_catalog.setval('django_admin_log_id_seq', 34, true);
 
 
 --
@@ -7348,141 +8201,161 @@ COPY django_content_type (id, name, app_label, model) FROM stdin;
 1	permission	auth	permission
 2	group	auth	group
 3	user	auth	user
-4	content type	contenttypes	contenttype
-5	redirect	redirects	redirect
-6	session	sessions	session
-7	site	sites	site
-8	post gis geometry columns	gis	postgisgeometrycolumns
-9	post gis spatial ref sys	gis	postgisspatialrefsys
-10	iRODS Environment	django_irods	rodsenvironment
-11	Site Configuration	theme	siteconfiguration
-12	Home page	theme	homepage
-13	icon box	theme	iconbox
-14	user profile	theme	userprofile
-15	Setting	conf	setting
-16	Site permission	core	sitepermission
-17	Comment	generic	threadedcomment
-18	Keyword	generic	keyword
-19	assigned keyword	generic	assignedkeyword
-20	Rating	generic	rating
-21	Blog post	blog	blogpost
-22	Blog Category	blog	blogcategory
-23	Form	forms	form
-24	Field	forms	field
-25	Form entry	forms	formentry
-26	Form field entry	forms	fieldentry
-27	Page	pages	page
-28	Rich text page	pages	richtextpage
-29	Link	pages	link
-30	Gallery	galleries	gallery
-31	Image	galleries	galleryimage
-32	ogr dataset collection	ga_ows	ogrdatasetcollection
-33	ogr dataset	ga_ows	ogrdataset
-34	ogr layer	ga_ows	ogrlayer
-35	catalog page	ga_resources	catalogpage
-36	data resource	ga_resources	dataresource
-37	ordered resource	ga_resources	orderedresource
-38	resource group	ga_resources	resourcegroup
-39	related resource	ga_resources	relatedresource
-40	style	ga_resources	style
-41	rendered layer	ga_resources	renderedlayer
-42	group ownership	hs_core	groupownership
-43	external profile link	hs_core	externalprofilelink
-44	contributor	hs_core	contributor
-45	creator	hs_core	creator
-46	description	hs_core	description
-47	title	hs_core	title
-48	type	hs_core	type
-49	date	hs_core	date
-50	relation	hs_core	relation
-51	identifier	hs_core	identifier
-52	publisher	hs_core	publisher
-53	language	hs_core	language
-54	coverage	hs_core	coverage
-55	format	hs_core	format
-56	subject	hs_core	subject
-57	source	hs_core	source
-58	rights	hs_core	rights
-59	resource file	hs_core	resourcefile
-60	bags	hs_core	bags
-61	Generic	hs_core	genericresource
-62	core meta data	hs_core	coremetadata
-63	task state	djcelery	taskmeta
-64	saved group result	djcelery	tasksetmeta
-65	interval	djcelery	intervalschedule
-66	crontab	djcelery	crontabschedule
-67	periodic tasks	djcelery	periodictasks
-68	periodic task	djcelery	periodictask
-69	worker	djcelery	workerstate
-70	task	djcelery	taskstate
-71	log entry	admin	logentry
-72	comment	comments	comment
-73	comment flag	comments	commentflag
-74	original coverage	hs_geo_raster_resource	originalcoverage
-75	band information	hs_geo_raster_resource	bandinformation
-76	cell information	hs_geo_raster_resource	cellinformation
-77	Geographic Raster	hs_geo_raster_resource	rasterresource
-78	raster meta data	hs_geo_raster_resource	rastermetadata
-79	HIS Referenced Time Series	ref_ts	reftimeseries
-80	reference url	ref_ts	referenceurl
-81	method	ref_ts	method
-82	quality control level	ref_ts	qualitycontrollevel
-83	variable	ref_ts	variable
-84	site	ref_ts	site
-85	ref ts metadata	ref_ts	reftsmetadata
-86	site	hs_app_timeseries	site
-87	variable	hs_app_timeseries	variable
-88	method	hs_app_timeseries	method
-89	processing level	hs_app_timeseries	processinglevel
-90	time series result	hs_app_timeseries	timeseriesresult
-91	Time Series	hs_app_timeseries	timeseriesresource
-92	time series meta data	hs_app_timeseries	timeseriesmetadata
-93	original coverage	hs_app_netCDF	originalcoverage
-94	variable	hs_app_netCDF	variable
-95	Multidimensional (NetCDF)	hs_app_netCDF	netcdfresource
-96	netcdf meta data	hs_app_netCDF	netcdfmetadata
-97	Tool Resource	hs_tools_resource	toolresource
-98	request url base	hs_tools_resource	requesturlbase
-99	tool resource type	hs_tools_resource	toolresourcetype
-100	fee	hs_tools_resource	fee
-101	tool version	hs_tools_resource	toolversion
-102	tool meta data	hs_tools_resource	toolmetadata
-103	docker profile	django_docker_processes	dockerprofile
-104	container overrides	django_docker_processes	containeroverrides
-105	override env var	django_docker_processes	overrideenvvar
-106	override volume	django_docker_processes	overridevolume
-107	override link	django_docker_processes	overridelink
-108	override port	django_docker_processes	overrideport
-109	docker link	django_docker_processes	dockerlink
-110	docker env var	django_docker_processes	dockerenvvar
-111	docker volume	django_docker_processes	dockervolume
-112	docker port	django_docker_processes	dockerport
-113	docker process	django_docker_processes	dockerprocess
-114	mp metadata	hs_model_program	mpmetadata
-115	Model Program Resource	hs_model_program	modelprogramresource
-116	model program meta data	hs_model_program	modelprogrammetadata
-117	model output	hs_modelinstance	modeloutput
-118	executed by	hs_modelinstance	executedby
-119	Model Instance Resource	hs_modelinstance	modelinstanceresource
-120	model instance meta data	hs_modelinstance	modelinstancemetadata
-121	model output	hs_swat_modelinstance	modeloutput
-122	executed by	hs_swat_modelinstance	executedby
-123	model objective	hs_swat_modelinstance	modelobjective
-124	simulation type	hs_swat_modelinstance	simulationtype
-127	model input	hs_swat_modelinstance	modelinput
-128	SWAT Model Instance Resource	hs_swat_modelinstance	swatmodelinstanceresource
-129	swat model instance meta data	hs_swat_modelinstance	swatmodelinstancemetadata
-130	model objective choices	hs_swat_modelinstance	modelobjectivechoices
-131	model method	hs_swat_modelinstance	modelmethod
-132	model parameters choices	hs_swat_modelinstance	modelparameterschoices
-133	model parameter	hs_swat_modelinstance	modelparameter
-134	Generic	hs_core	baseresource
-135	user group privilege	hs_access_control	usergroupprivilege
-136	user resource privilege	hs_access_control	userresourceprivilege
-137	group resource privilege	hs_access_control	groupresourceprivilege
-138	user access	hs_access_control	useraccess
-139	group access	hs_access_control	groupaccess
-140	resource access	hs_access_control	resourceaccess
+4	application	oauth2_provider	application
+5	grant	oauth2_provider	grant
+6	access token	oauth2_provider	accesstoken
+7	refresh token	oauth2_provider	refreshtoken
+8	cors model	corsheaders	corsmodel
+9	content type	contenttypes	contenttype
+10	redirect	redirects	redirect
+11	session	sessions	session
+12	site	sites	site
+13	post gis geometry columns	gis	postgisgeometrycolumns
+14	post gis spatial ref sys	gis	postgisspatialrefsys
+15	iRODS Environment	django_irods	rodsenvironment
+16	Site Configuration	theme	siteconfiguration
+17	Home page	theme	homepage
+18	icon box	theme	iconbox
+19	user profile	theme	userprofile
+20	Setting	conf	setting
+21	Site permission	core	sitepermission
+22	Comment	generic	threadedcomment
+23	Keyword	generic	keyword
+24	assigned keyword	generic	assignedkeyword
+25	Rating	generic	rating
+26	Blog post	blog	blogpost
+27	Blog Category	blog	blogcategory
+28	Form	forms	form
+29	Field	forms	field
+30	Form entry	forms	formentry
+31	Form field entry	forms	fieldentry
+32	Page	pages	page
+33	Rich text page	pages	richtextpage
+34	Link	pages	link
+35	Gallery	galleries	gallery
+36	Image	galleries	galleryimage
+37	ogr dataset collection	ga_ows	ogrdatasetcollection
+38	ogr dataset	ga_ows	ogrdataset
+39	ogr layer	ga_ows	ogrlayer
+40	catalog page	ga_resources	catalogpage
+41	data resource	ga_resources	dataresource
+42	ordered resource	ga_resources	orderedresource
+43	resource group	ga_resources	resourcegroup
+44	related resource	ga_resources	relatedresource
+45	style	ga_resources	style
+46	rendered layer	ga_resources	renderedlayer
+47	group ownership	hs_core	groupownership
+48	external profile link	hs_core	externalprofilelink
+49	contributor	hs_core	contributor
+50	creator	hs_core	creator
+51	description	hs_core	description
+52	title	hs_core	title
+53	type	hs_core	type
+54	date	hs_core	date
+55	relation	hs_core	relation
+56	identifier	hs_core	identifier
+57	publisher	hs_core	publisher
+58	language	hs_core	language
+59	coverage	hs_core	coverage
+60	format	hs_core	format
+61	subject	hs_core	subject
+62	source	hs_core	source
+63	rights	hs_core	rights
+64	resource file	hs_core	resourcefile
+65	bags	hs_core	bags
+66	Generic	hs_core	baseresource
+67	Generic	hs_core	genericresource
+68	core meta data	hs_core	coremetadata
+69	user group privilege	hs_access_control	usergroupprivilege
+70	user resource privilege	hs_access_control	userresourceprivilege
+71	group resource privilege	hs_access_control	groupresourceprivilege
+72	user access	hs_access_control	useraccess
+73	group access	hs_access_control	groupaccess
+74	resource access	hs_access_control	resourceaccess
+75	user resource labels	hs_labels	userresourcelabels
+76	user resource flags	hs_labels	userresourceflags
+77	user stored labels	hs_labels	userstoredlabels
+78	user labels	hs_labels	userlabels
+79	resource labels	hs_labels	resourcelabels
+80	docker profile	django_docker_processes	dockerprofile
+81	container overrides	django_docker_processes	containeroverrides
+82	override env var	django_docker_processes	overrideenvvar
+83	override volume	django_docker_processes	overridevolume
+84	override link	django_docker_processes	overridelink
+85	override port	django_docker_processes	overrideport
+86	docker link	django_docker_processes	dockerlink
+87	docker env var	django_docker_processes	dockerenvvar
+88	docker volume	django_docker_processes	dockervolume
+89	docker port	django_docker_processes	dockerport
+90	docker process	django_docker_processes	dockerprocess
+91	original coverage	hs_geo_raster_resource	originalcoverage
+92	band information	hs_geo_raster_resource	bandinformation
+93	cell information	hs_geo_raster_resource	cellinformation
+94	Geographic Raster	hs_geo_raster_resource	rasterresource
+95	raster meta data	hs_geo_raster_resource	rastermetadata
+96	task state	djcelery	taskmeta
+97	saved group result	djcelery	tasksetmeta
+98	interval	djcelery	intervalschedule
+99	crontab	djcelery	crontabschedule
+100	periodic tasks	djcelery	periodictasks
+101	periodic task	djcelery	periodictask
+102	worker	djcelery	workerstate
+103	task	djcelery	taskstate
+104	HIS Referenced Time Series	ref_ts	reftimeseries
+105	reference url	ref_ts	referenceurl
+106	method	ref_ts	method
+107	quality control level	ref_ts	qualitycontrollevel
+108	variable	ref_ts	variable
+109	site	ref_ts	site
+110	ref ts metadata	ref_ts	reftsmetadata
+111	site	hs_app_timeseries	site
+112	variable	hs_app_timeseries	variable
+113	method	hs_app_timeseries	method
+114	processing level	hs_app_timeseries	processinglevel
+115	time series result	hs_app_timeseries	timeseriesresult
+116	Time Series	hs_app_timeseries	timeseriesresource
+117	time series meta data	hs_app_timeseries	timeseriesmetadata
+118	original coverage	hs_app_netCDF	originalcoverage
+119	variable	hs_app_netCDF	variable
+120	Multidimensional (NetCDF)	hs_app_netCDF	netcdfresource
+121	netcdf meta data	hs_app_netCDF	netcdfmetadata
+122	mp metadata	hs_model_program	mpmetadata
+123	Model Program Resource	hs_model_program	modelprogramresource
+124	model program meta data	hs_model_program	modelprogrammetadata
+125	model output	hs_modelinstance	modeloutput
+126	executed by	hs_modelinstance	executedby
+127	Model Instance Resource	hs_modelinstance	modelinstanceresource
+128	model instance meta data	hs_modelinstance	modelinstancemetadata
+129	Web App Resource	hs_tools_resource	toolresource
+130	request url base	hs_tools_resource	requesturlbase
+131	tool version	hs_tools_resource	toolversion
+132	supported res type choices	hs_tools_resource	supportedrestypechoices
+133	supported res types	hs_tools_resource	supportedrestypes
+134	tool icon	hs_tools_resource	toolicon
+135	tool meta data	hs_tools_resource	toolmetadata
+136	model output	hs_swat_modelinstance	modeloutput
+137	executed by	hs_swat_modelinstance	executedby
+138	model objective choices	hs_swat_modelinstance	modelobjectivechoices
+139	model objective	hs_swat_modelinstance	modelobjective
+140	simulation type	hs_swat_modelinstance	simulationtype
+141	model method	hs_swat_modelinstance	modelmethod
+142	model parameters choices	hs_swat_modelinstance	modelparameterschoices
+143	model parameter	hs_swat_modelinstance	modelparameter
+144	model input	hs_swat_modelinstance	modelinput
+145	SWAT Model Instance Resource	hs_swat_modelinstance	swatmodelinstanceresource
+146	swat model instance meta data	hs_swat_modelinstance	swatmodelinstancemetadata
+147	original file info	hs_geographic_feature_resource	originalfileinfo
+148	original coverage	hs_geographic_feature_resource	originalcoverage
+149	field information	hs_geographic_feature_resource	fieldinformation
+150	geometry information	hs_geographic_feature_resource	geometryinformation
+151	Geographic Feature (ESRI Shapefiles)	hs_geographic_feature_resource	geographicfeatureresource
+152	geographic feature meta data	hs_geographic_feature_resource	geographicfeaturemetadata
+153	Script Resource	hs_script_resource	scriptresource
+154	script specific metadata	hs_script_resource	scriptspecificmetadata
+155	script meta data	hs_script_resource	scriptmetadata
+156	log entry	admin	logentry
+157	comment	comments	comment
+158	comment flag	comments	commentflag
 \.
 
 
@@ -7490,7 +8363,7 @@ COPY django_content_type (id, name, app_label, model) FROM stdin;
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_content_type_id_seq', 140, true);
+SELECT pg_catalog.setval('django_content_type_id_seq', 158, true);
 
 
 --
@@ -7678,52 +8551,82 @@ SELECT pg_catalog.setval('django_irods_rodsenvironment_id_seq', 1, false);
 --
 
 COPY django_migrations (id, app, name, applied) FROM stdin;
-1	contenttypes	0001_initial	2015-05-15 20:12:49.058613+00
-2	auth	0001_initial	2015-05-15 20:12:49.549085+00
-3	admin	0001_initial	2015-05-15 20:12:49.715318+00
-4	django_irods	0001_initial	2015-05-15 20:12:49.863744+00
-5	ga_ows	0001_initial	2015-05-15 20:12:50.246525+00
-6	ga_resources	0001_initial	2015-05-15 20:12:51.336662+00
-7	hs_core	0001_initial	2015-05-15 20:12:54.557293+00
-8	sites	0001_initial	2015-05-15 20:12:54.654602+00
-9	redirects	0001_initial	2015-05-15 20:12:54.937912+00
-10	sessions	0001_initial	2015-05-15 20:12:55.060781+00
-11	theme	0001_initial	2015-05-15 20:12:55.48462+00
-12	hs_app_netCDF	0001_initial	2015-05-15 20:38:03.054662+00
-13	hs_app_timeseries	0001_initial	2015-05-15 20:38:05.141411+00
-14	hs_geo_raster_resource	0001_initial	2015-05-15 20:38:06.564661+00
-15	hs_tools_resource	0001_initial	2015-05-15 20:38:07.799189+00
-16	ref_ts	0001_initial	2015-05-15 20:38:09.210912+00
-17	django_docker_processes	0001_initial	2015-05-15 20:42:05.22799+00
-18	hs_model_program	0001_initial	2015-05-15 20:42:31.546003+00
-19	hs_modelinstance	0001_initial	2015-05-15 20:42:32.769538+00
-20	hs_model_program	0002_auto_20150527_1944	2015-06-26 18:55:03.038896+00
-21	hs_swat_modelinstance	0001_initial	2015-06-26 18:58:19.023392+00
-22	hs_swat_modelinstance	0002_auto_20150626_1920	2015-07-07 15:40:13.193479+00
-23	hs_swat_modelinstance	0003_auto_20150707_1513	2015-07-07 15:40:15.149429+00
-24	hs_core	0002_genericresource_resource_type	2015-09-17 15:09:22.727022+00
-25	hs_core	0003_auto_20150721_1122	2015-09-17 15:09:23.549123+00
-26	hs_core	0004_auto_20150721_1125	2015-09-17 15:09:25.763437+00
-27	hs_access_control	0001_initial	2015-09-17 15:09:28.085101+00
-28	hs_access_control	0002_auto_20150817_1150	2015-09-17 15:09:28.66018+00
-29	hs_access_control	0003_auto_20150824_2215	2015-09-17 15:09:30.730547+00
-30	hs_app_netCDF	0002_auto_20150813_1215	2015-09-17 15:09:30.975345+00
-31	hs_app_netCDF	0003_netcdfresource	2015-09-17 15:09:31.535464+00
-32	hs_app_timeseries	0002_auto_20150813_1247	2015-09-17 15:09:31.786281+00
-33	hs_app_timeseries	0003_timeseriesresource	2015-09-17 15:09:32.358649+00
-34	hs_core	0005_auto_20150910_0233	2015-09-17 15:09:33.582237+00
-35	hs_geo_raster_resource	0002_auto_20150813_1313	2015-09-17 15:09:33.708989+00
-36	hs_geo_raster_resource	0003_auto_20150813_1315	2015-09-17 15:09:35.80624+00
-37	hs_modelinstance	0002_auto_20150813_1345	2015-09-17 15:09:37.980022+00
-38	hs_model_program	0002_auto_20150813_1729	2015-09-17 15:09:38.103076+00
-39	hs_model_program	0003_auto_20150813_1730	2015-09-17 15:09:40.229688+00
-40	hs_swat_modelinstance	0002_auto_20150813_1726	2015-09-17 15:09:40.491189+00
-41	hs_swat_modelinstance	0003_swatmodelinstanceresource	2015-09-17 15:09:41.043341+00
-42	hs_tools_resource	0002_auto_20150724_1422	2015-09-17 15:09:41.440034+00
-43	hs_tools_resource	0003_auto_20150724_1501	2015-09-17 15:09:42.037364+00
-44	ref_ts	0002_auto_20150813_1336	2015-09-17 15:09:42.357724+00
-45	ref_ts	0003_reftimeseries	2015-09-17 15:09:42.867091+00
-46	hs_core	0006_auto_20150917_1515	2015-09-17 15:16:03.282225+00
+1	contenttypes	0001_initial	2016-01-25 19:11:56.863948+00
+2	auth	0001_initial	2016-01-25 19:11:57.121386+00
+3	admin	0001_initial	2016-01-25 19:11:57.247222+00
+4	django_docker_processes	0001_initial	2016-01-25 19:11:58.730572+00
+5	django_irods	0001_initial	2016-01-25 19:11:58.841429+00
+6	ga_ows	0001_initial	2016-01-25 19:11:59.076346+00
+7	ga_resources	0001_initial	2016-01-25 19:11:59.934826+00
+8	hs_core	0001_initial	2016-01-25 19:12:02.460395+00
+9	hs_core	0002_genericresource_resource_type	2016-01-25 19:12:02.728512+00
+10	hs_core	0003_auto_20150721_1122	2016-01-25 19:12:03.719141+00
+11	hs_core	0004_auto_20150721_1125	2016-01-25 19:12:06.140491+00
+12	hs_access_control	0001_initial	2016-01-25 19:12:08.794606+00
+13	hs_access_control	0002_auto_20150817_1150	2016-01-25 19:12:09.31385+00
+14	hs_access_control	0003_auto_20150824_2215	2016-01-25 19:12:11.708885+00
+15	hs_access_control	0004_remove_useraccess_admin	2016-01-25 19:12:12.265732+00
+16	hs_access_control	0005_remove_useraccess_active	2016-01-25 19:12:13.040689+00
+17	hs_app_netCDF	0001_initial	2016-01-25 19:12:13.857061+00
+18	hs_app_netCDF	0002_auto_20150813_1215	2016-01-25 19:12:14.103772+00
+19	hs_app_netCDF	0003_netcdfresource	2016-01-25 19:12:14.661719+00
+20	hs_app_timeseries	0001_initial	2016-01-25 19:12:16.317675+00
+21	hs_app_timeseries	0002_auto_20150813_1247	2016-01-25 19:12:16.691335+00
+22	hs_app_timeseries	0003_timeseriesresource	2016-01-25 19:12:17.197022+00
+23	hs_core	0005_auto_20150910_0233	2016-01-25 19:12:18.452997+00
+24	hs_core	0006_auto_20150917_1515	2016-01-25 19:12:18.931433+00
+25	hs_core	0007_auto_20151114_1618	2016-01-25 19:12:19.812616+00
+26	hs_core	0008_auto_20151114_2024	2016-01-25 19:12:20.502906+00
+27	hs_core	0009_auto_20151114_2105	2016-01-25 19:12:21.100168+00
+28	hs_core	0010_auto_20151114_2205	2016-01-25 19:12:21.824277+00
+29	hs_core	0011_auto_20151114_2231	2016-01-25 19:12:22.505024+00
+30	hs_core	0012_auto_20151114_2243	2016-01-25 19:12:23.188598+00
+31	hs_core	0013_auto_20151114_2314	2016-01-25 19:12:23.976933+00
+32	hs_core	0014_auto_20151123_1451	2016-01-25 19:12:24.680615+00
+33	hs_geo_raster_resource	0001_initial	2016-01-25 19:12:25.732457+00
+34	hs_geo_raster_resource	0002_auto_20150813_1313	2016-01-25 19:12:25.870148+00
+35	hs_geo_raster_resource	0003_auto_20150813_1315	2016-01-25 19:12:27.812284+00
+36	hs_geo_raster_resource	0004_auto_20151116_2257	2016-01-25 19:12:28.582408+00
+37	hs_geographic_feature_resource	0001_initial	2016-01-25 19:12:29.947073+00
+38	hs_labels	0001_initial	2016-01-25 19:12:31.044383+00
+39	hs_labels	0002_custom_migration	2016-01-25 19:12:31.760094+00
+40	hs_labels	0003_manual_delete_duplicates	2016-01-25 19:12:32.577078+00
+41	hs_labels	0004_auto_add_constraints	2016-01-25 19:12:33.85641+00
+42	hs_model_program	0001_initial	2016-01-25 19:12:34.545962+00
+43	hs_modelinstance	0001_initial	2016-01-25 19:12:35.220586+00
+44	hs_modelinstance	0002_auto_20150813_1345	2016-01-25 19:12:37.414321+00
+45	hs_model_program	0002_auto_20150813_1729	2016-01-25 19:12:37.561396+00
+46	hs_model_program	0003_auto_20150813_1730	2016-01-25 19:12:39.677772+00
+47	hs_model_program	0004_auto_20151012_1656	2016-01-25 19:12:42.639648+00
+48	hs_model_program	0005_auto_20151104_1604	2016-01-25 19:12:44.21169+00
+49	hs_model_program	0006_auto_20151216_1511	2016-01-25 19:12:45.172674+00
+50	hs_modelinstance	0002_auto_20150914_1902	2016-01-25 19:12:45.807549+00
+51	hs_modelinstance	0003_merge	2016-01-25 19:12:46.401464+00
+52	hs_modelinstance	0004_auto_20151110_1920	2016-01-25 19:12:47.492696+00
+53	hs_modelinstance	0005_auto_20151111_2129	2016-01-25 19:12:48.432108+00
+54	hs_modelinstance	0006_auto_20151216_1511	2016-01-25 19:12:49.41211+00
+55	hs_script_resource	0001_initial	2016-01-25 19:12:50.367661+00
+56	hs_swat_modelinstance	0001_initial	2016-01-25 19:12:52.143662+00
+57	hs_swat_modelinstance	0002_auto_20150813_1726	2016-01-25 19:12:52.435242+00
+58	hs_swat_modelinstance	0003_auto_20151013_1955	2016-01-25 19:12:54.130572+00
+59	hs_swat_modelinstance	0004_auto_20151106_1932	2016-01-25 19:12:57.702306+00
+60	hs_swat_modelinstance	0005_auto_20151110_1945	2016-01-25 19:13:02.692517+00
+61	hs_swat_modelinstance	0006_auto_20160114_1508	2016-01-25 19:13:04.238265+00
+62	sites	0001_initial	2016-01-25 19:13:04.325634+00
+63	hs_tools_resource	0001_initial	2016-01-25 19:13:05.12026+00
+64	hs_tools_resource	0002_auto_20150724_1422	2016-01-25 19:13:05.543658+00
+65	hs_tools_resource	0003_auto_20150724_1501	2016-01-25 19:13:06.249824+00
+66	hs_tools_resource	0004_auto_20151204_2301	2016-01-25 19:13:08.134296+00
+67	hs_tools_resource	0005_remove_requesturlbase_resshortid	2016-01-25 19:13:08.852496+00
+68	hs_tools_resource	0006_auto_20160113_2003	2016-01-25 19:13:09.597931+00
+69	oauth2_provider	0001_initial	2016-01-25 19:13:10.030944+00
+70	oauth2_provider	0002_08_updates	2016-01-25 19:13:10.364442+00
+71	redirects	0001_initial	2016-01-25 19:13:10.46622+00
+72	ref_ts	0001_initial	2016-01-25 19:13:11.526706+00
+73	ref_ts	0002_auto_20150813_1336	2016-01-25 19:13:11.788654+00
+74	ref_ts	0003_reftimeseries	2016-01-25 19:13:12.394768+00
+75	sessions	0001_initial	2016-01-25 19:13:12.483043+00
+76	theme	0001_initial	2016-01-25 19:13:12.791757+00
 \.
 
 
@@ -7731,7 +8634,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 46, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 76, true);
 
 
 --
@@ -7754,12 +8657,8 @@ SELECT pg_catalog.setval('django_redirect_id_seq', 1, false);
 --
 
 COPY django_session (session_key, session_data, expire_date) FROM stdin;
-flxpn3hii2goadcoy7adra8bxyt1vph8	Zjk0NzMwNTU0OWExODViN2ZhZmJlOTc3NzZhZTFkOTI3YmM2MmIyNzp7Il9hdXRoX3VzZXJfaGFzaCI6IjVmNTUxYjkxYzM4MmU2NTJiMDI3YjA5ZGUxMzc0NjhlYTFhMzk4NzEiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJtZXp6YW5pbmUuY29yZS5hdXRoX2JhY2tlbmRzLk1lenphbmluZUJhY2tlbmQiLCJfYXV0aF91c2VyX2lkIjoxfQ==	2015-05-29 20:14:27.011195+00
-rs391fcr96eeg1d4ju0pnn1zzur8ynhy	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-07-10 18:56:58.097448+00
-5a6bs2zh3z4wyjx15ah1skh234yx1ftq	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-07-10 18:56:58.105578+00
-04st0xdaqt58elpx43jxgaq8p7zv7qw8	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-07-24 20:34:11.926695+00
-x5e9m86tpp8ke6gejra4kzjdl14pfun6	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-09-11 19:44:05.487375+00
-2h50xkq09hwtpwvigu383zopcypd73vx	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2015-10-01 15:10:53.903643+00
+iuq13wh2xtsrestc3ixty7cy7pcutc3b	ZTIwZWRiZTQzZjI5ODhkYTE0NDQxYzFmZmQzMTRjZDc3MWUxNGUzYTp7Il9hdXRoX3VzZXJfaGFzaCI6IjBkNTY4M2MyYWVkNjA4OWNhMDc5YTE4ZmFlZTNjNjdlMjExNTRmZDciLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJtZXp6YW5pbmUuY29yZS5hdXRoX2JhY2tlbmRzLk1lenphbmluZUJhY2tlbmQiLCJfYXV0aF91c2VyX2lkIjo0fQ==	2016-02-08 19:50:52.911919+00
+r95gvslruo55bqar11kco2o9ynh41mrq	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2016-02-08 19:55:45.734662+00
 \.
 
 
@@ -7897,7 +8796,7 @@ SELECT pg_catalog.setval('forms_fieldentry_id_seq', 1, false);
 --
 
 COPY forms_form (page_ptr_id, content, button_text, response, send_email, email_from, email_copies, email_subject, email_message) FROM stdin;
-6	<p class="p1">Please give us your email address and we will resend the confirmation</p>	Resend verification	<p class="p1">Verification email sent!</p>	f				
+8	<p class="p1">Please give us your email address and we will resend the confirmation</p>	Resend Verification	<p class="p1">Verification email sent!</p>	f				
 \.
 
 
@@ -8164,8 +9063,8 @@ SELECT pg_catalog.setval('hs_access_control_resourceaccess_id_seq', 1, false);
 -- Data for Name: hs_access_control_useraccess; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_access_control_useraccess (id, active, admin, user_id) FROM stdin;
-1	t	f	1
+COPY hs_access_control_useraccess (id, user_id) FROM stdin;
+1	4
 \.
 
 
@@ -8331,7 +9230,7 @@ SELECT pg_catalog.setval('hs_app_timeseries_variable_id_seq', 1, false);
 -- Data for Name: hs_core_bags; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_core_bags (id, object_id, bag, "timestamp", content_type_id) FROM stdin;
+COPY hs_core_bags (id, object_id, "timestamp", content_type_id) FROM stdin;
 \.
 
 
@@ -8654,7 +9553,7 @@ SELECT pg_catalog.setval('hs_geo_raster_resource_bandinformation_id_seq', 1, fal
 -- Data for Name: hs_geo_raster_resource_cellinformation; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_geo_raster_resource_cellinformation (id, object_id, name, rows, columns, "cellSizeXValue", "cellSizeYValue", "cellSizeUnit", "cellDataType", "noDataValue", content_type_id) FROM stdin;
+COPY hs_geo_raster_resource_cellinformation (id, object_id, name, rows, columns, "cellSizeXValue", "cellSizeYValue", "cellDataType", "noDataValue", content_type_id) FROM stdin;
 \.
 
 
@@ -8689,6 +9588,150 @@ COPY hs_geo_raster_resource_rastermetadata (coremetadata_ptr_id) FROM stdin;
 
 
 --
+-- Data for Name: hs_geographic_feature_resource_fieldinformation; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geographic_feature_resource_fieldinformation (id, object_id, "fieldName", "fieldType", "fieldTypeCode", "fieldWidth", "fieldPrecision", content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_geographic_feature_resource_fieldinformation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_geographic_feature_resource_fieldinformation_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_geographic_feature_resource_geographicfeaturemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geographic_feature_resource_geographicfeaturemetadata (coremetadata_ptr_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_geographic_feature_resource_geometryinformation; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geographic_feature_resource_geometryinformation (id, object_id, "featureCount", "geometryType", content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_geographic_feature_resource_geometryinformation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_geographic_feature_resource_geometryinformation_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_geographic_feature_resource_originalcoverage; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geographic_feature_resource_originalcoverage (id, object_id, northlimit, southlimit, westlimit, eastlimit, projection_string, projection_name, datum, unit, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_geographic_feature_resource_originalcoverage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_geographic_feature_resource_originalcoverage_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_geographic_feature_resource_originalfileinfo; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_geographic_feature_resource_originalfileinfo (id, object_id, "fileType", "baseFilename", "fileCount", "filenameString", content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_geographic_feature_resource_originalfileinfo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_geographic_feature_resource_originalfileinfo_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_labels_resourcelabels; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_labels_resourcelabels (id, resource_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_labels_resourcelabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_labels_resourcelabels_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_labels_userlabels; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_labels_userlabels (id, user_id) FROM stdin;
+1	4
+\.
+
+
+--
+-- Name: hs_labels_userlabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_labels_userlabels_id_seq', 1, true);
+
+
+--
+-- Data for Name: hs_labels_userresourceflags; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_labels_userresourceflags (id, kind, start, resource_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_labels_userresourceflags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_labels_userresourceflags_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_labels_userresourcelabels; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_labels_userresourcelabels (id, start, label, resource_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_labels_userresourcelabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_labels_userresourcelabels_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_labels_userstoredlabels; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_labels_userstoredlabels (id, label, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_labels_userstoredlabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_labels_userstoredlabels_id_seq', 1, false);
+
+
+--
 -- Data for Name: hs_model_program_modelprogrammetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -8700,7 +9743,7 @@ COPY hs_model_program_modelprogrammetadata (coremetadata_ptr_id) FROM stdin;
 -- Data for Name: hs_model_program_mpmetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_model_program_mpmetadata (id, object_id, software_version, software_language, operating_sys, date_released, program_website, software_repo, release_notes, user_manual, theoretical_manual, source_code, content_type_id) FROM stdin;
+COPY hs_model_program_mpmetadata (id, object_id, content_type_id, "modelCodeRepository", "modelDocumentation", "modelOperatingSystem", "modelProgramLanguage", "modelReleaseDate", "modelReleaseNotes", "modelSoftware", "modelVersion", "modelWebsite", "modelEngine") FROM stdin;
 \.
 
 
@@ -8750,25 +9793,33 @@ SELECT pg_catalog.setval('hs_modelinstance_modeloutput_id_seq', 1, false);
 
 
 --
--- Data for Name: hs_swat_modelinstance_executedby; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: hs_script_resource_scriptmetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_swat_modelinstance_executedby (id, object_id, content_type_id, name, url) FROM stdin;
+COPY hs_script_resource_scriptmetadata (coremetadata_ptr_id) FROM stdin;
 \.
 
 
 --
--- Name: hs_swat_modelinstance_executedby_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Data for Name: hs_script_resource_scriptspecificmetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('hs_swat_modelinstance_executedby_id_seq', 1, false);
+COPY hs_script_resource_scriptspecificmetadata (id, object_id, "scriptLanguage", "languageVersion", "scriptVersion", "scriptDependencies", "scriptReleaseDate", "scriptCodeRepository", content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_script_resource_scriptspecificmetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_script_resource_scriptspecificmetadata_id_seq', 1, false);
 
 
 --
 -- Data for Name: hs_swat_modelinstance_modelinput; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_swat_modelinstance_modelinput (id, object_id, content_type_id, rainfall_time_step_value, simulation_time_step_value, watershed_area, number_of_subbasins, "number_of_HRUs", "DEM_resolution", "DEM_source_name", "DEM_source_URL", "landUse_data_source_name", "landUse_data_source_URL", soil_data_source_name, "soil_data_source_URL", routing_time_step_value, warm_up_period, rainfall_time_step_type, routing_time_step_type, simulation_time_step_type) FROM stdin;
+COPY hs_swat_modelinstance_modelinput (id, object_id, "warmupPeriodValue", "rainfallTimeStepType", "rainfallTimeStepValue", "routingTimeStepType", "routingTimeStepValue", "simulationTimeStepType", "simulationTimeStepValue", "watershedArea", "numberOfSubbasins", "numberOfHRUs", "demResolution", "demSourceName", "demSourceURL", "landUseDataSourceName", "landUseDataSourceURL", "soilDataSourceName", "soilDataSourceURL", content_type_id) FROM stdin;
 \.
 
 
@@ -8783,7 +9834,7 @@ SELECT pg_catalog.setval('hs_swat_modelinstance_modelinput_id_seq', 1, false);
 -- Data for Name: hs_swat_modelinstance_modelmethod; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_swat_modelinstance_modelmethod (id, object_id, runoff_calculation_method, flow_routing_method, "PET_estimation_method", content_type_id) FROM stdin;
+COPY hs_swat_modelinstance_modelmethod (id, object_id, "runoffCalculationMethod", "petEstimationMethod", "flowRoutingMethod", content_type_id) FROM stdin;
 \.
 
 
@@ -8798,7 +9849,7 @@ SELECT pg_catalog.setval('hs_swat_modelinstance_modelmethod_id_seq', 1, false);
 -- Data for Name: hs_swat_modelinstance_modelobjective; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_swat_modelinstance_modelobjective (id, object_id, content_type_id, other_objectives) FROM stdin;
+COPY hs_swat_modelinstance_modelobjective (id, object_id, other_objectives, content_type_id) FROM stdin;
 \.
 
 
@@ -8837,21 +9888,6 @@ COPY hs_swat_modelinstance_modelobjectivechoices (id, description) FROM stdin;
 --
 
 SELECT pg_catalog.setval('hs_swat_modelinstance_modelobjectivechoices_id_seq', 1, false);
-
-
---
--- Data for Name: hs_swat_modelinstance_modeloutput; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY hs_swat_modelinstance_modeloutput (id, object_id, content_type_id, includes_output) FROM stdin;
-\.
-
-
---
--- Name: hs_swat_modelinstance_modeloutput_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('hs_swat_modelinstance_modeloutput_id_seq', 1, false);
 
 
 --
@@ -8903,7 +9939,7 @@ SELECT pg_catalog.setval('hs_swat_modelinstance_modelparameterschoices_id_seq', 
 -- Data for Name: hs_swat_modelinstance_simulationtype; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_swat_modelinstance_simulationtype (id, object_id, content_type_id, simulation_type_name) FROM stdin;
+COPY hs_swat_modelinstance_simulationtype (id, object_id, simulation_type_name, content_type_id) FROM stdin;
 \.
 
 
@@ -8918,23 +9954,8 @@ SELECT pg_catalog.setval('hs_swat_modelinstance_simulationtype_id_seq', 1, false
 -- Data for Name: hs_swat_modelinstance_swatmodelinstancemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_swat_modelinstance_swatmodelinstancemetadata (coremetadata_ptr_id) FROM stdin;
+COPY hs_swat_modelinstance_swatmodelinstancemetadata (modelinstancemetadata_ptr_id) FROM stdin;
 \.
-
-
---
--- Data for Name: hs_tools_resource_fee; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY hs_tools_resource_fee (id, object_id, description, value, content_type_id) FROM stdin;
-\.
-
-
---
--- Name: hs_tools_resource_fee_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('hs_tools_resource_fee_id_seq', 1, false);
 
 
 --
@@ -8953,26 +9974,71 @@ SELECT pg_catalog.setval('hs_tools_resource_requesturlbase_id_seq', 1, false);
 
 
 --
+-- Data for Name: hs_tools_resource_supportedrestypechoices; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tools_resource_supportedrestypechoices (id, description) FROM stdin;
+\.
+
+
+--
+-- Name: hs_tools_resource_supportedrestypechoices_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tools_resource_supportedrestypechoices_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_tools_resource_supportedrestypes; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tools_resource_supportedrestypes (id, object_id, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_tools_resource_supportedrestypes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tools_resource_supportedrestypes_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_tools_resource_supportedrestypes_supported_res_types; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tools_resource_supportedrestypes_supported_res_types (id, supportedrestypes_id, supportedrestypechoices_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tools_resource_supportedrestypes_supported_res_types_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_tools_resource_toolicon; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tools_resource_toolicon (id, object_id, icon, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_tools_resource_toolicon_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tools_resource_toolicon_id_seq', 1, false);
+
+
+--
 -- Data for Name: hs_tools_resource_toolmetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY hs_tools_resource_toolmetadata (coremetadata_ptr_id) FROM stdin;
 \.
-
-
---
--- Data for Name: hs_tools_resource_toolresourcetype; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY hs_tools_resource_toolresourcetype (id, object_id, tool_res_type, content_type_id) FROM stdin;
-\.
-
-
---
--- Name: hs_tools_resource_toolresourcetype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('hs_tools_resource_toolresourcetype_id_seq', 1, false);
 
 
 --
@@ -8991,10 +10057,71 @@ SELECT pg_catalog.setval('hs_tools_resource_toolversion_id_seq', 1, false);
 
 
 --
+-- Data for Name: oauth2_provider_accesstoken; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY oauth2_provider_accesstoken (id, token, expires, scope, application_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: oauth2_provider_accesstoken_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('oauth2_provider_accesstoken_id_seq', 1, false);
+
+
+--
+-- Data for Name: oauth2_provider_application; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY oauth2_provider_application (id, client_id, redirect_uris, client_type, authorization_grant_type, client_secret, name, user_id, skip_authorization) FROM stdin;
+\.
+
+
+--
+-- Name: oauth2_provider_application_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('oauth2_provider_application_id_seq', 1, false);
+
+
+--
+-- Data for Name: oauth2_provider_grant; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY oauth2_provider_grant (id, code, expires, redirect_uri, scope, application_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: oauth2_provider_grant_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('oauth2_provider_grant_id_seq', 1, false);
+
+
+--
+-- Data for Name: oauth2_provider_refreshtoken; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY oauth2_provider_refreshtoken (id, token, access_token_id, application_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: oauth2_provider_refreshtoken_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('oauth2_provider_refreshtoken_id_seq', 1, false);
+
+
+--
 -- Data for Name: pages_link; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY pages_link (page_ptr_id) FROM stdin;
+6
 \.
 
 
@@ -9003,14 +10130,17 @@ COPY pages_link (page_ptr_id) FROM stdin;
 --
 
 COPY pages_page (id, keywords_string, site_id, title, slug, _meta_title, description, gen_description, created, updated, status, publish_date, expiry_date, short_url, in_sitemap, _order, parent_id, in_menus, titles, content_model, login_required) FROM stdin;
-2		1	Home	/		HydroShare is an online collaboration environment for sharing data, models, and code.  Join the community to start sharing.	t	2015-05-15 20:15:43.818697+00	2015-05-15 20:15:43.818697+00	2	2015-05-15 20:15:43.817858+00	\N	\N	t	0	\N		Home	homepage	f
-3		1	Resources	my-resources		my-resources	t	2015-05-15 20:17:23.597424+00	2015-05-15 20:17:23.597424+00	2	2015-05-15 20:17:23.595895+00	\N	\N	t	1	\N	1,2,3	Resources	richtextpage	f
-4		1	Support	help	help	help	t	2015-05-15 20:18:26.021058+00	2015-05-15 20:18:26.021058+00	2	2015-05-15 20:18:26.020052+00	\N	\N	t	2	\N	1,2,3	Support	richtextpage	f
-5		1	Verify account	verify-account		Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.	t	2015-05-15 20:19:58.643431+00	2015-05-15 20:19:58.643431+00	2	2015-05-15 20:19:58.642504+00	\N	\N	t	3	\N		Verify account	richtextpage	f
-6		1	Resend Verification Email	resend-verification-email		Please give us your email address and we will resend the confirmation	t	2015-05-15 20:21:44.908245+00	2015-05-15 20:21:44.908245+00	2	2015-05-15 20:21:44.907393+00	\N	\N	t	4	\N		Resend Verification Email	form	f
-8		1	Statement of Privacy	privacy		HydroShare Statement of Privacy\nLast modified July 7, 2013	t	2015-05-15 20:25:37.565592+00	2015-05-15 20:25:37.565592+00	2	2015-05-15 20:25:37.564543+00	\N	\N	t	6	\N		Statement of Privacy	richtextpage	f
-9		1	Create Resource	create-resource		create resource	t	2015-05-15 20:26:29.815022+00	2015-05-15 20:26:29.815022+00	2	2015-05-15 20:26:29.814103+00	\N	\N	t	7	\N		Create Resource	richtextpage	t
-7		1	Terms of Use	terms-of-use		HydroShare Terms of Use\nLast modified July 7, 2013	t	2015-05-15 20:24:13.980237+00	2015-05-15 20:31:45.081414+00	2	2015-05-15 20:24:13.979169+00	\N	\N	t	5	\N		Terms of Use	richtextpage	f
+2		1	Home	/		HydroShare is an online collaboration environment for sharing data, models, and code.  Join the community to start sharing.	t	2016-01-25 19:17:47.144396+00	2016-01-25 19:17:47.144396+00	2	2016-01-25 19:17:47.143386+00	\N	\N	t	0	\N		Home	homepage	f
+6		1	Apps	https://appsdev.hydroshare.org/apps	\N	Apps	t	2016-01-25 19:26:44.887463+00	2016-01-25 19:26:44.887463+00	2	2016-01-25 19:26:44.886468+00	\N	\N	f	3	\N	1,2,3	Apps	link	f
+5		1	Help	help	Help	help	t	2016-01-25 19:25:35.644671+00	2016-01-25 19:25:35.644671+00	2	2016-01-25 19:25:35.643697+00	\N	\N	t	4	\N	1,2,3	Help	richtextpage	f
+7		1	Verify Account	verify-account	Verify Account	Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.	t	2016-01-25 19:28:12.867432+00	2016-01-25 19:28:12.867432+00	2	2016-01-25 19:28:12.866419+00	\N	\N	t	5	\N		Verify Account	richtextpage	f
+3		1	My Resources	my-resources	My Resources	my-resources	t	2016-01-25 19:22:48.667099+00	2016-01-25 19:29:50.956511+00	2	2016-01-25 19:22:48+00	\N	\N	t	1	\N	1,2,3	My Resources	richtextpage	f
+8		1	Resend Verification Email	resend-verification-email	Resend Email Verification	Please give us your email address and we will resend the confirmation	t	2016-01-25 19:32:20.248488+00	2016-01-25 19:32:20.248488+00	2	2016-01-25 19:32:20.247193+00	\N	\N	t	6	\N		Resend Verification Email	form	f
+11		1	Create Resource	create-resource	Create Resource	create resource	t	2016-01-25 19:35:15.10115+00	2016-01-25 19:35:15.10115+00	2	2016-01-25 19:35:15.100153+00	\N	\N	t	9	\N		Create Resource	richtextpage	f
+10		1	Statement of Privacy	privacy	Statement of Privacy	HydroShare Statement of Privacy\nLast modified July 7, 2013	t	2016-01-25 19:34:22.084583+00	2016-01-25 19:36:36.646829+00	2	2016-01-25 19:34:22+00	\N	\N	t	8	\N		Statement of Privacy	richtextpage	f
+9		1	Terms of Use	terms-of-use	Terms of Use	HydroShare Terms of Use\nLast modified July 7, 2013	t	2016-01-25 19:33:24.439209+00	2016-01-25 19:37:08.21102+00	2	2016-01-25 19:33:24+00	\N	\N	t	7	\N		Terms of Use	richtextpage	f
+12		1	Sign Up	sign-up	Sign Up	sign up	t	2016-01-25 19:40:35.894321+00	2016-01-25 19:40:35.894321+00	2	2016-01-25 19:40:35.893206+00	\N	\N	t	10	\N		Sign Up	richtextpage	f
+4		1	Discover	search	Discover	Discover	t	2016-01-25 19:23:52.174668+00	2016-01-25 19:52:37.387455+00	2	2016-01-25 19:23:52+00	\N	\N	t	2	\N	1,2,3	Discover	richtextpage	f
 \.
 
 
@@ -9018,7 +10148,7 @@ COPY pages_page (id, keywords_string, site_id, title, slug, _meta_title, descrip
 -- Name: pages_page_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('pages_page_id_seq', 9, true);
+SELECT pg_catalog.setval('pages_page_id_seq', 12, true);
 
 
 --
@@ -9026,12 +10156,14 @@ SELECT pg_catalog.setval('pages_page_id_seq', 9, true);
 --
 
 COPY pages_richtextpage (page_ptr_id, content) FROM stdin;
+5	<p>help</p>
+7	<p class="p1">Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.</p>\n<p class="p2"><a href="http://dev.hydroshare.org/hsapi/_internal/resend_verification_email/">Please click here if you do not receive a verification email within 1 hour.</a></p>
 3	<p>my-resources</p>
-4	<p>help</p>
-5	<p class="p1">Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.</p>\n<p class="p2"><a href="http://dev.hydroshare.org/hsapi/_internal/resend_verification_email/">Please click here if you do not receive a verification email within 1 hour.</a></p>
-8	<h1 class="p1"><b>HydroShare Statement of Privacy</b></h1>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">HydroShare is operated by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI.  In the following these are referred to as participating institutions.</p>\n<p class="p2">We respect your privacy. We will only use your personal identification information to support and manage your use of hydroshare.org, including the use of tracking cookies to facilitate hydroshare.org security procedures. The HydroShare participating institutions and the National Science Foundation (which funds hydroshare.org development) regularly request hydroshare.org usages statistics and other information. Usage of hydroshare.org is monitored and usage statistics are collected and reported on a regular basis. Hydroshare.org also reserves the right to contact you to request additional information or to keep you updated on changes to Hydroshare.org. You may opt out of receiving newsletters and other non-essential communications. No information that would identify you personally will be provided to sponsors or third parties without your permission.</p>\n<p class="p2">While HydroShare uses policies and procedures to manage the access to content according to the access control settings set by users all information posted or stored on hydroshare.org is potentially available to other users of hydroshare.org and the public. The HydroShare participating institutions and hydroshare.org disclaim any responsibility for the preservation of confidentiality of such information. <i>Do not post or store information on hydroshare.org if you expect to or are obligated to protect the confidentiality of that information.</i></p>
-9	<p>create resource</p>
-7	<h1 class="p1"><strong>HydroShare Terms of Use</strong></h1>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">Thank you for using the HydroShare hydrologic data sharing system hosted at hydroshare.org.  HydroShare services are provided by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI. Your access to hydroshare.org is subject to your agreement to these Terms of Use. By using our services at hydroshare.org, you are agreeing to these terms.  Please read them carefully.</p>\n<h2 class="p3"><b>Modification of the Agreement</b></h2>\n<p class="p2">We maintain the right to modify these Terms of Use and may do so by posting modifications on this page. Any modification is effective immediately upon posting the modification unless otherwise stated. Your continued use of hydroshare.org following the posting of any modification signifies your acceptance of that modification. You should regularly visit this page to review the current Terms of Use.</p>\n<h2 class="p3"><b>Conduct Using our Services</b></h2>\n<p class="p2">The hydroshare.org site is intended to support data and model sharing in hydrology.  This is broadly interpreted to include any discipline or endeavor that has something to do with water.  You are responsible at all times for using hydroshare.org in a manner that is legal, ethical, and not to the detriment of others and for purposes related to hydrology. You agree that you will not in your use of hydroshare.org:</p>\n<ul class="ul1">\n<li class="li2">Violate any applicable law, commit a criminal offense or perform actions that might encourage others to commit a criminal offense or give rise to a civil liability;</li>\n<li class="li2">Post or transmit any unlawful, threatening, libelous, harassing, defamatory, vulgar, obscene, pornographic, profane, or otherwise objectionable content;</li>\n<li class="li2">Use hydroshare.org to impersonate other parties or entities;</li>\n<li class="li2">Use hydroshare.org to upload any content that contains a software virus, "Trojan Horse" or any other computer code, files, or programs that may alter, damage, or interrupt the functionality of hydroshare.org or the hardware or software of any other person who accesses hydroshare.org;</li>\n<li class="li2">Upload, post, email, or otherwise transmit any materials that you do not have a right to transmit under any law or under a contractual relationship;</li>\n<li class="li2">Alter, damage, or delete any content posted on hydroshare.org, except where such alterations or deletions are consistent with the access control settings of that content in hydroshare.org;</li>\n<li class="li2">Disrupt the normal flow of communication in any way;</li>\n<li class="li2">Claim a relationship with or speak for any business, association, or other organization for which you are not authorized to claim such a relationship;</li>\n<li class="li2">Post or transmit any unsolicited advertising, promotional materials, or other forms of solicitation;</li>\n<li class="li2">Post any material that infringes or violates the intellectual property rights of another.</li>\n</ul>\n<p class="p2">Certain portions of hydroshare.org are limited to registered users and/or allow a user to participate in online services by entering personal information. You agree that any information provided to hydroshare.org in these areas will be complete and accurate, and that you will neither register under the name of nor attempt to enter hydroshare.org under the name of another person or entity.</p>\n<p class="p2">You are responsible for maintaining the confidentiality of your user ID and password, if any, and for restricting access to your computer, and you agree to accept responsibility for all activities that occur under your account or password. Hydroshare.org does not authorize use of your User ID by third-parties.</p>\n<p class="p2">We may, in our sole discretion, terminate or suspend your access to and use of hydroshare.org without notice and for any reason, including for violation of these Terms of Use or for other conduct that we, in our sole discretion, believe to be unlawful or harmful to others. In the event of termination, you are no longer authorized to access hydroshare.org.</p>\n<h2 class="p3"><b>Disclaimers</b></h2>\n<p class="p2">HYDROSHARE AND ANY INFORMATION, PRODUCTS OR SERVICES ON IT ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Hydroshare.org and its participating institutions do not warrant, and hereby disclaim any warranties, either express or implied, with respect to the accuracy, adequacy or completeness of any good, service, or information obtained from hydroshare.org. Hydroshare.org and its participating institutions do not warrant that Hydroshare.org will operate in an uninterrupted or error-free manner or that hydroshare.org is free of viruses or other harmful components. Use of hydroshare.org is at your own risk.</p>\n<p class="p2">You agree that hydroshare.org and its participating institutions shall have no liability for any consequential, indirect, punitive, special or incidental damages, whether foreseeable or unforeseeable (including, but not limited to, claims for defamation, errors, loss of data, or interruption in availability of data), arising out of or relating to your use of water-hub.org or any resource that you access through hydroshare.org.</p>\n<p class="p2">The hydroshare.org site hosts content from a number of authors. The statements and views of these authors are theirs alone, and do not reflect the stances or policies of the HydroShare research team or their sponsors, nor does their posting imply the endorsement of HydroShare or their sponsors.</p>\n<h2 class="p3"><b>Choice of Law/Forum Selection/Attorney Fees</b></h2>\n<p class="p2">You agree that any dispute arising out of or relating to hydroshare.org, whether based in contract, tort, statutory or other law, will be governed by federal law and by the laws of North Carolina, excluding its conflicts of law provisions. You further consent to the personal jurisdiction of and exclusive venue in the federal and state courts located in and serving the United States of America, North Carolina as the exclusive legal forums for any such dispute.</p>
+11	<p>create resource</p>
+10	<h2 class="p1"><b>HydroShare Statement of Privacy</b></h2>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">HydroShare is operated by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI.  In the following these are referred to as participating institutions.</p>\n<p class="p2">We respect your privacy. We will only use your personal identification information to support and manage your use of hydroshare.org, including the use of tracking cookies to facilitate hydroshare.org security procedures. The HydroShare participating institutions and the National Science Foundation (which funds hydroshare.org development) regularly request hydroshare.org usages statistics and other information. Usage of hydroshare.org is monitored and usage statistics are collected and reported on a regular basis. Hydroshare.org also reserves the right to contact you to request additional information or to keep you updated on changes to Hydroshare.org. You may opt out of receiving newsletters and other non-essential communications. No information that would identify you personally will be provided to sponsors or third parties without your permission.</p>\n<p class="p2">While HydroShare uses policies and procedures to manage the access to content according to the access control settings set by users all information posted or stored on hydroshare.org is potentially available to other users of hydroshare.org and the public. The HydroShare participating institutions and hydroshare.org disclaim any responsibility for the preservation of confidentiality of such information. <i>Do not post or store information on hydroshare.org if you expect to or are obligated to protect the confidentiality of that information.</i></p>
+9	<h2 class="p1"><b>HydroShare Terms of Use</b></h2>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">Thank you for using the HydroShare hydrologic data sharing system hosted at hydroshare.org.  HydroShare services are provided by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI. Your access to hydroshare.org is subject to your agreement to these Terms of Use. By using our services at hydroshare.org, you are agreeing to these terms.  Please read them carefully.</p>\n<h2 class="p3"><b>Modification of the Agreement</b></h2>\n<p class="p2">We maintain the right to modify these Terms of Use and may do so by posting modifications on this page. Any modification is effective immediately upon posting the modification unless otherwise stated. Your continued use of hydroshare.org following the posting of any modification signifies your acceptance of that modification. You should regularly visit this page to review the current Terms of Use.</p>\n<h2 class="p3"><b>Conduct Using our Services</b></h2>\n<p class="p2">The hydroshare.org site is intended to support data and model sharing in hydrology.  This is broadly interpreted to include any discipline or endeavor that has something to do with water.  You are responsible at all times for using hydroshare.org in a manner that is legal, ethical, and not to the detriment of others and for purposes related to hydrology. You agree that you will not in your use of hydroshare.org:</p>\n<ul class="ul1">\n<li class="li2">Violate any applicable law, commit a criminal offense or perform actions that might encourage others to commit a criminal offense or give rise to a civil liability;</li>\n<li class="li2">Post or transmit any unlawful, threatening, libelous, harassing, defamatory, vulgar, obscene, pornographic, profane, or otherwise objectionable content;</li>\n<li class="li2">Use hydroshare.org to impersonate other parties or entities;</li>\n<li class="li2">Use hydroshare.org to upload any content that contains a software virus, "Trojan Horse" or any other computer code, files, or programs that may alter, damage, or interrupt the functionality of hydroshare.org or the hardware or software of any other person who accesses hydroshare.org;</li>\n<li class="li2">Upload, post, email, or otherwise transmit any materials that you do not have a right to transmit under any law or under a contractual relationship;</li>\n<li class="li2">Alter, damage, or delete any content posted on hydroshare.org, except where such alterations or deletions are consistent with the access control settings of that content in hydroshare.org;</li>\n<li class="li2">Disrupt the normal flow of communication in any way;</li>\n<li class="li2">Claim a relationship with or speak for any business, association, or other organization for which you are not authorized to claim such a relationship;</li>\n<li class="li2">Post or transmit any unsolicited advertising, promotional materials, or other forms of solicitation;</li>\n<li class="li2">Post any material that infringes or violates the intellectual property rights of another.</li>\n</ul>\n<p class="p2">Certain portions of hydroshare.org are limited to registered users and/or allow a user to participate in online services by entering personal information. You agree that any information provided to hydroshare.org in these areas will be complete and accurate, and that you will neither register under the name of nor attempt to enter hydroshare.org under the name of another person or entity.</p>\n<p class="p2">You are responsible for maintaining the confidentiality of your user ID and password, if any, and for restricting access to your computer, and you agree to accept responsibility for all activities that occur under your account or password. Hydroshare.org does not authorize use of your User ID by third-parties.</p>\n<p class="p2">We may, in our sole discretion, terminate or suspend your access to and use of hydroshare.org without notice and for any reason, including for violation of these Terms of Use or for other conduct that we, in our sole discretion, believe to be unlawful or harmful to others. In the event of termination, you are no longer authorized to access hydroshare.org.</p>\n<h2 class="p3"><b>Disclaimers</b></h2>\n<p class="p2">HYDROSHARE AND ANY INFORMATION, PRODUCTS OR SERVICES ON IT ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Hydroshare.org and its participating institutions do not warrant, and hereby disclaim any warranties, either express or implied, with respect to the accuracy, adequacy or completeness of any good, service, or information obtained from hydroshare.org. Hydroshare.org and its participating institutions do not warrant that Hydroshare.org will operate in an uninterrupted or error-free manner or that hydroshare.org is free of viruses or other harmful components. Use of hydroshare.org is at your own risk.</p>\n<p class="p2">You agree that hydroshare.org and its participating institutions shall have no liability for any consequential, indirect, punitive, special or incidental damages, whether foreseeable or unforeseeable (including, but not limited to, claims for defamation, errors, loss of data, or interruption in availability of data), arising out of or relating to your use of water-hub.org or any resource that you access through hydroshare.org.</p>\n<p class="p2">The hydroshare.org site hosts content from a number of authors. The statements and views of these authors are theirs alone, and do not reflect the stances or policies of the HydroShare research team or their sponsors, nor does their posting imply the endorsement of HydroShare or their sponsors.</p>\n<h2 class="p3"><b>Choice of Law/Forum Selection/Attorney Fees</b></h2>\n<p class="p2">You agree that any dispute arising out of or relating to hydroshare.org, whether based in contract, tort, statutory or other law, will be governed by federal law and by the laws of North Carolina, excluding its conflicts of law provisions. You further consent to the personal jurisdiction of and exclusive venue in the federal and state courts located in and serving the United States of America, North Carolina as the exclusive legal forums for any such dispute.</p>
+12	<p>sign up</p>
+4	<p>Discover</p>
 \.
 
 
@@ -9163,7 +10295,7 @@ SELECT pg_catalog.setval('theme_iconbox_id_seq', 1, false);
 --
 
 COPY theme_siteconfiguration (id, col1_heading, col1_content, col2_heading, col2_content, col3_heading, col3_content, twitter_link, facebook_link, pinterest_link, youtube_link, github_link, linkedin_link, vk_link, gplus_link, has_social_network_links, copyright, site_id) FROM stdin;
-1	Contact us	<p class="p1">Email us at <a href="mailto:support@hydroshare.org">hydroshare.org</a></p>	Follow		Open Source	<p class="p1">HydroShare is Open Source. Find us on <a href="https://github.com/hydroshare/"><strong>Github</strong></a>.</p>\n<p class="p1">Report a bug <strong><a href="https://github.com/hydroshare/hydroshare/issues?state=open">here</a></strong></p>\n<p class="p1">This is HydroShare Version<b> DEVELOPMENT</b></p>	http://twitter.com/cuahsi 	https://www.facebook.com/pages/CUAHSI-Consortium-of-Universities-for-the-Advancement-of-Hydrologic-Science-Inc/179921902590		http://www.youtube.com/user/CUAHSI	http://github.com/hydroshare	https://www.linkedin.com/company/2632114			t	&copy {% now "Y" %} CUAHSI. This material is based upon work supported by the National Science Foundation (NSF) under awards 1148453 and 1148090.  Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF.	1
+1	Contact us	<p class="p1">Email us at <a href="mailto:support@hydroshare.org">hydroshare.org</a></p>	Follow		Open Source	<p class="p1">HydroShare is Open Source. Find us on <a href="https://github.com/hydroshare/"><b>Github</b></a>.</p>\n<p class="p1">Report a bug <a href="https://github.com/hydroshare/hydroshare/issues?state=open"><b>here</b></a></p>\n<p class="p1">This is HydroShare Version<b> DEVELOPMENT</b></p>	http://twitter.com/cuahsi 	https://www.facebook.com/pages/CUAHSI-Consortium-of-Universities-for-the-Advancement-of-Hydrologic-Science-Inc/179921902590		http://www.youtube.com/user/CUAHSI	http://github.com/hydroshare	https://www.linkedin.com/company/2632114			t	&copy {% now "Y" %} CUAHSI. This material is based upon work supported by the National Science Foundation (NSF) under awards 1148453 and 1148090.  Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF.	1
 \.
 
 
@@ -9179,7 +10311,7 @@ SELECT pg_catalog.setval('theme_siteconfiguration_id_seq', 1, true);
 --
 
 COPY theme_userprofile (id, picture, title, profession, subject_areas, organization, organization_type, phone_1, phone_1_type, phone_2, phone_2_type, public, cv, details, user_id) FROM stdin;
-1		\N	Student	\N	\N	\N	\N	\N	\N	\N	t		\N	1
+4		\N	Student	\N	\N	\N	\N	\N	\N	\N	t		\N	4
 \.
 
 
@@ -9187,7 +10319,7 @@ COPY theme_userprofile (id, picture, title, profession, subject_areas, organizat
 -- Name: theme_userprofile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('theme_userprofile_id_seq', 1, true);
+SELECT pg_catalog.setval('theme_userprofile_id_seq', 4, true);
 
 
 --
@@ -9404,6 +10536,14 @@ ALTER TABLE ONLY core_sitepermission_sites
 
 ALTER TABLE ONLY core_sitepermission
     ADD CONSTRAINT core_sitepermission_user_id_key UNIQUE (user_id);
+
+
+--
+-- Name: corsheaders_corsmodel_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY corsheaders_corsmodel
+    ADD CONSTRAINT corsheaders_corsmodel_pkey PRIMARY KEY (id);
 
 
 --
@@ -10103,6 +11243,14 @@ ALTER TABLE ONLY hs_core_coverage
 
 
 --
+-- Name: hs_core_coverage_type_5e44b8195dffb14e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_core_coverage
+    ADD CONSTRAINT hs_core_coverage_type_5e44b8195dffb14e_uniq UNIQUE (type, content_type_id, object_id);
+
+
+--
 -- Name: hs_core_creator_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10116,6 +11264,14 @@ ALTER TABLE ONLY hs_core_creator
 
 ALTER TABLE ONLY hs_core_date
     ADD CONSTRAINT hs_core_date_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_core_date_type_51dc7e471f315ec_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_core_date
+    ADD CONSTRAINT hs_core_date_type_51dc7e471f315ec_uniq UNIQUE (type, content_type_id, object_id);
 
 
 --
@@ -10159,6 +11315,14 @@ ALTER TABLE ONLY hs_core_format
 
 
 --
+-- Name: hs_core_format_value_8b10e84db4524d5_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_core_format
+    ADD CONSTRAINT hs_core_format_value_8b10e84db4524d5_uniq UNIQUE (value, content_type_id, object_id);
+
+
+--
 -- Name: hs_core_genericresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10188,6 +11352,14 @@ ALTER TABLE ONLY hs_core_identifier
 
 ALTER TABLE ONLY hs_core_identifier
     ADD CONSTRAINT hs_core_identifier_url_key UNIQUE (url);
+
+
+--
+-- Name: hs_core_language_content_type_id_3effcbe0af54718f_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_core_language
+    ADD CONSTRAINT hs_core_language_content_type_id_3effcbe0af54718f_uniq UNIQUE (content_type_id, object_id);
 
 
 --
@@ -10223,6 +11395,14 @@ ALTER TABLE ONLY hs_core_relation
 
 
 --
+-- Name: hs_core_relation_type_191141a8918183f4_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_core_relation
+    ADD CONSTRAINT hs_core_relation_type_191141a8918183f4_uniq UNIQUE (type, content_type_id, object_id);
+
+
+--
 -- Name: hs_core_resourcefile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10247,6 +11427,14 @@ ALTER TABLE ONLY hs_core_rights
 
 
 --
+-- Name: hs_core_source_derived_from_76cd74fc0518456b_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_core_source
+    ADD CONSTRAINT hs_core_source_derived_from_76cd74fc0518456b_uniq UNIQUE (derived_from, content_type_id, object_id);
+
+
+--
 -- Name: hs_core_source_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10260,6 +11448,14 @@ ALTER TABLE ONLY hs_core_source
 
 ALTER TABLE ONLY hs_core_subject
     ADD CONSTRAINT hs_core_subject_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_core_subject_value_4ec0e8f3e12395cd_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_core_subject
+    ADD CONSTRAINT hs_core_subject_value_4ec0e8f3e12395cd_uniq UNIQUE (value, content_type_id, object_id);
 
 
 --
@@ -10343,6 +11539,150 @@ ALTER TABLE ONLY hs_geo_raster_resource_rastermetadata
 
 
 --
+-- Name: hs_geographic_feature_res_content_type_id_28e85abff23b5f53_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_originalfileinfo
+    ADD CONSTRAINT hs_geographic_feature_res_content_type_id_28e85abff23b5f53_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_geographic_feature_res_content_type_id_304dc81d9f5c66f1_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_originalcoverage
+    ADD CONSTRAINT hs_geographic_feature_res_content_type_id_304dc81d9f5c66f1_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_geographic_feature_res_content_type_id_580ebce926dd9f27_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_geometryinformation
+    ADD CONSTRAINT hs_geographic_feature_res_content_type_id_580ebce926dd9f27_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_geographic_feature_resource_fieldinformation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_fieldinformation
+    ADD CONSTRAINT hs_geographic_feature_resource_fieldinformation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_geographic_feature_resource_geographicfeaturemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_geographicfeaturemetadata
+    ADD CONSTRAINT hs_geographic_feature_resource_geographicfeaturemetadata_pkey PRIMARY KEY (coremetadata_ptr_id);
+
+
+--
+-- Name: hs_geographic_feature_resource_geometryinformation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_geometryinformation
+    ADD CONSTRAINT hs_geographic_feature_resource_geometryinformation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_geographic_feature_resource_originalcoverage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_originalcoverage
+    ADD CONSTRAINT hs_geographic_feature_resource_originalcoverage_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_geographic_feature_resource_originalfileinfo_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_originalfileinfo
+    ADD CONSTRAINT hs_geographic_feature_resource_originalfileinfo_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_labels_resourcelabels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_labels_resourcelabels
+    ADD CONSTRAINT hs_labels_resourcelabels_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_labels_resourcelabels_resource_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_labels_resourcelabels
+    ADD CONSTRAINT hs_labels_resourcelabels_resource_id_key UNIQUE (resource_id);
+
+
+--
+-- Name: hs_labels_userlabels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_labels_userlabels
+    ADD CONSTRAINT hs_labels_userlabels_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_labels_userlabels_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_labels_userlabels
+    ADD CONSTRAINT hs_labels_userlabels_user_id_key UNIQUE (user_id);
+
+
+--
+-- Name: hs_labels_userresourceflags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_labels_userresourceflags
+    ADD CONSTRAINT hs_labels_userresourceflags_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_labels_userresourceflags_user_id_69a243739138a875_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_labels_userresourceflags
+    ADD CONSTRAINT hs_labels_userresourceflags_user_id_69a243739138a875_uniq UNIQUE (user_id, resource_id, kind);
+
+
+--
+-- Name: hs_labels_userresourcelabels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_labels_userresourcelabels
+    ADD CONSTRAINT hs_labels_userresourcelabels_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_labels_userresourcelabels_user_id_b650ac9425073db_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_labels_userresourcelabels
+    ADD CONSTRAINT hs_labels_userresourcelabels_user_id_b650ac9425073db_uniq UNIQUE (user_id, resource_id, label);
+
+
+--
+-- Name: hs_labels_userstoredlabels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_labels_userstoredlabels
+    ADD CONSTRAINT hs_labels_userstoredlabels_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_labels_userstoredlabels_user_id_7fcfa0bbb19f026e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_labels_userstoredlabels
+    ADD CONSTRAINT hs_labels_userstoredlabels_user_id_7fcfa0bbb19f026e_uniq UNIQUE (user_id, label);
+
+
+--
 -- Name: hs_model_program_modelprogrammetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10351,19 +11691,19 @@ ALTER TABLE ONLY hs_model_program_modelprogrammetadata
 
 
 --
--- Name: hs_model_program_mpmetada_content_type_id_6d7804f108cda18d_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY hs_model_program_mpmetadata
-    ADD CONSTRAINT hs_model_program_mpmetada_content_type_id_6d7804f108cda18d_uniq UNIQUE (content_type_id, object_id);
-
-
---
 -- Name: hs_model_program_mpmetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
 ALTER TABLE ONLY hs_model_program_mpmetadata
     ADD CONSTRAINT hs_model_program_mpmetadata_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_modelinstance_executed_content_type_id_4f66b59ecd8e1887_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_modelinstance_executedby
+    ADD CONSTRAINT hs_modelinstance_executed_content_type_id_4f66b59ecd8e1887_uniq UNIQUE (content_type_id, object_id);
 
 
 --
@@ -10383,6 +11723,14 @@ ALTER TABLE ONLY hs_modelinstance_modelinstancemetadata
 
 
 --
+-- Name: hs_modelinstance_modeloutp_content_type_id_34b90c2dff9368a_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_modelinstance_modeloutput
+    ADD CONSTRAINT hs_modelinstance_modeloutp_content_type_id_34b90c2dff9368a_uniq UNIQUE (content_type_id, object_id);
+
+
+--
 -- Name: hs_modelinstance_modeloutput_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10391,11 +11739,59 @@ ALTER TABLE ONLY hs_modelinstance_modeloutput
 
 
 --
--- Name: hs_swat_modelinstance_executedby_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_script_resource_script_content_type_id_5eae48b373d35aeb_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
-ALTER TABLE ONLY hs_swat_modelinstance_executedby
-    ADD CONSTRAINT hs_swat_modelinstance_executedby_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY hs_script_resource_scriptspecificmetadata
+    ADD CONSTRAINT hs_script_resource_script_content_type_id_5eae48b373d35aeb_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_script_resource_scriptmetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_script_resource_scriptmetadata
+    ADD CONSTRAINT hs_script_resource_scriptmetadata_pkey PRIMARY KEY (coremetadata_ptr_id);
+
+
+--
+-- Name: hs_script_resource_scriptspecificmetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_script_resource_scriptspecificmetadata
+    ADD CONSTRAINT hs_script_resource_scriptspecificmetadata_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_swat_modelinstance_mod_content_type_id_12914098fd213943_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelmethod
+    ADD CONSTRAINT hs_swat_modelinstance_mod_content_type_id_12914098fd213943_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_swat_modelinstance_mod_content_type_id_2589e0316a36326c_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelparameter
+    ADD CONSTRAINT hs_swat_modelinstance_mod_content_type_id_2589e0316a36326c_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_swat_modelinstance_mod_content_type_id_25b988ceed439ad3_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelinput
+    ADD CONSTRAINT hs_swat_modelinstance_mod_content_type_id_25b988ceed439ad3_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_swat_modelinstance_mod_content_type_id_42514385fa10eab4_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelobjective
+    ADD CONSTRAINT hs_swat_modelinstance_mod_content_type_id_42514385fa10eab4_uniq UNIQUE (content_type_id, object_id);
 
 
 --
@@ -10447,14 +11843,6 @@ ALTER TABLE ONLY hs_swat_modelinstance_modelobjectivechoices
 
 
 --
--- Name: hs_swat_modelinstance_modeloutput_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY hs_swat_modelinstance_modeloutput
-    ADD CONSTRAINT hs_swat_modelinstance_modeloutput_pkey PRIMARY KEY (id);
-
-
---
 -- Name: hs_swat_modelinstance_modelpa_modelparameter_id_modelparame_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10487,6 +11875,14 @@ ALTER TABLE ONLY hs_swat_modelinstance_modelparameterschoices
 
 
 --
+-- Name: hs_swat_modelinstance_sim_content_type_id_2fdb321047680e89_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_simulationtype
+    ADD CONSTRAINT hs_swat_modelinstance_sim_content_type_id_2fdb321047680e89_uniq UNIQUE (content_type_id, object_id);
+
+
+--
 -- Name: hs_swat_modelinstance_simulationtype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10499,15 +11895,15 @@ ALTER TABLE ONLY hs_swat_modelinstance_simulationtype
 --
 
 ALTER TABLE ONLY hs_swat_modelinstance_swatmodelinstancemetadata
-    ADD CONSTRAINT hs_swat_modelinstance_swatmodelinstancemetadata_pkey PRIMARY KEY (coremetadata_ptr_id);
+    ADD CONSTRAINT hs_swat_modelinstance_swatmodelinstancemetadata_pkey PRIMARY KEY (modelinstancemetadata_ptr_id);
 
 
 --
--- Name: hs_tools_resource_fee_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_request_content_type_id_4247c7cfc01d751b_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
-ALTER TABLE ONLY hs_tools_resource_fee
-    ADD CONSTRAINT hs_tools_resource_fee_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY hs_tools_resource_requesturlbase
+    ADD CONSTRAINT hs_tools_resource_request_content_type_id_4247c7cfc01d751b_uniq UNIQUE (content_type_id, object_id);
 
 
 --
@@ -10519,6 +11915,54 @@ ALTER TABLE ONLY hs_tools_resource_requesturlbase
 
 
 --
+-- Name: hs_tools_resource_supportedre_supportedrestypes_id_supporte_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_supportedrestypes_supported_res_types
+    ADD CONSTRAINT hs_tools_resource_supportedre_supportedrestypes_id_supporte_key UNIQUE (supportedrestypes_id, supportedrestypechoices_id);
+
+
+--
+-- Name: hs_tools_resource_supportedrestypechoices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_supportedrestypechoices
+    ADD CONSTRAINT hs_tools_resource_supportedrestypechoices_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tools_resource_supportedrestypes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_supportedrestypes
+    ADD CONSTRAINT hs_tools_resource_supportedrestypes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_supportedrestypes_supported_res_types
+    ADD CONSTRAINT hs_tools_resource_supportedrestypes_supported_res_types_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tools_resource_toolico_content_type_id_2eb114df398af35f_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_toolicon
+    ADD CONSTRAINT hs_tools_resource_toolico_content_type_id_2eb114df398af35f_uniq UNIQUE (content_type_id, object_id);
+
+
+--
+-- Name: hs_tools_resource_toolicon_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tools_resource_toolicon
+    ADD CONSTRAINT hs_tools_resource_toolicon_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: hs_tools_resource_toolmetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10527,11 +11971,11 @@ ALTER TABLE ONLY hs_tools_resource_toolmetadata
 
 
 --
--- Name: hs_tools_resource_toolresourcetype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_toolver_content_type_id_2a1bdb955c1a5eb5_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
-ALTER TABLE ONLY hs_tools_resource_toolresourcetype
-    ADD CONSTRAINT hs_tools_resource_toolresourcetype_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY hs_tools_resource_toolversion
+    ADD CONSTRAINT hs_tools_resource_toolver_content_type_id_2a1bdb955c1a5eb5_uniq UNIQUE (content_type_id, object_id);
 
 
 --
@@ -10540,6 +11984,54 @@ ALTER TABLE ONLY hs_tools_resource_toolresourcetype
 
 ALTER TABLE ONLY hs_tools_resource_toolversion
     ADD CONSTRAINT hs_tools_resource_toolversion_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oauth2_provider_accesstoken_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY oauth2_provider_accesstoken
+    ADD CONSTRAINT oauth2_provider_accesstoken_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oauth2_provider_application_client_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY oauth2_provider_application
+    ADD CONSTRAINT oauth2_provider_application_client_id_key UNIQUE (client_id);
+
+
+--
+-- Name: oauth2_provider_application_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY oauth2_provider_application
+    ADD CONSTRAINT oauth2_provider_application_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oauth2_provider_grant_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY oauth2_provider_grant
+    ADD CONSTRAINT oauth2_provider_grant_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oauth2_provider_refreshtoken_access_token_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY oauth2_provider_refreshtoken
+    ADD CONSTRAINT oauth2_provider_refreshtoken_access_token_id_key UNIQUE (access_token_id);
+
+
+--
+-- Name: oauth2_provider_refreshtoken_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY oauth2_provider_refreshtoken
+    ADD CONSTRAINT oauth2_provider_refreshtoken_pkey PRIMARY KEY (id);
 
 
 --
@@ -10663,6 +12155,13 @@ ALTER TABLE ONLY theme_userprofile
 
 
 --
+-- Name: auth_group_name_253ae2a6331666e8_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX auth_group_name_253ae2a6331666e8_like ON auth_group USING btree (name varchar_pattern_ops);
+
+
+--
 -- Name: auth_group_permissions_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10709,6 +12208,13 @@ CREATE INDEX auth_user_user_permissions_8373b171 ON auth_user_user_permissions U
 --
 
 CREATE INDEX auth_user_user_permissions_e8701ad4 ON auth_user_user_permissions USING btree (user_id);
+
+
+--
+-- Name: auth_user_username_51b3b110094b8aae_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX auth_user_username_51b3b110094b8aae_like ON auth_user USING btree (username varchar_pattern_ops);
 
 
 --
@@ -10915,6 +12421,13 @@ CREATE INDEX django_docker_processes_dockerport_3885db4e ON django_docker_proces
 
 
 --
+-- Name: django_docker_processes_dockerproce_token_1211961caacdde18_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX django_docker_processes_dockerproce_token_1211961caacdde18_like ON django_docker_processes_dockerprocess USING btree (token varchar_pattern_ops);
+
+
+--
 -- Name: django_docker_processes_dockerprocess_83a0eb3f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -10926,6 +12439,13 @@ CREATE INDEX django_docker_processes_dockerprocess_83a0eb3f ON django_docker_pro
 --
 
 CREATE INDEX django_docker_processes_dockerprocess_e8701ad4 ON django_docker_processes_dockerprocess USING btree (user_id);
+
+
+--
+-- Name: django_docker_processes_dockerprofil_name_75d7d5a2a3b969e3_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX django_docker_processes_dockerprofil_name_75d7d5a2a3b969e3_like ON django_docker_processes_dockerprofile USING btree (name varchar_pattern_ops);
 
 
 --
@@ -10992,10 +12512,24 @@ CREATE INDEX django_redirect_9365d6e7 ON django_redirect USING btree (site_id);
 
 
 --
+-- Name: django_redirect_old_path_9db3e423470cdaf_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX django_redirect_old_path_9db3e423470cdaf_like ON django_redirect USING btree (old_path varchar_pattern_ops);
+
+
+--
 -- Name: django_session_de54fa62; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
 CREATE INDEX django_session_de54fa62 ON django_session USING btree (expire_date);
+
+
+--
+-- Name: django_session_session_key_461cfeaa630ca218_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX django_session_session_key_461cfeaa630ca218_like ON django_session USING btree (session_key varchar_pattern_ops);
 
 
 --
@@ -11139,6 +12673,20 @@ CREATE INDEX ga_ows_ogrdataset_extent_id ON ga_ows_ogrdataset USING gist (extent
 
 
 --
+-- Name: ga_ows_ogrdataset_human_name_2718979caa46bdd6_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX ga_ows_ogrdataset_human_name_2718979caa46bdd6_like ON ga_ows_ogrdataset USING btree (human_name text_pattern_ops);
+
+
+--
+-- Name: ga_ows_ogrdataset_name_5ef251b0d7fbd366_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX ga_ows_ogrdataset_name_5ef251b0d7fbd366_like ON ga_ows_ogrdataset USING btree (name varchar_pattern_ops);
+
+
+--
 -- Name: ga_ows_ogrlayer_81aebe41; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -11164,6 +12712,20 @@ CREATE INDEX ga_ows_ogrlayer_d366d308 ON ga_ows_ogrlayer USING btree (dataset_id
 --
 
 CREATE INDEX ga_ows_ogrlayer_extent_id ON ga_ows_ogrlayer USING gist (extent);
+
+
+--
+-- Name: ga_ows_ogrlayer_human_name_517fb130c5bed6d7_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX ga_ows_ogrlayer_human_name_517fb130c5bed6d7_like ON ga_ows_ogrlayer USING btree (human_name text_pattern_ops);
+
+
+--
+-- Name: ga_ows_ogrlayer_name_440515aa32d1fbcb_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX ga_ows_ogrlayer_name_440515aa32d1fbcb_like ON ga_ows_ogrlayer USING btree (name varchar_pattern_ops);
 
 
 --
@@ -11377,17 +12939,17 @@ CREATE INDEX hs_access_control_userresourceprivilege_e8701ad4 ON hs_access_contr
 
 
 --
--- Name: hs_app_netcdf_originalcoverage_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_app_netCDF_originalcoverage_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_app_netcdf_originalcoverage_417f1b1c ON "hs_app_netCDF_originalcoverage" USING btree (content_type_id);
+CREATE INDEX "hs_app_netCDF_originalcoverage_417f1b1c" ON "hs_app_netCDF_originalcoverage" USING btree (content_type_id);
 
 
 --
--- Name: hs_app_netcdf_variable_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_app_netCDF_variable_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_app_netcdf_variable_417f1b1c ON "hs_app_netCDF_variable" USING btree (content_type_id);
+CREATE INDEX "hs_app_netCDF_variable_417f1b1c" ON "hs_app_netCDF_variable" USING btree (content_type_id);
 
 
 --
@@ -11524,10 +13086,24 @@ CREATE INDEX hs_core_genericresource_7258c37c ON hs_core_genericresource USING b
 
 
 --
+-- Name: hs_core_genericresource_doi_1fd041a54c9b75f0_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_core_genericresource_doi_1fd041a54c9b75f0_like ON hs_core_genericresource USING btree (doi varchar_pattern_ops);
+
+
+--
 -- Name: hs_core_genericresource_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
 CREATE INDEX hs_core_genericresource_e8701ad4 ON hs_core_genericresource USING btree (user_id);
+
+
+--
+-- Name: hs_core_genericresource_short_id_1ccf03b27239c9d9_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_core_genericresource_short_id_1ccf03b27239c9d9_like ON hs_core_genericresource USING btree (short_id varchar_pattern_ops);
 
 
 --
@@ -11549,6 +13125,13 @@ CREATE INDEX hs_core_groupownership_5e7b1936 ON hs_core_groupownership USING btr
 --
 
 CREATE INDEX hs_core_identifier_417f1b1c ON hs_core_identifier USING btree (content_type_id);
+
+
+--
+-- Name: hs_core_identifier_url_5612dd61d821222e_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_core_identifier_url_5612dd61d821222e_like ON hs_core_identifier USING btree (url varchar_pattern_ops);
 
 
 --
@@ -11636,6 +13219,69 @@ CREATE INDEX hs_geo_raster_resource_originalcoverage_417f1b1c ON hs_geo_raster_r
 
 
 --
+-- Name: hs_geographic_feature_resource_fieldinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geographic_feature_resource_fieldinformation_417f1b1c ON hs_geographic_feature_resource_fieldinformation USING btree (content_type_id);
+
+
+--
+-- Name: hs_geographic_feature_resource_geometryinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geographic_feature_resource_geometryinformation_417f1b1c ON hs_geographic_feature_resource_geometryinformation USING btree (content_type_id);
+
+
+--
+-- Name: hs_geographic_feature_resource_originalcoverage_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geographic_feature_resource_originalcoverage_417f1b1c ON hs_geographic_feature_resource_originalcoverage USING btree (content_type_id);
+
+
+--
+-- Name: hs_geographic_feature_resource_originalfileinfo_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_geographic_feature_resource_originalfileinfo_417f1b1c ON hs_geographic_feature_resource_originalfileinfo USING btree (content_type_id);
+
+
+--
+-- Name: hs_labels_userresourceflags_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_labels_userresourceflags_e2f3ef5b ON hs_labels_userresourceflags USING btree (resource_id);
+
+
+--
+-- Name: hs_labels_userresourceflags_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_labels_userresourceflags_e8701ad4 ON hs_labels_userresourceflags USING btree (user_id);
+
+
+--
+-- Name: hs_labels_userresourcelabels_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_labels_userresourcelabels_e2f3ef5b ON hs_labels_userresourcelabels USING btree (resource_id);
+
+
+--
+-- Name: hs_labels_userresourcelabels_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_labels_userresourcelabels_e8701ad4 ON hs_labels_userresourcelabels USING btree (user_id);
+
+
+--
+-- Name: hs_labels_userstoredlabels_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_labels_userstoredlabels_e8701ad4 ON hs_labels_userstoredlabels USING btree (user_id);
+
+
+--
 -- Name: hs_model_program_mpmetadata_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -11664,17 +13310,17 @@ CREATE INDEX hs_modelinstance_modeloutput_417f1b1c ON hs_modelinstance_modeloutp
 
 
 --
--- Name: hs_swat_modelinstance_executedby_content_type_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_script_resource_scriptspecificmetadata_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_swat_modelinstance_executedby_content_type_id ON hs_swat_modelinstance_executedby USING btree (content_type_id);
+CREATE INDEX hs_script_resource_scriptspecificmetadata_417f1b1c ON hs_script_resource_scriptspecificmetadata USING btree (content_type_id);
 
 
 --
--- Name: hs_swat_modelinstance_modelinput_content_type_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_swat_modelinstance_modelinput_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_swat_modelinstance_modelinput_content_type_id ON hs_swat_modelinstance_modelinput USING btree (content_type_id);
+CREATE INDEX hs_swat_modelinstance_modelinput_417f1b1c ON hs_swat_modelinstance_modelinput USING btree (content_type_id);
 
 
 --
@@ -11685,10 +13331,10 @@ CREATE INDEX hs_swat_modelinstance_modelmethod_417f1b1c ON hs_swat_modelinstance
 
 
 --
--- Name: hs_swat_modelinstance_modelobjective_content_type_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_swat_modelinstance_modelobjective_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_swat_modelinstance_modelobjective_content_type_id ON hs_swat_modelinstance_modelobjective USING btree (content_type_id);
+CREATE INDEX hs_swat_modelinstance_modelobjective_417f1b1c ON hs_swat_modelinstance_modelobjective USING btree (content_type_id);
 
 
 --
@@ -11703,13 +13349,6 @@ CREATE INDEX hs_swat_modelinstance_modelobjective_swat_model_objectives_402b ON 
 --
 
 CREATE INDEX hs_swat_modelinstance_modelobjective_swat_model_objectives_5316 ON hs_swat_modelinstance_modelobjective_swat_model_objectives USING btree (modelobjectivechoices_id);
-
-
---
--- Name: hs_swat_modelinstance_modeloutput_content_type_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX hs_swat_modelinstance_modeloutput_content_type_id ON hs_swat_modelinstance_modeloutput USING btree (content_type_id);
 
 
 --
@@ -11734,17 +13373,10 @@ CREATE INDEX hs_swat_modelinstance_modelparameter_model_parameters_d6566261 ON h
 
 
 --
--- Name: hs_swat_modelinstance_simulationtype_content_type_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_swat_modelinstance_simulationtype_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_swat_modelinstance_simulationtype_content_type_id ON hs_swat_modelinstance_simulationtype USING btree (content_type_id);
-
-
---
--- Name: hs_tools_resource_fee_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX hs_tools_resource_fee_417f1b1c ON hs_tools_resource_fee USING btree (content_type_id);
+CREATE INDEX hs_swat_modelinstance_simulationtype_417f1b1c ON hs_swat_modelinstance_simulationtype USING btree (content_type_id);
 
 
 --
@@ -11755,10 +13387,31 @@ CREATE INDEX hs_tools_resource_requesturlbase_417f1b1c ON hs_tools_resource_requ
 
 
 --
--- Name: hs_tools_resource_toolresourcetype_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedrestypes_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_tools_resource_toolresourcetype_417f1b1c ON hs_tools_resource_toolresourcetype USING btree (content_type_id);
+CREATE INDEX hs_tools_resource_supportedrestypes_417f1b1c ON hs_tools_resource_supportedrestypes USING btree (content_type_id);
+
+
+--
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types_a538657; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tools_resource_supportedrestypes_supported_res_types_a538657 ON hs_tools_resource_supportedrestypes_supported_res_types USING btree (supportedrestypechoices_id);
+
+
+--
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types_ae94a0b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tools_resource_supportedrestypes_supported_res_types_ae94a0b ON hs_tools_resource_supportedrestypes_supported_res_types USING btree (supportedrestypes_id);
+
+
+--
+-- Name: hs_tools_resource_toolicon_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tools_resource_toolicon_417f1b1c ON hs_tools_resource_toolicon USING btree (content_type_id);
 
 
 --
@@ -11766,6 +13419,118 @@ CREATE INDEX hs_tools_resource_toolresourcetype_417f1b1c ON hs_tools_resource_to
 --
 
 CREATE INDEX hs_tools_resource_toolversion_417f1b1c ON hs_tools_resource_toolversion USING btree (content_type_id);
+
+
+--
+-- Name: oauth2_provider_accesstoken_6bc0a4eb; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_accesstoken_6bc0a4eb ON oauth2_provider_accesstoken USING btree (application_id);
+
+
+--
+-- Name: oauth2_provider_accesstoken_94a08da1; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_accesstoken_94a08da1 ON oauth2_provider_accesstoken USING btree (token);
+
+
+--
+-- Name: oauth2_provider_accesstoken_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_accesstoken_e8701ad4 ON oauth2_provider_accesstoken USING btree (user_id);
+
+
+--
+-- Name: oauth2_provider_accesstoken_token_3f77f86fb4ecbe0f_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_accesstoken_token_3f77f86fb4ecbe0f_like ON oauth2_provider_accesstoken USING btree (token varchar_pattern_ops);
+
+
+--
+-- Name: oauth2_provider_application_9d667c2b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_application_9d667c2b ON oauth2_provider_application USING btree (client_secret);
+
+
+--
+-- Name: oauth2_provider_application_client_id_58c909672dac14b2_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_application_client_id_58c909672dac14b2_like ON oauth2_provider_application USING btree (client_id varchar_pattern_ops);
+
+
+--
+-- Name: oauth2_provider_application_client_secret_7a03c41cdcace5e9_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_application_client_secret_7a03c41cdcace5e9_like ON oauth2_provider_application USING btree (client_secret varchar_pattern_ops);
+
+
+--
+-- Name: oauth2_provider_application_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_application_e8701ad4 ON oauth2_provider_application USING btree (user_id);
+
+
+--
+-- Name: oauth2_provider_grant_6bc0a4eb; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_grant_6bc0a4eb ON oauth2_provider_grant USING btree (application_id);
+
+
+--
+-- Name: oauth2_provider_grant_c1336794; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_grant_c1336794 ON oauth2_provider_grant USING btree (code);
+
+
+--
+-- Name: oauth2_provider_grant_code_a5c88732687483b_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_grant_code_a5c88732687483b_like ON oauth2_provider_grant USING btree (code varchar_pattern_ops);
+
+
+--
+-- Name: oauth2_provider_grant_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_grant_e8701ad4 ON oauth2_provider_grant USING btree (user_id);
+
+
+--
+-- Name: oauth2_provider_refreshtoken_6bc0a4eb; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_refreshtoken_6bc0a4eb ON oauth2_provider_refreshtoken USING btree (application_id);
+
+
+--
+-- Name: oauth2_provider_refreshtoken_94a08da1; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_refreshtoken_94a08da1 ON oauth2_provider_refreshtoken USING btree (token);
+
+
+--
+-- Name: oauth2_provider_refreshtoken_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_refreshtoken_e8701ad4 ON oauth2_provider_refreshtoken USING btree (user_id);
+
+
+--
+-- Name: oauth2_provider_refreshtoken_token_1e4e9388e6a22527_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX oauth2_provider_refreshtoken_token_1e4e9388e6a22527_like ON oauth2_provider_refreshtoken USING btree (token varchar_pattern_ops);
 
 
 --
@@ -11904,6 +13669,14 @@ ALTER TABLE ONLY django_docker_processes_dockervolume
 
 
 --
+-- Name: D2339626414192982538d20c2f5e41c1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_labels_userresourcelabels
+    ADD CONSTRAINT "D2339626414192982538d20c2f5e41c1" FOREIGN KEY (resource_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D28d4ec87c18a4f707acafb3b265fe0b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -11968,6 +13741,22 @@ ALTER TABLE ONLY ga_resources_renderedlayer
 
 
 --
+-- Name: D45bbb0995f328a0a002d8f6df90b6c5; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_supportedrestypes_supported_res_types
+    ADD CONSTRAINT "D45bbb0995f328a0a002d8f6df90b6c5" FOREIGN KEY (supportedrestypechoices_id) REFERENCES hs_tools_resource_supportedrestypechoices(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D467aacf426b069679ea1cdc7ff9cc2a; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_script_resource_scriptmetadata
+    ADD CONSTRAINT "D467aacf426b069679ea1cdc7ff9cc2a" FOREIGN KEY (coremetadata_ptr_id) REFERENCES hs_core_coremetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D59977fad305f0130e8e94d0cf611f50; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -12016,6 +13805,14 @@ ALTER TABLE ONLY django_docker_processes_dockerenvvar
 
 
 --
+-- Name: D792bbec64dddad2dfcdc3c0be032f83; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tools_resource_supportedrestypes_supported_res_types
+    ADD CONSTRAINT "D792bbec64dddad2dfcdc3c0be032f83" FOREIGN KEY (supportedrestypes_id) REFERENCES hs_tools_resource_supportedrestypes(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D7e7cede746315ab9e08ce902995fd0e; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -12029,6 +13826,22 @@ ALTER TABLE ONLY ga_resources_renderedlayer
 
 ALTER TABLE ONLY ref_ts_reftimeseries
     ADD CONSTRAINT "D90ce1b78bee1ce52cbd3c2e51980f13" FOREIGN KEY (baseresource_ptr_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D9aead397b25d8154e554023da34d33b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY oauth2_provider_refreshtoken
+    ADD CONSTRAINT "D9aead397b25d8154e554023da34d33b" FOREIGN KEY (access_token_id) REFERENCES oauth2_provider_accesstoken(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: a17250f96ea449de36002be9c6c6acfb; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY oauth2_provider_accesstoken
+    ADD CONSTRAINT a17250f96ea449de36002be9c6c6acfb FOREIGN KEY (application_id) REFERENCES oauth2_provider_application(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -12112,11 +13925,27 @@ ALTER TABLE ONLY auth_user_user_permissions
 
 
 --
+-- Name: b47420973174e99d60b21c97419b7e7d; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_swatmodelinstancemetadata
+    ADD CONSTRAINT b47420973174e99d60b21c97419b7e7d FOREIGN KEY (modelinstancemetadata_ptr_id) REFERENCES hs_modelinstance_modelinstancemetadata(coremetadata_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: b63b96a572d7b3efb2f8fb476540a554; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY hs_access_control_resourceaccess
     ADD CONSTRAINT b63b96a572d7b3efb2f8fb476540a554 FOREIGN KEY (resource_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: b880a3861b1b4ee955080e12d158b7e7; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_labels_userresourceflags
+    ADD CONSTRAINT b880a3861b1b4ee955080e12d158b7e7 FOREIGN KEY (resource_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -12149,6 +13978,30 @@ ALTER TABLE ONLY django_docker_processes_dockerlink
 
 ALTER TABLE ONLY generic_threadedcomment
     ADD CONSTRAINT comment_ptr_id_refs_id_d4c241e5 FOREIGN KEY (comment_ptr_id) REFERENCES django_comments(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: coremetadata_ptr_id_94bd0d87da46011_fk_hs_core_coremetadata_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_geographicfeaturemetadata
+    ADD CONSTRAINT coremetadata_ptr_id_94bd0d87da46011_fk_hs_core_coremetadata_id FOREIGN KEY (coremetadata_ptr_id) REFERENCES hs_core_coremetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: d4e9b3137507001988ea891be22e9789; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_labels_resourcelabels
+    ADD CONSTRAINT d4e9b3137507001988ea891be22e9789 FOREIGN KEY (resource_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: da2196e2988877260c8db8e9bb03265e; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY oauth2_provider_refreshtoken
+    ADD CONSTRAINT da2196e2988877260c8db8e9bb03265e FOREIGN KEY (application_id) REFERENCES oauth2_provider_application(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -12237,6 +14090,14 @@ ALTER TABLE ONLY django_docker_processes_overrideenvvar
 
 ALTER TABLE ONLY django_docker_processes_overrideport
     ADD CONSTRAINT ed07907c5bbff48aa33f866d15220f0a FOREIGN KEY (container_overrides_id) REFERENCES django_docker_processes_containeroverrides(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: ed9fd5eb4f62c9b049823c4a9799fadb; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY oauth2_provider_grant
+    ADD CONSTRAINT ed9fd5eb4f62c9b049823c4a9799fadb FOREIGN KEY (application_id) REFERENCES oauth2_provider_application(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -12760,6 +14621,22 @@ ALTER TABLE ONLY hs_geo_raster_resource_cellinformation
 
 
 --
+-- Name: hs_g_content_type_id_322c34901bfae5cb_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_fieldinformation
+    ADD CONSTRAINT hs_g_content_type_id_322c34901bfae5cb_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_g_content_type_id_3a67e16436568536_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_originalfileinfo
+    ADD CONSTRAINT hs_g_content_type_id_3a67e16436568536_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_g_content_type_id_3c68392c27f3db93_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -12768,11 +14645,59 @@ ALTER TABLE ONLY hs_geo_raster_resource_originalcoverage
 
 
 --
+-- Name: hs_g_content_type_id_4dbd862ddd6248f6_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_geometryinformation
+    ADD CONSTRAINT hs_g_content_type_id_4dbd862ddd6248f6_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_g_content_type_id_63f5acc301191318_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY hs_geo_raster_resource_bandinformation
     ADD CONSTRAINT hs_g_content_type_id_63f5acc301191318_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_g_content_type_id_66d126c2b3cf7352_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_geographic_feature_resource_originalcoverage
+    ADD CONSTRAINT hs_g_content_type_id_66d126c2b3cf7352_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_labels_userlabels_user_id_67d4ad8ba6073785_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_labels_userlabels
+    ADD CONSTRAINT hs_labels_userlabels_user_id_67d4ad8ba6073785_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_labels_userresource_user_id_17c2ac15d94c26f8_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_labels_userresourceflags
+    ADD CONSTRAINT hs_labels_userresource_user_id_17c2ac15d94c26f8_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_labels_userresourcel_user_id_ca1355f4a3868e3_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_labels_userresourcelabels
+    ADD CONSTRAINT hs_labels_userresourcel_user_id_ca1355f4a3868e3_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_labels_userstoredla_user_id_534d602d9683725a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_labels_userstoredlabels
+    ADD CONSTRAINT hs_labels_userstoredla_user_id_534d602d9683725a_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -12800,6 +14725,38 @@ ALTER TABLE ONLY hs_modelinstance_executedby
 
 
 --
+-- Name: hs_s_content_type_id_2525bc5c55d4bdb6_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelinput
+    ADD CONSTRAINT hs_s_content_type_id_2525bc5c55d4bdb6_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_s_content_type_id_36a685eb8e70f0ba_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_simulationtype
+    ADD CONSTRAINT hs_s_content_type_id_36a685eb8e70f0ba_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_s_content_type_id_60bff7e50d58202e_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_script_resource_scriptspecificmetadata
+    ADD CONSTRAINT hs_s_content_type_id_60bff7e50d58202e_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_s_content_type_id_62f727efbef81583_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_swat_modelinstance_modelobjective
+    ADD CONSTRAINT hs_s_content_type_id_62f727efbef81583_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_s_content_type_id_67e73462ac6a1f3b_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -12816,51 +14773,11 @@ ALTER TABLE ONLY hs_swat_modelinstance_modelmethod
 
 
 --
--- Name: hs_swat_modelinstance_executedby_content_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_t_content_type_id_4054d4b11537b3be_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY hs_swat_modelinstance_executedby
-    ADD CONSTRAINT hs_swat_modelinstance_executedby_content_type_id_fkey FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: hs_swat_modelinstance_modelinput_content_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_swat_modelinstance_modelinput
-    ADD CONSTRAINT hs_swat_modelinstance_modelinput_content_type_id_fkey FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: hs_swat_modelinstance_modelobjective_content_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_swat_modelinstance_modelobjective
-    ADD CONSTRAINT hs_swat_modelinstance_modelobjective_content_type_id_fkey FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: hs_swat_modelinstance_modeloutput_content_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_swat_modelinstance_modeloutput
-    ADD CONSTRAINT hs_swat_modelinstance_modeloutput_content_type_id_fkey FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: hs_swat_modelinstance_simulationtype_content_type_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_swat_modelinstance_simulationtype
-    ADD CONSTRAINT hs_swat_modelinstance_simulationtype_content_type_id_fkey FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: hs_swat_modelinstance_swatmodelinstanc_coremetadata_ptr_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_swat_modelinstance_swatmodelinstancemetadata
-    ADD CONSTRAINT hs_swat_modelinstance_swatmodelinstanc_coremetadata_ptr_id_fkey FOREIGN KEY (coremetadata_ptr_id) REFERENCES hs_core_coremetadata(id) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY hs_tools_resource_toolicon
+    ADD CONSTRAINT hs_t_content_type_id_4054d4b11537b3be_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -12872,14 +14789,6 @@ ALTER TABLE ONLY hs_tools_resource_toolversion
 
 
 --
--- Name: hs_t_content_type_id_5ec1c49e6fcf0e12_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_tools_resource_fee
-    ADD CONSTRAINT hs_t_content_type_id_5ec1c49e6fcf0e12_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: hs_t_content_type_id_62b8f4790407354c_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -12888,11 +14797,43 @@ ALTER TABLE ONLY hs_tools_resource_requesturlbase
 
 
 --
--- Name: hs_to_content_type_id_c1e8b932248645d_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_t_content_type_id_767d162d9152deeb_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY hs_tools_resource_toolresourcetype
-    ADD CONSTRAINT hs_to_content_type_id_c1e8b932248645d_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY hs_tools_resource_supportedrestypes
+    ADD CONSTRAINT hs_t_content_type_id_767d162d9152deeb_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: oauth2_provider_access_user_id_5e2f004fdebea22d_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY oauth2_provider_accesstoken
+    ADD CONSTRAINT oauth2_provider_access_user_id_5e2f004fdebea22d_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: oauth2_provider_applic_user_id_7fa13387c260b798_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY oauth2_provider_application
+    ADD CONSTRAINT oauth2_provider_applic_user_id_7fa13387c260b798_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: oauth2_provider_grant_user_id_3111344894d452da_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY oauth2_provider_grant
+    ADD CONSTRAINT oauth2_provider_grant_user_id_3111344894d452da_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: oauth2_provider_refres_user_id_3f695b639cfbc9a3_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY oauth2_provider_refreshtoken
+    ADD CONSTRAINT oauth2_provider_refres_user_id_3f695b639cfbc9a3_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

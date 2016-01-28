@@ -35,6 +35,7 @@ display_usage() {
 	echo "usage: $0 rebuild         # deletes hydroshare container contents only and deploys using exsiting database"
 	echo "usage: $0 rebuild --db    # deletes all database and container contents and deploys from scratch"
 	echo "usage: $0 rebuild_index   # rebuild solr index in a non-interactive way"
+	echo "usage: $0 reset_all       # remove all data, containers and images that were previously deployed"
 	echo "usage: $0 restart         # restarts the hydroshare container without rebuilding"
 	echo "usage: $0 start           # attempts to start all containers"
 	echo "usage: $0 stop            # stops all running containers"
@@ -147,7 +148,9 @@ preflight_hs() {
             echo "*** Using SSL: USE_SSL = ${USE_SSL} ***"
             # copy ssl cert and ssl key to hs-certs directory
             yes | cp -rf ${SSL_CERT_DIR}/${SSL_CERT_FILE} ${HOST_SSL_DIR}
-            yes | cp -rf ${SSL_CERT_DIR}/${SSL_KEY_FILE} ${HOST_SSL_DIR};
+            yes | cp -rf ${SSL_CERT_DIR}/${SSL_KEY_FILE} ${HOST_SSL_DIR}
+            # disable SSH server from running
+            sed -i 's!'"/usr/sbin/sshd"'!'"# REMOVED SSH COMPONENT"'!g' ${HS_PATH}/init;
         else
             echo "*** Not using SSL: USE_SSL = ${USE_SSL} ***"
         fi
@@ -298,6 +301,33 @@ rebuild_solr_index() {
     cd -
 }
 
+reset_all_hs() {
+    echo "*** WARNING: All data, containers, and hydroshare related images will be removed ***"
+    if [[ "$(docker ps | grep hydroshare_hydroshare_1)" ]]; then
+        echo "*** INFO: HydroShare found previously running, proceeding with clean up ***"
+        # Remove root items
+        scripts/pre-remove-hs;
+    else
+        echo "*** WARNING: Could not find a running instance of HydroShare ***"
+        echo "*** WARNING: Attempting cleanup anyway ***";
+    fi
+    echo "*** INFO: Stopping all running docker containers ***"
+    docker stop $(docker ps -a -q)
+    echo "*** INFO: Removing all docker containers ***"
+    docker rm -fv $(docker ps -a -q)
+    echo "*** INFO: Removing hydroshare related images ***"
+    while read line; do docker rmi -f $line; done < <(docker images | grep "^hydroshare_" | tr -s ' ' | cut -d ' ' -f 3)
+    echo "*** INFO: Removing static directory ***"
+    if [[ -d hydroshare/static ]]; then
+        echo "INFO: Found hydroshare/static directory, attempting to remove ***"
+        rm -rf hydroshare/static;
+    fi
+    if [[ -f root-items.txt ]]; then
+        echo "INFO: Found root-items.txt file, attempting to remove ***"
+        rm root-items.txt;
+    fi
+}
+
 ### Display usage if exactly one argument is not provided ###
 if [  $# -ne 1 ]
 then
@@ -322,6 +352,8 @@ case "$1" in
     maint_on) maint_on_hs $1
         ;;
     rebuild) rebuild_hs $1 $2
+        ;;
+    reset_all) reset_all_hs $1
         ;;
     restart) restart_hs $1
         ;;

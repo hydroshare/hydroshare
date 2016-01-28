@@ -1,0 +1,58 @@
+{# This template is used as the landing page for Model Program resource #}
+
+{% extends "pages/genericresource.html" %}
+{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
+{% load staticfiles  %}
+
+{% block extended_metadata %}
+    {% if extended_metadata_exists %}
+        <div class="row">
+            <div class="col-md-12">
+                {% if script_metadata %}
+                    {########################}
+                    {#   SCRIPT  METADATA  #}
+                    {########################}
+                    <legend>General</legend>
+                    <table class="custom-table">
+                        <tbody>
+                            <tr>
+                                <th class="text-muted">Programming Language </th>
+                                <td>{{ script_metadata.scriptLanguage }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Programming Language Version </th>
+                                <td>{{ script_metadata.languageVersion }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Script Version </th>
+                                <td>{{ script_metadata.scriptVersion }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Script Dependencies </th>
+                                <td>{{ script_metadata.scriptDependencies }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Release Date </th>
+                                <td>{{ script_metadata.scriptReleaseDate |date:"SHORT_DATE_FORMAT" }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Script Repository </th>
+                                <td>
+                                    <a target="_blank" href="{{ script_metadata.scriptCodeRepository }}">
+                                        {{ script_metadata.scriptCodeRepository }}
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <hr style="border:0"/>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script src="{% static "js/script.js" %}"></script>
+{% endblock %}
