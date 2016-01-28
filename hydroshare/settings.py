@@ -529,6 +529,6 @@ LOGGING = {
             'handlers': ['syslog'],
             'level': 'DEBUG',
             'propagate': False,
-        }
+        },
     }
 }
