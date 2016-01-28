@@ -2242,14 +2242,6 @@ button.loading {
     margin-bottom: 10px;
 }
 
-#btn-edit-profile, #btn-cancel-profile-edit {
-    color: #428bca;
-}
-
-#btn-save-profile {
-    color: #20833F;
-}
-
 .round-image {
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
@@ -3126,3 +3118,13 @@ div.description.active {
     height:100px;
 }
 
+/* Profile edit page */
+.profile-picture-controls {
+    text-align: center;
+    padding: 20px;
+}
+
+.profile-picture-controls .btn {
+    margin-bottom: 20px;
+    width: 100%;
+}

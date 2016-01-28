@@ -13,7 +13,31 @@
             <div class="col-sm-12">
                 {#        Profile picture       #}
                 <div class="row">
-                    <div class="col-sm-3">
+                    {% if profile_user.id == user.id %}
+                        <div class="col-xs-12 col-sm-12">
+                            <div class="dropdown" style="float:right; right:100px; font-size:22px;">
+                                <a id="profile-actions" data-toggle="dropdown" aria-haspopup="true"
+                                   aria-expanded="true">
+                                    <span data-page-mode="view" class="glyphicon glyphicon-cog"></span>
+                                </a>
+
+                                <ul class="dropdown-menu" aria-labelledby="profile-actions" style="background: #FFF;">
+                                    <li id="btn-edit-profile"><a>Edit profile</a></li>
+                                    <li role="separator" class="divider"></li>
+                                    <li><a>Delete profile</a></li>
+                                </ul>
+                            </div>
+
+                            <span data-page-mode="edit" id="btn-save-profile" class="btn btn-primary"
+                                    style="float:right;margin:5px">Save changes
+                            </span>
+                            <span data-page-mode="edit" id="btn-cancel-profile-edit" class="btn btn-default"
+                                    style="float:right;margin:5px">Cancel
+                            </span>
+
+                        </div>
+                    {% endif %}
+                    <div class="col-sm-3" style="margin-bottom:20px;">
                         {% if profile.picture and profile.picture.url %}
                             <div style="background-image: url('{{ profile.picture.url }}')"
                                  class="profile-pic round-image">
@@ -21,6 +45,24 @@
                         {% else %}
                             <div class="profile-pic round-image user-icon"></div>
                         {% endif %}
+
+                        <div data-page-mode="edit">
+                            <div class="profile-picture-controls">
+                            {% if profile.picture and profile.picture.url %}
+{#                                <button class="btn btn-default"><span class="glyphicon glyphicon-upload"></span>&nbsp;Replace</button>#}
+{#                                <button class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Remove</button>#}
+                                <label>Profile picture</label>
+                                <fieldset>
+                                    <span class="btn btn-default btn-file">Change<input type="file"></span>
+                                </fieldset>
+                                <button class="btn btn-default">Remove</button>
+                            {% else %}
+                                <fieldset>
+                                    <span class="btn btn-default btn-file">Add a photo<input type="file"></span>
+                                </fieldset>
+                            {% endif %}
+                            </div>
+                        </div>
                     </div>
 
                     <div class="col-xs-12 col-sm-6">
@@ -67,12 +109,20 @@
                                     <input class="form-control" value="{{ profile_user.first_name }}">
                                 </fieldset>
 
+                                {# Middle name #}
+                                <fieldset class="col-sm-4">
+                                    <label>Middle name</label>
+                                    <input class="form-control" value="">
+                                </fieldset>
+
                                 {# Last name #}
                                 <fieldset class="col-sm-4">
                                     <label>Last name</label>
                                     <input class="form-control" value="{{ profile_user.last_name }}">
                                 </fieldset>
+                            </div>
 
+                            <div class="row">
                                 {# Username #}
                                 <fieldset class="col-sm-4">
                                     <label>Username</label>
@@ -113,13 +163,7 @@
                     </div>
                 </div>
             </div>
-            {% if profile_user.id == user.id %}
-                <div class="col-xs-12 col-sm-12">
-                    <span data-page-mode="view" id="btn-edit-profile" title="Edit profile" class="glyphicon glyphicon-pencil icon-button btn-edit"></span>
-                    <span data-page-mode="edit" id="btn-save-profile" title="Save" class="glyphicon glyphicon-floppy-save icon-button"></span>
-                    <span data-page-mode="edit" id="btn-cancel-profile-edit" title="Cancel" class="glyphicon glyphicon-circle-arrow-left icon-button"></span>
-                </div>
-            {% endif %}
+
         </div>
 
         <div class="full-width-tabs-container">
@@ -197,15 +241,75 @@
                             {% if profile.details and not user.is_anonymous %}
                             <div class="panel panel-default">
                                 <div class="panel-heading">
-                                    <h3 class="panel-title"><span class="glyphicon glyphicon-user">&nbsp;</span>About {{ profile_user.first_name }}</h3>
+                                    <h3 class="panel-title"><span
+                                            class="glyphicon glyphicon-user">&nbsp;</span>About {{ profile_user.first_name }}
+                                    </h3>
                                 </div>
                                 <div class="panel-body">
-                                    <div data-page-mode="view">{{ profile.details }}</div>
+                                    <div data-page-mode="view">
+                                        <div>{{ profile.details }}</div>
+                                        <table class="overview" data-page-mode="view" style="margin-top:20px;">
+                                            <tbody>
+                                            <tr>
+                                                <td><span class="text-muted">User type</span></td>
+                                                <td>University Faculty</td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="text-muted">Country</span></td>
+                                                <td>United States</td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="text-muted">State/Province</span></td>
+                                                <td>Utah</td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="text-muted">User since</span></td>
+                                                <td>01/28/2016</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
 
-                                    <fieldset data-page-mode="edit">
-                                        <label>Description</label>
-                                        <textarea class="form-control" id="exampleTextarea" rows="3" placeholder="About {{ profile_user.first_name }}">{{ profile.details }}</textarea>
-                                    </fieldset>
+
+                                    <div data-page-mode="edit">
+                                        <fieldset>
+                                            <label>Description</label>
+                                            <textarea class="form-control" id="exampleTextarea" rows="3"
+                                                      placeholder="About {{ profile_user.first_name }}">{{ profile.details }}</textarea>
+                                        </fieldset>
+
+                                        <fieldset>
+                                            <label for="exampleSelect1">User type</label>
+                                            <select class="form-control" id="selectUserType">
+                                                <option>University Faculty</option>
+                                                <option>University Professional or Research Staff</option>
+                                                <option>Post-Doctoral Fellow</option>
+                                                <option>University Graduate Student</option>
+                                                <option>University Undergraduate Student</option>
+                                                <option>Commercial/Professional</option>
+                                                <option>Government Official</option>
+                                                <option>School Student Kindergarten to 12th Grade</option>
+                                                <option>School Teacher Kindergarten to 12th Grade</option>
+                                                <option>Other</option>
+                                                <option>Unspecified</option>
+                                            </select>
+                                        </fieldset>
+
+                                        <fieldset>
+                                            <label>Country</label>
+                                            <input class="form-control" value="United States">
+                                        </fieldset>
+
+                                        <fieldset>
+                                            <label>State/Province</label>
+                                            <input class="form-control" value="Utah">
+                                        </fieldset>
+
+                                        <fieldset>
+                                            <label>User since</label>
+                                            <input readonly class="form-control" value="01/28/2016">
+                                        </fieldset>
+                                    </div>
                                 </div>
                             </div>
                             {% endif %}
@@ -277,8 +381,7 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <input class="form-control" placeholder="Subject areas"
-                                                           value="{{ profile.phone_1 }}">
+                                                    <input id="phone1" class="form-control phone" value="{{ profile.phone_1 }}">
                                                 </div>
                                             </fieldset>
 
@@ -299,8 +402,7 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <input class="form-control" placeholder="Subject areas"
-                                                           value="{{ profile.phone_2 }}">
+                                                    <input id="phone2" class="form-control phone" value="{{ profile.phone_2 }}">
                                                 </div>
                                             </fieldset>
                                             <fieldset class="col-sm-12">
@@ -453,17 +555,36 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.13.4/jquery.mask.min.js" type="text/javascript"></script>
     <script type="text/javascript">
     $(document).ready(function () {
+
+        $(".phone").mask("(999) 999-9999");
+
+        $(".phone").on("blur", function () {
+            var last = $(this).val().substr($(this).val().indexOf("-") + 1);
+
+            if (last.length == 5) {
+                var move = $(this).val().substr($(this).val().indexOf("-") + 1, 1);
+
+                var lastfour = last.substr(1, 4);
+
+                var first = $(this).val().substr(0, 9);
+
+                $(this).val(first + move + '-' + lastfour);
+            }
+        });
+
+
         $("[data-page-mode='edit']").hide();
         $("#btn-edit-profile").click(function(){
             $("[data-page-mode='view']").hide();
-            $("[data-page-mode='edit']").fadeIn();
+            $("[data-page-mode='edit']").show();
         });
 
         $("#btn-cancel-profile-edit").click(function(){
             $("[data-page-mode='edit']").hide();
-            $("[data-page-mode='view']").fadeIn();
+            $("[data-page-mode='view']").show();
         });
 
         // Abstract collapse toggle
