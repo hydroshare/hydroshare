@@ -723,6 +723,21 @@ def delete_resource_file(pk, filename_or_id, user):
 
     return filename_or_id
 
+def get_resource_doi(res_id, pending):
+    doi_str = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
+    if pending:
+        return "{doi}pending".format(doi=doi_str)
+    else:
+        return doi_str
+
+
+def get_activated_doi(doi):
+    idx = doi.find('pending')
+    if idx >= 0:
+        return doi[:idx]
+    else:
+        return doi
+
 def publish_resource(user, pk):
     """
     Formally publishes a resource in HydroShare. Triggers the creation of a DOI for the resource, and triggers the
@@ -748,7 +763,8 @@ def publish_resource(user, pk):
     Note:  This is different than just giving public access to a resource via access control rule
     """
     resource = utils.get_resource_by_shortkey(pk)
-    resource.doi = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=pk)
+    # append pending to the doi field to indicate DOI is not activated yet. Upon successful activation, "pending" will be removed from DOI field
+    resource.doi = get_resource_doi(pk, True)
     resource.save()
 
     xml_file_name = '{uuid}_deposit_metadata.xml'.format(uuid=pk)
@@ -770,7 +786,7 @@ def publish_resource(user, pk):
 
         # add doi to "Identifier" element of science metadata
         md_args = {'name': 'doi',
-                   'url': resource.doi}
+                   'url': get_activated_doi(resource.doi)}
         resource.metadata.create_element('Identifier', **md_args)
 
         # downgrade all editor privilege to view privilege with ownership retained

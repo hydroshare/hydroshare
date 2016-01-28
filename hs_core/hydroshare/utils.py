@@ -150,6 +150,10 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
         res_modified_date = resource.metadata.dates.all().filter(type='modified')[0]
         resource.metadata.update_element('date', res_modified_date.id)
 
+    # create published date when the resource is first published
+    if resource.raccess.published:
+        resource.metadata.create_element('date', type='published', start_date=resource.updated)
+
     if overwrite_bag:
         create_bag_files(resource)
 

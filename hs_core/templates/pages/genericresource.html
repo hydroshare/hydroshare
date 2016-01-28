@@ -486,7 +486,7 @@
                     {% endif %}
                 {% else %}
                     {% if cm.raccess.published %}
-                        <span><strong class="label-public">&nbspPublished and Immutable</strong> &#8210; Note that the DOI will not be available until it has been registered and activated.</span>
+                        <span><strong class="label-public">&nbspPublished and Immutable</strong> {% if "pending" in cm.doi %}&#8210; Note that the DOI will not be available until it has been registered and activated.{% endif %}</span>
                     {% elif cm.raccess.public %}
                         <strong class="label-public">&nbspPublic</strong>
                     {% elif cm.raccess.discoverable %}

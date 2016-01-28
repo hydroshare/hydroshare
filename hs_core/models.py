@@ -28,6 +28,8 @@ from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.generic.fields import KeywordsField
 from mezzanine.conf import settings as s
 
+from hs_core.hydroshare.resource import get_activated_doi
+
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
     owner = models.ForeignKey(User)
@@ -1223,8 +1225,11 @@ class AbstractResource(ResourcePermissionsMixin):
         citation_str_lst.append(" ({year}). ".format(year=citation_date.start_date.year))
         citation_str_lst.append(self.metadata.title.value)
 
+        isPendingActivation = False
         if self.metadata.identifiers.all().filter(name="doi"):
             hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
+            if self.doi.find('pending') >= 0:
+                isPendingActivation = True
         elif self.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
             hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         else:
@@ -1241,6 +1246,9 @@ class AbstractResource(ResourcePermissionsMixin):
                                     repl_rel_value=repl_rel.value, creation_date=date_str, url=hs_identifier.url))
         else:
             citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
+
+        if isPendingActivation:
+            citation_str_lst.append(", DOI for this published resource is pending activation.")
 
         return ''.join(citation_str_lst)
 
@@ -1553,7 +1561,7 @@ class CoreMetaData(models.Model):
         etree.SubElement(ds_titles, 'title').text = self.title.value
         # doi_data is required element for dataset
         doi_data = etree.SubElement(dataset, 'doi_data')
-        res_doi = resource.doi
+        res_doi =  get_activated_doi(resource.doi)
         idx = res_doi.find('10.4211')
         if idx >= 0:
             res_doi = res_doi[idx:]
