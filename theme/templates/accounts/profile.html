@@ -24,7 +24,7 @@
                                 <ul class="dropdown-menu" aria-labelledby="profile-actions" style="background: #FFF;">
                                     <li id="btn-edit-profile"><a>Edit profile</a></li>
                                     <li role="separator" class="divider"></li>
-                                    <li><a>Delete profile</a></li>
+                                    <li id="btn-delete-profile"><a>Delete profile</a></li>
                                 </ul>
                             </div>
 
@@ -183,7 +183,7 @@
                 <div role="tabpanel" class="tab-pane fade in active" id="overview">
                     <div class="row">
                         <div class="col-md-7">
-                            <div class="panel panel-default">
+                            <div data-page-mode="on-edit-blur" class="panel panel-default">
                                 <div class="panel-heading">
                                     <h3 class="panel-title"><span class="glyphicon glyphicon-bell">&nbsp;</span>Recent activity</h3>
                                 </div>
@@ -579,12 +579,19 @@
         $("[data-page-mode='edit']").hide();
         $("#btn-edit-profile").click(function(){
             $("[data-page-mode='view']").hide();
-            $("[data-page-mode='edit']").show();
+            $("[data-page-mode='edit']").fadeIn();
+            $("[data-page-mode='on-edit-blur']").fadeTo("fast", 0.5, function () {
+                // Animation complete.
+            });
+
         });
 
         $("#btn-cancel-profile-edit").click(function(){
             $("[data-page-mode='edit']").hide();
-            $("[data-page-mode='view']").show();
+            $("[data-page-mode='view']").fadeIn();
+            $("[data-page-mode='on-edit-blur']").fadeTo("fast", 1, function () {
+                // Animation complete.
+            });
         });
 
         // Abstract collapse toggle

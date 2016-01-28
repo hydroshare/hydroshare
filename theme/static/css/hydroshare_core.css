@@ -2242,6 +2242,9 @@ button.loading {
     margin-bottom: 10px;
 }
 
+#btn-edit-profile, #btn-delete-profile {
+    cursor: pointer;
+}
 .round-image {
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
