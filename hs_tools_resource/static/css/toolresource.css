@@ -7,7 +7,6 @@
 .user-webapp-icon, #tool-icon-preview, #tool-icon{
     width:80px;
     height:80px;
-    border: 0;
     border-radius: 7px;
     margin: 10px;
 }
@@ -18,7 +17,6 @@
 .dropdown-user-webapp-icon {
     width: 40px;
     height: 40px;
-    border: 0;
     border-radius: 4px;
     margin: 5px;
 }

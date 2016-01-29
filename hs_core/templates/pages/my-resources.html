@@ -1,7 +1,5 @@
 {% extends "pages/page.html" %}
 {% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
-
-{# {% block title %}{{ user|best_name }}'s Resources{% endblock %}#}
 {% block title %}My Resources{% endblock %}
 
 {% block main %}
@@ -401,6 +399,20 @@
     <script type="text/javascript">
         var resourceTable;
 
+        function getTableMaxScrollSize() {
+            /* Large Devices, Wide Screens
+             @media only screen and (min-width : 1200px)*/
+            var largeDeviceScreenSize = 1200;
+            if ($(window).width() >= largeDeviceScreenSize) {
+                scrollY = $("body > .container").height();
+            }
+            else {
+                scrollY = Math.max(500, ($("body > .container").height() - $("#facets").height()));
+            }
+
+            return scrollY;
+        }
+
         $(document).ready(function () {
 
         /*==================================================
@@ -422,7 +434,7 @@
                 "order": [[4, "asc"]],
                 "paging": false,
                 "info": false,
-                "scrollY": "523px",
+                "scrollY": getTableMaxScrollSize(),
                 "scrollCollapse": true,
                 "columnDefs": [
                     {
@@ -469,8 +481,11 @@
                         "visible": false,
                         "searchable": true
                     }
-
                 ]
+            });
+
+            $(window).resize(function () {
+                $('.dataTables_scrollBody').css('max-height', getTableMaxScrollSize());
             });
 
             // Trigger label creation when pressing Enter

@@ -42,5 +42,5 @@ $(document).ready(function() {
     }).on('error', function() {
         setDefaultIcon($(this));
     });
-    $('h2').attr('style', 'width: calc(100% - 110px);');
+    $('#resource-title').attr('style', 'width: calc(100% - 110px);');
 });
