@@ -30,8 +30,8 @@ hydroshare:
     # - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
     # log files
     - "HS_LOG_FILES:/var/log/hydroshare"
-    # shared location for uwsgi.sock
-    - "/var/run/uwsgi.sock"
+    # shared location for uwsgi.sock between containers
+    - "/var/run"
   ports:
     - "1338:22"
     - "8000:8000"
