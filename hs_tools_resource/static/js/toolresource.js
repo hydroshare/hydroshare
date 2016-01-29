@@ -22,4 +22,25 @@ $(document).ready(function() {
     if ($('#resourceSpecificTab #id_url').val() != "") {
         $('#tool-icon-preview').attr('src', $('#resourceSpecificTab #id_url').val());
     }
+
+    /*
+    * The following code is only meant to affect resources landing pages other than
+    * Web Apps themselves, as it formats the "Open with..." dropdown button on the
+    * landing page of resources that have a web app associated with them.
+    */
+    var setDefaultIcon = function($this) {
+        var style = $this.hasClass('user-webapp-icon') ? "" : "dropdown-";
+        $this
+            .attr('src', '/static/img/web-app-default-icon.png')
+            .removeClass(style + 'user-webapp-icon')
+            .addClass(style + 'default-webapp-icon');
+    };
+    $('.user-webapp-icon, .dropdown-user-webapp-icon').each(function() {
+        if ($(this).attr('src') == '') {
+            setDefaultIcon($(this));
+        }
+    }).on('error', function() {
+        setDefaultIcon($(this));
+    });
+    $('#resource-title').attr('style', 'width: calc(100% - 110px);');
 });

@@ -61,7 +61,22 @@
         {# ======= Title ======= #}
         <div class="col-sm-12">
             {% if not metadata_form %}
-                <h2>{{ title }}</h2>
+                <h2 id="resource-title">{{ title }}</h2>
+                {% if relevant_tools %}
+                    <span id="apps-dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Open with...
+                        <span class="caret"></span></button>
+                    <ul class="dropdown-menu">
+                        {% for tool in relevant_tools %}
+                            <li>
+                                <a href="{{ tool.url }}" target="_blank">
+                                    <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">
+                                    <span>{{ tool.title }}</span>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             {% else %}
                 <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
                       id="id-title"
@@ -3508,29 +3523,18 @@
                         $(this).closest("form").find("button").show();
                     });
                 });
-                var setDefaultIcon = function($this) {
-                    $this
-                            .attr('src', '{{ STATIC_URL }}img/web-app-default-icon.png')
-                            .removeClass('user-webapp-icon')
-                            .addClass('default-webapp-icon');
-                };
-                $('.user-webapp-icon').each(function() {
-                    if ($(this).attr('src') == '') {
-                        setDefaultIcon($(this));
-                    }
-                }).on('error', function() {
-                    setDefaultIcon($(this));
-                });
-
             });
         </script>
         <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=drawing&callback=initMap"></script>
+        {% if relevant_tools %}
+            <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>
+        {% endif %}
     {% endblock %}
 
 
     {% block extra_css %}
         {{ block.super }}
-        <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+        {% if relevant_tools %}
+            <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+        {% endif %}
     {%  endblock %}
-
-
