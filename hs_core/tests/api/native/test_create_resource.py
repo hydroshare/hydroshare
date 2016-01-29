@@ -199,53 +199,44 @@ class TestCreateResource(TestCase):
         self.assertEqual(res.metadata.title.value, 'My Test resource')
         self.assertEquals(res.files.all().count(), 2)
 
-    # def test_create_resource_with_zipfile(self):
-    #
-    #     # Make a zip file
-    #     zip_path = os.path.join(self.tmp_dir, 'test.zip')
-    #     with zipfile.ZipFile(zip_path, 'w') as zfile:
-    #         zfile.write(self.raster_file_path)
-    #         zfile.write(self.txt_file_path)
-    #
-    #     # Create a resource with zipfile, do not un-pack
-    #     payload = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
-    #                                     content_type='application/zip',
-    #                                     size=os.stat(zip_path).st_size)
-    #     res = resource.create_resource('GenericResource',
-    #                                    self.user,
-    #                                    'My Test resource',
-    #                                    files=(payload,))
-    #
-    #     pid = res.short_id
-    #
-    #     # get the resource by pid
-    #     res = get_resource_by_shortkey(pid)
-    #     self.assertEquals(res.files.all().count(), 1)
-    #
-    #     # Create a resource with zipfile, un-pack
-    #     payload2 = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
-    #                                     content_type='application/zip',
-    #                                     size=os.stat(zip_path).st_size)
-    #     res = resource.create_resource('GenericResource',
-    #                                    self.user,
-    #                                    'My Test resource',
-    #                                    files=(payload2,),
-    #                                    unpack_file=True)
-    #
-    #     pid = res.short_id
-    #
-    #     # Wait until zip unpacking finishes
-    #     itr = 0
-    #     res_tmp = get_resource_by_shortkey(pid)
-    #     while res_tmp.file_unpack_status != 'Done':
-    #         if itr > 10:
-    #             self.fail("File unpack status is {0} after {1} iterations".format(res_tmp.file_unpack_status,
-    #                                                                               itr))
-    #         time.sleep(10)
-    #         res_tmp = get_resource_by_shortkey(pid)
-    #         itr += 1
-    #
-    #     self.assertEquals(res_tmp.files.all().count(), 2)
+    def test_create_resource_with_zipfile(self):
+
+        # Make a zip file
+        zip_path = os.path.join(self.tmp_dir, 'test.zip')
+        with zipfile.ZipFile(zip_path, 'w') as zfile:
+            zfile.write(self.raster_file_path)
+            zfile.write(self.txt_file_path)
+
+        # Create a resource with zipfile, do not un-pack
+        payload = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
+                                        content_type='application/zip',
+                                        size=os.stat(zip_path).st_size)
+        res = resource.create_resource('GenericResource',
+                                       self.user,
+                                       'My Test resource',
+                                       files=(payload,))
+
+        pid = res.short_id
+
+        # get the resource by pid
+        res = get_resource_by_shortkey(pid)
+        for f in res.files.all():
+            print f.resource_file.name
+        self.assertEquals(res.files.all().count(), 1)
+
+        # Create a resource with zipfile, un-pack
+        payload2 = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
+                                        content_type='application/zip',
+                                        size=os.stat(zip_path).st_size)
+        res = resource.create_resource('GenericResource',
+                                       self.user,
+                                       'My Test resource',
+                                       files=(payload2,),
+                                       unpack_file=True)
+
+        pid = res.short_id
+        res_tmp = get_resource_by_shortkey(pid)
+        self.assertEquals(res_tmp.files.all().count(), 2)
 
 
 
