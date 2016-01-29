@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import requests
 
 from django.conf import settings
+from django.core.mail import send_mail
 
 from celery import shared_task
 
@@ -31,5 +32,6 @@ def check_doi_activation():
 
         email_msg = ''.join(msg_lst)
         # send email to support@hydroshare.org
-
+        send_mail('Notification of pending DOI activation of published resources', email_msg,
+                       settings.DEFAULT_FROM_EMAIL, 'hongyi@renci.org')
     return True

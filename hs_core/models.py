@@ -28,8 +28,6 @@ from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.generic.fields import KeywordsField
 from mezzanine.conf import settings as s
 
-from hs_core.hydroshare.resource import get_activated_doi
-
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
     owner = models.ForeignKey(User)
@@ -1524,6 +1522,8 @@ class CoreMetaData(models.Model):
     def get_crossref_deposit_xml(self, pretty_print=True):
         # importing here to avoid circular import problem
         from hydroshare.utils import get_resource_types
+        from hydroshare.resource import get_activated_doi
+
         xsi = "http://www.w3.org/2001/XMLSchema-instance"
         schemaLocation = 'http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schemas/crossref4.3.6.xsd'
         ns = "http://www.crossref.org/schema/4.3.6"
