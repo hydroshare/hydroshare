@@ -4,7 +4,6 @@ import os
 import tempfile
 import zipfile
 import shutil
-import time
 
 from unittest import TestCase
 import datetime as dt
