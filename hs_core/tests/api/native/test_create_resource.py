@@ -8,25 +8,13 @@ import shutil
 from unittest import TestCase
 import datetime as dt
 
-from django.core.files.uploadedfile import UploadedFile
 from django.contrib.auth.models import Group
 
 from hs_core.hydroshare import resource, get_resource_by_shortkey
 from hs_core.hydroshare import users
 from hs_core.models import GenericResource
 
-
-class MyTemporaryUploadedFile(UploadedFile):
-    def __init__(self, file=None, name=None, content_type=None, size=None, charset=None, content_type_extra=None):
-        super(UploadedFile, self).__init__(file, name)
-        self.orig_name = name
-        self.size = size
-        self.content_type = content_type
-        self.charset = charset
-        self.content_type_extra = content_type_extra
-
-    def temporary_file_path(self):
-        return self.orig_name
+from hs_core.tests.api.utils import MyTemporaryUploadedFile
 
 
 class TestCreateResource(TestCase):
@@ -214,7 +202,6 @@ class TestCreateResource(TestCase):
                                        self.user,
                                        'My Test resource',
                                        files=(payload,))
-
         pid = res.short_id
 
         # get the resource by pid
@@ -230,7 +217,6 @@ class TestCreateResource(TestCase):
                                        'My Test resource',
                                        files=(payload2,),
                                        unpack_file=True)
-
         pid = res.short_id
         res = get_resource_by_shortkey(pid)
         self.assertEquals(res.files.all().count(), 2)
