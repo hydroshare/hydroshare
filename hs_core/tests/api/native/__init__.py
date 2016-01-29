@@ -1,6 +1,6 @@
 __author__ = 'jeffersonheard'
 from test_add_resource_files import *
-#from test_bagit import *
+from test_bagit import *
 from test_comment_on_resource import *
 from test_core_metadata import *
 from test_create_account import *
