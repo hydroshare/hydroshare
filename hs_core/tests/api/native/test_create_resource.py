@@ -219,8 +219,6 @@ class TestCreateResource(TestCase):
 
         # get the resource by pid
         res = get_resource_by_shortkey(pid)
-        for f in res.files.all():
-            print f.resource_file.name
         self.assertEquals(res.files.all().count(), 1)
 
         # Create a resource with zipfile, un-pack
@@ -234,8 +232,8 @@ class TestCreateResource(TestCase):
                                        unpack_file=True)
 
         pid = res.short_id
-        res_tmp = get_resource_by_shortkey(pid)
-        self.assertEquals(res_tmp.files.all().count(), 2)
+        res = get_resource_by_shortkey(pid)
+        self.assertEquals(res.files.all().count(), 2)
 
 
 
