@@ -5,6 +5,7 @@ import requests
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.conf import settings
 from rest_framework import status
@@ -802,8 +803,9 @@ def publish_resource(user, pk):
         resource.raccess.immutable = True
         resource.raccess.published = True
         resource.raccess.save()
-
-    return pk
+        return pk
+    else:
+        raise ValidationError("{msg} - raised from Crossref".format(msg=response.content))
 
 def resolve_doi(doi):
     """

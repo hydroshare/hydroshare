@@ -486,7 +486,7 @@
                     {% endif %}
                 {% else %}
                     {% if cm.raccess.published %}
-                        <span><strong class="label-public">&nbspPublished and Immutable</strong> {% if "pending" in cm.doi %}&#8210; Note that the DOI will not be available until it has been registered and activated.{% endif %}</span>
+                        <strong class="label-public">&nbspPublished</strong>
                     {% elif cm.raccess.public %}
                         <strong class="label-public">&nbspPublic</strong>
                     {% elif cm.raccess.discoverable %}
@@ -494,7 +494,11 @@
                     {% else %}
                         <strong class="label-private">&nbspPrivate</strong>
                     {% endif %}
-                    &{% if cm.raccess.shareable %}<strong style="color:#5cb85c">&nbspShareable</strong>{% else %}<strong style="color:#d9534f">&nbspNot Shareable</strong>{% endif %}
+                    {% if cm.raccess.published %}
+                        {% if "pending" in cm.doi %}&#8210; Note that the DOI will not be available until it has been registered and activated.{% endif %}
+                    {% else %}
+                        &{% if cm.raccess.shareable %}<strong style="color:#5cb85c">&nbspShareable</strong>{% else %}<strong style="color:#d9534f">&nbspNot Shareable</strong>{% endif %}
+                    {% endif %}
                 {% endif %}
             </div>
 
