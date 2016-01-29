@@ -1,1 +1,1 @@
-from test_script_resource import *
+from .test_script_resource import *

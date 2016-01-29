@@ -1,2 +1,1 @@
-__author__ = 'hydro'
-from test_access_control import *
+from .test_access_control import *

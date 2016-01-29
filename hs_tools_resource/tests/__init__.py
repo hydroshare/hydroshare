@@ -1,1 +1,1 @@
-from test_web_app import *
+from .test_web_app import *
