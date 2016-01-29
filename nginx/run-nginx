@@ -81,12 +81,13 @@ start_nginx() {
             docker start ${NGINX_DOCKER_CNTR};
         fi
     fi
+    docker exec ${HYDROSHARE_CID} chmod 777 /var/run/uwsgi.sock
 }
 
 restart_nginx() {
     echo "*** ${1^^} ***"
     stop_nginx STOP
-    preflight_nginx
+    #preflight_nginx
     start_nginx START
 }
 
