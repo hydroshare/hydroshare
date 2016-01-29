@@ -32,9 +32,9 @@ class TestGetChecksum(MockIRODSTestCaseMixin, unittest.TestCase):
         )
 
     def tearDown(self):
+        super(TestGetChecksum, self).tearDown()
         User.objects.all().delete()
         GenericResource.objects.all().delete()
-        super(TestGetChecksum, self).tearDown()
 
     def test_get_checksum(self):
         with self.assertRaises(NotImplementedError):

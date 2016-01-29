@@ -1,7 +1,6 @@
 __author__ = 'tonycastronova'
 
 from unittest import TestCase
-from mock import patch
 
 from django.contrib.auth.models import User, Group
 
@@ -9,14 +8,12 @@ from hs_core.models import GenericResource
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
 
-# iRODS mocking has not been used here as we want to test bag creation
+# iRODS mocking has not been used here as we want to test bag creation which needs
+# interaction with iRODS
 
 
 class TestGetResource(TestCase):
     def setUp(self):
-        # stop mocking of iRODS interaction in case those patchers are active
-        patch.stopall()
-
         self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
         self.user = users.create_account(

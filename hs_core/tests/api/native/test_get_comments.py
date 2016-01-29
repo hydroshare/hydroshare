@@ -60,7 +60,7 @@ class TestGetComments(MockIRODSTestCaseMixin, unittest.TestCase):
                                                         in_reply_to=self.comment_2.pk)
 
     def tearDown(self):
-        super(TestGetComments, self).setUp()
+        super(TestGetComments, self).tearDown()
         User.objects.all().delete()
         Group.objects.all().delete()
         ThreadedComment.objects.all().delete()

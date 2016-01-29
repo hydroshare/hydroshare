@@ -42,7 +42,7 @@ class TestUtils(MockIRODSTestCaseMixin, unittest.TestCase):
         self.res.save()
 
     def tearDown(self):
-        super(TestUtils, self).setUp()
+        super(TestUtils, self).tearDown()
         User.objects.all().delete()
         Group.objects.all().delete()
         GenericResource.objects.all().delete()

@@ -1,5 +1,4 @@
 from unittest import TestCase
-from mock import patch
 
 from django.contrib.auth.models import Group, User
 
@@ -12,8 +11,6 @@ from django_irods.storage import IrodsStorage
 
 class TestBagIt(TestCase):
     def setUp(self):
-        # stop mocking of iRODS interaction in case those patchers are active
-        patch.stopall()
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
         self.user = hydroshare.create_account(
