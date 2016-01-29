@@ -76,9 +76,9 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.delete_group(felines)
         with self.assertRaises(PermissionDenied): 
-            cat.uaccess.get_view_groups()
+            cat.uaccess.view_groups
         with self.assertRaises(PermissionDenied): 
-            cat.uaccess.get_owned_groups()
+            cat.uaccess.owned_groups
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.owns_group(felines)
         with self.assertRaises(PermissionDenied): 
@@ -108,11 +108,11 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.get_group_unshare_users(felines)
         with self.assertRaises(PermissionDenied): 
-            cat.uaccess.get_view_resources()
+            cat.uaccess.view_resources
         with self.assertRaises(PermissionDenied): 
-            cat.uaccess.get_owned_resources()
+            cat.uaccess.owned_resources
         with self.assertRaises(PermissionDenied): 
-            cat.uaccess.get_edit_resources()
+            cat.uaccess.edit_resources
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
         with self.assertRaises(PermissionDenied): 
@@ -173,7 +173,7 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(is_equal_to_as_set(cat.uaccess.get_resource_undo_users(scratching), [dog]))
         self.assertTrue(is_equal_to_as_set(cat.uaccess.get_resource_unshare_users(scratching), [cat, dog]))
 
-        self.assertTrue(is_equal_to_as_set(felines.gaccess.get_members(), [cat, dog]))
+        self.assertTrue(is_equal_to_as_set(felines.gaccess.members, [cat, dog]))
         self.assertTrue(is_equal_to_as_set(felines.gaccess.owners, [cat, dog]))
 
         self.assertTrue(is_equal_to_as_set(scratching.raccess.view_users, [cat, dog]))
@@ -188,7 +188,7 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(is_equal_to_as_set(cat.uaccess.get_resource_undo_users(scratching), []))
         self.assertTrue(is_equal_to_as_set(cat.uaccess.get_resource_unshare_users(scratching), []))
 
-        self.assertTrue(is_equal_to_as_set(felines.gaccess.get_members(), [cat]))
+        self.assertTrue(is_equal_to_as_set(felines.gaccess.members, [cat]))
         self.assertTrue(is_equal_to_as_set(felines.gaccess.owners, [cat]))
 
         self.assertTrue(is_equal_to_as_set(scratching.raccess.view_users, [cat]))

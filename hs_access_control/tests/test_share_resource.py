@@ -730,8 +730,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_view_group(meowers))
 
         self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertTrue(meowers.gaccess.public)
         self.assertTrue(meowers.gaccess.discoverable)
@@ -756,11 +756,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
 
         self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 1)
-        self.assertEqual(meowers.gaccess.get_members().count(), 1)
+        self.assertEqual(meowers.gaccess.members.count(), 1)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -790,11 +790,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.OWNER)
 
         self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 2)
-        self.assertEqual(meowers.gaccess.get_members().count(), 2)
+        self.assertEqual(meowers.gaccess.members.count(), 2)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -824,11 +824,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.OWNER)
 
         self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 2)
-        self.assertEqual(meowers.gaccess.get_members().count(), 2)
+        self.assertEqual(meowers.gaccess.members.count(), 2)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -867,11 +867,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # initial state
         self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 1)
-        self.assertEqual(meowers.gaccess.get_members().count(), 1)
+        self.assertEqual(meowers.gaccess.members.count(), 1)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -910,11 +910,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # check other state for this change
         self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 1)
-        self.assertEqual(meowers.gaccess.get_members().count(), 2)
+        self.assertEqual(meowers.gaccess.members.count(), 2)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -947,11 +947,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # check for unchanged configuration
         self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 1)
-        self.assertEqual(meowers.gaccess.get_members().count(), 2)
+        self.assertEqual(meowers.gaccess.members.count(), 2)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -988,11 +988,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # initial state
         self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 1)
-        self.assertEqual(meowers.gaccess.get_members().count(), 1)
+        self.assertEqual(meowers.gaccess.members.count(), 1)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -1027,11 +1027,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # shared state
         self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 1)
-        self.assertEqual(meowers.gaccess.get_members().count(), 2)
+        self.assertEqual(meowers.gaccess.members.count(), 2)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -1064,11 +1064,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # shared state
         self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 1)
-        self.assertEqual(meowers.gaccess.get_members().count(), 2)
+        self.assertEqual(meowers.gaccess.members.count(), 2)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -1105,11 +1105,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # initial state
         self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 1)
-        self.assertEqual(meowers.gaccess.get_members().count(), 1)
+        self.assertEqual(meowers.gaccess.members.count(), 1)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -1141,11 +1141,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 2)
-        self.assertEqual(meowers.gaccess.get_members().count(), 2)
+        self.assertEqual(meowers.gaccess.members.count(), 2)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -1183,11 +1183,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # check for correctness
         self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 1)
-        self.assertEqual(meowers.gaccess.get_members().count(), 2)
+        self.assertEqual(meowers.gaccess.members.count(), 2)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -1220,11 +1220,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # initial state
         self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 1)
-        self.assertEqual(meowers.gaccess.get_members().count(), 2)
+        self.assertEqual(meowers.gaccess.members.count(), 2)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -1258,11 +1258,11 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # back to initial state
         self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.owners))
-        self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.get_members()))
-        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.get_view_resources()))
+        self.assertTrue(is_equal_to_as_set([cat], meowers.gaccess.members))
+        self.assertTrue(is_equal_to_as_set([], meowers.gaccess.view_resources))
 
         self.assertEqual(meowers.gaccess.owners.count(), 1)
-        self.assertEqual(meowers.gaccess.get_members().count(), 1)
+        self.assertEqual(meowers.gaccess.members.count(), 1)
 
         # simple privilege for cat
         self.assertTrue(cat.uaccess.owns_group(meowers))
@@ -1378,7 +1378,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # now share something with dog via group meowers
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.CHANGE)
-        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.get_members().all()))
+        self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.members.all()))
 
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))

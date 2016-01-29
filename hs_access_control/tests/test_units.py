@@ -75,21 +75,21 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
     def test_user_create_group(self):
         george = self.george
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_view_groups(), [bikers]))
+        self.assertTrue(is_equal_to_as_set(george.uaccess.view_groups, [bikers]))
         foo = george.uaccess.create_group('Foozball')
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_view_groups(), [foo, bikers]))
+        self.assertTrue(is_equal_to_as_set(george.uaccess.view_groups, [foo, bikers]))
 
     def test_user_delete_group(self):
         george = self.george
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_view_groups(), [bikers]))
+        self.assertTrue(is_equal_to_as_set(george.uaccess.view_groups, [bikers]))
         george.uaccess.delete_group(bikers)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_view_groups(), []))
+        self.assertTrue(is_equal_to_as_set(george.uaccess.view_groups, []))
 
-    def test_user_get_owned_groups(self):
+    def test_user_owned_groups(self):
         george = self.george
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_owned_groups(), [bikers]))
+        self.assertTrue(is_equal_to_as_set(george.uaccess.owned_groups, [bikers]))
 
     def test_user_owns_group(self):
         george = self.george
@@ -149,19 +149,19 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         george = self.george
         alva = self.alva
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_members(), [george]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.members, [george]))
         george.uaccess.share_group_with_user(bikers, alva, PrivilegeCodes.VIEW)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_members(), [george, alva]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.members, [george, alva]))
 
     def test_user_unshare_group_with_user(self):
         george = self.george
         alva = self.alva
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_members(), [george]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.members, [george]))
         george.uaccess.share_group_with_user(bikers, alva, PrivilegeCodes.VIEW)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_members(), [george, alva]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.members, [george, alva]))
         george.uaccess.unshare_group_with_user(bikers, alva)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_members(), [george]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.members, [george]))
 
     def test_user_can_unshare_group_with_user(self):
         george = self.george
@@ -175,11 +175,11 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         george = self.george
         alva = self.alva
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_members(), [george]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.members, [george]))
         george.uaccess.share_group_with_user(bikers, alva, PrivilegeCodes.VIEW)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_members(), [george, alva]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.members, [george, alva]))
         george.uaccess.undo_share_group_with_user(bikers, alva)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_members(), [george]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.members, [george]))
 
     def test_user_can_undo_share_group_with_user(self):
         george = self.george
@@ -205,35 +205,35 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         george.uaccess.share_group_with_user(bikers, alva, PrivilegeCodes.VIEW)
         self.assertTrue(is_equal_to_as_set(george.uaccess.get_group_unshare_users(bikers), [alva]))
 
-    def test_user_get_view_resources(self):
+    def test_user_view_resources(self):
         george = self.george
         bikes = self.bikes
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_view_resources(), [bikes]))
+        self.assertTrue(is_equal_to_as_set(george.uaccess.view_resources, [bikes]))
         trikes = hydroshare.create_resource(resource_type='GenericResource',
                                             owner=self.george,
                                             title='Trikes',
                                             metadata=[],)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_view_resources(), [bikes, trikes]))
+        self.assertTrue(is_equal_to_as_set(george.uaccess.view_resources, [bikes, trikes]))
 
-    def test_user_get_owned_resources(self):
+    def test_user_owned_resources(self):
         george = self.george
         bikes = self.bikes
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_owned_resources(), [bikes]))
+        self.assertTrue(is_equal_to_as_set(george.uaccess.owned_resources, [bikes]))
         trikes = hydroshare.create_resource(resource_type='GenericResource',
                                             owner=self.george,
                                             title='Trikes',
                                             metadata=[],)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_owned_resources(), [bikes, trikes]))
+        self.assertTrue(is_equal_to_as_set(george.uaccess.owned_resources, [bikes, trikes]))
 
-    def test_user_get_edit_resources(self):
+    def test_user_edit_resources(self):
         george = self.george
         bikes = self.bikes
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_edit_resources(), [bikes]))
+        self.assertTrue(is_equal_to_as_set(george.uaccess.edit_resources, [bikes]))
         trikes = hydroshare.create_resource(resource_type='GenericResource',
                                             owner=self.george,
                                             title='Trikes',
                                             metadata=[],)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_edit_resources(), [bikes, trikes]))
+        self.assertTrue(is_equal_to_as_set(george.uaccess.edit_resources, [bikes, trikes]))
 
     def test_user_get_resources_with_explicit_access(self):
         george = self.george
@@ -314,11 +314,11 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         george = self.george
         bikes = self.bikes
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_view_resources(), []))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.view_resources, []))
         george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.VIEW)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_view_resources(), [bikes]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.view_resources, [bikes]))
         george.uaccess.undo_share_resource_with_group(bikes, bikers)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_view_resources(), []))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.view_resources, []))
 
     def test_user_can_undo_share_resource_with_group(self):
         george = self.george
@@ -332,19 +332,19 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         george = self.george
         alva = self.alva
         bikes = self.bikes
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_view_resources(), []))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.view_resources, []))
         george.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.VIEW)
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_view_resources(), [bikes]))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.view_resources, [bikes]))
 
     def test_user_unshare_resource_with_user(self):
         george = self.george
         alva = self.alva
         bikes = self.bikes
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_view_resources(), []))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.view_resources, []))
         george.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.VIEW)
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_view_resources(), [bikes]))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.view_resources, [bikes]))
         george.uaccess.unshare_resource_with_user(bikes, alva)
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_view_resources(), []))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.view_resources, []))
 
     def test_user_can_unshare_resource_with_user(self):
         george = self.george
@@ -358,11 +358,11 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         george = self.george
         alva = self.alva
         bikes = self.bikes
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_view_resources(), []))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.view_resources, []))
         george.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.VIEW)
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_view_resources(), [bikes]))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.view_resources, [bikes]))
         george.uaccess.undo_share_resource_with_user(bikes, alva)
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_view_resources(), []))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.view_resources, []))
 
     def test_user_can_undo_share_resource_with_user(self):
         george = self.george
@@ -376,19 +376,19 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         george = self.george
         bikes = self.bikes
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_view_resources(), []))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.view_resources, []))
         george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.VIEW)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_view_resources(), [bikes]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.view_resources, [bikes]))
 
     def test_user_unshare_resource_with_group(self):
         george = self.george
         bikes = self.bikes
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_view_resources(), []))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.view_resources, []))
         george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.VIEW)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_view_resources(), [bikes]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.view_resources, [bikes]))
         george.uaccess.unshare_resource_with_group(bikes, bikers)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_view_resources(), []))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.view_resources, []))
 
     def test_user_can_unshare_resource_with_group(self):
         george = self.george
@@ -430,29 +430,29 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.VIEW)
         self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_unshare_groups(bikes), [bikers]))
 
-    def test_group_get_members(self):
+    def test_group_members(self):
         george = self.george
         alva = self.alva
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_members(), [george]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.members, [george]))
         george.uaccess.share_group_with_user(bikers, alva, PrivilegeCodes.CHANGE)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_members(), [george, alva]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.members, [george, alva]))
 
-    def test_group_get_view_resources(self):
+    def test_group_view_resources(self):
         george = self.george
         bikes = self.bikes
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_view_resources(), []))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.view_resources, []))
         george.uaccess.share_resource_with_group(bikes, bikers,  PrivilegeCodes.CHANGE)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_view_resources(), [bikes]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.view_resources, [bikes]))
 
-    def test_group_get_edit_resources(self):
+    def test_group_edit_resources(self):
         george = self.george
         bikes = self.bikes
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_edit_resources(), []))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.edit_resources, []))
         george.uaccess.share_resource_with_group(bikes, bikers,  PrivilegeCodes.CHANGE)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.get_edit_resources(), [bikes]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.edit_resources, [bikes]))
 
     def test_group_get_resources_with_explicit_access(self):
         george = self.george
@@ -474,9 +474,9 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         george = self.george
         alva = self.alva
         bikers = self.bikers
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.view_users, [george]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.members, [george]))
         george.uaccess.share_group_with_user(bikers, alva, PrivilegeCodes.OWNER)
-        self.assertTrue(is_equal_to_as_set(bikers.gaccess.view_users, [george, alva]))
+        self.assertTrue(is_equal_to_as_set(bikers.gaccess.members, [george, alva]))
 
     def test_group_edit_users(self):
         george = self.george

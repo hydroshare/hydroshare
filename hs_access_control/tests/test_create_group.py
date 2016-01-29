@@ -54,23 +54,23 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         """Create a new group"""
         dog = self.dog
         cat = self.cat
-        self.assertEqual(dog.uaccess.get_owned_groups().count(), 0)
-        self.assertEqual(dog.uaccess.get_view_groups().count(), 0)
+        self.assertEqual(dog.uaccess.owned_groups.count(), 0)
+        self.assertEqual(dog.uaccess.view_groups.count(), 0)
 
         # user 'dog' create a new group called 'arfers'
         arfers = dog.uaccess.create_group('arfers')
 
-        self.assertEqual(dog.uaccess.get_owned_groups().count(), 1)
-        self.assertEqual(dog.uaccess.get_view_groups().count(), 1)
+        self.assertEqual(dog.uaccess.owned_groups.count(), 1)
+        self.assertEqual(dog.uaccess.view_groups.count(), 1)
 
-        self.assertEqual(cat.uaccess.get_owned_groups().count(), 0)
-        self.assertEqual(cat.uaccess.get_view_groups().count(), 0)
+        self.assertEqual(cat.uaccess.owned_groups.count(), 0)
+        self.assertEqual(cat.uaccess.view_groups.count(), 0)
 
-        self.assertTrue(is_equal_to_as_set([arfers], dog.uaccess.get_owned_groups()))
-        self.assertTrue(is_equal_to_as_set([arfers], dog.uaccess.get_view_groups()))
+        self.assertTrue(is_equal_to_as_set([arfers], dog.uaccess.owned_groups))
+        self.assertTrue(is_equal_to_as_set([arfers], dog.uaccess.view_groups))
 
         # check membership list
-        self.assertEqual(arfers.gaccess.get_members().count(), 1)
+        self.assertEqual(arfers.gaccess.members.count(), 1)
 
         # metadata state
         self.assertTrue(arfers.gaccess.public)
@@ -90,7 +90,7 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_group(arfers, PrivilegeCodes.VIEW))
 
         # membership
-        self.assertTrue(dog in arfers.gaccess.get_members())
+        self.assertTrue(dog in arfers.gaccess.members)
 
         # protection state for other user
         self.assertFalse(cat.uaccess.owns_group(arfers))
@@ -105,7 +105,7 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(cat.uaccess.can_share_group(arfers, PrivilegeCodes.VIEW))
 
         # membership for other user
-        self.assertTrue(cat not in arfers.gaccess.get_members())
+        self.assertTrue(cat not in arfers.gaccess.members)
 
         # test django admin's group access permissions - admin has not been given any access over the group by anyone
         # even though admin does not own the group, admin can do anything to a group
@@ -125,8 +125,8 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         arfers = dog.uaccess.create_group('arfers')
 
         # check that it got created
-        self.assertEqual(dog.uaccess.get_owned_groups().count(), 1)
-        self.assertEqual(dog.uaccess.get_view_groups().count(), 1)
+        self.assertEqual(dog.uaccess.owned_groups.count(), 1)
+        self.assertEqual(dog.uaccess.view_groups.count(), 1)
 
         # # THE FOLLOWING WORKS
         # # but is a synonym for UserGroupPrivilege.objects.filter(privilege=PrivilegeCodes.OWNER)
@@ -142,8 +142,8 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         dog.uaccess.delete_group(arfers)
 
         # check that it got destroyed according to statistics
-        self.assertEqual(dog.uaccess.get_owned_groups().count(), 0)
-        self.assertEqual(dog.uaccess.get_view_groups().count(), 0)
+        self.assertEqual(dog.uaccess.owned_groups.count(), 0)
+        self.assertEqual(dog.uaccess.view_groups.count(), 0)
 
 
 class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):

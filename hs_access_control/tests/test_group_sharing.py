@@ -117,8 +117,8 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         dog.uaccess.share_resource_with_group(scratching, felines, PrivilegeCodes.CHANGE)
 
         # is the resource just shared with this group?
-        self.assertEqual(felines.gaccess.get_view_resources().count(), 1)
-        self.assertTrue(is_equal_to_as_set([scratching], felines.gaccess.get_view_resources()))
+        self.assertEqual(felines.gaccess.view_resources.count(), 1)
+        self.assertTrue(is_equal_to_as_set([scratching], felines.gaccess.view_resources))
 
         # check that flags haven't changed
         self.assertTrue(felines.gaccess.discoverable)
@@ -139,5 +139,5 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(cm.exception.message, 'Insufficient privilege to unshare resource')
 
         dog.uaccess.unshare_resource_with_group(scratching, felines)
-        self.assertEqual(felines.gaccess.get_view_resources().count(), 0)
+        self.assertEqual(felines.gaccess.view_resources.count(), 0)
 

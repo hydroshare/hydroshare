@@ -19,8 +19,7 @@ Notes and quandaries
 --------------------
 
 * A resource or group can become unowned as a result of a user becoming inactive. In this case, logic must not break.
-* users of ResourceAccess.get_edit_resources(), ResourceAccess.edit_users, ResourceAccess.view_users should be aware
-  that
+* users of ResourceAccess.edit_resources, ResourceAccess.edit_users, ResourceAccess.view_users should be aware that
 
     * Listed resources include all accessible resources (via user or group sharing)
     * privileges are cumulative over all flags
@@ -278,7 +277,8 @@ class UserAccess(models.Model):
     # held and owned groups
     ################################
 
-    def get_view_groups(self):
+    @property
+    def view_groups(self):
         """ 
         Get number of groups accessible to self. 
 
@@ -288,7 +288,8 @@ class UserAccess(models.Model):
 
         return Group.objects.filter(g2ugp__user=self.user)
 
-    def get_edit_groups(self):
+    @property
+    def edit_groups(self):
         """
         Return a list of groups editable by self.
 
@@ -300,7 +301,7 @@ class UserAccess(models.Model):
         Because this returns a QuerySet, and not a set of objects, one can append
         extra QuerySet attributes to it, e.g. ordering, selection, projection:
 
-            q = user.get_edit_groups()
+            q = user.edit_groups
             q2 = q.order_by(...)
             v2 = q2.values('title')
             # etc
@@ -311,9 +312,10 @@ class UserAccess(models.Model):
         return Group.objects.filter(g2ugp__user=self.user,
                                     g2ugp__privilege__lte=PrivilegeCodes.CHANGE)
 
-    def get_owned_groups(self):
+    @property
+    def owned_groups(self):
         """
-        Return a list of groups owned by self.
+        Return a QuerySet of groups owned by self.
 
         :return: QuerySet of groups owned by self.
 
@@ -323,7 +325,7 @@ class UserAccess(models.Model):
         Because this returns a QuerySet, and not a set of objects, one can append
         extra QuerySet attributes to it, e.g. ordering, selection, projection:
 
-            q = user.get_owned_groups()
+            q = user.owned_groups
             q2 = q.order_by(...)
             v2 = q2.values('title')
             # etc
@@ -416,7 +418,7 @@ class UserAccess(models.Model):
 
         access_group = this_group.gaccess
 
-        return self.user.is_superuser or access_group.public or self.user in this_group.gaccess.get_members()
+        return self.user.is_superuser or access_group.public or self.user in this_group.gaccess.members
 
     def can_view_group_metadata(self, this_group):
         """
@@ -675,7 +677,7 @@ class UserAccess(models.Model):
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active: raise PermissionDenied("Grantee user is not active")
 
-        if this_user not in this_group.gaccess.get_members():
+        if this_user not in this_group.gaccess.members:
             raise PermissionDenied("User is not a member of the group")
 
         # Check for sufficient privilege
@@ -736,7 +738,7 @@ class UserAccess(models.Model):
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active: raise PermissionDenied("Grantee user is not active")
 
-        if this_user not in this_group.gaccess.get_members():
+        if this_user not in this_group.gaccess.members:
             return False  # unshare raises PermissionDenied("User is not a member of the group")
 
         # Check for sufficient privilege
@@ -811,7 +813,7 @@ class UserAccess(models.Model):
                                                  grantor=this_grantor).exists():
             raise PermissionDenied("Grantor did not grant privilege")
 
-        if this_user not in access_group.get_members():
+        if this_user not in access_group.members:
             raise PermissionDenied("User is not a member of the group")
 
         try:
@@ -902,7 +904,7 @@ class UserAccess(models.Model):
         else:
             this_grantor = self.user
 
-        if this_user not in access_group.get_members():
+        if this_user not in access_group.members:
             return False # undo_share raises PermissionDenied("User is not a member of the group")
 
         try:
@@ -930,10 +932,10 @@ class UserAccess(models.Model):
 
     def get_group_undo_users(self, this_group):
         """
-        DEPRECATED: Get a list of users to whom self granted access
+        DEPRECATED: Get a QuerySet of users to whom self granted access
 
         :param this_group: group to check.
-        :return: list of users granted access by self.
+        :return: QuerySet of users granted access by self.
 
         *This will be replaced in the next version* 
 
@@ -993,10 +995,10 @@ class UserAccess(models.Model):
 
     def get_group_unshare_users(self, this_group):
         """
-        Get a list of users who could be unshared from this group.
+        Get a QuerySet of users who could be unshared from this group.
 
         :param this_group: group to check.
-        :return: list of users who could be removed by self.
+        :return: QuerySet of users who could be removed by self.
 
         A user can be unshared with a group if:
 
@@ -1006,7 +1008,7 @@ class UserAccess(models.Model):
 
             * Self has admin privilege.
 
-        except that a user in the list cannot be the last owner of the group.
+        except that a user in the QuerySet cannot be the last owner of the group.
 
         Usage:
         ------
@@ -1033,12 +1035,12 @@ class UserAccess(models.Model):
                 users_to_exclude = User.objects.filter(is_active=True,
                                                        u2ugp__group=this_group,
                                                        u2ugp__privilege=PrivilegeCodes.OWNER)
-                return access_group.get_members().exclude(pk__in=users_to_exclude)
+                return access_group.members.exclude(pk__in=users_to_exclude)
             else:
-                return access_group.get_members()
+                return access_group.members
 
         # unprivileged user can only remove grants to self, if any
-        elif self in access_group.view_users:
+        elif self in access_group.members:
             if access_group.owners.count() == 1:
                 # if self is not an owner,
                 if not UserGroupPrivilege.objects\
@@ -1056,11 +1058,11 @@ class UserAccess(models.Model):
 
     def get_groups_with_explicit_access(self, this_privilege):
         """
-        Get a list of groups for which the user has the specified privilege
+        Get a QuerySet of groups for which the user has the specified privilege
         Args:
             this_privilege: one of the PrivilegeCodes
 
-        Returns: list of group objects (QuerySet)
+        Returns: QuerySet of group objects (QuerySet)
         """
         if __debug__:
             assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
@@ -1083,11 +1085,12 @@ class UserAccess(models.Model):
     # PUBLIC FUNCTIONS: resources
     ##########################################
 
-    def get_view_resources(self):
+    @property 
+    def view_resources(self):
         """
-        Get a list of resources held by user.
+        QuerySet of resources held by user.
 
-        :return: List of resource objects accessible (in any form) to user.
+        :return: QuerySet of resource objects accessible (in any form) to user.
 
         Held implies viewable.
         """
@@ -1096,9 +1099,10 @@ class UserAccess(models.Model):
         # need distinct due to duplicates invoked via Q expressions 
         return BaseResource.objects.filter(Q(r2urp__user=self.user) | Q(r2grp__group__g2ugp__user=self.user)).distinct()
 
-    def get_owned_resources(self):
+    @property 
+    def owned_resources(self):
         """
-        Get a list of resources owned by user.
+        Get a QuerySet of resources owned by user.
 
         :return: List of resource objects owned by this user.
         """
@@ -1107,9 +1111,10 @@ class UserAccess(models.Model):
         return BaseResource.objects.filter(r2urp__user=self.user,
                                            r2urp__privilege=PrivilegeCodes.OWNER)
 
-    def get_edit_resources(self):
+    @property 
+    def edit_resources(self):
         """
-        Get a list of resources that can be edited by user.
+        Get a QuerySet of resources that can be edited by user.
 
         :return: QuerySet of resource objects that can be edited  by this user.
 
@@ -1126,6 +1131,7 @@ class UserAccess(models.Model):
                                               | Q(r2grp__group__g2ugp__user=self.user,
                                                   r2grp__privilege__lte=PrivilegeCodes.CHANGE))).distinct()
 
+    # TODO: make this conformant to Sphinx conventions. 
     def get_resources_with_explicit_access(self, this_privilege):
         """
         Get a list of resources that the user has the specified privilege
@@ -1280,7 +1286,7 @@ class UserAccess(models.Model):
         Note that:
 
         * One can view resources that are public, that one does not own.
-        * Thus, this returns True for many public resources that are not returned from get_view_resources().
+        * Thus, this returns True for many public resources that are not returned from view_resources.
         * This is not sensitive to the setting for the "immutable" flag. That only affects editing.
 
         """
@@ -1414,7 +1420,7 @@ class UserAccess(models.Model):
         if not self.can_share_resource(this_resource, this_privilege):
             return False
 
-        if self.user not in this_group.gaccess.get_members() and not self.user.is_superuser:
+        if self.user not in this_group.gaccess.members and not self.user.is_superuser:
             return False
 
         return True
@@ -1866,7 +1872,7 @@ class UserAccess(models.Model):
         if not self.can_share_resource(this_resource, this_privilege):
             raise PermissionDenied("User has insufficient sharing privilege over resource")
 
-        if self.user not in access_group.get_members() and not self.user.is_superuser:
+        if self.user not in access_group.members and not self.user.is_superuser:
             raise PermissionDenied("User is not a member of the group and not an admin")
 
         # user is authorized and privilege is appropriate
@@ -2159,13 +2165,6 @@ class GroupAccess(models.Model):
     # group membership: owners, edit_users, view_users are parallel to those in resources
     ####################################
 
-    def get_members(self):
-        """ Get members of a group
-
-        :return: List of User objects who are members
-        """
-        return self.view_users
-
     @property
     def owners(self):
         """
@@ -2182,7 +2181,7 @@ class GroupAccess(models.Model):
     @property
     def edit_users(self):
         """
-        Return list of owners for a group.
+        Return list of users who can add members to a group.
 
         :return: list of users
 
@@ -2194,9 +2193,9 @@ class GroupAccess(models.Model):
                                    u2ugp__privilege__lte=PrivilegeCodes.CHANGE)
 
     @property
-    def view_users(self):
+    def members(self):
         """
-        Return list of owners for a group.
+        Return list of members for a group.
 
         :return: list of users
 
@@ -2207,16 +2206,19 @@ class GroupAccess(models.Model):
                                    u2ugp__group=self.group,
                                    u2ugp__privilege__lte=PrivilegeCodes.VIEW)
 
-    def get_view_resources(self):
-        """ Get resources held by group. use held_resources
+    @property
+    def view_resources(self):
+        """ 
+        QuerySet of resources held by group. 
 
-        :return: List of resource objects held by group.
+        :return: QuerySet of resource objects held by group.
         """
         return BaseResource.objects.filter(r2grp__group=self.group)
 
-    def get_edit_resources(self):
-        """
-        Get a list of resources that can be edited by group.
+    @property
+    def edit_resources(self):
+        """ 
+        QuerySet of resources that can be edited by group.
 
         :return: List of resource objects that can be edited  by this group.
         """
@@ -2327,7 +2329,7 @@ class ResourceAccess(models.Model):
     @property
     def view_users(self):
         """ 
-        QuerySet of users with view privileges
+        QuerySet of users with view privileges over a resource. 
         
         This is a property so that it is a workalike for a prior explicit list.
 

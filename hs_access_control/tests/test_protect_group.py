@@ -83,10 +83,10 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_group(polyamory, PrivilegeCodes.VIEW))
 
         # membership
-        self.assertTrue(cat in polyamory.gaccess.get_members())
+        self.assertTrue(cat in polyamory.gaccess.members)
 
         # ensure that this group was created and current user is a member
-        self.assertTrue(is_equal_to_as_set([polyamory], cat.uaccess.get_view_groups()))
+        self.assertTrue(is_equal_to_as_set([polyamory], cat.uaccess.view_groups))
 
     def test_02_isolate(self):
         "Groups cannot be changed by non-members"
@@ -107,7 +107,7 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_share_group(polyamory, PrivilegeCodes.VIEW))
 
         # dog's groups should be unchanged
-        self.assertTrue(is_equal_to_as_set([], dog.uaccess.get_view_groups()))
+        self.assertTrue(is_equal_to_as_set([], dog.uaccess.view_groups))
 
         # dog should not be able to modify group members
         with self.assertRaises(PermissionDenied) as cm:

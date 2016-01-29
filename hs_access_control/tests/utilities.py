@@ -75,12 +75,12 @@ def assertResourceOwnersAre(self, this_resource, these_users):
         self.assertTrue(u.uaccess.can_change_resource_flags(this_resource))
         self.assertTrue(u.uaccess.can_view_resource(this_resource))
         self.assertTrue(u.uaccess.can_delete_resource(this_resource))
-        self.assertTrue(this_resource in u.uaccess.get_owned_resources())
+        self.assertTrue(this_resource in u.uaccess.owned_resources)
         if not this_resource.raccess.immutable:
-            self.assertTrue(this_resource in u.uaccess.get_edit_resources())
+            self.assertTrue(this_resource in u.uaccess.edit_resources)
         else:
-            self.assertTrue(this_resource not in u.uaccess.get_edit_resources())
-        self.assertTrue(this_resource in u.uaccess.get_view_resources())
+            self.assertTrue(this_resource not in u.uaccess.edit_resources)
+        self.assertTrue(this_resource in u.uaccess.view_resources)
         self.assertTrue(this_resource in u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER))
         self.assertTrue(this_resource not in u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE))
         self.assertTrue(this_resource not in u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW))
@@ -109,16 +109,16 @@ def assertResourceEditorsAre(self, this_resource, these_users):
         self.assertFalse(u.uaccess.can_change_resource_flags(this_resource))
         self.assertTrue(u.uaccess.can_view_resource(this_resource))
         self.assertFalse(u.uaccess.can_delete_resource(this_resource))
-        self.assertTrue(this_resource not in u.uaccess.get_owned_resources())
-        self.assertTrue(this_resource in u.uaccess.get_edit_resources())
+        self.assertTrue(this_resource not in u.uaccess.owned_resources)
+        self.assertTrue(this_resource in u.uaccess.edit_resources)
         self.assertTrue(is_equal_to_as_set(
-            u.uaccess.get_owned_resources(),
+            u.uaccess.owned_resources,
             u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)))
         self.assertTrue(is_equal_to_as_set(
-            set(u.uaccess.get_edit_resources())
-            - set(u.uaccess.get_owned_resources()),
+            set(u.uaccess.edit_resources)
+            - set(u.uaccess.owned_resources),
             u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)))
-        self.assertTrue(this_resource in u.uaccess.get_view_resources())
+        self.assertTrue(this_resource in u.uaccess.view_resources)
         self.assertTrue(this_resource not in u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER))
         self.assertTrue(this_resource in u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE))
         self.assertTrue(this_resource not in u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW))
@@ -141,9 +141,9 @@ def assertResourceViewersAre(self, this_resource, these_users):
         self.assertFalse(u.uaccess.can_change_resource_flags(this_resource))
         self.assertTrue(u.uaccess.can_view_resource(this_resource))
         self.assertFalse(u.uaccess.can_delete_resource(this_resource))
-        self.assertTrue(this_resource not in u.uaccess.get_owned_resources())
-        self.assertTrue(this_resource not in u.uaccess.get_edit_resources())
-        self.assertTrue(this_resource in u.uaccess.get_view_resources())
+        self.assertTrue(this_resource not in u.uaccess.owned_resources)
+        self.assertTrue(this_resource not in u.uaccess.edit_resources)
+        self.assertTrue(this_resource in u.uaccess.view_resources)
         self.assertTrue(this_resource not in u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER))
         self.assertTrue(this_resource not in u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE))
         self.assertTrue(this_resource in u.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW))
@@ -165,8 +165,8 @@ def assertResourceUserState(self, this_resource, owners, editors, viewers):
 
 def assertOwnedResourcesAre(self, this_user, these_resources):
     """ this user owns these resources """
-    self.assertTrue(is_equal_to_as_set(this_user.uaccess.get_owned_resources(), these_resources))
-    self.assertTrue(is_subset_of(these_resources, this_user.uaccess.get_view_resources()))
+    self.assertTrue(is_equal_to_as_set(this_user.uaccess.owned_resources, these_resources))
+    self.assertTrue(is_subset_of(these_resources, this_user.uaccess.view_resources))
     self.assertTrue(is_equal_to_as_set(these_resources, this_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)))
     self.assertTrue(is_disjoint_from(these_resources, this_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)))
     self.assertTrue(is_disjoint_from(these_resources, this_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)))
@@ -182,18 +182,18 @@ def assertOwnedResourcesAre(self, this_user, these_resources):
         self.assertTrue(this_user in r.raccess.owners)
         if not r.raccess.immutable:
             self.assertTrue(this_user in r.raccess.edit_users)
-            self.assertTrue(r in this_user.uaccess.get_edit_resources())
+            self.assertTrue(r in this_user.uaccess.edit_resources)
         else:
             self.assertTrue(this_user not in r.raccess.edit_users)
-            self.assertTrue(r not in this_user.uaccess.get_edit_resources())
+            self.assertTrue(r not in this_user.uaccess.edit_resources)
         self.assertTrue(this_user in r.raccess.view_users)
         # self.assertEqual(r.raccess.get_combined_privilege(this_user), PrivilegeCodes.OWNER)
         self.assertEqual(r.raccess.get_effective_privilege(this_user), PrivilegeCodes.OWNER)
 
 def assertEditableResourcesAre(self, this_user, these_resources):
     """ this user owns these resources """
-    self.assertTrue(is_disjoint_from(this_user.uaccess.get_owned_resources(), these_resources))
-    self.assertTrue(is_subset_of(these_resources, this_user.uaccess.get_view_resources()))
+    self.assertTrue(is_disjoint_from(this_user.uaccess.owned_resources, these_resources))
+    self.assertTrue(is_subset_of(these_resources, this_user.uaccess.view_resources))
     self.assertTrue(is_disjoint_from(these_resources, this_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)))
     self.assertTrue(is_equal_to_as_set(these_resources, this_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)))
     self.assertTrue(is_disjoint_from(these_resources, this_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)))
@@ -211,14 +211,14 @@ def assertEditableResourcesAre(self, this_user, these_resources):
         # these only apply to non-group privilege
         self.assertTrue(this_user in r.raccess.edit_users)
         self.assertTrue(this_user in r.raccess.view_users)
-        self.assertTrue(r in this_user.uaccess.get_edit_resources())
+        self.assertTrue(r in this_user.uaccess.edit_resources)
         self.assertEqual(r.raccess.get_effective_privilege(this_user), PrivilegeCodes.CHANGE)
 
 def assertViewableResourcesAre(self, this_user, these_resources):
     """ this user owns these resources """
-    self.assertTrue(is_disjoint_from(these_resources, this_user.uaccess.get_owned_resources()))
-    self.assertTrue(is_disjoint_from(these_resources, this_user.uaccess.get_edit_resources()))
-    self.assertTrue(is_subset_of(these_resources, this_user.uaccess.get_view_resources()))
+    self.assertTrue(is_disjoint_from(these_resources, this_user.uaccess.owned_resources))
+    self.assertTrue(is_disjoint_from(these_resources, this_user.uaccess.edit_resources))
+    self.assertTrue(is_subset_of(these_resources, this_user.uaccess.view_resources))
     self.assertTrue(is_disjoint_from(these_resources, this_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)))
     self.assertTrue(is_disjoint_from(these_resources, this_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)))
     self.assertTrue(is_equal_to_as_set(these_resources, this_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)))
@@ -250,7 +250,7 @@ def assertGroupOwnersAre(self, this_group, these_users):
                                      set(this_group.gaccess.edit_users)
                                      - set(this_group.gaccess.owners)))
     self.assertTrue(is_disjoint_from(these_users,
-                                     set(this_group.gaccess.view_users)
+                                     set(this_group.gaccess.members)
                                      - set(this_group.gaccess.owners)))
     for u in these_users:
         self.assertTrue(u.uaccess.owns_group(this_group))
@@ -258,8 +258,8 @@ def assertGroupOwnersAre(self, this_group, these_users):
         self.assertTrue(u.uaccess.can_change_group_flags(this_group))
         self.assertTrue(u.uaccess.can_view_group(this_group))
         self.assertTrue(u.uaccess.can_delete_group(this_group))
-        self.assertTrue(this_group in u.uaccess.get_owned_groups())
-        self.assertTrue(this_group in u.uaccess.get_view_groups())
+        self.assertTrue(this_group in u.uaccess.owned_groups)
+        self.assertTrue(this_group in u.uaccess.view_groups)
         self.assertTrue(this_group in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER))
         self.assertTrue(this_group not in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.CHANGE))
         self.assertTrue(this_group not in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW))
@@ -272,7 +272,7 @@ def assertGroupEditorsAre(self, this_group, these_users):
                                        set(this_group.gaccess.edit_users)
                                        - set(this_group.gaccess.owners)))
     self.assertTrue(is_disjoint_from(these_users,
-                                     set(this_group.gaccess.view_users)
+                                     set(this_group.gaccess.members)
                                      - set(this_group.gaccess.edit_users)))
     for u in these_users:
         self.assertFalse(u.uaccess.owns_group(this_group))
@@ -280,8 +280,8 @@ def assertGroupEditorsAre(self, this_group, these_users):
         self.assertFalse(u.uaccess.can_change_group_flags(this_group))
         self.assertTrue(u.uaccess.can_view_group(this_group))
         self.assertFalse(u.uaccess.can_delete_group(this_group))
-        self.assertTrue(this_group not in u.uaccess.get_owned_groups())
-        self.assertTrue(this_group in u.uaccess.get_view_groups())
+        self.assertTrue(this_group not in u.uaccess.owned_groups)
+        self.assertTrue(this_group in u.uaccess.view_groups)
         self.assertTrue(this_group not in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER))
         self.assertTrue(this_group in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.CHANGE))
         self.assertTrue(this_group not in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW))
@@ -294,7 +294,7 @@ def assertGroupViewersAre(self, this_group, these_users):
                                      set(this_group.gaccess.edit_users)
                                      - set(this_group.gaccess.owners)))
     self.assertTrue(is_equal_to_as_set(these_users,
-                                       set(this_group.gaccess.view_users)
+                                       set(this_group.gaccess.members)
                                        - set(this_group.gaccess.edit_users)))
     for u in these_users:
         self.assertFalse(u.uaccess.owns_group(this_group))
@@ -302,8 +302,8 @@ def assertGroupViewersAre(self, this_group, these_users):
         self.assertFalse(u.uaccess.can_change_group_flags(this_group))
         self.assertTrue(u.uaccess.can_view_group(this_group))
         self.assertFalse(u.uaccess.can_delete_group(this_group))
-        self.assertTrue(this_group not in u.uaccess.get_owned_groups())
-        self.assertTrue(this_group in u.uaccess.get_view_groups())
+        self.assertTrue(this_group not in u.uaccess.owned_groups)
+        self.assertTrue(this_group in u.uaccess.view_groups)
         self.assertTrue(this_group not in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER))
         self.assertTrue(this_group not in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.CHANGE))
         self.assertTrue(this_group in u.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW))
@@ -313,7 +313,7 @@ def assertGroupUserState(self, this_group, owners, editors, viewers):
     self.assertTrue(is_disjoint_from(owners, editors))
     self.assertTrue(is_disjoint_from(owners, viewers))
     self.assertTrue(is_disjoint_from(editors, viewers))
-    self.assertTrue(is_equal_to_as_set(this_group.gaccess.view_users, set(owners) | set(editors) | set(viewers)))
+    self.assertTrue(is_equal_to_as_set(this_group.gaccess.members, set(owners) | set(editors) | set(viewers)))
     self.assertTrue(is_equal_to_as_set(this_group.gaccess.edit_users, set(owners) | set(editors)))
     assertGroupOwnersAre(self, this_group, owners)
     assertGroupEditorsAre(self, this_group, editors)
@@ -321,22 +321,22 @@ def assertGroupUserState(self, this_group, owners, editors, viewers):
 
 def assertOwnedGroupsAre(self, this_user, these_groups):
     """ This user is owner of these groups """
-    self.assertTrue(is_equal_to_as_set(these_groups, this_user.uaccess.get_owned_groups()))
-    self.assertTrue(is_subset_of(these_groups, this_user.uaccess.get_edit_groups()))
-    self.assertTrue(is_subset_of(these_groups, this_user.uaccess.get_view_groups()))
+    self.assertTrue(is_equal_to_as_set(these_groups, this_user.uaccess.owned_groups))
+    self.assertTrue(is_subset_of(these_groups, this_user.uaccess.edit_groups))
+    self.assertTrue(is_subset_of(these_groups, this_user.uaccess.view_groups))
     self.assertTrue(is_disjoint_from(these_groups,
-                                     set(this_user.uaccess.get_edit_groups())
-                                     - set(this_user.uaccess.get_owned_groups())))
+                                     set(this_user.uaccess.edit_groups)
+                                     - set(this_user.uaccess.owned_groups)))
     self.assertTrue(is_disjoint_from(these_groups,
-                                     set(this_user.uaccess.get_view_groups())
-                                     - set(this_user.uaccess.get_owned_groups())))
+                                     set(this_user.uaccess.view_groups)
+                                     - set(this_user.uaccess.owned_groups)))
     self.assertTrue(is_equal_to_as_set(these_groups, this_user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)))
     self.assertTrue(is_disjoint_from(these_groups, this_user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.CHANGE)))
     self.assertTrue(is_disjoint_from(these_groups, this_user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW)))
     for g in these_groups:
         self.assertTrue(this_user in g.gaccess.owners)
         self.assertTrue(this_user in g.gaccess.edit_users)
-        self.assertTrue(this_user in g.gaccess.view_users)
+        self.assertTrue(this_user in g.gaccess.members)
         self.assertTrue(this_user.uaccess.owns_group(g))
         self.assertTrue(this_user.uaccess.can_change_group(g))
         self.assertTrue(this_user.uaccess.can_change_group_flags(g))
@@ -346,23 +346,23 @@ def assertOwnedGroupsAre(self, this_user, these_groups):
 
 def assertEditableGroupsAre(self, this_user, these_groups):
     """ This user is editor of these groups """
-    self.assertTrue(is_disjoint_from(these_groups, this_user.uaccess.get_owned_groups()))
-    self.assertTrue(is_subset_of(these_groups, this_user.uaccess.get_edit_groups()))
-    self.assertTrue(is_subset_of(these_groups, this_user.uaccess.get_view_groups()))
+    self.assertTrue(is_disjoint_from(these_groups, this_user.uaccess.owned_groups))
+    self.assertTrue(is_subset_of(these_groups, this_user.uaccess.edit_groups))
+    self.assertTrue(is_subset_of(these_groups, this_user.uaccess.view_groups))
     self.assertTrue(is_equal_to_as_set(these_groups,
-                                     set(this_user.uaccess.get_edit_groups())
-                                     - set(this_user.uaccess.get_owned_groups())))
+                                     set(this_user.uaccess.edit_groups)
+                                     - set(this_user.uaccess.owned_groups)))
     self.assertTrue(is_disjoint_from(these_groups,
-                                     set(this_user.uaccess.get_view_groups())
-                                     - set(this_user.uaccess.get_owned_groups())
-                                     - set(this_user.uaccess.get_edit_groups())))
+                                     set(this_user.uaccess.view_groups)
+                                     - set(this_user.uaccess.owned_groups)
+                                     - set(this_user.uaccess.edit_groups)))
     self.assertTrue(is_disjoint_from(these_groups, this_user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)))
     self.assertTrue(is_equal_to_as_set(these_groups, this_user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.CHANGE)))
     self.assertTrue(is_disjoint_from(these_groups, this_user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW)))
     for g in these_groups:
         self.assertTrue(this_user not in g.gaccess.owners)
         self.assertTrue(this_user in g.gaccess.edit_users)
-        self.assertTrue(this_user in g.gaccess.view_users)
+        self.assertTrue(this_user in g.gaccess.members)
         self.assertFalse(this_user.uaccess.owns_group(g))
         self.assertTrue(this_user.uaccess.can_change_group(g))
         self.assertFalse(this_user.uaccess.can_change_group_flags(g))
@@ -372,23 +372,23 @@ def assertEditableGroupsAre(self, this_user, these_groups):
 
 def assertViewableGroupsAre(self, this_user, these_groups):
     """ This user can view these groups """
-    self.assertTrue(is_disjoint_from(these_groups, this_user.uaccess.get_owned_groups()))
-    self.assertTrue(is_disjoint_from(these_groups, this_user.uaccess.get_edit_groups()))
-    self.assertTrue(is_subset_of(these_groups, this_user.uaccess.get_view_groups()))
+    self.assertTrue(is_disjoint_from(these_groups, this_user.uaccess.owned_groups))
+    self.assertTrue(is_disjoint_from(these_groups, this_user.uaccess.edit_groups))
+    self.assertTrue(is_subset_of(these_groups, this_user.uaccess.view_groups))
     self.assertTrue(is_equal_to_as_set(these_groups,
-                                       set(this_user.uaccess.get_view_groups())
-                                       - set(this_user.uaccess.get_edit_groups())
-                                       - set(this_user.uaccess.get_owned_groups())))
+                                       set(this_user.uaccess.view_groups)
+                                       - set(this_user.uaccess.edit_groups)
+                                       - set(this_user.uaccess.owned_groups)))
     self.assertTrue(is_disjoint_from(these_groups,
-                                     set(this_user.uaccess.get_edit_groups())
-                                     - set(this_user.uaccess.get_view_groups())))
+                                     set(this_user.uaccess.edit_groups)
+                                     - set(this_user.uaccess.view_groups)))
     self.assertTrue(is_disjoint_from(these_groups, this_user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.OWNER)))
     self.assertTrue(is_disjoint_from(these_groups, this_user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.CHANGE)))
     self.assertTrue(is_equal_to_as_set(these_groups, this_user.uaccess.get_groups_with_explicit_access(PrivilegeCodes.VIEW)))
     for g in these_groups:
         self.assertTrue(this_user not in g.gaccess.owners)
         self.assertTrue(this_user not in g.gaccess.edit_users)
-        self.assertTrue(this_user in g.gaccess.view_users)
+        self.assertTrue(this_user in g.gaccess.members)
         self.assertFalse(this_user.uaccess.owns_group(g))
         self.assertFalse(this_user.uaccess.can_change_group(g))
         self.assertFalse(this_user.uaccess.can_change_group_flags(g))
@@ -400,7 +400,7 @@ def assertUserGroupState(self, this_user, owned, editable, viewable):
     self.assertTrue(is_disjoint_from(owned, editable))
     self.assertTrue(is_disjoint_from(owned, viewable))
     self.assertTrue(is_disjoint_from(editable, viewable))
-    self.assertTrue(is_equal_to_as_set(this_user.uaccess.get_view_groups(), set(owned) | set(editable) | set(viewable)))
+    self.assertTrue(is_equal_to_as_set(this_user.uaccess.view_groups, set(owned) | set(editable) | set(viewable)))
     assertOwnedGroupsAre(self, this_user, owned)
     assertEditableGroupsAre(self, this_user, editable)
     assertViewableGroupsAre(self, this_user, viewable)
@@ -410,8 +410,8 @@ def assertResourceGroupEditorsAre(self, this_resource, these_groups):
     self.assertTrue(is_equal_to_as_set(these_groups, this_resource.raccess.edit_groups))
     self.assertTrue(is_subset_of(these_groups, this_resource.raccess.view_groups))
     for g in these_groups:
-        self.assertTrue(this_resource in g.gaccess.get_edit_resources())
-        self.assertTrue(this_resource in g.gaccess.get_view_resources())
+        self.assertTrue(this_resource in g.gaccess.edit_resources)
+        self.assertTrue(this_resource in g.gaccess.view_resources)
         self.assertTrue(this_resource not in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER))
         self.assertTrue(this_resource in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE))
         self.assertTrue(this_resource not in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW))
@@ -423,8 +423,8 @@ def assertResourceGroupViewersAre(self, this_resource, these_groups):
     self.assertTrue(is_subset_of(these_groups, this_resource.raccess.view_groups))
     self.assertTrue(is_equal_to_as_set(these_groups, set(this_resource.raccess.view_groups) - set(this_resource.raccess.edit_groups)))
     for g in these_groups:
-        self.assertTrue(this_resource not in g.gaccess.get_edit_resources())
-        self.assertTrue(this_resource in g.gaccess.get_view_resources())
+        self.assertTrue(this_resource not in g.gaccess.edit_resources)
+        self.assertTrue(this_resource in g.gaccess.view_resources)
         self.assertTrue(this_resource not in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER))
         self.assertTrue(this_resource not in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE))
         self.assertTrue(this_resource in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW))
@@ -437,27 +437,27 @@ def assertResourceGroupState(self, this_resource, editors, viewers):
 
 def assertGroupEditableResourcesAre(self, this_group, these_resources):
     """ these resources are all editable by this_group"""
-    self.assertTrue(is_subset_of(these_resources, this_group.gaccess.get_view_resources()))
+    self.assertTrue(is_subset_of(these_resources, this_group.gaccess.view_resources))
     self.assertTrue(is_equal_to_as_set(these_resources,this_group.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)))
     self.assertTrue(is_disjoint_from(these_resources,this_group.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)))
-    self.assertTrue(is_equal_to_as_set(these_resources, this_group.gaccess.get_edit_resources()))
+    self.assertTrue(is_equal_to_as_set(these_resources, this_group.gaccess.edit_resources))
     for r in these_resources:
         self.assertTrue(this_group in r.raccess.edit_groups)
         self.assertTrue(this_group in r.raccess.view_groups)
 
 def assertGroupViewableResourcesAre(self, this_group, these_resources):
     """ these resources are all editable by this_group"""
-    self.assertTrue(is_subset_of(these_resources, this_group.gaccess.get_view_resources()))
+    self.assertTrue(is_subset_of(these_resources, this_group.gaccess.view_resources))
     self.assertTrue(is_disjoint_from(these_resources,this_group.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)))
     self.assertTrue(is_equal_to_as_set(these_resources,this_group.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)))
-    self.assertTrue(is_disjoint_from(these_resources, this_group.gaccess.get_edit_resources()))
+    self.assertTrue(is_disjoint_from(these_resources, this_group.gaccess.edit_resources))
     for r in these_resources:
         self.assertTrue(this_group not in r.raccess.edit_groups)
         self.assertTrue(this_group in r.raccess.view_groups)
 
 def assertGroupResourceState(self, this_group, editable, viewable):
     self.assertTrue(is_disjoint_from(editable, viewable))
-    self.assertTrue(is_equal_to_as_set(this_group.gaccess.get_view_resources(), set(editable) | set(viewable)))
+    self.assertTrue(is_equal_to_as_set(this_group.gaccess.view_resources, set(editable) | set(viewable)))
     assertGroupEditableResourcesAre(self, this_group, editable)
     assertGroupViewableResourcesAre(self, this_group, viewable)
 

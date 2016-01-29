@@ -226,7 +226,6 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
 
         # test django admin has ownership permission over any resource even when not owning a resource
         self.assertFalse(admin.uaccess.owns_resource(bikes))
-        # self.assertEqual(bikes.raccess.get_combined_privilege(admin), PrivilegeCodes.OWNER)
         self.assertEqual(bikes.raccess.get_effective_privilege(admin), PrivilegeCodes.OWNER)
 
         # test django admin can always view/change or delete any resource
@@ -261,27 +260,27 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         assertResourceUserState(self, bikes, [george], [john], [])
 
         # test django admin can share a group with a user
-        self.assertEqual(bikers.gaccess.get_members().count(), 1)
+        self.assertEqual(bikers.gaccess.members.count(), 1)
         self.assertFalse(admin.uaccess.owns_group(bikers))
         admin.uaccess.share_group_with_user(bikers, alva, PrivilegeCodes.OWNER)
-        self.assertEqual(alva.uaccess.get_owned_groups().count(), 1)
-        self.assertEqual(bikers.gaccess.get_members().count(), 2)
+        self.assertEqual(alva.uaccess.owned_groups.count(), 1)
+        self.assertEqual(bikers.gaccess.members.count(), 2)
 
         # test django admin can share resource with a group
         self.assertFalse(admin.uaccess.can_share_resource_with_group(bikes, harpers, PrivilegeCodes.OWNER))
         self.assertTrue(admin.uaccess.can_share_resource_with_group(bikes, harpers, PrivilegeCodes.CHANGE))
         admin.uaccess.share_resource_with_group(bikes, harpers, PrivilegeCodes.CHANGE)
-        self.assertTrue(bikes in harpers.gaccess.get_edit_resources())
+        self.assertTrue(bikes in harpers.gaccess.edit_resources)
 
         self.assertTrue(admin.uaccess.can_share_resource_with_group(bikes, harpers, PrivilegeCodes.VIEW))
         admin.uaccess.share_resource_with_group(bikes, harpers, PrivilegeCodes.VIEW)
-        self.assertTrue(bikes in harpers.gaccess.get_view_resources())
+        self.assertTrue(bikes in harpers.gaccess.view_resources)
 
         # test django admin can unshare a user with a group
         self.assertTrue(admin.uaccess.can_unshare_group_with_user(bikers, alva))
         admin.uaccess.unshare_group_with_user(bikers, alva)
-        self.assertTrue(bikers.gaccess.get_members().count(), 1)
-        self.assertEqual(alva.uaccess.get_owned_groups().count(), 0)
+        self.assertTrue(bikers.gaccess.members.count(), 1)
+        self.assertEqual(alva.uaccess.owned_groups.count(), 0)
 
     def test_share_inactive_user(self):
         """
@@ -293,7 +292,6 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         john = self.john
         bikes = self.bikes
 
-        # self.assertEqual(bikes.raccess.get_combined_privilege(alva), PrivilegeCodes.NONE)
         self.assertEqual(bikes.raccess.get_effective_privilege(alva), PrivilegeCodes.NONE)
 
         # inactive users can't be granted access
@@ -311,7 +309,6 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         # let's first grant John access privilege
         george.uaccess.share_resource_with_user(bikes, john, PrivilegeCodes.CHANGE)
 
-        # self.assertEqual(bikes.raccess.get_combined_privilege(john), PrivilegeCodes.CHANGE)
         self.assertEqual(bikes.raccess.get_effective_privilege(john), PrivilegeCodes.CHANGE)
 
         john.is_active = False
