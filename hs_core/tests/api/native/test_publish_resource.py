@@ -1,5 +1,7 @@
 __author__ = 'Tian Gan'
 
+import unittest
+
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
@@ -28,6 +30,9 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
             'Test Resource'
         )
 
+    # TODO: This test needs to be enabled once the publish_resource() function is updated to register resource DOI
+    # with crossref. At that point the call to crossref needs to be mocked here in this test (IMPORTANT)
+    @unittest.skip
     def test_publish_resource(self):
         # check status prior to publishing the resource
         self.assertFalse(
