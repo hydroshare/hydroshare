@@ -910,10 +910,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         hydroshare.add_resource_files(self.res.short_id, original_file)
         self.assertEquals(self.res.metadata.publisher, None)
 
-        # This call to create publisher element would set CUAHSI as the publisher even if we specify "HydroShare' as the
-        # publisher
-        resource.create_metadata_element(self.res.short_id, 'publisher', name='HydroShare',
-                                         url="http://hydroshare.org")
+        # This call to create publisher element would set CUAHSI as the publisher even if we don't specify any data
+        # for the publisher element
+        resource.create_metadata_element(self.res.short_id, 'publisher', **{})
 
         # Only CUAHSI can be publisher when resource has content files
         self.assertEqual(self.res.metadata.publisher.name, publisher_CUAHSI,

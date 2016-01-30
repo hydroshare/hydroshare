@@ -699,28 +699,36 @@ class Publisher(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        if 'name' in kwargs:
-            metadata_obj = kwargs['content_object']
-            # get matching resource
-            resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
-            publisher_CUAHSI = "Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)"
-            if not resource.raccess.published:
-                raise ValidationError("Publisher element can't be created for a resource that is not yet published.")
+        metadata_obj = kwargs['content_object']
+        # get matching resource
+        resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
+        if not resource.raccess.published:
+            raise ValidationError("Publisher element can't be created for a resource that is not yet published.")
 
-            # if the resource has content files, set CUAHSI as the publisher - ignore passed kwargs
-            if resource.files.all():
-                kwargs['name'] = publisher_CUAHSI
-                kwargs['url'] = 'https://www.cuahsi.org'
-            elif 'url' in kwargs:
-                if kwargs['url'].lower() == 'https://www.cuahsi.org' or kwargs['name'] == publisher_CUAHSI.lower():
-                    raise ValidationError("Hydroshare/CUAHSI can't be the publisher for a resource that has no content "
-                                          "files.")
-            else:
-                raise ValidationError("URL for publisher is missing.")
+        publisher_CUAHSI = "Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)"
 
-            return super(Publisher, cls).create(**kwargs)
+        if resource.files.all():
+            # if the resource has content files, set CUAHSI as the publisher
+            if 'name' in kwargs:
+                if kwargs['name'].lower() != publisher_CUAHSI.lower():
+                    raise ValidationError("Invalid publisher name")
+
+            kwargs['name'] = publisher_CUAHSI
+            if 'url' in kwargs:
+                if kwargs['url'].lower() != 'https://www.cuahsi.org':
+                    raise ValidationError("Invalid publisher URL")
+
+            kwargs['url'] = 'https://www.cuahsi.org'
         else:
-            raise ValidationError("Name of publisher is missing.")
+            # make sure we are not setting CUAHSI as publisher for a resource that has no content files
+            if 'name' in kwargs:
+                if kwargs['name'].lower() == publisher_CUAHSI.lower():
+                    raise ValidationError("Invalid publisher name")
+            if 'url' in kwargs:
+                if kwargs['url'].lower() == 'https://www.cuahsi.org':
+                    raise ValidationError("Invalid publisher URL")
+
+        return super(Publisher, cls).create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
