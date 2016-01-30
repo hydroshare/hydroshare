@@ -1,10 +1,9 @@
 from dateutil import parser
-from unittest import TestCase
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
+from django.test import TestCase
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
@@ -21,12 +20,6 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
             )
 
         self.res = hydroshare.create_resource('GenericResource', user, 'Test Resource')
-
-    def tearDown(self):
-        super(TestUpdateMetadata, self).tearDown()
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        GenericResource.objects.all().delete()
 
     def test_update_science_metadata(self):
         # add these new metadata elements

@@ -1,7 +1,6 @@
-import unittest
-
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 from django.contrib.sites.models import Site
+from django.test import TestCase
 
 from mezzanine.conf import settings
 
@@ -11,7 +10,7 @@ from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestUtils(MockIRODSTestCaseMixin, unittest.TestCase):
+class TestUtils(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestUtils, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -40,12 +39,6 @@ class TestUtils(MockIRODSTestCaseMixin, unittest.TestCase):
         )
         self.res.doi = 'doi1000100010001'
         self.res.save()
-
-    def tearDown(self):
-        super(TestUtils, self).tearDown()
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        GenericResource.objects.all().delete()
 
     def test_get_resource_types(self):
         res_types = utils.get_resource_types()

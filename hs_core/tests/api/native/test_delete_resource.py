@@ -1,6 +1,5 @@
-from unittest import TestCase
-
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
+from django.test import TestCase
 
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
@@ -21,11 +20,6 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
             last_name='some_last_name',
             superuser=False,
             groups=[])
-
-    def tearDown(self):
-        super(TestDeleteResource, self).tearDown()
-        User.objects.all().delete()
-        Group.objects.all().delete()
 
     def test_delete_resource(self):
         new_res = resource.create_resource(

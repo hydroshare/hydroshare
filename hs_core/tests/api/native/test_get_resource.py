@@ -1,10 +1,8 @@
 __author__ = 'tonycastronova'
 
-from unittest import TestCase
+from django.contrib.auth.models import Group
+from django.test import TestCase
 
-from django.contrib.auth.models import User, Group
-
-from hs_core.models import GenericResource
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
 
@@ -29,11 +27,6 @@ class TestGetResource(TestCase):
             self.user,
             'My Test Resource'
             )
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        GenericResource.objects.all().delete()
 
     def test_get_resource(self):
         # function to test: hydroshare.get_resource() which returns a Bags object (not the actual bag file)

@@ -33,6 +33,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             keywords=['kw1', 'kw2']
         )
 
+    # without this tearDown() getting transaction error even if we make this class inherit from django TestCase and
+    # and not uninttest TestCase
     def tearDown(self):
         super(TestCoreMetadata, self).tearDown()
         User.objects.all().delete()

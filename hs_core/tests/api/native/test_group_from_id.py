@@ -1,9 +1,8 @@
 
 from __future__ import absolute_import
 
-from unittest import TestCase
-
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
+from django.test import TestCase
 
 from hs_core import hydroshare
 
@@ -20,10 +19,6 @@ class TestGroupFromId(TestCase):
             groups=[]
         )
         self.group = self.user.uaccess.create_group('Jamy group')
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Group.objects.all().delete()
 
     def test_accept_group_instance(self):
         self.assertEquals(

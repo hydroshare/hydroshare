@@ -1,10 +1,8 @@
-from unittest import TestCase
-
 from django.contrib.auth.models import Group, User
+from django.test import TestCase
 
 from hs_core import hydroshare
 from hs_core.hydroshare import hs_bagit
-from hs_core.models import GenericResource
 
 from django_irods.storage import IrodsStorage
 
@@ -28,11 +26,6 @@ class TestBagIt(TestCase):
             self.user,
             'My Test Resource'
             )
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        GenericResource.objects.all().delete()
 
     def test_create_bag(self):
         # the resource should have only one bags object

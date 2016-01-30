@@ -2,16 +2,14 @@ __author__ = 'Tian Gan'
 
 # unit test for get_endorsement() from social.py
 
-import unittest
+from django.contrib.auth.models import Group
+from django.test import TestCase
 
-from django.contrib.auth.models import User, Group
-from mezzanine.generic.models import Rating
 from hs_core import hydroshare
-from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestGetEndorsements(MockIRODSTestCaseMixin, unittest.TestCase):
+class TestGetEndorsements(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestGetEndorsements, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -51,13 +49,6 @@ class TestGetEndorsements(MockIRODSTestCaseMixin, unittest.TestCase):
         # endorse comment
         self.endorse1_com = hydroshare.endorse_comment(self.comment.id, self.res.short_id, self.user1)
         self.endorse2_com = hydroshare.endorse_comment(self.comment.id, self.res.short_id, self.user2)
-
-    def tearDown(self):
-        super(TestGetEndorsements, self).tearDown()
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        Rating.objects.all().delete()
-        GenericResource.objects.all().delete()
 
     def test_get_endorsements(self):
         # test get the endorsement of resource

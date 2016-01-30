@@ -8,20 +8,14 @@ comments- not sure how to implement test_email_function
 import unittest
 
 from django.contrib.auth.models import User, Group
+from django.test import TestCase
 
 from hs_core import hydroshare
-from hs_access_control.models import UserAccess, UserGroupPrivilege
 
 
-class CreateAccountTest(unittest.TestCase):
+class CreateAccountTest(TestCase):
     def setUp(self):
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-
-    def tearDown(self):
-        UserGroupPrivilege.objects.all().delete()
-        UserAccess.objects.all().delete()
-        User.objects.all().delete()
-        Group.objects.all().delete()
 
     def test_basic_superuser(self):
         username, first_name, last_name, password = 'shaunjl', 'shaun','joseph','mypass'

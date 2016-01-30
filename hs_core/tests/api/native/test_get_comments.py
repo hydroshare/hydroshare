@@ -2,17 +2,14 @@ __author__ = 'Tian Gan'
 
 # unit test for get_comments() from social.py
 
-import unittest
-
-from django.contrib.auth.models import User, Group
-from mezzanine.generic.models import ThreadedComment
+from django.contrib.auth.models import Group
+from django.test import TestCase
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestGetComments(MockIRODSTestCaseMixin, unittest.TestCase):
+class TestGetComments(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestGetComments, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -58,13 +55,6 @@ class TestGetComments(MockIRODSTestCaseMixin, unittest.TestCase):
                                                         "comment3 to reply comment 2 by user2",
                                                         user=self.user2,
                                                         in_reply_to=self.comment_2.pk)
-
-    def tearDown(self):
-        super(TestGetComments, self).tearDown()
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        ThreadedComment.objects.all().delete()
-        GenericResource.objects.all().delete()
 
     def test_get_comments(self):
         # this is the api call we are testing

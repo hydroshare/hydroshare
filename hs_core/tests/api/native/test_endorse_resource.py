@@ -1,23 +1,17 @@
-import unittest
-
 from django.contrib.auth.models import User, Group
+from django.test import TestCase
+
 from mezzanine.generic.models import Rating
+
 from hs_core import hydroshare
 from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestEndorseResourceAPI(MockIRODSTestCaseMixin, unittest.TestCase):
+class TestEndorseResourceAPI(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestEndorseResourceAPI, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-
-    def tearDown(self):
-        super(TestEndorseResourceAPI, self).tearDown()
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        GenericResource.objects.all().delete()
-        Rating.objects.all().delete()
 
     def test_endorse_resource(self):
         # create a user to be used for creating the resource

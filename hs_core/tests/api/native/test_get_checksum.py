@@ -2,15 +2,13 @@ __author__ = 'Tian Gan'
 
 # unit test for get_checksum() from resource.py
 
-import unittest
-
 from django.contrib.auth.models import User, Group
+from django.test import TestCase
 from hs_core import hydroshare
-from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestGetChecksum(MockIRODSTestCaseMixin, unittest.TestCase):
+class TestGetChecksum(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestGetChecksum, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -30,11 +28,6 @@ class TestGetChecksum(MockIRODSTestCaseMixin, unittest.TestCase):
             self.user1,
             'Test Resource',
         )
-
-    def tearDown(self):
-        super(TestGetChecksum, self).tearDown()
-        User.objects.all().delete()
-        GenericResource.objects.all().delete()
 
     def test_get_checksum(self):
         with self.assertRaises(NotImplementedError):

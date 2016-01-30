@@ -7,25 +7,17 @@ must be extended to test other types of resources
 
 """
 
-import unittest
-
 from django.contrib.auth.models import User, Group
+from django.test import TestCase
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestGetCapabilities(MockIRODSTestCaseMixin, unittest.TestCase):
+class TestGetCapabilities(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestGetCapabilities, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-
-    def tearDown(self):
-        super(TestGetCapabilities, self).tearDown()
-        GenericResource.objects.all().delete()
-        User.objects.filter(username='shaun').delete()
-        Group.objects.all().delete()
 
     def test_generic(self):
         user = hydroshare.create_account(email='shauntheta@gmail.com', username='shaun', first_name='shaun',

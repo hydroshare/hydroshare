@@ -1,26 +1,16 @@
-import unittest
+from django.contrib.auth.models import Group
+from django.test import TestCase
 
-from django.contrib.auth.models import User, Group
-
-from mezzanine.generic.models import Rating, ThreadedComment
+from mezzanine.generic.models import Rating
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestEndorseCommentAPI(MockIRODSTestCaseMixin, unittest.TestCase):
+class TestEndorseCommentAPI(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestEndorseCommentAPI, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-
-    def tearDown(self):
-        super(TestEndorseCommentAPI, self).tearDown()
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        GenericResource.objects.all().delete()
-        ThreadedComment.objects.all().delete()
-        Rating.objects.all().delete()
 
     def test_endorse_comment(self):
         # create a user to be used for creating the resource

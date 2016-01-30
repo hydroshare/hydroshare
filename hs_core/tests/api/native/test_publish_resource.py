@@ -1,16 +1,13 @@
 __author__ = 'Tian Gan'
 
-
-import unittest
-
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
+from django.test import TestCase
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestPublishResource(MockIRODSTestCaseMixin, unittest.TestCase):
+class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestPublishResource, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -30,13 +27,6 @@ class TestPublishResource(MockIRODSTestCaseMixin, unittest.TestCase):
             self.user,
             'Test Resource'
         )
-
-    def tearDown(self):
-        super(TestPublishResource, self).tearDown()
-        self.user.uaccess.delete()
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        GenericResource.objects.all().delete()
 
     def test_publish_resource(self):
         # check status prior to publishing the resource
