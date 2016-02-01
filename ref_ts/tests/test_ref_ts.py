@@ -6,14 +6,11 @@ from django.test import TestCase, Client
 from django.contrib.auth.models import User, Group
 
 from hs_core import hydroshare
-from ref_ts.models import RefTimeSeriesResource
-import ref_ts.views as views
-
 
 class TestRefTS(TestCase):
 
     def setUp(self):
-        self.logger = logging.getLogger("ref_ts")
+        self.logger = logging.getLogger("django")
         self.api_client = Client()
 
         self.username = 'creator'
@@ -192,7 +189,6 @@ class TestRefTS(TestCase):
         resp = self.api_client.get(url_to_download_resource_files)
         self.assertEqual(resp.status_code, 401)
 
-
     def test_create_resource_hydroserver_REST(self):
         url = "http://data.iutahepscor.org/LoganRiverWOF/REST/waterml_2.svc/values?location=iutah:LR_WaterLab_AA&variable=iutah:BattVolt&startDate=2016-01-08T04:45:00Z&endDate=2016-01-11T04:45:00Z"
         ref_type = "rest"
@@ -233,7 +229,3 @@ class TestRefTS(TestCase):
         self.api_client.logout()
         resp = self.api_client.get(url_to_download_resource_files)
         self.assertEqual(resp.status_code, 401)
-
-
-
-

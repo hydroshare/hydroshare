@@ -20,15 +20,16 @@ from django_irods.views import download as download_bag_from_irods
 from . import ts_utils
 from .forms import ReferencedSitesForm, ReferencedVariablesForm, GetTSValuesForm, VerifyRestUrlForm, CreateRefTimeSeriesForm
 
-preview_name = "preview.png"
-his_central_url = 'http://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'
+PREVIEW_NAME = "preview.png"
+HIS_CENTRAL_URL = 'http://hiscentral.cuahsi.org/webservices/hiscentral.asmx/GetWaterOneFlowServiceInfo'
+BLANK_FIELD_STRING = ""
+
 logger = logging.getLogger("django")
-blank_field_string = ""
 
 # query HIS central to get all available HydroServer urls
 def get_his_urls(request):
     try:
-        r = requests.get(his_central_url)
+        r = requests.get(HIS_CENTRAL_URL)
         if r.status_code == 200:
             response = r.text.encode('utf-8')
             root = etree.XML(response)
@@ -114,7 +115,7 @@ def time_series_from_service(request):
             tempdir = tempfile.mkdtemp()
             ts_utils.create_vis_2(path=tempdir, site_name=site, data=data, xlabel='Date',
                                 variable_name=variable_name, units=units, noDataValue=noDataValue,
-                                predefined_name=preview_name)
+                                predefined_name=PREVIEW_NAME)
             tempdir_last_six_chars = tempdir[-6:]
             preview_url = "/hsapi/_internal/refts/preview-figure/%s/" % (tempdir_last_six_chars)
             return json_or_jsonp(request, {'status': "success", 'preview_url': preview_url})
@@ -127,14 +128,14 @@ def time_series_from_service(request):
         return json_or_jsonp(request, {'status': "error"})
 
 
-def preview_figure (request, preview_code, *args, **kwargs):
+def preview_figure(request, preview_code, *args, **kwargs):
     response = HttpResponse()
     preview_str = None
     tempdir_preview = None
     try:
         tempdir_base_path = tempfile.gettempdir()
         tempdir_preview = tempdir_base_path + "/" + "tmp" + preview_code
-        preview_full_path = tempdir_preview + "/" + preview_name
+        preview_full_path = tempdir_preview + "/" + PREVIEW_NAME
         preview_fhandle = open(preview_full_path,'rb')
         preview_str = str(preview_fhandle.read())
         preview_fhandle.close()
@@ -202,25 +203,25 @@ def create_ref_time_series(request, *args, **kwargs):
                 metadata.append(coverage_period)
 
             metadata += [{"ReferenceURL": {"value": url, "type": reference_type}},
-                        {"Site": {"name": ts_dict['site_name'] if ts_dict['site_name'] is not None else blank_field_string,
-                                  "code": ts_dict['site_code'] if ts_dict['site_code'] is not None else blank_field_string,
-                                  "net_work": ts_dict['net_work'] if ts_dict['net_work'] is not None else blank_field_string,
+                        {"Site": {"name": ts_dict['site_name'] if ts_dict['site_name'] is not None else BLANK_FIELD_STRING,
+                                  "code": ts_dict['site_code'] if ts_dict['site_code'] is not None else BLANK_FIELD_STRING,
+                                  "net_work": ts_dict['net_work'] if ts_dict['net_work'] is not None else BLANK_FIELD_STRING,
                                   "latitude": ts_dict['latitude'],
                                   "longitude": ts_dict['longitude']
                                   }
                         },
-                        {"Variable": {"name": ts_dict['variable_name'] if ts_dict['variable_name'] is not None else blank_field_string,
-                                      "code": ts_dict['variable_code'] if ts_dict['variable_code'] is not None else blank_field_string
+                        {"Variable": {"name": ts_dict['variable_name'] if ts_dict['variable_name'] is not None else BLANK_FIELD_STRING,
+                                      "code": ts_dict['variable_code'] if ts_dict['variable_code'] is not None else BLANK_FIELD_STRING
                                       }
                         },
-                        {"DataSource": {"code": ts_dict['source_code'] if ts_dict['source_code'] is not None else blank_field_string}},
-                        {"Method": {"code": ts_dict['method_code'] if ts_dict['method_code'] is not None else blank_field_string,
-                                    "description": ts_dict['method_description'] if ts_dict['method_description'] is not None else blank_field_string
+                        {"DataSource": {"code": ts_dict['source_code'] if ts_dict['source_code'] is not None else BLANK_FIELD_STRING}},
+                        {"Method": {"code": ts_dict['method_code'] if ts_dict['method_code'] is not None else BLANK_FIELD_STRING,
+                                    "description": ts_dict['method_description'] if ts_dict['method_description'] is not None else BLANK_FIELD_STRING
                                    }
                         },
                         {"QualityControlLevel": {
-                            "code": ts_dict['quality_control_level_code'] if ts_dict['quality_control_level_code'] is not None else blank_field_string,
-                            "definition": ts_dict['quality_control_level_definition'] if ts_dict['quality_control_level_definition'] is not None else blank_field_string
+                            "code": ts_dict['quality_control_level_code'] if ts_dict['quality_control_level_code'] is not None else BLANK_FIELD_STRING,
+                            "definition": ts_dict['quality_control_level_definition'] if ts_dict['quality_control_level_definition'] is not None else BLANK_FIELD_STRING
                                                  }
                         }]
 
@@ -241,7 +242,7 @@ def create_ref_time_series(request, *args, **kwargs):
         context = {'resource_creation_error': "Error: failed to create resource." }
         return render_to_response('pages/create-ref-time-series.html', context, context_instance=RequestContext(request))
 
-def download_resource_files(request, shortkey, *args, **kwargs):
+def download_refts_resource_files(request, shortkey, *args, **kwargs):
     tempdir = None
     try:
         _, authorized, _ = authorize(request, shortkey, edit=True, full=True, view=True, superuser=True, raises_exception=False)

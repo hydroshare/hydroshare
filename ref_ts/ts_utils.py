@@ -10,8 +10,6 @@ from xml.sax._exceptions import SAXParseException
 import matplotlib.pyplot as plt
 
 from hs_core import hydroshare
-# from ref_ts.owslib_revised.waterml.wml11 import WaterML_1_1 as wml11
-# from ref_ts.owslib_revised.waterml.wml10 import WaterML_1_0 as wml10
 from owslib.waterml.wml11 import WaterML_1_1 as wml11
 from owslib.waterml.wml10 import WaterML_1_0 as wml10
 
@@ -558,7 +556,8 @@ def save_ts_to_files(res, tempdir, ts):
     res_file_info_array.append(preview_file_info)
 
     # csv wml1 wml2 file name base
-    file_name_base = title.replace(" ", "_")
+    # file_name_base = title.replace(" ", "_")
+    file_name_base = "res_" + str(res.short_id)
     # save csv file
     csv_name = '{0}.{1}'.format(file_name_base, 'csv')
     csv_name_full_path = tempdir + "/" + csv_name
