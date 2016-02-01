@@ -2,6 +2,7 @@
 import os
 import zipfile
 import shutil
+import logging
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
@@ -385,7 +386,6 @@ def create_resource(
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile asynchronously; wait 30 seconds to be "sure" that resource creation
             # has finished.
-            import logging
             logger = logging.getLogger('django')
             tmp_dir = '/shared_temp'
             logger.debug("Copying uploaded file from {0} to {1}".format(files[0].temporary_file_path(),
