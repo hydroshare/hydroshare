@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
 from django.core import exceptions as ex
@@ -21,7 +21,7 @@ import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage
-from hs_access_control.models import PrivilegeCodes, HSAccessException
+from hs_access_control.models import PrivilegeCodes
 
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
@@ -339,13 +339,13 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     if access_privilege != PrivilegeCodes.NONE:
         try:
             user.uaccess.share_resource_with_user(res, user_to_share_with, access_privilege)
-        except HSAccessException as exp:
+        except PermissionDenied as exp:
             status = 'error'
             err_message = exp.message
     else:
         status = 'error'
 
-    current_user_privilege = res.raccess.get_combined_privilege(user)
+    current_user_privilege = res.raccess.get_effective_privilege(user)
     if current_user_privilege == PrivilegeCodes.VIEW:
         current_user_privilege = "view"
     elif current_user_privilege == PrivilegeCodes.CHANGE:
@@ -380,13 +380,15 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
             user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
         else:
             # requesting user is the original grantor of privilege to user_to_unshare_with
+            # COUCH: This can raise a PermissionDenied exception without a guard such as 
+            # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
             user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
 
         messages.success(request, "Resource unsharing was successful")
         if user == user_to_unshare_with and not res.raccess.public:
             # user has no access to the resource - redirect to resource listing page
             return HttpResponseRedirect('/my-resources/')
-    except HSAccessException as exp:
+    except PermissionDenied as exp:
         messages.error(request, exp.message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -622,7 +624,7 @@ def _share_resource_with_user(request, frm, resource, requesting_user, privilege
     if frm.is_valid():
         try:
             requesting_user.uaccess.share_resource_with_user(resource, frm.cleaned_data['user'], privilege)
-        except HSAccessException as exp:
+        except PermissionDenied as exp:
             messages.error(request, exp.message)
     else:
         messages.error(request, frm.errors.as_json())
@@ -652,11 +654,13 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
                     requesting_user.uaccess.unshare_resource_with_user(resource, user)
                 else:
                     # requesting user is the original grantor of privilege to user
+                    # TODO from @alvacouch: This can raise a PermissionDenied exception without a guard such as 
+                    # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
                     requesting_user.uaccess.undo_share_resource_with_user(resource, user)
 
                 if requesting_user == user and not resource.raccess.public:
                     go_to_resource_listing_page = True
-            except HSAccessException as exp:
+            except PermissionDenied as exp:
                 messages.error(request, exp.message)
                 break
     return go_to_resource_listing_page

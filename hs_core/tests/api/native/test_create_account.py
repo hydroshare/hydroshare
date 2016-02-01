@@ -79,7 +79,10 @@ class CreateAccountTest(unittest.TestCase):
         g0 = user.uaccess.create_group('group0')
         g1 = user.uaccess.create_group('group1')
         g2 = user.uaccess.create_group('group2')
-        user_groups = list(Group.objects.filter(gaccess__g2ugp__user=user.uaccess))
+
+        # TODO from @alvacouch: no order assumption -> poor test. 
+        user_groups = list(Group.objects.filter(g2ugp__user=user))
+
         groups = [g0, g1, g2]
 
         self.assertEqual(groups, user_groups)
