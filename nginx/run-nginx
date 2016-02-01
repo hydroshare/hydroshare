@@ -86,7 +86,6 @@ start_nginx() {
 restart_nginx() {
     echo "*** ${1^^} ***"
     stop_nginx STOP
-    preflight_nginx
     start_nginx START
 }
 
