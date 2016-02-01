@@ -928,8 +928,7 @@
                 // Update filter badges count
                 $("#filter .badge[data-facet='owned']").text(ownedCount);
                 $("#filter .badge[data-facet='editable']").text(ownedEditableCount+editableCount);
-                ownedPublishedCount = ownedCount - ownedEditableCount
-                $("#filter .badge[data-facet='viewable by me']").text(viewableCount+ownedPublishedCount);
+                $("#filter .badge[data-facet='viewable by me']").text(viewableCount+editableCount+ownedCount);
 
                 if (dataColFavorite == "Favorite") {
                     favorites++;
@@ -1125,7 +1124,7 @@
                         if (sharingStatus.indexOf('Published') != -1)
                             return true
 
-                        if (data[7] == "Owned" || (data[7] != "Viewable" && data[7] != "Editable")) {
+                        if (data[7] != "Owned" && data[7] != "Viewable" && data[7] != "Editable") {
                             return false;
                         }
                     }

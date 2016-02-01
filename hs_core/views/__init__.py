@@ -256,8 +256,6 @@ def publish(request, shortkey, *args, **kwargs):
         hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
         request.session['validation_error'] = exp.message
-    except HSAccessException as exp:
-        messages.error(request, exp.message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -489,7 +487,7 @@ def my_resources(request, page):
     favorite_resources = list(user.ulabels.favorited_resources)
     labeled_resources = list(user.ulabels.labeled_resources)
     discovered_resources = list(user.ulabels.my_resources)
-
+    
     for res in owned_resources:
         res.owned = True
 

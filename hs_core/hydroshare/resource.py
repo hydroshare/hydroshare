@@ -780,6 +780,11 @@ def publish_resource(user, pk):
     if response.status_code == status.HTTP_200_OK:
         content = response.content
 
+        resource.raccess.public = True
+        resource.raccess.immutable = True
+        resource.raccess.published = True
+        resource.raccess.save()
+
         # change "Publisher" element of science metadata to CUAHSI
         md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)',
                    'url': 'https://www.cuahsi.org/'}
@@ -793,19 +798,8 @@ def publish_resource(user, pk):
                    'url': get_activated_doi(resource.doi)}
         resource.metadata.create_element('Identifier', **md_args)
 
-        # downgrade all editor privilege to view privilege with ownership retained
-        owners = set(resource.raccess.owners.all())
-        editors = set(resource.raccess.edit_users.all()) - owners
-
-        for user in editors:
-            user.uaccess.share_resource_with_user(resource, user, PrivilegeCodes.VIEW)
-
         utils.resource_modified(resource, user)
 
-        resource.raccess.public = True
-        resource.raccess.immutable = True
-        resource.raccess.published = True
-        resource.raccess.save()
         return pk
     else:
         raise ValidationError("{msg} - raised from Crossref".format(msg=response.content))
