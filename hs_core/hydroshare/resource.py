@@ -785,6 +785,9 @@ def publish_resource(user, pk):
                    'url': 'https://www.cuahsi.org/'}
         resource.metadata.create_element('Publisher', **md_args)
 
+        # create published date
+        resource.metadata.create_element('date', type='published', start_date=resource.updated)
+
         # add doi to "Identifier" element of science metadata
         md_args = {'name': 'doi',
                    'url': get_activated_doi(resource.doi)}
