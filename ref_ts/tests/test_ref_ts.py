@@ -34,7 +34,7 @@ class TestRefTS(TestCase):
         self.url_to_search_variables = "/hsapi/_internal/search-variables/"
         self.url_to_time_series_from_service = "/hsapi/_internal/time-series-from-service/"
         self.url_to_create_ref_time_series = "/hsapi/_internal/create-ref-time-series/"
-        self.url_to_download_resource_files = "/hsapi/_internal/{0}/download-files/"
+        self.url_to_download_resource_files = "/hsapi/RefTimeSeriesResource/{0}/downloadFiles/"
 
     def test_get_his_central_urls(self):
         self.assertEqual(1, 1)
